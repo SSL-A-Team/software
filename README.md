@@ -26,5 +26,8 @@
 
    ```bash
    # In the ateam_ws directory
+   source /opt/ros/galactic/setup.bash
    colcon build
    ```
+
+**Note:** You'll need to source both the underlay (`/opt/ros/galactic/setup.bash`) and our workspace's overlay (`ateam_ws/install/setup.bash`) in every terminal session before running any of our code.
