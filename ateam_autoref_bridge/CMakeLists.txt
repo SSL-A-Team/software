@@ -8,26 +8,21 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(ateam_common REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
-find_package(Protobuf REQUIRED)
-find_package(Boost REQUIRED)
-
-add_subdirectory(proto)
+find_package(ssl_league_protobufs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/autoref_bridge_node.cpp
   src/message_conversions.cpp
-  src/referee_multicast_bridge.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
+  ateam_common
   ssl_league_msgs
-)
-target_link_libraries(${PROJECT_NAME}
-  league_protobufs 
-  Boost::boost
+  ssl_league_protobufs
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}

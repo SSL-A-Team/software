@@ -11,9 +11,9 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>ateam_common</depend>
   <depend>ssl_league_msgs</depend>
-  <depend>protobuf</depend>
-  <depend>boost</depend>
+  <depend>ssl_league_protobufs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
