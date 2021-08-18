@@ -12,6 +12,7 @@
    mkdir ateam_ws
    cd ateam_ws
    mkdir src
+   cd src
    git clone git@github.com:SSL-A-Team/software.git
    ```
 
