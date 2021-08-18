@@ -8,7 +8,7 @@ on:
 jobs:
   buildAndTest:
     runs-on: ubuntu-20.04
-    container: ros:foxy
+    container: ros:galactic
     steps:
       - uses: actions/checkout@v2
         with:
@@ -16,18 +16,18 @@ jobs:
       - name: Install Dependencies
         shell: bash
         run: |
-          source /opt/ros/foxy/setup.bash
+          source /opt/ros/galactic/setup.bash
           sudo apt-get update
-          rosdep update --rosdistro=foxy
+          rosdep update --rosdistro=galactic
           rosdep install --from-paths . --ignore-src -y
       - name: Build
         shell: bash
         run: |
-          source /opt/ros/foxy/setup.bash
+          source /opt/ros/galactic/setup.bash
           colcon build
       - name: Test
         shell: bash
         run: |
-          source /opt/ros/foxy/setup.bash
+          source /opt/ros/galactic/setup.bash
           colcon test
           colcon test-result --verbose 
