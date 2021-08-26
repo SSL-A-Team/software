@@ -14,7 +14,7 @@ class AutorefBridgeNode : public rclcpp::Node
 public:
   explicit AutorefBridgeNode(const rclcpp::NodeOptions& options)
   : rclcpp::Node("autoref_bridge", options),
-    multicast_rcevier_("224.5.23.1",
+    multicast_receiver_("224.5.23.1",
                        10003,
                        [this](auto* buffer, size_t bytes_received){
                          Referee referee_proto;
@@ -30,7 +30,7 @@ public:
 
 private:
   rclcpp::Publisher<ssl_league_msgs::msg::Referee>::SharedPtr referee_publisher_;
-  MulticastReceiver multicast_rcevier_;
+  ateam_common::MulticastReceiver multicast_receiver_;
 };
 
 }

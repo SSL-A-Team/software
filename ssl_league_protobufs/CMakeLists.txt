@@ -30,16 +30,31 @@ protobuf_generate_cpp(
 )
 
 add_library(${PROJECT_NAME} SHARED
-  ${PROTOBUF_SRCS}
   ${PROTOBUF_HDRS}
+  ${PROTOBUF_SRCS}
 )
 target_link_libraries(${PROJECT_NAME}
   protobuf::libprotobuf
 )
-target_include_directories(${PROJECT_NAME} INTERFACE
-  ${CMAKE_CURRENT_BINARY_DIR}
+target_include_directories(${PROJECT_NAME}
+  INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
-install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+
+ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(Protobuf)
+
+install(
+  DIRECTORY ${CMAKE_BINARY_DIR}
+  DESTINATION include
+)
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

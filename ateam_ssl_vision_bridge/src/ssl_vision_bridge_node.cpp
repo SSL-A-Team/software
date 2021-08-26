@@ -3,21 +3,22 @@
 
 #include <ateam_common/multicast_receiver.hpp>
 #include <ssl_league_msgs/msg/vision.hpp>
+#include <ssl_league_protobufs/ssl_vision_detection.pb.h>
 
 #include "message_conversions.hpp"
 
-namespace ateam_autoref_bridge
+namespace ateam_ssl_vision_bridge
 {
 
-class AutorefBridgeNode : public rclcpp::Node
+class VisionBridgeNode : public rclcpp::Node
 {
 public:
-  explicit AutorefBridgeNode(const rclcpp::NodeOptions& options)
-  : rclcpp::Node("autoref_bridge", options),
-    multicast_rcevier_("224.5.23.2",
+  explicit VisionBridgeNode(const rclcpp::NodeOptions& options)
+  : rclcpp::Node("vision_bridge", options),
+    multicast_receiver_("224.5.23.2",
                        10006,
                        [this](auto* buffer, size_t bytes_received){
-                         Vision vision_proto;
+                         SSL_DetectionFrame vision_proto;
                          if (!vision_proto.ParseFromArray(buffer, bytes_received))
                            return false;
 
@@ -30,9 +31,9 @@ public:
 
 private:
   rclcpp::Publisher<ssl_league_msgs::msg::Vision>::SharedPtr vision_publisher_;
-  MulticastReceiver multicast_rcevier_;
+  ateam_common::MulticastReceiver multicast_receiver_;
 };
 
 }
 
-RCLCPP_COMPONENTS_REGISTER_NODE(ateam_autoref_bridge::AutorefBridgeNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(ateam_ssl_vision_bridge::VisionBridgeNode)

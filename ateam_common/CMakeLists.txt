@@ -23,9 +23,24 @@ target_link_libraries(${PROJECT_NAME}
 )
 target_include_directories(${PROJECT_NAME}
   PUBLIC
-  include
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
 )
-install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+
+ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(Boost)
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -3,12 +3,12 @@
 
 #include <ssl_league_msgs/msg/vision.hpp>
 
-#include <ssl_vision_detection.pb.h>
+#include <ssl_league_protobufs/ssl_vision_detection.pb.h>
 
 namespace ateam_ssl_vision_bridge::message_conversions
 {
 
-ssl_league_msgs::msg::Vision fromProto(const Vision& proto_msg) {}
+ssl_league_msgs::msg::Vision fromProto(const SSL_DetectionFrame& proto_msg) {}
 
 }
 

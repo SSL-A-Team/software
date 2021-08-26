@@ -12,6 +12,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/GameEventProposalGroup.msg
   msg/Referee.msg
   msg/TeamInfo.msg
+  msg/Vision.msg
 
   DEPENDENCIES
   builtin_interfaces
