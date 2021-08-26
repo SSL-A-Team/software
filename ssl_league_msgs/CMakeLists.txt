@@ -12,7 +12,18 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/GameEventProposalGroup.msg
   msg/Referee.msg
   msg/TeamInfo.msg
-  msg/Vision.msg
+
+  msg/VisionDetectionBall.msg
+  msg/VisionDetectionRobot.msg
+  msg/VisionDetectionFrame.msg
+
+  msg/VisionFieldCircularArc.msg
+  msg/VisionFieldLineSegment.msg
+  msg/VisionGeometryFieldSize.msg
+  msg/VisionGeometryCameraCalibration.msg
+  msg/VisionGeometryData.msg
+
+  msg/VisionWrapper.msg
 
   DEPENDENCIES
   builtin_interfaces

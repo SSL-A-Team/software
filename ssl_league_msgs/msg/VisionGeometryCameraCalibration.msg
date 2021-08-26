@@ -1,0 +1,7 @@
+uint32 camera_id
+float32 focal_length
+geometry_msgs/Point32 principal_point
+float32 distortion
+geometry_msgs/Quaternion q
+geometry_msgs/Point32 t
+geometry_msgs/Point32 derived_camera_world_t
