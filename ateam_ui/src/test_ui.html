@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+
+<script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+<script type="text/javascript" type="text/javascript">
+  // Connecting to ROS
+  // -----------------
+
+  var ros = new ROSLIB.Ros({
+    url : 'ws://localhost:9090'
+  });
+
+  ros.on('connection', function() {
+    console.log('Connected to websocket server.');
+  });
+
+  ros.on('error', function(error) {
+    console.log('Error connecting to websocket server: ', error);
+  });
+
+  ros.on('close', function() {
+    console.log('Connection to websocket server closed.');
+  });
+
+  // set up publish test topic
+  // ------------------
+
+  var cmdVel = new ROSLIB.Topic({
+    ros : ros,
+    name : '/cmd_vel',
+    messageType : 'geometry_msgs/Twist'
+  });
+
+  var twist = new ROSLIB.Message({
+    linear : {
+      x : 0.1,
+      y : 0.2,
+      z : 0.3
+    },
+    angular : {
+      x : -0.1,
+      y : -0.2,
+      z : -0.3
+    }
+  });
+  //cmdVel.publish(twist);
+
+  // Calling a service
+  // -----------------
+
+  var addTwoIntsClient = new ROSLIB.Service({
+    ros : ros,
+    name : '/add_two_ints',
+    serviceType : 'rospy_tutorials/AddTwoInts'
+  });
+
+  var request = new ROSLIB.ServiceRequest({
+    a : 1,
+    b : 2
+  });
+
+  addTwoIntsClient.callService(request, function(result) {
+    console.log('Result for service call on '
+      + addTwoIntsClient.name
+      + ': '
+      + result.sum);
+  });
+
+  // Getting and setting a param value
+  // ---------------------------------
+
+  ros.getParams(function(params) {
+    console.log(params);
+  });
+
+  var maxVelX = new ROSLIB.Param({
+    ros : ros,
+    name : 'max_vel_y'
+  });
+
+  maxVelX.set(0.8);
+  maxVelX.get(function(value) {
+    console.log('MAX VAL: ' + value);
+  });
+</script>
+</head>
+
+<body>
+  <h1>Simple roslib Example</h1>
+</body>
+
+
+<script type="text/javascript" type="text/javascript">
+  // Set up button to test publish
+  var btn = document.createElement("button");
+  btn.innerHTML = "send cmdVel";
+  btn.onclick = function(){cmdVel.publish(twist)};
+  document.body.appendChild(btn);
+
+
+ // subscribe to test topic
+ // ----------------------
+
+ var listener = new ROSLIB.Topic({
+     ros : ros,
+     name : '/listener',
+     messageType : 'std_msgs/String'
+ });
+
+ listener.subscribe(function(message) {
+     console.log('Received message on ' + listener.name + ': ' + message.data);
+     var div = document.createElement("div");
+     div.innerHTML = 'Received message ' + listener.name + ': ' + message.data;
+     document.body.appendChild(div);
+ });
+
+</script>
+
+</html>
