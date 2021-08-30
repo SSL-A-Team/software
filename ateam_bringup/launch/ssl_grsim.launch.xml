@@ -1,0 +1,3 @@
+<launch>
+  <executable cmd="docker run robocupssl/grsim" output="screen" />
+</launch>
