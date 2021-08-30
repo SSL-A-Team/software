@@ -44,7 +44,7 @@ void MulticastReceiver::HandleMulticastReceiveFrom(const boost::system::error_co
 
   if(!receive_callback_(buffer_.data(), bytes_received)) {
     std::cerr << "Failed to parse message." << std::endl;
-    return;
+    //return;
   }
 
   multicast_socket_.async_receive_from(boost::asio::buffer(buffer_), sender_endpoint_, boost::bind(&MulticastReceiver::HandleMulticastReceiveFrom, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
