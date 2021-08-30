@@ -10,13 +10,13 @@
 namespace ateam_ssl_vision_bridge
 {
 
-class VisionBridgeNode : public rclcpp::Node
+class SSLVisionBridgeNode : public rclcpp::Node
 {
 public:
-  explicit VisionBridgeNode(const rclcpp::NodeOptions& options)
-  : rclcpp::Node("vision_bridge", options),
+  explicit SSLVisionBridgeNode(const rclcpp::NodeOptions& options)
+  : rclcpp::Node("ssl_vision_bridge", options),
     multicast_receiver_("224.5.23.2",
-                       10006,
+                       10020,
                        [this](auto* buffer, size_t bytes_received){
                          SSL_WrapperPacket vision_proto;
                          if (!vision_proto.ParseFromArray(buffer, bytes_received))
@@ -36,4 +36,4 @@ private:
 
 }
 
-RCLCPP_COMPONENTS_REGISTER_NODE(ateam_ssl_vision_bridge::VisionBridgeNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(ateam_ssl_vision_bridge::SSLVisionBridgeNode)

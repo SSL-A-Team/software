@@ -26,7 +26,7 @@ ament_target_dependencies(${PROJECT_NAME}
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}
-  PLUGIN "ssl_vision_bridge::SSLVisionBridgeNode"
+  PLUGIN "ateam_ssl_vision_bridge::SSLVisionBridgeNode"
   EXECUTABLE ssl_vision_bridge_node
 )
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
