@@ -17,17 +17,18 @@
 
 namespace ateam_ssl_vision_bridge::message_conversions
 {
-ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall& proto_msg);
-ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot& proto_msg);
-ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame& proto_msg);
+ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall & proto_msg);
+ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot & proto_msg);
+ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame & proto_msg);
 
-ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegment& proto_msg);
-ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCicularArc& proto_msg);
-ssl_league_msgs::msg::VisionGeometryFieldSize fromProto(const SSL_GeometryFieldSize& proto_msg);
-ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(const SSL_GeometryCameraCalibration& proto_msg);
-ssl_league_msgs::msg::VisionGeometryData fromProto(const SSL_GeometryData& proto_msg);
+ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegment & proto_msg);
+ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCicularArc & proto_msg);
+ssl_league_msgs::msg::VisionGeometryFieldSize fromProto(const SSL_GeometryFieldSize & proto_msg);
+ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(
+  const SSL_GeometryCameraCalibration & proto_msg);
+ssl_league_msgs::msg::VisionGeometryData fromProto(const SSL_GeometryData & proto_msg);
 
-ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket& proto_msg);
+ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket & proto_msg);
 
 }
 

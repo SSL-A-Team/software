@@ -3,7 +3,8 @@
 
 namespace ateam_ssl_vision_bridge::message_conversions
 {
-ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall& proto_msg) {
+ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall & proto_msg)
+{
   ssl_league_msgs::msg::VisionDetectionBall ros_msg;
   ros_msg.confidence = proto_msg.confidence();
   ros_msg.area = proto_msg.area();
@@ -15,7 +16,8 @@ ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall& pro
 
   return ros_msg;
 }
-ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot& proto_msg) {
+ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot & proto_msg)
+{
   ssl_league_msgs::msg::VisionDetectionRobot ros_msg;
   ros_msg.confidence = proto_msg.confidence();
   ros_msg.robot_id = proto_msg.robot_id();
@@ -28,29 +30,34 @@ ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot& p
 
   return ros_msg;
 }
-ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame& proto_msg) {
+ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame & proto_msg)
+{
   ssl_league_msgs::msg::VisionDetectionFrame ros_msg;
   ros_msg.frame_number = proto_msg.frame_number();
   ros_msg.t_capture = rclcpp::Time(proto_msg.t_capture() * 1000);
   ros_msg.t_sent = rclcpp::Time(proto_msg.t_sent() * 1000);
   ros_msg.camera_id = proto_msg.camera_id();
-  std::transform(proto_msg.balls().begin(), 
-                 proto_msg.balls().end(), 
-                 std::back_inserter(ros_msg.balls), 
-                 [](const auto& p){ return fromProto(p); });
-  std::transform(proto_msg.robots_yellow().begin(), 
-                 proto_msg.robots_yellow().end(), 
-                 std::back_inserter(ros_msg.robots_yellow), 
-                 [](const auto& p){ return fromProto(p); });
-  std::transform(proto_msg.robots_blue().begin(), 
-                 proto_msg.robots_blue().end(), 
-                 std::back_inserter(ros_msg.robots_blue), 
-                 [](const auto& p){ return fromProto(p); });
+  std::transform(
+    proto_msg.balls().begin(),
+    proto_msg.balls().end(),
+    std::back_inserter(ros_msg.balls),
+    [](const auto & p) {return fromProto(p);});
+  std::transform(
+    proto_msg.robots_yellow().begin(),
+    proto_msg.robots_yellow().end(),
+    std::back_inserter(ros_msg.robots_yellow),
+    [](const auto & p) {return fromProto(p);});
+  std::transform(
+    proto_msg.robots_blue().begin(),
+    proto_msg.robots_blue().end(),
+    std::back_inserter(ros_msg.robots_blue),
+    [](const auto & p) {return fromProto(p);});
 
   return ros_msg;
 }
 
-ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegment& proto_msg) {
+ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegment & proto_msg)
+{
   ssl_league_msgs::msg::VisionFieldLineSegment ros_msg;
   ros_msg.name = proto_msg.name();
   ros_msg.p1.x = proto_msg.p1().x();
@@ -58,10 +65,11 @@ ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegmen
   ros_msg.p2.x = proto_msg.p2().x();
   ros_msg.p2.y = proto_msg.p2().y();
   ros_msg.thickness = proto_msg.thickness();
-  
+
   return ros_msg;
 }
-ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCicularArc& proto_msg) {
+ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCicularArc & proto_msg)
+{
   ssl_league_msgs::msg::VisionFieldCircularArc ros_msg;
   ros_msg.name = proto_msg.name();
   ros_msg.center.x = proto_msg.center().x();
@@ -70,28 +78,33 @@ ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCicularArc
   ros_msg.a1 = proto_msg.a1();
   ros_msg.a2 = proto_msg.a2();
   ros_msg.thickness = proto_msg.thickness();
-  
+
   return ros_msg;
 }
-ssl_league_msgs::msg::VisionGeometryFieldSize fromProto(const SSL_GeometryFieldSize& proto_msg) {
+ssl_league_msgs::msg::VisionGeometryFieldSize fromProto(const SSL_GeometryFieldSize & proto_msg)
+{
   ssl_league_msgs::msg::VisionGeometryFieldSize ros_msg;
   ros_msg.field_length = proto_msg.field_length();
   ros_msg.field_width = proto_msg.field_width();
   ros_msg.goal_width = proto_msg.goal_width();
   ros_msg.goal_depth = proto_msg.goal_depth();
   ros_msg.boundary_width = proto_msg.boundary_width();
-  std::transform(proto_msg.field_lines().begin(), 
-                 proto_msg.field_lines().end(), 
-                 std::back_inserter(ros_msg.field_lines), 
-                 [](const auto& p){ return fromProto(p); });
-  std::transform(proto_msg.field_arcs().begin(), 
-                 proto_msg.field_arcs().end(), 
-                 std::back_inserter(ros_msg.field_arcs), 
-                 [](const auto& p){ return fromProto(p); });
+  std::transform(
+    proto_msg.field_lines().begin(),
+    proto_msg.field_lines().end(),
+    std::back_inserter(ros_msg.field_lines),
+    [](const auto & p) {return fromProto(p);});
+  std::transform(
+    proto_msg.field_arcs().begin(),
+    proto_msg.field_arcs().end(),
+    std::back_inserter(ros_msg.field_arcs),
+    [](const auto & p) {return fromProto(p);});
 
   return ros_msg;
 }
-ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(const SSL_GeometryCameraCalibration& proto_msg) {
+ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(
+  const SSL_GeometryCameraCalibration & proto_msg)
+{
   ssl_league_msgs::msg::VisionGeometryCameraCalibration ros_msg;
   ros_msg.camera_id = proto_msg.camera_id();
   ros_msg.focal_length = proto_msg.focal_length();
@@ -111,18 +124,21 @@ ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(const SSL_Geomet
 
   return ros_msg;
 }
-ssl_league_msgs::msg::VisionGeometryData fromProto(const SSL_GeometryData& proto_msg) {
+ssl_league_msgs::msg::VisionGeometryData fromProto(const SSL_GeometryData & proto_msg)
+{
   ssl_league_msgs::msg::VisionGeometryData ros_msg;
   ros_msg.field = fromProto(proto_msg.field());
-  std::transform(proto_msg.calib().begin(), 
-                 proto_msg.calib().end(), 
-                 std::back_inserter(ros_msg.calibration), 
-                 [](const auto& p){ return fromProto(p); });
+  std::transform(
+    proto_msg.calib().begin(),
+    proto_msg.calib().end(),
+    std::back_inserter(ros_msg.calibration),
+    [](const auto & p) {return fromProto(p);});
 
   return ros_msg;
 }
 
-ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket& proto_msg) {
+ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket & proto_msg)
+{
   ssl_league_msgs::msg::VisionWrapper ros_msg;
   ros_msg.detection = fromProto(proto_msg.detection());
   ros_msg.geometry = fromProto(proto_msg.geometry());

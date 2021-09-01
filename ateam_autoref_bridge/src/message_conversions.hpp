@@ -10,10 +10,10 @@
 namespace ateam_autoref_bridge::message_conversions
 {
 
-ssl_league_msgs::msg::Referee fromProto(const Referee& proto_msg);
-ssl_league_msgs::msg::TeamInfo fromProto(const Referee::TeamInfo& proto_msg);
-ssl_league_msgs::msg::GameEvent fromProto(const GameEvent& proto_msg);
-ssl_league_msgs::msg::GameEventProposalGroup fromProto(const GameEventProposalGroup& proto_msg);
+ssl_league_msgs::msg::Referee fromProto(const Referee & proto_msg);
+ssl_league_msgs::msg::TeamInfo fromProto(const Referee::TeamInfo & proto_msg);
+ssl_league_msgs::msg::GameEvent fromProto(const GameEvent & proto_msg);
+ssl_league_msgs::msg::GameEventProposalGroup fromProto(const GameEventProposalGroup & proto_msg);
 
 }
 
