@@ -18,12 +18,11 @@ public:
       10003,
       [this](auto * buffer, size_t bytes_received) {
         Referee referee_proto;
-        if (!referee_proto.ParseFromArray(buffer, bytes_received)) {
-          return false;
+        if (referee_proto.ParseFromArray(buffer, bytes_received)) {
+          referee_publisher_->publish(message_conversions::fromProto(referee_proto));
+        } else {
+          RCLCPP_INFO(get_logger(), "Failed to parse referee protobuf packet");
         }
-
-        referee_publisher_->publish(message_conversions::fromProto(referee_proto));
-        return true;
       })
   {
     referee_publisher_ = create_publisher<ssl_league_msgs::msg::Referee>(

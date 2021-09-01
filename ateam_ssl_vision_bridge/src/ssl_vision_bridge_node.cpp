@@ -20,11 +20,10 @@ public:
       [this](auto * buffer, size_t bytes_received) {
         SSL_WrapperPacket vision_proto;
         if (!vision_proto.ParseFromArray(buffer, bytes_received)) {
-          return false;
+          vision_publisher_->publish(message_conversions::fromProto(vision_proto));
+        } else {
+          RCLCPP_INFO(get_logger(), "Failed to parse vision protobuf packet");
         }
-
-        vision_publisher_->publish(message_conversions::fromProto(vision_proto));
-        return true;
       })
   {
     vision_publisher_ = create_publisher<ssl_league_msgs::msg::VisionWrapper>(

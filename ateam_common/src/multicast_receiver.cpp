@@ -49,10 +49,7 @@ void MulticastReceiver::HandleMulticastReceiveFrom(
     return;
   }
 
-  if (!receive_callback_(buffer_.data(), bytes_received)) {
-    std::cerr << "Failed to parse message." << std::endl;
-    //return;
-  }
+  receive_callback_(buffer_.data(), bytes_received);
 
   multicast_socket_.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,

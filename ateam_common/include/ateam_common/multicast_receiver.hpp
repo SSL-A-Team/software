@@ -13,10 +13,8 @@ public:
   /**
    * @param char* Data received in latest packet
    * @param size_t Length of data received
-   * 
-   * @return False if failed to parse, True if valid parse
    */
-  using ReceiveCallback = std::function<bool(char*, size_t)>;
+  using ReceiveCallback = std::function<void(char*, size_t)>;
 
   MulticastReceiver(std::string multicast_ip_address,
                          short multicast_port,

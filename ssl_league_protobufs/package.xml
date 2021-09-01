@@ -7,7 +7,7 @@
   <maintainer email="fcdneiger@gmail.com">Joseph Neiger</maintainer>
   <license>TODO: License declaration</license>
 
-  <depend>protobuf</depend>
+  <depend>protobuf-dev</depend>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
