@@ -41,7 +41,7 @@ public:
         if (referee_proto.ParseFromArray(buffer, bytes_received)) {
           referee_publisher_->publish(message_conversions::fromProto(referee_proto));
         } else {
-          RCLCPP_INFO(get_logger(), "Failed to parse referee protobuf packet");
+          RCLCPP_WARN(get_logger(), "Failed to parse referee protobuf packet");
         }
       })
   {

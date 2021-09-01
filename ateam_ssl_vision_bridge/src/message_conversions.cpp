@@ -19,7 +19,11 @@
 // THE SOFTWARE.
 
 #include "message_conversions.hpp"
+
 #include <rclcpp/time.hpp>
+
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 namespace ateam_ssl_vision_bridge::message_conversions
 {
@@ -42,9 +46,11 @@ ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot & 
   ssl_league_msgs::msg::VisionDetectionRobot ros_msg;
   ros_msg.confidence = proto_msg.confidence();
   ros_msg.robot_id = proto_msg.robot_id();
-  ros_msg.pose.x = proto_msg.x();
-  ros_msg.pose.y = proto_msg.y();
-  ros_msg.pose.theta = proto_msg.orientation();
+  ros_msg.pose.position.x = proto_msg.x();
+  ros_msg.pose.position.y = proto_msg.y();
+  ros_msg.pose.position.z = 0;
+  ros_msg.pose.orientation =
+    tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), proto_msg.orientation()));
   ros_msg.pixel.x = proto_msg.pixel_x();
   ros_msg.pixel.y = proto_msg.pixel_y();
   ros_msg.height = proto_msg.height();

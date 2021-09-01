@@ -42,7 +42,7 @@ public:
         if (!vision_proto.ParseFromArray(buffer, bytes_received)) {
           vision_publisher_->publish(message_conversions::fromProto(vision_proto));
         } else {
-          RCLCPP_INFO(get_logger(), "Failed to parse vision protobuf packet");
+          RCLCPP_WARN(get_logger(), "Failed to parse vision protobuf packet");
         }
       })
   {
