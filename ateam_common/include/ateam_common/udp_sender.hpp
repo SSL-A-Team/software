@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__MULTICAST_SENDER_HPP_
-#define ATEAM_COMMON__MULTICAST_SENDER_HPP_
+#ifndef ATEAM_COMMON__UDP_SENDER_HPP_
+#define ATEAM_COMMON__UDP_SENDER_HPP_
 
 #include <boost/asio.hpp>
 
@@ -28,27 +28,27 @@
 
 namespace ateam_common
 {
-class MulticastSender
+class UDPSender
 {
 public:
-  MulticastSender(
-    std::string multicast_ip_address,
-    int16_t multicast_port);
+  UDPSender(
+    std::string udp_ip_address,
+    int16_t udp_port);
 
   void send(char * data, size_t length);
 
-  ~MulticastSender();
+  ~UDPSender();
 
 private:
   boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket multicast_socket_;
+  boost::asio::ip::udp::socket udp_socket_;
   boost::asio::ip::udp::endpoint receiver_endpoint_;
   std::array<char, 1024> buffer_;
   std::thread io_service_thread_;
 
-  void HandleMulticastSendTo(const boost::system::error_code& error, std::size_t bytes_transferred);
+  void HandleUDPSendTo(const boost::system::error_code& error, std::size_t bytes_transferred);
 };
 
 }  // namespace ateam_common
 
-#endif  // ATEAM_COMMON__MULTICAST_SENDER_HPP_
+#endif  // ATEAM_COMMON__UDP_SENDER_HPP_

@@ -18,26 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_common/multicast_sender.hpp"
+#include "ateam_common/udp_sender.hpp"
 
 #include <boost/bind.hpp>
-
-#include <algorithm>
-#include <iostream>
-#include <string>
 
 namespace ateam_common
 {
 
-MulticastSender::MulticastSender(
-  std::string multicast_address_string,
-  int16_t multicast_port)
-: multicast_socket_(io_service_),
+UDPSender::UDPSender(
+  std::string udp_address_string,
+  int16_t udp_port)
+: udp_socket_(io_service_),
   receiver_endpoint_(
-    boost::asio::ip::make_address(multicast_address_string),
-    multicast_port)
+    boost::asio::ip::make_address(udp_address_string),
+    udp_port)
 {
-  multicast_socket_.open(receiver_endpoint_.protocol());
+  udp_socket_.open(receiver_endpoint_.protocol());
 
   io_service_thread_ = std::thread(
     [this]() {
@@ -45,7 +41,7 @@ MulticastSender::MulticastSender(
     });
 }
 
-MulticastSender::~MulticastSender()
+UDPSender::~UDPSender()
 {
   io_service_.stop();
   if (io_service_thread_.joinable()) {
@@ -53,31 +49,32 @@ MulticastSender::~MulticastSender()
   }
 }
 
-void MulticastSender::send(char * data, size_t length) {
+void UDPSender::send(char * data, size_t length) {
   if (length >= buffer_.size()) {
-    //RCLCPP_ERROR(get_logger(), "Multicast send data length is larger than buffer");
+    //RCLCPP_ERROR(get_logger(), "UDP send data length is larger than buffer");
 
     return;
   }
 
-  // Copy to unique buffer for each send
-  // delete buffer after send
-  // std::copy(data, data + length, std::back_inserter(buffer_));
+  // Copy to buffer
+  // Better to send an invalid packet than to overrun the buffer
+  // With the if statement above, this should never happen
+  memcpy(buffer_.data(), data, std::min(buffer_.size(), length));
 
-  multicast_socket_.async_send_to(
+  udp_socket_.async_send_to(
     boost::asio::buffer(buffer_, length),
     receiver_endpoint_,
     boost::bind(
-      &MulticastSender::HandleMulticastSendTo, this,
+      &UDPSender::HandleUDPSendTo, this,
       boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-void MulticastSender::HandleMulticastSendTo(
+void UDPSender::HandleUDPSendTo(
   const boost::system::error_code& error,
   std::size_t /** bytes_transferred **/) {
 
   if (error) {
-    //RCLCPP_ERROR(get_logger(), "Error during multicast send");
+    //RCLCPP_ERROR(get_logger(), "Error during udp send");
   }
 }
 
