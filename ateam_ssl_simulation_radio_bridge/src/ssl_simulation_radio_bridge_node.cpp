@@ -25,6 +25,8 @@
 #include <std_msgs/msg/string.hpp>
 #include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
 
+#include <string>
+
 namespace ateam_ssl_simulation_radio_bridge
 {
 
@@ -35,29 +37,30 @@ public:
   : rclcpp::Node("ateam_ssl_simulation_radio_bridge", options),
     udp_sender_("127.0.0.1", 10301)
   {
-    auto callback = [&](const std_msgs::msg::String::SharedPtr) {      
-      RobotControl robots_control;
+    auto callback = [&](const std_msgs::msg::String::SharedPtr) {
+        RobotControl robots_control;
 
-      RobotCommand* robot_command = robots_control.add_robot_commands();
-      robot_command->set_id(2);
+        RobotCommand * robot_command = robots_control.add_robot_commands();
+        robot_command->set_id(2);
 
-      RobotMoveCommand* robot_move_command = robot_command->mutable_move_command();
-      MoveGlobalVelocity* global_velocity_command = robot_move_command->mutable_global_velocity();
-      global_velocity_command->set_x(5);
-      global_velocity_command->set_y(5);
-      global_velocity_command->set_angular(1);
+        RobotMoveCommand * robot_move_command = robot_command->mutable_move_command();
+        MoveGlobalVelocity * global_velocity_command =
+          robot_move_command->mutable_global_velocity();
+        global_velocity_command->set_x(5);
+        global_velocity_command->set_y(5);
+        global_velocity_command->set_angular(1);
 
-      std::string protobuf_msg;
-      if (robots_control.SerializeToString(&protobuf_msg)) {
-        udp_sender_.send(protobuf_msg.data(), protobuf_msg.size());
-      }
-    };
+        std::string protobuf_msg;
+        if (robots_control.SerializeToString(&protobuf_msg)) {
+          udp_sender_.send(protobuf_msg.data(), protobuf_msg.size());
+        }
+      };
 
     subscription_ =
       create_subscription<std_msgs::msg::String>(
-        "~/robot_motion_commands",
-        10,
-        callback);
+      "~/robot_motion_commands",
+      10,
+      callback);
   }
 
 private:

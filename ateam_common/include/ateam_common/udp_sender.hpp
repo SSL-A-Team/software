@@ -46,7 +46,7 @@ private:
   std::array<char, 1024> buffer_;
   std::thread io_service_thread_;
 
-  void HandleUDPSendTo(const boost::system::error_code& error, std::size_t bytes_transferred);
+  void HandleUDPSendTo(const boost::system::error_code & error, std::size_t bytes_transferred);
 };
 
 }  // namespace ateam_common

@@ -22,6 +22,9 @@
 
 #include <boost/bind.hpp>
 
+#include <algorithm>
+#include <string>
+
 namespace ateam_common
 {
 
@@ -49,9 +52,10 @@ UDPSender::~UDPSender()
   }
 }
 
-void UDPSender::send(char * data, size_t length) {
+void UDPSender::send(char * data, size_t length)
+{
   if (length >= buffer_.size()) {
-    //RCLCPP_ERROR(get_logger(), "UDP send data length is larger than buffer");
+    // RCLCPP_ERROR(get_logger(), "UDP send data length is larger than buffer");
 
     return;
   }
@@ -70,11 +74,11 @@ void UDPSender::send(char * data, size_t length) {
 }
 
 void UDPSender::HandleUDPSendTo(
-  const boost::system::error_code& error,
-  std::size_t /** bytes_transferred **/) {
-
+  const boost::system::error_code & error,
+  std::size_t /** bytes_transferred **/)
+{
   if (error) {
-    //RCLCPP_ERROR(get_logger(), "Error during udp send");
+    // RCLCPP_ERROR(get_logger(), "Error during udp send");
   }
 }
 
