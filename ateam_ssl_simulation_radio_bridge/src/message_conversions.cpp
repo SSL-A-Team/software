@@ -20,157 +20,31 @@
 
 #include "message_conversions.hpp"
 
-#include <rclcpp/time.hpp>
-
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <tf2/LinearMath/Quaternion.h>
-
 namespace ateam_ssl_simulation_radio_bridge::message_conversions
 {
 
-ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall & proto_msg)
+void fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, RobotCommand * proto_msg)
 {
-  ssl_league_msgs::msg::VisionDetectionBall ros_msg;
-  ros_msg.confidence = proto_msg.confidence();
-  ros_msg.area = proto_msg.area();
-  ros_msg.pos.x = proto_msg.x();
-  ros_msg.pos.y = proto_msg.y();
-  ros_msg.pos.z = proto_msg.z();
-  ros_msg.pixel.x = proto_msg.pixel_x();
-  ros_msg.pixel.y = proto_msg.pixel_y();
+  proto_msg->set_id(ros_msg.id);
 
-  return ros_msg;
-}
-ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot & proto_msg)
-{
-  ssl_league_msgs::msg::VisionDetectionRobot ros_msg;
-  ros_msg.confidence = proto_msg.confidence();
-  ros_msg.robot_id = proto_msg.robot_id();
-  ros_msg.pose.position.x = proto_msg.x();
-  ros_msg.pose.position.y = proto_msg.y();
-  ros_msg.pose.position.z = 0;
-  ros_msg.pose.orientation =
-    tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), proto_msg.orientation()));
-  ros_msg.pixel.x = proto_msg.pixel_x();
-  ros_msg.pixel.y = proto_msg.pixel_y();
-  ros_msg.height = proto_msg.height();
-
-  return ros_msg;
-}
-ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame & proto_msg)
-{
-  ssl_league_msgs::msg::VisionDetectionFrame ros_msg;
-  ros_msg.frame_number = proto_msg.frame_number();
-  ros_msg.t_capture = rclcpp::Time(proto_msg.t_capture() * 1000);
-  ros_msg.t_sent = rclcpp::Time(proto_msg.t_sent() * 1000);
-  ros_msg.camera_id = proto_msg.camera_id();
-  std::transform(
-    proto_msg.balls().begin(),
-    proto_msg.balls().end(),
-    std::back_inserter(ros_msg.balls),
-    [](const auto & p) {return fromProto(p);});
-  std::transform(
-    proto_msg.robots_yellow().begin(),
-    proto_msg.robots_yellow().end(),
-    std::back_inserter(ros_msg.robots_yellow),
-    [](const auto & p) {return fromProto(p);});
-  std::transform(
-    proto_msg.robots_blue().begin(),
-    proto_msg.robots_blue().end(),
-    std::back_inserter(ros_msg.robots_blue),
-    [](const auto & p) {return fromProto(p);});
-
-  return ros_msg;
+  RobotMoveCommand * robot_move_command = proto_msg->mutable_move_command();
+  MoveGlobalVelocity * global_velocity_command =
+    robot_move_command->mutable_global_velocity();
+  global_velocity_command->set_x(ros_msg.twist.linear.x);
+  global_velocity_command->set_y(ros_msg.twist.linear.y);
+  global_velocity_command->set_angular(ros_msg.twist.angular.z);
 }
 
-ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegment & proto_msg)
+RobotControl fromMsg(const ateam_msgs::msg::RobotCommands & ros_msg)
 {
-  ssl_league_msgs::msg::VisionFieldLineSegment ros_msg;
-  ros_msg.name = proto_msg.name();
-  ros_msg.p1.x = proto_msg.p1().x();
-  ros_msg.p1.y = proto_msg.p1().y();
-  ros_msg.p2.x = proto_msg.p2().x();
-  ros_msg.p2.y = proto_msg.p2().y();
-  ros_msg.thickness = proto_msg.thickness();
+  RobotControl robots_control;
 
-  return ros_msg;
-}
-ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCicularArc & proto_msg)
-{
-  ssl_league_msgs::msg::VisionFieldCircularArc ros_msg;
-  ros_msg.name = proto_msg.name();
-  ros_msg.center.x = proto_msg.center().x();
-  ros_msg.center.y = proto_msg.center().y();
-  ros_msg.radius = proto_msg.radius();
-  ros_msg.a1 = proto_msg.a1();
-  ros_msg.a2 = proto_msg.a2();
-  ros_msg.thickness = proto_msg.thickness();
+  for (const auto & ros_robot_command : ros_msg.commands) {
+    RobotCommand * proto_robot_command = robots_control.add_robot_commands();
+    fromMsg(ros_robot_command, proto_robot_command);
+  }
 
-  return ros_msg;
-}
-ssl_league_msgs::msg::VisionGeometryFieldSize fromProto(const SSL_GeometryFieldSize & proto_msg)
-{
-  ssl_league_msgs::msg::VisionGeometryFieldSize ros_msg;
-  ros_msg.field_length = proto_msg.field_length();
-  ros_msg.field_width = proto_msg.field_width();
-  ros_msg.goal_width = proto_msg.goal_width();
-  ros_msg.goal_depth = proto_msg.goal_depth();
-  ros_msg.boundary_width = proto_msg.boundary_width();
-  std::transform(
-    proto_msg.field_lines().begin(),
-    proto_msg.field_lines().end(),
-    std::back_inserter(ros_msg.field_lines),
-    [](const auto & p) {return fromProto(p);});
-  std::transform(
-    proto_msg.field_arcs().begin(),
-    proto_msg.field_arcs().end(),
-    std::back_inserter(ros_msg.field_arcs),
-    [](const auto & p) {return fromProto(p);});
-
-  return ros_msg;
-}
-ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(
-  const SSL_GeometryCameraCalibration & proto_msg)
-{
-  ssl_league_msgs::msg::VisionGeometryCameraCalibration ros_msg;
-  ros_msg.camera_id = proto_msg.camera_id();
-  ros_msg.focal_length = proto_msg.focal_length();
-  ros_msg.principal_point.x = proto_msg.principal_point_x();
-  ros_msg.principal_point.y = proto_msg.principal_point_y();
-  ros_msg.distortion = proto_msg.distortion();
-  ros_msg.pose.orientation.x = proto_msg.q0();
-  ros_msg.pose.orientation.y = proto_msg.q1();
-  ros_msg.pose.orientation.z = proto_msg.q2();
-  ros_msg.pose.orientation.w = proto_msg.q3();
-  ros_msg.pose.position.x = proto_msg.tx();
-  ros_msg.pose.position.y = proto_msg.ty();
-  ros_msg.pose.position.z = proto_msg.tz();
-  ros_msg.derived_camera_world_t.x = proto_msg.derived_camera_world_tx();
-  ros_msg.derived_camera_world_t.y = proto_msg.derived_camera_world_ty();
-  ros_msg.derived_camera_world_t.z = proto_msg.derived_camera_world_tz();
-
-  return ros_msg;
-}
-ssl_league_msgs::msg::VisionGeometryData fromProto(const SSL_GeometryData & proto_msg)
-{
-  ssl_league_msgs::msg::VisionGeometryData ros_msg;
-  ros_msg.field = fromProto(proto_msg.field());
-  std::transform(
-    proto_msg.calib().begin(),
-    proto_msg.calib().end(),
-    std::back_inserter(ros_msg.calibration),
-    [](const auto & p) {return fromProto(p);});
-
-  return ros_msg;
-}
-
-ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket & proto_msg)
-{
-  ssl_league_msgs::msg::VisionWrapper ros_msg;
-  ros_msg.detection = fromProto(proto_msg.detection());
-  ros_msg.geometry = fromProto(proto_msg.geometry());
-
-  return ros_msg;
+  return robots_control;
 }
 
 }  // namespace ateam_ssl_simulation_radio_bridge::message_conversions
