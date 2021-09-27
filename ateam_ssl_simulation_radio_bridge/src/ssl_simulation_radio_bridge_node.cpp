@@ -42,7 +42,8 @@ public:
   {
     for (int robot_id = 0; robot_id < 16; robot_id++) {
       // Copy of a callback for each robot_id
-      auto callback = [&, robot_id](const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg) {
+      auto callback =
+        [&, robot_id](const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg) {
           RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);
 
           std::cout << robot_id << std::endl;
@@ -63,7 +64,8 @@ public:
 
 private:
   ateam_common::UDPSender udp_sender_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr, 16> subscriptions_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
+    16> subscriptions_;
 };
 
 }  // namespace ateam_ssl_simulation_radio_bridge
