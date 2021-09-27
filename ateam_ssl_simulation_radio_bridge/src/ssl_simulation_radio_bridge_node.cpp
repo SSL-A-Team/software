@@ -22,9 +22,10 @@
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <ateam_common/udp_sender.hpp>
-#include <ateam_msgs/msg/robot_commands.hpp>
+#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
 
+#include <array>
 #include <string>
 
 #include "message_conversions.hpp"
@@ -39,25 +40,30 @@ public:
   : rclcpp::Node("ateam_ssl_simulation_radio_bridge", options),
     udp_sender_("127.0.0.1", 10301)
   {
-    auto callback = [&](const ateam_msgs::msg::RobotCommands::SharedPtr robot_commands_msg) {
-        RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg);
+    for (int robot_id = 0; robot_id < 16; robot_id++) {
+      // Copy of a callback for each robot_id
+      auto callback = [&, robot_id](const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg) {
+          RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);
 
-        std::string protobuf_msg;
-        if (robots_control.SerializeToString(&protobuf_msg)) {
-          udp_sender_.send(protobuf_msg.data(), protobuf_msg.size());
-        }
-      };
+          std::cout << robot_id << std::endl;
 
-    subscription_ =
-      create_subscription<ateam_msgs::msg::RobotCommands>(
-      "~/robot_commands",
-      10,
-      callback);
+          std::string protobuf_msg;
+          if (robots_control.SerializeToString(&protobuf_msg)) {
+            udp_sender_.send(protobuf_msg.data(), protobuf_msg.size());
+          }
+        };
+
+      subscriptions_.at(robot_id) =
+        create_subscription<ateam_msgs::msg::RobotMotionCommand>(
+        "~/robot_motion_commands/robot" + std::to_string(robot_id),
+        10,
+        callback);
+    }
   }
 
 private:
   ateam_common::UDPSender udp_sender_;
-  rclcpp::Subscription<ateam_msgs::msg::RobotCommands>::SharedPtr subscription_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr, 16> subscriptions_;
 };
 
 }  // namespace ateam_ssl_simulation_radio_bridge
