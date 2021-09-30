@@ -1,0 +1,3 @@
+<launch>
+	<node name="rosbridge" pkg="rosbridge_server" exec="rosbridge_websocket.py" namespace="ui_test" />
+</launch>
