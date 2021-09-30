@@ -11,11 +11,14 @@
   "author": "Matthew Woodward <mwoodward@gatech.edu>",
   "license": "TODO: License declaration",
   "dependencies": {
-    "vue": "3.1.2"
+    "vue": "^3.1.2",
+    "vuetify": "^3.0.0-alpha.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "1.2.3",
+    "@vitejs/plugin-vue": "^1.2.4",
     "@vue/compiler-sfc": "3.1.2",
-    "vite": "2.3.8"
+    "@vuetify/vite-plugin":"^1.0.0-alpha.4",
+    "vue-cli-plugin-vuetify":"~2.4.2",
+    "vite": "^2.3.8"
   }
 }
