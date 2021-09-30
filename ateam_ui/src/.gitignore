@@ -1,0 +1,15 @@
+# vite
+node_modules
+.DS_Store
+dist-ssr
+*.local
+
+# neutralino
+resources
+.storage
+*.log
+/bin
+/dist
+
+# npm (I plan to try to use yarn only)
+package-lock.json
