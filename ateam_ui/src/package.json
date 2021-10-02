@@ -12,13 +12,14 @@
   "license": "TODO: License declaration",
   "dependencies": {
     "vue": "^3.1.2",
-    "vuetify": "^3.0.0-alpha.0"
+    "vuetify": "^3.0.0-alpha.11",
+    "vue3-konva": "^2.1.7",
+    "konva": "^8.2.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^1.2.4",
-    "@vue/compiler-sfc": "3.1.2",
+    "@vitejs/plugin-vue": "^1.6.0",
+    "@vue/compiler-sfc": "^3.2.7",
     "@vuetify/vite-plugin":"^1.0.0-alpha.4",
-    "vue-cli-plugin-vuetify":"~2.4.2",
-    "vite": "^2.3.8"
+    "vite": "^2.5.3"
   }
 }

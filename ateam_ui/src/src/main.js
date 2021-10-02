@@ -1,11 +1,14 @@
-import 'vuetify/styles'
-import { createApp } from 'vue'
-import { createVuetify } from 'vuetify'
-import colors from 'vuetify/lib/util/colors'
-import App from './App.vue'
+import { createApp } from 'vue';
+import vuetify from './plugins/vuetify';
+import VueKonva from 'vue3-konva';
+import App from './App.vue';
 
+const app = createApp(App);
 
-const vuetify = createVuetify({theme: {defaultTheme: 'dark'}});
-const app = createApp(App).use(vuetify).mount('#app');
+app.use(vuetify);
+app.use(VueKonva);
 
-console.log(Object.getOwnPropertyNames(vuetify))
+const vm = app.mount('#app');
+console.log("app mounted");
+
+vm.state.robots[0].y=200;

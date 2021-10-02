@@ -6,22 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ateam UI</title>
   </head>
+
   <body>
-
       <div id="app"></div>
-      <v-app theme="dark">
-          <vcard theme="dark" >
-              <v-btn>toggle theme</v-btn>
-          </vcard>
-        </v-app>
-
-    <script type="module" src="/src/main.js"></script>
-
-    <script src="/neutralino.js"></script>
-    <script>
-       Neutralino.init();
-       Neutralino.events.on("windowClose", function(){Neutralino.app.exit()});
-    </script>
-
   </body>
+
+
+  <script type="module" src="/src/main.js"></script>
+  <script src="/neutralino.js"></script>
+  <script>
+      Neutralino.init();
+      Neutralino.events.on("windowClose", function(){Neutralino.app.exit()});
+  </script>
 </html>
