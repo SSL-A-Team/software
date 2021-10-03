@@ -5,8 +5,8 @@
   "scripts": {
     "configure": "test -d ./bin || neu update",
     "dev": "vite",
-    "devrun": "yarn configure; vite build && neu run",
-    "build": "yarn configure; (vite build && neu build --release) && (test -x ./bin/neutralino-linux_x64 || (echo Fixing Permission Issue; chmod +x ./dist/Ateam_UI/* && echo Success))"
+    "devrun": "(yarn configure || true) && vite build && neu run",
+    "build": "(yarn configure || true) && (vite build && neu build --release) && (test -x ./bin/neutralino-linux_x64 || (echo Fixing Permission Issue; chmod +x ./dist/Ateam_UI/* && echo Success))"
   },
   "author": "Matthew Woodward <mwoodward@gatech.edu>",
   "license": "TODO: License declaration",
