@@ -1,5 +1,60 @@
 <template>
-    <v-stage ref="stage" :config="configKonva" @dragstart="handleDragStart" @dragend="handleDragEnd">
+    <v-stage ref="stage" :config="{
+                         width: state.fieldDimensions.width*renderConfig.scale,
+                         height: state.fieldDimensions.length*renderConfig.scale,
+                         }">
+
+        <v-layer ref="field"
+                 @dragstart="handleDragStart" @dragmove="handleDrag"
+                 @mousedown="handleDown" @mousemove="handleMouse" @mouseup="handleUp"
+                 :config="{scaleX: .4, scaleY: .4}">
+
+            <v-rect ref="background" :config="{
+                                    x:0,
+                                    y:0,
+                                    width: state.fieldDimensions.width*renderConfig.scale,
+                                    height: state.fieldDimensions.length*renderConfig.scale,
+                                    fill:'green'
+                                     }"/>
+
+            <div ref="fieldMarkings">
+                <!-- <v-rect ref="fieldLines" config:{
+
+                     }>
+                     </v-rect> -->
+            </div>
+
+            <div v-for="(team, i) in state.teams">
+                <v-shape v-for="robot in team.robots" :ref="el => {robotShapes[team.color].push(el)}"
+                        :config="{
+                        renderScale: renderConfig.scale,
+                        sceneFunc: robotShape,
+                        r_id: robot.id,
+                        ref: robot.team+'_robot'+robot.id,
+                        team: robot.team,
+                        x: robot.x,
+                        y: robot.y,
+                        visible: robot.visible,
+                        fill: robot.team,
+                        draggable: this.state.sim,
+                        stroke: 'black',
+                        strokeWidth: 2
+                        }">
+                </v-shape>
+                <v-circle ref="ball" :config="{
+                                     x: state.ball.x,
+                                     y: state.ball.y,
+                                     visible: state.ball.visible,
+                                     radius: .022 * renderConfig.scale,
+                                     fill: 'orange'
+                                     }">
+
+                </v-circle>
+            </div>
+        </v-layer>
+        <v-layer ref="overlay">
+            <!-- Need to set up a v-for loop in this with a dynamic way of handling overlays -->>
+        </v-layer>
     </v-stage>
 </template>
 
@@ -8,48 +63,29 @@
 import { ref, defineComponent, inject, provide, reactive, watchEffect } from 'vue';
 
 export default {
-    inject: ['state'],
+    inject: ['state', 'renderConfig'],
+    // setup() {
+    //     const teams = ref([]);
+    //     return {teams};
+    // },
     data() {
         return {
+            stage: null,
+            overlay: null,
             field: null,
-            overLayer: null,
-            robotLayer: null,
-            robots: [],
-            configKonva: {
-                width: 560,
-                height: 360
-            }
-        }
-    },
-    mounted() {
-        this.stage = this.$refs["stage"].getStage();
-        this.overlay = new Konva.Layer();
-        this.field = new Konva.Layer();
-
-        this.stage.add(this.overlay);
-        this.stage.add(this.field);
-
-        const background = new Konva.Rect({
-            x:0,
-            y:0,
-            width: this.field.width(),
-            height: this.field.height(),
-            fill: "green"
-        })
-        this.field.add(background);
-
-
-        // robot shapes not reacting to changes in state
-        // Outline on text is missing in neutralino
-
-        // for (var robot of this.state.robots) {
-        for (var i = 0; i < 32; i++) {
-            const robot = this.state.robots[i];
-            const bot = new Konva.Shape({
-                sceneFunc: function(ctx) {
-
-                    const scale = 30; //pixels per meter
-                    const radius = .9;
+            movingBall: false,
+            robotShapes: ref({
+                blue: [],
+                yellow: []
+            }),
+            configBackground: {
+                x: 0,
+                y: 0,
+                fill: "green"
+            },
+            robotShape: function(ctx) {
+                    const scale = this.attrs.renderScale; //pixels per meter
+                    const radius = .09;
                     const sr = scale*radius;
 
                     const start = (-50/180)*Math.PI;
@@ -60,109 +96,60 @@ export default {
                     ctx.closePath();
                     ctx.fillStrokeShape(this);
 
-
                     ctx.strokeStyle = "black"; //this will need to support styles later
                     ctx.fillStyle = "white";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle"
                     ctx.font = "30px sans-serif";
-                    ctx.strokeText(this.getAttr('r_id'), -sr, -sr + 4);
+                    ctx.strokeText(this.getAttr('r_id'), -sr, -sr + 4); // this doesn't work on linux neutralino, not sure why
                     ctx.fillText(this.getAttr('r_id'), -sr, -sr + 4);
-                },
-                r_id: robot.id,
-                team: robot.team,
-                x: robot.x,
-                y: this.state.robots[i].y,
-                fill: robot.team,
-                draggable: this.state.sim,
-                stroke: 'black',
-                strokeWidth: 2
-
-            });
-            this.robots.push(bot);
-            this.field.add(bot);
-
+            }
         }
-        watchEffect(()=>console.log(this.state.robots[0].y))
-
-        this.stage.on('click', function(e){
-            var pos = this.getRelativePointerPosition();
-            this.children[1].add(new Konva.Rect({
-                x: pos.x,
-                y: pos.y,
-                width: 20,
-                height: 20,
-                fill: "red"
-            }))
-        })
-
+    },
+    mounted() {
+        this.stage = this.$refs["stage"].getStage();
+        this.field = this.$refs["field"].getNode();
+        this.overlay = this.$refs["overlay"].getNode();
+    },
+    onBeforeUpdate() {
+        this.teams.value = [];
     },
     methods: {
         handleDragStart: function(e) {
             e.target.moveToTop();
-            console.log(this.state.robots[0]);
         },
-        handleDragEnd: function(e) {
-            console.log("drag end");
+        handleDrag: function(e) {
+            const robot = this.state.teams[e.target.attrs.team].robots[e.target.attrs.r_id];
+            const shape = this.robotShapes[robot.team][robot.id].getNode();
+            robot.x = shape.attrs.x;
+            robot.y = shape.attrs.y;
+
+            //Send command to ros
+        },
+        handleDown: function(e) {
+            if (this.state.sim &&
+                (e.target === this.$refs.background.getNode() ||
+                e.target === this.$refs.ball.getNode())) {
+                this.movingBall = true;
+                this.$refs.ball.getNode().moveToTop();
+                this.state.ball.x = e.evt.layerX;
+                this.state.ball.y = e.evt.layerY;
+
+                //Send command to ros
+            }
+        },
+        handleMouse: function(e) {
+            if (this.movingBall) {
+                this.state.ball.x = e.evt.layerX;
+                this.state.ball.y = e.evt.layerY;
+
+                //Send command to ros
+            }
+
+        },
+        handleUp: function(e) {
+            this.movingBall = false;
         }
-    },
-    render(){
-        console.log("Field Render");
     }
 }
-
-
-
-// export default {
-//     inject: ['state', 'field'],
-//     data() {
-//         return{ templates: {} }
-//     },
-//     mounted(){
-//         console.log("mounted field")
-//         this.templates = this.generateTemplates(["yellow", "blue"]);
-//     },
-//     render(){
-//         console.log("rendering field");
-//         if (!this.field.ctx) return;
-//         const ctx = this.field.ctx;
-//
-//         ctx.clearRect(0,0,800,800);
-//
-//         for (var robot of this.state.robots) {
-//             this.drawRobot(robot);
-//         }
-//
-//         // ctx.drawImage(this.templates.yellow, 200, 200);
-//         // ctx.drawImage(this.templates.blue, 200, 150);
-//     },
-//     methods: {
-//         generateTemplates: function(colors) {
-//             var templates = {}
-//             for (var color of colors) {
-//                 var c = document.createElement('canvas');
-//                 c.width = 20;
-//                 c.height = 20;
-//
-//                 var tc = c.getContext('2d');
-//                 tc.fillStyle = color; //this will need to support styles later
-//                 tc.fillRect(0,0,20,20);
-//
-//                 templates[color] = c;
-//             }
-//             return templates;
-//         },
-//         drawRobot: function(robot) {
-//             this.field.ctx.drawImage(this.templates[robot.team], robot.x - 10, robot.y - 10);
-//             this.field.ctx.strokeStyle = "black"; //this will need to support styles later
-//             this.field.ctx.fillStyle = "white";
-//             this.field.ctx.textAlign = "center";
-//             this.field.ctx.textBaseline = "middle"
-//             this.field.ctx.strokeText(robot.id, robot.x, robot.y);
-//             this.field.ctx.fillText(robot.id, robot.x, robot.y);
-//
-//
-//         }
-//     }
-// }
 </script>
