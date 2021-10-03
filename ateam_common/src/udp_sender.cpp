@@ -23,14 +23,15 @@
 #include <boost/bind.hpp>
 
 #include <algorithm>
+#include <iostream>
 #include <string>
 
 namespace ateam_common
 {
 
 UDPSender::UDPSender(
-  std::string udp_address_string,
-  int16_t udp_port)
+  const std::string & udp_address_string,
+  const int16_t udp_port)
 : udp_socket_(io_service_),
   receiver_endpoint_(
     boost::asio::ip::make_address(udp_address_string),
@@ -52,10 +53,11 @@ UDPSender::~UDPSender()
   }
 }
 
-void UDPSender::send(char * data, size_t length)
+void UDPSender::send(const char * const data, const size_t length)
 {
   if (length >= buffer_.size()) {
     // RCLCPP_ERROR(get_logger(), "UDP send data length is larger than buffer");
+    std::cout << "WARNING: UDP send data length is larger than buffer" << std::endl;
 
     return;
   }
@@ -79,6 +81,7 @@ void UDPSender::HandleUDPSendTo(
 {
   if (error) {
     // RCLCPP_ERROR(get_logger(), "Error during udp send");
+    std::cout << "WARNING: Error during udp send" << std::endl;
   }
 }
 

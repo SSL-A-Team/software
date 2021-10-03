@@ -27,6 +27,7 @@
 
 #include <array>
 #include <string>
+#include <functional>
 
 #include "message_conversions.hpp"
 
@@ -41,24 +42,32 @@ public:
     udp_sender_("127.0.0.1", 10301)
   {
     for (int robot_id = 0; robot_id < 16; robot_id++) {
-      // Copy of a callback for each robot_id
-      auto callback =
-        [&, robot_id](const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg) {
-          RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);
-
-          std::cout << robot_id << std::endl;
-
-          std::string protobuf_msg;
-          if (robots_control.SerializeToString(&protobuf_msg)) {
-            udp_sender_.send(protobuf_msg.data(), protobuf_msg.size());
-          }
-        };
+      // Full type is required
+      // https://answers.ros.org/question/289207/function-callback-using-stdbind-in-ros-2-subscription/
+      std::function<void(const ateam_msgs::msg::RobotMotionCommand::SharedPtr)> callback =
+        std::bind(
+        &SSLSimulationRadioBridgeNode::message_callback,
+        this,
+        std::placeholders::_1,
+        robot_id);
 
       subscriptions_.at(robot_id) =
         create_subscription<ateam_msgs::msg::RobotMotionCommand>(
         "~/robot_motion_commands/robot" + std::to_string(robot_id),
         10,
         callback);
+    }
+  }
+
+  void message_callback(
+    const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg,
+    int robot_id)
+  {
+    RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);
+
+    std::string protobuf_msg;
+    if (robots_control.SerializeToString(&protobuf_msg)) {
+      udp_sender_.send(protobuf_msg.data(), protobuf_msg.size());
     }
   }
 

@@ -32,10 +32,10 @@ class UDPSender
 {
 public:
   UDPSender(
-    std::string udp_ip_address,
-    int16_t udp_port);
+    const std::string & udp_ip_address,
+    const int16_t udp_port);
 
-  void send(char * data, size_t length);
+  void send(const char * const data, const size_t length);
 
   ~UDPSender();
 
