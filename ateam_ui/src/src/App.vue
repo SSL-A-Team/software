@@ -12,7 +12,7 @@
 
 <script lang="js">
 import FieldComponent from './components/FieldComponent.vue'
-import { defineComponent, provide, reactive, ref, computed } from 'vue'
+import { provide } from 'vue'
 
 export default {
     data() {
@@ -25,18 +25,32 @@ export default {
                     blue: {
                         name: "",
                         color: "blue",
+                        defending: +1,
                         robots: []
                     },
                     yellow: {
                         name: "",
                         color:  "yellow",
-                        robots: []
+                        defending: -1,
+                        robots: [],
                     }
                 },
                 overlays: [],
                 fieldDimensions: {
-                    width: 2,
-                    length: 1
+                    length: 9,
+                    width: 6,
+                    border: .7,
+                    lineWidth: .01,
+                    goalWidth: 1,
+                    goalDepth: .18,
+                    goalHeight: .16,
+                    penaltyShort: 1,
+                    penaltyLong: 2,
+                    centerRadius: .5,
+                    centerDiameter: 1,
+                    goalFlat: .5,
+                    floorLength: 10.4,
+                    floorWidth: 7.4
                 }
             },
             renderConfig: {

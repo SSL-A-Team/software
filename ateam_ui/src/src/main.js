@@ -10,14 +10,15 @@ app.use(VueKonva);
 
 const vm = app.mount('#app');
 
-// Configer Default Ball Location
+// Configure Default Ball Location
 vm.state.ball = {
-    x: 560/2,
-    y: 360/2,
+    x: 0,
+    y: 0,
     visible: true
 }
 
 // Configure Default Robot Layout
+const numVisible = 16;
 var yoffset = 0;
 for (var team in vm.state.teams) {
     var xoffset = 0;
@@ -25,15 +26,11 @@ for (var team in vm.state.teams) {
         vm.state.teams[team].robots.push({
             id: i,
             team: team,
-            x: 60 + (70*(i+xoffset)),
-            y: 60 + (70*yoffset),
-            visible: (i<=6)
+            x: (70*(i+xoffset)) - (70*(numVisible-1)/2),
+            y: (120*yoffset) - 60,
+            rotation: team=="blue" ? 180 : 0,
+            visible: (i<=numVisible-1)
         })
-
-        if (i!=0 && ((i+1) % 8) == 0) {
-            xoffset-=8;
-            yoffset+=1;
-        }
     };
     yoffset += 1;
 }
@@ -45,22 +42,3 @@ vm.state.overlays.push({
     y: 0,
     fill: "red"
 });
-
-
-// Configure Field Dimensions
-vm.state.fieldDimensions = {
-    length: 9,
-    width: 6,
-    border: .7,
-    lineWidth: .01,
-    goalWidth: 1,
-    goalDepth: .18,
-    goalHeight: .16,
-    penaltyShort: 1,
-    penaltyLong: 2,
-    centerRadius: .5,
-    centerDiameter: 1,
-    goalFlat: .5,
-    floorLength: 10.4,
-    floorWidth: 7.4
-};
