@@ -109,46 +109,26 @@
                                      height: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
                                      }"/>
 
-            <!-- programatically generate each team of robots -->>
-            <div v-for="(team, i) in state.teams">
-
-                <!-- programatically generate each robot group (a robot shell and its label have to rotate seperately) -->>
-                <v-group v-for="robot in team.robots" :ref="el => {robotShapes[team.color].push(el)}"
-                            :config="{ x: robot.x, y:robot.y, draggable: this.state.sim}">
-
-                    <!-- robot shell -->>
-                    <v-shape :config="{
-                             renderScale: renderConfig.scale,
-                             sceneFunc: robotShape,
-                             r_id: robot.id,
-                             team: robot.team,
-                             x: 0,
-                             y: 0,
-                             offsetX: -.09*renderConfig.scale,
-                             offsetY: -.09*renderConfig.scale,
-                             rotation: robot.rotation,
-                             visible: robot.visible,
-                             fill: robot.team,
-                             stroke: 'black',
-                             strokeWidth: 2,
-                             cache: true
-                             }">
-                    </v-shape>
-
-                    <!-- text label -->>
-                    <v-shape :config="{
-                             r_id: robot.id,
-                             team: robot.team,
-                             sceneFunc: robotText,
-                             x: 0,
-                             y: 3,
-                             stroke: 'black',
-                             strokeWidth: 1,
-                             fill: 'white'
-                             }">
-                    </v-shape>
-                </v-group>
-            </div>
+            <!-- programatically generate each robot -->>
+            <v-shape v-for="robot in Object.entries(state.teams).map(i => {return i[1].robots}).flat()"
+                :config="{
+                renderScale: renderConfig.scale,
+                sceneFunc: robotShape,
+                r_id: robot.id,
+                team: robot.team,
+                x: robot.x,
+                y: robot.y,
+                offsetX: -.09*renderConfig.scale,
+                offsetY: -.09*renderConfig.scale,
+                rot: robot.rotation,
+                visible: robot.visible,
+                fill: robot.team,
+                stroke: 'black',
+                strokeWidth: 2,
+                draggable: this.state.sim,
+                cache: true
+                }">
+            </v-shape>
 
             <v-circle ref="ball" :config="{
                                  fieldWidth: (100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
@@ -187,29 +167,24 @@ export default {
             game: null,
             field: null,
             movingBall: false,
-            robotShapes: ref({
-                blue: [],
-                yellow: []
-            }),
             robotShape: function(ctx) {
-                    const scale = this.attrs.renderScale; //pixels per meter
-                    const radius = .09;
-                    const sr = scale*radius;
+                const scale = this.attrs.renderScale; //pixels per meter
+                const radius = .09;
+                const sr = scale*radius;
 
-                    const start = (-50/180)*Math.PI;
-                    const end =  (230/180)*Math.PI;
+                const start = ((this.attrs.rot-50)/180)*Math.PI;
+                const end =  ((this.attrs.rot+230)/180)*Math.PI;
 
-                    ctx.beginPath();
-                    ctx.arc(-sr, -sr, sr, start, end);
-                    ctx.closePath();
-                    ctx.fillStrokeShape(this);
-            },
-            robotText: function(ctx) {
+                ctx.beginPath();
+                ctx.arc(-sr, -sr, sr, start, end);
+                ctx.closePath();
+                ctx.fillStrokeShape(this);
+
                 ctx.fillStyle = this.attrs.team=="yellow" ? "black" : "white";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.font = "29px sans-serif";
-                ctx.fillText(this.attrs.r_id, 0, 0,);
+                ctx.fillText(this.attrs.r_id, -sr, -sr + 3);
             },
         }
     },
@@ -224,6 +199,8 @@ export default {
     },
     methods: {
         handleDragStart: function(e) {
+            // problem with getting the dragged element to be on top.
+            // updating the coordinates causes the entire list to redraw in id order which overwrites the new z layer
             e.target.moveToTop();
         },
         handleDrag: function(e) {
@@ -231,7 +208,7 @@ export default {
                 this.state.ball.x = e.target.x();
                 this.state.ball.y = e.target.y();
             } else {
-                const shape = e.target.children[0];
+                const shape = e.target;
                 const robot = this.state.teams[shape.attrs.team].robots[shape.attrs.r_id];
                 robot.x = e.target.x();
                 robot.y = e.target.y();
