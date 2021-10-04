@@ -12,10 +12,18 @@
 
 #include "kalman_filter.hpp"
 
+#include <Eigen/Core>
+
 #include <vector>
 
-class InteractingMultipleModel {
+class InteractingMultipleModelFilter {
 public:
+  explicit InteractingMultipleModelFilter(const std::vector<KalmanFilter>& models);
+
+  void predict();
+  void update(Eigen::VectorXd measurement);
+
+  Eigen::VectorXd get_state_estimate() const;
 
 private:
   std::vector<KalmanFilter> models;
