@@ -199,20 +199,19 @@ export default {
     },
     methods: {
         handleDragStart: function(e) {
-            // problem with getting the dragged element to be on top.
-            // updating the coordinates causes the entire list to redraw in id order which overwrites the new z layer
             e.target.moveToTop();
         },
         handleDrag: function(e) {
-            if (e.target === this.$refs.ball.getNode()) {
-                this.state.ball.x = e.target.x();
-                this.state.ball.y = e.target.y();
-            } else {
-                const shape = e.target;
-                const robot = this.state.teams[shape.attrs.team].robots[shape.attrs.r_id];
-                robot.x = e.target.x();
-                robot.y = e.target.y();
-            }
+            // Send ros messages only, updating state causes layering issues
+            // if (e.target === this.$refs.ball.getNode()) {
+            //     this.state.ball.x = e.target.x();
+            //     this.state.ball.y = e.target.y();
+            // } else {
+            //     const shape = e.target;
+            //     const robot = this.state.teams[shape.attrs.team].robots[shape.attrs.r_id];
+            //     robot.x = e.target.x();
+            //     robot.y = e.target.y();
+            // }
         },
         handleDragEnd: function(e) {
             if (e.target === this.$refs.ball.getNode()) {
