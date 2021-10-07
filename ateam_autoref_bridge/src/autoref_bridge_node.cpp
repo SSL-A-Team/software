@@ -33,26 +33,38 @@ class AutorefBridgeNode : public rclcpp::Node
 {
 public:
   explicit AutorefBridgeNode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("autoref_bridge", options),
-    multicast_receiver_("224.5.23.1",
-      10003,
-      [this](auto * buffer, size_t bytes_received) {
-        Referee referee_proto;
-        if (referee_proto.ParseFromArray(buffer, bytes_received)) {
-          referee_publisher_->publish(message_conversions::fromProto(referee_proto));
-        } else {
-          RCLCPP_WARN(get_logger(), "Failed to parse referee protobuf packet");
-        }
-      })
+  : rclcpp::Node("autoref_bridge", options)
   {
     referee_publisher_ = create_publisher<ssl_league_msgs::msg::Referee>(
       "~/referee_messages",
       rclcpp::SystemDefaultsQoS());
+
+    const auto multicast_address =
+      declare_parameter<std::string>("multicast.address", "224.5.23.1");
+    const auto multicast_port = declare_parameter<int>("multicast.port", 10003);
+    RCLCPP_INFO(
+      get_logger(), "Listening for multicast packets at %s:%ld",
+      multicast_address.c_str(), multicast_port);
+    multicast_receiver_ = std::make_unique<ateam_common::MulticastReceiver>(
+      multicast_address,
+      multicast_port, std::bind(
+        &AutorefBridgeNode::PublishMulticastMessage, this, std::placeholders::_1,
+        std::placeholders::_2));
   }
 
 private:
   rclcpp::Publisher<ssl_league_msgs::msg::Referee>::SharedPtr referee_publisher_;
-  ateam_common::MulticastReceiver multicast_receiver_;
+  std::unique_ptr<ateam_common::MulticastReceiver> multicast_receiver_;
+
+  void PublishMulticastMessage(const char * buffer, const size_t bytes_received)
+  {
+    Referee referee_proto;
+    if (referee_proto.ParseFromArray(buffer, bytes_received)) {
+      referee_publisher_->publish(message_conversions::fromProto(referee_proto));
+    } else {
+      RCLCPP_WARN(get_logger(), "Failed to parse referee protobuf packet");
+    }
+  }
 };
 
 }  // namespace ateam_autoref_bridge
