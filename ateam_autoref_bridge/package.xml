@@ -12,6 +12,7 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>ateam_common</depend>
+  <depend>ateam_msgs</depend>
   <depend>ssl_league_msgs</depend>
   <depend>ssl_league_protobufs</depend>
 
