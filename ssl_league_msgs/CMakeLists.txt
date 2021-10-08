@@ -8,10 +8,11 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  msg/game_controller/TeamInfo.msg
+  msg/game_controller/ControllerReply.msg
   msg/game_controller/GameEvent.msg
   msg/game_controller/GameEventProposalGroup.msg
   msg/game_controller/Referee.msg
+  msg/game_controller/TeamInfo.msg
 
   msg/game_controller/common/Team.msg
   msg/game_controller/common/RobotId.msg
