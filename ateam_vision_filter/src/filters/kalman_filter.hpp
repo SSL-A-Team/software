@@ -1,4 +1,4 @@
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 // Standard kalman filter
 
@@ -16,7 +16,7 @@ public:
   void update(const Eigen::VectorXd & z);
 
   Eigen::VectorXd get_x_hat() const;
-  double get_potential_measurement_error(const Eigen::VectorXd & z);
+  Eigen::VectorXd get_potential_measurement_error(const Eigen::VectorXd & z);
 
 private:
   Eigen::MatrixXd F;

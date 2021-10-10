@@ -49,7 +49,7 @@ Eigen::VectorXd KalmanFilter::get_x_hat() const {
   return x_hat;
 }
 
-double KalmanFilter::get_potential_measurement_error(const Eigen::VectorXd & z)
+Eigen::VectorXd KalmanFilter::get_potential_measurement_error(const Eigen::VectorXd & z)
 {
-  return (z - H * x_hat).norm();
+  return z - H * x_hat;
 }

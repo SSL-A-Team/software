@@ -11,20 +11,40 @@
 // Robot with constant accel
 
 #include "kalman_filter.hpp"
+#include "types/models.hpp"
 
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
+#include <map>
+#include <memory>
 #include <vector>
 
 class InteractingMultipleModelFilter {
 public:
-  explicit InteractingMultipleModelFilter(const std::vector<KalmanFilter>& models);
+  explicit InteractingMultipleModelFilter(
+    const KalmanFilter& base_model,
+    std::vector<Models::Ball::ModelType> model_types,
+    std::shared_ptr<ModelInputGenerator> model_input_generator,
+    std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator);
 
   void predict();
   void update(Eigen::VectorXd measurement);
 
   Eigen::VectorXd get_state_estimate() const;
 
+  double get_potential_measurement_error(const Eigen::VectorXd & measurement);
+
 private:
-  std::vector<KalmanFilter> models;
+  void update_mu();
+  double normal_distribution_pdf(double x, double mean, double sigma) const;
+
+  std::vector<Models::Ball::ModelType> model_types;
+  std::map<Models::Ball::ModelType, KalmanFilter> models;
+  std::map<Models::Ball::ModelType, double> mu;
+
+  unsigned int frames_since_last_update = 0;
+  unsigned int updates_until_valid_track = 10;
+
+  std::shared_ptr<ModelInputGenerator> model_input_generator;
+  std::shared_ptr<TransmissionProbabilityGenerator> transmisson_probability_generator;
 };

@@ -14,8 +14,23 @@ find_package(ssl_league_msgs REQUIRED)
 find_package(ssl_league_protobufs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
+  src/filters/interacting_multiple_model_filter.cpp
+  src/filters/interacting_multiple_model_filter.hpp
+  src/filters/kalman_filter.cpp
+  src/filters/kalman_filter.hpp
+  src/filters/multiple_hypothesis_tracker.hpp
+  src/generators/model_input_generator.cpp
+  src/generators/model_input_generator.hpp
+  src/generators/transmission_probability_generator.cpp
+  src/generators/transmission_probability_generator.hpp
+  src/types/ball_measurement.hpp
+  src/types/ball.hpp
+  src/types/models.hpp
+  src/types/robot_measurement.hpp
+  src/types/robot.hpp
+  src/camera.hpp
   src/ssl_vision_bridge_node.cpp
-  src/message_conversions.cpp
+  src/world.hpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
