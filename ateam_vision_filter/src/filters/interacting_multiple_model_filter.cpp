@@ -112,7 +112,7 @@ void InteractingMultipleModelFilter::update_mu(const Eigen::VectorXd & zt)
     for (const auto& other_model_type : model_types)
     {
       double probability_transition_from_other_model_to_model =
-        transmission_probability_generator->get_tranmission_probability(
+        transmission_probability_generator->get_transmission_probability(
           models.at(model_type).get_x_hat(),
           other_model_type,
           model_type);
