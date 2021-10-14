@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Eigen/Dense>
 
 struct Robot {
@@ -9,4 +11,4 @@ struct Robot {
 
     Eigen::Vector2d acceleration;
     double alpha;
-}
+};

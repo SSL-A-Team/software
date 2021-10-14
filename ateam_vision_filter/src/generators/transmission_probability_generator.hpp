@@ -3,9 +3,9 @@
 // last ball estimate position
 // Transmission of ball from slide to roll, etc
 
-#include "types/ball.hpp"
-#include "types/robot.hpp"
-#include "types/models.hpp"
+#include "../types/ball.hpp"
+#include "../types/robot.hpp"
+#include "../types/models.hpp"
 
 class TransmissionProbabilityGenerator {
 public:
@@ -14,7 +14,7 @@ public:
 
     double get_tranmission_probability(const Ball & possible_ball,
                                        Models::Ball::ModelType from_model,
-                                       Models::Ball::ModelType to_model) const;
+                                       Models::Ball::ModelType to_model) const {}
 
 private:
 };

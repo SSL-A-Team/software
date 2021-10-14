@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Eigen/Dense>
 
 namespace Models
@@ -14,10 +16,12 @@ enum ModelType {
   SLOW_KICK,
   MEDIUM_KICK,
   FAST_KICK,
-}
+};
+
+constexpr double dt = 1.0 / 100.0;
 
 // pos_x, pos_y, vel_x, vel_y, accel_x, accel_y
-constexpr Eigen::MatrixXd F =
+const Eigen::MatrixXd F =
   (Eigen::MatrixXd(6, 6) <<
      1, 0, dt,  0, 0,   0,
      0, 1,  0, dt, 0,   0,
@@ -30,7 +34,7 @@ constexpr Eigen::MatrixXd F =
 // Constant "Position" commands are constant velocity of model
 // Constant "Velocity" commands are constant acceleration of model
 // Constant "Acceleration" commands are constant jerk of model
-constexpr Eigen::MatrixXd B =
+const Eigen::MatrixXd B =
   (Eigen::MatrixXd(6, 6) <<
      dt,  0,  0,  0,  0,  0,
       0, dt,  0,  0,  0,  0,
@@ -40,7 +44,7 @@ constexpr Eigen::MatrixXd B =
       0,  0,  0,  0,  0, dt).finished();
 
 // Only measure position
-constexpr Eigen::MatrixXd H =
+const Eigen::MatrixXd H =
   (Eigen::MatrixXd(2, 6) <<
     1, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0).finished();

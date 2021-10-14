@@ -5,18 +5,22 @@
 
 InteractingMultipleModelFilter::InteractingMultipleModelFilter(
   const KalmanFilter& base_model,
+  std::vector<Models::Ball::ModelType> model_types,
   std::shared_ptr<ModelInputGenerator> model_input_generator,
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator)
-  : model_input_generator(model_input_generator), transmission_probability_generator(transmission_probability_generator)
+  : model_types(model_types), model_input_generator(model_input_generator), transmission_probability_generator(transmission_probability_generator)
 {
-  std::fill(models.begin(), models.end(), base_model);
+  for (const auto& model_type : model_types)
+  {
+    models[model_type] = base_model;
+  }
 }
 
 void InteractingMultipleModelFilter::predict()
 {
   for (auto& model_pair : models)
   {
-    model.second.predict();
+    model_pair.second.predict(model_input_generator->get_model_input(Ball(), model_pair.first));
   }
 
   ++frames_since_last_update;
@@ -26,7 +30,7 @@ void InteractingMultipleModelFilter::update(Eigen::VectorXd measurement)
 {
   for (auto& model_pair : models)
   {
-    model.second.update(measurement);
+    model_pair.second.update(measurement);
   }
 
   frames_since_last_update = 0;
@@ -56,13 +60,13 @@ double InteractingMultipleModelFilter::get_potential_measurement_error(const Eig
 
   for (const auto& model_type : model_types)
   {
-    potential_measurement_error += mu.at(model_type) * model.at(model_type).get_potential_measurement_error(measurement);
+    potential_measurement_error += mu.at(model_type) * models.at(model_type).get_potential_measurement_error(measurement);
   }
 
   return potential_measurement_error.norm();
 }
 
-Eigen::VectorXd InteractingMultipleModelFilter::get_state_estimate()
+Eigen::VectorXd InteractingMultipleModelFilter::get_state_estimate() const
 {
   // Requires update_mu to have been called for this frame
 
@@ -92,7 +96,6 @@ void InteractingMultipleModelFilter::update_mu()
 
   double normalization_factor = 0.0;
   std::map<Models::Ball::ModelType, double> current_time_step_mu;
-  current_time_step_mu.reserve(mu.size());
 
   // Use standard gaussian mixture
   for (const auto& model_type : model_types)
@@ -100,11 +103,12 @@ void InteractingMultipleModelFilter::update_mu()
     double probability_of_model = 0;
     for (const auto& other_model_type : model_types)
     {
-      double probability_transition_to_model = get_tranmission_probability(other_model_type, model_type);
-      probability_of_model += probability_transition_to_model * mu.at(j);
+      double probability_transition_to_model =
+        transmission_probability_generator->get_tranmission_probability(Ball(), other_model_type, model_type);
+      probability_of_model += probability_transition_to_model * mu.at(other_model_type);
     }
 
-    current_time_step_mu[model_type] = normal_distribution_pdf(zt, H*x, H * P * H.transpose() + R) * probability_of_model;
+    current_time_step_mu[model_type] = 0;// normal_distribution_pdf(zt, H*x, H * P * H.transpose() + R) * probability_of_model;
     normalization_factor += current_time_step_mu.at(model_type);
   }
 
@@ -113,7 +117,7 @@ void InteractingMultipleModelFilter::update_mu()
   }
 }
 
-double InteractingMultipleModelFilter::normal_distribution_pdf(double x, double mean, double sigma)
+double InteractingMultipleModelFilter::normal_distribution_pdf(double x, double mean, double sigma) const
 {
   return 1 / (sigma * sqrt(2.0 * M_PI)) * std::exp(-1.0 / 2.0 * std::pow((x - mean) / sigma, 2));
 }

@@ -2,9 +2,9 @@
 // output the most likely kick direction
 // as well as the most likely bounce direction
 
-#include "types/ball.hpp"
-#include "types/robot.hpp"
-#include "types/models.hpp"
+#include "../types/ball.hpp"
+#include "../types/robot.hpp"
+#include "../types/models.hpp"
 
 class ModelInputGenerator {
 public:
@@ -12,6 +12,6 @@ public:
                 const std::array<Robot, 16> & yellow_robots);
 
     Eigen::VectorXd get_model_input(const Ball & possible_ball,
-                                    Models::Ball::ModelType model_type) const;
+                                    Models::Ball::ModelType model_type) const {}
 private:
 };

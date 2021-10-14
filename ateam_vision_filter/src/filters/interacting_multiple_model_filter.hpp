@@ -11,7 +11,9 @@
 // Robot with constant accel
 
 #include "kalman_filter.hpp"
-#include "types/models.hpp"
+#include "../types/models.hpp"
+#include "../generators/model_input_generator.hpp"
+#include "../generators/transmission_probability_generator.hpp"
 
 #include <Eigen/Dense>
 
@@ -46,5 +48,5 @@ private:
   unsigned int updates_until_valid_track = 10;
 
   std::shared_ptr<ModelInputGenerator> model_input_generator;
-  std::shared_ptr<TransmissionProbabilityGenerator> transmisson_probability_generator;
+  std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;
 };

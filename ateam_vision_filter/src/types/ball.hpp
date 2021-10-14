@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Eigen/Dense>
 
 struct Ball {
@@ -6,4 +8,4 @@ struct Ball {
     Eigen::Vector2d velocity;
 
     Eigen::Vector2d acceleration;
-}
+};
