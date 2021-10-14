@@ -8,7 +8,7 @@ namespace Models
 enum ModelType {
   BALL_ROLLING_FRICTION, // Standard ball rolling over the ground
   BALL_SLIDING_FRICTION, // Ball with backspin after kick where it's sliding instead of rolling
-  BALL_BOUNCE_ON_ROBOT,           // Ball doing a perfectly inelastic collision
+  BALL_BOUNCE_ON_ROBOT, // Ball doing a perfectly inelastic collision
   BALL_STOP_ON_DRIBBLER,
   BALL_SLOW_KICK, // 2 m/s
   BALL_MEDIUM_KICK, // 4 m/s
