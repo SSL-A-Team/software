@@ -13,6 +13,6 @@ public:
                 const std::array<Robot, 16> & yellow_robots);
 
     Eigen::VectorXd get_model_input(const Eigen::VectorXd & possible_ball,
-                                    Models::Ball::ModelType model_type) const {}
+                                    Models::ModelType model_type) const {}
 private:
 };

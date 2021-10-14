@@ -25,7 +25,7 @@ class InteractingMultipleModelFilter {
 public:
   explicit InteractingMultipleModelFilter(
     const KalmanFilter& base_model,
-    std::vector<Models::Ball::ModelType> model_types,
+    std::vector<Models::ModelType> model_types,
     std::shared_ptr<ModelInputGenerator> model_input_generator,
     std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator);
 
@@ -50,9 +50,9 @@ private:
    */
   static double normal_multivariate_distribution_pdf(Eigen::VectorXd x, Eigen::VectorXd mu, Eigen::MatrixXd sigma);
 
-  std::vector<Models::Ball::ModelType> model_types; // List of models 
-  std::map<Models::Ball::ModelType, KalmanFilter> models; // Kalman filter representing ModelType
-  std::map<Models::Ball::ModelType, double> mu; // ~= Probability of being in model ModelType
+  std::vector<Models::ModelType> model_types; // List of models 
+  std::map<Models::ModelType, KalmanFilter> models; // Kalman filter representing ModelType
+  std::map<Models::ModelType, double> mu; // ~= Probability of being in model ModelType
 
   unsigned int frames_since_last_update = 0;
   unsigned int updates_until_valid_track = 10;

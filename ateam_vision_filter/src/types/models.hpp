@@ -5,18 +5,22 @@
 namespace Models
 {
 
+enum ModelType {
+  BALL_ROLLING_FRICTION, // Standard ball rolling over the ground
+  BALL_SLIDING_FRICTION, // Ball with backspin after kick where it's sliding instead of rolling
+  BALL_BOUNCE_ON_ROBOT,           // Ball doing a perfectly inelastic collision
+  BALL_STOP_ON_DRIBBLER,
+  BALL_SLOW_KICK, // 2 m/s
+  BALL_MEDIUM_KICK, // 4 m/s
+  BALL_FAST_KICK, // 6 m/s
+
+  ROBOT_NO_ACCEL,
+  ROBOT_ACCEL_TOWARDS_BALL, // Move towards the ball
+  ROBOT_ACCEL_AWAY_FROM_BALL // Slow down while moving towards ball
+};
+
 namespace Ball
 {
-
-enum ModelType {
-  ROLLING_FRICTION, // Standard ball rolling over the ground
-  SLIDING_FRICTION, // Ball with backspin after kick where it's sliding instead of rolling
-  BOUNCE,           // Ball doing a perfectly inelastic collision
-  STOP,
-  SLOW_KICK,
-  MEDIUM_KICK,
-  FAST_KICK,
-};
 
 constexpr double dt = 1.0 / 100.0;
 

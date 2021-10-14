@@ -14,8 +14,8 @@ public:
                 const std::array<Robot, 16> & yellow_robots);
 
     double get_tranmission_probability(const Eigen::VectorXd & possible_ball,
-                                       Models::Ball::ModelType from_model,
-                                       Models::Ball::ModelType to_model) const {}
+                                       Models::ModelType from_model,
+                                       Models::ModelType to_model) const {}
 
 private:
 };

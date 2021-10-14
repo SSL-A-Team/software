@@ -5,7 +5,7 @@
 
 InteractingMultipleModelFilter::InteractingMultipleModelFilter(
   const KalmanFilter& base_model,
-  std::vector<Models::Ball::ModelType> model_types,
+  std::vector<Models::ModelType> model_types,
   std::shared_ptr<ModelInputGenerator> model_input_generator,
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator)
   : model_types(model_types), model_input_generator(model_input_generator),
@@ -101,7 +101,7 @@ void InteractingMultipleModelFilter::update_mu(const Eigen::VectorXd & zt)
   // to produce the overall estimate
 
   double normalization_factor = 0.0;
-  std::map<Models::Ball::ModelType, double> current_time_step_mu;
+  std::map<Models::ModelType, double> current_time_step_mu;
 
   for (const auto& model_type : model_types)
   {
