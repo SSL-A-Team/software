@@ -10,10 +10,10 @@
 
 // Robot with constant accel
 
-#include "kalman_filter.hpp"
-#include "../types/models.hpp"
-#include "../generators/model_input_generator.hpp"
-#include "../generators/transmission_probability_generator.hpp"
+#include "filters/kalman_filter.hpp"
+#include "types/models.hpp"
+#include "generators/model_input_generator.hpp"
+#include "generators/transmission_probability_generator.hpp"
 
 #include <Eigen/Dense>
 

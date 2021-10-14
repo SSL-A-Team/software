@@ -2,9 +2,9 @@
 // output the most likely kick direction
 // as well as the most likely bounce direction
 
-#include "../types/ball.hpp"
-#include "../types/robot.hpp"
-#include "../types/models.hpp"
+#include "types/ball.hpp"
+#include "types/robot.hpp"
+#include "types/models.hpp"
 
 class ModelInputGenerator {
 public:

@@ -3,9 +3,9 @@
 // last ball estimate position
 // Transmission of ball from slide to roll, etc
 
-#include "../types/ball.hpp"
-#include "../types/robot.hpp"
-#include "../types/models.hpp"
+#include "types/ball.hpp"
+#include "types/robot.hpp"
+#include "types/models.hpp"
 
 class TransmissionProbabilityGenerator {
 public:
