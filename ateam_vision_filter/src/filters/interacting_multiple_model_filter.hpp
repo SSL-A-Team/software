@@ -30,19 +30,29 @@ public:
     std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator);
 
   void predict();
-  void update(Eigen::VectorXd measurement);
+  void update(const Eigen::VectorXd & measurement);
 
   Eigen::VectorXd get_state_estimate() const;
 
   double get_potential_measurement_error(const Eigen::VectorXd & measurement);
 
 private:
-  void update_mu();
-  double normal_distribution_pdf(double x, double mean, double sigma) const;
+  void update_mu(const Eigen::VectorXd & zt);
 
-  std::vector<Models::Ball::ModelType> model_types;
-  std::map<Models::Ball::ModelType, KalmanFilter> models;
-  std::map<Models::Ball::ModelType, double> mu;
+  /**
+   * Calculates the PDF of a multivariate normal distribution
+   *
+   * @param X Test point
+   * @param mu mean
+   * @param sigma variance
+   *
+   * @return PDF at test point
+   */
+  static double normal_multivariate_distribution_pdf(Eigen::VectorXd x, Eigen::VectorXd mu, Eigen::MatrixXd sigma);
+
+  std::vector<Models::Ball::ModelType> model_types; // List of models 
+  std::map<Models::Ball::ModelType, KalmanFilter> models; // Kalman filter representing ModelType
+  std::map<Models::Ball::ModelType, double> mu; // ~= Probability of being in model ModelType
 
   unsigned int frames_since_last_update = 0;
   unsigned int updates_until_valid_track = 10;

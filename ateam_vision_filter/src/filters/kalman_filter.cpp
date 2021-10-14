@@ -1,4 +1,4 @@
-#include "kalman_filter.hpp"
+#include "filters/kalman_filter.hpp"
 
 void KalmanFilter::set_initial_x_hat(const Eigen::VectorXd & x_hat)
 {
@@ -50,8 +50,19 @@ void KalmanFilter::update(const Eigen::VectorXd & z)
   P = P;//(P.Ones() - K * H) * P;
 }
 
-Eigen::VectorXd KalmanFilter::get_x_hat() const {
+Eigen::VectorXd KalmanFilter::get_x_hat() const
+{
   return x_hat;
+}
+
+Eigen::VectorXd KalmanFilter::get_y() const
+{
+  return H * x_hat;
+}
+
+Eigen::VectorXd KalmanFilter::get_estimated_gaussian_variance() const
+{
+  return H * P * H.transpose() + R;
 }
 
 Eigen::VectorXd KalmanFilter::get_potential_measurement_error(const Eigen::VectorXd & z)

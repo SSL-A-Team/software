@@ -16,6 +16,8 @@ public:
   void update(const Eigen::VectorXd & z);
 
   Eigen::VectorXd get_x_hat() const;
+  Eigen::VectorXd get_y() const;
+  Eigen::VectorXd get_estimated_gaussian_variance() const;
   Eigen::VectorXd get_potential_measurement_error(const Eigen::VectorXd & z);
 
 private:
