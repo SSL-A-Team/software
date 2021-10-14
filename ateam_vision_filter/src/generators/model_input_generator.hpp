@@ -1,18 +1,23 @@
-// Given a ball location
-// output the most likely kick direction
-// as well as the most likely bounce direction
+#pragma once
 
-#include "types/robot.hpp"
+#include "types/ball.hpp"
 #include "types/models.hpp"
+#include "types/robot.hpp"
 
 #include <Eigen/Dense>
+
+#include <array>
 
 class ModelInputGenerator {
 public:
     void update(const std::array<Robot, 16> & blue_robots,
-                const std::array<Robot, 16> & yellow_robots);
+                const std::array<Robot, 16> & yellow_robots,
+                const Ball & ball);
 
-    Eigen::VectorXd get_model_input(const Eigen::VectorXd & possible_ball,
-                                    Models::ModelType model_type) const {}
+    Eigen::VectorXd get_model_input(const Eigen::VectorXd & possible_state,
+                                    const Models::ModelType & model_type) const;
 private:
+    std::array<Robot, 16> blue_robots;
+    std::array<Robot, 16> yellow_robots;
+    Ball ball;
 };
