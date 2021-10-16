@@ -9,7 +9,9 @@ find_package(geometry_msgs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  msg/BallState.msg
   msg/RobotMotionCommand.msg
+  msg/RobotState.msg
 
   srv/SetDesiredKeeper.srv
   srv/SubstituteBot.srv
