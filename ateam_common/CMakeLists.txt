@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(Boost REQUIRED)
+find_package(Protobuf REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/multicast_receiver.cpp
@@ -21,6 +22,7 @@ ament_target_dependencies(${PROJECT_NAME}
 )
 target_link_libraries(${PROJECT_NAME}
   Boost::boost
+  protobuf::libprotobuf
 )
 target_include_directories(${PROJECT_NAME}
   PUBLIC
@@ -29,7 +31,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(Boost)
+ament_export_dependencies(Boost Protobuf)
 
 install(
   DIRECTORY include/
@@ -46,6 +48,7 @@ install(TARGETS ${PROJECT_NAME}
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+  add_subdirectory(test)
 endif()
 
 ament_package()
