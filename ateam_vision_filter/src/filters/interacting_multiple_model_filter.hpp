@@ -1,3 +1,5 @@
+#pragma once
+
 // Multiple kalman filters each with a different model
 
 // Ball with rolling accel

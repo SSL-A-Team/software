@@ -40,6 +40,9 @@ public:
   std::array<std::optional<RobotWithScore>, 16> get_blue_robot_estimates_with_score();
 
 private:
+  void setup_ball_interacting_multiple_model_filter();
+  void setup_robot_interacting_multiple_model_filter();
+
   static std::vector<Eigen::VectorXd> robot_measurements_to_vector(
     const std::vector<RobotMeasurement> & robot_measurements);
 

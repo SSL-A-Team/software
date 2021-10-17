@@ -19,10 +19,10 @@ enum ModelType {
   ROBOT_ACCEL_AWAY_FROM_BALL // Slow down while moving towards ball
 };
 
+constexpr double dt = 1.0 / 100.0;
+
 namespace Ball
 {
-
-constexpr double dt = 1.0 / 100.0;
 
 // pos_x, pos_y, vel_x, vel_y, accel_x, accel_y
 const Eigen::MatrixXd F =
@@ -53,6 +53,54 @@ const Eigen::MatrixXd H =
     1, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0).finished();
 
+const Eigen::MatrixXd Q = F;
+const Eigen::MatrixXd R = F;
+
 }
 
+namespace Robot
+{
+
+
+// pos_x, pos_y, theta, vel_x, vel_y, omega, accel_x, accel_y, alpha
+const Eigen::MatrixXd F =
+  (Eigen::MatrixXd(9, 9) <<
+     1, 0, 0, dt,  0,  0,  0,  0,  0,
+     0, 1, 0,  0, dt,  0,  0,  0,  0,
+     0, 0, 1,  0,  0, dt,  0,  0,  0,
+     0, 0, 0,  1,  0,  0, dt,  0,  0,
+     0, 0, 0,  0,  1,  0,  0, dt,  0,
+     0, 0, 0,  0,  0,  1,  0,  0, dt,
+     0, 0, 0,  0,  0,  0,  1,  0,  0,
+     0, 0, 0,  0,  0,  0,  0,  1,  0,
+     0, 0, 0,  0,  0,  0,  0,  0,  1).finished();
+
+// commands
+// Constant "Position" commands are constant velocity of model
+// Constant "Velocity" commands are constant acceleration of model
+// Constant "Acceleration" commands are constant jerk of model
+const Eigen::MatrixXd B =
+  (Eigen::MatrixXd(9, 9) <<
+     dt,  0,  0,  0,  0,  0,  0,  0,  0,
+      0, dt,  0,  0,  0,  0,  0,  0,  0,
+      0,  0, dt,  0,  0,  0,  0,  0,  0,
+      0,  0,  0, dt,  0,  0,  0,  0,  0,
+      0,  0,  0,  0, dt,  0,  0,  0,  0,
+      0,  0,  0,  0,  0, dt,  0,  0,  0,
+      0,  0,  0,  0,  0,  0, dt,  0,  0,
+      0,  0,  0,  0,  0,  0,  0, dt,  0,
+      0,  0,  0,  0,  0,  0,  0,  0, dt).finished();
+
+// Only measure position
+const Eigen::MatrixXd H =
+  (Eigen::MatrixXd(3, 9) <<
+    1, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0, 0, 0, 0).finished();
+
+const Eigen::MatrixXd Q = F;
+const Eigen::MatrixXd R = F;
+
+
+}
 }
