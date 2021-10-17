@@ -23,11 +23,13 @@
 
 class InteractingMultipleModelFilter {
 public:
-  explicit InteractingMultipleModelFilter(
+  void setup(
     const KalmanFilter& base_model,
     std::vector<Models::ModelType> model_types,
     std::shared_ptr<ModelInputGenerator> model_input_generator,
     std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator);
+
+  InteractingMultipleModelFilter clone();
 
   void predict();
   void update(const Eigen::VectorXd & measurement);

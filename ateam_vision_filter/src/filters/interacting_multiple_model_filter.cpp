@@ -3,14 +3,16 @@
 #include <algorithm>
 #include <cmath>
 
-InteractingMultipleModelFilter::InteractingMultipleModelFilter(
+void InteractingMultipleModelFilter::setup(
   const KalmanFilter& base_model,
   std::vector<Models::ModelType> model_types,
   std::shared_ptr<ModelInputGenerator> model_input_generator,
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator)
-  : model_types(model_types), model_input_generator(model_input_generator),
-    transmission_probability_generator(transmission_probability_generator)
 {
+  this->model_types = model_types;
+  this->model_input_generator = model_input_generator;
+  this->transmission_probability_generator = transmission_probability_generator;
+
   for (const auto& model_type : model_types)
   {
     models[model_type] = base_model;

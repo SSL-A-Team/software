@@ -2,7 +2,8 @@
 
 #include <Eigen/Dense>
 
-struct RobotMeasurement {
+class RobotMeasurement {
+public:
     Eigen::Vector2d position;
     double theta;
 };

@@ -26,5 +26,5 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
   // Robot
 
   // Most likely to stay the same
-  // Equally like to swap to other 
+  // Equally like to swap to other
 }
