@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ateam_common</name>
+  <name>ateam_ssl_simulation_radio_bridge</name>
   <version>0.0.0</version>
-  <description>Common functionailty used in multiple nodes.</description>
+  <description>Bridges robot commands in ROS to the SSL simulation input stream.</description>
   <maintainer email="fcdneiger@gmail.com">Joseph Neiger</maintainer>
   <license>TODO: License declaration</license>
 
@@ -11,10 +11,9 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
-  <depend>boost</depend>
-
-  <build_depend>protobuf-dev</build_depend>
-  <exec_depend>protobuf</exec_depend>
+  <depend>ateam_common</depend>
+  <depend>ateam_msgs</depend>
+  <depend>ssl_league_protobufs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

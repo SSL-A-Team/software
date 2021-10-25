@@ -22,6 +22,12 @@ protobuf_generate_cpp(
   proto/ssl_gc_rcon.proto
   proto/ssl_gc_referee_message.proto
   proto/ssl_gc_state.proto
+  proto/ssl_simulation_config.proto
+  proto/ssl_simulation_control.proto
+  proto/ssl_simulation_error.proto
+  proto/ssl_simulation_robot_control.proto
+  proto/ssl_simulation_robot_feedback.proto
+  proto/ssl_simulation_synchronous.proto
   proto/ssl_vision_detection_tracked.proto
   proto/ssl_vision_detection.proto
   proto/ssl_vision_geometry.proto
