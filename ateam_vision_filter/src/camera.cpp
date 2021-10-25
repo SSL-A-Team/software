@@ -4,9 +4,12 @@
 #include "filters/interacting_multiple_model_filter.hpp"
 #include "types/models.hpp"
 
-Camera::Camera()
+Camera::Camera(
+    std::shared_ptr<ModelInputGenerator> model_input_generator,
+    std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator)
 {
-
+    setup_ball_interacting_multiple_model_filter(model_input_generator, transmission_probability_generator);
+    setup_robot_interacting_multiple_model_filter(model_input_generator, transmission_probability_generator);
 }
 
 void Camera::update(const CameraMeasurement & camera_measurement)
@@ -67,7 +70,9 @@ std::array<std::optional<Camera::RobotWithScore>, 16> Camera::get_blue_robot_est
     // TODO: Return from the tracker
 }
 
-void Camera::setup_ball_interacting_multiple_model_filter()
+void Camera::setup_ball_interacting_multiple_model_filter(
+    std::shared_ptr<ModelInputGenerator> model_input_generator,
+    std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator)
 {
     KalmanFilter base_kf_model;
     base_kf_model.set_F(Models::Ball::F);
@@ -85,13 +90,16 @@ void Camera::setup_ball_interacting_multiple_model_filter()
     model_types.emplace_back(Models::ModelType::BALL_MEDIUM_KICK);
     model_types.emplace_back(Models::ModelType::BALL_FAST_KICK);
 
-    InteractingMultipleModelFilter base_track(
+    InteractingMultipleModelFilter base_track;
+    base_track.setup(
         base_kf_model, model_types, model_input_generator, transmission_probability_generator);
 
     ball.set_base_track(base_track);
 }
 
-void Camera::setup_robot_interacting_multiple_model_filter()
+void Camera::setup_robot_interacting_multiple_model_filter(
+    std::shared_ptr<ModelInputGenerator> model_input_generator,
+    std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator)
 {
     KalmanFilter base_kf_model;
     base_kf_model.set_F(Models::Robot::F);
@@ -105,8 +113,8 @@ void Camera::setup_robot_interacting_multiple_model_filter()
     model_types.emplace_back(Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL);
     model_types.emplace_back(Models::ModelType::ROBOT_ACCEL_AWAY_FROM_BALL);
 
-    InteractingMultipleModelFilter base_track(
-        base_kf_model, model_types, model_input_generator, transmission_probability_generator);
+    InteractingMultipleModelFilter base_track;
+    base_track.setup(base_kf_model, model_types, model_input_generator, transmission_probability_generator);
 
     for (auto & yellow_robot : yellow_team)
     {

@@ -1,5 +1,8 @@
 #include "world.hpp"
 
+#include <Eigen/Dense>
+
+#include <cmath>
 #include <utility>
 
 void World::update_camera(const CameraID & cameraID, const CameraMeasurement & measurement)
@@ -7,11 +10,11 @@ void World::update_camera(const CameraID & cameraID, const CameraMeasurement & m
     // If camera does not exists, add it
     if (cameras.find(cameraID) == cameras.end())
     {
-        cameras[cameraID] = Camera();
+        cameras.insert({cameraID, Camera(model_input_generator, transmission_probability_generator)});
     }
 
     // Update the specific camera
-    cameras[cameraID].update(measurement);
+    cameras.at(cameraID).update(measurement);
 }
 
 void World::predict()
@@ -47,6 +50,21 @@ std::optional<Ball> World::get_ball_estimate()
 
     // TODO: Merge balls based on score
     Ball merged_ball;
+    double total_score = 0.0;
+    for (const auto & ball_with_score : balls_with_scores)
+    {
+        const auto & ball = ball_with_score.first;
+        const auto & score = ball_with_score.second;
+
+        merged_ball.position += score * ball.position;
+        merged_ball.velocity += score * ball.velocity;
+        merged_ball.acceleration += score * ball.acceleration;
+        total_score += score;
+    }
+
+    merged_ball.position /= total_score;
+    merged_ball.velocity /= total_score;
+    merged_ball.acceleration /= total_score;
 
     return merged_ball;
 }
@@ -87,6 +105,7 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
             yellow_robots_estimates.at(yellow_id) = Robot();
 
             auto & output_robot = yellow_robots_estimates.at(yellow_id).value();
+            Eigen::Vector2d output_angle{0, 0};
             double total_score = 0.0;
 
             for (const auto & robot_with_score : yellow_robots_with_scores.at(yellow_id))
@@ -94,7 +113,7 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
                 const Robot & robot = std::get<0>(robot_with_score);
                 const double & score = std::get<1>(robot_with_score);
                 output_robot.position += score * robot.position;
-                // TODO Angle average
+                output_angle += score * Eigen::Vector2d{std::cos(output_robot.theta), std::sin(output_robot.theta)};
                 output_robot.velocity += score * robot.velocity;
                 output_robot.omega += score * robot.omega;
                 output_robot.acceleration += score * robot.acceleration;
@@ -104,7 +123,10 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
             }
 
             output_robot.position /= total_score;
-            // TODO Angle average
+            output_robot.theta = 0.0;
+            if (output_angle.norm() > 0) {
+                output_robot.theta = std::atan2(output_angle.x(), output_angle.y());
+            }
             output_robot.velocity /= total_score;
             output_robot.omega /= total_score;
             output_robot.acceleration /= total_score;
@@ -151,6 +173,7 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
             blue_robots_estimates.at(blue_id) = Robot();
 
             auto & output_robot = blue_robots_estimates.at(blue_id).value();
+            Eigen::Vector2d output_angle{0, 0};
             double total_score = 0.0;
 
             for (const auto & robot_with_score : blue_robots_with_scores.at(blue_id))
@@ -158,7 +181,7 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
                 const Robot & robot = std::get<0>(robot_with_score);
                 const double & score = std::get<1>(robot_with_score);
                 output_robot.position += score * robot.position;
-                // TODO Angle average
+                output_angle += score * Eigen::Vector2d{std::cos(output_robot.theta), std::sin(output_robot.theta)};
                 output_robot.velocity += score * robot.velocity;
                 output_robot.omega += score * robot.omega;
                 output_robot.acceleration += score * robot.acceleration;
@@ -168,7 +191,10 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
             }
 
             output_robot.position /= total_score;
-            // TODO Angle average
+            output_robot.theta = 0.0;
+            if (output_angle.norm() > 0) {
+                output_robot.theta = std::atan2(output_angle.x(), output_angle.y());
+            }
             output_robot.velocity /= total_score;
             output_robot.omega /= total_score;
             output_robot.acceleration /= total_score;

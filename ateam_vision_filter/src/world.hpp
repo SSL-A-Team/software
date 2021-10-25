@@ -1,12 +1,15 @@
 // Contains all the cameras
 
 #include "camera.hpp"
+#include "generators/model_input_generator.hpp"
+#include "generators/transmission_probability_generator.hpp"
 #include "types/ball.hpp"
 #include "types/camera_measurement.hpp"
 #include "types/robot.hpp"
 
 #include <array>
 #include <map>
+#include <memory>
 #include <optional>
 
 class World {
@@ -42,5 +45,7 @@ public:
   std::array<std::optional<Robot>, 16> get_blue_robots_estimate();
 
 private:
+  std::shared_ptr<ModelInputGenerator> model_input_generator;
+  std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;
   std::map<CameraID, Camera> cameras;
 };
