@@ -22,8 +22,8 @@
 
 #include <Eigen/Dense>
 
-class RobotMeasurement {
-public:
-    Eigen::Vector2d position;
-    double theta;
+struct RobotMeasurement
+{
+  Eigen::Vector2d position;
+  double theta;
 };

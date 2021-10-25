@@ -25,7 +25,8 @@
 namespace Models
 {
 
-enum ModelType {
+enum ModelType
+{
   BALL_ROLLING_FRICTION, // Standard ball rolling over the ground
   BALL_SLIDING_FRICTION, // Ball with backspin after kick where it's sliding instead of rolling
   BALL_BOUNCE_ON_ROBOT, // Ball doing a perfectly inelastic collision
@@ -47,12 +48,12 @@ namespace Ball
 // pos_x, pos_y, vel_x, vel_y, accel_x, accel_y
 const Eigen::MatrixXd F =
   (Eigen::MatrixXd(6, 6) <<
-     1, 0, dt,  0, 0,   0,
-     0, 1,  0, dt, 0,   0,
-     0, 0,  1,  0, dt,  0,
-     0, 0,  0,  1,  0, dt,
-     0, 0,  0,  0,  1,  0,
-     0, 0,  0,  0,  0,  1).finished();
+  1, 0, dt, 0, 0, 0,
+  0, 1, 0, dt, 0, 0,
+  0, 0, 1, 0, dt, 0,
+  0, 0, 0, 1, 0, dt,
+  0, 0, 0, 0, 1, 0,
+  0, 0, 0, 0, 0, 1).finished();
 
 // commands
 // Constant "Position" commands are constant velocity of model
@@ -60,18 +61,18 @@ const Eigen::MatrixXd F =
 // Constant "Acceleration" commands are constant jerk of model
 const Eigen::MatrixXd B =
   (Eigen::MatrixXd(6, 6) <<
-     dt,  0,  0,  0,  0,  0,
-      0, dt,  0,  0,  0,  0,
-      0,  0, dt,  0,  0,  0,
-      0,  0,  0, dt,  0,  0,
-      0,  0,  0,  0, dt,  0,
-      0,  0,  0,  0,  0, dt).finished();
+  dt, 0, 0, 0, 0, 0,
+  0, dt, 0, 0, 0, 0,
+  0, 0, dt, 0, 0, 0,
+  0, 0, 0, dt, 0, 0,
+  0, 0, 0, 0, dt, 0,
+  0, 0, 0, 0, 0, dt).finished();
 
 // Only measure position
 const Eigen::MatrixXd H =
   (Eigen::MatrixXd(2, 6) <<
-    1, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 0, 0).finished();
+  1, 0, 0, 0, 0, 0,
+  0, 1, 0, 0, 0, 0).finished();
 
 const Eigen::MatrixXd Q = F;
 const Eigen::MatrixXd R = F;
@@ -85,15 +86,15 @@ namespace Robot
 // pos_x, pos_y, theta, vel_x, vel_y, omega, accel_x, accel_y, alpha
 const Eigen::MatrixXd F =
   (Eigen::MatrixXd(9, 9) <<
-     1, 0, 0, dt,  0,  0,  0,  0,  0,
-     0, 1, 0,  0, dt,  0,  0,  0,  0,
-     0, 0, 1,  0,  0, dt,  0,  0,  0,
-     0, 0, 0,  1,  0,  0, dt,  0,  0,
-     0, 0, 0,  0,  1,  0,  0, dt,  0,
-     0, 0, 0,  0,  0,  1,  0,  0, dt,
-     0, 0, 0,  0,  0,  0,  1,  0,  0,
-     0, 0, 0,  0,  0,  0,  0,  1,  0,
-     0, 0, 0,  0,  0,  0,  0,  0,  1).finished();
+  1, 0, 0, dt, 0, 0, 0, 0, 0,
+  0, 1, 0, 0, dt, 0, 0, 0, 0,
+  0, 0, 1, 0, 0, dt, 0, 0, 0,
+  0, 0, 0, 1, 0, 0, dt, 0, 0,
+  0, 0, 0, 0, 1, 0, 0, dt, 0,
+  0, 0, 0, 0, 0, 1, 0, 0, dt,
+  0, 0, 0, 0, 0, 0, 1, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 1).finished();
 
 // commands
 // Constant "Position" commands are constant velocity of model
@@ -101,26 +102,25 @@ const Eigen::MatrixXd F =
 // Constant "Acceleration" commands are constant jerk of model
 const Eigen::MatrixXd B =
   (Eigen::MatrixXd(9, 9) <<
-     dt,  0,  0,  0,  0,  0,  0,  0,  0,
-      0, dt,  0,  0,  0,  0,  0,  0,  0,
-      0,  0, dt,  0,  0,  0,  0,  0,  0,
-      0,  0,  0, dt,  0,  0,  0,  0,  0,
-      0,  0,  0,  0, dt,  0,  0,  0,  0,
-      0,  0,  0,  0,  0, dt,  0,  0,  0,
-      0,  0,  0,  0,  0,  0, dt,  0,  0,
-      0,  0,  0,  0,  0,  0,  0, dt,  0,
-      0,  0,  0,  0,  0,  0,  0,  0, dt).finished();
+  dt, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, dt, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, dt, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, dt, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, dt, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, dt, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, dt, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, dt, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, dt).finished();
 
 // Only measure position
 const Eigen::MatrixXd H =
   (Eigen::MatrixXd(3, 9) <<
-    1, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 1, 0, 0, 0, 0, 0, 0).finished();
+  1, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 1, 0, 0, 0, 0, 0, 0).finished();
 
 const Eigen::MatrixXd Q = F;
 const Eigen::MatrixXd R = F;
-
 
 }
 }

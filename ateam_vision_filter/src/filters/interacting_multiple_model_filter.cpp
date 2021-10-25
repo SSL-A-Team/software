@@ -24,7 +24,7 @@
 #include <cmath>
 
 void InteractingMultipleModelFilter::setup(
-  const KalmanFilter& base_model,
+  const KalmanFilter & base_model,
   std::vector<Models::ModelType> model_types,
   std::shared_ptr<ModelInputGenerator> model_input_generator,
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator)
@@ -33,16 +33,14 @@ void InteractingMultipleModelFilter::setup(
   this->model_input_generator = model_input_generator;
   this->transmission_probability_generator = transmission_probability_generator;
 
-  for (const auto& model_type : model_types)
-  {
+  for (const auto & model_type : model_types) {
     models[model_type] = base_model;
   }
 }
 
 void InteractingMultipleModelFilter::predict()
 {
-  for (auto& model_pair : models)
-  {
+  for (auto & model_pair : models) {
     model_pair.second.predict(
       model_input_generator->get_model_input(
         model_pair.second.get_x_hat(),
@@ -56,20 +54,19 @@ void InteractingMultipleModelFilter::update(const Eigen::VectorXd & measurement)
 {
   update_mu(measurement);
 
-  for (auto& model_pair : models)
-  {
+  for (auto & model_pair : models) {
     model_pair.second.update(measurement);
   }
 
   frames_since_last_update = 0;
 
-  if (updates_until_valid_track > 0)
-  {
+  if (updates_until_valid_track > 0) {
     --updates_until_valid_track;
   }
 }
 
-double InteractingMultipleModelFilter::get_potential_measurement_error(const Eigen::VectorXd & measurement)
+double InteractingMultipleModelFilter::get_potential_measurement_error(
+  const Eigen::VectorXd & measurement)
 {
   // Uses previous frame mu because we haven't gotten this frames measurements yet
   // This is because the MHT is using this to associate measurements to tracks
@@ -86,9 +83,9 @@ double InteractingMultipleModelFilter::get_potential_measurement_error(const Eig
 
   Eigen::VectorXd potential_measurement_error;
 
-  for (const auto& model_type : model_types)
-  {
-    potential_measurement_error += mu.at(model_type) * models.at(model_type).get_potential_measurement_error(measurement);
+  for (const auto & model_type : model_types) {
+    potential_measurement_error += mu.at(model_type) *
+      models.at(model_type).get_potential_measurement_error(measurement);
   }
 
   return potential_measurement_error.norm();
@@ -104,8 +101,7 @@ Eigen::VectorXd InteractingMultipleModelFilter::get_state_estimate() const
   // Best estimate is a weighted average of the individual models estimate
   Eigen::VectorXd x_bar;
 
-  for (const auto& model_type : model_types)
-  {
+  for (const auto & model_type : model_types) {
     x_bar += mu.at(model_type) * models.at(model_type).get_x_hat();
   }
 
@@ -125,20 +121,19 @@ void InteractingMultipleModelFilter::update_mu(const Eigen::VectorXd & zt)
   double normalization_factor = 0.0;
   std::map<Models::ModelType, double> current_time_step_mu;
 
-  for (const auto& model_type : model_types)
-  {
-  
+  for (const auto & model_type : model_types) {
+
     // Grab the probability of transitioning from all other models to this model
     // Weighted individually by the probability of being in that model last frame
     double probability_of_transition_to_model = 0;
-    for (const auto& other_model_type : model_types)
-    {
+    for (const auto & other_model_type : model_types) {
       double probability_transition_from_other_model_to_model =
         transmission_probability_generator->get_transmission_probability(
-          models.at(model_type).get_x_hat(),
-          other_model_type,
-          model_type);
-      probability_of_transition_to_model += mu.at(other_model_type) * probability_transition_from_other_model_to_model;
+        models.at(model_type).get_x_hat(),
+        other_model_type,
+        model_type);
+      probability_of_transition_to_model += mu.at(other_model_type) *
+        probability_transition_from_other_model_to_model;
     }
 
     // Weight probability of being in this model by how well this model matches the measurement
@@ -146,11 +141,12 @@ void InteractingMultipleModelFilter::update_mu(const Eigen::VectorXd & zt)
       zt,
       models.at(model_type).get_y(),
       models.at(model_type).get_estimated_gaussian_variance());
-    current_time_step_mu[model_type] = probability_of_measurement_to_model * probability_of_transition_to_model;
+    current_time_step_mu[model_type] = probability_of_measurement_to_model *
+      probability_of_transition_to_model;
     normalization_factor += current_time_step_mu.at(model_type);
   }
 
-  for (const auto& model_type : model_types) {
+  for (const auto & model_type : model_types) {
     mu.at(model_type) = current_time_step_mu.at(model_type) / normalization_factor;
   }
 }

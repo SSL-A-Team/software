@@ -43,10 +43,11 @@
 #include <memory>
 #include <vector>
 
-class InteractingMultipleModelFilter {
+class InteractingMultipleModelFilter
+{
 public:
   void setup(
-    const KalmanFilter& base_model,
+    const KalmanFilter & base_model,
     std::vector<Models::ModelType> model_types,
     std::shared_ptr<ModelInputGenerator> model_input_generator,
     std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator);
@@ -72,9 +73,11 @@ private:
    *
    * @return PDF at test point
    */
-  static double normal_multivariate_distribution_pdf(Eigen::VectorXd x, Eigen::VectorXd mu, Eigen::MatrixXd sigma);
+  static double normal_multivariate_distribution_pdf(
+    Eigen::VectorXd x, Eigen::VectorXd mu,
+    Eigen::MatrixXd sigma);
 
-  std::vector<Models::ModelType> model_types; // List of models 
+  std::vector<Models::ModelType> model_types; // List of models
   std::map<Models::ModelType, KalmanFilter> models; // Kalman filter representing ModelType
   std::map<Models::ModelType, double> mu; // ~= Probability of being in model ModelType
 

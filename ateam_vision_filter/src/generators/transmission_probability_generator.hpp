@@ -33,18 +33,21 @@
 
 #include <array>
 
-class TransmissionProbabilityGenerator {
+class TransmissionProbabilityGenerator
+{
 public:
-    void update(const std::array<Robot, 16> & blue_robots,
-                const std::array<Robot, 16> & yellow_robots,
-                const Ball & ball);
+  void update(
+    const std::array<Robot, 16> & blue_robots,
+    const std::array<Robot, 16> & yellow_robots,
+    const Ball & ball);
 
-    double get_transmission_probability(const Eigen::VectorXd & possible_state,
-                                       const Models::ModelType & from_model,
-                                       const Models::ModelType & to_model) const;
+  double get_transmission_probability(
+    const Eigen::VectorXd & possible_state,
+    const Models::ModelType & from_model,
+    const Models::ModelType & to_model) const;
 
 private:
-    std::array<Robot, 16> blue_robots;
-    std::array<Robot, 16> yellow_robots;
-    Ball ball;
+  std::array<Robot, 16> blue_robots;
+  std::array<Robot, 16> yellow_robots;
+  Ball ball;
 };

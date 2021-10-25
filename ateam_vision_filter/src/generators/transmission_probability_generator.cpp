@@ -36,7 +36,7 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
   const Models::ModelType & to_model) const
 {
   // Ball
-  
+
   // Const transition from Rolling to sliding
   // Increase bounce if ball is going at not the mouth of11 robot
   // Increase stop if ball is going at the mouth of robot

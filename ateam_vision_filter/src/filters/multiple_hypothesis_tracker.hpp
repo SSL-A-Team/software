@@ -31,7 +31,8 @@
 
 #include <vector>
 
-class MultipleHypothesisTracker {
+class MultipleHypothesisTracker
+{
 public:
   void set_base_track(const InteractingMultipleModelFilter & base_track);
 

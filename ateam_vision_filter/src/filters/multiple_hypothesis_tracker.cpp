@@ -27,7 +27,7 @@ void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFil
 
 void MultipleHypothesisTracker::predict()
 {
-  for (auto& track : tracks) {
+  for (auto & track : tracks) {
     track.predict();
   }
 }

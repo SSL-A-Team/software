@@ -53,8 +53,7 @@ TEST(kalman_filter, getXHat_ShouldReturnPrediction_WhenPredictx10WithNoInput)
   kf.set_Q(Eigen::Matrix2d::Identity());
   kf.set_R(Eigen::Matrix2d::Identity());
 
-  for (int i = 0; i < 10; i++)
-  {
+  for (int i = 0; i < 10; i++) {
     kf.predict(Eigen::Vector2d::Zero());
   }
 
@@ -78,8 +77,7 @@ TEST(kalman_filter, getXHat_ShouldReturnPrediction_WhenPredictx10WithInput)
   kf.set_Q(Eigen::Matrix2d::Identity());
   kf.set_R(Eigen::Matrix2d::Identity());
 
-  for (int i = 0; i < 10; i++)
-  {
+  for (int i = 0; i < 10; i++) {
     kf.predict(Eigen::Vector2d{1, 0});
   }
 
@@ -103,13 +101,11 @@ TEST(kalman_filter, getXHat_ShouldReturnNearUpdate_WhenPredictx10ThenUpdatex10)
   kf.set_Q(Eigen::Matrix2d::Identity());
   kf.set_R(Eigen::Matrix2d::Identity());
 
-  for (int i = 0; i < 10; i++)
-  {
+  for (int i = 0; i < 10; i++) {
     kf.predict(Eigen::Vector2d::Zero());
   }
 
-  for (int i = 0; i < 10; i++)
-  {
+  for (int i = 0; i < 10; i++) {
     kf.update(Eigen::Vector2d{1, 1});
   }
 

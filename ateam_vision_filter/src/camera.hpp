@@ -30,7 +30,8 @@
 #include <memory>
 #include <vector>
 
-class Camera {
+class Camera
+{
 public:
   using BallWithScore = std::pair<Ball, double>;
   using RobotWithScore = std::pair<Robot, double>;
@@ -41,7 +42,7 @@ public:
 
   /**
    * Updates the camera with a specific frame's measurement
-   * 
+   *
    * @param camera_measurement Measurement from a specific frame
    */
   void update(const CameraMeasurement & camera_measurement);
@@ -55,7 +56,7 @@ public:
    * @return Returns a ball with a corresponding likelyhood score (if exists)
    */
   std::optional<BallWithScore> get_ball_estimate_with_score();
-  
+
   /**
    * @return Returns yellow robots with a corresponding likelyhood score (if exists)
    */

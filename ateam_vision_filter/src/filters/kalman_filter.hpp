@@ -24,7 +24,8 @@
 
 // Standard kalman filter
 
-class KalmanFilter {
+class KalmanFilter
+{
 public:
   void set_initial_x_hat(const Eigen::VectorXd & x_hat);
   void set_initial_p(const Eigen::MatrixXd & P);

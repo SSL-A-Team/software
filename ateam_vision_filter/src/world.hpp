@@ -32,13 +32,14 @@
 #include <memory>
 #include <optional>
 
-class World {
+class World
+{
 public:
   using CameraID = int;
 
   /**
    * Updates the world with a specific camera's measurement
-   * 
+   *
    * @param cameraID Unique ID of the camera given by SSL Vision
    * @param measurement Measurement from the camera frame
    */
