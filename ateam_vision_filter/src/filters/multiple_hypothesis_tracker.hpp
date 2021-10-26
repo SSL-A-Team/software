@@ -18,18 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
+#define FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
 
 // Matches measurements to filters
 // Creates tracks as needed
 // Removes tracks as needed
 // Returns best track
 
-#include "filters/interacting_multiple_model_filter.hpp"
-
 #include <Eigen/Dense>
 
 #include <vector>
+
+#include "filters/interacting_multiple_model_filter.hpp"
 
 class MultipleHypothesisTracker
 {
@@ -46,3 +47,5 @@ private:
 
   std::vector<InteractingMultipleModelFilter> tracks;
 };
+
+#endif  // FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_

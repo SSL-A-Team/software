@@ -18,13 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
-
-#include "types/ball_measurement.hpp"
-#include "types/robot_measurement.hpp"
+#ifndef TYPES__CAMERA_MEASUREMENT_HPP_
+#define TYPES__CAMERA_MEASUREMENT_HPP_
 
 #include <array>
 #include <vector>
+
+#include "types/ball_measurement.hpp"
+#include "types/robot_measurement.hpp"
 
 struct CameraMeasurement
 {
@@ -32,3 +33,5 @@ struct CameraMeasurement
   std::array<std::vector<RobotMeasurement>, 16> blue_robots;
   std::vector<BallMeasurement> ball;
 };
+
+#endif  // TYPES__CAMERA_MEASUREMENT_HPP_

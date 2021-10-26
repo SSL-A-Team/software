@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef TYPES__ROBOT_HPP_
+#define TYPES__ROBOT_HPP_
 
 #include <Eigen/Dense>
 
@@ -33,3 +34,5 @@ struct Robot
   Eigen::Vector2d acceleration;
   double alpha;
 };
+
+#endif  // TYPES__ROBOT_HPP_

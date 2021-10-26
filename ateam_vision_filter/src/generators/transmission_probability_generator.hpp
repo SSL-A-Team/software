@@ -18,20 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef GENERATORS__TRANSMISSION_PROBABILITY_GENERATOR_HPP_
+#define GENERATORS__TRANSMISSION_PROBABILITY_GENERATOR_HPP_
 
 // Builds a transmission probability matrix
 // given last robot estimate positions
 // last ball estimate position
 // Transmission of ball from slide to roll, etc
 
-#include "types/ball.hpp"
-#include "types/models.hpp"
-#include "types/robot.hpp"
-
 #include <Eigen/Dense>
 
 #include <array>
+
+#include "types/ball.hpp"
+#include "types/models.hpp"
+#include "types/robot.hpp"
 
 class TransmissionProbabilityGenerator
 {
@@ -51,3 +52,5 @@ private:
   std::array<Robot, 16> yellow_robots;
   Ball ball;
 };
+
+#endif  // GENERATORS__TRANSMISSION_PROBABILITY_GENERATOR_HPP_

@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef TYPES__BALL_HPP_
+#define TYPES__BALL_HPP_
 
 #include <Eigen/Dense>
 
@@ -30,3 +31,5 @@ struct Ball
 
   Eigen::Vector2d acceleration;
 };
+
+#endif  // TYPES__BALL_HPP_

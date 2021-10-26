@@ -54,7 +54,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
 
   // Robot
   if (model_type == Models::ModelType::ROBOT_NO_ACCEL) {
-    //return Eigen::VectorXd{0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // return Eigen::VectorXd{0, 0, 0, 0, 0, 0, 0, 0, 0};
   } else if (model_type == Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL) {
     // Accel at X m/s2 towards ball
   } else if (model_type == Models::ModelType::ROBOT_ACCEL_AWAY_FROM_BALL) {

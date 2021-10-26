@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef TYPES__ROBOT_MEASUREMENT_HPP_
+#define TYPES__ROBOT_MEASUREMENT_HPP_
 
 #include <Eigen/Dense>
 
@@ -27,3 +28,5 @@ struct RobotMeasurement
   Eigen::Vector2d position;
   double theta;
 };
+
+#endif  // TYPES__ROBOT_MEASUREMENT_HPP_

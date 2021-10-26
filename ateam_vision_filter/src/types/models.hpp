@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef TYPES__MODELS_HPP_
+#define TYPES__MODELS_HPP_
 
 #include <Eigen/Dense>
 
@@ -27,17 +28,17 @@ namespace Models
 
 enum ModelType
 {
-  BALL_ROLLING_FRICTION, // Standard ball rolling over the ground
-  BALL_SLIDING_FRICTION, // Ball with backspin after kick where it's sliding instead of rolling
-  BALL_BOUNCE_ON_ROBOT, // Ball doing a perfectly inelastic collision
+  BALL_ROLLING_FRICTION,  // Standard ball rolling over the ground
+  BALL_SLIDING_FRICTION,  // Ball with backspin after kick where it's sliding instead of rolling
+  BALL_BOUNCE_ON_ROBOT,  // Ball doing a perfectly inelastic collision
   BALL_STOP_ON_DRIBBLER,
-  BALL_SLOW_KICK, // 2 m/s
-  BALL_MEDIUM_KICK, // 4 m/s
-  BALL_FAST_KICK, // 6 m/s
+  BALL_SLOW_KICK,  // 2 m/s
+  BALL_MEDIUM_KICK,  // 4 m/s
+  BALL_FAST_KICK,  // 6 m/s
 
   ROBOT_NO_ACCEL,
-  ROBOT_ACCEL_TOWARDS_BALL, // Move towards the ball
-  ROBOT_ACCEL_AWAY_FROM_BALL // Slow down while moving towards ball
+  ROBOT_ACCEL_TOWARDS_BALL,  // Move towards the ball
+  ROBOT_ACCEL_AWAY_FROM_BALL  // Slow down while moving towards ball
 };
 
 constexpr double dt = 1.0 / 100.0;
@@ -77,7 +78,7 @@ const Eigen::MatrixXd H =
 const Eigen::MatrixXd Q = F;
 const Eigen::MatrixXd R = F;
 
-}
+}  // namespace Ball
 
 namespace Robot
 {
@@ -122,5 +123,7 @@ const Eigen::MatrixXd H =
 const Eigen::MatrixXd Q = F;
 const Eigen::MatrixXd R = F;
 
-}
-}
+}  // namespace Robot
+}  // namespace Models
+
+#endif  // TYPES__MODELS_HPP_

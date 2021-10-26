@@ -35,6 +35,6 @@ public:
 private:
 };
 
-}  // namespace ateam_ssl_vision_bridge
+}  // namespace ateam_vision_filter
 
 RCLCPP_COMPONENTS_REGISTER_NODE(ateam_vision_filter::VisionFilterNode)

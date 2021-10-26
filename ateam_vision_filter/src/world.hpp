@@ -18,7 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// Contains all the cameras
+#ifndef WORLD_HPP_
+#define WORLD_HPP_
+
+#include <optional>
+
+#include <array>
+#include <map>
+#include <memory>
 
 #include "camera.hpp"
 #include "generators/model_input_generator.hpp"
@@ -26,11 +33,6 @@
 #include "types/ball.hpp"
 #include "types/camera_measurement.hpp"
 #include "types/robot.hpp"
-
-#include <array>
-#include <map>
-#include <memory>
-#include <optional>
 
 class World
 {
@@ -70,3 +72,5 @@ private:
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;
   std::map<CameraID, Camera> cameras;
 };
+
+#endif  // WORLD_HPP_

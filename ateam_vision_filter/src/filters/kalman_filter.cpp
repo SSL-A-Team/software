@@ -67,7 +67,7 @@ void KalmanFilter::update(const Eigen::VectorXd & z)
   Eigen::MatrixXd S = H * P * H.transpose() + R;
   Eigen::MatrixXd K = P * H.transpose() * S.inverse();
   x_hat = x_hat + K * y;
-  P = P;//(P.Ones() - K * H) * P;
+  P = P;  // TODO(jneiger): (P.Ones() - K * H) * P;
 }
 
 Eigen::VectorXd KalmanFilter::get_x_hat() const

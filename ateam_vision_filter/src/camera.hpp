@@ -18,17 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef CAMERA_HPP_
+#define CAMERA_HPP_
+
+#include <optional>
+
+#include <array>
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include "filters/multiple_hypothesis_tracker.hpp"
 #include "generators/model_input_generator.hpp"
 #include "generators/transmission_probability_generator.hpp"
 #include "types/camera_measurement.hpp"
-
-#include <array>
-#include <optional>
-#include <memory>
-#include <vector>
 
 class Camera
 {
@@ -85,3 +88,5 @@ private:
   std::array<MultipleHypothesisTracker, 16> blue_team;
   MultipleHypothesisTracker ball;
 };
+
+#endif  // CAMERA_HPP_

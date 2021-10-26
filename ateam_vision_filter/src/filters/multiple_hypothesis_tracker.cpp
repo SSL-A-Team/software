@@ -20,6 +20,8 @@
 
 #include "filters/multiple_hypothesis_tracker.hpp"
 
+#include <vector>
+
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {
   this->base_track = base_track;

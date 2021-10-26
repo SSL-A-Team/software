@@ -22,6 +22,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
+#include <memory>
+#include <vector>
 
 void InteractingMultipleModelFilter::setup(
   const KalmanFilter & base_model,
@@ -122,7 +125,6 @@ void InteractingMultipleModelFilter::update_mu(const Eigen::VectorXd & zt)
   std::map<Models::ModelType, double> current_time_step_mu;
 
   for (const auto & model_type : model_types) {
-
     // Grab the probability of transitioning from all other models to this model
     // Weighted individually by the probability of being in that model last frame
     double probability_of_transition_to_model = 0;

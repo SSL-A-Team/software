@@ -20,6 +20,9 @@
 
 #include "camera.hpp"
 
+#include <memory>
+#include <vector>
+
 #include "filters/kalman_filter.hpp"
 #include "filters/interacting_multiple_model_filter.hpp"
 #include "types/models.hpp"
@@ -74,19 +77,19 @@ void Camera::predict()
 
 std::optional<Camera::BallWithScore> Camera::get_ball_estimate_with_score()
 {
-  // TODO: Return from the tracker
+  // TODO(jneiger): Return from the tracker
   return std::nullopt;
 }
 
 std::array<std::optional<Camera::RobotWithScore>,
   16> Camera::get_yellow_robot_estimates_with_score()
 {
-  // TODO: Return from the tracker
+  // TODO(jneiger): Return from the tracker
 }
 
 std::array<std::optional<Camera::RobotWithScore>, 16> Camera::get_blue_robot_estimates_with_score()
 {
-  // TODO: Return from the tracker
+  // TODO(jneiger): Return from the tracker
 }
 
 void Camera::setup_ball_interacting_multiple_model_filter(

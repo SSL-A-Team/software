@@ -18,15 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
-
-#include "types/ball.hpp"
-#include "types/models.hpp"
-#include "types/robot.hpp"
+#ifndef GENERATORS__MODEL_INPUT_GENERATOR_HPP_
+#define GENERATORS__MODEL_INPUT_GENERATOR_HPP_
 
 #include <Eigen/Dense>
 
 #include <array>
+
+#include "types/ball.hpp"
+#include "types/models.hpp"
+#include "types/robot.hpp"
 
 class ModelInputGenerator
 {
@@ -45,3 +46,5 @@ private:
   std::array<Robot, 16> yellow_robots;
   Ball ball;
 };
+
+#endif  // GENERATORS__MODEL_INPUT_GENERATOR_HPP_

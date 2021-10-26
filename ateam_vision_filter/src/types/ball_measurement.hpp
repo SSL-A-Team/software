@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef TYPES__BALL_MEASUREMENT_HPP_
+#define TYPES__BALL_MEASUREMENT_HPP_
 
 #include <Eigen/Dense>
 
@@ -26,3 +27,5 @@ struct BallMeasurement
 {
   Eigen::Vector2d position;
 };
+
+#endif  // TYPES__BALL_MEASUREMENT_HPP_

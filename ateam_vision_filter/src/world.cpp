@@ -24,6 +24,7 @@
 
 #include <cmath>
 #include <utility>
+#include <vector>
 
 void World::update_camera(const CameraID & cameraID, const CameraMeasurement & measurement)
 {
@@ -63,7 +64,7 @@ std::optional<Ball> World::get_ball_estimate()
     return std::nullopt;
   }
 
-  // TODO: Merge balls based on score
+  // TODO(jneiger): Merge balls based on score
   Ball merged_ball;
   double total_score = 0.0;
   for (const auto & ball_with_score : balls_with_scores) {

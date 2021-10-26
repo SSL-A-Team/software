@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef FILTERS__KALMAN_FILTER_HPP_
+#define FILTERS__KALMAN_FILTER_HPP_
 
 #include <Eigen/Dense>
 
@@ -53,3 +54,5 @@ private:
   Eigen::VectorXd x_hat;
   Eigen::MatrixXd P;
 };
+
+#endif  // FILTERS__KALMAN_FILTER_HPP_

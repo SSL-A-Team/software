@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#ifndef FILTERS__INTERACTING_MULTIPLE_MODEL_FILTER_HPP_
+#define FILTERS__INTERACTING_MULTIPLE_MODEL_FILTER_HPP_
 
 // Multiple kalman filters each with a different model
 
@@ -32,16 +33,16 @@
 
 // Robot with constant accel
 
-#include "filters/kalman_filter.hpp"
-#include "types/models.hpp"
-#include "generators/model_input_generator.hpp"
-#include "generators/transmission_probability_generator.hpp"
-
 #include <Eigen/Dense>
 
 #include <map>
 #include <memory>
 #include <vector>
+
+#include "filters/kalman_filter.hpp"
+#include "types/models.hpp"
+#include "generators/model_input_generator.hpp"
+#include "generators/transmission_probability_generator.hpp"
 
 class InteractingMultipleModelFilter
 {
@@ -77,9 +78,9 @@ private:
     Eigen::VectorXd x, Eigen::VectorXd mu,
     Eigen::MatrixXd sigma);
 
-  std::vector<Models::ModelType> model_types; // List of models
-  std::map<Models::ModelType, KalmanFilter> models; // Kalman filter representing ModelType
-  std::map<Models::ModelType, double> mu; // ~= Probability of being in model ModelType
+  std::vector<Models::ModelType> model_types;  // List of models
+  std::map<Models::ModelType, KalmanFilter> models;  // Kalman filter representing ModelType
+  std::map<Models::ModelType, double> mu;  // ~= Probability of being in model ModelType
 
   unsigned int frames_since_last_update = 0;
   unsigned int updates_until_valid_track = 10;
@@ -87,3 +88,5 @@ private:
   std::shared_ptr<ModelInputGenerator> model_input_generator;
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;
 };
+
+#endif  // FILTERS__INTERACTING_MULTIPLE_MODEL_FILTER_HPP_
