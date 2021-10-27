@@ -11,6 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Boost REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/filters/interacting_multiple_model_filter.cpp

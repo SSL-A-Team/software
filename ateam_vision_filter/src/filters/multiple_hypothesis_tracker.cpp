@@ -20,7 +20,11 @@
 
 #include "filters/multiple_hypothesis_tracker.hpp"
 
+#include <map>
 #include <vector>
+
+#include <boost/graph/successive_shortest_path_nonnegative_weights.hpp>
+#include <boost/graph/adjacency_list.hpp>
 
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {
@@ -42,6 +46,135 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   //
   // Form is a bipartite graph assignmnet problem with 1 supply per measurement,
   // and 1 sink per track
+
+  using adjacency_list_traits = boost::adjacency_list_traits<boost::vecS, boost::vecS, boost::directedS>;
+
+  using graph_t = boost::adjacency_list<
+    boost::vecS,
+    boost::vecS,
+    boost::directedS,
+    boost::no_property,
+    boost::property<boost::edge_capacity_t, long,
+      boost::property<boost::edge_residual_capacity_t, long,
+        boost::property<boost::edge_reverse_t, adjacency_list_traits::edge_descriptor,
+          boost::property<boost::edge_weight_t, double>>>>>;
+  using edge_capacity_list_t = boost::property_map<graph_t, boost::edge_capacity_t>::type;
+  using edge_residual_capacity_list_t = boost::property_map<graph_t, boost::edge_residual_capacity_t>::type;
+  using edge_weight_list_t = boost::property_map<graph_t, boost::edge_weight_t>::type;
+  using edge_reverse_list_t = boost::property_map<graph_t, boost::edge_reverse_t>::type;
+
+  adjacency_list_traits::vertex_descriptor source, sink;
+  graph_t graph;
+  edge_capacity_list_t edge_capacity_list = boost::get(boost::edge_capacity, graph);
+  edge_weight_list_t edge_weight_list = boost::get(boost::edge_weight, graph);
+  edge_reverse_list_t edge_reverse_list = boost::get(boost::edge_reverse, graph);
+
+  //
+  //     a - 1
+  //   /   X   \.
+  // s - b - 2 - e
+  //   \   X   /
+  //     c - 3
+  //
+  // Where s is the source, e is the sink
+  // The left set (a,b,c) and right set (1,2,3) is fully connected
+  // All edges have 1 flow representing 1 to 1 assignment of measurements to tracks
+  // The cost between the left set and right set represent the distance between
+
+  source = boost::add_vertex(graph);
+  sink = boost::add_vertex(graph);
+
+  std::map<adjacency_list_traits::vertex_descriptor, const Eigen::VectorXd&> vertex_to_measurement;
+  for (size_t i = 0; i < measurements.size(); i++) {
+    vertex_to_measurement.insert({boost::add_vertex(graph), measurements.at(i)});
+  }
+
+  std::map<adjacency_list_traits::vertex_descriptor, InteractingMultipleModelFilter&> vertex_to_track;
+  for (size_t i = 0; i < tracks.size(); i++) {
+    vertex_to_track.insert({boost::add_vertex(graph), tracks.at(i)});
+  }
+
+  std::map<
+    adjacency_list_traits::edge_descriptor,
+    std::pair<
+      adjacency_list_traits::vertex_descriptor,
+      adjacency_list_traits::vertex_descriptor>> forward_edge_to_vertex_pair;
+  auto add_edge_to_graph = [&](auto & source_vertex, auto & sink_vertex, double weight) {
+    adjacency_list_traits::edge_descriptor forward_edge, backward_edge;
+    bool is_valid = true;
+    long capacity = 1;
+    boost::tie(forward_edge, is_valid) = boost::add_edge(boost::vertex(source_vertex, graph), boost::vertex(sink_vertex, graph), graph);
+
+    assert(is_valid);  // Fails if edge already exists
+
+    edge_capacity_list[forward_edge] = capacity;
+    edge_weight_list[forward_edge] = weight;
+
+    boost::tie(backward_edge, is_valid) = boost::add_edge(boost::vertex(sink_vertex, graph), boost::vertex(source_vertex, graph), graph);
+
+    assert(is_valid);  // Fails if edge already exists
+
+    edge_capacity_list[backward_edge] = 0;
+    edge_weight_list[backward_edge] = -weight;
+
+    edge_reverse_list[forward_edge] = backward_edge;
+    edge_reverse_list[backward_edge] = forward_edge;
+
+    forward_edge_to_vertex_pair[forward_edge] = std::make_pair(source_vertex, sink_vertex);
+  };
+
+  // Add all source to first set
+  for (auto & vertex_measurement_pair : vertex_to_measurement) {
+    add_edge_to_graph(source, vertex_measurement_pair.first, 0.0);
+  }
+
+  // Add all second set to sink
+  for (auto & vertex_track_pair : vertex_to_track) {
+    add_edge_to_graph(vertex_track_pair.first, sink, 0.0);
+  }
+
+  // We don't actually care about the source -> * and * -> sink so just clear edge to vertex map
+  forward_edge_to_vertex_pair.clear();
+
+  // Add cost for every single combination of measurement to track
+  for (const auto & vertex_measurement_pair : vertex_to_measurement) {
+    for (auto & vertex_track_pair : vertex_to_track) {
+      double dist = (vertex_measurement_pair.second - vertex_track_pair.second.get_state_estimate()).norm();
+      add_edge_to_graph(vertex_measurement_pair.first, vertex_track_pair.first, dist);
+    }
+  }
+
+  boost::successive_shortest_path_nonnegative_weights(graph, source, sink);
+
+  std::set<adjacency_list_traits::vertex_descriptor> unassigned_measurements;
+  for (const auto & vertex_measurement_pair : vertex_to_measurement) {
+    unassigned_measurements.insert(vertex_measurement_pair.first);
+  }
+
+  // Note: residual capacity so 1 is not used, 0 is used
+  edge_residual_capacity_list_t edge_residual_capacity_list = boost::get(boost::edge_residual_capacity, graph);
+  for (const auto & forward_edge_vertex_pair : forward_edge_to_vertex_pair) {
+    long used_flow = 1 - edge_residual_capacity_list[forward_edge_vertex_pair.first];
+
+    // Assigned edge
+    if (used_flow == 1) {
+      auto & source_measurement_vertex = forward_edge_vertex_pair.second.first;
+      auto & sink_track_vertex = forward_edge_vertex_pair.second.second;
+
+      const auto & measurement = vertex_to_measurement.at(source_measurement_vertex);
+      auto & track = vertex_to_track.at(sink_track_vertex);
+
+      track.update(measurement);
+
+      unassigned_measurements.erase(source_measurement_vertex);
+    }
+  }
+
+  // For any leftover measurement, create a new track
+  for (const auto & vertex_measurement : unassigned_measurements) {
+    const auto & measurement = vertex_to_measurement.at(vertex_measurement);
+    tracks.emplace_back(base_track.clone(measurement));
+  }
 }
 
 void MultipleHypothesisTracker::life_cycle_management()

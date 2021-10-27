@@ -53,7 +53,10 @@ public:
     std::shared_ptr<ModelInputGenerator> model_input_generator,
     std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator);
 
-  InteractingMultipleModelFilter clone();
+  /**
+   * Clone filter and set state estimate
+   */
+  InteractingMultipleModelFilter clone(const Eigen::VectorXd & state_estimate);
 
   void predict();
   void update(const Eigen::VectorXd & measurement);

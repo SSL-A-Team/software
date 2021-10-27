@@ -41,6 +41,10 @@ void InteractingMultipleModelFilter::setup(
   }
 }
 
+InteractingMultipleModelFilter InteractingMultipleModelFilter::clone(const Eigen::VectorXd & state_estimate) {
+  return InteractingMultipleModelFilter();  // TODO(jneiger): Implement clone correctly
+}
+
 void InteractingMultipleModelFilter::predict()
 {
   for (auto & model_pair : models) {
