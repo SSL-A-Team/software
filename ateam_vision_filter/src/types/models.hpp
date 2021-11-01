@@ -47,10 +47,11 @@ namespace Ball
 {
 
 // pos_x, pos_y, vel_x, vel_y, accel_x, accel_y
+const double dt22 = dt * dt / 2;  // accel -> position
 const Eigen::MatrixXd F =
   (Eigen::MatrixXd(6, 6) <<
-  1, 0, dt, 0, 0, 0,
-  0, 1, 0, dt, 0, 0,
+  1, 0, dt, 0, dt22, 0,
+  0, 1, 0, dt, 0, dt22,
   0, 0, 1, 0, dt, 0,
   0, 0, 0, 1, 0, dt,
   0, 0, 0, 0, 1, 0,
@@ -101,11 +102,12 @@ namespace Robot
 
 
 // pos_x, pos_y, theta, vel_x, vel_y, omega, accel_x, accel_y, alpha
+const double dt22 = dt * dt / 2;  // accel -> position
 const Eigen::MatrixXd F =
   (Eigen::MatrixXd(9, 9) <<
-  1, 0, 0, dt, 0, 0, 0, 0, 0,
-  0, 1, 0, 0, dt, 0, 0, 0, 0,
-  0, 0, 1, 0, 0, dt, 0, 0, 0,
+  1, 0, 0, dt, 0, 0, dt22, 0, 0,
+  0, 1, 0, 0, dt, 0, 0, dt22, 0,
+  0, 0, 1, 0, 0, dt, 0, 0, dt22,
   0, 0, 0, 1, 0, 0, dt, 0, 0,
   0, 0, 0, 0, 1, 0, 0, dt, 0,
   0, 0, 0, 0, 0, 1, 0, 0, dt,
