@@ -55,14 +55,30 @@ public:
 
   /**
    * Clone filter and set state estimate
+   *
+   * @note Clones all current tracks and covariance estimates. Only state estimates get changed
+   * to new values
    */
   InteractingMultipleModelFilter clone(const Eigen::VectorXd & state_estimate);
 
+  /**
+   * Step models forward one time step
+   */
   void predict();
+
+  /**
+   * Update models with new measurement
+   */
   void update(const Eigen::VectorXd & measurement);
 
+  /**
+   * @return Best estimation of state (special weighted average of model's xhat)
+   */
   Eigen::VectorXd get_state_estimate() const;
 
+  /**
+   * @return Score of how far off a potential measurement error is
+   */
   double get_potential_measurement_error(const Eigen::VectorXd & measurement);
 
 private:

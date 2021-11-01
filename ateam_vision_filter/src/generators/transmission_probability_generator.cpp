@@ -47,4 +47,5 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
 
   // Most likely to stay the same
   // Equally like to swap to other
+  return 1.0;
 }

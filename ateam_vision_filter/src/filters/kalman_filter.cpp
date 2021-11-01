@@ -67,7 +67,8 @@ void KalmanFilter::update(const Eigen::VectorXd & z)
   Eigen::MatrixXd S = H * P * H.transpose() + R;
   Eigen::MatrixXd K = P * H.transpose() * S.inverse();
   x_hat = x_hat + K * y;
-  P = P;  // TODO(jneiger): (P.Ones() - K * H) * P;
+  Eigen::MatrixXd I = Eigen::MatrixXd::Identity(P.rows(), P.cols());
+  P = (I - K * H) * P * (I - K * H).transpose() + K * R * K.transpose();
 }
 
 Eigen::VectorXd KalmanFilter::get_x_hat() const
@@ -75,17 +76,22 @@ Eigen::VectorXd KalmanFilter::get_x_hat() const
   return x_hat;
 }
 
+Eigen::MatrixXd KalmanFilter::get_P_hat() const
+{
+  return P;
+}
+
 Eigen::VectorXd KalmanFilter::get_y() const
 {
   return H * x_hat;
 }
 
-Eigen::VectorXd KalmanFilter::get_estimated_gaussian_variance() const
+Eigen::MatrixXd KalmanFilter::get_estimated_gaussian_variance() const
 {
   return H * P * H.transpose() + R;
 }
 
 Eigen::VectorXd KalmanFilter::get_potential_measurement_error(const Eigen::VectorXd & z)
 {
-  return z - H * x_hat;
+  return z - H * F * x_hat;
 }

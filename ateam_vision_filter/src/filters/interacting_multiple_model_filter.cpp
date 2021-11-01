@@ -38,11 +38,19 @@ void InteractingMultipleModelFilter::setup(
 
   for (const auto & model_type : model_types) {
     models[model_type] = base_model;
+    mu[model_type] = 1.0 / model_types.size();
   }
 }
 
-InteractingMultipleModelFilter InteractingMultipleModelFilter::clone(const Eigen::VectorXd & state_estimate) {
-  return InteractingMultipleModelFilter();  // TODO(jneiger): Implement clone correctly
+InteractingMultipleModelFilter InteractingMultipleModelFilter::clone(
+  const Eigen::VectorXd & state_estimate)
+{
+  InteractingMultipleModelFilter output(*this);
+  for (auto & model : output.models) {
+    model.second.set_initial_x_hat(state_estimate);
+  }
+
+  return output;
 }
 
 void InteractingMultipleModelFilter::predict()
@@ -88,7 +96,7 @@ double InteractingMultipleModelFilter::get_potential_measurement_error(
   // allowing us to push the z - F * H * x into the kalman filter
   // and not expose model data to this class
 
-  Eigen::VectorXd potential_measurement_error;
+  Eigen::VectorXd potential_measurement_error = 0.0 * measurement;
 
   for (const auto & model_type : model_types) {
     potential_measurement_error += mu.at(model_type) *
@@ -106,7 +114,8 @@ Eigen::VectorXd InteractingMultipleModelFilter::get_state_estimate() const
   // https://arxiv.org/pdf/1912.00603.pdf
   //
   // Best estimate is a weighted average of the individual models estimate
-  Eigen::VectorXd x_bar;
+
+  Eigen::VectorXd x_bar = 0.0 * models.begin()->second.get_x_hat();
 
   for (const auto & model_type : model_types) {
     x_bar += mu.at(model_type) * models.at(model_type).get_x_hat();
