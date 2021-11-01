@@ -20,11 +20,13 @@
 
 #include "filters/multiple_hypothesis_tracker.hpp"
 
-#include <map>
-#include <vector>
-
 #include <boost/graph/successive_shortest_path_nonnegative_weights.hpp>
 #include <boost/graph/adjacency_list.hpp>
+
+#include <map>
+#include <set>
+#include <utility>
+#include <vector>
 
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {
@@ -47,19 +49,21 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   // Form is a bipartite graph assignmnet problem with 1 supply per measurement,
   // and 1 sink per track
 
-  using adjacency_list_traits = boost::adjacency_list_traits<boost::vecS, boost::vecS, boost::directedS>;
+  using adjacency_list_traits = boost::adjacency_list_traits<boost::vecS, boost::vecS,
+      boost::directedS>;
 
   using graph_t = boost::adjacency_list<
     boost::vecS,
     boost::vecS,
     boost::directedS,
     boost::no_property,
-    boost::property<boost::edge_capacity_t, long,
-      boost::property<boost::edge_residual_capacity_t, long,
-        boost::property<boost::edge_reverse_t, adjacency_list_traits::edge_descriptor,
-          boost::property<boost::edge_weight_t, double>>>>>;
+    boost::property<boost::edge_capacity_t, unsigned int,
+    boost::property<boost::edge_residual_capacity_t, unsigned int,
+    boost::property<boost::edge_reverse_t, adjacency_list_traits::edge_descriptor,
+    boost::property<boost::edge_weight_t, double>>>>>;
   using edge_capacity_list_t = boost::property_map<graph_t, boost::edge_capacity_t>::type;
-  using edge_residual_capacity_list_t = boost::property_map<graph_t, boost::edge_residual_capacity_t>::type;
+  using edge_residual_capacity_list_t = boost::property_map<graph_t,
+      boost::edge_residual_capacity_t>::type;
   using edge_weight_list_t = boost::property_map<graph_t, boost::edge_weight_t>::type;
   using edge_reverse_list_t = boost::property_map<graph_t, boost::edge_reverse_t>::type;
 
@@ -84,12 +88,14 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   source = boost::add_vertex(graph);
   sink = boost::add_vertex(graph);
 
-  std::map<adjacency_list_traits::vertex_descriptor, const Eigen::VectorXd&> vertex_to_measurement;
+  std::map<adjacency_list_traits::vertex_descriptor,
+    const Eigen::VectorXd &> vertex_to_measurement;
   for (size_t i = 0; i < measurements.size(); i++) {
     vertex_to_measurement.insert({boost::add_vertex(graph), measurements.at(i)});
   }
 
-  std::map<adjacency_list_traits::vertex_descriptor, InteractingMultipleModelFilter&> vertex_to_track;
+  std::map<adjacency_list_traits::vertex_descriptor,
+    InteractingMultipleModelFilter &> vertex_to_track;
   for (size_t i = 0; i < tracks.size(); i++) {
     vertex_to_track.insert({boost::add_vertex(graph), tracks.at(i)});
   }
@@ -100,28 +106,36 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
       adjacency_list_traits::vertex_descriptor,
       adjacency_list_traits::vertex_descriptor>> forward_edge_to_vertex_pair;
   auto add_edge_to_graph = [&](auto & source_vertex, auto & sink_vertex, double weight) {
-    adjacency_list_traits::edge_descriptor forward_edge, backward_edge;
-    bool is_valid = true;
-    long capacity = 1;
-    boost::tie(forward_edge, is_valid) = boost::add_edge(boost::vertex(source_vertex, graph), boost::vertex(sink_vertex, graph), graph);
+      adjacency_list_traits::edge_descriptor forward_edge, backward_edge;
+      bool is_valid = true;
+      unsigned int capacity = 1;
+      boost::tie(forward_edge, is_valid) = boost::add_edge(
+        boost::vertex(
+          source_vertex,
+          graph),
+        boost::vertex(sink_vertex, graph), graph);
 
-    assert(is_valid);  // Fails if edge already exists
+      assert(is_valid);  // Fails if edge already exists
 
-    edge_capacity_list[forward_edge] = capacity;
-    edge_weight_list[forward_edge] = weight;
+      edge_capacity_list[forward_edge] = capacity;
+      edge_weight_list[forward_edge] = weight;
 
-    boost::tie(backward_edge, is_valid) = boost::add_edge(boost::vertex(sink_vertex, graph), boost::vertex(source_vertex, graph), graph);
+      boost::tie(backward_edge, is_valid) = boost::add_edge(
+        boost::vertex(
+          sink_vertex,
+          graph),
+        boost::vertex(source_vertex, graph), graph);
 
-    assert(is_valid);  // Fails if edge already exists
+      assert(is_valid);  // Fails if edge already exists
 
-    edge_capacity_list[backward_edge] = 0;
-    edge_weight_list[backward_edge] = -weight;
+      edge_capacity_list[backward_edge] = 0;
+      edge_weight_list[backward_edge] = -weight;
 
-    edge_reverse_list[forward_edge] = backward_edge;
-    edge_reverse_list[backward_edge] = forward_edge;
+      edge_reverse_list[forward_edge] = backward_edge;
+      edge_reverse_list[backward_edge] = forward_edge;
 
-    forward_edge_to_vertex_pair[forward_edge] = std::make_pair(source_vertex, sink_vertex);
-  };
+      forward_edge_to_vertex_pair[forward_edge] = std::make_pair(source_vertex, sink_vertex);
+    };
 
   // Add all source to first set
   for (auto & vertex_measurement_pair : vertex_to_measurement) {
@@ -139,7 +153,8 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   // Add cost for every single combination of measurement to track
   for (const auto & vertex_measurement_pair : vertex_to_measurement) {
     for (auto & vertex_track_pair : vertex_to_track) {
-      double dist = (vertex_measurement_pair.second - vertex_track_pair.second.get_state_estimate()).norm();
+      double dist =
+        (vertex_measurement_pair.second - vertex_track_pair.second.get_state_estimate()).norm();
       add_edge_to_graph(vertex_measurement_pair.first, vertex_track_pair.first, dist);
     }
   }
@@ -152,9 +167,10 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   }
 
   // Note: residual capacity so 1 is not used, 0 is used
-  edge_residual_capacity_list_t edge_residual_capacity_list = boost::get(boost::edge_residual_capacity, graph);
+  edge_residual_capacity_list_t edge_residual_capacity_list = boost::get(
+    boost::edge_residual_capacity, graph);
   for (const auto & forward_edge_vertex_pair : forward_edge_to_vertex_pair) {
-    long used_flow = 1 - edge_residual_capacity_list[forward_edge_vertex_pair.first];
+    unsigned int used_flow = 1 - edge_residual_capacity_list[forward_edge_vertex_pair.first];
 
     // Assigned edge
     if (used_flow == 1) {
