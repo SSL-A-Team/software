@@ -24,6 +24,7 @@
 #include <Eigen/Dense>
 
 #include <array>
+#include <optional>
 
 #include "types/ball.hpp"
 #include "types/models.hpp"
@@ -33,18 +34,18 @@ class ModelInputGenerator
 {
 public:
   void update(
-    const std::array<Robot, 16> & blue_robots,
-    const std::array<Robot, 16> & yellow_robots,
-    const Ball & ball);
+    const std::array<std::optional<Robot>, 16> & blue_robots,
+    const std::array<std::optional<Robot>, 16> & yellow_robots,
+    const std::optional<Ball> & ball);
 
   Eigen::VectorXd get_model_input(
     const Eigen::VectorXd & possible_state,
     const Models::ModelType & model_type) const;
 
 private:
-  std::array<Robot, 16> blue_robots;
-  std::array<Robot, 16> yellow_robots;
-  Ball ball;
+  std::array<std::optional<Robot>, 16> blue_robots;
+  std::array<std::optional<Robot>, 16> yellow_robots;
+  std::optional<Ball> ball;
 };
 
 #endif  // GENERATORS__MODEL_INPUT_GENERATOR_HPP_

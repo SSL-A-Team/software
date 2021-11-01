@@ -28,6 +28,8 @@ namespace Models
 
 enum ModelType
 {
+  TEST_EMPTY_MODEL,
+
   BALL_ROLLING_FRICTION,  // Standard ball rolling over the ground
   BALL_SLIDING_FRICTION,  // Ball with backspin after kick where it's sliding instead of rolling
   BALL_BOUNCE_ON_ROBOT,  // Ball doing a perfectly inelastic collision
@@ -45,6 +47,9 @@ constexpr double dt = 1.0 / 100.0;
 
 namespace Ball
 {
+
+const double rolling_friction_accel = 0.1;  // m/s^2 decel of rolling friction
+const double sliding_friction_accel = 0.1;  // m/s^2 decel of sliding friction
 
 // pos_x, pos_y, vel_x, vel_y, accel_x, accel_y
 const double dt22 = dt * dt / 2;  // accel -> position

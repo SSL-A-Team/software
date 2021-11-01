@@ -33,7 +33,7 @@ TEST(interacting_multiple_model_filter, get_state_estimate_ShouldReturnIntial_Wh
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 2.0});
-  std::vector<Models::ModelType> model_types{Models::ModelType::BALL_ROLLING_FRICTION};
+  std::vector<Models::ModelType> model_types{Models::ModelType::TEST_EMPTY_MODEL};
   std::shared_ptr<ModelInputGenerator> model_input_generator =
     std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator =
@@ -56,7 +56,7 @@ TEST(interacting_multiple_model_filter, predict_ShouldReturnX10Step_WhenPredictX
   kf.set_H(Eigen::Matrix2d::Identity());
   kf.set_Q(Eigen::Matrix2d::Identity());
   kf.set_R(Eigen::Matrix2d::Identity());
-  std::vector<Models::ModelType> model_types{Models::ModelType::BALL_ROLLING_FRICTION};
+  std::vector<Models::ModelType> model_types{Models::ModelType::TEST_EMPTY_MODEL};
   std::shared_ptr<ModelInputGenerator> model_input_generator =
     std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator =
@@ -83,7 +83,7 @@ TEST(interacting_multiple_model_filter, update_ShouldReturnUpdate_WhenUpdateX100
   kf.set_H(Eigen::Matrix2d::Identity());
   kf.set_Q(Eigen::Matrix2d::Identity());
   kf.set_R(Eigen::Matrix2d::Identity());
-  std::vector<Models::ModelType> model_types{Models::ModelType::BALL_ROLLING_FRICTION};
+  std::vector<Models::ModelType> model_types{Models::ModelType::TEST_EMPTY_MODEL};
   std::shared_ptr<ModelInputGenerator> model_input_generator =
     std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator =
@@ -108,7 +108,7 @@ TEST(interacting_multiple_model_filter, clone_ShouldReturnIntial_WhenNothingChan
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 2.0});
-  std::vector<Models::ModelType> model_types{Models::ModelType::BALL_ROLLING_FRICTION};
+  std::vector<Models::ModelType> model_types{Models::ModelType::TEST_EMPTY_MODEL};
   std::shared_ptr<ModelInputGenerator> model_input_generator =
     std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator =
@@ -137,7 +137,7 @@ TEST(
   kf.set_H(Eigen::Matrix2d::Identity());
   kf.set_Q(Eigen::Matrix2d::Identity());
   kf.set_R(Eigen::Matrix2d::Identity());
-  std::vector<Models::ModelType> model_types{Models::ModelType::BALL_ROLLING_FRICTION};
+  std::vector<Models::ModelType> model_types{Models::ModelType::TEST_EMPTY_MODEL};
   std::shared_ptr<ModelInputGenerator> model_input_generator =
     std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator =
