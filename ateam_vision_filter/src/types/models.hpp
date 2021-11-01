@@ -75,8 +75,24 @@ const Eigen::MatrixXd H =
   1, 0, 0, 0, 0, 0,
   0, 1, 0, 0, 0, 0).finished();
 
-const Eigen::MatrixXd Q = F;
-const Eigen::MatrixXd R = F;
+const double dt4 = dt * dt * dt * dt / 4.0;
+const double dt3 = dt * dt * dt / 2.0;
+const double dt2 = dt * dt / 2.0;
+const double sigma_alpha_squared = 0.1;  // Acceleration std dev
+const Eigen::MatrixXd Q =
+  (Eigen::MatrixXd(6, 6) <<
+  dt4, 0, dt3, 0, dt2, 0,
+  0, dt4, 0, dt3, 0, dt2,
+  dt3, 0, dt * dt, 0, dt, 0,
+  0, dt3, 0, dt * dt, 0, dt,
+  dt2, 0, dt, 0, 1, 0,
+  0, dt2, 0, dt, 0, 1).finished() * sigma_alpha_squared;
+
+const double sigma_pos_squared = 0.1;  // Position measurement error
+const Eigen::MatrixXd R =
+  (Eigen::MatrixXd(2, 2) <<
+  sigma_pos_squared, 0,
+  0, sigma_pos_squared).finished();
 
 }  // namespace Ball
 
@@ -120,8 +136,41 @@ const Eigen::MatrixXd H =
   0, 1, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 1, 0, 0, 0, 0, 0, 0).finished();
 
-const Eigen::MatrixXd Q = F;
-const Eigen::MatrixXd R = F;
+const double dt4 = dt * dt * dt * dt / 4.0;
+const double dt3 = dt * dt * dt / 2.0;
+const double dt2 = dt * dt / 2.0;
+const double sigma_linear_alpha_squared = .1;  // Linear acceleration std dev
+const double sigma_angular_alpha_squared = .1;  // Angular acceleration std dev
+// Split into linear and angular portion
+const Eigen::MatrixXd Q =
+  (Eigen::MatrixXd(9, 9) <<
+  dt4, 0, 0, dt3, 0, 0, dt2, 0, 0,
+  0, dt4, 0, 0, dt3, 0, 0, dt2, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  dt3, 0, 0, dt * dt, 0, 0, dt, 0, 0,
+  0, dt3, 0, 0, dt * dt, 0, 0, dt, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  dt2, 0, 0, dt, 0, 0, 1, 0, 0,
+  0, dt2, 0, 0, dt, 0, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0).finished() * sigma_linear_alpha_squared +
+  (Eigen::MatrixXd(9, 9) <<
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, dt4, 0, 0, dt3, 0, 0, dt2,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, dt3, 0, 0, dt * dt, 0, 0, dt,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, dt2, 0, 0, dt, 0, 0, 1).finished() * sigma_angular_alpha_squared;
+
+const double sigma_pos_squared = 0.1;  // Position measurement error
+const double sigma_theta_squared = 0.1;  // Angular heading measurement error
+const Eigen::MatrixXd R =
+  (Eigen::MatrixXd(3, 3) <<
+  sigma_pos_squared, 0, 0,
+  0, sigma_pos_squared, 0,
+  0, 0, sigma_theta_squared).finished();
 
 }  // namespace Robot
 }  // namespace Models
