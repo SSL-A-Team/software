@@ -59,7 +59,7 @@ public:
    * @note Clones all current tracks and covariance estimates. Only state estimates get changed
    * to new values
    */
-  InteractingMultipleModelFilter clone(const Eigen::VectorXd & state_estimate);
+  InteractingMultipleModelFilter clone(const Eigen::VectorXd & measurement);
 
   /**
    * Step models forward one time step
@@ -75,6 +75,13 @@ public:
    * @return Best estimation of state (special weighted average of model's xhat)
    */
   Eigen::VectorXd get_state_estimate() const;
+
+  Eigen::VectorXd get_position_estimate() const;
+
+  /**
+   * @return Score representing how much this filter has been updated
+   */
+  double get_validity_score() const;
 
   /**
    * @return Score of how far off a potential measurement error is
@@ -101,7 +108,8 @@ private:
   std::map<Models::ModelType, KalmanFilter> models;  // Kalman filter representing ModelType
   std::map<Models::ModelType, double> mu;  // ~= Probability of being in model ModelType
 
-  unsigned int frames_since_last_update = 0;
+  double alpha = 0.5;  // How much to weight old updates when getting average frequency
+  double relative_update_frequency = 0;
   unsigned int updates_until_valid_track = 10;
 
   std::shared_ptr<ModelInputGenerator> model_input_generator;

@@ -28,6 +28,7 @@
 
 #include <Eigen/Dense>
 
+#include <utility>
 #include <vector>
 
 #include "filters/interacting_multiple_model_filter.hpp"
@@ -35,10 +36,14 @@
 class MultipleHypothesisTracker
 {
 public:
+  using StateWithScore = std::pair<Eigen::VectorXd, double>;
+
   void set_base_track(const InteractingMultipleModelFilter & base_track);
 
   void update(const std::vector<Eigen::VectorXd> & measurements);
   void predict();
+
+  std::optional<StateWithScore> get_state_estimate() const;
 
 private:
   void life_cycle_management();

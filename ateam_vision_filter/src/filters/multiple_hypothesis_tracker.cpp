@@ -27,17 +27,11 @@
 #include <set>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {
   this->base_track = base_track;
-}
-
-void MultipleHypothesisTracker::predict()
-{
-  for (auto & track : tracks) {
-    track.predict();
-  }
 }
 
 void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & measurements)
@@ -154,7 +148,7 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   for (const auto & vertex_measurement_pair : vertex_to_measurement) {
     for (auto & vertex_track_pair : vertex_to_track) {
       double dist =
-        (vertex_measurement_pair.second - vertex_track_pair.second.get_state_estimate()).norm();
+        (vertex_measurement_pair.second - vertex_track_pair.second.get_position_estimate()).norm();
       add_edge_to_graph(vertex_measurement_pair.first, vertex_track_pair.first, dist);
     }
   }
@@ -180,9 +174,13 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
       const auto & measurement = vertex_to_measurement.at(source_measurement_vertex);
       auto & track = vertex_to_track.at(sink_track_vertex);
 
-      track.update(measurement);
+      // Only add the measurement if they're within some range of the track
+      // since measurements aren't super consistent
+      if ((measurement - track.get_position_estimate()).norm() < 1) {
+        track.update(measurement);
 
-      unassigned_measurements.erase(source_measurement_vertex);
+        unassigned_measurements.erase(source_measurement_vertex);
+      }
     }
   }
 
@@ -191,6 +189,34 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
     const auto & measurement = vertex_to_measurement.at(vertex_measurement);
     tracks.emplace_back(base_track.clone(measurement));
   }
+}
+
+void MultipleHypothesisTracker::predict()
+{
+  for (auto & track : tracks) {
+    track.predict();
+  }
+}
+
+std::optional<MultipleHypothesisTracker::StateWithScore> MultipleHypothesisTracker::
+get_state_estimate() const
+{
+  // Only return values if we have tracks
+  if (tracks.empty()) {
+    return std::nullopt;
+  }
+
+  // Otherwise return best scoring track
+  size_t best_idx = 0;
+  double best_score = 0.0;
+  for (size_t track_id = 0; track_id < tracks.size(); track_id++) {
+    if (best_score < tracks.at(track_id).get_validity_score()) {
+      best_score = tracks.at(track_id).get_validity_score();
+      best_idx = track_id;
+    }
+  }
+
+  return std::make_pair(tracks.at(best_idx).get_state_estimate(), best_score);
 }
 
 void MultipleHypothesisTracker::life_cycle_management()

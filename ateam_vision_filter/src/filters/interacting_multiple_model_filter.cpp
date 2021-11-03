@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 void InteractingMultipleModelFilter::setup(
   const KalmanFilter & base_model,
@@ -43,11 +44,13 @@ void InteractingMultipleModelFilter::setup(
 }
 
 InteractingMultipleModelFilter InteractingMultipleModelFilter::clone(
-  const Eigen::VectorXd & state_estimate)
+  const Eigen::VectorXd & measurement)
 {
   InteractingMultipleModelFilter output(*this);
   for (auto & model : output.models) {
-    model.second.set_initial_x_hat(state_estimate);
+    Eigen::VectorXd new_x_hat = model.second.get_x_hat();
+    new_x_hat.block(0, 0, measurement.rows(), 1) = measurement;
+    model.second.set_initial_x_hat(new_x_hat);
   }
 
   return output;
@@ -62,7 +65,7 @@ void InteractingMultipleModelFilter::predict()
         model_pair.first));
   }
 
-  ++frames_since_last_update;
+  relative_update_frequency = alpha * relative_update_frequency + (1 - alpha) * 0;
 }
 
 void InteractingMultipleModelFilter::update(const Eigen::VectorXd & measurement)
@@ -73,10 +76,55 @@ void InteractingMultipleModelFilter::update(const Eigen::VectorXd & measurement)
     model_pair.second.update(measurement);
   }
 
-  frames_since_last_update = 0;
+  relative_update_frequency = alpha * relative_update_frequency + (1 - alpha) * 1;
 
   if (updates_until_valid_track > 0) {
     --updates_until_valid_track;
+  }
+}
+
+Eigen::VectorXd InteractingMultipleModelFilter::get_state_estimate() const
+{
+  // Requires update_mu to have been called for this frame
+
+  // Eq 19
+  // https://arxiv.org/pdf/1912.00603.pdf
+  //
+  // Best estimate is a weighted average of the individual models estimate
+
+  Eigen::VectorXd x_bar = 0.0 * models.begin()->second.get_x_hat();
+
+  for (const auto & model_type : model_types) {
+    x_bar += mu.at(model_type) * models.at(model_type).get_x_hat();
+  }
+
+  return x_bar;
+}
+
+Eigen::VectorXd InteractingMultipleModelFilter::get_position_estimate() const
+{
+  // Requires update_mu to have been called for this frame
+
+  // Eq 19
+  // https://arxiv.org/pdf/1912.00603.pdf
+  //
+  // Best estimate is a weighted average of the individual models estimate
+
+  Eigen::VectorXd x_bar = 0.0 * models.begin()->second.get_y();
+
+  for (const auto & model_type : model_types) {
+    x_bar += mu.at(model_type) * models.at(model_type).get_y();
+  }
+
+  return x_bar;
+}
+
+double InteractingMultipleModelFilter::get_validity_score() const
+{
+  if (updates_until_valid_track > 0) {
+    return 0;
+  } else {
+    return relative_update_frequency;
   }
 }
 
@@ -104,24 +152,6 @@ double InteractingMultipleModelFilter::get_potential_measurement_error(
   }
 
   return potential_measurement_error.norm();
-}
-
-Eigen::VectorXd InteractingMultipleModelFilter::get_state_estimate() const
-{
-  // Requires update_mu to have been called for this frame
-
-  // Eq 19
-  // https://arxiv.org/pdf/1912.00603.pdf
-  //
-  // Best estimate is a weighted average of the individual models estimate
-
-  Eigen::VectorXd x_bar = 0.0 * models.begin()->second.get_x_hat();
-
-  for (const auto & model_type : model_types) {
-    x_bar += mu.at(model_type) * models.at(model_type).get_x_hat();
-  }
-
-  return x_bar;
 }
 
 void InteractingMultipleModelFilter::update_mu(const Eigen::VectorXd & zt)

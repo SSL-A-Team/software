@@ -59,6 +59,7 @@ if(BUILD_TESTING)
   ament_add_gtest(${PROJECT_NAME}_test
     test/filters/interacting_multiple_model_filter_test.cpp
     test/filters/kalman_filter_test.cpp
+    test/filters/multiple_hypothesis_tracker_test.cpp
     test/generators/model_input_generator_test.cpp
   )
   target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
