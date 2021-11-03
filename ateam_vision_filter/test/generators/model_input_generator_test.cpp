@@ -20,8 +20,8 @@
 
 #include <gtest/gtest.h>
 
-#include <array>
 #include <optional>
+#include <array>
 
 #include "../src/generators/model_input_generator.hpp"
 #include "../src/types/ball.hpp"
@@ -112,8 +112,12 @@ TEST(model_input_generator, get_model_input_ShouldReturnNegStep_WhenBallStopOnDr
 
   Eigen::VectorXd ret = mig.get_model_input(input_state, Models::ModelType::BALL_STOP_ON_DRIBBLER);
 
-  EXPECT_NEAR(ret(0), -Models::dt * input_state(2) - Models::dt * Models::dt / 2.0 * input_state(4), 1e-6);
-  EXPECT_NEAR(ret(1), -Models::dt * input_state(3) - Models::dt * Models::dt / 2.0 * input_state(5), 1e-6);
+  EXPECT_NEAR(
+    ret(0), -Models::dt * input_state(2) - Models::dt * Models::dt / 2.0 * input_state(
+      4), 1e-6);
+  EXPECT_NEAR(
+    ret(1), -Models::dt * input_state(3) - Models::dt * Models::dt / 2.0 * input_state(
+      5), 1e-6);
   EXPECT_NEAR(ret(2), -Models::dt * input_state(4), 1e-6);
   EXPECT_NEAR(ret(3), -Models::dt * input_state(5), 1e-6);
   EXPECT_NEAR(ret(4), -input_state(4), 1e-6);
@@ -162,8 +166,13 @@ TEST(model_input_generator, get_model_input_ShouldReturnSlowKickPlusNegStep_When
 
   Eigen::VectorXd ret = mig.get_model_input(input_state, Models::ModelType::BALL_SLOW_KICK);
 
-  EXPECT_NEAR(ret(0), -Models::dt * input_state(2) - Models::dt * Models::dt / 2.0 * input_state(4) + Models::dt * 2.0, 1e-6);
-  EXPECT_NEAR(ret(1), -Models::dt * input_state(3) - Models::dt * Models::dt / 2.0 * input_state(5), 1e-6);
+  EXPECT_NEAR(
+    ret(
+      0), -Models::dt * input_state(2) - Models::dt * Models::dt / 2.0 * input_state(
+      4) + Models::dt * 2.0, 1e-6);
+  EXPECT_NEAR(
+    ret(1), -Models::dt * input_state(3) - Models::dt * Models::dt / 2.0 * input_state(
+      5), 1e-6);
   EXPECT_NEAR(ret(2), -Models::dt * input_state(4) + 2.0, 1e-6);
   EXPECT_NEAR(ret(3), -Models::dt * input_state(5), 1e-6);
   EXPECT_NEAR(ret(4), -input_state(4), 1e-6);
@@ -212,8 +221,12 @@ TEST(model_input_generator, get_model_input_ShouldReturnMediumKickPlusNegStep_Wh
 
   Eigen::VectorXd ret = mig.get_model_input(input_state, Models::ModelType::BALL_MEDIUM_KICK);
 
-  EXPECT_NEAR(ret(0), -Models::dt * input_state(2) - Models::dt * Models::dt / 2.0 * input_state(4) + Models::dt * 4.0, 1e-6);
-  EXPECT_NEAR(ret(1), -Models::dt * input_state(3) - Models::dt * Models::dt / 2.0 * input_state(5), 1e-6);
+  EXPECT_NEAR(
+    ret(0), -Models::dt * input_state(2) - Models::dt * Models::dt / 2.0 * input_state(
+      4) + Models::dt * 4.0, 1e-6);
+  EXPECT_NEAR(
+    ret(1), -Models::dt * input_state(3) - Models::dt * Models::dt / 2.0 * input_state(
+      5), 1e-6);
   EXPECT_NEAR(ret(2), -Models::dt * input_state(4) + 4.0, 1e-6);
   EXPECT_NEAR(ret(3), -Models::dt * input_state(5), 1e-6);
   EXPECT_NEAR(ret(4), -input_state(4), 1e-6);
@@ -262,8 +275,12 @@ TEST(model_input_generator, get_model_input_ShouldReturnFastKickPlusNegStep_When
 
   Eigen::VectorXd ret = mig.get_model_input(input_state, Models::ModelType::BALL_FAST_KICK);
 
-  EXPECT_NEAR(ret(0), -Models::dt * input_state(2) - Models::dt * Models::dt / 2.0 * input_state(4) + Models::dt * 6.0, 1e-6);
-  EXPECT_NEAR(ret(1), -Models::dt * input_state(3) - Models::dt * Models::dt / 2.0 * input_state(5), 1e-6);
+  EXPECT_NEAR(
+    ret(0), -Models::dt * input_state(2) - Models::dt * Models::dt / 2.0 * input_state(
+      4) + Models::dt * 6.0, 1e-6);
+  EXPECT_NEAR(
+    ret(1), -Models::dt * input_state(3) - Models::dt * Models::dt / 2.0 * input_state(
+      5), 1e-6);
   EXPECT_NEAR(ret(2), -Models::dt * input_state(4) + 6.0, 1e-6);
   EXPECT_NEAR(ret(3), -Models::dt * input_state(5), 1e-6);
   EXPECT_NEAR(ret(4), -input_state(4), 1e-6);
@@ -319,7 +336,8 @@ TEST(model_input_generator, get_model_input_ShouldReturnPositive_WhenRobotAccelT
   ball.value().position = Eigen::Vector2d{0, 0};
   mig.update(blue_robots, yellow_robots, ball);
 
-  Eigen::VectorXd ret = mig.get_model_input(input_state, Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL);
+  Eigen::VectorXd ret =
+    mig.get_model_input(input_state, Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL);
 
   EXPECT_NEAR(ret(0), Models::dt * Models::dt / 2.0 * Models::Robot::max_acceleration, 1e-6);
   EXPECT_NEAR(ret(1), 0.0, 1e-6);
@@ -352,7 +370,9 @@ TEST(model_input_generator, get_model_input_ShouldReturnNegative_WhenRobotAccelA
   std::optional<Ball> ball = Ball();
   mig.update(blue_robots, yellow_robots, ball);
 
-  Eigen::VectorXd ret = mig.get_model_input(input_state, Models::ModelType::ROBOT_ACCEL_AWAY_FROM_BALL);
+  Eigen::VectorXd ret = mig.get_model_input(
+    input_state,
+    Models::ModelType::ROBOT_ACCEL_AWAY_FROM_BALL);
 
   EXPECT_NEAR(ret(0), -Models::dt * Models::dt / 2.0 * Models::Robot::max_acceleration, 1e-6);
   EXPECT_NEAR(ret(1), 0.0, 1e-6);

@@ -23,8 +23,8 @@
 
 #include <Eigen/Dense>
 
-#include <array>
 #include <optional>
+#include <array>
 
 #include "types/ball.hpp"
 #include "types/models.hpp"
@@ -52,7 +52,9 @@ private:
    */
   std::optional<Robot> get_closest_robot(const Eigen::Vector2d & position) const;
 
-  Eigen::VectorXd get_output_with_kick_at_speed(const Eigen::VectorXd & possible_state, const double kick_speed) const;
+  Eigen::VectorXd get_output_with_kick_at_speed(
+    const Eigen::VectorXd & possible_state,
+    const double kick_speed) const;
 };
 
 #endif  // GENERATORS__MODEL_INPUT_GENERATOR_HPP_
