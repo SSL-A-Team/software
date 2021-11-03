@@ -63,17 +63,15 @@ const Eigen::MatrixXd F =
   0, 0, 0, 0, 0, 1).finished();
 
 // commands
-// Constant "Position" commands are constant velocity of model
-// Constant "Velocity" commands are constant acceleration of model
-// Constant "Acceleration" commands are constant jerk of model
+// Note that this is x = x + B * u, so make sure dt's are in the right space
 const Eigen::MatrixXd B =
   (Eigen::MatrixXd(6, 6) <<
-  dt, 0, 0, 0, 0, 0,
-  0, dt, 0, 0, 0, 0,
-  0, 0, dt, 0, 0, 0,
-  0, 0, 0, dt, 0, 0,
-  0, 0, 0, 0, dt, 0,
-  0, 0, 0, 0, 0, dt).finished();
+  1, 0, 0, 0, 0, 0,
+  0, 1, 0, 0, 0, 0,
+  0, 0, 1, 0, 0, 0,
+  0, 0, 0, 1, 0, 0,
+  0, 0, 0, 0, 1, 0,
+  0, 0, 0, 0, 0, 1).finished();
 
 // Only measure position
 const Eigen::MatrixXd H =
@@ -105,6 +103,8 @@ const Eigen::MatrixXd R =
 namespace Robot
 {
 
+const double max_speed = 6;
+const double max_acceleration = 12;
 
 // pos_x, pos_y, theta, vel_x, vel_y, omega, accel_x, accel_y, alpha
 const double dt22 = dt * dt / 2;  // accel -> position
@@ -121,20 +121,18 @@ const Eigen::MatrixXd F =
   0, 0, 0, 0, 0, 0, 0, 0, 1).finished();
 
 // commands
-// Constant "Position" commands are constant velocity of model
-// Constant "Velocity" commands are constant acceleration of model
-// Constant "Acceleration" commands are constant jerk of model
+// Note that this is x = x + B * u, so make sure dt's are in the right space
 const Eigen::MatrixXd B =
   (Eigen::MatrixXd(9, 9) <<
-  dt, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, dt, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, dt, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, dt, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, dt, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, dt, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, dt, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, dt, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, dt).finished();
+  1, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 1, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 1, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 1, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 1, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 1, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 1).finished();
 
 // Only measure position
 const Eigen::MatrixXd H =

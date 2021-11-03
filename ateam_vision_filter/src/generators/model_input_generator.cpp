@@ -22,6 +22,7 @@
 
 #include <limits>
 #include <optional>
+#include <iostream>
 
 void ModelInputGenerator::update(
   const std::array<std::optional<Robot>, 16> & blue_robots,
@@ -47,8 +48,13 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
       friction = vel.norm() * friction.normalized();
     }
 
+    // Try to set output position to be if the accel happened the entire frame
+    // Try to set output velocity to be decreased by friction
+    // Try to set output acceleration to take into account friction
     Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
-    output.block(2, 0, 2, 1) = vel + friction;
+    output.block(0, 0, 2, 1) = Models::dt * Models::dt / 2.0 * friction;
+    output.block(2, 0, 2, 1) = Models::dt * friction;
+    output.block(4, 0, 2, 1) = friction;
 
     return output;
   } else if (model_type == Models::ModelType::BALL_SLIDING_FRICTION) {
@@ -60,47 +66,27 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
       friction = vel.norm() * friction.normalized();
     }
 
+    // Try to set output position to be if the accel happened the entire frame
+    // Try to set output velocity to be decreased by friction
+    // Try to set output acceleration to take into account friction
     Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
-    output.block(2, 0, 2, 1) = vel + friction;
+    output.block(0, 0, 2, 1) = Models::dt * Models::dt / 2.0 * friction;
+    output.block(2, 0, 2, 1) = Models::dt * friction;
+    output.block(4, 0, 2, 1) = friction;
 
     return output;
   } else if (model_type == Models::ModelType::BALL_BOUNCE_ON_ROBOT) {
     // Get closest robot
     Eigen::Vector2d ball_pos = possible_state.block(0, 0, 2, 1);
 
-    std::optional<Robot> closest_robot;
-    double dist = std::numeric_limits<double>::infinity();
-
-    for (const auto & robot : blue_robots) {
-      if (robot.has_value()) {
-        Eigen::Vector2d robot_pos = robot.value().position;
-
-        double test_dist = (ball_pos - robot_pos).norm();
-        if (test_dist < dist) {
-          closest_robot = robot;
-          dist = test_dist;
-        }
-      }
-    }
-    
-    for (const auto & robot : yellow_robots) {
-      if (robot.has_value()) {
-        Eigen::Vector2d robot_pos = robot.value().position;
-
-        double test_dist = (ball_pos - robot_pos).norm();
-        if (test_dist < dist) {
-          closest_robot = robot;
-          dist = test_dist;
-        }
-      }
-    }
+    std::optional<Robot> closest_robot = get_closest_robot(ball_pos);
 
     // No visible robots
     if (!closest_robot.has_value()) {
       return 0.0 * possible_state;  // Easy way to get 0 vector of right size
     }
 
-    // Figure out bounce (assuming robot is circle for now)
+    // TODO(jneiger): Figure out bounce (assuming robot is circle for now)
     // Get hit point on radius
     // Get angle to hit point
     // Reflect velocity off hitpoint
@@ -109,16 +95,25 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     // Negate current speed like ball instantly damps on dribbler
     Eigen::Vector2d vel = possible_state.block(2, 0, 2, 1);
     Eigen::Vector2d accel = possible_state.block(4, 0, 2, 1);
+
+    // Try to set output position to be if the 0 vel/accel happened the entire frame
+    // Try to set output velocity to be 0
+    // Try to set output acceleration to be 0
     Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
-    output.block(0, 0, 2, 1) = -vel - Models::dt * accel;
+    output.block(0, 0, 2, 1) = -Models::dt * vel - Models::dt * Models::dt / 2.0 * accel;  // Cancel vel/accel effect on motion
+    output.block(2, 0, 2, 1) = -Models::dt * accel;  // Cancel accel effect on vel
+    output.block(4, 0, 2, 1) = -accel;  // Negate accel to 0
 
     return output;
   } else if (model_type == Models::ModelType::BALL_SLOW_KICK) {
     // Facing direction of closest robot at 2 m/s
+    return get_output_with_kick_at_speed(possible_state, 2.0);
   } else if (model_type == Models::ModelType::BALL_MEDIUM_KICK) {
     // Facing direction of closest robot at 4 m/s
+    return get_output_with_kick_at_speed(possible_state, 4.0);
   } else if (model_type == Models::ModelType::BALL_FAST_KICK) {
     // Facing direction of closest robot at 6 m/s
+    return get_output_with_kick_at_speed(possible_state, 6.0);
   }
 
   // Robot
@@ -126,10 +121,122 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     return 0.0 * possible_state;  // Easy way to get 0 vector of right size
   } else if (model_type == Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL) {
     // Accel at X m/s2 towards ball
+    Eigen::Vector2d robot_pos = possible_state.block(0, 0, 2, 1);
+    Eigen::Vector2d robot_velocity = possible_state.block(3, 0, 2, 1);
+
+    // Make sure we actually have an idea where the ball is
+    if (!ball.has_value()) {
+      return 0.0 * possible_state;
+    }
+
+    Eigen::Vector2d robot_to_ball_vector = (ball.value().position - robot_pos).normalized();
+    Eigen::Vector2d new_velocity = robot_velocity + Models::dt * Models::Robot::max_acceleration * robot_to_ball_vector;
+    if (new_velocity.norm() > Models::Robot::max_speed) {
+      new_velocity = Models::Robot::max_speed * new_velocity.normalized();
+    }
+
+    Eigen::Vector2d realized_acceleration = (new_velocity - robot_velocity) / Models::dt;
+
+    // Try to set output position to be if the 0 vel/accel happened the entire frame
+    // Try to set output velocity to be 0
+    // Try to set output acceleration to be 0
+    Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
+    output.block(0, 0, 2, 1) = Models::dt * Models::dt / 2.0 * realized_acceleration;  // Cancel vel/accel effect on motion
+    output.block(3, 0, 2, 1) = Models::dt * realized_acceleration;  // Cancel accel effect on vel
+    output.block(6, 0, 2, 1) = realized_acceleration;  // Negate accel to 0
+
+    return output;
   } else if (model_type == Models::ModelType::ROBOT_ACCEL_AWAY_FROM_BALL) {
     // Accel at X m/s2 away from ball
+    // Accel at X m/s2 towards ball
+    Eigen::Vector2d robot_pos = possible_state.block(0, 0, 2, 1);
+    Eigen::Vector2d robot_velocity = possible_state.block(3, 0, 2, 1);
+
+    // Make sure we actually have an idea where the ball is
+    if (!ball.has_value()) {
+      return 0.0 * possible_state;
+    }
+
+    Eigen::Vector2d robot_to_ball_vector = (ball.value().position - robot_pos).normalized();
+    Eigen::Vector2d new_velocity = robot_velocity - Models::dt * Models::Robot::max_acceleration * robot_to_ball_vector;
+    if (new_velocity.norm() > Models::Robot::max_speed) {
+      new_velocity = Models::Robot::max_speed * new_velocity.normalized();
+    }
+
+    Eigen::Vector2d realized_acceleration = (new_velocity - robot_velocity) / Models::dt;
+
+    // Try to set output position to be if the 0 vel/accel happened the entire frame
+    // Try to set output velocity to be 0
+    // Try to set output acceleration to be 0
+    Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
+    output.block(0, 0, 2, 1) = Models::dt * Models::dt / 2.0 * realized_acceleration;  // Cancel vel/accel effect on motion
+    output.block(3, 0, 2, 1) = Models::dt * realized_acceleration;  // Cancel accel effect on vel
+    output.block(6, 0, 2, 1) = realized_acceleration;  // Negate accel to 0
+
+    return output;
   }
 
   // ERROR
   return 0.0 * possible_state;
+}
+
+
+std::optional<Robot> ModelInputGenerator::get_closest_robot(const Eigen::Vector2d & position) const
+{
+  std::optional<Robot> closest_robot = std::nullopt;
+  double dist = std::numeric_limits<double>::infinity();
+
+  for (const auto & robot : blue_robots) {
+    if (robot.has_value()) {
+      Eigen::Vector2d robot_pos = robot.value().position;
+
+      double test_dist = (position - robot_pos).norm();
+      if (test_dist < dist) {
+        closest_robot = robot;
+        dist = test_dist;
+      }
+    }
+  }
+  
+  for (const auto & robot : yellow_robots) {
+    if (robot.has_value()) {
+      Eigen::Vector2d robot_pos = robot.value().position;
+
+      double test_dist = (position - robot_pos).norm();
+      if (test_dist < dist) {
+        closest_robot = robot;
+        dist = test_dist;
+      }
+    }
+  }
+
+  return closest_robot;
+}
+
+Eigen::VectorXd ModelInputGenerator::get_output_with_kick_at_speed(const Eigen::VectorXd & possible_state, const double kick_speed) const
+{
+  // Facing direction of closest robot at X m/s
+  Eigen::Vector2d ball_pos = possible_state.block(0, 0, 2, 1);
+  Eigen::Vector2d ball_velocity = possible_state.block(2, 0, 2, 1);
+  Eigen::Vector2d ball_accel = possible_state.block(4, 0, 2, 1);
+
+  std::optional<Robot> closest_robot = get_closest_robot(ball_pos);
+
+  // No visible robots
+  if (!closest_robot.has_value()) {
+    return 0.0 * possible_state;  // Easy way to get 0 vector of right size
+  }
+
+  double theta = closest_robot.value().theta;
+  Eigen::Vector2d kick_velocity = kick_speed * Eigen::Vector2d{std::cos(theta), std::sin(theta)};
+
+  // Try to set output position to be if the kick_velocity happened the entire frame
+  // Try to set output velocity to be kick_velocity
+  // Try to set output acceleration to be 0
+  Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
+  output.block(0, 0, 2, 1) = -Models::dt * ball_velocity - Models::dt * Models::dt / 2.0 * ball_accel + Models::dt * kick_velocity;
+  output.block(2, 0, 2, 1) = -Models::dt * ball_accel + kick_velocity;
+  output.block(4, 0, 2, 1) = -ball_accel;
+
+  return output;
 }

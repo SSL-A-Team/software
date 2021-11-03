@@ -46,6 +46,13 @@ private:
   std::array<std::optional<Robot>, 16> blue_robots;
   std::array<std::optional<Robot>, 16> yellow_robots;
   std::optional<Ball> ball;
+
+  /**
+   * @return Closest robot to the position given (if one exists)
+   */
+  std::optional<Robot> get_closest_robot(const Eigen::Vector2d & position) const;
+
+  Eigen::VectorXd get_output_with_kick_at_speed(const Eigen::VectorXd & possible_state, const double kick_speed) const;
 };
 
 #endif  // GENERATORS__MODEL_INPUT_GENERATOR_HPP_
