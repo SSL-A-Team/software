@@ -42,7 +42,7 @@ ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot & 
 ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame & proto_msg);
 
 ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegment & proto_msg);
-ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCicularArc & proto_msg);
+ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCircularArc & proto_msg);
 ssl_league_msgs::msg::VisionGeometryFieldSize fromProto(const SSL_GeometryFieldSize & proto_msg);
 ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(
   const SSL_GeometryCameraCalibration & proto_msg);
