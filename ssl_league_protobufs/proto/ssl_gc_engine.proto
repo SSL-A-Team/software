@@ -36,6 +36,23 @@ message GcStateTeam {
 
     // true: The remote control for the team connected via TLS with a verified certificate
     optional bool remote_control_connection_verified = 4;
+
+    // the advantage choice of the team
+    optional TeamAdvantageChoice advantage_choice = 5;
+}
+
+// The choice from a team regarding the advantage rule
+message TeamAdvantageChoice {
+    // the choice of the team
+    optional AdvantageChoice choice = 1;
+
+    // possible advantage choices
+    enum AdvantageChoice {
+        // stop the game
+        STOP = 0;
+        // keep the match running
+        CONTINUE = 1;
+    }
 }
 
 // The GC state of an auto referee
