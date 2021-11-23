@@ -16,6 +16,8 @@ find_package(ssl_league_protobufs REQUIRED)
 add_library(${PROJECT_NAME} SHARED
   src/autoref_bridge_node.cpp
   src/message_conversions.cpp
+  src/team_client_node.cpp
+  src/team_client.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
@@ -30,6 +32,11 @@ rclcpp_components_register_node(
   ${PROJECT_NAME}
   PLUGIN "ateam_autoref_bridge::AutorefBridgeNode"
   EXECUTABLE autoref_bridge_node
+)
+rclcpp_components_register_node(
+  ${PROJECT_NAME}
+  PLUGIN "ateam_autoref_bridge::TeamClientNode"
+  EXECUTABLE team_client_node
 )
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 

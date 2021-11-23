@@ -2,4 +2,5 @@
 int32 desired_keeper
 ---
 # Response
-ssl_league_msgs/ControllerReply controller_reply
+bool success
+string reason

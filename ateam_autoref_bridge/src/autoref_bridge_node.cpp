@@ -22,9 +22,8 @@
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <ateam_common/multicast_receiver.hpp>
+#include <ateam_common/protobuf_logging.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
-#include <ateam_msgs/srv/set_desired_keeper.hpp>
-#include <ateam_msgs/srv/substitute_bot.hpp>
 
 #include "message_conversions.hpp"
 
@@ -37,21 +36,11 @@ public:
   explicit AutorefBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("autoref_bridge", options)
   {
+    SET_ROS_PROTOBUF_LOG_HANDLER("autoref_bridge.protobuf");
+
     referee_publisher_ = create_publisher<ssl_league_msgs::msg::Referee>(
       "~/referee_messages",
       rclcpp::SystemDefaultsQoS());
-
-    set_desired_keeper_service_ = create_service<ateam_msgs::srv::SetDesiredKeeper>(
-      "~/set_desired_keeper",
-      std::bind(
-        &AutorefBridgeNode::HandleSetDesiredKeeper, this, std::placeholders::_1,
-        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
-
-    substitute_bot_service_ = create_service<ateam_msgs::srv::SubstituteBot>(
-      "~/substitute_bot",
-      std::bind(
-        &AutorefBridgeNode::HandleSubstituteBot, this, std::placeholders::_1,
-        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
 
     const auto multicast_address =
       declare_parameter<std::string>("multicast.address", "224.5.23.1");
@@ -68,8 +57,6 @@ public:
 
 private:
   rclcpp::Publisher<ssl_league_msgs::msg::Referee>::SharedPtr referee_publisher_;
-  rclcpp::Service<ateam_msgs::srv::SetDesiredKeeper>::SharedPtr set_desired_keeper_service_;
-  rclcpp::Service<ateam_msgs::srv::SubstituteBot>::SharedPtr substitute_bot_service_;
   std::unique_ptr<ateam_common::MulticastReceiver> multicast_receiver_;
 
   void PublishMulticastMessage(const char * buffer, const size_t bytes_received)
@@ -80,20 +67,6 @@ private:
     } else {
       RCLCPP_WARN(get_logger(), "Failed to parse referee protobuf packet");
     }
-  }
-
-  void HandleSetDesiredKeeper(
-    const ateam_msgs::srv::SetDesiredKeeper::Request::SharedPtr /*request*/,
-    ateam_msgs::srv::SetDesiredKeeper::Response::SharedPtr /*response*/)
-  {
-    RCLCPP_ERROR(get_logger(), "Service %s not implemented yet.", set_desired_keeper_service_->get_service_name());
-  }
-
-  void HandleSubstituteBot(
-    const ateam_msgs::srv::SubstituteBot::Request::SharedPtr /*request*/,
-    ateam_msgs::srv::SubstituteBot::Response::SharedPtr /*response*/)
-  {
-    RCLCPP_ERROR(get_logger(), "Service %s not implemented yet.", substitute_bot_service_->get_service_name());
   }
 };
 

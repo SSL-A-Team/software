@@ -12,7 +12,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/BallState.msg
   msg/RobotMotionCommand.msg
   msg/RobotState.msg
+  msg/TeamClientConnectionStatus.msg
 
+  srv/ReconnectTeamClient.srv
   srv/SetDesiredKeeper.srv
   srv/SubstituteBot.srv
 
