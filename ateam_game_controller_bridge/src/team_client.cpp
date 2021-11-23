@@ -20,8 +20,9 @@
 
 #include "team_client.hpp"
 #include <google/protobuf/util/delimited_message_util.h>
+#include <string>
 
-namespace ateam_autoref_bridge
+namespace ateam_game_controller_bridge
 {
 
 TeamClient::TeamClient(rclcpp::Logger logger)
@@ -30,12 +31,13 @@ TeamClient::TeamClient(rclcpp::Logger logger)
 {
 }
 
-bool TeamClient::Connect(const ConnectionParameters& parameters) {
+bool TeamClient::Connect(const ConnectionParameters & parameters)
+{
   connected_ = false;
-  if(!AttemptToConnectSocket(parameters.address, parameters.port)) {
+  if (!AttemptToConnectSocket(parameters.address, parameters.port)) {
     return false;
   }
-  if(!AttemptToRegister(parameters.team_name, parameters.team_color)) {
+  if (!AttemptToRegister(parameters.team_name, parameters.team_color)) {
     socket_.close();
     return false;
   }
@@ -44,19 +46,22 @@ bool TeamClient::Connect(const ConnectionParameters& parameters) {
   return true;
 }
 
-TeamClient::Result TeamClient::SetDesiredKeeper(const int keeper_id) {
+TeamClient::Result TeamClient::SetDesiredKeeper(const int keeper_id)
+{
   TeamToController team_to_controller;
   team_to_controller.set_desired_keeper(keeper_id);
   return SendRequest(team_to_controller);
 }
 
-TeamClient::Result TeamClient::RequestBotSubstitution() {
+TeamClient::Result TeamClient::RequestBotSubstitution()
+{
   TeamToController team_to_controller;
   team_to_controller.set_substitute_bot(true);
   return SendRequest(team_to_controller);
 }
 
-TeamClient::PingResult TeamClient::Ping() {
+TeamClient::PingResult TeamClient::Ping()
+{
   TeamToController team_to_controller;
   team_to_controller.set_ping(true);
   PingResult result;
@@ -66,72 +71,48 @@ TeamClient::PingResult TeamClient::Ping() {
   return result;
 }
 
-TeamClient::Result TeamClient::SendRequest(TeamToController & request) {
-  boost::asio::streambuf boost_streambuf;
-  std::ostream std_stream(&boost_streambuf);
-  google::protobuf::util::SerializeDelimitedToOstream(request, &std_stream);
-
-  boost::asio::write(socket_, boost_streambuf, boost::asio::transfer_all());
-
-  ControllerToTeam controller_to_team;
-  if(!WaitForReply(controller_to_team)) {
-    return {false, "Client error."};
-  }
-
-  if(!controller_to_team.has_controller_reply()) {
-    RCLCPP_ERROR(logger_, "Got ControllerToTeam message with no ControllerReply payload!");
-    return {false, "Client error."};
-  }
-
-  const auto& controller_reply = controller_to_team.controller_reply();
-
-  if(controller_reply.has_next_token()) {
-    next_token_ = controller_reply.next_token();
-  }
-
-  Result result;
-  result.accepted = controller_reply.has_status_code() && (controller_reply.status_code() == ControllerReply::OK);
-  if(controller_reply.has_reason()) {
-    result.reason = controller_reply.reason();
-  }
-  return result;
-}
-
-bool TeamClient::AttemptToConnectSocket(const boost::asio::ip::address& address, const uint16_t port) {
-  if(socket_.is_open()) {
+bool TeamClient::AttemptToConnectSocket(
+  const boost::asio::ip::address & address,
+  const uint16_t port)
+{
+  if (socket_.is_open()) {
     socket_.close();
   }
   boost::system::error_code error_code;
   RCLCPP_INFO(logger_, "Connecting to game controller at %s:%d", address.to_string().c_str(), port);
   socket_.connect(boost::asio::ip::tcp::endpoint(address, port), error_code);
-  if(error_code) {
+  if (error_code) {
     RCLCPP_WARN(logger_, "Team client connect failed: %s", error_code.message().c_str());
     return false;
   }
-  
+
   ControllerToTeam controller_to_team;
-  if(!WaitForReply(controller_to_team)) {
+  if (!WaitForReply(controller_to_team)) {
     return false;
   }
 
-  if(!controller_to_team.has_controller_reply()) {
+  if (!controller_to_team.has_controller_reply()) {
     RCLCPP_ERROR(logger_, "Got ControllerToTeam message with no ControllerReply payload!");
     return false;
   }
 
-  const auto& controller_reply = controller_to_team.controller_reply();
+  const auto & controller_reply = controller_to_team.controller_reply();
 
-  if(controller_reply.has_status_code() && controller_reply.status_code() != ControllerReply::OK) {
-    if(controller_reply.has_reason()) {
-      RCLCPP_ERROR(logger_, "Game controller sent bad status code (%d) with reason: %s", controller_reply.status_code(), controller_reply.reason().c_str());
+  if (controller_reply.has_status_code() && controller_reply.status_code() != ControllerReply::OK) {
+    if (controller_reply.has_reason()) {
+      RCLCPP_ERROR(
+        logger_, "Game controller sent bad status code (%d) with reason: %s",
+        controller_reply.status_code(), controller_reply.reason().c_str());
     } else {
-      RCLCPP_ERROR(logger_, "Game controller sent bad status code: %d", controller_reply.status_code());
+      RCLCPP_ERROR(
+        logger_, "Game controller sent bad status code: %d",
+        controller_reply.status_code());
     }
     socket_.close();
     return false;
   }
-  
-  if(!controller_reply.has_next_token()) {
+
+  if (!controller_reply.has_next_token()) {
     RCLCPP_ERROR(logger_, "Controller reply did not include a token!");
   } else {
     next_token_ = controller_reply.next_token();
@@ -140,11 +121,12 @@ bool TeamClient::AttemptToConnectSocket(const boost::asio::ip::address& address,
   return true;
 }
 
-bool TeamClient::AttemptToRegister(const std::string& team_name, const TeamColor team_color) {
+bool TeamClient::AttemptToRegister(const std::string & team_name, const TeamColor team_color)
+{
   RCLCPP_INFO(logger_, "Registering team...");
   TeamRegistration team_registration_msg;
   team_registration_msg.set_team_name(team_name);
-  switch(team_color) {
+  switch (team_color) {
     case TeamColor::Blue:
       team_registration_msg.set_team(BLUE);
       break;
@@ -155,7 +137,7 @@ bool TeamClient::AttemptToRegister(const std::string& team_name, const TeamColor
       break;
   }
   // team_registration_msg.mutable_signature()->set_token(next_token_);
-  
+
   boost::asio::streambuf boost_streambuf;
   std::ostream std_stream(&boost_streambuf);
   google::protobuf::util::SerializeDelimitedToOstream(team_registration_msg, &std_stream);
@@ -163,22 +145,26 @@ bool TeamClient::AttemptToRegister(const std::string& team_name, const TeamColor
   boost::asio::write(socket_, boost_streambuf, boost::asio::transfer_all());
 
   ControllerToTeam controller_to_team;
-  if(!WaitForReply(controller_to_team)) {
+  if (!WaitForReply(controller_to_team)) {
     return false;
   }
 
-  if(!controller_to_team.has_controller_reply()) {
+  if (!controller_to_team.has_controller_reply()) {
     RCLCPP_ERROR(logger_, "Got ControllerToTeam message with no ControllerReply payload!");
     return false;
   }
 
-  const auto& controller_reply = controller_to_team.controller_reply();
+  const auto & controller_reply = controller_to_team.controller_reply();
 
-  if(controller_reply.has_status_code() && controller_reply.status_code() != ControllerReply::OK) {
-    if(controller_reply.has_reason()) {
-      RCLCPP_WARN(logger_, "Game controller sent bad status code (%d) with reason: %s", controller_reply.status_code(), controller_reply.reason().c_str());
+  if (controller_reply.has_status_code() && controller_reply.status_code() != ControllerReply::OK) {
+    if (controller_reply.has_reason()) {
+      RCLCPP_WARN(
+        logger_, "Game controller sent bad status code (%d) with reason: %s",
+        controller_reply.status_code(), controller_reply.reason().c_str());
     } else {
-      RCLCPP_WARN(logger_, "Game controller sent bad status code: %d", controller_reply.status_code());
+      RCLCPP_WARN(
+        logger_, "Game controller sent bad status code: %d",
+        controller_reply.status_code());
     }
     return false;
   }
@@ -186,34 +172,40 @@ bool TeamClient::AttemptToRegister(const std::string& team_name, const TeamColor
   return true;
 }
 
-bool TeamClient::WaitForReply(ControllerToTeam& reply) {
+bool TeamClient::WaitForReply(ControllerToTeam & reply)
+{
   boost::system::error_code error_code;
-  rclcpp::WallRate retry_rate(10/*Hz*/);
+  rclcpp::WallRate retry_rate(10 /*Hz*/);
   std::size_t bytes_received = 0;
   const auto timeout = std::chrono::steady_clock::now() + std::chrono::seconds(1);
-  while(true) {
-    if(std::chrono::steady_clock::now() >= timeout) {
+  while (true) {
+    if (std::chrono::steady_clock::now() >= timeout) {
       RCLCPP_ERROR(logger_, "Team client timed out waiting for a reply!");
       return false;
     }
     const auto bytes_available = socket_.available(error_code);
-    if(error_code && error_code != boost::asio::error::eof) {
+    if (error_code && error_code != boost::asio::error::eof) {
       RCLCPP_ERROR(logger_, "Team client TCP error: %s", error_code.message().c_str());
       return false;
     }
-    if(bytes_available == 0) {
+    if (bytes_available == 0) {
       retry_rate.sleep();
       continue;
     }
-    bytes_received = boost::asio::read(socket_, boost::asio::buffer(buffer_), boost::asio::transfer_at_least(bytes_available), error_code);
-    if(error_code && error_code != boost::asio::error::eof) {
+    bytes_received = boost::asio::read(
+      socket_, boost::asio::buffer(
+        buffer_), boost::asio::transfer_at_least(bytes_available), error_code);
+    if (error_code && error_code != boost::asio::error::eof) {
       RCLCPP_ERROR(logger_, "Team client TCP error: %s", error_code.message().c_str());
       return false;
     }
     break;
   }
   google::protobuf::io::ArrayInputStream array_input_stream(buffer_.data(), bytes_received);
-  if(!google::protobuf::util::ParseDelimitedFromZeroCopyStream(&reply, &array_input_stream, nullptr)) {
+  if (!google::protobuf::util::ParseDelimitedFromZeroCopyStream(
+      &reply, &array_input_stream,
+      nullptr))
+  {
     RCLCPP_ERROR(logger_, "Team client could not parse reply message.");
     return false;
   }
@@ -221,4 +213,37 @@ bool TeamClient::WaitForReply(ControllerToTeam& reply) {
   return true;
 }
 
+TeamClient::Result TeamClient::SendRequest(TeamToController & request)
+{
+  boost::asio::streambuf boost_streambuf;
+  std::ostream std_stream(&boost_streambuf);
+  google::protobuf::util::SerializeDelimitedToOstream(request, &std_stream);
+
+  boost::asio::write(socket_, boost_streambuf, boost::asio::transfer_all());
+
+  ControllerToTeam controller_to_team;
+  if (!WaitForReply(controller_to_team)) {
+    return {false, "Client error."};
+  }
+
+  if (!controller_to_team.has_controller_reply()) {
+    RCLCPP_ERROR(logger_, "Got ControllerToTeam message with no ControllerReply payload!");
+    return {false, "Client error."};
+  }
+
+  const auto & controller_reply = controller_to_team.controller_reply();
+
+  if (controller_reply.has_next_token()) {
+    next_token_ = controller_reply.next_token();
+  }
+
+  Result result;
+  result.accepted = controller_reply.has_status_code() &&
+    (controller_reply.status_code() == ControllerReply::OK);
+  if (controller_reply.has_reason()) {
+    result.reason = controller_reply.reason();
+  }
+  return result;
 }
+
+}  // namespace ateam_game_controller_bridge

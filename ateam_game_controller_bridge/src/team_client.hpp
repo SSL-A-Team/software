@@ -21,47 +21,54 @@
 #ifndef TEAM_CLIENT_HPP_
 #define TEAM_CLIENT_HPP_
 
-#include <array>
-#include <atomic>
-#include <mutex>
-#include <vector>
 #include <boost/asio.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <ssl_league_protobufs/ssl_gc_rcon_team.pb.h>
+#include <array>
+#include <atomic>
+#include <mutex>
+#include <string>
+#include <vector>
 
-namespace ateam_autoref_bridge
+namespace ateam_game_controller_bridge
 {
 
-class TeamClient {
+class TeamClient
+{
 public:
-  struct Result {
+  struct Result
+  {
     bool accepted;
     std::string reason;
   };
 
-  struct PingResult {
+  struct PingResult
+  {
     Result request_result;
     std::chrono::duration<double, std::milli> ping;
   };
 
-  enum class TeamColor {
+  enum class TeamColor
+  {
     Auto,
     Blue,
     Yellow
   };
 
-  struct ConnectionParameters {
+  struct ConnectionParameters
+  {
     boost::asio::ip::address address;
     uint16_t port;
     std::string team_name;
     TeamColor team_color;
   };
 
-  TeamClient(rclcpp::Logger logger);
+  explicit TeamClient(rclcpp::Logger logger);
 
-  bool Connect(const ConnectionParameters& parameters);
+  bool Connect(const ConnectionParameters & parameters);
 
-  bool IsConnected() const {
+  bool IsConnected() const
+  {
     return connected_;
   }
 
@@ -71,8 +78,6 @@ public:
 
   PingResult Ping();
 
-  Result SendRequest(TeamToController& request);
-
 private:
   rclcpp::Logger logger_;
   bool connected_{false};
@@ -81,17 +86,15 @@ private:
   std::size_t buffer_index_{0};
   boost::asio::io_service io_service_;
   boost::asio::ip::tcp::socket socket_;
-  
 
-  void ThreadMain();
+  bool AttemptToConnectSocket(const boost::asio::ip::address & address, const uint16_t port);
 
-  bool AttemptToConnectSocket(const boost::asio::ip::address& address, const uint16_t port);
+  bool AttemptToRegister(const std::string & team_name, const TeamColor team_color);
 
-  bool AttemptToRegister(const std::string& team_name, const TeamColor team_color);
+  bool WaitForReply(ControllerToTeam & reply);
 
-  bool WaitForReply(ControllerToTeam& reply);
-
+  Result SendRequest(TeamToController & request);
 };
 
-} // namespace ateam_autoref_bridge
+}  // namespace ateam_game_controller_bridge
 #endif  // TEAM_CLIENT_HPP_

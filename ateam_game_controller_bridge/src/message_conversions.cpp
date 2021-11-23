@@ -20,27 +20,30 @@
 
 #include "message_conversions.hpp"
 #include <rclcpp/time.hpp>
+#include <algorithm>
 
-#define CopyOptional(proto_msg, ros_msg, var_name)\
-if ( proto_msg.has_##var_name() ) {\
-    ros_msg.var_name = {proto_msg.var_name()};\
-}
+#define CopyOptional(proto_msg, ros_msg, var_name) \
+  if (proto_msg.has_ ## var_name() ) { \
+    ros_msg.var_name = {proto_msg.var_name()}; \
+  }
 
-#define CopyOptionalStruct(proto_msg, ros_msg, var_name)\
-if ( proto_msg.has_##var_name() ) {\
-    ros_msg.var_name = {fromProto(proto_msg.var_name())};\
-}
+#define CopyOptionalStruct(proto_msg, ros_msg, var_name) \
+  if (proto_msg.has_ ## var_name() ) { \
+    ros_msg.var_name = {fromProto(proto_msg.var_name())}; \
+  }
 
-namespace ateam_autoref_bridge::message_conversions
+namespace ateam_game_controller_bridge::message_conversions
 {
 
-geometry_msgs::msg::Point32 fromProto(const Vector2 & proto_msg){
+geometry_msgs::msg::Point32 fromProto(const Vector2 & proto_msg)
+{
   geometry_msgs::msg::Point32 ros_msg;
   ros_msg.x = proto_msg.x();
   ros_msg.y = proto_msg.y();
   return ros_msg;
 }
-geometry_msgs::msg::Point32 fromProto(const Vector3 & proto_msg){
+geometry_msgs::msg::Point32 fromProto(const Vector3 & proto_msg)
+{
   geometry_msgs::msg::Point32 ros_msg;
   ros_msg.x = proto_msg.x();
   ros_msg.y = proto_msg.y();
@@ -103,7 +106,9 @@ ssl_league_msgs::msg::GameEvent fromProto(const GameEvent & proto_msg)
 {
   ssl_league_msgs::msg::GameEvent ros_msg;
   ros_msg.type = proto_msg.type();
-  std::copy(proto_msg.origin().begin(), proto_msg.origin().end(), std::back_inserter(ros_msg.origin));
+  std::copy(
+    proto_msg.origin().begin(), proto_msg.origin().end(),
+    std::back_inserter(ros_msg.origin));
   CopyOptionalStruct(proto_msg, ros_msg, ball_left_field_touch_line);
   CopyOptionalStruct(proto_msg, ros_msg, ball_left_field_goal_line);
   CopyOptionalStruct(proto_msg, ros_msg, aimless_kick);
@@ -163,26 +168,30 @@ ssl_league_msgs::msg::GameEventProposalGroup fromProto(const GameEventProposalGr
   return ros_msg;
 }
 
-ssl_league_msgs::msg::Division fromProto(const Division & proto_msg){
+ssl_league_msgs::msg::Division fromProto(const Division & proto_msg)
+{
   ssl_league_msgs::msg::Division ros_msg;
   ros_msg.division = proto_msg;
   return ros_msg;
 }
 
-ssl_league_msgs::msg::RobotId fromProto(const RobotId & proto_msg){
+ssl_league_msgs::msg::RobotId fromProto(const RobotId & proto_msg)
+{
   ssl_league_msgs::msg::RobotId ros_msg;
   CopyOptionalStruct(proto_msg, ros_msg, team);
   CopyOptional(proto_msg, ros_msg, id);
   return ros_msg;
 }
 
-ssl_league_msgs::msg::Team fromProto(const Team & proto_msg){
+ssl_league_msgs::msg::Team fromProto(const Team & proto_msg)
+{
   ssl_league_msgs::msg::Team ros_msg;
   ros_msg.color = proto_msg;
   return ros_msg;
 }
 
-ssl_league_msgs::msg::AimlessKick fromProto(const GameEvent_AimlessKick & proto_msg) {
+ssl_league_msgs::msg::AimlessKick fromProto(const GameEvent_AimlessKick & proto_msg)
+{
   ssl_league_msgs::msg::AimlessKick ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -190,14 +199,18 @@ ssl_league_msgs::msg::AimlessKick fromProto(const GameEvent_AimlessKick & proto_
   CopyOptionalStruct(proto_msg, ros_msg, kick_location);
   return ros_msg;
 }
-ssl_league_msgs::msg::AttackerDoubleTouchedBall fromProto(const GameEvent_AttackerDoubleTouchedBall & proto_msg) {
+ssl_league_msgs::msg::AttackerDoubleTouchedBall fromProto(
+  const GameEvent_AttackerDoubleTouchedBall & proto_msg)
+{
   ssl_league_msgs::msg::AttackerDoubleTouchedBall ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
   CopyOptionalStruct(proto_msg, ros_msg, location);
   return ros_msg;
 }
-ssl_league_msgs::msg::AttackerTooCloseToDefenseArea fromProto(const GameEvent_AttackerTooCloseToDefenseArea & proto_msg) {
+ssl_league_msgs::msg::AttackerTooCloseToDefenseArea fromProto(
+  const GameEvent_AttackerTooCloseToDefenseArea & proto_msg)
+{
   ssl_league_msgs::msg::AttackerTooCloseToDefenseArea ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -206,7 +219,9 @@ ssl_league_msgs::msg::AttackerTooCloseToDefenseArea fromProto(const GameEvent_At
   CopyOptionalStruct(proto_msg, ros_msg, ball_location);
   return ros_msg;
 }
-ssl_league_msgs::msg::AttackerTouchedBallInDefenseArea fromProto(const GameEvent_AttackerTouchedBallInDefenseArea & proto_msg) {
+ssl_league_msgs::msg::AttackerTouchedBallInDefenseArea fromProto(
+  const GameEvent_AttackerTouchedBallInDefenseArea & proto_msg)
+{
   ssl_league_msgs::msg::AttackerTouchedBallInDefenseArea ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -214,7 +229,9 @@ ssl_league_msgs::msg::AttackerTouchedBallInDefenseArea fromProto(const GameEvent
   CopyOptional(proto_msg, ros_msg, distance);
   return ros_msg;
 }
-ssl_league_msgs::msg::AttackerTouchedOpponentInDefenseArea fromProto(const GameEvent_AttackerTouchedOpponentInDefenseArea & proto_msg) {
+ssl_league_msgs::msg::AttackerTouchedOpponentInDefenseArea fromProto(
+  const GameEvent_AttackerTouchedOpponentInDefenseArea & proto_msg)
+{
   ssl_league_msgs::msg::AttackerTouchedOpponentInDefenseArea ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -222,14 +239,16 @@ ssl_league_msgs::msg::AttackerTouchedOpponentInDefenseArea fromProto(const GameE
   CopyOptionalStruct(proto_msg, ros_msg, location);
   return ros_msg;
 }
-ssl_league_msgs::msg::BallLeftField fromProto(const GameEvent_BallLeftField & proto_msg) {
+ssl_league_msgs::msg::BallLeftField fromProto(const GameEvent_BallLeftField & proto_msg)
+{
   ssl_league_msgs::msg::BallLeftField ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
   CopyOptionalStruct(proto_msg, ros_msg, location);
   return ros_msg;
 }
-ssl_league_msgs::msg::BotCrashDrawn fromProto(const GameEvent_BotCrashDrawn & proto_msg) {
+ssl_league_msgs::msg::BotCrashDrawn fromProto(const GameEvent_BotCrashDrawn & proto_msg)
+{
   ssl_league_msgs::msg::BotCrashDrawn ros_msg;
   CopyOptional(proto_msg, ros_msg, bot_yellow);
   CopyOptional(proto_msg, ros_msg, bot_blue);
@@ -239,7 +258,8 @@ ssl_league_msgs::msg::BotCrashDrawn fromProto(const GameEvent_BotCrashDrawn & pr
   CopyOptional(proto_msg, ros_msg, crash_angle);
   return ros_msg;
 }
-ssl_league_msgs::msg::BotCrashUnique fromProto(const GameEvent_BotCrashUnique & proto_msg) {
+ssl_league_msgs::msg::BotCrashUnique fromProto(const GameEvent_BotCrashUnique & proto_msg)
+{
   ssl_league_msgs::msg::BotCrashUnique ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, violator);
@@ -250,7 +270,9 @@ ssl_league_msgs::msg::BotCrashUnique fromProto(const GameEvent_BotCrashUnique & 
   CopyOptional(proto_msg, ros_msg, crash_angle);
   return ros_msg;
 }
-ssl_league_msgs::msg::BotDribbledBallTooFar fromProto(const GameEvent_BotDribbledBallTooFar & proto_msg) {
+ssl_league_msgs::msg::BotDribbledBallTooFar fromProto(
+  const GameEvent_BotDribbledBallTooFar & proto_msg)
+{
   ssl_league_msgs::msg::BotDribbledBallTooFar ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -258,7 +280,9 @@ ssl_league_msgs::msg::BotDribbledBallTooFar fromProto(const GameEvent_BotDribble
   CopyOptionalStruct(proto_msg, ros_msg, end);
   return ros_msg;
 }
-ssl_league_msgs::msg::BotHeldBallDeliberately fromProto(const GameEvent_BotHeldBallDeliberately & proto_msg) {
+ssl_league_msgs::msg::BotHeldBallDeliberately fromProto(
+  const GameEvent_BotHeldBallDeliberately & proto_msg)
+{
   ssl_league_msgs::msg::BotHeldBallDeliberately ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -266,14 +290,18 @@ ssl_league_msgs::msg::BotHeldBallDeliberately fromProto(const GameEvent_BotHeldB
   CopyOptional(proto_msg, ros_msg, duration);
   return ros_msg;
 }
-ssl_league_msgs::msg::BotInterferedPlacement fromProto(const GameEvent_BotInterferedPlacement & proto_msg) {
+ssl_league_msgs::msg::BotInterferedPlacement fromProto(
+  const GameEvent_BotInterferedPlacement & proto_msg)
+{
   ssl_league_msgs::msg::BotInterferedPlacement ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
   CopyOptionalStruct(proto_msg, ros_msg, location);
   return ros_msg;
 }
-ssl_league_msgs::msg::BotKickedBallTooFast fromProto(const GameEvent_BotKickedBallTooFast & proto_msg) {
+ssl_league_msgs::msg::BotKickedBallTooFast fromProto(
+  const GameEvent_BotKickedBallTooFast & proto_msg)
+{
   ssl_league_msgs::msg::BotKickedBallTooFast ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -282,7 +310,8 @@ ssl_league_msgs::msg::BotKickedBallTooFast fromProto(const GameEvent_BotKickedBa
   CopyOptional(proto_msg, ros_msg, chipped);
   return ros_msg;
 }
-ssl_league_msgs::msg::BotPushedBot fromProto(const GameEvent_BotPushedBot & proto_msg) {
+ssl_league_msgs::msg::BotPushedBot fromProto(const GameEvent_BotPushedBot & proto_msg)
+{
   ssl_league_msgs::msg::BotPushedBot ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, violator);
@@ -291,12 +320,14 @@ ssl_league_msgs::msg::BotPushedBot fromProto(const GameEvent_BotPushedBot & prot
   CopyOptional(proto_msg, ros_msg, pushed_distance);
   return ros_msg;
 }
-ssl_league_msgs::msg::BotSubstitution fromProto(const GameEvent_BotSubstitution & proto_msg) {
+ssl_league_msgs::msg::BotSubstitution fromProto(const GameEvent_BotSubstitution & proto_msg)
+{
   ssl_league_msgs::msg::BotSubstitution ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   return ros_msg;
 }
-ssl_league_msgs::msg::BotTippedOver fromProto(const GameEvent_BotTippedOver & proto_msg) {
+ssl_league_msgs::msg::BotTippedOver fromProto(const GameEvent_BotTippedOver & proto_msg)
+{
   ssl_league_msgs::msg::BotTippedOver ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -304,7 +335,8 @@ ssl_league_msgs::msg::BotTippedOver fromProto(const GameEvent_BotTippedOver & pr
   CopyOptionalStruct(proto_msg, ros_msg, ball_location);
   return ros_msg;
 }
-ssl_league_msgs::msg::BotTooFastInStop fromProto(const GameEvent_BotTooFastInStop & proto_msg) {
+ssl_league_msgs::msg::BotTooFastInStop fromProto(const GameEvent_BotTooFastInStop & proto_msg)
+{
   ssl_league_msgs::msg::BotTooFastInStop ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -312,18 +344,21 @@ ssl_league_msgs::msg::BotTooFastInStop fromProto(const GameEvent_BotTooFastInSto
   CopyOptional(proto_msg, ros_msg, speed);
   return ros_msg;
 }
-ssl_league_msgs::msg::BoundaryCrossing fromProto(const GameEvent_BoundaryCrossing & proto_msg) {
+ssl_league_msgs::msg::BoundaryCrossing fromProto(const GameEvent_BoundaryCrossing & proto_msg)
+{
   ssl_league_msgs::msg::BoundaryCrossing ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptionalStruct(proto_msg, ros_msg, location);
   return ros_msg;
 }
-ssl_league_msgs::msg::ChallengeFlag fromProto(const GameEvent_ChallengeFlag & proto_msg) {
+ssl_league_msgs::msg::ChallengeFlag fromProto(const GameEvent_ChallengeFlag & proto_msg)
+{
   ssl_league_msgs::msg::ChallengeFlag ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   return ros_msg;
 }
-ssl_league_msgs::msg::ChippedGoal fromProto(const GameEvent_ChippedGoal & proto_msg) {
+ssl_league_msgs::msg::ChippedGoal fromProto(const GameEvent_ChippedGoal & proto_msg)
+{
   ssl_league_msgs::msg::ChippedGoal ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -332,7 +367,9 @@ ssl_league_msgs::msg::ChippedGoal fromProto(const GameEvent_ChippedGoal & proto_
   CopyOptional(proto_msg, ros_msg, max_ball_height);
   return ros_msg;
 }
-ssl_league_msgs::msg::DefenderInDefenseArea fromProto(const GameEvent_DefenderInDefenseArea & proto_msg) {
+ssl_league_msgs::msg::DefenderInDefenseArea fromProto(
+  const GameEvent_DefenderInDefenseArea & proto_msg)
+{
   ssl_league_msgs::msg::DefenderInDefenseArea ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -340,7 +377,9 @@ ssl_league_msgs::msg::DefenderInDefenseArea fromProto(const GameEvent_DefenderIn
   CopyOptional(proto_msg, ros_msg, distance);
   return ros_msg;
 }
-ssl_league_msgs::msg::DefenderInDefenseAreaPartially fromProto(const GameEvent_DefenderInDefenseAreaPartially & proto_msg) {
+ssl_league_msgs::msg::DefenderInDefenseAreaPartially fromProto(
+  const GameEvent_DefenderInDefenseAreaPartially & proto_msg)
+{
   ssl_league_msgs::msg::DefenderInDefenseAreaPartially ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -349,7 +388,9 @@ ssl_league_msgs::msg::DefenderInDefenseAreaPartially fromProto(const GameEvent_D
   CopyOptionalStruct(proto_msg, ros_msg, ball_location);
   return ros_msg;
 }
-ssl_league_msgs::msg::DefenderTooCloseToKickPoint fromProto(const GameEvent_DefenderTooCloseToKickPoint & proto_msg) {
+ssl_league_msgs::msg::DefenderTooCloseToKickPoint fromProto(
+  const GameEvent_DefenderTooCloseToKickPoint & proto_msg)
+{
   ssl_league_msgs::msg::DefenderTooCloseToKickPoint ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -357,12 +398,14 @@ ssl_league_msgs::msg::DefenderTooCloseToKickPoint fromProto(const GameEvent_Defe
   CopyOptional(proto_msg, ros_msg, distance);
   return ros_msg;
 }
-ssl_league_msgs::msg::EmergencyStop fromProto(const GameEvent_EmergencyStop & proto_msg) {
+ssl_league_msgs::msg::EmergencyStop fromProto(const GameEvent_EmergencyStop & proto_msg)
+{
   ssl_league_msgs::msg::EmergencyStop ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   return ros_msg;
 }
-ssl_league_msgs::msg::Goal fromProto(const GameEvent_Goal & proto_msg) {
+ssl_league_msgs::msg::Goal fromProto(const GameEvent_Goal & proto_msg)
+{
   ssl_league_msgs::msg::Goal ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptionalStruct(proto_msg, ros_msg, kicking_team);
@@ -375,7 +418,8 @@ ssl_league_msgs::msg::Goal fromProto(const GameEvent_Goal & proto_msg) {
   CopyOptional(proto_msg, ros_msg, message);
   return ros_msg;
 }
-ssl_league_msgs::msg::IndirectGoal fromProto(const GameEvent_IndirectGoal & proto_msg) {
+ssl_league_msgs::msg::IndirectGoal fromProto(const GameEvent_IndirectGoal & proto_msg)
+{
   ssl_league_msgs::msg::IndirectGoal ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -383,54 +427,64 @@ ssl_league_msgs::msg::IndirectGoal fromProto(const GameEvent_IndirectGoal & prot
   CopyOptionalStruct(proto_msg, ros_msg, kick_location);
   return ros_msg;
 }
-ssl_league_msgs::msg::KeeperHeldBall fromProto(const GameEvent_KeeperHeldBall & proto_msg) {
+ssl_league_msgs::msg::KeeperHeldBall fromProto(const GameEvent_KeeperHeldBall & proto_msg)
+{
   ssl_league_msgs::msg::KeeperHeldBall ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptionalStruct(proto_msg, ros_msg, location);
   CopyOptional(proto_msg, ros_msg, duration);
   return ros_msg;
 }
-ssl_league_msgs::msg::KickTimeout fromProto(const GameEvent_KickTimeout & proto_msg) {
+ssl_league_msgs::msg::KickTimeout fromProto(const GameEvent_KickTimeout & proto_msg)
+{
   ssl_league_msgs::msg::KickTimeout ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptionalStruct(proto_msg, ros_msg, location);
   CopyOptional(proto_msg, ros_msg, time);
   return ros_msg;
 }
-ssl_league_msgs::msg::MultipleCards fromProto(const GameEvent_MultipleCards & proto_msg) {
+ssl_league_msgs::msg::MultipleCards fromProto(const GameEvent_MultipleCards & proto_msg)
+{
   ssl_league_msgs::msg::MultipleCards ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   return ros_msg;
 }
-ssl_league_msgs::msg::MultipleFouls fromProto(const GameEvent_MultipleFouls & proto_msg) {
+ssl_league_msgs::msg::MultipleFouls fromProto(const GameEvent_MultipleFouls & proto_msg)
+{
   ssl_league_msgs::msg::MultipleFouls ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   return ros_msg;
 }
-ssl_league_msgs::msg::MultiplePlacementFailures fromProto(const GameEvent_MultiplePlacementFailures & proto_msg) {
+ssl_league_msgs::msg::MultiplePlacementFailures fromProto(
+  const GameEvent_MultiplePlacementFailures & proto_msg)
+{
   ssl_league_msgs::msg::MultiplePlacementFailures ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   return ros_msg;
 }
-ssl_league_msgs::msg::NoProgressInGame fromProto(const GameEvent_NoProgressInGame & proto_msg) {
+ssl_league_msgs::msg::NoProgressInGame fromProto(const GameEvent_NoProgressInGame & proto_msg)
+{
   ssl_league_msgs::msg::NoProgressInGame ros_msg;
   CopyOptionalStruct(proto_msg, ros_msg, location);
   CopyOptional(proto_msg, ros_msg, time);
   return ros_msg;
 }
-ssl_league_msgs::msg::PenaltyKickFailed fromProto(const GameEvent_PenaltyKickFailed & proto_msg) {
+ssl_league_msgs::msg::PenaltyKickFailed fromProto(const GameEvent_PenaltyKickFailed & proto_msg)
+{
   ssl_league_msgs::msg::PenaltyKickFailed ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptionalStruct(proto_msg, ros_msg, location);
   return ros_msg;
 }
-ssl_league_msgs::msg::PlacementFailed fromProto(const GameEvent_PlacementFailed & proto_msg) {
+ssl_league_msgs::msg::PlacementFailed fromProto(const GameEvent_PlacementFailed & proto_msg)
+{
   ssl_league_msgs::msg::PlacementFailed ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, remaining_distance);
   return ros_msg;
 }
-ssl_league_msgs::msg::PlacementSucceeded fromProto(const GameEvent_PlacementSucceeded & proto_msg) {
+ssl_league_msgs::msg::PlacementSucceeded fromProto(const GameEvent_PlacementSucceeded & proto_msg)
+{
   ssl_league_msgs::msg::PlacementSucceeded ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, time_taken);
@@ -438,12 +492,14 @@ ssl_league_msgs::msg::PlacementSucceeded fromProto(const GameEvent_PlacementSucc
   CopyOptional(proto_msg, ros_msg, distance);
   return ros_msg;
 }
-ssl_league_msgs::msg::Prepared fromProto(const GameEvent_Prepared & proto_msg) {
+ssl_league_msgs::msg::Prepared fromProto(const GameEvent_Prepared & proto_msg)
+{
   ssl_league_msgs::msg::Prepared ros_msg;
   CopyOptional(proto_msg, ros_msg, time_taken);
   return ros_msg;
 }
-ssl_league_msgs::msg::TooManyRobots fromProto(const GameEvent_TooManyRobots & proto_msg) {
+ssl_league_msgs::msg::TooManyRobots fromProto(const GameEvent_TooManyRobots & proto_msg)
+{
   ssl_league_msgs::msg::TooManyRobots ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, num_robots_allowed);
@@ -451,17 +507,21 @@ ssl_league_msgs::msg::TooManyRobots fromProto(const GameEvent_TooManyRobots & pr
   CopyOptionalStruct(proto_msg, ros_msg, ball_location);
   return ros_msg;
 }
-ssl_league_msgs::msg::UnsportingBehaviorMajor fromProto(const GameEvent_UnsportingBehaviorMajor & proto_msg) {
+ssl_league_msgs::msg::UnsportingBehaviorMajor fromProto(
+  const GameEvent_UnsportingBehaviorMajor & proto_msg)
+{
   ssl_league_msgs::msg::UnsportingBehaviorMajor ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   ros_msg.reason = proto_msg.reason();
   return ros_msg;
 }
-ssl_league_msgs::msg::UnsportingBehaviorMinor fromProto(const GameEvent_UnsportingBehaviorMinor & proto_msg) {
+ssl_league_msgs::msg::UnsportingBehaviorMinor fromProto(
+  const GameEvent_UnsportingBehaviorMinor & proto_msg)
+{
   ssl_league_msgs::msg::UnsportingBehaviorMinor ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   ros_msg.reason = proto_msg.reason();
   return ros_msg;
 }
 
-}  // namespace ateam_autoref_bridge::message_conversions
+}  // namespace ateam_game_controller_bridge::message_conversions

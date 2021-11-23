@@ -20,23 +20,23 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/protobuf_logging.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
-
+#include <memory>
+#include <string>
 #include "message_conversions.hpp"
 
-namespace ateam_autoref_bridge
+namespace ateam_game_controller_bridge
 {
 
-class AutorefBridgeNode : public rclcpp::Node
+class GCMulticastBridgeNode : public rclcpp::Node
 {
 public:
-  explicit AutorefBridgeNode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("autoref_bridge", options)
+  explicit GCMulticastBridgeNode(const rclcpp::NodeOptions & options)
+  : rclcpp::Node("gc_multicast_bridge", options)
   {
-    SET_ROS_PROTOBUF_LOG_HANDLER("autoref_bridge.protobuf");
+    SET_ROS_PROTOBUF_LOG_HANDLER("gc_multicast_bridge.protobuf");
 
     referee_publisher_ = create_publisher<ssl_league_msgs::msg::Referee>(
       "~/referee_messages",
@@ -51,7 +51,7 @@ public:
     multicast_receiver_ = std::make_unique<ateam_common::MulticastReceiver>(
       multicast_address,
       multicast_port, std::bind(
-        &AutorefBridgeNode::PublishMulticastMessage, this, std::placeholders::_1,
+        &GCMulticastBridgeNode::PublishMulticastMessage, this, std::placeholders::_1,
         std::placeholders::_2));
   }
 
@@ -70,6 +70,6 @@ private:
   }
 };
 
-}  // namespace ateam_autoref_bridge
+}  // namespace ateam_game_controller_bridge
 
-RCLCPP_COMPONENTS_REGISTER_NODE(ateam_autoref_bridge::AutorefBridgeNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(ateam_game_controller_bridge::GCMulticastBridgeNode)

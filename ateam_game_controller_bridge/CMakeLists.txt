@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ateam_autoref_bridge)
+project(ateam_game_controller_bridge)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -14,7 +14,7 @@ find_package(ssl_league_msgs REQUIRED)
 find_package(ssl_league_protobufs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
-  src/autoref_bridge_node.cpp
+  src/gc_multicast_bridge_node.cpp
   src/message_conversions.cpp
   src/team_client_node.cpp
   src/team_client.cpp
@@ -30,12 +30,12 @@ ament_target_dependencies(${PROJECT_NAME}
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}
-  PLUGIN "ateam_autoref_bridge::AutorefBridgeNode"
+  PLUGIN "ateam_game_controller_bridge::GCMulticastBridgeNode"
   EXECUTABLE autoref_bridge_node
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}
-  PLUGIN "ateam_autoref_bridge::TeamClientNode"
+  PLUGIN "ateam_game_controller_bridge::TeamClientNode"
   EXECUTABLE team_client_node
 )
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)

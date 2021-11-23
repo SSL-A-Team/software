@@ -33,7 +33,7 @@
 #include <ssl_league_protobufs/ssl_gc_common.pb.h>
 #include <ssl_league_protobufs/ssl_gc_geometry.pb.h>
 
-namespace ateam_autoref_bridge::message_conversions
+namespace ateam_game_controller_bridge::message_conversions
 {
 
 geometry_msgs::msg::Point32 fromProto(const Vector2 & proto_msg);
@@ -49,17 +49,25 @@ ssl_league_msgs::msg::RobotId fromProto(const RobotId & proto_msg);
 ssl_league_msgs::msg::Team fromProto(const Team & proto_msg);
 
 ssl_league_msgs::msg::AimlessKick fromProto(const GameEvent_AimlessKick & proto_msg);
-ssl_league_msgs::msg::AttackerDoubleTouchedBall fromProto(const GameEvent_AttackerDoubleTouchedBall & proto_msg);
-ssl_league_msgs::msg::AttackerTooCloseToDefenseArea fromProto(const GameEvent_AttackerTooCloseToDefenseArea & proto_msg);
-ssl_league_msgs::msg::AttackerTouchedBallInDefenseArea fromProto(const GameEvent_AttackerTouchedBallInDefenseArea & proto_msg);
-ssl_league_msgs::msg::AttackerTouchedOpponentInDefenseArea fromProto(const GameEvent_AttackerTouchedOpponentInDefenseArea & proto_msg);
+ssl_league_msgs::msg::AttackerDoubleTouchedBall fromProto(
+  const GameEvent_AttackerDoubleTouchedBall & proto_msg);
+ssl_league_msgs::msg::AttackerTooCloseToDefenseArea fromProto(
+  const GameEvent_AttackerTooCloseToDefenseArea & proto_msg);
+ssl_league_msgs::msg::AttackerTouchedBallInDefenseArea fromProto(
+  const GameEvent_AttackerTouchedBallInDefenseArea & proto_msg);
+ssl_league_msgs::msg::AttackerTouchedOpponentInDefenseArea fromProto(
+  const GameEvent_AttackerTouchedOpponentInDefenseArea & proto_msg);
 ssl_league_msgs::msg::BallLeftField fromProto(const GameEvent_BallLeftField & proto_msg);
 ssl_league_msgs::msg::BotCrashDrawn fromProto(const GameEvent_BotCrashDrawn & proto_msg);
 ssl_league_msgs::msg::BotCrashUnique fromProto(const GameEvent_BotCrashUnique & proto_msg);
-ssl_league_msgs::msg::BotDribbledBallTooFar fromProto(const GameEvent_BotDribbledBallTooFar & proto_msg);
-ssl_league_msgs::msg::BotHeldBallDeliberately fromProto(const GameEvent_BotHeldBallDeliberately & proto_msg);
-ssl_league_msgs::msg::BotInterferedPlacement fromProto(const GameEvent_BotInterferedPlacement & proto_msg);
-ssl_league_msgs::msg::BotKickedBallTooFast fromProto(const GameEvent_BotKickedBallTooFast & proto_msg);
+ssl_league_msgs::msg::BotDribbledBallTooFar fromProto(
+  const GameEvent_BotDribbledBallTooFar & proto_msg);
+ssl_league_msgs::msg::BotHeldBallDeliberately fromProto(
+  const GameEvent_BotHeldBallDeliberately & proto_msg);
+ssl_league_msgs::msg::BotInterferedPlacement fromProto(
+  const GameEvent_BotInterferedPlacement & proto_msg);
+ssl_league_msgs::msg::BotKickedBallTooFast fromProto(
+  const GameEvent_BotKickedBallTooFast & proto_msg);
 ssl_league_msgs::msg::BotPushedBot fromProto(const GameEvent_BotPushedBot & proto_msg);
 ssl_league_msgs::msg::BotSubstitution fromProto(const GameEvent_BotSubstitution & proto_msg);
 ssl_league_msgs::msg::BotTippedOver fromProto(const GameEvent_BotTippedOver & proto_msg);
@@ -67,9 +75,12 @@ ssl_league_msgs::msg::BotTooFastInStop fromProto(const GameEvent_BotTooFastInSto
 ssl_league_msgs::msg::BoundaryCrossing fromProto(const GameEvent_BoundaryCrossing & proto_msg);
 ssl_league_msgs::msg::ChallengeFlag fromProto(const GameEvent_ChallengeFlag & proto_msg);
 ssl_league_msgs::msg::ChippedGoal fromProto(const GameEvent_ChippedGoal & proto_msg);
-ssl_league_msgs::msg::DefenderInDefenseArea fromProto(const GameEvent_DefenderInDefenseArea & proto_msg);
-ssl_league_msgs::msg::DefenderInDefenseAreaPartially fromProto(const GameEvent_DefenderInDefenseAreaPartially & proto_msg);
-ssl_league_msgs::msg::DefenderTooCloseToKickPoint fromProto(const GameEvent_DefenderTooCloseToKickPoint & proto_msg);
+ssl_league_msgs::msg::DefenderInDefenseArea fromProto(
+  const GameEvent_DefenderInDefenseArea & proto_msg);
+ssl_league_msgs::msg::DefenderInDefenseAreaPartially fromProto(
+  const GameEvent_DefenderInDefenseAreaPartially & proto_msg);
+ssl_league_msgs::msg::DefenderTooCloseToKickPoint fromProto(
+  const GameEvent_DefenderTooCloseToKickPoint & proto_msg);
 ssl_league_msgs::msg::EmergencyStop fromProto(const GameEvent_EmergencyStop & proto_msg);
 ssl_league_msgs::msg::Goal fromProto(const GameEvent_Goal & proto_msg);
 ssl_league_msgs::msg::IndirectGoal fromProto(const GameEvent_IndirectGoal & proto_msg);
@@ -77,16 +88,19 @@ ssl_league_msgs::msg::KeeperHeldBall fromProto(const GameEvent_KeeperHeldBall & 
 ssl_league_msgs::msg::KickTimeout fromProto(const GameEvent_KickTimeout & proto_msg);
 ssl_league_msgs::msg::MultipleCards fromProto(const GameEvent_MultipleCards & proto_msg);
 ssl_league_msgs::msg::MultipleFouls fromProto(const GameEvent_MultipleFouls & proto_msg);
-ssl_league_msgs::msg::MultiplePlacementFailures fromProto(const GameEvent_MultiplePlacementFailures & proto_msg);
+ssl_league_msgs::msg::MultiplePlacementFailures fromProto(
+  const GameEvent_MultiplePlacementFailures & proto_msg);
 ssl_league_msgs::msg::NoProgressInGame fromProto(const GameEvent_NoProgressInGame & proto_msg);
 ssl_league_msgs::msg::PenaltyKickFailed fromProto(const GameEvent_PenaltyKickFailed & proto_msg);
 ssl_league_msgs::msg::PlacementFailed fromProto(const GameEvent_PlacementFailed & proto_msg);
 ssl_league_msgs::msg::PlacementSucceeded fromProto(const GameEvent_PlacementSucceeded & proto_msg);
 ssl_league_msgs::msg::Prepared fromProto(const GameEvent_Prepared & proto_msg);
 ssl_league_msgs::msg::TooManyRobots fromProto(const GameEvent_TooManyRobots & proto_msg);
-ssl_league_msgs::msg::UnsportingBehaviorMajor fromProto(const GameEvent_UnsportingBehaviorMajor & proto_msg);
-ssl_league_msgs::msg::UnsportingBehaviorMinor fromProto(const GameEvent_UnsportingBehaviorMinor & proto_msg);
+ssl_league_msgs::msg::UnsportingBehaviorMajor fromProto(
+  const GameEvent_UnsportingBehaviorMajor & proto_msg);
+ssl_league_msgs::msg::UnsportingBehaviorMinor fromProto(
+  const GameEvent_UnsportingBehaviorMinor & proto_msg);
 
-}
+}  // namespace ateam_game_controller_bridge::message_conversions
 
 #endif  // MESSAGE_CONVERSIONS_HPP_

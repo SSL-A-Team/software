@@ -20,15 +20,15 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-
 #include <ateam_common/protobuf_logging.hpp>
 #include <ateam_msgs/srv/set_desired_keeper.hpp>
 #include <ateam_msgs/srv/substitute_bot.hpp>
 #include <ateam_msgs/srv/reconnect_team_client.hpp>
 #include <ateam_msgs/msg/team_client_connection_status.hpp>
+#include <string>
 #include "team_client.hpp"
 
-namespace ateam_autoref_bridge
+namespace ateam_game_controller_bridge
 {
 class TeamClientNode : public rclcpp::Node
 {
@@ -70,12 +70,16 @@ public:
         &TeamClientNode::HandleReconnectTeamClient, this, std::placeholders::_1,
         std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
 
-    connection_status_publisher_ = create_publisher<ateam_msgs::msg::TeamClientConnectionStatus>("~/connection_status", rclcpp::SystemDefaultsQoS());
+    connection_status_publisher_ = create_publisher<ateam_msgs::msg::TeamClientConnectionStatus>(
+      "~/connection_status", rclcpp::SystemDefaultsQoS());
 
     const auto ping_period = declare_parameter<double>("ping_period", 5);
-    ping_timer_ = create_wall_timer(std::chrono::duration<double>(ping_period), std::bind(&TeamClientNode::PingCallback, this));
+    ping_timer_ =
+      create_wall_timer(
+      std::chrono::duration<double>(ping_period),
+      std::bind(&TeamClientNode::PingCallback, this));
 
-    if(!Connect()) {
+    if (!Connect()) {
       RCLCPP_ERROR(get_logger(), "Failed to connect to Game Controller.");
     }
   }
@@ -85,20 +89,23 @@ private:
   rclcpp::Service<ateam_msgs::srv::SetDesiredKeeper>::SharedPtr set_desired_keeper_service_;
   rclcpp::Service<ateam_msgs::srv::SubstituteBot>::SharedPtr substitute_bot_service_;
   rclcpp::Service<ateam_msgs::srv::ReconnectTeamClient>::SharedPtr reconnect_service_;
-  rclcpp::Publisher<ateam_msgs::msg::TeamClientConnectionStatus>::SharedPtr connection_status_publisher_;
+  rclcpp::Publisher<ateam_msgs::msg::TeamClientConnectionStatus>::SharedPtr
+    connection_status_publisher_;
   rclcpp::TimerBase::SharedPtr ping_timer_;
 
-  bool Connect() {
+  bool Connect()
+  {
     TeamClient::ConnectionParameters connection_parameters;
-    connection_parameters.address = boost::asio::ip::address::from_string(get_parameter("gc_ip_address").as_string());
+    connection_parameters.address =
+      boost::asio::ip::address::from_string(get_parameter("gc_ip_address").as_string());
     connection_parameters.port = get_parameter("gc_port").as_int();
     connection_parameters.team_name = get_parameter("team_name").as_string();
     const auto team_color_name = get_parameter("team_color").as_string();
-    if(team_color_name == "auto"){
+    if (team_color_name == "auto") {
       connection_parameters.team_color = TeamClient::TeamColor::Auto;
-    } else if(team_color_name == "blue") {
+    } else if (team_color_name == "blue") {
       connection_parameters.team_color = TeamClient::TeamColor::Blue;
-    } else if(team_color_name == "yellow") {
+    } else if (team_color_name == "yellow") {
       connection_parameters.team_color = TeamClient::TeamColor::Yellow;
     }
     return team_client_.Connect(connection_parameters);
@@ -145,18 +152,18 @@ private:
     response->success = Connect();
   }
 
-  void PingCallback() {
+  void PingCallback()
+  {
     ateam_msgs::msg::TeamClientConnectionStatus status_msg;
     status_msg.connected = team_client_.IsConnected();
-    if(team_client_.IsConnected()) {
+    if (team_client_.IsConnected()) {
       const auto result = team_client_.Ping();
       status_msg.connected = result.request_result.accepted;
       status_msg.ping = rclcpp::Duration(result.ping);
     }
     connection_status_publisher_->publish(status_msg);
   }
-
 };
-}
+}  // namespace ateam_game_controller_bridge
 
-RCLCPP_COMPONENTS_REGISTER_NODE(ateam_autoref_bridge::TeamClientNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(ateam_game_controller_bridge::TeamClientNode)
