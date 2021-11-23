@@ -95,7 +95,7 @@ ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegmen
 
   return ros_msg;
 }
-ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCicularArc & proto_msg)
+ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCircularArc & proto_msg)
 {
   ssl_league_msgs::msg::VisionFieldCircularArc ros_msg;
   ros_msg.name = proto_msg.name();
