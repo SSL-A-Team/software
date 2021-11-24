@@ -31,7 +31,7 @@ ament_target_dependencies(${PROJECT_NAME}
 rclcpp_components_register_node(
   ${PROJECT_NAME}
   PLUGIN "ateam_game_controller_bridge::GCMulticastBridgeNode"
-  EXECUTABLE autoref_bridge_node
+  EXECUTABLE gc_multicast_bridge_node
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}

@@ -40,14 +40,6 @@ public:
   {
     SET_ROS_PROTOBUF_LOG_HANDLER("team_client_node.protobuf");
 
-    if (rcutils_logging_set_logger_level(
-        get_logger().get_name(),
-        RCUTILS_LOG_SEVERITY_DEBUG) != RCUTILS_RET_OK)
-    {
-      RCLCPP_ERROR(get_logger(), "Error setting severity: %s", rcutils_get_error_string().str);
-      rcutils_reset_error();
-    }
-
     declare_parameter<std::string>("gc_ip_address", "127.0.0.1");
     declare_parameter<uint16_t>("gc_port", 10008);
     declare_parameter<std::string>("team_name", "A-Team");
