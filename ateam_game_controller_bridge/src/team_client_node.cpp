@@ -24,6 +24,7 @@
 #include <ateam_msgs/srv/set_desired_keeper.hpp>
 #include <ateam_msgs/srv/substitute_bot.hpp>
 #include <ateam_msgs/srv/reconnect_team_client.hpp>
+#include <ateam_msgs/srv/set_team_advantage_choice.hpp>
 #include <ateam_msgs/msg/team_client_connection_status.hpp>
 #include <string>
 #include "team_client.hpp"
@@ -70,6 +71,12 @@ public:
         &TeamClientNode::HandleReconnectTeamClient, this, std::placeholders::_1,
         std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
 
+    advantage_choice_service_ = create_service<ateam_msgs::srv::SetTeamAdvantageChoice>(
+      "~/set_advantage_choice",
+      std::bind(
+        &TeamClientNode::HandleSetAdvantageChoice, this, std::placeholders::_1,
+        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+
     connection_status_publisher_ = create_publisher<ateam_msgs::msg::TeamClientConnectionStatus>(
       "~/connection_status", rclcpp::SystemDefaultsQoS());
 
@@ -89,6 +96,7 @@ private:
   rclcpp::Service<ateam_msgs::srv::SetDesiredKeeper>::SharedPtr set_desired_keeper_service_;
   rclcpp::Service<ateam_msgs::srv::SubstituteBot>::SharedPtr substitute_bot_service_;
   rclcpp::Service<ateam_msgs::srv::ReconnectTeamClient>::SharedPtr reconnect_service_;
+  rclcpp::Service<ateam_msgs::srv::SetTeamAdvantageChoice>::SharedPtr advantage_choice_service_;
   rclcpp::Publisher<ateam_msgs::msg::TeamClientConnectionStatus>::SharedPtr
     connection_status_publisher_;
   rclcpp::TimerBase::SharedPtr ping_timer_;
@@ -150,6 +158,32 @@ private:
     ateam_msgs::srv::ReconnectTeamClient::Response::SharedPtr response)
   {
     response->success = Connect();
+  }
+
+  void HandleSetAdvantageChoice(
+    const ateam_msgs::srv::SetTeamAdvantageChoice::Request::SharedPtr request,
+    ateam_msgs::srv::SetTeamAdvantageChoice::Response::SharedPtr response)
+  {
+    if (!team_client_.IsConnected()) {
+      response->success = false;
+      response->reason = "Team client is not connected to the Game Controller.";
+      RCLCPP_ERROR(
+        get_logger(), "Service %s called before team client connected.",
+        advantage_choice_service_->get_service_name());
+      return;
+    }
+    TeamClient::AdvantageChoiceOption choice;
+    switch(request->choice) {
+      case ateam_msgs::srv::SetTeamAdvantageChoice::Request::STOP:
+        choice = TeamClient::AdvantageChoiceOption::Stop;
+        break;
+      case ateam_msgs::srv::SetTeamAdvantageChoice::Request::CONTINUE:
+        choice = TeamClient::AdvantageChoiceOption::Continue;
+        break;
+    }
+    const auto result = team_client_.SetAdvantageChoice(choice);
+    response->success = result.accepted;
+    response->reason = result.reason;
   }
 
   void PingCallback()

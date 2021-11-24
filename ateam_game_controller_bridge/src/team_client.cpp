@@ -60,6 +60,20 @@ TeamClient::Result TeamClient::RequestBotSubstitution()
   return SendRequest(team_to_controller);
 }
 
+TeamClient::Result TeamClient::SetAdvantageChoice(const AdvantageChoiceOption& choice)
+{
+  TeamToController team_to_controller;
+  switch(choice) {
+    case AdvantageChoiceOption::Stop:
+      team_to_controller.set_advantage_choice(STOP);
+      break;
+    case AdvantageChoiceOption::Continue:
+      team_to_controller.set_advantage_choice(CONTINUE);
+      break;
+  }
+  return SendRequest(team_to_controller);
+}
+
 TeamClient::PingResult TeamClient::Ping()
 {
   TeamToController team_to_controller;

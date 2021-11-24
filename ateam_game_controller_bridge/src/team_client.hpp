@@ -63,6 +63,12 @@ public:
     TeamColor team_color;
   };
 
+  enum class AdvantageChoiceOption
+  {
+    Stop,
+    Continue
+  };
+
   explicit TeamClient(rclcpp::Logger logger);
 
   bool Connect(const ConnectionParameters & parameters);
@@ -75,6 +81,8 @@ public:
   Result SetDesiredKeeper(const int keeper_id);
 
   Result RequestBotSubstitution();
+
+  Result SetAdvantageChoice(const AdvantageChoiceOption& choice);
 
   PingResult Ping();
 

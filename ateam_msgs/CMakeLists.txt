@@ -16,6 +16,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
   srv/ReconnectTeamClient.srv
   srv/SetDesiredKeeper.srv
+  srv/SetTeamAdvantageChoice.srv
   srv/SubstituteBot.srv
 
   DEPENDENCIES
