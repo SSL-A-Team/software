@@ -82,7 +82,7 @@ public:
 
   Result RequestBotSubstitution();
 
-  Result SetAdvantageChoice(const AdvantageChoiceOption& choice);
+  Result SetAdvantageChoice(const AdvantageChoiceOption & choice);
 
   PingResult Ping();
 

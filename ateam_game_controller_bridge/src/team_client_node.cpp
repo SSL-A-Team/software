@@ -165,7 +165,7 @@ private:
       return;
     }
     TeamClient::AdvantageChoiceOption choice;
-    switch(request->choice) {
+    switch (request->choice) {
       case ateam_msgs::srv::SetTeamAdvantageChoice::Request::STOP:
         choice = TeamClient::AdvantageChoiceOption::Stop;
         break;
