@@ -1,0 +1,14 @@
+string name
+uint32 score
+uint32 red_cards
+uint32[] yellow_card_times
+uint32 yellow_cards
+uint32 timeouts
+uint32 timeout_time
+uint32 goalkeeper
+uint32 foul_counter
+uint32 ball_placement_failures
+bool can_place_ball
+uint32 max_allowed_bots
+bool bot_substitution_intent
+bool ball_placement_failures_reached

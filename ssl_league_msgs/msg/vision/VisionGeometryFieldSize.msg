@@ -1,0 +1,7 @@
+float32 field_length
+float32 field_width
+float32 goal_width
+float32 goal_depth
+float32 boundary_width
+ssl_league_msgs/VisionFieldLineSegment[] field_lines
+ssl_league_msgs/VisionFieldCircularArc[] field_arcs

@@ -1,0 +1,3 @@
+<launch>
+  <executable cmd="docker run -p 8081:8081 robocupssl/ssl-game-controller" output="screen" />
+</launch>
