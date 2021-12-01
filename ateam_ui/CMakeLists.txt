@@ -5,9 +5,11 @@ find_package(ament_cmake REQUIRED)
 find_package(rosbridge_server REQUIRED)
 
 
-install(FILES
-  launch/ateam_ui_launch.xml
-  DESTINATION share/${PROJECT_NAME}/launch
+install(DIRECTORY
+  launch
+  src
+  DESTINATION share/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
 )
 
 if(BUILD_TESTING)

@@ -3,10 +3,10 @@
   "version": "1.0.1",
   "description": "Robocup A-Team UI",
   "scripts": {
-    "configure": "test -d ./bin || neu update",
+    "configure": "yarn install; (test -d ./bin || neu update)",
     "dev": "vite",
     "devrun": "(yarn configure || true) && vite build && neu run",
-    "build": "(yarn configure || true) && (vite build && neu build --release) && (test -x ./bin/neutralino-linux_x64 || (echo Fixing Permission Issue; chmod +x ./dist/Ateam_UI/* && echo Success))"
+    "build": "(yarn configure || true) && (vite build && neu build --release) && (test -x ./bin/neutralino-linux_x64 || ((echo Fixing Permission Issue); (chmod +x ./dist/Ateam_UI/* && echo Success)))"
   },
   "author": "Matthew Woodward <mwoodward@gatech.edu>",
   "license": "TODO: License declaration",
@@ -14,7 +14,8 @@
     "vue": "^3.1.2",
     "vuetify": "^3.0.0-alpha.11",
     "vue3-konva": "^2.1.7",
-    "konva": "^8.2.1"
+    "konva": "^8.2.1",
+    "roslib": "^1.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^1.6.0",

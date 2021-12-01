@@ -1,4 +1,4 @@
 <launch>
-    <executable cmd="yarn devrun" cwd="software/ateam_ui/src" output="screen" />
+    <executable cmd="yarn devrun" cwd="$(find-pkg-share ateam_ui)/src" output="screen" />
 	<node name="rosbridge" pkg="rosbridge_server" exec="rosbridge_websocket.py" namespace="ui" />
 </launch>
