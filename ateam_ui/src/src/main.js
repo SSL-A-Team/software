@@ -13,9 +13,16 @@ const vm = app.mount('#app');
 
 // Configure Default Ball Location
 vm.state.ball = {
-    x: 0,
-    y: 0,
-    visible: true
+    pose: {
+        position: {
+            x: 0,
+            y: 0
+        }
+    },
+    twist: {},
+    accel: {},
+    visible: true,
+    publisher: null
 }
 
 // Configure Default Robot Layout
@@ -27,8 +34,15 @@ for (var team in vm.state.teams) {
         vm.state.teams[team].robots.push({
             id: i,
             team: team,
-            x: (70*(i+xoffset)) - (70*(numVisible-1)/2),
-            y: (120*yoffset) - 60,
+            pose: {
+                position: {
+                    x: (70*(i+xoffset)) - (70*(numVisible-1)/2),
+                    y: (120*yoffset) - 60
+                },
+                orientation: {}
+            },
+            twist: {},
+            accel: {},
             rotation: team=="blue" ? 180 : 0,
             visible: (i<=numVisible-1),
             status: {
@@ -36,7 +50,8 @@ for (var team in vm.state.teams) {
                 kicker: false,
                 battery: 100,
                 name: null,
-                message: null
+                message: null,
+                publisher: null
             }
         })
     };
@@ -44,54 +59,65 @@ for (var team in vm.state.teams) {
 }
 
 // Configure Default Overlays
-vm.state.overlays.push({
-    type: 'line',
-    x: 0,
-    y: 0,
-    fill: "red"
-});
+vm.state.overlays = [];
 
 
+// Configure ROS
 var ros = new window.ROSLIB.Ros({
     url : 'ws://localhost:9090'
 });
 
 ros.on('connection', function() {
-    console.log('Connected to websocket server.');
+    console.log('Connected to ROS server.');
 });
 
 ros.on('error', function(error) {
-    console.log('Error connecting to websocket server: ', error);
+    console.log('Error connecting to ROS server: ', error);
 });
 
 ros.on('close', function() {
-    console.log('Connection to websocket server closed.');
+    console.log('Connection to ROS server closed.');
 });
 
-
-var listener = new ROSLIB.Topic({
+// Set up ball subscribers and publishers
+var ballTopic = new ROSLIB.Topic({
     ros: ros,
-    name: '/listener',
-    messageType: 'std_msgs/String'
+    name: '/ball',
+    messageType: 'ateam_msgs/msg/BallState'
 });
 
-listener.subscribe(function(msg) {console.log(msg)})
-
-var cmdVel = new ROSLIB.Topic({
-    ros : ros,
-    name : '/cmd_vel',
-    messageType : 'geometry_msgs/Twist'
+ballTopic.subscribe(function(msg) {
+    vm.state.ball.position = msg.pose.position;
 });
-var twist = new ROSLIB.Message({
-    linear : {
-        x : 0.1,
-        y : 0.2,
-        z : 0.3
-    },
-    angular : {
-        x : -0.1,
-        y : -0.2,
-        z : -0.3
+
+//TODO: add publisher for moving sim ball
+
+
+// Set up robot subscribers and publishers
+function getRobotCallback(team, id){
+    return function(msg) {
+        console.log(team + '/robot' + id)
+        console.log(msg)
+        var robot = vm.state.teams[team].robots[id];
+        robot.pose = msg.pose;
+
+        // Check if ROS quaternions are going to exceed -1:1
+        robot.rotation = 2*Math.acos(robot.pose.orientation.z);
+    };
+};
+
+for (var team in vm.state.teams) {
+    for (var i = 0; i < 16; i++) {
+        var robotTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: '/' + team + '/robot' + i,
+            messageType: 'ateam_msgs/msg/RobotState'
+        });
+
+        robotTopic.subscribe(getRobotCallback(team, i));
+
+        //TODO: add publisher for moving sim robots
     }
-});
-cmdVel.publish(twist);
+}
+
+//TODO: add all other pub/subs (field dimensions, referee, etc)

@@ -116,8 +116,8 @@
                 sceneFunc: robotShape,
                 r_id: robot.id,
                 team: robot.team,
-                x: robot.x,
-                y: robot.y,
+                x: robot.pose.position.x,
+                y: robot.pose.position.y,
                 offsetX: -.09*renderConfig.scale,
                 offsetY: -.09*renderConfig.scale,
                 rot: robot.rotation,
@@ -133,8 +133,8 @@
             <v-circle ref="ball" :config="{
                                  fieldWidth: (100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
                                  fieldLength: (100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
-                                 x: state.ball.x,
-                                 y: state.ball.y,
+                                 x: state.ball.pose.position.x,
+                                 y: state.ball.pose.position.y,
                                  visible: state.ball.visible,
                                  radius: .022 * renderConfig.scale,
                                  fill: 'orange',
@@ -225,8 +225,7 @@ export default {
 
                 const ball = this.$refs.ball.getNode()
                 const pos = this.game.getRelativePointerPosition();
-                this.state.ball.x = pos.x;
-                this.state.ball.y = pos.y;
+                this.state.ball.pose.position = pos;
                 ball.x(pos.x);
                 ball.y(pos.y);
 
@@ -240,8 +239,7 @@ export default {
                    mouse is moving as you click */
                 const ball = this.$refs.ball.getNode()
                 const pos = this.game.getRelativePointerPosition();
-                this.state.ball.x = pos.x;
-                this.state.ball.y = pos.y;
+                this.state.ball.pose.position = pos;
                 ball.x(pos.x);
                 ball.y(pos.y);
                 this.$refs.ball.getNode().startDrag();

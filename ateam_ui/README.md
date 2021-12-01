@@ -9,6 +9,7 @@ Everything should now be ready to be run normally
 
 # Launch files
 The `ateam_ui_launch.xml` file should launch both [rosbridge](https://github.com/RobotWebTools/rosbridge_suite) and the ui.
+The `ateam_ui_debug_launch.xml` launches both rosbridge and runs the ui in development mode where it can be viewed in a web browser.
 
 # Notes for development
-Do not make changes to files in the `resources` folder, these files are from part of the output from Vite that then gets fed into Neutralino to produce the binaries in the `dist` folder so they will be overwritten every time you build. Most of the files should have their actual counterparts in the `public` folder so make changes there instead.
+When running `colcon build` the `/src` directory is copied into the share folder of the package where everything can then be built using the launch files discussed above. Eventually I should probably change it so colcon build actually builds the javascript packages and the launch files just run them but this works well enough for now.

@@ -24,7 +24,13 @@ export default {
             state: {
                 sim: true,
                 team: "yellow",
-                ball: {},
+                ball: {
+                    pose: {
+                        position: {}
+                    },
+                    twist: {},
+                    accel: {}
+                },
                 teams: {
                     blue: {
                         name: "",
