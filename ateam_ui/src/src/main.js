@@ -29,7 +29,14 @@ for (var team in vm.state.teams) {
             x: (70*(i+xoffset)) - (70*(numVisible-1)/2),
             y: (120*yoffset) - 60,
             rotation: team=="blue" ? 180 : 0,
-            visible: (i<=numVisible-1)
+            visible: (i<=numVisible-1),
+            status: {
+                connected: true,
+                kicker: false,
+                battery: 100,
+                name: null,
+                message: null
+            }
         })
     };
     yoffset += 1;

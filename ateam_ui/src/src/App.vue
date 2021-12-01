@@ -1,10 +1,13 @@
 <template>
     <v-app>
-        <v-app-bar color="red" density="compact">
+        <v-app-bar ref="Top Bar" color="red" density="compact">
             <v-app-bar-title> ATeam UI </v-app-bar-title>
         </v-app-bar>
         <v-main>
-            <FieldComponent/>
+            <v-container class="d-flex flex-row" ref="Main Components">
+                <StatusComponent/>
+                <FieldComponent/>
+            </v-container>
         </v-main>
     </v-app>
 </template>
@@ -12,6 +15,7 @@
 
 <script lang="js">
 import FieldComponent from './components/FieldComponent.vue'
+import StatusComponent from './components/StatusComponent.vue'
 import { provide } from 'vue'
 
 export default {
@@ -65,7 +69,10 @@ export default {
             renderConfig: this.renderConfig
         }
     },
-    components: {FieldComponent}
+    components: {
+        FieldComponent,
+        StatusComponent
+    }
 }
 
 </script>
