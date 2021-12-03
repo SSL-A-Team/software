@@ -56,17 +56,17 @@ public:
   void predict();
 
   /**
-   * @return Returns a ball with a corresponding likelyhood score (if exists)
+   * @return Returns a ball with a corresponding likelihood score (if exists)
    */
   std::optional<BallWithScore> get_ball_estimate_with_score();
 
   /**
-   * @return Returns yellow robots with a corresponding likelyhood score (if exists)
+   * @return Returns yellow robots with a corresponding likelihood score (if exists)
    */
   std::array<std::optional<RobotWithScore>, 16> get_yellow_robot_estimates_with_score();
 
   /**
-   * @return Returns blue robots with a corresponding likelyhood score (if exists)
+   * @return Returns blue robots with a corresponding likelihood score (if exists)
    */
   std::array<std::optional<RobotWithScore>, 16> get_blue_robot_estimates_with_score();
 
