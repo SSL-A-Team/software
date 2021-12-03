@@ -28,7 +28,7 @@
 #include "../src/types/models.hpp"
 #include "../src/types/robot.hpp"
 
-TEST(model_input_generator, get_model_input_ShouldReturnSmallerVelocity_WhenBallRollingFriction)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnSmallerVelocity_WhenBallRollingFriction)
 {
   ModelInputGenerator mig;
 
@@ -50,7 +50,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnSmallerVelocity_WhenBall
   EXPECT_NEAR(ret(5), input_state(5), 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnSmallerVelocity_WhenBallSlidingFriction)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnSmallerVelocity_WhenBallSlidingFriction)
 {
   ModelInputGenerator mig;
 
@@ -72,7 +72,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnSmallerVelocity_WhenBall
   EXPECT_NEAR(ret(5), input_state(5), 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturn0_WhenBallBounceWithNoRobots)
+TEST(ModelInputGenerator, getModelInput_ShouldReturn0_WhenBallBounceWithNoRobots)
 {
   ModelInputGenerator mig;
   std::array<std::optional<Robot>, 16> blue_robots;
@@ -98,7 +98,7 @@ TEST(model_input_generator, get_model_input_ShouldReturn0_WhenBallBounceWithNoRo
   EXPECT_NEAR(ret(5), 0.0, 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnNegStep_WhenBallStopOnDribbler)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnNegStep_WhenBallStopOnDribbler)
 {
   ModelInputGenerator mig;
 
@@ -124,7 +124,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnNegStep_WhenBallStopOnDr
   EXPECT_NEAR(ret(5), -input_state(5), 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnZero_WhenBallSlowKickNoRobots)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnZero_WhenBallSlowKickNoRobots)
 {
   ModelInputGenerator mig;
 
@@ -146,7 +146,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnZero_WhenBallSlowKickNoR
   EXPECT_NEAR(ret(5), 0.0, 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnSlowKickPlusNegStep_WhenBallSlowKick)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnSlowKickPlusNegStep_WhenBallSlowKick)
 {
   ModelInputGenerator mig;
 
@@ -179,7 +179,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnSlowKickPlusNegStep_When
   EXPECT_NEAR(ret(5), -input_state(5), 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnZero_WhenBallMediumKickNoRobots)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnZero_WhenBallMediumKickNoRobots)
 {
   ModelInputGenerator mig;
 
@@ -201,7 +201,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnZero_WhenBallMediumKickN
   EXPECT_NEAR(ret(5), 0.0, 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnMediumKickPlusNegStep_WhenBallMediumKick)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnMediumKickPlusNegStep_WhenBallMediumKick)
 {
   ModelInputGenerator mig;
 
@@ -233,7 +233,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnMediumKickPlusNegStep_Wh
   EXPECT_NEAR(ret(5), -input_state(5), 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnZero_WhenBallFastKickNoRobots)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnZero_WhenBallFastKickNoRobots)
 {
   ModelInputGenerator mig;
 
@@ -255,7 +255,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnZero_WhenBallFastKickNoR
   EXPECT_NEAR(ret(5), 0.0, 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnFastKickPlusNegStep_WhenBallFastKick)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnFastKickPlusNegStep_WhenBallFastKick)
 {
   ModelInputGenerator mig;
 
@@ -287,7 +287,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnFastKickPlusNegStep_When
   EXPECT_NEAR(ret(5), -input_state(5), 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnZero_WhenRobotNoAccel)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnZero_WhenRobotNoAccel)
 {
   ModelInputGenerator mig;
 
@@ -315,7 +315,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnZero_WhenRobotNoAccel)
   EXPECT_NEAR(ret(8), 0.0, 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnPositive_WhenRobotAccelToBall)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnPositive_WhenRobotAccelToBall)
 {
   ModelInputGenerator mig;
 
@@ -350,7 +350,7 @@ TEST(model_input_generator, get_model_input_ShouldReturnPositive_WhenRobotAccelT
   EXPECT_NEAR(ret(8), 0.0, 1e-6);
 }
 
-TEST(model_input_generator, get_model_input_ShouldReturnNegative_WhenRobotAccelAwayFromBall)
+TEST(ModelInputGenerator, getModelInput_ShouldReturnNegative_WhenRobotAccelAwayFromBall)
 {
   ModelInputGenerator mig;
 

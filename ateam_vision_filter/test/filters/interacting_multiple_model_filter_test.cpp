@@ -29,7 +29,7 @@
 #include "../src/generators/transmission_probability_generator.hpp"
 #include "../src/types/models.hpp"
 
-TEST(interacting_multiple_model_filter, get_state_estimate_ShouldReturnIntial_WhenNothingChanges)
+TEST(InteractingMultipleModelFilter, getStateEstimate_ShouldReturnIntial_WhenNothingChanges)
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 2.0});
@@ -46,7 +46,7 @@ TEST(interacting_multiple_model_filter, get_state_estimate_ShouldReturnIntial_Wh
   EXPECT_FLOAT_EQ(imm.get_state_estimate().y(), 2.0);
 }
 
-TEST(interacting_multiple_model_filter, predict_ShouldReturnX10Step_WhenPredictX10)
+TEST(InteractingMultipleModelFilter, predict_ShouldReturnX10Step_WhenPredictX10)
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 1.0});
@@ -73,7 +73,7 @@ TEST(interacting_multiple_model_filter, predict_ShouldReturnX10Step_WhenPredictX
   EXPECT_FLOAT_EQ(imm.get_state_estimate().y(), 1.0);
 }
 
-TEST(interacting_multiple_model_filter, update_ShouldReturnUpdate_WhenUpdateX100)
+TEST(InteractingMultipleModelFilter, update_ShouldReturnUpdate_WhenUpdateX100)
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{0.0, 0.0});
@@ -104,7 +104,7 @@ TEST(interacting_multiple_model_filter, update_ShouldReturnUpdate_WhenUpdateX100
   EXPECT_NEAR(imm.get_state_estimate().y(), 10.0, .1);
 }
 
-TEST(interacting_multiple_model_filter, clone_ShouldReturnIntial_WhenNothingChanges)
+TEST(InteractingMultipleModelFilter, clone_ShouldReturnIntial_WhenNothingChanges)
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 2.0});
@@ -126,8 +126,8 @@ TEST(interacting_multiple_model_filter, clone_ShouldReturnIntial_WhenNothingChan
 }
 
 TEST(
-  interacting_multiple_model_filter,
-  get_potential_measurement_error_ShouldReturnDist_WhenNothingChanges)
+  InteractingMultipleModelFilter,
+  getPotentialMeasurementError_ShouldReturnDist_WhenNothingChanges)
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 1.0});

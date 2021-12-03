@@ -24,7 +24,7 @@
 
 #include <vector>
 
-TEST(kalman_filter, getXHat_ShouldReturnIntial_WhenNoPredictOrUpdate)
+TEST(KalmanFilter, getXHat_ShouldReturnIntial_WhenNoPredictOrUpdate)
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 2.0});
@@ -41,7 +41,7 @@ TEST(kalman_filter, getXHat_ShouldReturnIntial_WhenNoPredictOrUpdate)
   EXPECT_DOUBLE_EQ(x_hat.y(), 2.0);
 }
 
-TEST(kalman_filter, getXHat_ShouldReturnPrediction_WhenPredictx10WithNoInput)
+TEST(KalmanFilter, getXHat_ShouldReturnPrediction_WhenPredictx10WithNoInput)
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 2.0});
@@ -65,7 +65,7 @@ TEST(kalman_filter, getXHat_ShouldReturnPrediction_WhenPredictx10WithNoInput)
   EXPECT_DOUBLE_EQ(x_hat.y(), 2.0);
 }
 
-TEST(kalman_filter, getXHat_ShouldReturnPrediction_WhenPredictx10WithInput)
+TEST(KalmanFilter, getXHat_ShouldReturnPrediction_WhenPredictx10WithInput)
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 2.0});
@@ -89,7 +89,7 @@ TEST(kalman_filter, getXHat_ShouldReturnPrediction_WhenPredictx10WithInput)
   EXPECT_DOUBLE_EQ(x_hat.y(), 2.0);
 }
 
-TEST(kalman_filter, getXHat_ShouldReturnNearUpdate_WhenPredictx10ThenUpdatex10)
+TEST(KalmanFilter, getXHat_ShouldReturnNearUpdate_WhenPredictx10ThenUpdatex10)
 {
   KalmanFilter kf;
   kf.set_initial_x_hat(Eigen::Vector2d{1.0, 2.0});
@@ -119,7 +119,7 @@ TEST(kalman_filter, getXHat_ShouldReturnNearUpdate_WhenPredictx10ThenUpdatex10)
   EXPECT_NEAR(x_hat.y(), 1.0, 0.1);
 }
 
-TEST(kalman_filter, getPotentialMeasurementError_ShouldReturnDistanceFromXHat_WhenXHatInitialized)
+TEST(KalmanFilter, getPotentialMeasurementError_ShouldReturnDistanceFromXHat_WhenXHatInitialized)
 {
   Eigen::Vector2d x_hat_init{1.0, 2.0};
 
@@ -139,7 +139,7 @@ TEST(kalman_filter, getPotentialMeasurementError_ShouldReturnDistanceFromXHat_Wh
   EXPECT_NEAR(measurement_error.y(), (potential_measurement - x_hat_init).y(), 1e-4);
 }
 
-TEST(kalman_filter, numeric_example)
+TEST(KalmanFilter, numeric_example)
 {
   // Taken from here https://www.kalmanfilter.net/multiExamples.html
   KalmanFilter kf;

@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 
-TEST(multiple_hypothesis_tracker, get_state_estimate_ShouldReturnNothing_WhenNoTracks)
+TEST(MultipleHypothesisTracker, getStateEstimate_ShouldReturnNothing_WhenNoTracks)
 {
   MultipleHypothesisTracker mht;
 
@@ -35,7 +35,7 @@ TEST(multiple_hypothesis_tracker, get_state_estimate_ShouldReturnNothing_WhenNoT
   EXPECT_FALSE(ret.has_value());
 }
 
-TEST(multiple_hypothesis_tracker, get_state_estimate_ShouldReturnEstimate_WhenOneMeasuremnt)
+TEST(MultipleHypothesisTracker, getStateEstimate_ShouldReturnEstimate_WhenOneMeasuremnt)
 {
   MultipleHypothesisTracker mht;
   KalmanFilter kf;
@@ -68,8 +68,8 @@ TEST(multiple_hypothesis_tracker, get_state_estimate_ShouldReturnEstimate_WhenOn
 }
 
 TEST(
-  multiple_hypothesis_tracker,
-  get_state_estimate_ShouldReturnEstimate_WhenOneMeasuremntThenOneMeasurement)
+  MultipleHypothesisTracker,
+  getStateEstimate_ShouldReturnEstimate_WhenOneMeasuremntThenOneMeasurement)
 {
   MultipleHypothesisTracker mht;
   KalmanFilter kf;
@@ -103,8 +103,8 @@ TEST(
 }
 
 TEST(
-  multiple_hypothesis_tracker,
-  get_state_estimate_ShouldReturnEstimate_WhenTwoMeasuremntThenTwoMeasurement)
+  MultipleHypothesisTracker,
+  getStateEstimate_ShouldReturnEstimate_WhenTwoMeasuremntThenTwoMeasurement)
 {
   MultipleHypothesisTracker mht;
   KalmanFilter kf;
@@ -139,8 +139,8 @@ TEST(
 }
 
 TEST(
-  multiple_hypothesis_tracker,
-  get_state_estimate_ShouldReturnBest_WhenOnlyOneGetsConstantUpdates)
+  MultipleHypothesisTracker,
+  getStateEstimate_ShouldReturnBest_WhenOnlyOneGetsConstantUpdates)
 {
   MultipleHypothesisTracker mht;
   KalmanFilter kf;
@@ -181,8 +181,8 @@ TEST(
 }
 
 TEST(
-  multiple_hypothesis_tracker,
-  get_state_estimate_ShouldReturnNone_WhenOneStoppedGettingUpdates)
+  MultipleHypothesisTracker,
+  getStateEstimate_ShouldReturnNone_WhenOneStoppedGettingUpdates)
 {
   MultipleHypothesisTracker mht;
   KalmanFilter kf;

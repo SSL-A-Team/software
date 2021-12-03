@@ -29,8 +29,8 @@
 #include "../src/types/robot.hpp"
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn085_WhenSameModelToFrom)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn085_WhenSameModelToFrom)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 11> models{
@@ -52,8 +52,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn015_WhenSlidingToRolling)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn015_WhenSlidingToRolling)
 {
   TransmissionProbabilityGenerator tpg;
 
@@ -65,8 +65,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenNoRobotForBounce)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenNoRobotForBounce)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -94,8 +94,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn015_WhenCloseAndMovingToRobotForBounce)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn015_WhenCloseAndMovingToRobotForBounce)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -132,8 +132,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenCloseAndMovingAwayRobotForBounce)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenCloseAndMovingAwayRobotForBounce)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -170,8 +170,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenFarAndMovingToRobotForBounce)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenFarAndMovingToRobotForBounce)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -208,8 +208,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenNoRobotForStop)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenNoRobotForStop)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -237,8 +237,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn015_WhenCloseInMouthMovingToRobotForStop)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn015_WhenCloseInMouthMovingToRobotForStop)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -276,8 +276,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenFarInMouthMovingToRobotForStop)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenFarInMouthMovingToRobotForStop)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -315,8 +315,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenCloseOutMouthUpMovingToRobotForStop)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenCloseOutMouthUpMovingToRobotForStop)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -354,8 +354,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenCloseOutMouthLeftMovingToRobotForStop)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenCloseOutMouthLeftMovingToRobotForStop)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -393,8 +393,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenCloseInMouthMovingAwayRobotForStop)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenCloseInMouthMovingAwayRobotForStop)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 10> models{
@@ -432,8 +432,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenNoRobotForKick)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenNoRobotForKick)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 8> models{
@@ -471,8 +471,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn015_WhenCloseInMouthRobotForKick)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn015_WhenCloseInMouthRobotForKick)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 8> models{
@@ -514,8 +514,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenFarInMouthRobotForKick)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenFarInMouthRobotForKick)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 8> models{
@@ -557,8 +557,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenCloseOutMouthRobotForKick)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenCloseOutMouthRobotForKick)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 8> models{
@@ -600,8 +600,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn085_WhenKickForSliding)
+  TransmissionProbabilityGenerator,
+  WShouldReturn085_WhenKickForSliding)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 3> kicks{
@@ -622,8 +622,8 @@ TEST(
 }
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn0_WhenNotKickForSliding)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn0_WhenNotKickForSliding)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 7> models{
@@ -649,8 +649,8 @@ TEST(
 
 
 TEST(
-  transmission_probability_generator,
-  get_transmission_probability_ShouldReturn015Or085_WhenNotSameRobotModelOrSame)
+  TransmissionProbabilityGenerator,
+  getTransmissionProbability_ShouldReturn015Or085_WhenNotSameRobotModelOrSame)
 {
   TransmissionProbabilityGenerator tpg;
   std::array<Models::ModelType, 3> models{
