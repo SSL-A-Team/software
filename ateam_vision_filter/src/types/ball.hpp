@@ -23,13 +23,22 @@
 
 #include <Eigen/Dense>
 
-struct Ball
+class Ball
 {
+public:
   Eigen::Vector2d position;
 
   Eigen::Vector2d velocity;
 
   Eigen::Vector2d acceleration;
+
+  Ball()
+  : position{0, 0}, velocity{0, 0}, acceleration{0, 0} {}
+
+  explicit Ball(const Eigen::Matrix<double, 6, 1> & from_state)
+  : position(from_state.block(2, 1, 0, 0)),
+    velocity(from_state.block(2, 1, 2, 0)),
+    acceleration(from_state.block(2, 1, 4, 0)) {}
 };
 
 #endif  // TYPES__BALL_HPP_

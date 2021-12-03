@@ -21,6 +21,7 @@
 #include "camera.hpp"
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "filters/kalman_filter.hpp"
@@ -77,19 +78,24 @@ void Camera::predict()
 
 std::optional<Camera::BallWithScore> Camera::get_ball_estimate_with_score()
 {
-  // TODO(jneiger): Return from the tracker
-  return std::nullopt;
+  auto ball_state_with_score = ball.get_state_estimate();
+  if (ball_state_with_score.has_value()) {
+    const auto & value = ball_state_with_score.value();
+    return std::make_pair(Ball(std::get<0>(value)), std::get<1>(value));
+  } else {
+    return std::nullopt;
+  }
 }
 
 std::array<std::optional<Camera::RobotWithScore>,
   16> Camera::get_yellow_robot_estimates_with_score()
 {
-  // TODO(jneiger): Return from the tracker
+  return get_robot_estimates_with_score(yellow_team);
 }
 
 std::array<std::optional<Camera::RobotWithScore>, 16> Camera::get_blue_robot_estimates_with_score()
 {
-  // TODO(jneiger): Return from the tracker
+  return get_robot_estimates_with_score(blue_team);
 }
 
 void Camera::setup_ball_interacting_multiple_model_filter(
@@ -179,4 +185,23 @@ std::vector<Eigen::VectorXd> Camera::ball_measurements_to_vector(
     });
 
   return vectored_measurements;
+}
+
+
+std::array<std::optional<Camera::RobotWithScore>, 16> Camera::get_robot_estimates_with_score(
+  const std::array<MultipleHypothesisTracker, 16> robot_team)
+{
+  std::array<std::optional<Camera::RobotWithScore>, 16> output;
+
+  for (size_t i = 0; i < output.size(); i++) {
+    const auto & robot = robot_team.at(i);
+
+    auto robot_state_with_score = robot.get_state_estimate();
+    if (robot_state_with_score.has_value()) {
+      const auto & value = robot_state_with_score.value();
+      output.at(i) = std::make_pair(Robot(std::get<0>(value)), std::get<1>(value));
+    }
+  }
+
+  return output;
 }

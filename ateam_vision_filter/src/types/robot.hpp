@@ -23,8 +23,9 @@
 
 #include <Eigen/Dense>
 
-struct Robot
+class Robot
 {
+public:
   Eigen::Vector2d position;
   double theta;
 
@@ -33,6 +34,14 @@ struct Robot
 
   Eigen::Vector2d acceleration;
   double alpha;
+
+  Robot()
+  : position{0, 0}, theta{0}, velocity{0, 0}, omega{0}, acceleration{0, 0}, alpha{0} {}
+
+  explicit Robot(const Eigen::Matrix<double, 9, 1> & from_state)
+  : position(from_state.block(2, 1, 0, 0)), theta(from_state(2, 0)),
+    velocity(from_state.block(2, 1, 3, 0)), omega(from_state(5, 0)),
+    acceleration(from_state.block(2, 1, 6, 0)), alpha(from_state(8, 0)) {}
 };
 
 #endif  // TYPES__ROBOT_HPP_

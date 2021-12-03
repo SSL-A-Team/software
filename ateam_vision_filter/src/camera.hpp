@@ -84,6 +84,9 @@ private:
   static std::vector<Eigen::VectorXd> ball_measurements_to_vector(
     const std::vector<BallMeasurement> & ball_measurements);
 
+  static std::array<std::optional<RobotWithScore>, 16> get_robot_estimates_with_score(
+    const std::array<MultipleHypothesisTracker, 16> robot_team);
+
   std::array<MultipleHypothesisTracker, 16> yellow_team;
   std::array<MultipleHypothesisTracker, 16> blue_team;
   MultipleHypothesisTracker ball;
