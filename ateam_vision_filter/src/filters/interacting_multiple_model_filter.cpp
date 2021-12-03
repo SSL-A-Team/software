@@ -119,6 +119,11 @@ Eigen::VectorXd InteractingMultipleModelFilter::get_position_estimate() const
   return x_bar;
 }
 
+bool InteractingMultipleModelFilter::has_been_updated_regularly() const
+{
+  return relative_update_frequency > regularly_updated_frequncy_cutoff;
+}
+
 double InteractingMultipleModelFilter::get_validity_score() const
 {
   if (updates_until_valid_track > 0) {

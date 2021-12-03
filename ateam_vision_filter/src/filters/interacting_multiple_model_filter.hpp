@@ -79,6 +79,11 @@ public:
   Eigen::VectorXd get_position_estimate() const;
 
   /**
+   * @return True if this filter has been updated at a reasonable regularly-ness
+   */
+  bool has_been_updated_regularly() const;
+
+  /**
    * @return Score representing how much this filter has been updated
    */
   double get_validity_score() const;
@@ -109,8 +114,9 @@ private:
   std::map<Models::ModelType, double> mu;  // ~= Probability of being in model ModelType
 
   double alpha = 0.5;  // How much to weight old updates when getting average frequency
-  double relative_update_frequency = 0;
+  double relative_update_frequency = 0.5;
   unsigned int updates_until_valid_track = 10;
+  double regularly_updated_frequncy_cutoff = 0.1;
 
   std::shared_ptr<ModelInputGenerator> model_input_generator;
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;

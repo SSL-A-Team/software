@@ -167,7 +167,7 @@ TEST(
   std::vector<Eigen::VectorXd> measurements2;
   measurements2.push_back(Eigen::Vector2d{4, 4});
 
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < 30; i++) {
     mht.update(measurements1);
     mht.predict();
     mht.update(measurements2);
@@ -178,4 +178,42 @@ TEST(
   ASSERT_TRUE(ret.has_value());
   EXPECT_NEAR(ret.value().first.x(), 4.0, 1e-6);
   EXPECT_NEAR(ret.value().first.y(), 4.0, 1e-6);
+}
+
+TEST(
+  multiple_hypothesis_tracker,
+  get_state_estimate_ShouldReturnNone_WhenOneStoppedGettingUpdates)
+{
+  MultipleHypothesisTracker mht;
+  KalmanFilter kf;
+  kf.set_initial_x_hat((Eigen::MatrixXd(6, 1) << 0, 0, 0, 0, 0, 0).finished());
+  kf.set_initial_p(Eigen::MatrixXd::Ones(6, 6));
+  kf.set_F(Models::Ball::F);
+  kf.set_B(Models::Ball::B);
+  kf.set_H(Models::Ball::H);
+  kf.set_Q(Models::Ball::Q);
+  kf.set_R(Models::Ball::R);
+  std::vector<Models::ModelType> model_types{Models::ModelType::BALL_ROLLING_FRICTION};
+  std::shared_ptr<ModelInputGenerator> model_input_generator =
+    std::make_shared<ModelInputGenerator>();
+  std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator =
+    std::make_shared<TransmissionProbabilityGenerator>();
+
+  InteractingMultipleModelFilter immf;
+  immf.setup(kf, model_types, model_input_generator, transmission_probability_generator);
+  mht.set_base_track(immf);
+
+  std::vector<Eigen::VectorXd> measurements1;
+  measurements1.push_back(Eigen::Vector2d{1, 2});
+
+  for (int i = 0; i < 20; i++) {
+    mht.update(measurements1);
+    mht.predict();
+  }
+  for (int i = 0; i < 200; i++) {
+    mht.predict();
+  }
+  std::optional<std::pair<Eigen::VectorXd, double>> ret = mht.get_state_estimate();
+
+  ASSERT_FALSE(ret.has_value());
 }

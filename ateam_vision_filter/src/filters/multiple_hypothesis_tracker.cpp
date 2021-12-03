@@ -193,6 +193,8 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
 
 void MultipleHypothesisTracker::predict()
 {
+  life_cycle_management();
+
   for (auto & track : tracks) {
     track.predict();
   }
@@ -221,6 +223,10 @@ get_state_estimate() const
 
 void MultipleHypothesisTracker::life_cycle_management()
 {
-  // Life cycle management
-  // Anything that's missed too many should be removed
+  // Anything that hasn't been updated regularly should be removed
+  tracks.erase(
+    std::remove_if(
+      tracks.begin(), tracks.end(), [](const auto & track) {
+        return !track.has_been_updated_regularly();
+      }), tracks.end());
 }
