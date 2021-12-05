@@ -109,14 +109,15 @@ void Camera::setup_ball_interacting_multiple_model_filter(
   base_kf_model.set_Q(Models::Ball::Q);
   base_kf_model.set_R(Models::Ball::R);
 
-  std::vector<Models::ModelType> model_types;
-  model_types.emplace_back(Models::ModelType::BALL_ROLLING_FRICTION);
-  model_types.emplace_back(Models::ModelType::BALL_SLIDING_FRICTION);
-  model_types.emplace_back(Models::ModelType::BALL_BOUNCE_ON_ROBOT);
-  model_types.emplace_back(Models::ModelType::BALL_STOP_ON_DRIBBLER);
-  model_types.emplace_back(Models::ModelType::BALL_SLOW_KICK);
-  model_types.emplace_back(Models::ModelType::BALL_MEDIUM_KICK);
-  model_types.emplace_back(Models::ModelType::BALL_FAST_KICK);
+  std::vector<Models::ModelType> model_types{
+    Models::ModelType::BALL_ROLLING_FRICTION,
+    Models::ModelType::BALL_SLIDING_FRICTION,
+    Models::ModelType::BALL_BOUNCE_ON_ROBOT,
+    Models::ModelType::BALL_STOP_ON_DRIBBLER,
+    Models::ModelType::BALL_SLOW_KICK,
+    Models::ModelType::BALL_MEDIUM_KICK,
+    Models::ModelType::BALL_FAST_KICK
+  };
 
   InteractingMultipleModelFilter base_track;
   base_track.setup(
@@ -136,10 +137,11 @@ void Camera::setup_robot_interacting_multiple_model_filter(
   base_kf_model.set_Q(Models::Robot::Q);
   base_kf_model.set_R(Models::Robot::R);
 
-  std::vector<Models::ModelType> model_types;
-  model_types.emplace_back(Models::ModelType::ROBOT_NO_ACCEL);
-  model_types.emplace_back(Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL);
-  model_types.emplace_back(Models::ModelType::ROBOT_ACCEL_AWAY_FROM_BALL);
+  std::vector<Models::ModelType> model_types{
+    Models::ModelType::ROBOT_NO_ACCEL,
+    Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL,
+    Models::ModelType::ROBOT_ACCEL_AWAY_FROM_BALL
+  };
 
   InteractingMultipleModelFilter base_track;
   base_track.setup(
@@ -159,11 +161,10 @@ std::vector<Eigen::VectorXd> Camera::robot_measurements_to_vector(
   const std::vector<RobotMeasurement> & robot_measurements)
 {
   std::vector<Eigen::VectorXd> vectored_measurements;
-  vectored_measurements.reserve(robot_measurements.size());
 
   std::transform(
     robot_measurements.begin(), robot_measurements.end(),
-    vectored_measurements.begin(),
+    std::back_inserter(vectored_measurements),
     [](const RobotMeasurement & original) {
       return Eigen::Vector3d{original.position.x(), original.position.y(), original.theta};
     });
@@ -175,11 +176,10 @@ std::vector<Eigen::VectorXd> Camera::ball_measurements_to_vector(
   const std::vector<BallMeasurement> & ball_measurements)
 {
   std::vector<Eigen::VectorXd> vectored_measurements;
-  vectored_measurements.reserve(ball_measurements.size());
 
   std::transform(
     ball_measurements.begin(), ball_measurements.end(),
-    vectored_measurements.begin(),
+    std::back_inserter(vectored_measurements),
     [](const BallMeasurement & original) {
       return original.position;
     });
