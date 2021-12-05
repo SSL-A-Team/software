@@ -27,7 +27,9 @@
 // Returns best track
 
 #include <Eigen/Dense>
+#include <boost/graph/adjacency_list.hpp>
 
+#include <map>
 #include <utility>
 #include <vector>
 
@@ -46,6 +48,39 @@ public:
   std::optional<StateWithScore> get_state_estimate() const;
 
 private:
+  using adjacency_list_traits = boost::adjacency_list_traits<boost::vecS, boost::vecS,
+      boost::directedS>;
+
+  using graph_t = boost::adjacency_list<
+    boost::vecS,
+    boost::vecS,
+    boost::directedS,
+    boost::no_property,
+    boost::property<boost::edge_capacity_t, unsigned int,
+    boost::property<boost::edge_residual_capacity_t, unsigned int,
+    boost::property<boost::edge_reverse_t, adjacency_list_traits::edge_descriptor,
+    boost::property<boost::edge_weight_t, double>>>>>;
+  using edge_capacity_list_t = boost::property_map<graph_t, boost::edge_capacity_t>::type;
+  using edge_residual_capacity_list_t = boost::property_map<graph_t,
+      boost::edge_residual_capacity_t>::type;
+  using edge_weight_list_t = boost::property_map<graph_t, boost::edge_weight_t>::type;
+  using edge_reverse_list_t = boost::property_map<graph_t, boost::edge_reverse_t>::type;
+  using forward_edge_to_vertex_pair_t = std::map<
+    adjacency_list_traits::edge_descriptor,
+    std::pair<
+      adjacency_list_traits::vertex_descriptor,
+      adjacency_list_traits::vertex_descriptor>>;
+
+  void add_edge_to_graph(
+    graph_t & graph,
+    edge_capacity_list_t & edge_capacity_list,
+    edge_weight_list_t & edge_weight_list,
+    edge_reverse_list_t & edge_reverse_list,
+    forward_edge_to_vertex_pair_t & forward_edge_to_vertex_pair,
+    adjacency_list_traits::vertex_descriptor source_vertex,
+    adjacency_list_traits::vertex_descriptor sink_vertex,
+    double weight);
+
   void life_cycle_management();
 
   InteractingMultipleModelFilter base_track;
