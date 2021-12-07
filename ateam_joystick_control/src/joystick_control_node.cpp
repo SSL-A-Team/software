@@ -47,6 +47,21 @@ public:
         get_logger(),
         "Command topic template does not contain '{}' placeholder. Robot ID will have no effect.");
     }
+
+    declare_parameters<int>(
+      "mapping", {
+        {"linear.x.axis", 1},
+        {"linear.y.axis", 0},
+        {"angular.z.axis", 3}
+      });
+
+    declare_parameters<double>(
+      "mapping", {
+        {"linear.x.scale", 1.0},
+        {"linear.y.scale", 1.0},
+        {"angular.z.scale", 1.0}
+      });
+
     CreatePublisher(declare_parameter<int>("robot_id", 0));
     parameter_callback_handle_ =
       add_on_set_parameters_callback(
@@ -76,9 +91,12 @@ private:
   {
     ateam_msgs::msg::RobotMotionCommand command_message;
 
-    command_message.twist.linear.x = joy_message->axes[1];
-    command_message.twist.linear.y = -1 * joy_message->axes[0];
-    command_message.twist.angular.z = joy_message->axes[3];
+    command_message.twist.linear.x = get_parameter("mapping.linear.x.scale").as_double() *
+      joy_message->axes[get_parameter("mapping.linear.x.axis").as_int()];
+    command_message.twist.linear.y = get_parameter("mapping.linear.y.scale").as_double() *
+      joy_message->axes[get_parameter("mapping.linear.y.axis").as_int()];
+    command_message.twist.angular.z = get_parameter("mapping.angular.z.scale").as_double() *
+      joy_message->axes[get_parameter("mapping.angular.z.axis").as_int()];
 
     // TODO(barulicm) Kick controls
     // TODO(barulicm) Dribbler controls

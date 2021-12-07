@@ -1,18 +1,14 @@
-/teleop_twist_joy:
+/joystick_control_node:
   ros__parameters:
-    axis_angular:
-      yaw: 3
-    axis_linear:
-      x: 1
-      y: 0
-    require_enable_button: false
-    scale_angular:
-      yaw: 0.5
-    scale_angular_turbo:
-      yaw: 1.0
-    scale_linear:
-      x: 0.5
-      y: 0.5
-    scale_linear_turbo:
-      x: 1.0
-      y: 1.0
+    mapping:
+      linear:
+        x:
+          axis: 1
+          scale: 1.0
+        y:
+          axis: 0
+          scale: 1.0
+      angular:
+        z:
+          axis: 3
+          scale: 1.0

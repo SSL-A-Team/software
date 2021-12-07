@@ -112,7 +112,7 @@ class TestJoystickControlNode(unittest.TestCase):
         self.assertAlmostEqual(
             self.received_msg_0.twist.linear.x, 1.0)
         self.assertAlmostEqual(
-            self.received_msg_0.twist.linear.y, -1.0)
+            self.received_msg_0.twist.linear.y, 1.0)
         self.assertAlmostEqual(
             self.received_msg_0.twist.linear.z, 0.0)
         self.assertAlmostEqual(
@@ -152,7 +152,7 @@ class TestJoystickControlNode(unittest.TestCase):
         self.assertAlmostEqual(
             self.received_msg_1.twist.linear.x, -1.0)
         self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.y, 1.0)
+            self.received_msg_1.twist.linear.y, -1.0)
         self.assertAlmostEqual(
             self.received_msg_1.twist.linear.z, 0.0)
         self.assertAlmostEqual(
