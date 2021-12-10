@@ -25,7 +25,6 @@
 #include <map>
 #include <memory>
 #include <vector>
-#include <iostream>
 
 void InteractingMultipleModelFilter::setup(
   const KalmanFilter & base_model,
@@ -71,7 +70,6 @@ void InteractingMultipleModelFilter::predict()
 void InteractingMultipleModelFilter::update(const Eigen::VectorXd & measurement)
 {
   update_mu(measurement);
-
   for (auto & model_pair : models) {
     model_pair.second.update(measurement);
   }

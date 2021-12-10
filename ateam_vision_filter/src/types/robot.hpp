@@ -39,9 +39,9 @@ public:
   : position{0, 0}, theta{0}, velocity{0, 0}, omega{0}, acceleration{0, 0}, alpha{0} {}
 
   explicit Robot(const Eigen::Matrix<double, 9, 1> & from_state)
-  : position(from_state.block(2, 1, 0, 0)), theta(from_state(2, 0)),
-    velocity(from_state.block(2, 1, 3, 0)), omega(from_state(5, 0)),
-    acceleration(from_state.block(2, 1, 6, 0)), alpha(from_state(8, 0)) {}
+  : position(from_state.block(0, 0, 2, 1)), theta(from_state(2, 0)),
+    velocity(from_state.block(3, 0, 2, 1)), omega(from_state(5, 0)),
+    acceleration(from_state.block(6, 0, 2, 1)), alpha(from_state(8, 0)) {}
 };
 
 #endif  // TYPES__ROBOT_HPP_

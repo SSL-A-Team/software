@@ -62,6 +62,7 @@ if(BUILD_TESTING)
     test/filters/multiple_hypothesis_tracker_test.cpp
     test/generators/model_input_generator_test.cpp
     test/generators/transmission_probability_generator_test.cpp
+    test/camera_test.cpp
   )
   target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
   target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
