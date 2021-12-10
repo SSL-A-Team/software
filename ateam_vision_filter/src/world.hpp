@@ -39,6 +39,8 @@ class World
 public:
   using CameraID = int;
 
+  World();
+
   /**
    * Updates the world with a specific camera's measurement
    *

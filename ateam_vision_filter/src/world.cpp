@@ -23,8 +23,13 @@
 #include <Eigen/Dense>
 
 #include <cmath>
+#include <memory>
 #include <utility>
 #include <vector>
+
+World::World()
+: model_input_generator(std::make_shared<ModelInputGenerator>()),
+  transmission_probability_generator(std::make_shared<TransmissionProbabilityGenerator>()) {}
 
 void World::update_camera(const CameraID & cameraID, const CameraMeasurement & measurement)
 {
@@ -42,6 +47,14 @@ void World::predict()
   for (auto & camera_pair : cameras) {
     camera_pair.second.predict();
   }
+
+  auto ball_estimate = get_ball_estimate();
+  auto yellow_robots_estimate = get_yellow_robots_estimate();
+  auto blue_robots_estimate = get_blue_robots_estimate();
+  model_input_generator->update(blue_robots_estimate, yellow_robots_estimate, ball_estimate);
+  transmission_probability_generator->update(
+    blue_robots_estimate, yellow_robots_estimate,
+    ball_estimate);
 }
 
 std::optional<Ball> World::get_ball_estimate()
@@ -68,7 +81,7 @@ std::optional<Ball> World::get_ball_estimate()
   double total_score = 0.0;
   for (const auto & ball_with_score : balls_with_scores) {
     const auto & ball = ball_with_score.first;
-    const auto & score = ball_with_score.second;
+    const auto & score = ball_with_score.second + 1;
 
     merged_ball.position += score * ball.position;
     merged_ball.velocity += score * ball.velocity;
@@ -105,7 +118,7 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
   // return nullopt if there are no measurements
   std::array<std::optional<Robot>, 16> yellow_robots_estimates;
   for (size_t yellow_id = 0; yellow_id < 16; yellow_id++) {
-    if (yellow_robots_with_scores.empty()) {
+    if (yellow_robots_with_scores.at(yellow_id).empty()) {
       yellow_robots_estimates.at(yellow_id) = std::nullopt;
     } else {
       // Merge robots based on weighted average of their scores
@@ -117,10 +130,11 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
 
       for (const auto & robot_with_score : yellow_robots_with_scores.at(yellow_id)) {
         const Robot & robot = std::get<0>(robot_with_score);
-        const double & score = std::get<1>(robot_with_score);
+        const double & score = std::get<1>(robot_with_score) + 1;
+
         output_robot.position += score * robot.position;
-        output_angle += score * Eigen::Vector2d{std::cos(output_robot.theta), std::sin(
-            output_robot.theta)};
+        output_angle += score * Eigen::Vector2d{std::cos(robot.theta), std::sin(
+            robot.theta)};
         output_robot.velocity += score * robot.velocity;
         output_robot.omega += score * robot.omega;
         output_robot.acceleration += score * robot.acceleration;
@@ -132,7 +146,7 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
       output_robot.position /= total_score;
       output_robot.theta = 0.0;
       if (output_angle.norm() > 0) {
-        output_robot.theta = std::atan2(output_angle.x(), output_angle.y());
+        output_robot.theta = std::atan2(output_angle.y(), output_angle.x());
       }
       output_robot.velocity /= total_score;
       output_robot.omega /= total_score;
@@ -143,7 +157,7 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
 
   return yellow_robots_estimates;
 }
-
+#include <iostream>
 std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
 {
   using RobotWithScore = std::pair<Robot, double>;
@@ -166,7 +180,7 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
   // return nullopt if there are no measurements
   std::array<std::optional<Robot>, 16> blue_robots_estimates;
   for (size_t blue_id = 0; blue_id < 16; blue_id++) {
-    if (blue_robots_with_scores.empty()) {
+    if (blue_robots_with_scores.at(blue_id).empty()) {
       blue_robots_estimates.at(blue_id) = std::nullopt;
     } else {
       // Merge robots based on weighted average of their scores
@@ -178,10 +192,11 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
 
       for (const auto & robot_with_score : blue_robots_with_scores.at(blue_id)) {
         const Robot & robot = std::get<0>(robot_with_score);
-        const double & score = std::get<1>(robot_with_score);
+        const double & score = std::get<1>(robot_with_score) + 1;
+
         output_robot.position += score * robot.position;
-        output_angle += score * Eigen::Vector2d{std::cos(output_robot.theta), std::sin(
-            output_robot.theta)};
+        output_angle += score * Eigen::Vector2d{std::cos(robot.theta), std::sin(
+            robot.theta)};
         output_robot.velocity += score * robot.velocity;
         output_robot.omega += score * robot.omega;
         output_robot.acceleration += score * robot.acceleration;
@@ -193,7 +208,8 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
       output_robot.position /= total_score;
       output_robot.theta = 0.0;
       if (output_angle.norm() > 0) {
-        output_robot.theta = std::atan2(output_angle.x(), output_angle.y());
+        std::cout << output_angle << std::endl;
+        output_robot.theta = std::atan2(output_angle.y(), output_angle.x());
       }
       output_robot.velocity /= total_score;
       output_robot.omega /= total_score;

@@ -63,6 +63,7 @@ if(BUILD_TESTING)
     test/generators/model_input_generator_test.cpp
     test/generators/transmission_probability_generator_test.cpp
     test/camera_test.cpp
+    test/world_test.cpp
   )
   target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
   target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
