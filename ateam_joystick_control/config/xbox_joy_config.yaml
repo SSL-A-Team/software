@@ -1,0 +1,14 @@
+/joystick_control_node:
+  ros__parameters:
+    mapping:
+      linear:
+        x:
+          axis: 1
+          scale: 1.0
+        y:
+          axis: 0
+          scale: 1.0
+      angular:
+        z:
+          axis: 3
+          scale: 1.0
