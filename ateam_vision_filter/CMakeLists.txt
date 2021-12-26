@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(ssl_league_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
@@ -30,9 +31,11 @@ add_library(${PROJECT_NAME} SHARED
   src/types/models.hpp
   src/types/robot_measurement.hpp
   src/types/robot.hpp
+  src/ateam_vision_filter_node.cpp
   src/camera.hpp
   src/camera.cpp
-  src/ateam_vision_filter_node.cpp
+  src/message_conversions.hpp
+  src/message_conversions.cpp
   src/world.hpp
   src/world.cpp
 )
@@ -42,6 +45,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
   ateam_common
+  ssl_league_msgs
   Eigen3
 )
 rclcpp_components_register_node(

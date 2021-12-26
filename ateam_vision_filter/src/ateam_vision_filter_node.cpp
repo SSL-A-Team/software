@@ -21,6 +21,15 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
+#include <chrono>
+#include <functional>
+#include <mutex>
+
+#include "world.hpp"
+#include "message_conversions.hpp"
+
+using namespace std::chrono_literals;
+
 namespace ateam_vision_filter
 {
 
@@ -28,13 +37,44 @@ class VisionFilterNode : public rclcpp::Node
 {
 public:
   explicit VisionFilterNode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ssl_vision_bridge", options)
+  : rclcpp::Node("ateam_vision_filter", options)
   {
+    timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
+    ssl_vision_subscription_ =
+      create_subscription<ssl_league_msgs::msg::VisionWrapper>(
+      "~/vision_messages",
+      10,
+      std::bind(&VisionFilterNode::message_callback, this, std::placeholders::_1));
+  }
+
+  void message_callback(
+    const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
+  {
+    int camera_id = vision_wrapper_msg->detection.camera_id;
+    CameraMeasurement camera_measurement = message_conversions::fromMsg(*vision_wrapper_msg);
+
+    world_mutex_.lock();
+    world_.update_camera(camera_id, camera_measurement);
+  }
+
+  void timer_callback()
+  {
+    world_mutex_.lock();
+    world_.predict();
   }
 
 private:
-};
+  rclcpp::TimerBase::SharedPtr timer_;
+  // rclcpp::Publisher<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ball_publisher_;
+  // std::array<rclcpp::Publisher<ssl_league_msgs::msg::VisionWrapper>
+  //   ::SharedPtr, 16> blue_robots_publisher_;
+  // std::array<rclcpp::Publisher<ssl_league_msgs::msg::VisionWrapper>
+  //   ::SharedPtr, 16> yellow_robots_publisher_;
+  rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
 
+  std::mutex world_mutex_;
+  World world_;
+};
 }  // namespace ateam_vision_filter
 
 RCLCPP_COMPONENTS_REGISTER_NODE(ateam_vision_filter::VisionFilterNode)
