@@ -21,14 +21,24 @@
 #ifndef MESSAGE_CONVERSIONS_HPP_
 #define MESSAGE_CONVERSIONS_HPP_
 
+#include <ateam_msgs/msg/ball_state.hpp>
+#include <ateam_msgs/msg/robot_state.hpp>
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <ssl_league_msgs/msg/vision_detection_frame.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
+
+#include "types/ball.hpp"
+#include "types/ball_measurement.hpp"
+#include "types/robot.hpp"
+#include "types/robot_measurement.hpp"
 #include "types/camera_measurement.hpp"
 
 namespace ateam_vision_filter::message_conversions
 {
+
+ateam_msgs::msg::BallState toMsg(const Ball & obj);
+ateam_msgs::msg::RobotState toMsg(const Robot & obj);
 
 CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionWrapper & ros_msg);
 CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg);

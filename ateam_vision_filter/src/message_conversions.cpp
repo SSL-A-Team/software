@@ -23,6 +23,32 @@
 namespace ateam_vision_filter::message_conversions
 {
 
+ateam_msgs::msg::BallState toMsg(const Ball & obj)
+{
+  ateam_msgs::msg::BallState ball_state_msg;
+  ball_state_msg.pose.position.x = obj.position.x();
+  ball_state_msg.pose.position.y = obj.position.y();
+  ball_state_msg.twist.linear.x = obj.velocity.x();
+  ball_state_msg.twist.linear.y = obj.velocity.y();
+  ball_state_msg.accel.linear.x = obj.acceleration.x();
+  ball_state_msg.accel.linear.y = obj.acceleration.y();
+
+  return ball_state_msg;
+}
+
+ateam_msgs::msg::RobotState toMsg(const Robot & obj)
+{
+  ateam_msgs::msg::RobotState robot_state_msg;
+  robot_state_msg.pose.position.x = obj.position.x();
+  robot_state_msg.pose.position.y = obj.position.y();
+  robot_state_msg.twist.linear.x = obj.velocity.x();
+  robot_state_msg.twist.linear.y = obj.velocity.y();
+  robot_state_msg.accel.linear.x = obj.acceleration.x();
+  robot_state_msg.accel.linear.y = obj.acceleration.y();
+  // todo theta/omega/alpha
+  return robot_state_msg;
+}
+
 CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionWrapper & ros_msg)
 {
   return fromMsg(ros_msg.detection);

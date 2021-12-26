@@ -40,6 +40,20 @@ public:
   : rclcpp::Node("ateam_vision_filter", options)
   {
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
+
+    ball_publisher_ = create_publisher<ateam_msgs::msg::BallState>(
+      "~/ball",
+      rclcpp::SystemDefaultsQoS());
+
+    for (std::size_t id = 0; id < blue_robots_publisher_.size(); id++) {
+      blue_robots_publisher_.at(id) = create_publisher<ateam_msgs::msg::RobotState>(
+        "~/blue_team/robot" + std::to_string(id),
+        rclcpp::SystemDefaultsQoS());
+      yellow_robots_publisher_.at(id) = create_publisher<ateam_msgs::msg::RobotState>(
+        "~/yellow_team/robot" + std::to_string(id),
+        rclcpp::SystemDefaultsQoS());
+    }
+
     ssl_vision_subscription_ =
       create_subscription<ssl_league_msgs::msg::VisionWrapper>(
       "~/vision_messages",
@@ -54,22 +68,43 @@ public:
     CameraMeasurement camera_measurement = message_conversions::fromMsg(*vision_wrapper_msg);
 
     world_mutex_.lock();
+    const std::lock_guard<std::mutex> lock(world_mutex_);
     world_.update_camera(camera_id, camera_measurement);
   }
 
   void timer_callback()
   {
-    world_mutex_.lock();
+    const std::lock_guard<std::mutex> lock(world_mutex_);
     world_.predict();
+
+    std::optional<Ball> maybe_ball = world_.get_ball_estimate();
+    if (maybe_ball.has_value()) {
+      ball_publisher_->publish(message_conversions::toMsg(maybe_ball.value()));
+    }
+
+    std::array<std::optional<Robot>, 16> blue_team_robots = world_.get_blue_robots_estimate();
+    for (std::size_t id = 0; id < 16; id++) {
+      const auto & maybe_robot = blue_team_robots.at(id);
+      if (maybe_robot.has_value()) {
+        blue_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot.value()));
+      }
+    }
+
+    std::array<std::optional<Robot>, 16> yellow_team_robots = world_.get_yellow_robots_estimate();
+    for (std::size_t id = 0; id < 16; id++) {
+      const auto & maybe_robot = yellow_team_robots.at(id);
+      if (maybe_robot.has_value()) {
+        yellow_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot.value()));
+      }
+    }
   }
 
 private:
   rclcpp::TimerBase::SharedPtr timer_;
-  // rclcpp::Publisher<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ball_publisher_;
-  // std::array<rclcpp::Publisher<ssl_league_msgs::msg::VisionWrapper>
-  //   ::SharedPtr, 16> blue_robots_publisher_;
-  // std::array<rclcpp::Publisher<ssl_league_msgs::msg::VisionWrapper>
-  //   ::SharedPtr, 16> yellow_robots_publisher_;
+  rclcpp::Publisher<ateam_msgs::msg::BallState>::SharedPtr ball_publisher_;
+  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotState>::SharedPtr, 16> blue_robots_publisher_;
+  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotState>::SharedPtr,
+    16> yellow_robots_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
 
   std::mutex world_mutex_;
