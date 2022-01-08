@@ -93,7 +93,7 @@ public:
    */
   double get_potential_measurement_error(const Eigen::VectorXd & measurement);
 
-private:
+//private:
   void update_mu(const Eigen::VectorXd & zt);
 
   /**
@@ -113,7 +113,7 @@ private:
   std::map<Models::ModelType, KalmanFilter> models;  // Kalman filter representing ModelType
   std::map<Models::ModelType, double> mu;  // ~= Probability of being in model ModelType
 
-  double alpha = 0.5;  // How much to weight old updates when getting average frequency
+  double alpha = 0.9;  // How much to weight old updates when getting average frequency
   double relative_update_frequency = 0.5;
   unsigned int updates_until_valid_track = 10;
   double regularly_updated_frequncy_cutoff = 0.1;

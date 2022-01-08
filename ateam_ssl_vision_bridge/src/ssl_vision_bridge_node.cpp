@@ -22,10 +22,12 @@
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <ateam_common/multicast_receiver.hpp>
+#include <ateam_common/protobuf_logging.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
 #include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
 
 #include "message_conversions.hpp"
+#include <iostream>
 
 namespace ateam_ssl_vision_bridge
 {
@@ -39,13 +41,17 @@ public:
       10020,
       [this](auto * buffer, size_t bytes_received) {
         SSL_WrapperPacket vision_proto;
+        std::cout << bytes_received << std::endl;
         if (!vision_proto.ParseFromArray(buffer, bytes_received)) {
           vision_publisher_->publish(message_conversions::fromProto(vision_proto));
+          RCLCPP_WARN(get_logger(), "Parsed vision protobuf packet");
         } else {
           RCLCPP_WARN(get_logger(), "Failed to parse vision protobuf packet");
         }
       })
   {
+    
+    SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
     vision_publisher_ = create_publisher<ssl_league_msgs::msg::VisionWrapper>(
       "~/vision_messages",
       rclcpp::SystemDefaultsQoS());

@@ -70,7 +70,7 @@ void MulticastReceiver::HandleMulticastReceiveFrom(
     return;
   }
 
-  receive_callback_(buffer_.data(), bytes_received);
+  receive_callback_(buffer_.data(), bytes_received - 1);  // ???
 
   multicast_socket_.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,

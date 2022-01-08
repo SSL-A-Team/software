@@ -41,7 +41,6 @@ void World::update_camera(const CameraID & cameraID, const CameraMeasurement & m
   // Update the specific camera
   cameras.at(cameraID).update(measurement);
 }
-
 void World::predict()
 {
   for (auto & camera_pair : cameras) {
@@ -157,7 +156,7 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
 
   return yellow_robots_estimates;
 }
-#include <iostream>
+
 std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
 {
   using RobotWithScore = std::pair<Robot, double>;
@@ -208,7 +207,6 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
       output_robot.position /= total_score;
       output_robot.theta = 0.0;
       if (output_angle.norm() > 0) {
-        std::cout << output_angle << std::endl;
         output_robot.theta = std::atan2(output_angle.y(), output_angle.x());
       }
       output_robot.velocity /= total_score;

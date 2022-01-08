@@ -27,6 +27,7 @@
 #include <set>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {
@@ -156,6 +157,7 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   // For any leftover measurement, create a new track
   for (const auto & vertex_measurement : unassigned_measurements) {
     const auto & measurement = vertex_to_measurement.at(vertex_measurement);
+    std::cout << "Created new track " << measurement.x() << " " << measurement.y() << std::endl;
     tracks.emplace_back(base_track.clone(measurement));
   }
 }

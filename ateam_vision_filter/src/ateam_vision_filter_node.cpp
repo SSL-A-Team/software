@@ -24,6 +24,7 @@
 #include <chrono>
 #include <functional>
 #include <mutex>
+#include <iostream>
 
 #include "world.hpp"
 #include "message_conversions.hpp"
@@ -56,7 +57,7 @@ public:
 
     ssl_vision_subscription_ =
       create_subscription<ssl_league_msgs::msg::VisionWrapper>(
-      "~/vision_messages",
+      "/ssl_vision_bridge/vision_messages",
       10,
       std::bind(&VisionFilterNode::message_callback, this, std::placeholders::_1));
   }
@@ -67,7 +68,6 @@ public:
     int camera_id = vision_wrapper_msg->detection.camera_id;
     CameraMeasurement camera_measurement = message_conversions::fromMsg(*vision_wrapper_msg);
 
-    world_mutex_.lock();
     const std::lock_guard<std::mutex> lock(world_mutex_);
     world_.update_camera(camera_id, camera_measurement);
   }

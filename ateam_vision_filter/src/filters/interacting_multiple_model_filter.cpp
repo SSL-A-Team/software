@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 void InteractingMultipleModelFilter::setup(
   const KalmanFilter & base_model,
@@ -119,7 +120,10 @@ Eigen::VectorXd InteractingMultipleModelFilter::get_position_estimate() const
 
 bool InteractingMultipleModelFilter::has_been_updated_regularly() const
 {
-  return relative_update_frequency > regularly_updated_frequncy_cutoff;
+  bool constantly_updated = relative_update_frequency > regularly_updated_frequncy_cutoff;
+  bool still_getting_up_to_date = updates_until_valid_track > 0;
+  bool recently_added = relative_update_frequency > 0.01 * regularly_updated_frequncy_cutoff;
+  return constantly_updated || (still_getting_up_to_date && recently_added);
 }
 
 double InteractingMultipleModelFilter::get_validity_score() const
@@ -205,5 +209,6 @@ double InteractingMultipleModelFilter::normal_multivariate_distribution_pdf(
   // PDF equation at https://en.wikipedia.org/wiki/Multivariate_normal_distribution
   return std::pow(2 * M_PI, -1 * x.size() / 2.0) *
          std::pow(sigma.determinant(), -1.0 / 2.0) *
-         std::exp(-1.0 / 2.0 * (x - mu).transpose() * sigma.inverse() * (x - mu));
+         std::exp(-1.0 / 2.0 * (x - mu).transpose() * sigma.inverse() * (x - mu)) +
+         1e-6;  // Disallow for 0 probability, the normalization allows for return probability to be over 1
 }

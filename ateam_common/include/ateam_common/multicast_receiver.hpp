@@ -32,10 +32,10 @@ class MulticastReceiver
 {
 public:
   /**
-   * @param char* Data received in latest packet
+   * @param uint8_t* Data received in latest packet
    * @param size_t Length of data received
    */
-  using ReceiveCallback = std::function<void (char *, size_t)>;
+  using ReceiveCallback = std::function<void (uint8_t *, size_t)>;
 
   MulticastReceiver(
     std::string multicast_ip_address,
@@ -49,7 +49,7 @@ private:
   boost::asio::io_service io_service_;
   boost::asio::ip::udp::socket multicast_socket_;
   boost::asio::ip::udp::endpoint sender_endpoint_;
-  std::array<char, 1024> buffer_;
+  std::array<uint8_t, 4096> buffer_;
   std::thread io_service_thread_;
 
   void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
