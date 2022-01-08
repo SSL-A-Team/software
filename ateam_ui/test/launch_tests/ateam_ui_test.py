@@ -15,6 +15,7 @@ import pytest
 
 @pytest.mark.rostest
 def generate_test_description():
+    return launch.LaunchDescription([
         launch.actions.ExecuteProcess(
             cmd=["neu", "run"],
             # I want to use ${find-pkg-share ateam_ui} here but can't get it working in python
@@ -63,8 +64,14 @@ class TestUI(unittest.TestCase):
         self.node.destroy_node()
         rclpy.shutdown(context=self.context)
 
-    def test_0_fail(self):
-        self.assertTrue(False)
+    def test_0_subscribers_created(self):
+        nodes = self.node.get_node_names_and_namespaces() #rosbridge not showing up in nodes?
+        topics = self.node.get_topic_names_and_types()
+
+        raise Exception(nodes)
+        # raise Exception(dir(self.context))
+
+        self.assertEqual(topics[0][0], "test")
 
 #     def setRobotId(self, robot_id):
 #         set_param_request = rcl_interfaces.srv.SetParameters.Request()
