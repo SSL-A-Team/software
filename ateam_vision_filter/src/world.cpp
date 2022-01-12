@@ -34,7 +34,7 @@ World::World()
 void World::update_camera(const CameraID & cameraID, const CameraMeasurement & measurement)
 {
   // Add camera if it doesn't exist yet
-  camera.try_emplace({cameraID, Camera(model_input_generator, transmission_probability_generator)});
+  cameras.try_emplace(cameraID, Camera(model_input_generator, transmission_probability_generator));
 
   // Update the specific camera
   cameras.at(cameraID).update(measurement);

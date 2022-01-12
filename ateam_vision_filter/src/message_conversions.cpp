@@ -82,10 +82,12 @@ CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros
 
 RobotMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionRobot & ros_msg)
 {
+  tf2::Quaternion tf2_quat;
   RobotMeasurement robotDetection;
   robotDetection.position.x() = ros_msg.pose.position.x;
   robotDetection.position.y() = ros_msg.pose.position.y;
-  robotDetection.theta = tf2::fromMsg(ros_msg.pose.orientation).getAngle();
+  tf2::fromMsg(ros_msg.pose.orientation, tf2_quat);
+  robotDetection.theta = tf2_quat.getAngle();
   return robotDetection;
 }
 

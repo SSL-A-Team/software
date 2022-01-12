@@ -92,8 +92,8 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     // Get angle to hit point
     // Reflect velocity off hitpoint
     // Remove all current velocity of ball, set to new velocity
-    Eigen::Vector2d robot_pos = closest_robot.position;
-    Eigen::Vector2d robot_vel = closest_robot.velocity;
+    Eigen::Vector2d robot_pos = closest_robot.value().position;
+    Eigen::Vector2d robot_vel = closest_robot.value().velocity;
 
     Eigen::Vector2d n = (ball_pos - robot_pos).normalized();
     Eigen::Vector2d output_ball_vel = ball_vel - n.dot(ball_vel - robot_vel) * n;
