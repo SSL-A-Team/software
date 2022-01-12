@@ -42,9 +42,12 @@ public:
       [this](auto * buffer, size_t bytes_received) {
         SSL_WrapperPacket vision_proto;
 
-        if (!vision_proto.ParseFromArray(buffer, bytes_received)) {
+        // Note: "- 1" is needed due to some weird bug where if the entire buffer
+        // is used to do the conversion to protobuf, it would silently fail.
+        // But, if all but the last byte is used, it succeeds and at worst some
+        // data is lost
+        if (!vision_proto.ParseFromArray(buffer, bytes_received - 1)) {
           vision_publisher_->publish(message_conversions::fromProto(vision_proto));
-          RCLCPP_WARN(get_logger(), "Parsed vision protobuf packet");
         } else {
           RCLCPP_WARN(get_logger(), "Failed to parse vision protobuf packet");
         }
