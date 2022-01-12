@@ -78,6 +78,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
   } else if (model_type == Models::ModelType::BALL_BOUNCE_ON_ROBOT) {
     // Get closest robot
     Eigen::Vector2d ball_pos = possible_state.block(0, 0, 2, 1);
+    Eigen::Vector2d ball_vel = possible_state.block(2, 0, 2, 1);
 
     std::optional<Robot> closest_robot = get_closest_robot(ball_pos);
 
@@ -86,12 +87,24 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
       return Eigen::VectorXd::Zero(possible_state.innerSize());
     }
 
-    // TODO(jneiger): Figure out bounce (assuming robot is circle for now)
+    // https://math.stackexchange.com/questions/4236016/how-to-calculate-two-circles-bouncing-off-of-each-other
     // Get hit point on radius
     // Get angle to hit point
     // Reflect velocity off hitpoint
     // Remove all current velocity of ball, set to new velocity
-  } else if (model_type == Models::ModelType::BALL_STOP_ON_DRIBBLER) {
+    Eigen::Vector2d robot_pos = closest_robot.position;
+    Eigen::Vector2d robot_vel = closest_robot.velocity;
+
+    Eigen::Vector2d n = (ball_pos - robot_pos).normalized();
+    Eigen::Vector2d output_ball_vel = ball_vel - n.dot(ball_vel - robot_vel) * n;
+
+    Eigen::VectorXd output = Eigen::VectorXd::Zero(possible_state.innerSize());
+    output.block(0, 0, 2, 1) = -Models::dt * ball_vel + Models::dt * output_ball_vel;
+    output.block(2, 0, 2, 1) = -ball_vel + output_ball_vel;
+    output.block(4, 0, 2, 1) = Eigen::Vector2d::Zero();
+
+    return output;
+    } else if (model_type == Models::ModelType::BALL_STOP_ON_DRIBBLER) {
     // Negate current speed like ball instantly damps on dribbler
     Eigen::Vector2d vel = possible_state.block(2, 0, 2, 1);
     Eigen::Vector2d accel = possible_state.block(4, 0, 2, 1);
