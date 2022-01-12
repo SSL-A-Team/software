@@ -23,11 +23,11 @@
 #include <memory>
 #include <vector>
 
-#include "../src/filters/kalman_filter.hpp"
-#include "../src/filters/interacting_multiple_model_filter.hpp"
-#include "../src/generators/model_input_generator.hpp"
-#include "../src/generators/transmission_probability_generator.hpp"
-#include "../src/types/models.hpp"
+#include "filters/kalman_filter.hpp"
+#include "filters/interacting_multiple_model_filter.hpp"
+#include "generators/model_input_generator.hpp"
+#include "generators/transmission_probability_generator.hpp"
+#include "types/models.hpp"
 
 TEST(InteractingMultipleModelFilter, getStateEstimate_ShouldReturnIntial_WhenNothingChanges)
 {

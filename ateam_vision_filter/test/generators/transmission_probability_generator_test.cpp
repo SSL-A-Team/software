@@ -23,10 +23,10 @@
 #include <optional>
 #include <array>
 
-#include "../src/generators/transmission_probability_generator.hpp"
-#include "../src/types/ball.hpp"
-#include "../src/types/models.hpp"
-#include "../src/types/robot.hpp"
+#include "generators/transmission_probability_generator.hpp"
+#include "types/ball.hpp"
+#include "types/models.hpp"
+#include "types/robot.hpp"
 
 TEST(
   TransmissionProbabilityGenerator,

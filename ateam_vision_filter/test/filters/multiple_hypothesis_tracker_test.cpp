@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "../src/filters/multiple_hypothesis_tracker.hpp"
+#include "filters/multiple_hypothesis_tracker.hpp"
 
 #include <gtest/gtest.h>
 

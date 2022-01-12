@@ -23,10 +23,10 @@
 #include <optional>
 #include <array>
 
-#include "../src/generators/model_input_generator.hpp"
-#include "../src/types/ball.hpp"
-#include "../src/types/models.hpp"
-#include "../src/types/robot.hpp"
+#include "generators/model_input_generator.hpp"
+#include "types/ball.hpp"
+#include "types/models.hpp"
+#include "types/robot.hpp"
 
 TEST(ModelInputGenerator, getModelInput_ShouldReturnSmallerVelocity_WhenBallRollingFriction)
 {
