@@ -33,10 +33,8 @@ World::World()
 
 void World::update_camera(const CameraID & cameraID, const CameraMeasurement & measurement)
 {
-  // If camera does not exists, add it
-  if (cameras.find(cameraID) == cameras.end()) {
-    cameras.insert({cameraID, Camera(model_input_generator, transmission_probability_generator)});
-  }
+  // Add camera if it doesn't exist yet
+  camera.try_emplace({cameraID, Camera(model_input_generator, transmission_probability_generator)});
 
   // Update the specific camera
   cameras.at(cameraID).update(measurement);
@@ -144,7 +142,7 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
 
       output_robot.position /= total_score;
       output_robot.theta = 0.0;
-      if (output_angle.norm() > 0) {
+      if (!output_angle.isZero()) {
         output_robot.theta = std::atan2(output_angle.y(), output_angle.x());
       }
       output_robot.velocity /= total_score;
