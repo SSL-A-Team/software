@@ -172,9 +172,8 @@ bool TransmissionProbabilityGenerator::is_in_robot_mouth(
   // https://en.wikipedia.org/wiki/Vector_projection
   Eigen::Vector2d heading{cos(robot.value().theta), sin(robot.value().theta)};
   Eigen::Vector2d robot_to_ball = position - robot.value().position;
-  double mouth_half_angle = 45.0 * 3.14 / 180.0;  // Angle between theta and side of mouth
 
-  return cos(mouth_half_angle) <
+  return cos(Models::Robot::mouth_half_angle) <
          heading.dot(robot_to_ball) / (heading.norm() * robot_to_ball.norm());
 }
 

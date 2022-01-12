@@ -103,6 +103,8 @@ const Eigen::MatrixXd R =
 namespace Robot
 {
 
+const double mouth_half_angle = 45.0 * 3.14 / 180.0;  // Angle between forward and edge of the mouth
+
 const double max_speed = 6;
 const double max_acceleration = 12;
 
