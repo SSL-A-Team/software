@@ -20,6 +20,9 @@
 
 #include "message_conversions.hpp"
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Quaternion.h>
+
 namespace ateam_vision_filter::message_conversions
 {
 
@@ -45,7 +48,10 @@ ateam_msgs::msg::RobotState toMsg(const Robot & obj)
   robot_state_msg.twist.linear.y = obj.velocity.y();
   robot_state_msg.accel.linear.x = obj.acceleration.x();
   robot_state_msg.accel.linear.y = obj.acceleration.y();
-  // todo theta/omega/alpha
+  robot_state_msg.pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
+  robot_state_msg.twist.angular.z = obj.omega;
+  robot_state_msg.accel.angular.z = obj.alpha;
+
   return robot_state_msg;
 }
 
@@ -79,7 +85,7 @@ RobotMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionRobot & ros_
   RobotMeasurement robotDetection;
   robotDetection.position.x() = ros_msg.pose.position.x;
   robotDetection.position.y() = ros_msg.pose.position.y;
-  //  robotDetection.theta = ros_msg.pose.orientation;  // TODO Figure this out
+  robotDetection.theta = tf2::fromMsg(ros_msg.pose.orientation).getAngle();
   return robotDetection;
 }
 
