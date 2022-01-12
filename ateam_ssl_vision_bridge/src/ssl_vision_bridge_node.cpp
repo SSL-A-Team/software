@@ -41,7 +41,7 @@ public:
       10020,
       [this](auto * buffer, size_t bytes_received) {
         SSL_WrapperPacket vision_proto;
-        std::cout << bytes_received << std::endl;
+
         if (!vision_proto.ParseFromArray(buffer, bytes_received)) {
           vision_publisher_->publish(message_conversions::fromProto(vision_proto));
           RCLCPP_WARN(get_logger(), "Parsed vision protobuf packet");
