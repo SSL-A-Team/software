@@ -51,7 +51,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     // Try to set output position to be if the accel happened the entire frame
     // Try to set output velocity to be decreased by friction
     // Try to set output acceleration to take into account friction
-    Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
+    Eigen::VectorXd output = Eigen::VectorXd::Zero(possible_state.innerSize());
     output.block(0, 0, 2, 1) = Models::dt * Models::dt / 2.0 * friction;
     output.block(2, 0, 2, 1) = Models::dt * friction;
     output.block(4, 0, 2, 1) = friction;
@@ -69,7 +69,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     // Try to set output position to be if the accel happened the entire frame
     // Try to set output velocity to be decreased by friction
     // Try to set output acceleration to take into account friction
-    Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
+    Eigen::VectorXd output = Eigen::VectorXd::Zero(possible_state.innerSize());
     output.block(0, 0, 2, 1) = Models::dt * Models::dt / 2.0 * friction;
     output.block(2, 0, 2, 1) = Models::dt * friction;
     output.block(4, 0, 2, 1) = friction;
@@ -83,7 +83,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
 
     // No visible robots
     if (!closest_robot.has_value()) {
-      return 0.0 * possible_state;  // Easy way to get 0 vector of right size
+      return Eigen::VectorXd::Zero(possible_state.innerSize());
     }
 
     // TODO(jneiger): Figure out bounce (assuming robot is circle for now)
@@ -99,7 +99,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     // Try to set output position to be if the 0 vel/accel happened the entire frame
     // Try to set output velocity to be 0
     // Try to set output acceleration to be 0
-    Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
+    Eigen::VectorXd output = Eigen::VectorXd::Zero(possible_state.innerSize());
     output.block(0, 0, 2, 1) = -Models::dt * vel - Models::dt * Models::dt / 2.0 * accel;
     output.block(2, 0, 2, 1) = -Models::dt * accel;
     output.block(4, 0, 2, 1) = -accel;
@@ -118,7 +118,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
 
   // Robot
   if (model_type == Models::ModelType::ROBOT_NO_ACCEL) {
-    return 0.0 * possible_state;  // Easy way to get 0 vector of right size
+    return Eigen::VectorXd::Zero(possible_state.innerSize());
   } else if (model_type == Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL) {
     // Accel at X m/s2 towards ball
     Eigen::Vector2d robot_pos = possible_state.block(0, 0, 2, 1);
@@ -126,7 +126,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
 
     // Make sure we actually have an idea where the ball is
     if (!ball.has_value()) {
-      return 0.0 * possible_state;
+      return Eigen::VectorXd::Zero(possible_state.innerSize());
     }
 
     Eigen::Vector2d robot_to_ball_vector = (ball.value().position - robot_pos).normalized();
@@ -141,7 +141,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     // Try to set output position to be if the accel happened the entire frame
     // Try to set output velocity to be if the accel happened the entire frame
     // Try to set output acceleration add in accel
-    Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
+    Eigen::VectorXd output = Eigen::VectorXd::Zero(possible_state.innerSize());
     output.block(0, 0, 2, 1) = Models::dt * Models::dt / 2.0 * realized_acceleration;
     output.block(3, 0, 2, 1) = Models::dt * realized_acceleration;
     output.block(6, 0, 2, 1) = realized_acceleration;
@@ -155,7 +155,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
 
     // Make sure we actually have an idea where the ball is
     if (!ball.has_value()) {
-      return 0.0 * possible_state;
+      return Eigen::VectorXd::Zero(possible_state.innerSize());
     }
 
     Eigen::Vector2d robot_to_ball_vector = (ball.value().position - robot_pos).normalized();
@@ -170,7 +170,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     // Try to set output position to be if the accel happened the entire frame
     // Try to set output velocity to be if the accel happened the entire frame
     // Try to set output acceleration add in accel
-    Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
+    Eigen::VectorXd output = Eigen::VectorXd::Zero(possible_state.innerSize());
     output.block(0, 0, 2, 1) = Models::dt * Models::dt / 2.0 * realized_acceleration;
     output.block(3, 0, 2, 1) = Models::dt * realized_acceleration;
     output.block(6, 0, 2, 1) = realized_acceleration;
@@ -179,7 +179,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
   }
 
   // ERROR
-  return 0.0 * possible_state;
+  return Eigen::VectorXd::Zero(possible_state.innerSize());
 }
 
 
@@ -227,7 +227,7 @@ Eigen::VectorXd ModelInputGenerator::get_output_with_kick_at_speed(
 
   // No visible robots
   if (!closest_robot.has_value()) {
-    return 0.0 * possible_state;  // Easy way to get 0 vector of right size
+    return Eigen::VectorXd::Zero(possible_state.innerSize());
   }
 
   double theta = closest_robot.value().theta;
@@ -236,7 +236,7 @@ Eigen::VectorXd ModelInputGenerator::get_output_with_kick_at_speed(
   // Try to set output position to be if the kick_velocity happened the entire frame
   // Try to set output velocity to be kick_velocity
   // Try to set output acceleration to be 0
-  Eigen::VectorXd output = 0.0 * possible_state;  // Easy way to get 0 vector of right size
+  Eigen::VectorXd output = Eigen::VectorXd::Zero(possible_state.innerSize());
   output.block(
     0, 0, 2,
     1) = -Models::dt * ball_velocity - Models::dt * Models::dt / 2.0 * ball_accel + Models::dt *

@@ -91,7 +91,7 @@ Eigen::VectorXd InteractingMultipleModelFilter::get_state_estimate() const
   //
   // Best estimate is a weighted average of the individual models estimate
 
-  Eigen::VectorXd x_bar = 0.0 * models.begin()->second.get_x_hat();
+  Eigen::VectorXd x_bar = Eigen::VectorXd::Zero(models.begin()->second.get_x_hat().innerSize());
 
   for (const auto & model_type : model_types) {
     x_bar += mu.at(model_type) * models.at(model_type).get_x_hat();
@@ -109,7 +109,7 @@ Eigen::VectorXd InteractingMultipleModelFilter::get_position_estimate() const
   //
   // Best estimate is a weighted average of the individual models estimate
 
-  Eigen::VectorXd x_bar = 0.0 * models.begin()->second.get_y();
+  Eigen::VectorXd x_bar = Eigen::VectorXd::Zero(models.begin()->second.get_y().innerSize());
 
   for (const auto & model_type : model_types) {
     x_bar += mu.at(model_type) * models.at(model_type).get_y();
@@ -151,7 +151,7 @@ double InteractingMultipleModelFilter::get_potential_measurement_error(
   // allowing us to push the z - F * H * x into the kalman filter
   // and not expose model data to this class
 
-  Eigen::VectorXd potential_measurement_error = 0.0 * measurement;
+  Eigen::VectorXd potential_measurement_error = Eigen::VectorXd::Zero(measurement.innerSize());
 
   for (const auto & model_type : model_types) {
     potential_measurement_error += mu.at(model_type) *

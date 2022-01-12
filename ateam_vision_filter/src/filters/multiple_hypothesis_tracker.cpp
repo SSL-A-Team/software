@@ -40,7 +40,7 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   // minimize assignment cost where cost is different between each
   // model's predicted location and the measurement location
   //
-  // Form is a bipartite graph assignmnet problem with 1 supply per measurement,
+  // Form is a bipartite graph assignment problem with 1 supply per measurement,
   // and 1 sink per track
 
   adjacency_list_traits::vertex_descriptor source, sink;
@@ -157,7 +157,6 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   // For any leftover measurement, create a new track
   for (const auto & vertex_measurement : unassigned_measurements) {
     const auto & measurement = vertex_to_measurement.at(vertex_measurement);
-    std::cout << "Created new track " << measurement.x() << " " << measurement.y() << std::endl;
     tracks.emplace_back(base_track.clone(measurement));
   }
 }
