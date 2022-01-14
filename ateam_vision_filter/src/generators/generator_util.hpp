@@ -21,41 +21,43 @@
 #ifndef GENERATORS__GENERATOR_UTIL_HPP_
 #define GENERATORS__GENERATOR_UTIL_HPP_
 
+#include <optional>
 #include <Eigen/Dense>
 
 #include <array>
-#include <optional>
 
 #include "types/robot.hpp"
 
 
-namespace generator_util {
-  /**
-   * @return Closest robot to the position given (if one exists)
-   */
-  std::optional<Robot> get_closest_robot(const Eigen::Vector2d & position, 
-    const std::array<std::optional<Robot>, 16> & blue_robots,
-    const std::array<std::optional<Robot>, 16> & yellow_robots);
+namespace generator_util
+{
+/**
+ * @return Closest robot to the position given (if one exists)
+ */
+std::optional<Robot> get_closest_robot(
+  const Eigen::Vector2d & position,
+  const std::array<std::optional<Robot>, 16> & blue_robots,
+  const std::array<std::optional<Robot>, 16> & yellow_robots);
 
-  /**
-   * @return true if position is near the given robot
-   */
-  bool is_near_robot(const Eigen::Vector2d & position, const std::optional<Robot> & robot);
+/**
+ * @return true if position is near the given robot
+ */
+bool is_near_robot(const Eigen::Vector2d & position, const std::optional<Robot> & robot);
 
-  /**
-   * @return true if position within the mouth angle (not accounting for distance to mouth)
-   */
-  bool is_in_robot_mouth(
-    const Eigen::Vector2d & position,
-    const std::optional<Robot> & robot);
+/**
+ * @return true if position within the mouth angle (not accounting for distance to mouth)
+ */
+bool is_in_robot_mouth(
+  const Eigen::Vector2d & position,
+  const std::optional<Robot> & robot);
 
-  /**
-   * @return true if ball is moving +- 90 degrees of vector from current position to robot
-   * @note Noise on the velocity vector at low speeds may produce inconsitent results
-   */
-  bool is_moving_towards_robot(
-    const Eigen::Vector2d & position, const Eigen::Vector2d & velocity,
-    const std::optional<Robot> & robot);
-}
+/**
+ * @return true if ball is moving +- 90 degrees of vector from current position to robot
+ * @note Noise on the velocity vector at low speeds may produce inconsitent results
+ */
+bool is_moving_towards_robot(
+  const Eigen::Vector2d & position, const Eigen::Vector2d & velocity,
+  const std::optional<Robot> & robot);
+}  // namespace generator_util
 
 #endif  // GENERATORS__GENERATOR_UTIL_HPP_

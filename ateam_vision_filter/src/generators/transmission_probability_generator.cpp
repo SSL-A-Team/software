@@ -37,7 +37,8 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
   const Models::ModelType & from_model,
   const Models::ModelType & to_model) const
 {
-  std::optional<Robot> closest_robot = generator_util::get_closest_robot(possible_state.block(0, 0, 2, 1), blue_robots, yellow_robots);
+  std::optional<Robot> closest_robot =
+    generator_util::get_closest_robot(possible_state.block(0, 0, 2, 1), blue_robots, yellow_robots);
 
   // Default transition to the same model
   if (from_model == to_model) {

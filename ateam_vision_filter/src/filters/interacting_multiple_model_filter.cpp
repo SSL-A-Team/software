@@ -207,8 +207,9 @@ double InteractingMultipleModelFilter::normal_multivariate_distribution_pdf(
   Eigen::VectorXd x, Eigen::VectorXd mu, Eigen::MatrixXd sigma)
 {
   // PDF equation at https://en.wikipedia.org/wiki/Multivariate_normal_distribution
+  // Disallow for 0 probability, the normalization allows for return probability to be over 1
   return std::pow(2 * M_PI, -1 * x.size() / 2.0) *
          std::pow(sigma.determinant(), -1.0 / 2.0) *
          std::exp(-1.0 / 2.0 * (x - mu).transpose() * sigma.inverse() * (x - mu)) +
-         1e-6;  // Disallow for 0 probability, the normalization allows for return probability to be over 1
+         1e-6;
 }

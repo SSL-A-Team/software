@@ -93,7 +93,7 @@ public:
    */
   double get_potential_measurement_error(const Eigen::VectorXd & measurement);
 
-//private:
+private:
   void update_mu(const Eigen::VectorXd & zt);
 
   /**

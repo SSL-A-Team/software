@@ -80,7 +80,9 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     Eigen::Vector2d ball_pos = possible_state.block(0, 0, 2, 1);
     Eigen::Vector2d ball_vel = possible_state.block(2, 0, 2, 1);
 
-    std::optional<Robot> closest_robot = generator_util::get_closest_robot(ball_pos, blue_robots, yellow_robots);
+    std::optional<Robot> closest_robot = generator_util::get_closest_robot(
+      ball_pos, blue_robots,
+      yellow_robots);
 
     // No visible robots
     if (!closest_robot.has_value()) {
@@ -104,7 +106,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     output.block(4, 0, 2, 1) = Eigen::Vector2d::Zero();
 
     return output;
-    } else if (model_type == Models::ModelType::BALL_STOP_ON_DRIBBLER) {
+  } else if (model_type == Models::ModelType::BALL_STOP_ON_DRIBBLER) {
     // Negate current speed like ball instantly damps on dribbler
     Eigen::Vector2d vel = possible_state.block(2, 0, 2, 1);
     Eigen::Vector2d accel = possible_state.block(4, 0, 2, 1);
@@ -203,7 +205,9 @@ Eigen::VectorXd ModelInputGenerator::get_output_with_kick_at_speed(
   Eigen::Vector2d ball_velocity = possible_state.block(2, 0, 2, 1);
   Eigen::Vector2d ball_accel = possible_state.block(4, 0, 2, 1);
 
-  std::optional<Robot> closest_robot = generator_util::get_closest_robot(ball_pos, blue_robots, yellow_robots);
+  std::optional<Robot> closest_robot = generator_util::get_closest_robot(
+    ball_pos, blue_robots,
+    yellow_robots);
 
   // No visible robots
   if (!closest_robot.has_value()) {

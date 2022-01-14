@@ -24,9 +24,10 @@
 
 #include "types/models.hpp"
 
-std::optional<Robot> generator_util::get_closest_robot(const Eigen::Vector2d & position, 
-    const std::array<std::optional<Robot>, 16> & blue_robots,
-    const std::array<std::optional<Robot>, 16> & yellow_robots)
+std::optional<Robot> generator_util::get_closest_robot(
+  const Eigen::Vector2d & position,
+  const std::array<std::optional<Robot>, 16> & blue_robots,
+  const std::array<std::optional<Robot>, 16> & yellow_robots)
 {
   std::optional<Robot> closest_robot = std::nullopt;
   double dist = std::numeric_limits<double>::infinity();

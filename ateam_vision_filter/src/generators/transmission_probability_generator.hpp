@@ -61,7 +61,6 @@ private:
   std::array<std::optional<Robot>, 16> blue_robots;
   std::array<std::optional<Robot>, 16> yellow_robots;
   std::optional<Ball> ball;
-
 };
 
 #endif  // GENERATORS__TRANSMISSION_PROBABILITY_GENERATOR_HPP_

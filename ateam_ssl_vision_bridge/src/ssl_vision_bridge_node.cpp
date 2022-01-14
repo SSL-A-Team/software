@@ -27,7 +27,6 @@
 #include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
 
 #include "message_conversions.hpp"
-#include <iostream>
 
 namespace ateam_ssl_vision_bridge
 {
@@ -53,7 +52,6 @@ public:
         }
       })
   {
-    
     SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
     vision_publisher_ = create_publisher<ssl_league_msgs::msg::VisionWrapper>(
       "~/vision_messages",
