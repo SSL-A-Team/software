@@ -62,30 +62,6 @@ private:
   std::array<std::optional<Robot>, 16> yellow_robots;
   std::optional<Ball> ball;
 
-  /**
-   * @return Closest robot from either team if one exists
-   */
-  std::optional<Robot> get_closest_robot(const Eigen::Vector2d & position) const;
-
-  /**
-   * @return true if position is near the given robot
-   */
-  bool is_near_robot(const Eigen::Vector2d & position, const std::optional<Robot> & robot) const;
-
-  /**
-   * @return true if position within the mouth angle (not accounting for distance to mouth)
-   */
-  bool is_in_robot_mouth(
-    const Eigen::Vector2d & position,
-    const std::optional<Robot> & robot) const;
-
-  /**
-   * @return true if ball is moving +- 90 degrees of vector from current position to robot
-   * @note Noise on the velocity vector at low speeds may produce inconsitent results
-   */
-  bool is_moving_towards_robot(
-    const Eigen::Vector2d & position, const Eigen::Vector2d & velocity,
-    const std::optional<Robot> & robot) const;
 };
 
 #endif  // GENERATORS__TRANSMISSION_PROBABILITY_GENERATOR_HPP_

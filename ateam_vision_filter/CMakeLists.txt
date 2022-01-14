@@ -23,6 +23,8 @@ add_library(${PROJECT_NAME} SHARED
   src/filters/kalman_filter.hpp
   src/filters/multiple_hypothesis_tracker.cpp
   src/filters/multiple_hypothesis_tracker.hpp
+  src/generators/generator_util.cpp
+  src/generators/generator_util.hpp
   src/generators/model_input_generator.cpp
   src/generators/model_input_generator.hpp
   src/generators/transmission_probability_generator.cpp

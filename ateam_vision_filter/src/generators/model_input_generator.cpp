@@ -22,7 +22,7 @@
 
 #include <optional>
 
-#include <limits>
+#include "generators/generator_util.hpp"
 
 void ModelInputGenerator::update(
   const std::array<std::optional<Robot>, 16> & blue_robots,
@@ -80,7 +80,7 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
     Eigen::Vector2d ball_pos = possible_state.block(0, 0, 2, 1);
     Eigen::Vector2d ball_vel = possible_state.block(2, 0, 2, 1);
 
-    std::optional<Robot> closest_robot = get_closest_robot(ball_pos);
+    std::optional<Robot> closest_robot = generator_util::get_closest_robot(ball_pos, blue_robots, yellow_robots);
 
     // No visible robots
     if (!closest_robot.has_value()) {
@@ -195,39 +195,6 @@ Eigen::VectorXd ModelInputGenerator::get_model_input(
   return Eigen::VectorXd::Zero(possible_state.innerSize());
 }
 
-
-std::optional<Robot> ModelInputGenerator::get_closest_robot(const Eigen::Vector2d & position) const
-{
-  std::optional<Robot> closest_robot = std::nullopt;
-  double dist = std::numeric_limits<double>::infinity();
-
-  for (const auto & robot : blue_robots) {
-    if (robot.has_value()) {
-      Eigen::Vector2d robot_pos = robot.value().position;
-
-      double test_dist = (position - robot_pos).norm();
-      if (test_dist < dist) {
-        closest_robot = robot;
-        dist = test_dist;
-      }
-    }
-  }
-
-  for (const auto & robot : yellow_robots) {
-    if (robot.has_value()) {
-      Eigen::Vector2d robot_pos = robot.value().position;
-
-      double test_dist = (position - robot_pos).norm();
-      if (test_dist < dist) {
-        closest_robot = robot;
-        dist = test_dist;
-      }
-    }
-  }
-
-  return closest_robot;
-}
-
 Eigen::VectorXd ModelInputGenerator::get_output_with_kick_at_speed(
   const Eigen::VectorXd & possible_state, const double kick_speed) const
 {
@@ -236,7 +203,7 @@ Eigen::VectorXd ModelInputGenerator::get_output_with_kick_at_speed(
   Eigen::Vector2d ball_velocity = possible_state.block(2, 0, 2, 1);
   Eigen::Vector2d ball_accel = possible_state.block(4, 0, 2, 1);
 
-  std::optional<Robot> closest_robot = get_closest_robot(ball_pos);
+  std::optional<Robot> closest_robot = generator_util::get_closest_robot(ball_pos, blue_robots, yellow_robots);
 
   // No visible robots
   if (!closest_robot.has_value()) {

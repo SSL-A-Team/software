@@ -20,7 +20,7 @@
 
 #include "generators/transmission_probability_generator.hpp"
 
-#include <limits>
+#include "generators/generator_util.hpp"
 
 void TransmissionProbabilityGenerator::update(
   const std::array<std::optional<Robot>, 16> & blue_robots,
@@ -37,7 +37,7 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
   const Models::ModelType & from_model,
   const Models::ModelType & to_model) const
 {
-  std::optional<Robot> closest_robot = get_closest_robot(possible_state.block(0, 0, 2, 1));
+  std::optional<Robot> closest_robot = generator_util::get_closest_robot(possible_state.block(0, 0, 2, 1), blue_robots, yellow_robots);
 
   // Default transition to the same model
   if (from_model == to_model) {
@@ -56,8 +56,8 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
 
   // Transition from any to ball bound
   // If near robot, ball is moving at robot
-  if (is_near_robot(possible_state.block(0, 0, 2, 1), closest_robot) &&
-    is_moving_towards_robot(
+  if (generator_util::is_near_robot(possible_state.block(0, 0, 2, 1), closest_robot) &&
+    generator_util::is_moving_towards_robot(
       possible_state.block(0, 0, 2, 1),
       possible_state.block(2, 0, 2, 1), closest_robot) &&
     to_model == Models::ModelType::BALL_BOUNCE_ON_ROBOT)
@@ -67,11 +67,11 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
 
   // Transition from any to ball stop
   // If near robot, ball is moving at robot, near mouth
-  if (is_near_robot(possible_state.block(0, 0, 2, 1), closest_robot) &&
-    is_moving_towards_robot(
+  if (generator_util::is_near_robot(possible_state.block(0, 0, 2, 1), closest_robot) &&
+    generator_util::is_moving_towards_robot(
       possible_state.block(0, 0, 2, 1),
       possible_state.block(2, 0, 2, 1), closest_robot) &&
-    is_in_robot_mouth(possible_state.block(0, 0, 2, 1), closest_robot) &&
+    generator_util::is_in_robot_mouth(possible_state.block(0, 0, 2, 1), closest_robot) &&
     to_model == Models::ModelType::BALL_STOP_ON_DRIBBLER)
   {
     return 0.15;
@@ -82,8 +82,8 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
   bool to_kick = to_model == Models::ModelType::BALL_SLOW_KICK ||
     to_model == Models::ModelType::BALL_MEDIUM_KICK ||
     to_model == Models::ModelType::BALL_FAST_KICK;
-  if (is_near_robot(possible_state.block(0, 0, 2, 1), closest_robot) &&
-    is_in_robot_mouth(possible_state.block(0, 0, 2, 1), closest_robot) &&
+  if (generator_util::is_near_robot(possible_state.block(0, 0, 2, 1), closest_robot) &&
+    generator_util::is_in_robot_mouth(possible_state.block(0, 0, 2, 1), closest_robot) &&
     to_kick)
   {
     return 0.15;
@@ -115,75 +115,4 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
 
   // Not possible to transition
   return 0.0;
-}
-
-std::optional<Robot> TransmissionProbabilityGenerator::get_closest_robot(
-  const Eigen::Vector2d & position) const
-{
-  std::optional<Robot> closest_robot = std::nullopt;
-  double dist = std::numeric_limits<double>::infinity();
-
-  for (const auto & robot : blue_robots) {
-    if (robot.has_value()) {
-      Eigen::Vector2d robot_pos = robot.value().position;
-
-      double test_dist = (position - robot_pos).norm();
-      if (test_dist < dist) {
-        closest_robot = robot;
-        dist = test_dist;
-      }
-    }
-  }
-
-  for (const auto & robot : yellow_robots) {
-    if (robot.has_value()) {
-      Eigen::Vector2d robot_pos = robot.value().position;
-
-      double test_dist = (position - robot_pos).norm();
-      if (test_dist < dist) {
-        closest_robot = robot;
-        dist = test_dist;
-      }
-    }
-  }
-
-  return closest_robot;
-}
-
-bool TransmissionProbabilityGenerator::is_near_robot(
-  const Eigen::Vector2d & position,
-  const std::optional<Robot> & robot) const
-{
-  if (!robot.has_value()) {
-    return false;
-  }
-
-  return (robot.value().position - position).norm() < 0.5;
-}
-
-bool TransmissionProbabilityGenerator::is_in_robot_mouth(
-  const Eigen::Vector2d & position,
-  const std::optional<Robot> & robot) const
-{
-  if (!robot.has_value()) {
-    return false;
-  }
-
-  // https://en.wikipedia.org/wiki/Vector_projection
-  Eigen::Vector2d heading{cos(robot.value().theta), sin(robot.value().theta)};
-  Eigen::Vector2d robot_to_ball = position - robot.value().position;
-
-  return cos(Models::Robot::mouth_half_angle) <
-         heading.dot(robot_to_ball) / (heading.norm() * robot_to_ball.norm());
-}
-
-bool TransmissionProbabilityGenerator::is_moving_towards_robot(
-  const Eigen::Vector2d & position,
-  const Eigen::Vector2d & velocity,
-  const std::optional<Robot> & robot)
-const
-{
-  Eigen::Vector2d ball_to_robot = robot.value().position - position;
-
-  return ball_to_robot.dot(velocity) > 0;
 }
