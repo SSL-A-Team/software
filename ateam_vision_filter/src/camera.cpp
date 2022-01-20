@@ -113,12 +113,12 @@ void Camera::setup_ball_interacting_multiple_model_filter(
 
   std::vector<Models::ModelType> model_types{
     Models::ModelType::BALL_ROLLING_FRICTION,
-    Models::ModelType::BALL_SLIDING_FRICTION,
-    Models::ModelType::BALL_BOUNCE_ON_ROBOT,
-    Models::ModelType::BALL_STOP_ON_DRIBBLER,
-    Models::ModelType::BALL_SLOW_KICK,
-    Models::ModelType::BALL_MEDIUM_KICK,
-    Models::ModelType::BALL_FAST_KICK
+    // Models::ModelType::BALL_SLIDING_FRICTION,
+    // Models::ModelType::BALL_BOUNCE_ON_ROBOT,
+    // Models::ModelType::BALL_STOP_ON_DRIBBLER,
+    // Models::ModelType::BALL_SLOW_KICK,
+    // Models::ModelType::BALL_MEDIUM_KICK,
+    // Models::ModelType::BALL_FAST_KICK
   };
 
   InteractingMultipleModelFilter base_track;
@@ -143,8 +143,8 @@ void Camera::setup_robot_interacting_multiple_model_filter(
 
   std::vector<Models::ModelType> model_types{
     Models::ModelType::ROBOT_NO_ACCEL,
-    Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL,
-    Models::ModelType::ROBOT_ACCEL_AWAY_FROM_BALL
+    // Models::ModelType::ROBOT_ACCEL_TOWARDS_BALL,
+    // Models::ModelType::ROBOT_ACCEL_AWAY_FROM_BALL
   };
 
   InteractingMultipleModelFilter base_track;

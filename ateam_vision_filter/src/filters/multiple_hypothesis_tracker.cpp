@@ -146,11 +146,11 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
 
       // Only add the measurement if they're within some range of the track
       // since measurements aren't super consistent
-      if ((measurement - track.get_position_estimate()).norm() < 1) {
-        track.update(measurement);
+      // if ((measurement - track.get_position_estimate()).norm() < 1) {
+      track.update(measurement);
 
-        unassigned_measurements.erase(source_measurement_vertex);
-      }
+      unassigned_measurements.erase(source_measurement_vertex);
+      // }
     }
   }
 
