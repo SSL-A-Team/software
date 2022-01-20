@@ -59,7 +59,7 @@ private:
   rclcpp::Publisher<ssl_league_msgs::msg::Referee>::SharedPtr referee_publisher_;
   std::unique_ptr<ateam_common::MulticastReceiver> multicast_receiver_;
 
-  void PublishMulticastMessage(const char * buffer, const size_t bytes_received)
+  void PublishMulticastMessage(const uint8_t * buffer, const size_t bytes_received)
   {
     Referee referee_proto;
     if (referee_proto.ParseFromArray(buffer, bytes_received)) {
