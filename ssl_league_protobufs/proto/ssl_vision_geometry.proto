@@ -3,8 +3,8 @@ option go_package = "github.com/RoboCup-SSL/ssl-simulation-protocol/pkg/sim";
 
 // A 2D float vector.
 message Vector2f {
-  required float x = 1;
-  required float y = 2;
+    required float x = 1;
+    required float y = 2;
 }
 
 // Represents a field marking as a line segment represented by a start point p1,
