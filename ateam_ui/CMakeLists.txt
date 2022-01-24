@@ -4,10 +4,8 @@ project(ateam_ui)
 find_package(ament_cmake REQUIRED)
 find_package(rosbridge_server REQUIRED)
 
-
 install(DIRECTORY
   launch
-  src
   DESTINATION share/${PROJECT_NAME}
   USE_SOURCE_PERMISSIONS
 )
@@ -18,39 +16,34 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
-# Install NodeJS if necessary
+# Copy src to install directory
 execute_process(
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/src
+  OUTPUT_VARIABLE RESULT0
+  ERROR_VARIABLE ERROR_RESULT
+)
+
+add_custom_target(build_js ALL
+  # Install NodeJS if necessary
   COMMAND bash -c "(npm list --depth 1 --global n > /dev/null 2>&1) || (sudo npm install -g n && sudo n stable)"
-)
 
-# Install yarn if necessary
-execute_process(
+  # Install yarn if necessary
   COMMAND bash -c "(npm list --depth 1 --global yarn > /dev/null 2>&1) || sudo npm install -g yarn"
-)
 
-# Install neutralino CLI if necessary
-execute_process(
+  # Install neutralino CLI if necessary
   COMMAND bash -c "(npm list --depth 1 --global @neutralinojs/neu > /dev/null 2>&1) || sudo npm install -g @neutralinojs/neu"
-)
 
-# Install Yarn dependencies
-execute_process(
+  # Install Yarn dependencies
   COMMAND bash -c "yarn install"
-  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/src
-)
 
-# Configure neu if necessary
-execute_process(
+  # Configure neu if necessary
   COMMAND bash -c "(test -d ./bin) || neu update"
-  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/src
-)
 
+  # Build the UI and fix permission issue if necessary
+  COMMAND bash -c "(yarn vite build && neu build --release) && (test -x ./bin/neutralino-linux_x64 || (chmod +x ./dist/Ateam_UI/*))"
 
-# # This step is currently incomplete, "neu build --release" not working
-# Build the UI and fix permission issue if necessary
-execute_process(
-  COMMAND bash -c "yarn vite build"
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/src
+  VERBATIM
 )
 
 ament_package()

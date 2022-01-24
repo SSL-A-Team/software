@@ -9,7 +9,7 @@
     "build": "(yarn configure || true) && (vite build && neu build --release) && (test -x ./bin/neutralino-linux_x64 || ((echo Fixing Permission Issue); (chmod +x ./dist/Ateam_UI/* && echo Success)))"
   },
   "author": "Matthew Woodward <mwoodward@gatech.edu>",
-  "license": "TODO: License declaration",
+  "license": "MIT",
   "dependencies": {
     "vue": "^3.1.2",
     "vuetify": "^3.0.0-alpha.11",
