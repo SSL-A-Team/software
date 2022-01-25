@@ -76,7 +76,7 @@ class TestUI(unittest.TestCase):
 
         # Need time for rosbridge node to set up
         # I want to use the ReadyToTest action but got some weird errors
-        time.sleep(1)
+        time.sleep(5)
 
         self.message_pump.start()
 
