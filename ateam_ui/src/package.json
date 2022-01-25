@@ -2,7 +2,7 @@
   "name": "ATeam_UI",
   "version": "1.0.1",
   "description": "Robocup A-Team UI",
-  "scripts": {
+    "scripts": {
     "configure": "yarn install; (test -d ./bin || neu update)",
     "dev": "vite",
     "devrun": "(yarn configure || true) && vite build && neu run",
@@ -20,7 +20,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^1.6.0",
     "@vue/compiler-sfc": "^3.2.7",
-    "@vuetify/vite-plugin":"^1.0.0-alpha.4",
+    "@vuetify/vite-plugin": "^1.0.0-alpha.4",
     "vite": "^2.5.3"
   }
 }

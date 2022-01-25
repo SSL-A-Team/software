@@ -10,8 +10,8 @@ export default defineConfig({
             autoImport: true
         })
     ],
-  base: '',
-  build: {
-  	outDir: 'resources'
-  }
+    base: '',
+    build: {
+        outDir: 'resources'
+    }
 });

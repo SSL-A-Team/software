@@ -16,12 +16,22 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
-# Copy src to install directory
-execute_process(
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/src
-  OUTPUT_VARIABLE RESULT0
-  ERROR_VARIABLE ERROR_RESULT
+
+# Get recursive list of files in ./src
+file(GLOB_RECURSE src_files
+  LIST_RECURSE true
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*
 )
+
+# Copy ./src to install directory
+foreach(src_file ${src_files})
+  configure_file(
+    ./src/${src_file}
+    ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/src/${src_file}
+    COPYONLY
+  )
+endforeach()
 
 add_custom_target(build_js ALL
   # Install NodeJS if necessary

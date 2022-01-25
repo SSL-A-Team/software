@@ -4,6 +4,10 @@ import VueKonva from 'vue3-konva';
 import App from './App.vue';
 import 'roslib/build/roslib';
 
+
+Neutralino.init();
+Neutralino.events.on("windowClose", function(){Neutralino.app.exit()});
+
 const app = createApp(App);
 
 app.use(vuetify);
@@ -77,6 +81,7 @@ ros.on('error', function(error) {
 
 ros.on('close', function() {
     console.log('Connection to ROS server closed.');
+    Neutralino.app.exit();
 });
 
 // Set up ball subscribers and publishers
