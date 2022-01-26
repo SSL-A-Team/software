@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>UI package for A-Team</description>
   <maintainer email="mwoodward@gatech.edu">Matthew Woodward</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

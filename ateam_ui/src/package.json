@@ -4,7 +4,7 @@
   "description": "Robocup A-Team UI",
     "scripts": {
     "configure": "yarn install; (test -d ./bin || neu update)",
-    "dev": "vite",
+    "dev": "vite --host",
     "devrun": "(yarn configure || true) && vite build && neu run",
     "build": "(yarn configure || true) && (vite build && neu build --release) && (test -x ./bin/neutralino-linux_x64 || ((echo Fixing Permission Issue); (chmod +x ./dist/Ateam_UI/* && echo Success)))"
   },

@@ -17,31 +17,30 @@ if(BUILD_TESTING)
 endif()
 
 
-# Get recursive list of files in ./src
-file(GLOB_RECURSE src_files
-  LIST_RECURSE true
-  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/*
+add_custom_command(
+  OUTPUT file_list PRE_BUILD
+  COMMAND bash -c "ls -R > ${CMAKE_BINARY_DIR}/file_list"
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/src
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+  VERBATIM
 )
 
-# Copy ./src to install directory
-foreach(src_file ${src_files})
-  configure_file(
-    ./src/${src_file}
-    ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/src/${src_file}
-    COPYONLY
-  )
-endforeach()
-
 add_custom_target(build_js ALL
+  COMMAND ${CMAKE_COMMAND}
+    -DINSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    -DBINARY_DIR=${CMAKE_BINARY_DIR}
+    -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+    -DPROJECT_NAME=${PROJECT_NAME}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/CopySrc.cmake
+
   # Install NodeJS if necessary
-  COMMAND bash -c "(npm list --depth 1 --global n > /dev/null 2>&1) || (sudo npm install -g n && sudo n stable)"
+  COMMAND bash -c "(npm list --quiet --depth 1 --global n > /dev/null 2>&1) || (sudo npm install -g n && sudo n stable)"
 
   # Install yarn if necessary
-  COMMAND bash -c "(npm list --depth 1 --global yarn > /dev/null 2>&1) || sudo npm install -g yarn"
+  COMMAND bash -c "(npm list --quiet --depth 1 --global yarn > /dev/null 2>&1) || sudo npm install -g yarn"
 
   # Install neutralino CLI if necessary
-  COMMAND bash -c "(npm list --depth 1 --global @neutralinojs/neu > /dev/null 2>&1) || sudo npm install -g @neutralinojs/neu"
+  COMMAND bash -c "(npm list --quiet --depth 1 --global @neutralinojs/neu > /dev/null 2>&1) || sudo npm install -g @neutralinojs/neu"
 
   # Install Yarn dependencies
   COMMAND bash -c "yarn install"
@@ -52,8 +51,10 @@ add_custom_target(build_js ALL
   # Build the UI and fix permission issue if necessary
   COMMAND bash -c "(yarn vite build && neu build --release) && (test -x ./bin/neutralino-linux_x64 || (chmod +x ./dist/Ateam_UI/*))"
 
+  DEPENDS file_list
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/src
   VERBATIM
 )
+
 
 ament_package()
