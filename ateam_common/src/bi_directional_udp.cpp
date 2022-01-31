@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_common/udp_sender.hpp"
+#include "ateam_common/bi_directional_udp.hpp"
 
 #include <boost/bind.hpp>
 
@@ -29,15 +29,25 @@
 namespace ateam_common
 {
 
-UDPSender::UDPSender(
+BiDirectionalUDP::BiDirectionalUDP(
   const std::string & udp_address_string,
-  const int16_t udp_port)
-: udp_socket_(io_service_),
-  receiver_endpoint_(
+  const int16_t udp_port,
+  ReceiveCallback receive_callback)
+: receive_callback_(receive_callback),
+  udp_socket_(io_service_),
+  endpoint_(
     boost::asio::ip::make_address(udp_address_string),
     udp_port)
 {
-  udp_socket_.open(receiver_endpoint_.protocol());
+  udp_socket_.open(endpoint_.protocol());
+
+  udp_socket_.async_receive_from(
+    boost::asio::buffer(receive_buffer_, receive_buffer_.size()),
+    endpoint_,
+    boost::bind(
+      &BiDirectionalUDP::HandleUDPReceiveFrom, this,
+      boost::asio::placeholders::error,
+      boost::asio::placeholders::bytes_transferred));
 
   io_service_thread_ = std::thread(
     [this]() {
@@ -45,7 +55,7 @@ UDPSender::UDPSender(
     });
 }
 
-UDPSender::~UDPSender()
+BiDirectionalUDP::~BiDirectionalUDP()
 {
   io_service_.stop();
   if (io_service_thread_.joinable()) {
@@ -53,9 +63,9 @@ UDPSender::~UDPSender()
   }
 }
 
-void UDPSender::send(const char * const data, const size_t length)
+void BiDirectionalUDP::send(const char * const data, const size_t length)
 {
-  if (length >= buffer_.size()) {
+  if (length >= send_buffer_.size()) {
     // RCLCPP_ERROR(get_logger(), "UDP send data length is larger than buffer");
     std::cout << "WARNING: UDP send data length is larger than buffer" << std::endl;
 
@@ -65,17 +75,17 @@ void UDPSender::send(const char * const data, const size_t length)
   // Copy to buffer
   // Better to send an invalid packet than to overrun the buffer
   // With the if statement above, this should never happen
-  memcpy(buffer_.data(), data, std::min(buffer_.size(), length));
+  memcpy(send_buffer_.data(), data, std::min(send_buffer_.size(), length));
 
   udp_socket_.async_send_to(
-    boost::asio::buffer(buffer_, length),
-    receiver_endpoint_,
+    boost::asio::buffer(send_buffer_, length),
+    endpoint_,
     boost::bind(
-      &UDPSender::HandleUDPSendTo, this,
+      &BiDirectionalUDP::HandleUDPSendTo, this,
       boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-void UDPSender::HandleUDPSendTo(
+void BiDirectionalUDP::HandleUDPSendTo(
   const boost::system::error_code & error,
   std::size_t /** bytes_transferred **/)
 {
@@ -84,5 +94,26 @@ void UDPSender::HandleUDPSendTo(
     std::cout << "WARNING: Error during udp send" << std::endl;
   }
 }
+
+void BiDirectionalUDP::HandleUDPReceiveFrom(
+  const boost::system::error_code & error,
+  std::size_t bytes_transferred)
+{
+  if (!error) {
+    receive_callback_(receive_buffer_.data(), bytes_transferred);
+
+    udp_socket_.async_receive_from(
+      boost::asio::buffer(receive_buffer_, receive_buffer_.size()),
+      endpoint_,
+      boost::bind(
+        &BiDirectionalUDP::HandleUDPReceiveFrom, this,
+        boost::asio::placeholders::error,
+        boost::asio::placeholders::bytes_transferred));
+  } else {
+    // RCLCPP_ERROR(get_logger(), "Error during udp receive");
+    std::cout << "WARNING: Error during udp receive" << std::endl;
+  }
+}
+
 
 }  // namespace ateam_common

@@ -1,0 +1,1 @@
+bool ball_sense_triggered
