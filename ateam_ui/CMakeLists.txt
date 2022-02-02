@@ -34,13 +34,13 @@ add_custom_target(build_js ALL
     -P ${CMAKE_CURRENT_SOURCE_DIR}/CopySrc.cmake
 
   # Install NodeJS if necessary
-  COMMAND bash -c "(npm list --quiet --depth 1 --global n > /dev/null 2>&1) || (sudo npm install -g n && sudo n stable)"
+  COMMAND bash -c "(npm list --depth 1 --global n > /dev/null 2>&1) || (sudo npm install -g n &> /dev/null && (sudo n stable &> /dev/null))"
 
   # Install yarn if necessary
-  COMMAND bash -c "(npm list --quiet --depth 1 --global yarn > /dev/null 2>&1) || sudo npm install -g yarn"
+  COMMAND bash -c "(npm list --depth 1 --global yarn > /dev/null 2>&1) || (sudo npm install -g yarn &> /dev/null)"
 
   # Install neutralino CLI if necessary
-  COMMAND bash -c "(npm list --quiet --depth 1 --global @neutralinojs/neu > /dev/null 2>&1) || sudo npm install -g @neutralinojs/neu"
+  COMMAND bash -c "(npm list --depth 1 --global @neutralinojs/neu > /dev/null 2>&1) || (sudo npm install -g @neutralinojs/neu &> /dev/null)"
 
   # Install Yarn dependencies
   COMMAND bash -c "yarn install"
