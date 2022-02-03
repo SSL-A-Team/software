@@ -24,7 +24,10 @@ file(GLOB_RECURSE src_files
   LIST_RECURSE true
   RELATIVE ${SOURCE_DIR}/src
   ${SOURCE_DIR}/src/*
-)
+  )
+
+# Filter out autosave files (files starting with .# or #)
+list(FILTER src_files EXCLUDE REGEX "(([.][#])|(#))[^\n]*")
 
 # Add file_list to ./src files
 list(APPEND src_files file_list)
