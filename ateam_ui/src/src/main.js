@@ -63,7 +63,8 @@ for (var team in vm.state.teams) {
 }
 
 // Configure Default Overlays
-vm.state.overlays = [];
+vm.state.underlays = {};
+vm.state.overlays = {};
 
 
 // Configure ROS
@@ -101,12 +102,10 @@ ballTopic.subscribe(function(msg) {
 // Set up robot subscribers and publishers
 function getRobotCallback(team, id){
     return function(msg) {
-        console.log(team + '/robot' + id)
-        console.log(msg)
         var robot = vm.state.teams[team].robots[id];
         robot.pose = msg.pose;
 
-        // Check if ROS quaternions are going to exceed -1:1
+        //TODO: Check if our ROS quaternions can exceed -1:1
         robot.rotation = 2*Math.acos(robot.pose.orientation.z);
     };
 };
@@ -124,5 +123,34 @@ for (var team in vm.state.teams) {
         //TODO: add publisher for moving sim robots
     }
 }
+
+// Set up overlay subscriber
+var overlayTopic = new ROSLIB.Topic({
+    ros: ros,
+    name: '/overlay',
+    messageType: 'ateam_msgs/msg/Overlay'
+});
+
+overlayTopic.subscribe(function(msg) {
+    var id = msg.ns+"/"+msg.name;
+    var location = (msg.depth==0) ? vm.state.underlays : vm.state.overlays;
+
+    switch(msg.command) {
+        // REPLACE
+        case 0:
+            location[id] = msg;
+            break;
+        // EDIT
+        case 1:
+            //TODO: Not sure if this command is necessary, will implement later if it is
+            // Might need to handle moving overlay between z-depths
+            location[id] = msg;
+            break;
+        // REMOVE
+        case 2:
+            delete vm.state.overlays[id];
+            break;
+    }
+});
 
 //TODO: add all other pub/subs (field dimensions, referee, etc)

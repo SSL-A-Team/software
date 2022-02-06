@@ -45,7 +45,8 @@ export default {
                         robots: [],
                     }
                 },
-                overlays: [],
+                underlays: {},
+                overlays: {},
                 fieldDimensions: {
                     length: 9,
                     width: 6,
@@ -65,7 +66,8 @@ export default {
             },
             renderConfig: {
                 angle: 0,
-                scale: 300 // Pixels per meter
+                scale: 300, // Pixels per meter
+                factor: .4 // Field Scaling Factor
             }
         }
     },
