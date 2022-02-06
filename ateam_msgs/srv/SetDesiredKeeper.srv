@@ -1,0 +1,6 @@
+# Request
+int32 desired_keeper
+---
+# Response
+bool success
+string reason

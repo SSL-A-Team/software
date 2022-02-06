@@ -1,17 +1,20 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ateam_bringup</name>
+  <name>ateam_game_controller_bridge</name>
   <version>0.0.0</version>
-  <description>Bringup files for A-Team software</description>
+  <description>Bridges SSL Game Controller communication into ROS.</description>
   <maintainer email="matthew.barulic@gmail.com">Matthew Barulic</maintainer>
-  <license>MIT</license>
+  <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <exec_depend>docker.io</exec_depend>
-
-  <exec_depend>ateam_ssl_simulation_radio_bridge</exec_depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>ateam_common</depend>
+  <depend>ateam_msgs</depend>
+  <depend>ssl_league_msgs</depend>
+  <depend>ssl_league_protobufs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
