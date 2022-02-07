@@ -54,7 +54,7 @@
                                          }"></v-line>
 
                 <!-- The goal/box for each team is programtically generated horizontally and then rotated into position -->>
-                <v-group v-for="team in state.teams" :config="{
+                <v-group v-for="team in state.teams" :key="team.color" :config="{
                                                      x: 0,
                                                      y: 0,
                                                      offsetX: state.fieldDimensions.length*renderConfig.scale/2,
@@ -101,6 +101,7 @@
             listening: false
             }">
             <v-shape v-for="underlay in Object.entries(state.underlays).map(i => {return i[1]} )"
+                     :key="underlay.ns + '/' + underlay.name"
                      :config="{
                          renderConfig: renderConfig,
                          sceneFunc: overlayShape,
@@ -137,6 +138,7 @@
 
             <!-- programatically generate each robot -->>
             <v-shape v-for="robot in Object.entries(state.teams).map(i => {return i[1].robots}).flat()"
+                :key="robot.team + '/' + robot.id"
                 :config="{
                 renderConfig: renderConfig,
                 sceneFunc: robotShape,
@@ -177,6 +179,7 @@
             listening: false
             }">
             <v-shape v-for="overlay in Object.entries(state.overlays).map(i => {return i[1]} )"
+                     :key="overlay.ns + '/' + overlay.name"
                      :config="{
                          renderConfig: renderConfig,
                          sceneFunc: overlayShape,
