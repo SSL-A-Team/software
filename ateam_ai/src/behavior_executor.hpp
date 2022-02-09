@@ -1,5 +1,3 @@
-#include <vector>
-
 #include "behavior.hpp"
 #include "behavior_execution.hpp"
 #include "behavior_feedback.hpp"
@@ -7,23 +5,31 @@
 
 class BehaviorExecutor {
 public:
-  void execute_behaviors(const std::vector<Behavior> & behaviors,
-                         std::vector<BehaviorFeedback> & behavior_feedbacks_out) {
+  void execute_behaviors(const DirectedGraph<Behavior> & behaviors,
+                         BehaviorRealization & behavior_realization) {
     //
     // Grab trajectories for everything
     //
-    BehaviorRealization behavior_realization; // This should be one class higher and passed in so stuff can be chached
-    std::vector<BehaviorExecution> behavior_executions;
-    behavior_realization.realize_behaviors(behaviors, behavior_feedbacks_out, behavior_executions);
+    DirectedGraph<BehaviorFeedback> behavior_feedback = behavior_realization.realize_behaviors(behaviors);
 
-    // Can filter out behaviors that we don't need to start moving towards yet
-    // Can filter out behaviors that should be done already
+    // Ideally, convert the behavior graph into a per robot list of trajectories as a function of time
+    //    https://help.perforce.com/visualization/jviews/documentation/userman/gantt/images/gen_gantt_default.png
+    // each row is a robot
+    // columns are a function of time
+    // a trajectory fills section of columns for a single robot based on it's start/end time
+
+    //
+    // Replan course trajectories as we approach their start time
+    //
+
+    // Long term planning (>10 seconds) is not valid due to the speed of robots
+    // as we approach some of the later behaviors in time, we need to replan them using better planners
+    // to dodge these obsticles and everything
 
     //
     // Follow trajectories
     //
 
     // send commands down to motion control
-    // edit times based on actual location inside trajectory
   }
 };

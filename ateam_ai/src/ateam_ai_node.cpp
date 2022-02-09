@@ -26,6 +26,7 @@
 #include "behavior_evaluator.hpp"
 #include "behavior_executor.hpp"
 #include "behavior_realization.hpp"
+#include "directed_graph.hpp"
 
 namespace ateam_ai
 {
@@ -36,12 +37,11 @@ public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_ai", options)
   {
-    std::vector<BehaviorFeedback> previous_behavior_feedback;
-    std::vector<Behavior> current_behaviors;
-    
+    DirectedGraph<Behavior> current_behaviors;
+
     while (true) {
-      evaluator.get_best_behavior(previous_behavior_feedback, current_behaviors);
-      executor.execute_behaviors(current_behaviors, previous_behavior_feedback);
+      current_behaviors = evaluator.get_best_behavior(realization);
+      executor.execute_behaviors(current_behaviors, realization);
     }
   }
 

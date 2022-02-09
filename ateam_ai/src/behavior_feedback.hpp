@@ -1,5 +1,11 @@
+struct Trajectory {};
+struct DribblerAndKickerBehavior {};
+
 struct BehaviorFeedback {
-  // earliest time for automatically assigned robot to reach location
-  // expected time to complete action
-  bool can_complete;
+  std::optional<int> assigned_robot_id;
+  // behavior start time
+  // behavior end time
+  // behavior wasted time (how long does this robot need to wait for other robots to get into position)
+  Trajectory trajectory;
+  DribblerAndKickerBehavior dribbler_and_kicker_behavior; // Maybe?
 };
