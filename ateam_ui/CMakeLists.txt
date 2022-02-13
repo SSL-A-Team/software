@@ -4,8 +4,6 @@ project(ateam_ui)
 find_package(ament_cmake REQUIRED)
 find_package(rosbridge_server REQUIRED)
 
-# TODO specify target dependencies so it only runs when needed
-
 add_custom_target(build_js ALL
   COMMAND bash ${CMAKE_SOURCE_DIR}/build.sh
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
