@@ -23,6 +23,14 @@
    rosdep install --from-paths . --ignore-src -y
    ```
 
+1. Install our non-ROS dependencies
+
+   ```bash
+   # In the ateam_ws directory
+   source /opt/ros/galactic/setup.bash
+   ./ateam_ui/install_deps.sh
+   ```
+
 1. Build the code
 
    ```bash
