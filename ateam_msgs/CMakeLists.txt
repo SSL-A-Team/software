@@ -10,6 +10,7 @@ find_package(ssl_league_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   msg/BallState.msg
+  msg/RobotFeedback.msg
   msg/RobotMotionCommand.msg
   msg/RobotState.msg
   msg/TeamClientConnectionStatus.msg

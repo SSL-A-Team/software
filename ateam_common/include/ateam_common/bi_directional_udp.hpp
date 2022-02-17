@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__UDP_SENDER_HPP_
-#define ATEAM_COMMON__UDP_SENDER_HPP_
+#ifndef ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
+#define ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
 
 #include <boost/asio.hpp>
 
@@ -28,27 +28,33 @@
 
 namespace ateam_common
 {
-class UDPSender
+class BiDirectionalUDP
 {
 public:
-  UDPSender(
+  using ReceiveCallback = std::function<void (const char * const data, const size_t length)>;
+
+  BiDirectionalUDP(
     const std::string & udp_ip_address,
-    const int16_t udp_port);
+    const int16_t udp_port,
+    ReceiveCallback receive_callback);
 
   void send(const char * const data, const size_t length);
 
-  ~UDPSender();
+  ~BiDirectionalUDP();
 
 private:
+  ReceiveCallback receive_callback_;
   boost::asio::io_service io_service_;
   boost::asio::ip::udp::socket udp_socket_;
-  boost::asio::ip::udp::endpoint receiver_endpoint_;
-  std::array<char, 1024> buffer_;
+  boost::asio::ip::udp::endpoint endpoint_;
+  std::array<char, 1024> send_buffer_;
+  std::array<char, 1024> receive_buffer_;
   std::thread io_service_thread_;
 
   void HandleUDPSendTo(const boost::system::error_code & error, std::size_t bytes_transferred);
+  void HandleUDPReceiveFrom(const boost::system::error_code & error, std::size_t bytes_transferred);
 };
 
 }  // namespace ateam_common
 
-#endif  // ATEAM_COMMON__UDP_SENDER_HPP_
+#endif  // ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
