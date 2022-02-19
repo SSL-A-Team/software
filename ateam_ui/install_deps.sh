@@ -21,7 +21,7 @@ echo "Installing libwebkit2gtk"
 # libwebkit2gtk is usually installed by default on desktop Ubuntu, but is
 # missing in some environments (including our CI)
 sudo apt-get update
-sudo apt-get install libwebkit2gtk-4.0-37
+sudo apt-get install -y libwebkit2gtk-4.0-37
 
 install_npm_package_if_missing n
 echo "Upgrading node to latest stable"
