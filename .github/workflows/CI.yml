@@ -18,7 +18,6 @@ jobs:
         run: |
           source /opt/ros/galactic/setup.bash
           sudo apt-get update
-          sudo apt install wget -y
           rosdep update --rosdistro=galactic
           rosdep install --from-paths . --ignore-src -y
           ./src/ateam_software/ateam_ui/install_deps.sh
