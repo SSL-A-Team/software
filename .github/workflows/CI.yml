@@ -21,7 +21,7 @@ jobs:
           sudo apt install wget -y
           rosdep update --rosdistro=galactic
           rosdep install --from-paths . --ignore-src -y
-          ./src/ateam_ui/install_deps.sh
+          ./src/ateam_software/ateam_ui/install_deps.sh
       - name: Build
         shell: bash
         run: |

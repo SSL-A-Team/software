@@ -28,7 +28,7 @@
    ```bash
    # In the ateam_ws directory
    source /opt/ros/galactic/setup.bash
-   ./src/ateam_ui/install_deps.sh
+   ./src/software/ateam_ui/install_deps.sh
    ```
 
 1. Build the code
