@@ -1,0 +1,11 @@
+<launch>
+  <node name="ssl_vision_bridge" pkg="ateam_ssl_vision_bridge" exec="ssl_vision_bridge_node" />
+  <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" />
+  <include file="$(find-pkg-share ateam_bringup)/launch/game_controller_nodes.launch.xml" />
+  <node name="follow_ball" pkg="ateam_dummy_ai" exec="follow_ball_node">
+    <remap from="~/robot_state" to="/vision_filter/blue_team/robot0"/>
+    <remap from="~/ball_state" to="/vision_filter/ball"/>
+    <remap from="~/motion_command" to="/radio_bridge/robot_motion_commands/robot0"/>
+    <param from="$(find-pkg-share ateam_bringup)/config/follow_ball_params.yaml"/>
+  </node>
+</launch>

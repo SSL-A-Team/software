@@ -50,21 +50,24 @@ private:
   message_filters::Subscriber<ateam_msgs::msg::RobotState> robot_subscription_;
   message_filters::Subscriber<ateam_msgs::msg::BallState> ball_subscription_;
   message_filters::TimeSynchronizer<ateam_msgs::msg::RobotState, ateam_msgs::msg::BallState> state_message_synchronizer_;
-  double x_offset = 0.2;
+  double x_offset = 200.0;
   double y_offset = 0.0;
+  double max_vel = 1.0;
   PDController x_controller;
   PDController y_controller;
 
   void StateCallback(const ateam_msgs::msg::RobotState::SharedPtr robot_state, const ateam_msgs::msg::BallState::SharedPtr ball_state)
   {
-    const auto x_diff = robot_state->pose.position.x - ball_state->pose.position.x + x_offset;
-    const auto y_diff = robot_state->pose.position.y - ball_state->pose.position.y + y_offset;
+    const auto x_diff = ball_state->pose.position.x - robot_state->pose.position.x + x_offset;
+    const auto y_diff = ball_state->pose.position.y - robot_state->pose.position.y + y_offset;
     ateam_msgs::msg::RobotMotionCommand motion_command;
-    motion_command.twist.linear.x = x_controller.Step(x_diff);
-    motion_command.twist.linear.y = y_controller.Step(y_diff);
+    motion_command.twist.linear.x = std::clamp(x_controller.Step(x_diff), -max_vel, max_vel);
+    motion_command.twist.linear.y = std::clamp(y_controller.Step(y_diff), -max_vel, max_vel);
     motion_command_publisher_->publish(motion_command);
   }
 
 };
 
 }  // namespace ateam_dummy_ai
+
+RCLCPP_COMPONENTS_REGISTER_NODE(ateam_dummy_ai::FollowBallNode)

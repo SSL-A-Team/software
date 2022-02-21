@@ -11,7 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED
   src/follow_ball_node.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
