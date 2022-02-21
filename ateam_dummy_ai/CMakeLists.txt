@@ -10,6 +10,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(message_filters REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/follow_ball_node.cpp
@@ -20,6 +21,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp_components
   ateam_msgs
   message_filters
+  Eigen3
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}

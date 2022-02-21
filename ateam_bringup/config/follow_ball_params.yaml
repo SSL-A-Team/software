@@ -1,9 +1,7 @@
 follow_ball:
   ros__parameters:
-    controllers:
-      x:
-        kP: 0.01
-        kD: 0.05
-      y:
-        kP: 0.0
-        kD: 0.0
+    controller:
+      kP: 0.01
+      kD: 0.08
+    offset: 500.0
+    max_speed: 1.0
