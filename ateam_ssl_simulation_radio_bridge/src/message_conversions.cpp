@@ -23,6 +23,15 @@
 namespace ateam_ssl_simulation_radio_bridge::message_conversions
 {
 
+ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg)
+{
+  ateam_msgs::msg::RobotFeedback robot_feedback;
+
+  robot_feedback.ball_sense_triggered = proto_msg.dribbler_ball_contact();
+
+  return robot_feedback;
+}
+
 RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id)
 {
   RobotControl robots_control;

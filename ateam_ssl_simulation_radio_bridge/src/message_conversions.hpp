@@ -21,12 +21,16 @@
 #ifndef MESSAGE_CONVERSIONS_HPP_
 #define MESSAGE_CONVERSIONS_HPP_
 
+#include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
 #include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
+#include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
 
 namespace ateam_ssl_simulation_radio_bridge::message_conversions
 {
+
+ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg);
 
 RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id);
 
