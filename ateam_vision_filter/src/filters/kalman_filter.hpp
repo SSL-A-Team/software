@@ -18,43 +18,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
-#define ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+#ifndef FILTERS__KALMAN_FILTER_HPP_
+#define FILTERS__KALMAN_FILTER_HPP_
 
-#include <boost/asio.hpp>
+#include <Eigen/Dense>
 
-#include <functional>
-#include <string>
+// Standard kalman filter
 
-namespace ateam_common
-{
-class MulticastReceiver
+class KalmanFilter
 {
 public:
-  /**
-   * @param uint8_t* Data received in latest packet
-   * @param size_t Length of data received
-   */
-  using ReceiveCallback = std::function<void (uint8_t *, size_t)>;
+  void set_initial_x_hat(const Eigen::VectorXd & x_hat);
+  void set_initial_p(const Eigen::MatrixXd & P);
+  void set_F(const Eigen::MatrixXd & F);
+  void set_B(const Eigen::MatrixXd & B);
+  void set_H(const Eigen::MatrixXd & H);
+  void set_Q(const Eigen::MatrixXd & Q);
+  void set_R(const Eigen::MatrixXd & R);
 
-  MulticastReceiver(
-    std::string multicast_ip_address,
-    int16_t multicast_port,
-    ReceiveCallback receive_callback);
+  void predict(const Eigen::VectorXd & u);
+  void update(const Eigen::VectorXd & z);
 
-  ~MulticastReceiver();
+  Eigen::VectorXd get_x_hat() const;
+  Eigen::MatrixXd get_P_hat() const;
+  Eigen::VectorXd get_y() const;
+  Eigen::MatrixXd get_estimated_gaussian_variance() const;
+  Eigen::VectorXd get_potential_measurement_error(const Eigen::VectorXd & z);
 
 private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket multicast_socket_;
-  boost::asio::ip::udp::endpoint sender_endpoint_;
-  std::array<uint8_t, 4096> buffer_;
-  std::thread io_service_thread_;
+  Eigen::MatrixXd F;
+  Eigen::MatrixXd B;
+  Eigen::MatrixXd H;
+  Eigen::MatrixXd Q;
+  Eigen::MatrixXd R;
 
-  void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
+  Eigen::VectorXd x_hat;
+  Eigen::MatrixXd P;
 };
 
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+#endif  // FILTERS__KALMAN_FILTER_HPP_
