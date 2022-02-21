@@ -25,41 +25,50 @@
 
 struct GetBallParam {};
 
-struct KickParam {
+struct KickParam
+{
   Eigen::Vector2d target_location;
 
-  KickParam(Eigen::Vector2d target_location) : target_location(target_location) {}
+  explicit KickParam(Eigen::Vector2d target_location)
+  : target_location(target_location) {}
 };
 
-struct ReceiveParam {
+struct ReceiveParam
+{
   Eigen::Vector2d receive_location;  // Repetitive info from previous pass info, do we need?
   Eigen::Vector2d target_location;
 
   ReceiveParam(Eigen::Vector2d receive_location, Eigen::Vector2d target_location)
-    : receive_location(receive_location), target_location(target_location) {}
+  : receive_location(receive_location), target_location(target_location) {}
 };
 
-struct ShotParam {
-};
+struct ShotParam {};
 
-struct ReceiveShotParam {
+struct ReceiveShotParam
+{
   Eigen::Vector2d receive_location;
 
-  ReceiveShotParam(Eigen::Vector2d receive_location) : receive_location(receive_location) {}
+  explicit ReceiveShotParam(Eigen::Vector2d receive_location)
+  : receive_location(receive_location) {}
 };
 
-struct MoveParam {
+struct MoveParam
+{
   Eigen::Vector2d target_location;
 
-  MoveParam(Eigen::Vector2d target_location) : target_location(target_location) {}
+  explicit MoveParam(Eigen::Vector2d target_location)
+  : target_location(target_location) {}
 };
 
-struct CostParam {
+struct CostParam
+{
   // std::function<Eigen::Vector2d()>
 };
 
-struct Behavior {
-  enum Type {
+struct Behavior
+{
+  enum Type
+  {
     GetBall,
 
     // Straight kick
@@ -79,14 +88,16 @@ struct Behavior {
     CostFunctionPoint
   } type;
 
-  enum Priority {
+  enum Priority
+  {
     Required,
     Medium,
     Low
   } priority;
 
-  using Params = std::variant<GetBallParam, KickParam, ReceiveParam, ShotParam, ReceiveShotParam, MoveParam, CostParam>;
+  using Params = std::variant<GetBallParam, KickParam, ReceiveParam, ShotParam, ReceiveShotParam,
+      MoveParam, CostParam>;
   Params params;
 };
 
-#endif  //BEHAVIOR_HPP_
+#endif  // BEHAVIOR_HPP_

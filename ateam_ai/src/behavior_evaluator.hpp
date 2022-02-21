@@ -28,9 +28,11 @@
 #include "behavior_realization.hpp"
 #include "directed_graph.hpp"
 
-class BehaviorEvaluator {
+class BehaviorEvaluator
+{
 public:
-  DirectedGraph<Behavior> get_best_behaviors(BehaviorRealization & behavior_realization) {
+  DirectedGraph<Behavior> get_best_behaviors(BehaviorRealization & behavior_realization)
+  {
     //
     // Do preprocessing on world state to get important metrics like possession
     //
@@ -79,8 +81,10 @@ public:
     //
     // See how that combination of behaviors would be planned and executed
     //
-    DirectedGraph<BehaviorFeedback> three_one_touch_shot_feedback = behavior_realization.realize_behaviors(three_one_touch_shot);
-    DirectedGraph<BehaviorFeedback> direct_shot_feedback = behavior_realization.realize_behaviors(direct_shot);
+    DirectedGraph<BehaviorFeedback> three_one_touch_shot_feedback =
+      behavior_realization.realize_behaviors(three_one_touch_shot);
+    DirectedGraph<BehaviorFeedback> direct_shot_feedback =
+      behavior_realization.realize_behaviors(direct_shot);
 
     //
     // Choose main behavior
@@ -98,11 +102,11 @@ public:
     Behavior goalie;
     goalie.type = Behavior::Type::MoveToPoint;
     goalie.priority = Behavior::Priority::Medium;
-    goalie.params = MoveParam({0, 0}); // Field::OurGoal.center();
+    goalie.params = MoveParam({0, 0});  // Field::OurGoal.center();
     Behavior forward;
     forward.type = Behavior::Type::MoveToPoint;
     forward.priority = Behavior::Priority::Low;
-    forward.params = MoveParam({10, 0}); // Field::TheirGoal.center();
+    forward.params = MoveParam({10, 0});  // Field::TheirGoal.center();
     Behavior left_defender;
     left_defender.type = Behavior::Type::MoveToPoint;
     left_defender.priority = Behavior::Priority::Medium;
