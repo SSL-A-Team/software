@@ -40,7 +40,7 @@ public:
     DirectedGraph<Behavior> current_behaviors;
 
     while (true) {
-      current_behaviors = evaluator.get_best_behavior(realization);
+      current_behaviors = evaluator.get_best_behaviors(realization);
       executor.execute_behaviors(current_behaviors, realization);
     }
   }

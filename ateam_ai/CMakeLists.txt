@@ -8,15 +8,23 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
-find_package(tf2 REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/ateam_ai_node.cpp
+  src/behavior_evaluator.hpp
+  src/behavior_executor.hpp
+  src/behavior_feedback.hpp
+  src/behavior_realization.hpp
+  src/behavior.hpp
+  src/directed_graph.hpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
+  Eigen3
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}

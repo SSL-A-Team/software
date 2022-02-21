@@ -1,3 +1,26 @@
+// Copyright 2021 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+#ifndef BEHAVIOR_EVALUATOR_HPP_
+#define BEHAVIOR_EVALUATOR_HPP_
+
 #include <vector>
 
 #include "behavior.hpp"
@@ -24,11 +47,11 @@ public:
     Behavior first_receiver;
     first_receiver.type = Behavior::Type::OneTouchReceiveKick;
     first_receiver.priority = Behavior::Priority::Required;
-    first_receiver.params = PassParam({0, 0}, {10, 10});
+    first_receiver.params = ReceiveParam({0, 0}, {10, 10});
     Behavior second_receiver;
     second_receiver.type = Behavior::Type::OneTouchReceiveKick;
     second_receiver.priority = Behavior::Priority::Required;
-    second_receiver.params = PassParam({10, 10}, {-10, -10});
+    second_receiver.params = ReceiveParam({10, 10}, {-10, -10});
     Behavior final_receiver_shot;
     final_receiver_shot.type = Behavior::Type::OneTouchShot;
     final_receiver_shot.priority = Behavior::Priority::Required;
@@ -97,3 +120,5 @@ public:
     return behavior_out;
   }
 };
+
+#endif  // BEHAVIOR_EVALUATOR_HPP_
