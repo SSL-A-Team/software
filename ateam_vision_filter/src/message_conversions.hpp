@@ -21,19 +21,30 @@
 #ifndef MESSAGE_CONVERSIONS_HPP_
 #define MESSAGE_CONVERSIONS_HPP_
 
-#include <ateam_msgs/msg/robot_feedback.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/msg/ball_state.hpp>
+#include <ateam_msgs/msg/robot_state.hpp>
+#include <ssl_league_msgs/msg/vision_detection_ball.hpp>
+#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
+#include <ssl_league_msgs/msg/vision_detection_frame.hpp>
+#include <ssl_league_msgs/msg/vision_wrapper.hpp>
 
-#include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
-#include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
+#include "types/ball.hpp"
+#include "types/ball_measurement.hpp"
+#include "types/robot.hpp"
+#include "types/robot_measurement.hpp"
+#include "types/camera_measurement.hpp"
 
-namespace ateam_ssl_simulation_radio_bridge::message_conversions
+namespace ateam_vision_filter::message_conversions
 {
 
-ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg);
+ateam_msgs::msg::BallState toMsg(const Ball & obj);
+ateam_msgs::msg::RobotState toMsg(const Robot & obj);
 
-RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id);
+CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionWrapper & ros_msg);
+CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg);
+RobotMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionRobot & ros_msg);
+BallMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionBall & ros_msg);
 
-}  // namespace ateam_ssl_simulation_radio_bridge::message_conversions
+}  // namespace ateam_vision_filter::message_conversions
 
 #endif  // MESSAGE_CONVERSIONS_HPP_

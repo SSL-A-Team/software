@@ -18,37 +18,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__UDP_SENDER_HPP_
-#define ATEAM_COMMON__UDP_SENDER_HPP_
+#ifndef FILTERS__KALMAN_FILTER_HPP_
+#define FILTERS__KALMAN_FILTER_HPP_
 
-#include <boost/asio.hpp>
+#include <Eigen/Dense>
 
-#include <functional>
-#include <string>
+// Standard kalman filter
 
-namespace ateam_common
-{
-class UDPSender
+class KalmanFilter
 {
 public:
-  UDPSender(
-    const std::string & udp_ip_address,
-    const int16_t udp_port);
+  void set_initial_x_hat(const Eigen::VectorXd & x_hat);
+  void set_initial_p(const Eigen::MatrixXd & P);
+  void set_F(const Eigen::MatrixXd & F);
+  void set_B(const Eigen::MatrixXd & B);
+  void set_H(const Eigen::MatrixXd & H);
+  void set_Q(const Eigen::MatrixXd & Q);
+  void set_R(const Eigen::MatrixXd & R);
 
-  void send(const char * const data, const size_t length);
+  void predict(const Eigen::VectorXd & u);
+  void update(const Eigen::VectorXd & z);
 
-  ~UDPSender();
+  Eigen::VectorXd get_x_hat() const;
+  Eigen::MatrixXd get_P_hat() const;
+  Eigen::VectorXd get_y() const;
+  Eigen::MatrixXd get_estimated_gaussian_variance() const;
+  Eigen::VectorXd get_potential_measurement_error(const Eigen::VectorXd & z);
 
 private:
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket udp_socket_;
-  boost::asio::ip::udp::endpoint receiver_endpoint_;
-  std::array<char, 1024> buffer_;
-  std::thread io_service_thread_;
+  Eigen::MatrixXd F;
+  Eigen::MatrixXd B;
+  Eigen::MatrixXd H;
+  Eigen::MatrixXd Q;
+  Eigen::MatrixXd R;
 
-  void HandleUDPSendTo(const boost::system::error_code & error, std::size_t bytes_transferred);
+  Eigen::VectorXd x_hat;
+  Eigen::MatrixXd P;
 };
 
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__UDP_SENDER_HPP_
+#endif  // FILTERS__KALMAN_FILTER_HPP_

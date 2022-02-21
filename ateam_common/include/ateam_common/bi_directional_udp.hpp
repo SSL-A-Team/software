@@ -18,36 +18,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "message_conversions.hpp"
+#ifndef ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
+#define ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
 
-namespace ateam_ssl_simulation_radio_bridge::message_conversions
+#include <boost/asio.hpp>
+
+#include <functional>
+#include <string>
+
+namespace ateam_common
 {
-
-ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg)
+class BiDirectionalUDP
 {
-  ateam_msgs::msg::RobotFeedback robot_feedback;
+public:
+  using ReceiveCallback = std::function<void (const char * const data, const size_t length)>;
 
-  robot_feedback.ball_sense_triggered = proto_msg.dribbler_ball_contact();
+  BiDirectionalUDP(
+    const std::string & udp_ip_address,
+    const int16_t udp_port,
+    ReceiveCallback receive_callback);
 
-  return robot_feedback;
-}
+  void send(const char * const data, const size_t length);
 
-RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id)
-{
-  RobotControl robots_control;
-  RobotCommand * proto_robot_command = robots_control.add_robot_commands();
+  ~BiDirectionalUDP();
 
-  proto_robot_command->set_id(robot_id);
+private:
+  ReceiveCallback receive_callback_;
+  boost::asio::io_service io_service_;
+  boost::asio::ip::udp::socket udp_socket_;
+  boost::asio::ip::udp::endpoint endpoint_;
+  std::array<char, 1024> send_buffer_;
+  std::array<char, 1024> receive_buffer_;
+  std::thread io_service_thread_;
 
-  RobotMoveCommand * robot_move_command = proto_robot_command->mutable_move_command();
-  MoveGlobalVelocity * global_velocity_command =
-    robot_move_command->mutable_global_velocity();
+  void HandleUDPSendTo(const boost::system::error_code & error, std::size_t bytes_transferred);
+  void HandleUDPReceiveFrom(const boost::system::error_code & error, std::size_t bytes_transferred);
+};
 
-  global_velocity_command->set_x(ros_msg.twist.linear.x);
-  global_velocity_command->set_y(ros_msg.twist.linear.y);
-  global_velocity_command->set_angular(ros_msg.twist.angular.z);
+}  // namespace ateam_common
 
-  return robots_control;
-}
-
-}  // namespace ateam_ssl_simulation_radio_bridge::message_conversions
+#endif  // ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
