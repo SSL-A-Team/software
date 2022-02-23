@@ -21,6 +21,7 @@
 #ifndef TRAJECTORY_GENERATION__TRAJECTORY_GENERATION_HPP_
 #define TRAJECTORY_GENERATION__TRAJECTORY_GENERATION_HPP_
 
+#include "behavior/behavior.hpp"
 #include "behavior/behavior_feedback.hpp"
 
 class TrajectoryGenerator

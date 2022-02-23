@@ -21,6 +21,7 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior_realization.cpp
   src/behavior/behavior_realization.hpp
   src/behavior/behavior.hpp
+  src/trajectory_generation/trajectory_generation.cpp
   src/trajectory_generation/trajectory_generation.hpp
   src/util/directed_graph.hpp
 )
