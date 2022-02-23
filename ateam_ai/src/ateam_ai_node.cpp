@@ -21,12 +21,12 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "behavior.hpp"
-#include "behavior_feedback.hpp"
-#include "behavior_evaluator.hpp"
-#include "behavior_executor.hpp"
-#include "behavior_realization.hpp"
-#include "directed_graph.hpp"
+#include "behavior/behavior.hpp"
+#include "behavior/behavior_feedback.hpp"
+#include "behavior/behavior_evaluator.hpp"
+#include "behavior/behavior_executor.hpp"
+#include "behavior/behavior_realization.hpp"
+#include "util/directed_graph.hpp"
 
 namespace ateam_ai
 {

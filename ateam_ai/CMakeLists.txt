@@ -13,13 +13,15 @@ find_package(Eigen3 REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/ateam_ai_node.cpp
-  src/behavior_evaluator.hpp
-  src/behavior_executor.hpp
-  src/behavior_feedback.hpp
-  src/behavior_realization.hpp
-  src/behavior.hpp
-  src/directed_graph.hpp
+  src/behavior/behavior_evaluator.hpp
+  src/behavior/behavior_executor.hpp
+  src/behavior/behavior_feedback.hpp
+  src/behavior/behavior_realization.hpp
+  src/behavior/behavior.hpp
+  src/trajectory_generation/trajectory_generation.hpp
+  src/util/directed_graph.hpp
 )
+target_include_directories(${PROJECT_NAME} PRIVATE src)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp

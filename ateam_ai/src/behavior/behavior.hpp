@@ -33,7 +33,7 @@ struct KickParam
 
 struct ReceiveParam
 {
-  Eigen::Vector2d receive_location;  // Repetitive info from previous pass info, do we need?
+  Eigen::Vector2d receive_location;
   Eigen::Vector2d target_location;
 
   ReceiveParam(Eigen::Vector2d receive_location, Eigen::Vector2d target_location)
@@ -91,9 +91,11 @@ struct Behavior
     Low
   } priority;
 
-  using Params = std::variant<GetBallParam, KickParam, ReceiveParam, ShotParam, ReceiveShotParam,
-      MoveParam, CostParam>;
+  using Params = std::variant<KickParam, ReceiveParam, ShotParam, ReceiveShotParam, MoveParam, CostParam>;
   Params params;
+
+  Behavior(Type type, Priority priority, Params params)
+    : type(type), priority(priority), params(params) {}  // TODO(jneiger): Add type<->param checking for consistency
 };
 
 #endif  // BEHAVIOR_HPP_

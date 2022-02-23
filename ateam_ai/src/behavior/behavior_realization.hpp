@@ -24,9 +24,9 @@
 #include <stack>
 #include <vector>
 
-#include "behavior.hpp"
-#include "behavior_feedback.hpp"
-#include "directed_graph.hpp"
+#include "behavior/behavior.hpp"
+#include "behavior/behavior_feedback.hpp"
+#include "util/directed_graph.hpp"
 
 class BehaviorRealization
 {

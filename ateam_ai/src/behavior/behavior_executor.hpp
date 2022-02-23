@@ -21,9 +21,9 @@
 #ifndef BEHAVIOR_EXECUTOR_HPP_
 #define BEHAVIOR_EXECUTOR_HPP_
 
-#include "behavior.hpp"
-#include "behavior_feedback.hpp"
-#include "behavior_realization.hpp"
+#include "behavior/behavior.hpp"
+#include "behavior/behavior_feedback.hpp"
+#include "behavior/behavior_realization.hpp"
 
 class BehaviorExecutor
 {

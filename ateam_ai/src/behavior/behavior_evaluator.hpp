@@ -23,10 +23,10 @@
 
 #include <vector>
 
-#include "behavior.hpp"
-#include "behavior_feedback.hpp"
-#include "behavior_realization.hpp"
-#include "directed_graph.hpp"
+#include "behavior/behavior.hpp"
+#include "behavior/behavior_feedback.hpp"
+#include "behavior/behavior_realization.hpp"
+#include "util/directed_graph.hpp"
 
 class BehaviorEvaluator
 {
@@ -42,22 +42,22 @@ public:
     //
 
     DirectedGraph<Behavior> three_one_touch_shot;
-    Behavior initial_pass_start;
-    initial_pass_start.type = Behavior::Type::MovingKick;
-    initial_pass_start.priority = Behavior::Priority::Required;
-    initial_pass_start.params = KickParam({0, 0});
-    Behavior first_receiver;
-    first_receiver.type = Behavior::Type::OneTouchReceiveKick;
-    first_receiver.priority = Behavior::Priority::Required;
-    first_receiver.params = ReceiveParam({0, 0}, {10, 10});
-    Behavior second_receiver;
-    second_receiver.type = Behavior::Type::OneTouchReceiveKick;
-    second_receiver.priority = Behavior::Priority::Required;
-    second_receiver.params = ReceiveParam({10, 10}, {-10, -10});
-    Behavior final_receiver_shot;
-    final_receiver_shot.type = Behavior::Type::OneTouchShot;
-    final_receiver_shot.priority = Behavior::Priority::Required;
-    final_receiver_shot.params = ReceiveShotParam({-10, -10});
+    Behavior initial_pass_start{
+      Behavior::Type::MovingKick,
+      Behavior::Priority::Required,
+      KickParam({0, 0})};
+    Behavior first_receiver{
+      Behavior::Type::OneTouchReceiveKick,
+      Behavior::Priority::Required,
+      ReceiveParam({0, 0}, {10, 10})};
+    Behavior second_receiver{
+      Behavior::Type::OneTouchReceiveKick,
+      Behavior::Priority::Required,
+      ReceiveParam({10, 10}, {-10, -10})};
+    Behavior final_receiver_shot{
+      Behavior::Type::OneTouchShot,
+      Behavior::Priority::Required,
+      ReceiveShotParam({-10, -10})};
 
     std::size_t parent = three_one_touch_shot.add_node(initial_pass_start);
     parent = three_one_touch_shot.add_node(first_receiver, parent);
@@ -66,10 +66,10 @@ public:
 
 
     DirectedGraph<Behavior> direct_shot;
-    Behavior shot;
-    shot.type = Behavior::Type::Shot;
-    shot.priority = Behavior::Priority::Required;
-    shot.params = ShotParam();
+    Behavior shot{
+      Behavior::Type::Shot,
+      Behavior::Priority::Required,
+      ShotParam()};
 
     parent = direct_shot.add_node(shot, parent);
 
@@ -94,22 +94,22 @@ public:
     // Add background behaviors
     //
 
-    Behavior goalie;
-    goalie.type = Behavior::Type::MoveToPoint;
-    goalie.priority = Behavior::Priority::Medium;
-    goalie.params = MoveParam({0, 0});  // Field::OurGoal.center();
-    Behavior forward;
-    forward.type = Behavior::Type::MoveToPoint;
-    forward.priority = Behavior::Priority::Low;
-    forward.params = MoveParam({10, 0});  // Field::TheirGoal.center();
-    Behavior left_defender;
-    left_defender.type = Behavior::Type::MoveToPoint;
-    left_defender.priority = Behavior::Priority::Medium;
-    left_defender.params = MoveParam({5, 5});
-    Behavior right_defender;
-    right_defender.type = Behavior::Type::MoveToPoint;
-    right_defender.priority = Behavior::Priority::Medium;
-    right_defender.params = MoveParam({5, -5});
+    Behavior goalie{
+      Behavior::Type::MoveToPoint,
+      Behavior::Priority::Medium,
+      MoveParam({0, 0})};  // Field::OurGoal.center();
+    Behavior forward{
+      Behavior::Type::MoveToPoint,
+      Behavior::Priority::Low,
+      MoveParam({10, 0})};  // Field::TheirGoal.center();
+    Behavior left_defender{
+      Behavior::Type::MoveToPoint,
+      Behavior::Priority::Medium,
+      MoveParam({5, 5})};
+    Behavior right_defender{
+      Behavior::Type::MoveToPoint,
+      Behavior::Priority::Medium,
+      MoveParam({5, -5})};
 
     behavior_out.add_node(goalie);
     behavior_out.add_node(forward);
