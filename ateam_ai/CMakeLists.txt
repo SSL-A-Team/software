@@ -13,10 +13,11 @@ find_package(Eigen3 REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/ateam_ai_node.cpp
-  src/behavior/behavior_evaluator.hpp
   src/behavior/behavior_evaluator.cpp
+  src/behavior/behavior_evaluator.hpp
   src/behavior/behavior_executor.hpp
   src/behavior/behavior_feedback.hpp
+  src/behavior/behavior_realization.cpp
   src/behavior/behavior_realization.hpp
   src/behavior/behavior.hpp
   src/trajectory_generation/trajectory_generation.hpp

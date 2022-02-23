@@ -38,7 +38,7 @@ struct BehaviorFeedback
   // behavior wasted time (how long does this robot need to
   //   wait for other robots to get into position)
   Trajectory trajectory;
-  DribblerAndKickerBehavior dribbler_and_kicker_behavior;  // Maybe?
+  DribblerAndKickerBehavior dribbler_and_kicker_behavior;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_
