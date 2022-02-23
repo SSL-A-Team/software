@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR_FEEDBACK_HPP_
-#define BEHAVIOR_FEEDBACK_HPP_
+#ifndef BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_
+#define BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_
 
 #include <Eigen/Dense>
 
@@ -41,4 +41,4 @@ struct BehaviorFeedback
   DribblerAndKickerBehavior dribbler_and_kicker_behavior;  // Maybe?
 };
 
-#endif  // BEHAVIOR_FEEDBACK_HPP_
+#endif  // BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_

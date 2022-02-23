@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR_EVALUATOR_HPP_
-#define BEHAVIOR_EVALUATOR_HPP_
+#ifndef BEHAVIOR__BEHAVIOR_EVALUATOR_HPP_
+#define BEHAVIOR__BEHAVIOR_EVALUATOR_HPP_
 
 #include <vector>
 
@@ -30,7 +30,7 @@
 class BehaviorEvaluator
 {
 public:
-  BehaviorEvaluator(BehaviorRealization & behavior_realization);
+  explicit BehaviorEvaluator(BehaviorRealization & behavior_realization);
 
   /**
    * Determine which set of behaviors should be currently running
@@ -41,4 +41,4 @@ private:
   BehaviorRealization & behavior_realization;
 };
 
-#endif  // BEHAVIOR_EVALUATOR_HPP_
+#endif  // BEHAVIOR__BEHAVIOR_EVALUATOR_HPP_

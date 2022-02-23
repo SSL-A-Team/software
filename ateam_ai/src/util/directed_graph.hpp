@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DIRECTED_GRAPH_HPP_
-#define DIRECTED_GRAPH_HPP_
+#ifndef UTIL__DIRECTED_GRAPH_HPP_
+#define UTIL__DIRECTED_GRAPH_HPP_
 
 #include <map>
 #include <vector>
@@ -79,4 +79,4 @@ private:
   std::map<std::size_t, std::vector<std::size_t>> parent_to_child_relationship;
 };
 
-#endif  // DIRECTED_GRAPH_HPP_
+#endif  // UTIL__DIRECTED_GRAPH_HPP_

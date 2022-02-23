@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR_EXECUTOR_HPP_
+#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
 
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_feedback.hpp"
@@ -61,4 +61,4 @@ public:
   }
 };
 
-#endif  // BEHAVIOR_EXECUTOR_HPP_
+#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_

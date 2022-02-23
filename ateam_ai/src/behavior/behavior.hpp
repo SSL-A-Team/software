@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR_HPP_
-#define BEHAVIOR_HPP_
+#ifndef BEHAVIOR__BEHAVIOR_HPP_
+#define BEHAVIOR__BEHAVIOR_HPP_
 
 #include <variant>
 
@@ -93,11 +93,13 @@ struct Behavior
     Low
   } priority;
 
-  using Params = std::variant<KickParam, ReceiveParam, ShotParam, ReceiveShotParam, MoveParam, CostParam>;
+  using Params = std::variant<KickParam, ReceiveParam, ShotParam, ReceiveShotParam, MoveParam,
+      CostParam>;
   Params params;
 
+  // TODO(jneiger): Add type<->param checking for consistency
   Behavior(Type type, Priority priority, Params params)
-    : type(type), priority(priority), params(params) {}  // TODO(jneiger): Add type<->param checking for consistency
+  : type(type), priority(priority), params(params) {}
 };
 
-#endif  // BEHAVIOR_HPP_
+#endif  // BEHAVIOR__BEHAVIOR_HPP_
