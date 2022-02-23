@@ -66,16 +66,11 @@ public:
 
 
     DirectedGraph<Behavior> direct_shot;
-    Behavior initial_capture;
-    initial_capture.type = Behavior::Type::GetBall;
-    initial_capture.priority = Behavior::Priority::Required;
-    initial_capture.params = GetBallParam();
     Behavior shot;
     shot.type = Behavior::Type::Shot;
     shot.priority = Behavior::Priority::Required;
     shot.params = ShotParam();
 
-    parent = direct_shot.add_node(initial_capture);
     parent = direct_shot.add_node(shot, parent);
 
     //

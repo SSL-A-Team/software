@@ -23,8 +23,6 @@
 
 #include <Eigen/Dense>
 
-struct GetBallParam {};
-
 struct KickParam
 {
   Eigen::Vector2d target_location;
@@ -69,8 +67,6 @@ struct Behavior
 {
   enum Type
   {
-    GetBall,
-
     // Straight kick
     MovingKick,
     PivotKick,

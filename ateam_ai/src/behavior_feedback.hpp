@@ -21,7 +21,13 @@
 #ifndef BEHAVIOR_FEEDBACK_HPP_
 #define BEHAVIOR_FEEDBACK_HPP_
 
-struct Trajectory {};
+#include <Eigen/Dense>
+
+struct Trajectory
+{
+  // TODO(jneiger): Flesh out the trajectory structure more based on Kyle's requirements
+  Eigen::Vector2d target_point;
+};
 struct DribblerAndKickerBehavior {};
 
 struct BehaviorFeedback

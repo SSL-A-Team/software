@@ -21,8 +21,8 @@
 #ifndef BEHAVIOR_REALIZATION_HPP_
 #define BEHAVIOR_REALIZATION_HPP_
 
+#include <stack>
 #include <vector>
-#include <queue>
 
 #include "behavior.hpp"
 #include "behavior_feedback.hpp"
@@ -102,15 +102,42 @@ public:
   DirectedGraph<BehaviorFeedback> realize_behaviors(const DirectedGraph<Behavior> & behaviors)
   {
     std::vector<std::size_t> root_nodes = behaviors.get_root_nodes();
+    DirectedGraph<BehaviorFeedback> behavior_results;
 
-    // Sort root nodes based on priority, highest priority first
+    // TODO(jneiger): Sort root nodes based on priority, highest priority first
 
-    // for (auto root_node : root_nodes) {
-    // Moving through every node in the graph, assign it a not already assigned robot
-    // If we run out of robots before running out of required behaviors, fail
-    // }
+    for (auto root_node : root_nodes) {
+      // Moving through every node in the graph, assign it a not already assigned robot
+      // If we run out of robots before running out of required behaviors, fail
 
-    return DirectedGraph<BehaviorFeedback>();
+      BehaviorFeedback root_feedback = BehaviorFeedback();
+      // TODO(jneiger): Add feedback factory to call trajectory generator etc
+      std::size_t root_feedback_idx = behavior_results.add_node(root_feedback);
+      traverse_and_assign_behaviors(behaviors, behavior_results, root_node, root_feedback_idx);
+    }
+
+    return behavior_results;
+  }
+
+private:
+  void traverse_and_assign_behaviors(
+    const DirectedGraph<Behavior> & behaviors,
+    DirectedGraph<BehaviorFeedback> & behavior_results,
+    std::size_t behavior_parent,
+    std::size_t results_parent)
+  {
+    std::vector<std::size_t> children = behaviors.get_children(behavior_parent);
+
+    if (children.empty()) {
+      return;
+    }
+
+    for (const auto & child : children) {
+      BehaviorFeedback child_feedback = BehaviorFeedback();
+      // TODO(jneiger): Add feedback factory to call trajectory generator etc
+      std::size_t child_feedback_idx = behavior_results.add_node(child_feedback, results_parent);
+      traverse_and_assign_behaviors(behaviors, behavior_results, child, child_feedback_idx);
+    }
   }
 };
 
