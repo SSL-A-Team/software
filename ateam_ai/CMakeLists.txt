@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME} SHARED
   src/ateam_ai_node.cpp
   src/behavior/behavior_evaluator.cpp
   src/behavior/behavior_evaluator.hpp
+  src/behavior/behavior_executor.cpp
   src/behavior/behavior_executor.hpp
   src/behavior/behavior_feedback.hpp
   src/behavior/behavior_realization.cpp

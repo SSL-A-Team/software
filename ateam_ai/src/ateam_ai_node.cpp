@@ -35,13 +35,13 @@ class ATeamAINode : public rclcpp::Node
 {
 public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ateam_ai", options), evaluator(realization)
+  : rclcpp::Node("ateam_ai", options), evaluator(realization), executor(realization)
   {
     DirectedGraph<Behavior> current_behaviors;
 
     while (true) {
       current_behaviors = evaluator.get_best_behaviors();
-      executor.execute_behaviors(current_behaviors, realization);
+      executor.execute_behaviors(current_behaviors);
     }
   }
 
