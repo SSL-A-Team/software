@@ -51,6 +51,7 @@ geometry_msgs/Point[] points
 
 # when using the MESH type specify the boundaries of the mesh as a rectangle using the position and scale values
 ateam_msgs/Mesh1d[] mesh
+ateam_msgs/Mesh1d[] mesh_alpha
 
 # When using the TEXT type place the text here, when using the CUSTOM type put arbitrary javascript in this variable
 string text

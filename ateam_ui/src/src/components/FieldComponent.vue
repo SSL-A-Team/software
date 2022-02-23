@@ -308,10 +308,10 @@ export default {
                         var Interpolate = class{
                             // top/bottom left/right values
                             constructor(mesh, r, c, xstart, ystart, xstep, ystep) {
-                                this.tl = mesh[r][c];
-                                this.tr = mesh[r][c+1];
-                                this.bl = mesh[r+1][c];
-                                this.br = mesh[r+1][c+1];
+                                this.tl = mesh[r].mesh1d[c];
+                                this.tr = mesh[r].mesh1d[c+1];
+                                this.bl = mesh[r+1].mesh1d[c];
+                                this.br = mesh[r+1].mesh1d[c+1];
 
                                 this.xstart = xstart;
                                 this.ystart = ystart;
