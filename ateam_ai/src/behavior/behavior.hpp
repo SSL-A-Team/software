@@ -21,6 +21,8 @@
 #ifndef BEHAVIOR_HPP_
 #define BEHAVIOR_HPP_
 
+#include <variant>
+
 #include <Eigen/Dense>
 
 struct KickParam
