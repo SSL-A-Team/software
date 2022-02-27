@@ -21,8 +21,11 @@
 #ifndef BEHAVIOR__BEHAVIOR_REALIZATION_HPP_
 #define BEHAVIOR__BEHAVIOR_REALIZATION_HPP_
 
+#include <queue>
+
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_feedback.hpp"
+#include "trajectory_generation/trajectory_generation.hpp"
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
@@ -43,8 +46,10 @@ private:
     const DirectedGraph<Behavior> & behaviors,
     DirectedGraph<BehaviorFeedback> & behavior_results,
     std::size_t behavior_parent,
-    std::size_t results_parent);
+    std::size_t results_parent,
+    std::queue<int> & robots_to_assign);
 
+  TrajectoryGeneration trajectory_generation;
   World world;
 };
 

@@ -23,11 +23,17 @@
 
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_feedback.hpp"
+#include "types/world.hpp"
 
-class TrajectoryGenerator
+class TrajectoryGeneration
 {
 public:
-  BehaviorFeedback get_feedback_from_behavior(Behavior behavior /**, Robot assigned_robot**/);
+  void update_world(World world);
+
+  BehaviorFeedback get_feedback_from_behavior(Behavior behavior, int assigned_robot);
+
+private:
+  World world;
 };
 
 #endif  // TRAJECTORY_GENERATION__TRAJECTORY_GENERATION_HPP_
