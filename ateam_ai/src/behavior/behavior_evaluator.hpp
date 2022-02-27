@@ -25,12 +25,15 @@
 
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_realization.hpp"
+#include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
 class BehaviorEvaluator
 {
 public:
   explicit BehaviorEvaluator(BehaviorRealization & behavior_realization);
+
+  void update_world(World world);
 
   /**
    * Determine which set of behaviors should be currently running
@@ -39,6 +42,7 @@ public:
 
 private:
   BehaviorRealization & behavior_realization;
+  World world;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_EVALUATOR_HPP_

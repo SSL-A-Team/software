@@ -26,6 +26,7 @@
 #include "behavior/behavior_evaluator.hpp"
 #include "behavior/behavior_executor.hpp"
 #include "behavior/behavior_realization.hpp"
+#include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
 namespace ateam_ai
@@ -39,6 +40,10 @@ public:
   {
     DirectedGraph<Behavior> current_behaviors;
 
+    realization.update_world(world);
+    evaluator.update_world(world);
+    executor.update_world(world);
+
     while (true) {
       current_behaviors = evaluator.get_best_behaviors();
       executor.execute_behaviors(current_behaviors);
@@ -49,6 +54,7 @@ private:
   BehaviorRealization realization;
   BehaviorEvaluator evaluator;
   BehaviorExecutor executor;
+  World world;
 };
 
 }  // namespace ateam_ai

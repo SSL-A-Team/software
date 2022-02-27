@@ -26,6 +26,7 @@
 #include <array>
 
 #include "types/field.hpp"
+#include "types/referee_info.hpp"
 #include "types/robot.hpp"
 
 struct World

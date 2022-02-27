@@ -25,6 +25,11 @@
 BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
 
+void BehaviorEvaluator::update_world(World world)
+{
+  this->world = world;
+}
+
 DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors()
 {
   //

@@ -22,6 +22,11 @@
 
 #include <vector>
 
+void BehaviorRealization::update_world(World world)
+{
+  this->world = world;
+}
+
 DirectedGraph<BehaviorFeedback> BehaviorRealization::realize_behaviors(
   const DirectedGraph<Behavior> & behaviors)
 {

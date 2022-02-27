@@ -23,12 +23,15 @@
 
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_realization.hpp"
+#include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
 class BehaviorExecutor
 {
 public:
   explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
+
+  void update_world(World world);
 
   /**
    * Given a set of behaviors, try to execute them as well as possible
@@ -37,6 +40,7 @@ public:
 
 private:
   BehaviorRealization & behavior_realization;
+  World world;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_

@@ -25,6 +25,11 @@
 BehaviorExecutor::BehaviorExecutor(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
 
+void BehaviorExecutor::update_world(World world)
+{
+  this->world = world;
+}
+
 void BehaviorExecutor::execute_behaviors(const DirectedGraph<Behavior> & behaviors)
 {
   //

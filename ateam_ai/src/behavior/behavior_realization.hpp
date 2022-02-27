@@ -23,11 +23,14 @@
 
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_feedback.hpp"
+#include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
 class BehaviorRealization
 {
 public:
+  void update_world(World world);
+
   /**
    * Given a set of behaviors, return trajectories and timings of all the behaviors expected for execution
    *
@@ -41,6 +44,8 @@ private:
     DirectedGraph<BehaviorFeedback> & behavior_results,
     std::size_t behavior_parent,
     std::size_t results_parent);
+
+  World world;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_REALIZATION_HPP_
