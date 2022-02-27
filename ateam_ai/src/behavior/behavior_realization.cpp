@@ -32,56 +32,14 @@ void BehaviorRealization::update_world(World world)
 DirectedGraph<BehaviorFeedback> BehaviorRealization::realize_behaviors(
   const DirectedGraph<Behavior> & behaviors)
 {
-  std::vector<std::size_t> root_nodes = behaviors.get_root_nodes();
   DirectedGraph<BehaviorFeedback> behavior_results;
-  std::queue<int> robots_to_assign;
 
-  for (int i = 0; i < 16; i++) {
-    robots_to_assign.push(i);
-  }
-
-  for (auto root_node : root_nodes) {
-    int assigned_robot = robots_to_assign.front();
-    robots_to_assign.pop();
-
-    BehaviorFeedback root_feedback =
-      trajectory_generation.get_feedback_from_behavior(
-      behaviors.get_node(root_node),
-      assigned_robot);
-
-    std::size_t root_feedback_idx = behavior_results.add_node(root_feedback);
-    traverse_and_assign_behaviors(
-      behaviors, behavior_results, root_node, root_feedback_idx,
-      robots_to_assign);
-  }
+  // Assign robots to behaviors
+  // Calculate the BehaviorFeedback and build the same directed graph shape
+  // BehaviorFeedback feedback =
+  //    trajectory_generation.get_feedback_from_behavior(
+  //    behavior,
+  //    assigned_robot);
 
   return behavior_results;
-}
-
-void BehaviorRealization::traverse_and_assign_behaviors(
-  const DirectedGraph<Behavior> & behaviors,
-  DirectedGraph<BehaviorFeedback> & behavior_results,
-  std::size_t behavior_parent,
-  std::size_t results_parent,
-  std::queue<int> & robots_to_assign)
-{
-  std::vector<std::size_t> children = behaviors.get_children(behavior_parent);
-
-  if (children.empty()) {
-    return;
-  }
-
-  for (const auto & child : children) {
-    int assigned_robot = robots_to_assign.front();
-    robots_to_assign.pop();
-
-    BehaviorFeedback child_feedback =
-      trajectory_generation.get_feedback_from_behavior(
-      behaviors.get_node(child),
-      assigned_robot);
-
-    std::size_t child_feedback_idx = behavior_results.add_node(child_feedback, results_parent);
-    traverse_and_assign_behaviors(
-      behaviors, behavior_results, child, child_feedback_idx, robots_to_assign);
-  }
 }

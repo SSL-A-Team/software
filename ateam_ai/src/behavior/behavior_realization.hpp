@@ -43,13 +43,6 @@ public:
   DirectedGraph<BehaviorFeedback> realize_behaviors(const DirectedGraph<Behavior> & behaviors);
 
 private:
-  void traverse_and_assign_behaviors(
-    const DirectedGraph<Behavior> & behaviors,
-    DirectedGraph<BehaviorFeedback> & behavior_results,
-    std::size_t behavior_parent,
-    std::size_t results_parent,
-    std::queue<int> & robots_to_assign);
-
   TrajectoryGeneration trajectory_generation;
   World world;
 };
