@@ -38,9 +38,6 @@ public:
 
   void update_world(World world);
 
-  /**
-   * Given a set of behaviors, try to execute them as well as possible
-   */
   void execute_behaviors(const DirectedGraph<Behavior> & behaviors);
 
 private:

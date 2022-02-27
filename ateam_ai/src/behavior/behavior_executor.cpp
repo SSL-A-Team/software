@@ -38,13 +38,6 @@ void BehaviorExecutor::execute_behaviors(const DirectedGraph<Behavior> & behavio
   DirectedGraph<BehaviorFeedback> behavior_feedback = behavior_realization.realize_behaviors(
     behaviors);
 
-  // Ideally, convert the behavior graph into a per robot list of trajectories as a function of
-  // time
-  //    https://help.perforce.com/visualization/jviews/documentation/userman/gantt/images/gen_gantt_default.png
-  // each row is a robot
-  // columns are a function of time
-  // a trajectory fills section of columns for a single robot based on it's start/end time
-
   //
   // Replan course trajectories as we approach their start time
   //
@@ -57,5 +50,5 @@ void BehaviorExecutor::execute_behaviors(const DirectedGraph<Behavior> & behavio
   // Follow trajectories
   //
 
-  // send commands down to motion control
+  // Send commands down to motion control
 }
