@@ -19,17 +19,15 @@
 // THE SOFTWARE.
 
 
-#ifndef TYPES__ROBOT_HPP_
-#define TYPES__ROBOT_HPP_
+#ifndef TYPES__BALL_HPP_
+#define TYPES__BALL_HPP_
 
 #include <Eigen/Dense>
 
-struct Robot
+struct Ball
 {
   Eigen::Vector2d pos;
-  double theta;
   Eigen::Vector2d vel;
-  double omega;
 };
 
-#endif  // TYPES__ROBOT_HPP_
+#endif  // TYPES__BALL_HPP_

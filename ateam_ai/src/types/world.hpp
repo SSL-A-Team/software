@@ -25,6 +25,7 @@
 #include <optional>
 #include <array>
 
+#include "types/ball.hpp"
 #include "types/field.hpp"
 #include "types/referee_info.hpp"
 #include "types/robot.hpp"
@@ -34,6 +35,7 @@ struct World
   Field field;
   RefereeInfo referee_info;
 
+  std::optional<Ball> ball;
   std::array<std::optional<Robot>, 16> our_robots;
   std::array<std::optional<Robot>, 16> their_robots;
 };

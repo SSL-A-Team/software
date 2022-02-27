@@ -23,6 +23,7 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior.hpp
   src/trajectory_generation/trajectory_generation.cpp
   src/trajectory_generation/trajectory_generation.hpp
+  src/types/ball.hpp
   src/types/field.hpp
   src/types/referee_info.hpp
   src/types/robot.hpp
