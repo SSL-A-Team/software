@@ -29,16 +29,17 @@
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
+/**
+ * Given a set of behaviors
+ *  - Assign the behaviors to robots
+ *  - Generate trajectories for the robots
+ *  - Figure out relative timings to start the trajectories
+ */
 class BehaviorRealization
 {
 public:
   void update_world(World world);
 
-  /**
-   * Given a set of behaviors, return trajectories and timings of all the behaviors expected for execution
-   *
-   * @note Simple version that's easy to implement initially
-   */
   DirectedGraph<BehaviorFeedback> realize_behaviors(const DirectedGraph<Behavior> & behaviors);
 
 private:

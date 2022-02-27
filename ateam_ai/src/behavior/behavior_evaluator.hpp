@@ -28,6 +28,9 @@
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
+/**
+ * Figure out which set of behaviors to run
+ */
 class BehaviorEvaluator
 {
 public:
@@ -35,9 +38,6 @@ public:
 
   void update_world(World world);
 
-  /**
-   * Determine which set of behaviors should be currently running
-   */
   DirectedGraph<Behavior> get_best_behaviors();
 
 private:

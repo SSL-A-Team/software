@@ -26,6 +26,11 @@
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
+/**
+ * Given a set of behaviors
+ *  - Replan trajectories as their start time approaches
+ *  - Manage/Follow the trajectories
+ */
 class BehaviorExecutor
 {
 public:

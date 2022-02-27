@@ -25,6 +25,9 @@
 #include "behavior/behavior_feedback.hpp"
 #include "types/world.hpp"
 
+/**
+ * Given a behavior and assigned robot, build a motion plan needed to fully execute it
+ */
 class TrajectoryGeneration
 {
 public:
