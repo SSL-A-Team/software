@@ -13,6 +13,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/RobotFeedback.msg
   msg/RobotMotionCommand.msg
   msg/RobotState.msg
+  msg/Mesh1d.msg
+  msg/Overlay.msg
   msg/TeamClientConnectionStatus.msg
 
   srv/ReconnectTeamClient.srv
