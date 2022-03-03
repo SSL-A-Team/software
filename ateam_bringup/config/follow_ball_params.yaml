@@ -3,5 +3,5 @@ follow_ball:
     controller:
       kP: 0.01
       kD: 0.08
-    offset: 500.0
+    offset: 250.0
     max_speed: 1.0

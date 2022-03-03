@@ -6,6 +6,7 @@
     <remap from="~/robot_state" to="/vision_filter/blue_team/robot0"/>
     <remap from="~/ball_state" to="/vision_filter/ball"/>
     <remap from="~/motion_command" to="/radio_bridge/robot_motion_commands/robot0"/>
+    <remap from="~/referee" to="/gc_multicast_bridge_node/referee_messages" />
     <param from="$(find-pkg-share ateam_bringup)/config/follow_ball_params.yaml"/>
   </node>
 </launch>
