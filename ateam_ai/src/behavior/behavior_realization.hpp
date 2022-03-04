@@ -38,13 +38,12 @@
 class BehaviorRealization
 {
 public:
-  void update_world(World world);
-
-  DirectedGraph<BehaviorFeedback> realize_behaviors(const DirectedGraph<Behavior> & behaviors);
+  DirectedGraph<BehaviorFeedback> realize_behaviors(
+    const DirectedGraph<Behavior> & behaviors,
+    const World & world);
 
 private:
   TrajectoryGeneration trajectory_generation;
-  World world;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_REALIZATION_HPP_

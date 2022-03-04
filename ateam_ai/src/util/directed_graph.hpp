@@ -21,11 +21,11 @@
 #ifndef UTIL__DIRECTED_GRAPH_HPP_
 #define UTIL__DIRECTED_GRAPH_HPP_
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 /**
- * Directed graph of nodes with no restriction on connectivity
+ * Directed graph of nodes. The graph must not be looping
  */
 template<typename Node>
 class DirectedGraph
@@ -76,7 +76,7 @@ public:
 private:
   std::vector<Node> nodes;
   std::vector<std::size_t> root_nodes;
-  std::map<std::size_t, std::vector<std::size_t>> parent_to_child_relationship;
+  std::unordered_map<std::size_t, std::vector<std::size_t>> parent_to_child_relationship;
 };
 
 #endif  // UTIL__DIRECTED_GRAPH_HPP_

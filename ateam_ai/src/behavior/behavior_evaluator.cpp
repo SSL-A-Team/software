@@ -20,17 +20,15 @@
 
 #include "behavior/behavior_evaluator.hpp"
 
+#include <functional>
+#include <vector>
+
 #include "behavior/behavior_feedback.hpp"
 
 BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
 
-void BehaviorEvaluator::update_world(World world)
-{
-  this->world = world;
-}
-
-DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors()
+DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors(const World & world)
 {
   //
   // Do preprocessing on world state to get important metrics like possession
@@ -73,12 +71,42 @@ DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors()
   parent = direct_shot.add_node(shot, parent);
 
   //
+  // Add background behaviors
+  //
+
+  std::vector<std::reference_wrapper<DirectedGraph<Behavior>>> possible_behaviors{
+    three_one_touch_shot, direct_shot};
+  for (auto & behavior : possible_behaviors) {
+    Behavior goalie{
+      Behavior::Type::MoveToPoint,
+      Behavior::Priority::Medium,
+      MoveParam({0, 0})};  // Field::OurGoal.center();
+    Behavior forward{
+      Behavior::Type::MoveToPoint,
+      Behavior::Priority::Low,
+      MoveParam({10, 0})};  // Field::TheirGoal.center();
+    Behavior left_defender{
+      Behavior::Type::MoveToPoint,
+      Behavior::Priority::Medium,
+      MoveParam({5, 5})};
+    Behavior right_defender{
+      Behavior::Type::MoveToPoint,
+      Behavior::Priority::Medium,
+      MoveParam({5, -5})};
+
+    behavior.get().add_node(goalie);
+    behavior.get().add_node(forward);
+    behavior.get().add_node(left_defender);
+    behavior.get().add_node(right_defender);
+  }
+
+  //
   // See how that combination of behaviors would be planned and executed
   //
   DirectedGraph<BehaviorFeedback> three_one_touch_shot_feedback =
-    behavior_realization.realize_behaviors(three_one_touch_shot);
+    behavior_realization.realize_behaviors(three_one_touch_shot, world);
   DirectedGraph<BehaviorFeedback> direct_shot_feedback =
-    behavior_realization.realize_behaviors(direct_shot);
+    behavior_realization.realize_behaviors(direct_shot, world);
 
   //
   // Choose main behavior
@@ -88,32 +116,6 @@ DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors()
   // maybe the total behavior completetion time is short
   // or maybe the other one can't be completed due to number of robots
   DirectedGraph<Behavior> behavior_out = direct_shot;
-
-  //
-  // Add background behaviors
-  //
-
-  Behavior goalie{
-    Behavior::Type::MoveToPoint,
-    Behavior::Priority::Medium,
-    MoveParam({0, 0})};  // Field::OurGoal.center();
-  Behavior forward{
-    Behavior::Type::MoveToPoint,
-    Behavior::Priority::Low,
-    MoveParam({10, 0})};  // Field::TheirGoal.center();
-  Behavior left_defender{
-    Behavior::Type::MoveToPoint,
-    Behavior::Priority::Medium,
-    MoveParam({5, 5})};
-  Behavior right_defender{
-    Behavior::Type::MoveToPoint,
-    Behavior::Priority::Medium,
-    MoveParam({5, -5})};
-
-  behavior_out.add_node(goalie);
-  behavior_out.add_node(forward);
-  behavior_out.add_node(left_defender);
-  behavior_out.add_node(right_defender);
 
   return behavior_out;
 }

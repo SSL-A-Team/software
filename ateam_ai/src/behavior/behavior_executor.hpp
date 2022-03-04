@@ -36,13 +36,10 @@ class BehaviorExecutor
 public:
   explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
 
-  void update_world(World world);
-
-  void execute_behaviors(const DirectedGraph<Behavior> & behaviors);
+  void execute_behaviors(const DirectedGraph<Behavior> & behaviors, const World & world);
 
 private:
   BehaviorRealization & behavior_realization;
-  World world;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_

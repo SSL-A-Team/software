@@ -20,13 +20,8 @@
 
 #include "trajectory_generation/trajectory_generation.hpp"
 
-void TrajectoryGeneration::update_world(World world)
-{
-  this->world = world;
-}
-
 BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
-  Behavior behavior, int assigned_robot)
+  Behavior behavior, int assigned_robot, const World & world)
 {
   BehaviorFeedback feedback;
 

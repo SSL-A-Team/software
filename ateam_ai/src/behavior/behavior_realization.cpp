@@ -23,14 +23,8 @@
 #include <vector>
 #include <queue>
 
-void BehaviorRealization::update_world(World world)
-{
-  this->world = world;
-  trajectory_generation.update_world(world);
-}
-
 DirectedGraph<BehaviorFeedback> BehaviorRealization::realize_behaviors(
-  const DirectedGraph<Behavior> & behaviors)
+  const DirectedGraph<Behavior> & behaviors, const World & world)
 {
   DirectedGraph<BehaviorFeedback> behavior_results;
 
@@ -39,7 +33,8 @@ DirectedGraph<BehaviorFeedback> BehaviorRealization::realize_behaviors(
   // BehaviorFeedback feedback =
   //    trajectory_generation.get_feedback_from_behavior(
   //    behavior,
-  //    assigned_robot);
+  //    assigned_robot,
+  //    world);
 
   return behavior_results;
 }

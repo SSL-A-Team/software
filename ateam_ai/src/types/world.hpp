@@ -24,6 +24,7 @@
 
 #include <optional>
 #include <array>
+#include <vector>
 
 #include "types/ball.hpp"
 #include "types/field.hpp"
@@ -35,7 +36,16 @@ struct World
   Field field;
   RefereeInfo referee_info;
 
-  std::optional<Ball> ball;
+  std::optional<Ball> get_unique_ball()
+  {
+    if (balls.size() == 1) {
+      return balls.front();
+    } else {
+      return std::nullopt;
+    }
+  }
+
+  std::vector<Ball> balls;
   std::array<std::optional<Robot>, 16> our_robots;
   std::array<std::optional<Robot>, 16> their_robots;
 };

@@ -25,18 +25,15 @@
 BehaviorExecutor::BehaviorExecutor(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
 
-void BehaviorExecutor::update_world(World world)
-{
-  this->world = world;
-}
-
-void BehaviorExecutor::execute_behaviors(const DirectedGraph<Behavior> & behaviors)
+void BehaviorExecutor::execute_behaviors(
+  const DirectedGraph<Behavior> & behaviors,
+  const World & world)
 {
   //
   // Grab trajectories for everything
   //
   DirectedGraph<BehaviorFeedback> behavior_feedback = behavior_realization.realize_behaviors(
-    behaviors);
+    behaviors, world);
 
   //
   // Replan course trajectories as we approach their start time

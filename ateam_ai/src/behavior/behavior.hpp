@@ -21,9 +21,11 @@
 #ifndef BEHAVIOR__BEHAVIOR_HPP_
 #define BEHAVIOR__BEHAVIOR_HPP_
 
-#include <variant>
-
 #include <Eigen/Dense>
+
+#include <optional>
+#include <variant>
+#include <functional>
 
 struct KickParam
 {
@@ -62,7 +64,8 @@ struct MoveParam
 
 struct CostParam
 {
-  // std::function<Eigen::Vector2d()>
+  std::function<double(Eigen::Vector2d)> cost;
+  std::optional<std::function<Eigen::Vector2d(Eigen::Vector2d)>> gradient;
 };
 
 struct Behavior

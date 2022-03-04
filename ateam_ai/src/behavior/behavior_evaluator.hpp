@@ -36,13 +36,10 @@ class BehaviorEvaluator
 public:
   explicit BehaviorEvaluator(BehaviorRealization & behavior_realization);
 
-  void update_world(World world);
-
-  DirectedGraph<Behavior> get_best_behaviors();
+  DirectedGraph<Behavior> get_best_behaviors(const World & world);
 
 private:
   BehaviorRealization & behavior_realization;
-  World world;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_EVALUATOR_HPP_

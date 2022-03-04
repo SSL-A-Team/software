@@ -30,12 +30,22 @@ struct Trajectory
 };
 struct DribblerAndKickerBehavior {};
 
+struct KickFeedback {};
+struct ReceiveFeedback {};
+struct ShotFeedback {};
+struct ReceiveShotFeedback {};
+struct MoveFeedback {};
+struct CostFeedback {};
+
 struct BehaviorFeedback
 {
   std::optional<int> assigned_robot_id;
-  // Information on timing (wasted time, start time etc)
   Trajectory trajectory;
   DribblerAndKickerBehavior dribbler_and_kicker_behavior;
+
+  using SpecificFeedback = std::variant<KickFeedback, ReceiveFeedback, ShotFeedback,
+      ReceiveFeedback, MoveFeedback, CostFeedback>;
+  std::variant<SpecificFeedback> specific_feedback;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_

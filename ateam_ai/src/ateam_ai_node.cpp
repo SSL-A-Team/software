@@ -40,13 +40,9 @@ public:
   {
     DirectedGraph<Behavior> current_behaviors;
 
-    realization.update_world(world);
-    evaluator.update_world(world);
-    executor.update_world(world);
-
     while (true) {
-      current_behaviors = evaluator.get_best_behaviors();
-      executor.execute_behaviors(current_behaviors);
+      current_behaviors = evaluator.get_best_behaviors(world);
+      executor.execute_behaviors(current_behaviors, world);
     }
   }
 
