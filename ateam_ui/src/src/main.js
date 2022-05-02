@@ -88,7 +88,7 @@ ros.on('close', function() {
 // Set up ball subscribers and publishers
 var ballTopic = new ROSLIB.Topic({
     ros: ros,
-    name: '/ball',
+    name: '/vision_filter/ball',
     messageType: 'ateam_msgs/msg/BallState'
 });
 
@@ -114,7 +114,7 @@ for (var team in vm.state.teams) {
     for (var i = 0; i < 16; i++) {
         var robotTopic = new ROSLIB.Topic({
             ros: ros,
-            name: '/' + team + '/robot' + i,
+            name: '/vision_filter/' + team + '_team/robot' + i,
             messageType: 'ateam_msgs/msg/RobotState'
         });
 

@@ -20,6 +20,15 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ateam_msgs/msg/ball_state.hpp>
+#include <ateam_msgs/msg/robot_state.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Quaternion.h>
+
+#include <chrono>
+#include <functional>
+#include <mutex>
+
 
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_feedback.hpp"
@@ -29,6 +38,8 @@
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
+using namespace std::chrono_literals;
+
 namespace ateam_ai
 {
 
@@ -36,21 +47,94 @@ class ATeamAINode : public rclcpp::Node
 {
 public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ateam_ai", options), evaluator(realization), executor(realization)
+  : rclcpp::Node("ateam_ai_node", options), evaluator_(realization_), executor_(realization_,
+      create_publisher<ateam_msgs::msg::RobotMotionCommand>(
+        "~/motion_command",
+        rclcpp::SystemDefaultsQoS()))
   {
-    DirectedGraph<Behavior> current_behaviors;
+    std::lock_guard<std::mutex> lock(world_mutex_);
+    world_.balls.emplace_back(Ball{});
 
-    while (true) {
-      current_behaviors = evaluator.get_best_behaviors(world);
-      executor.execute_behaviors(current_behaviors, world);
+    for (std::size_t id = 0; id < blue_robots_subscriptions_.size(); id++) {
+      auto our_robot_callback =
+        [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
+          robot_state_callback(world_.our_robots, id, robot_state_msg);
+        };
+      auto their_robot_callback =
+        [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
+          robot_state_callback(world_.their_robots, id, robot_state_msg);
+        };
+      blue_robots_subscriptions_.at(id) = create_subscription<ateam_msgs::msg::RobotState>(
+        "/vision_filter/blue_team/robot" + std::to_string(id),
+        10,
+        our_robot_callback);
+      yellow_robots_subscriptions_.at(id) = create_subscription<ateam_msgs::msg::RobotState>(
+        "/vision_filter/yellow_team/robot" + std::to_string(id),
+        10,
+        their_robot_callback);
     }
+
+    auto ball_callback = [&](const ateam_msgs::msg::BallState::SharedPtr ball_state_msg) {
+        ball_state_callback(world_.balls.at(0), ball_state_msg);
+      };
+    ball_subscription_ = create_subscription<ateam_msgs::msg::BallState>(
+      "/vision_filter/ball",
+      10,
+      ball_callback);
+
+    timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
   }
 
 private:
-  BehaviorRealization realization;
-  BehaviorEvaluator evaluator;
-  BehaviorExecutor executor;
-  World world;
+  rclcpp::TimerBase::SharedPtr timer_;
+
+  rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
+    16> blue_robots_subscriptions_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
+    16> yellow_robots_subscriptions_;
+
+  BehaviorRealization realization_;
+  BehaviorEvaluator evaluator_;
+  BehaviorExecutor executor_;
+  std::mutex world_mutex_;
+  World world_;
+
+  void robot_state_callback(
+    std::array<std::optional<Robot>, 16> & robot_states,
+    std::size_t id,
+    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg)
+  {
+    std::lock_guard<std::mutex> lock(world_mutex_);
+    robot_states.at(id) = Robot();
+    robot_states.at(id).value().pos.x() = robot_state_msg->pose.position.x;
+    robot_states.at(id).value().pos.y() = robot_state_msg->pose.position.y;
+    tf2::Quaternion tf2_quat;
+    tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
+    robot_states.at(id).value().theta = tf2_quat.getAngle();
+    robot_states.at(id).value().vel.x() = robot_state_msg->twist.linear.x;
+    robot_states.at(id).value().vel.y() = robot_state_msg->twist.linear.y;
+    robot_states.at(id).value().omega = robot_state_msg->twist.angular.z;
+  }
+
+  void ball_state_callback(
+    Ball & ball_state,
+    const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
+  {
+    std::lock_guard<std::mutex> lock(world_mutex_);
+    ball_state.pos.x() = ball_state_msg->pose.position.x;
+    ball_state.pos.y() = ball_state_msg->pose.position.y;
+    ball_state.vel.x() = ball_state_msg->twist.linear.x;
+    ball_state.vel.y() = ball_state_msg->twist.linear.y;
+  }
+
+  void timer_callback()
+  {
+    std::lock_guard<std::mutex> lock(world_mutex_);
+    DirectedGraph<Behavior> current_behaviors;
+    current_behaviors = evaluator_.get_best_behaviors(world_);
+    executor_.execute_behaviors(current_behaviors, world_);
+  }
 };
 
 }  // namespace ateam_ai

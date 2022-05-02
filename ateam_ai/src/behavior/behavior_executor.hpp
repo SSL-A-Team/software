@@ -21,6 +21,9 @@
 #ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
 #define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
 
+#include <rclcpp/rclcpp.hpp>
+#include <ateam_msgs/msg/robot_motion_command.hpp>
+
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_realization.hpp"
 #include "types/world.hpp"
@@ -34,12 +37,15 @@
 class BehaviorExecutor
 {
 public:
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
+  explicit BehaviorExecutor(
+    BehaviorRealization & behavior_realization,
+    rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr robot_commands);
 
   void execute_behaviors(const DirectedGraph<Behavior> & behaviors, const World & world);
 
 private:
   BehaviorRealization & behavior_realization;
+  rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr robot_commands;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
