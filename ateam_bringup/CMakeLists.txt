@@ -4,8 +4,8 @@ project(ateam_bringup)
 find_package(ament_cmake REQUIRED)
 
 install(DIRECTORY
-  launch
   gc_config
+  launch
   DESTINATION share/${PROJECT_NAME}
 )
 

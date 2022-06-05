@@ -36,7 +36,7 @@ struct World
   Field field;
   RefereeInfo referee_info;
 
-  std::optional<Ball> get_unique_ball()
+  std::optional<Ball> get_unique_ball() const
   {
     if (balls.size() == 1) {
       return balls.front();

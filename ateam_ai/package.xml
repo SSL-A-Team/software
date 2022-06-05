@@ -11,6 +11,8 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>tf2</depend>
+  <depend>ateam_msgs</depend>
   <depend>eigen3_cmake_module</depend>
   <depend>eigen</depend>
 
