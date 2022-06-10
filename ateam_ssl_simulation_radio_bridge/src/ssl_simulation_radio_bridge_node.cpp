@@ -58,7 +58,7 @@ public:
 
       command_subscriptions_.at(robot_id) =
         create_subscription<ateam_msgs::msg::RobotMotionCommand>(
-        "~/robot_motion_commands/robot" + std::to_string(robot_id),
+        "/ateam_ai/robot_motion_commands/robot" + std::to_string(robot_id),
         10,
         callback);
 

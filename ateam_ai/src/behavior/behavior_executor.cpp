@@ -22,12 +22,10 @@
 
 #include "behavior/behavior_feedback.hpp"
 
-BehaviorExecutor::BehaviorExecutor(
-  BehaviorRealization & behavior_realization,
-  rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr robot_commands)
-: behavior_realization(behavior_realization), robot_commands(robot_commands) {}
+BehaviorExecutor::BehaviorExecutor(BehaviorRealization & behavior_realization)
+: behavior_realization(behavior_realization) {}
 
-void BehaviorExecutor::execute_behaviors(
+BehaviorExecutor::RobotMotionCommands BehaviorExecutor::execute_behaviors(
   const DirectedGraph<Behavior> & behaviors,
   const World & world)
 {
@@ -50,15 +48,25 @@ void BehaviorExecutor::execute_behaviors(
   //
 
   // Send commands down to motion control
-  Eigen::Vector2d target = std::get<MoveParam>(
-    behaviors.get_node(
-      behaviors.get_root_nodes().front()).params).target_location;
-  Eigen::Vector2d command = (target - world.our_robots.at(0).value_or(Robot()).pos) / 1000.0;
-  if (command.norm() > 1) {
-    command = command.normalized();
+  RobotMotionCommands robot_motion_commands;
+  for (std::size_t id = 0; id < robot_motion_commands.size(); id++) {
+    // Note: This abuses the way the behaviors are supposed to be executed
+    // This is just a placeholder for now
+    Eigen::Vector2d target = std::get<MoveParam>(
+      behaviors.get_node(
+        behaviors.get_root_nodes().front()).params).target_location;
+
+    Eigen::Vector2d command = (target - world.our_robots.at(id).value_or(Robot()).pos) / 1000.0;
+
+    if (command.norm() > 1) {
+      command = command.normalized();
+    }
+
+    ateam_msgs::msg::RobotMotionCommand motion_command;
+    motion_command.twist.linear.x = command.x();
+    motion_command.twist.linear.y = command.y();
+    robot_motion_commands.at(id) = motion_command;
   }
-  ateam_msgs::msg::RobotMotionCommand motion_command;
-  motion_command.twist.linear.x = command.x();
-  motion_command.twist.linear.y = command.y();
-  robot_commands->publish(motion_command);
+
+  return robot_motion_commands;
 }
