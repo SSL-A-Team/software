@@ -53,7 +53,7 @@ void BehaviorExecutor::execute_behaviors(
   Eigen::Vector2d target = std::get<MoveParam>(
     behaviors.get_node(
       behaviors.get_root_nodes().front()).params).target_location;
-  Eigen::Vector2d command = (target - world.our_robots.at(0).value_or(Robot()).pos) / 1000.0;
+  Eigen::Vector2d command = (target - world.our_robots.at(0).value_or(Robot()).pos);
   if (command.norm() > 1) {
     command = command.normalized();
   }
