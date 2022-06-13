@@ -56,7 +56,7 @@ BehaviorExecutor::RobotMotionCommands BehaviorExecutor::execute_behaviors(
       behaviors.get_node(
         behaviors.get_root_nodes().front()).params).target_location;
 
-    Eigen::Vector2d command = (target - world.our_robots.at(id).value_or(Robot()).pos) / 1000.0;
+    Eigen::Vector2d command = (target - world.our_robots.at(id).value_or(Robot()).pos);
 
     if (command.norm() > 1) {
       command.normalize();

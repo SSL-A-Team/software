@@ -28,14 +28,16 @@
 namespace ateam_ssl_vision_bridge::message_conversions
 {
 
+constexpr double mmTom = 1.0e-3;
+
 ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall & proto_msg)
 {
   ssl_league_msgs::msg::VisionDetectionBall ros_msg;
   ros_msg.confidence = proto_msg.confidence();
-  ros_msg.area = proto_msg.area();
-  ros_msg.pos.x = proto_msg.x();
-  ros_msg.pos.y = proto_msg.y();
-  ros_msg.pos.z = proto_msg.z();
+  ros_msg.area = proto_msg.area() * mmTom * mmTom;
+  ros_msg.pos.x = proto_msg.x() * mmTom;
+  ros_msg.pos.y = proto_msg.y() * mmTom;
+  ros_msg.pos.z = proto_msg.z() * mmTom;
   ros_msg.pixel.x = proto_msg.pixel_x();
   ros_msg.pixel.y = proto_msg.pixel_y();
 
@@ -46,8 +48,8 @@ ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot & 
   ssl_league_msgs::msg::VisionDetectionRobot ros_msg;
   ros_msg.confidence = proto_msg.confidence();
   ros_msg.robot_id = proto_msg.robot_id();
-  ros_msg.pose.position.x = proto_msg.x();
-  ros_msg.pose.position.y = proto_msg.y();
+  ros_msg.pose.position.x = proto_msg.x() * mmTom;
+  ros_msg.pose.position.y = proto_msg.y() * mmTom;
   ros_msg.pose.position.z = 0;
   ros_msg.pose.orientation =
     tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), proto_msg.orientation()));
@@ -87,11 +89,11 @@ ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegmen
 {
   ssl_league_msgs::msg::VisionFieldLineSegment ros_msg;
   ros_msg.name = proto_msg.name();
-  ros_msg.p1.x = proto_msg.p1().x();
-  ros_msg.p1.y = proto_msg.p1().y();
-  ros_msg.p2.x = proto_msg.p2().x();
-  ros_msg.p2.y = proto_msg.p2().y();
-  ros_msg.thickness = proto_msg.thickness();
+  ros_msg.p1.x = proto_msg.p1().x() * mmTom;
+  ros_msg.p1.y = proto_msg.p1().y() * mmTom;
+  ros_msg.p2.x = proto_msg.p2().x() * mmTom;
+  ros_msg.p2.y = proto_msg.p2().y() * mmTom;
+  ros_msg.thickness = proto_msg.thickness() * mmTom;
 
   return ros_msg;
 }
@@ -99,23 +101,23 @@ ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCircularAr
 {
   ssl_league_msgs::msg::VisionFieldCircularArc ros_msg;
   ros_msg.name = proto_msg.name();
-  ros_msg.center.x = proto_msg.center().x();
-  ros_msg.center.y = proto_msg.center().y();
-  ros_msg.radius = proto_msg.radius();
+  ros_msg.center.x = proto_msg.center().x() * mmTom;
+  ros_msg.center.y = proto_msg.center().y() * mmTom;
+  ros_msg.radius = proto_msg.radius() * mmTom;
   ros_msg.a1 = proto_msg.a1();
   ros_msg.a2 = proto_msg.a2();
-  ros_msg.thickness = proto_msg.thickness();
+  ros_msg.thickness = proto_msg.thickness() * mmTom;
 
   return ros_msg;
 }
 ssl_league_msgs::msg::VisionGeometryFieldSize fromProto(const SSL_GeometryFieldSize & proto_msg)
 {
   ssl_league_msgs::msg::VisionGeometryFieldSize ros_msg;
-  ros_msg.field_length = proto_msg.field_length();
-  ros_msg.field_width = proto_msg.field_width();
-  ros_msg.goal_width = proto_msg.goal_width();
-  ros_msg.goal_depth = proto_msg.goal_depth();
-  ros_msg.boundary_width = proto_msg.boundary_width();
+  ros_msg.field_length = proto_msg.field_length() * mmTom;
+  ros_msg.field_width = proto_msg.field_width() * mmTom;
+  ros_msg.goal_width = proto_msg.goal_width() * mmTom;
+  ros_msg.goal_depth = proto_msg.goal_depth() * mmTom;
+  ros_msg.boundary_width = proto_msg.boundary_width() * mmTom;
   std::transform(
     proto_msg.field_lines().begin(),
     proto_msg.field_lines().end(),
@@ -142,12 +144,12 @@ ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(
   ros_msg.pose.orientation.y = proto_msg.q1();
   ros_msg.pose.orientation.z = proto_msg.q2();
   ros_msg.pose.orientation.w = proto_msg.q3();
-  ros_msg.pose.position.x = proto_msg.tx();
-  ros_msg.pose.position.y = proto_msg.ty();
-  ros_msg.pose.position.z = proto_msg.tz();
-  ros_msg.derived_camera_world_t.x = proto_msg.derived_camera_world_tx();
-  ros_msg.derived_camera_world_t.y = proto_msg.derived_camera_world_ty();
-  ros_msg.derived_camera_world_t.z = proto_msg.derived_camera_world_tz();
+  ros_msg.pose.position.x = proto_msg.tx() * mmTom;
+  ros_msg.pose.position.y = proto_msg.ty() * mmTom;
+  ros_msg.pose.position.z = proto_msg.tz() * mmTom;
+  ros_msg.derived_camera_world_t.x = proto_msg.derived_camera_world_tx() * mmTom;
+  ros_msg.derived_camera_world_t.y = proto_msg.derived_camera_world_ty() * mmTom;
+  ros_msg.derived_camera_world_t.z = proto_msg.derived_camera_world_tz() * mmTom;
 
   return ros_msg;
 }
