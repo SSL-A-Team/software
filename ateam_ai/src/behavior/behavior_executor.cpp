@@ -59,7 +59,7 @@ BehaviorExecutor::RobotMotionCommands BehaviorExecutor::execute_behaviors(
     Eigen::Vector2d command = (target - world.our_robots.at(id).value_or(Robot()).pos) / 1000.0;
 
     if (command.norm() > 1) {
-      command = command.normalized();
+      command.normalize();
     }
 
     ateam_msgs::msg::RobotMotionCommand motion_command;
