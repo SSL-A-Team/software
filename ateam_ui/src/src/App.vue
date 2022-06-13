@@ -5,6 +5,7 @@
         </v-app-bar>
         <v-main>
             <v-container class="d-flex flex-row" ref="Main Components">
+                <RefButtonsComponent/>
                 <StatusComponent/>
                 <FieldComponent/>
             </v-container>
@@ -16,6 +17,7 @@
 <script lang="js">
 import FieldComponent from './components/FieldComponent.vue'
 import StatusComponent from './components/StatusComponent.vue'
+import RefButtonsComponent from './components/RefButtonsComponent.vue'
 import { provide } from 'vue'
 
 export default {
@@ -78,9 +80,10 @@ export default {
         }
     },
     components: {
-        FieldComponent,
-        StatusComponent
-    }
+    FieldComponent,
+    StatusComponent,
+    RefButtonsComponent
+}
 }
 
 </script>
