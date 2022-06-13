@@ -28,7 +28,7 @@
 namespace ateam_ssl_vision_bridge::message_conversions
 {
 
-constexpr double mmTom = 1.0 / 1000;
+constexpr double mmTom = 1.0e-3;
 
 ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall & proto_msg)
 {
