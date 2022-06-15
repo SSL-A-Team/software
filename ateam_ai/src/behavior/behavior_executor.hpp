@@ -24,6 +24,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
+#include <array>
+
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_realization.hpp"
 #include "types/world.hpp"
@@ -37,15 +39,17 @@
 class BehaviorExecutor
 {
 public:
-  explicit BehaviorExecutor(
-    BehaviorRealization & behavior_realization,
-    rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr robot_commands);
+  using MaybeRobotMotionCommand = std::optional<ateam_msgs::msg::RobotMotionCommand>;
+  using RobotMotionCommands = std::array<MaybeRobotMotionCommand, 16>;
 
-  void execute_behaviors(const DirectedGraph<Behavior> & behaviors, const World & world);
+  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
+
+  RobotMotionCommands execute_behaviors(
+    const DirectedGraph<Behavior> & behaviors,
+    const World & world);
 
 private:
   BehaviorRealization & behavior_realization;
-  rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr robot_commands;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_

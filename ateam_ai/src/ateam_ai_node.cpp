@@ -21,6 +21,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
+#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -47,10 +48,7 @@ class ATeamAINode : public rclcpp::Node
 {
 public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ateam_ai_node", options), evaluator_(realization_), executor_(realization_,
-      create_publisher<ateam_msgs::msg::RobotMotionCommand>(
-        "~/motion_command",
-        rclcpp::SystemDefaultsQoS()))
+  : rclcpp::Node("ateam_ai_node", options), evaluator_(realization_), executor_(realization_)
   {
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.balls.emplace_back(Ball{});
@@ -74,6 +72,12 @@ public:
         their_robot_callback);
     }
 
+    for (std::size_t id = 0; id < robot_commands_publishers_.size(); id++) {
+      robot_commands_publishers_.at(id) = create_publisher<ateam_msgs::msg::RobotMotionCommand>(
+        "~/robot_motion_commands/robot" + std::to_string(id),
+        rclcpp::SystemDefaultsQoS());
+    }
+
     auto ball_callback = [&](const ateam_msgs::msg::BallState::SharedPtr ball_state_msg) {
         ball_state_callback(world_.balls.at(0), ball_state_msg);
       };
@@ -93,6 +97,8 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
+  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
+    16> robot_commands_publishers_;
 
   BehaviorRealization realization_;
   BehaviorEvaluator evaluator_;
@@ -132,8 +138,23 @@ private:
   {
     std::lock_guard<std::mutex> lock(world_mutex_);
     DirectedGraph<Behavior> current_behaviors;
+
     current_behaviors = evaluator_.get_best_behaviors(world_);
-    executor_.execute_behaviors(current_behaviors, world_);
+    auto robot_motion_commands = executor_.execute_behaviors(current_behaviors, world_);
+
+    send_all_motion_commands(robot_motion_commands);
+  }
+
+  void send_all_motion_commands(
+    const std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & robot_motion_commands)
+  {
+    for (std::size_t id = 0; id < robot_commands_publishers_.size(); id++) {
+      const auto & maybe_motion_command = robot_motion_commands.at(id);
+      if (maybe_motion_command.has_value()) {
+        robot_commands_publishers_.at(id)->publish(maybe_motion_command.value());
+      }
+    }
   }
 };
 
