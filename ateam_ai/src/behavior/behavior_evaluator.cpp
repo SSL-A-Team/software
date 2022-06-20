@@ -22,6 +22,7 @@
 
 #include <functional>
 #include <vector>
+#include <cmath>
 
 #include "behavior/behavior_feedback.hpp"
 
@@ -70,13 +71,20 @@ DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors(const World & worl
 
   // direct_shot.add_node(shot);
 
+  // Generate 16 move behaviors towards the ball, we'll figure out which
+  // ones we can fill later
   DirectedGraph<Behavior> simple_move;
-  Behavior move{
-    Behavior::Type::MoveToPoint,
-    Behavior::Priority::Required,
-    MoveParam(world.get_unique_ball().value_or(Ball()).pos)};
+  static double j = 0;
+  j += 0.002;
+  for (int i = 0; i < 16; i++) {
+    double theta = i / 11.0 * 3.14 * 2 + j;
+    Behavior move{
+      Behavior::Type::MoveToPoint,
+      Behavior::Priority::Required,
+      MoveParam(Eigen::Vector2d{cos(theta) - 2, sin(theta)})};
 
-  simple_move.add_node(move);
+    simple_move.add_node(move);
+  }
 
   //
   // Add background behaviors

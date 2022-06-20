@@ -30,11 +30,30 @@ DirectedGraph<BehaviorFeedback> BehaviorRealization::realize_behaviors(
 
   // Assign robots to behaviors
   // Calculate the BehaviorFeedback and build the same directed graph shape
-  // BehaviorFeedback feedback =
-  //    trajectory_generation.get_feedback_from_behavior(
-  //    behavior,
-  //    assigned_robot,
-  //    world);
+
+
+  // Just assign robots in number order if they are available
+  std::size_t robot_id = 0;
+  for (const auto & root_id : behaviors.get_root_nodes()) {
+    // Assume there are no children for now
+    const auto & root_node = behaviors.get_node(root_id);
+
+    while (robot_id < world.our_robots.size() && !world.our_robots.at(robot_id).has_value()) {
+      robot_id++;
+    }
+    if (robot_id < world.our_robots.size()) {
+      BehaviorFeedback feedback =
+        trajectory_generation.get_feedback_from_behavior(
+        root_node,
+        robot_id,
+        world);
+      behavior_results.add_node(feedback);
+      robot_id++;
+    } else {
+      // If we don't have enough robots, show the behavior isn't assigned
+      behavior_results.add_node(BehaviorFeedback());
+    }
+  }
 
   return behavior_results;
 }
