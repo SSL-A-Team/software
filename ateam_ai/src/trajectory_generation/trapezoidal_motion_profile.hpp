@@ -34,11 +34,11 @@ namespace TrapezoidalMotionProfile
  * and the vel/accel limits for 3 DOF
  */
 Trajectory Generate3d(
-  Eigen::Vector3d start, Eigen::Vector3d start_vel,
-  Eigen::Vector3d end, Eigen::Vector3d end_vel,
-  Eigen::Vector3d max_vel_limits,
-  Eigen::Vector3d max_accel_limits,
-  double dt);
+  const Eigen::Vector3d & start, const Eigen::Vector3d & start_vel,
+  const Eigen::Vector3d & end, const Eigen::Vector3d & end_vel,
+  const Eigen::Vector3d & max_vel_limits,
+  const Eigen::Vector3d & max_accel_limits,
+  const double dt);
 
 struct Sample1d
 {
@@ -58,7 +58,7 @@ struct Trajectory1d
  */
 Trajectory1d Generate1d(
   double start_pos, double start_vel, double end_pos, double end_vel,
-  double max_vel, double max_accel, double dt);
+  const double max_vel, const double max_accel, const double dt);
 }  // namespace TrapezoidalMotionProfile
 
 #endif  // TRAJECTORY_GENERATION__TRAPEZOIDAL_MOTION_PROFILE_HPP_

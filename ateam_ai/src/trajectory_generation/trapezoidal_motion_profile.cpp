@@ -19,15 +19,17 @@
 // THE SOFTWARE.
 
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
-#include <iostream>
+
+#include <numeric>
+
 namespace TrapezoidalMotionProfile
 {
 Trajectory Generate3d(
-  Eigen::Vector3d start, Eigen::Vector3d start_vel,
-  Eigen::Vector3d end, Eigen::Vector3d end_vel,
-  Eigen::Vector3d max_vel_limits,
-  Eigen::Vector3d max_accel_limits,
-  double dt)
+  const Eigen::Vector3d & start, const Eigen::Vector3d & start_vel,
+  const Eigen::Vector3d & end, const Eigen::Vector3d & end_vel,
+  const Eigen::Vector3d & max_vel_limits,
+  const Eigen::Vector3d & max_accel_limits,
+  const double dt)
 {
   // Independently plan for each DOF
   std::array<Trajectory1d, 3> trajectories;
@@ -73,9 +75,139 @@ Trajectory Generate3d(
   return output;
 }
 
+/**
+ * Returns time (s) to accelerate from start vel to end vel given an acceleration limit
+ */
+double time_to_accelerate(const double start_vel, const double end_vel, const double accel_limit)
+{
+  return std::abs(end_vel - start_vel) / accel_limit;
+}
+
+/**
+ * Return average velocity given the start vel and end vel, assuming a constant acceleration
+ */
+double avg_vel_over_acceleration(const double start_vel, const double end_vel)
+{
+  return std::midpoint(start_vel, end_vel);
+}
+
+/**
+ * Returns distance (m) required to accelerate from start_vel to end_vel given an acceleration limit
+ */
+double dist_covered_during_acceleration(
+  const double start_vel, const double end_vel,
+  const double accel_limit)
+{
+  const double t = time_to_accelerate(start_vel, end_vel, accel_limit);
+  const double avg_vel = avg_vel_over_acceleration(start_vel, end_vel);
+
+  return t * avg_vel;
+}
+
+struct AccelerationPhaseInputs
+{
+  double start_vel;  // m/s
+  double end_vel;  // m/s
+  double accel_limit;  // abs(limiting_accel_value) == m/s^2
+};
+
+struct AccelerationPhaseResults
+{
+  double time_required;
+  double distance_required;
+};
+
+AccelerationPhaseResults get_acceleration_phase_results(const AccelerationPhaseInputs inputs)
+{
+  AccelerationPhaseResults output;
+  output.time_required = time_to_accelerate(inputs.start_vel, inputs.end_vel, inputs.accel_limit);
+  output.distance_required = dist_covered_during_acceleration(
+    inputs.start_vel, inputs.end_vel,
+    inputs.accel_limit);
+
+  return output;
+}
+
+struct PhaseCoeffs
+{
+  double start_time;
+  double start_dist;
+  double start_vel;
+  double duration;
+  double end_vel;
+};
+
+struct TrapezoidalCoeffs
+{
+  //    __________
+  //   /          \.
+  //  /            \.
+  // /              \.
+  // ^^^
+  // Phase 1
+  //    ^^^^^^^^^^
+  //    Phase 2
+  //              ^^^
+  //              Phase 3
+  //
+  // Phase 1 - Accel to some "max" velocity
+  // Phase 2 - Stay at some "max" velocity (optional)
+  // Phase 3 - Decell to the end velocity
+  PhaseCoeffs phase_1;
+  PhaseCoeffs phase_2;
+  PhaseCoeffs phase_3;
+};
+
+Trajectory1d sample_trapezoidal_profile(
+  const TrapezoidalCoeffs coeffs, const double accel_limit,
+  const double dt)
+{
+  const auto sq = [](const double x) {return x * x;};
+  const auto position = [sq](const double t, const double v_initial, const double a) {
+      return v_initial * t + 1. / 2. * a * sq(t);
+    };
+  const auto velocity = [sq](const double t, const double v_initial, const double a) {
+      return v_initial + a * t;
+    };
+
+  Trajectory1d output;
+
+  const double end_time = coeffs.phase_3.start_time + coeffs.phase_3.duration;
+  for (double t = 0.0; t <= end_time; t += dt) {
+    Sample1d sample;
+    sample.time = t;
+
+    if (t < coeffs.phase_2.start_time) {
+      // Phase 1
+      sample.pos = position(t, coeffs.phase_1.start_vel, accel_limit);
+      sample.vel = velocity(t, coeffs.phase_1.start_vel, accel_limit);
+      sample.accel = accel_limit;
+    } else if (t < coeffs.phase_3.start_time) {
+      // Phase 2
+      double t_into_phase_2 = t - coeffs.phase_2.start_time;
+      double d_into_phase_2 = coeffs.phase_2.start_dist;
+      sample.pos = d_into_phase_2 + position(t_into_phase_2, coeffs.phase_2.start_vel, 0);
+      sample.vel = velocity(t_into_phase_2, coeffs.phase_2.start_vel, 0);
+      sample.accel = 0;
+    } else {
+      // Phase 3
+      double t_into_phase_3 = t - coeffs.phase_3.start_time;
+      double d_into_phase_3 = coeffs.phase_3.start_dist;
+      sample.pos = d_into_phase_3 +
+        position(t_into_phase_3, coeffs.phase_3.start_vel, -accel_limit);
+      sample.vel = velocity(t_into_phase_3, coeffs.phase_3.start_vel, -accel_limit);
+      sample.accel = -accel_limit;
+    }
+
+    output.samples.push_back(sample);
+  }
+
+  return output;
+}
+
 Trajectory1d Generate1d(
   double start_pos, double start_vel, double end_pos, double end_vel,
-  double max_vel, double max_accel, double dt)
+  const double max_vel, const double max_accel, const double dt)
 {
   // Invert so the start is always before the end
   // and we only have to deal with positive values
@@ -89,47 +221,35 @@ Trajectory1d Generate1d(
 
   // Note, distances are distance from start_pos internally
   // The output will be shifted back into world coordinates
+  TrapezoidalCoeffs trapezoidal_coeffs;
+  trapezoidal_coeffs.phase_1.start_time = 0;
+  trapezoidal_coeffs.phase_1.start_dist = 0;
+  trapezoidal_coeffs.phase_1.start_vel = start_vel;
 
-  double phase_2_start_time;
-  double phase_2_start_dist;
-  double phase_2_start_vel;
+  // Phase 1 is start_vel to max_vel
+  const AccelerationPhaseInputs phase_1_to_vel_limit_input{
+    .start_vel = start_vel,
+    .end_vel = max_vel,
+    .accel_limit = max_accel};
 
-  double phase_3_start_time;
-  double phase_3_start_dist;
-  double phase_3_start_vel;
+  // Phase 3 is max_accel to end_vel
+  const AccelerationPhaseInputs phase_3_from_vel_limit_input{
+    .start_vel = max_vel,
+    .end_vel = end_vel,
+    .accel_limit = max_accel};
 
-  //    __________
-  //   /          \.
-  //  /            \.
-  // /              \.
-  // ^^^
-  // Phase 1
-  //    ^^^^^^^^^^
-  //    Phase 2
-  //              ^^^
-  //              Phase 3
-
-  // Distance to cover
-  double target_dist = end_pos - start_pos;
-
-  // Time needed to accel/decel to/from max
-  double t_start_to_max_vel = std::abs(max_vel - start_vel) / max_accel;
-  double t_max_to_end_vel = std::abs(end_vel - max_vel) / max_accel;
-
-  // Avg velocity over accel/decel
-  double avg_vel_start_to_max_vel = (start_vel + max_vel) / 2;
-  double avg_vel_max_to_end_vel = (max_vel + end_vel) / 2;
-
-  // Distance covered during accel
-  double d_covered_by_start_to_max_vel = avg_vel_start_to_max_vel * t_start_to_max_vel;
-  double d_covered_by_max_to_end_vel = avg_vel_max_to_end_vel * t_max_to_end_vel;
+  const AccelerationPhaseResults phase_1_to_vel_limit = get_acceleration_phase_results(
+    phase_1_to_vel_limit_input);
+  const AccelerationPhaseResults phase_3_from_vel_limit = get_acceleration_phase_results(
+    phase_3_from_vel_limit_input);
 
   // Distanced covered by both accels
-  double dist_covered_by_accels = d_covered_by_start_to_max_vel + d_covered_by_max_to_end_vel;
-
   // Skip phase 2 if that distance is too big
   // If it's too big, we need to shrink the max vel limit we accel/decel to/from
-  bool skip_phase_two = dist_covered_by_accels > target_dist;
+  const double target_dist = end_pos - start_pos;  // Distance to cover
+  const double dist_covered_by_accels = phase_1_to_vel_limit.distance_required +
+    phase_3_from_vel_limit.distance_required;
+  const bool skip_phase_two = dist_covered_by_accels > target_dist;
 
   if (!skip_phase_two) {
     // When phase 2 is included, stay at max speed for X time
@@ -140,13 +260,21 @@ Trajectory1d Generate1d(
     // Figure out how long that takes to cover that dist at max velocity
     double time_at_max_vel = d_covered_by_phase_2 / max_vel;
 
-    phase_2_start_time = t_start_to_max_vel;
-    phase_2_start_dist = d_covered_by_start_to_max_vel;
-    phase_2_start_vel = max_vel;
+    trapezoidal_coeffs.phase_1.duration = phase_1_to_vel_limit.time_required;
+    trapezoidal_coeffs.phase_1.end_vel = max_vel;
 
-    phase_3_start_time = t_start_to_max_vel + time_at_max_vel;
-    phase_3_start_dist = phase_2_start_dist + d_covered_by_phase_2;
-    phase_3_start_vel = max_vel;
+    trapezoidal_coeffs.phase_2.start_time = phase_1_to_vel_limit.time_required;
+    trapezoidal_coeffs.phase_2.start_dist = phase_1_to_vel_limit.distance_required;
+    trapezoidal_coeffs.phase_2.start_vel = max_vel;
+    trapezoidal_coeffs.phase_2.duration = time_at_max_vel;
+    trapezoidal_coeffs.phase_2.end_vel = max_vel;
+
+    trapezoidal_coeffs.phase_3.start_time = trapezoidal_coeffs.phase_2.start_time + time_at_max_vel;
+    trapezoidal_coeffs.phase_3.start_dist = trapezoidal_coeffs.phase_2.start_dist +
+      d_covered_by_phase_2;
+    trapezoidal_coeffs.phase_3.start_vel = max_vel;
+    trapezoidal_coeffs.phase_3.duration = phase_3_from_vel_limit.time_required;
+    trapezoidal_coeffs.phase_3.end_vel = end_vel;
   } else {
     // Figure out the max vel needed to get the target dist
     // Solve the above equations for max_velocity
@@ -177,58 +305,46 @@ Trajectory1d Generate1d(
     // sqrt((d * max_accel + svel^2 + evel^2) / 2) = +-max
 
     // Don't allow negative speed so we can just assume positive is only correct value
-    max_vel = sqrt((target_dist * max_accel + start_vel * start_vel + end_vel * end_vel) / 2);
+    double nonlimit_max_vel =
+      sqrt((target_dist * max_accel + start_vel * start_vel + end_vel * end_vel) / 2);
 
-    t_start_to_max_vel = (max_vel - start_vel) / max_accel;
-    t_max_to_end_vel = (max_vel - end_vel) / max_accel;
+    // Phase 1 is start_vel to nonlimit_max_vel
+    const AccelerationPhaseInputs phase_1_to_nonlimit_vel_input{
+      .start_vel = start_vel,
+      .end_vel = nonlimit_max_vel,
+      .accel_limit = max_accel};
 
-    avg_vel_start_to_max_vel = (start_vel + max_vel) / 2;
-    avg_vel_max_to_end_vel = (max_vel + end_vel) / 2;
+    // Phase 3 is max_accel to end_vel
+    const AccelerationPhaseInputs phase_3_from_nonlimit_vel_input{
+      .start_vel = nonlimit_max_vel,
+      .end_vel = end_vel,
+      .accel_limit = max_accel};
 
-    d_covered_by_start_to_max_vel = avg_vel_start_to_max_vel * t_start_to_max_vel;
-    d_covered_by_max_to_end_vel = avg_vel_max_to_end_vel * t_max_to_end_vel;
+    const AccelerationPhaseResults phase_1_to_nonlimit_vel = get_acceleration_phase_results(
+      phase_1_to_nonlimit_vel_input);
+    const AccelerationPhaseResults phase_3_from_nonlimit_vel = get_acceleration_phase_results(
+      phase_3_from_nonlimit_vel_input);
+
 
     // Skip phase 2
-    phase_2_start_time = t_start_to_max_vel;
-    phase_2_start_dist = d_covered_by_start_to_max_vel;
-    phase_2_start_vel = max_vel;
+    trapezoidal_coeffs.phase_2.start_time = phase_1_to_nonlimit_vel.time_required;
+    trapezoidal_coeffs.phase_2.start_dist = phase_1_to_nonlimit_vel.distance_required;
+    trapezoidal_coeffs.phase_2.start_vel = nonlimit_max_vel;
+    trapezoidal_coeffs.phase_2.duration = 0;
+    trapezoidal_coeffs.phase_2.end_vel = nonlimit_max_vel;
 
-    phase_3_start_time = phase_2_start_time;
-    phase_3_start_dist = phase_2_start_dist;
-    phase_3_start_vel = phase_2_start_vel;
+    trapezoidal_coeffs.phase_3.start_time = trapezoidal_coeffs.phase_2.start_time;
+    trapezoidal_coeffs.phase_3.start_dist = trapezoidal_coeffs.phase_2.start_dist;
+    trapezoidal_coeffs.phase_3.start_vel = nonlimit_max_vel;
+    trapezoidal_coeffs.phase_3.duration = phase_3_from_nonlimit_vel.time_required;
+    trapezoidal_coeffs.phase_3.end_vel = end_vel;
   }
 
-  Trajectory1d output;
+  Trajectory1d output = sample_trapezoidal_profile(trapezoidal_coeffs, max_accel, dt);
 
-  double end_time = phase_3_start_time + t_max_to_end_vel;
-  for (double t = 0.0; t <= end_time; t += dt) {
-    Sample1d sample;
-    sample.time = t;
-
-    if (t < phase_2_start_time) {
-      // Phase 1
-      double d_into_phase_1 = start_pos;
-      sample.pos = d_into_phase_1 + t * start_vel + 1.0 / 2.0 * max_accel * t * t;
-      sample.vel = t * max_accel + start_vel;
-      sample.accel = max_accel;
-    } else if (t < phase_3_start_time) {
-      // Phase 2
-      double t_into_phase_2 = t - phase_2_start_time;
-      double d_into_phase_2 = start_pos + phase_2_start_dist;
-      sample.pos = d_into_phase_2 + max_vel * t_into_phase_2;
-      sample.vel = phase_2_start_vel;
-      sample.accel = 0;
-    } else {
-      // Phase 3
-      double t_into_phase_3 = t - phase_3_start_time;
-      double d_into_phase_3 = start_pos + phase_3_start_dist;
-      sample.pos = d_into_phase_3 + t_into_phase_3 * max_vel - 1.0 / 2.0 * max_accel *
-        t_into_phase_3 * t_into_phase_3;
-      sample.vel = phase_3_start_vel - t_into_phase_3 * max_accel;
-      sample.accel = -max_accel;
-    }
-
-    output.samples.push_back(sample);
+  // Add offset start pos
+  for (auto & sample : output.samples) {
+    sample.pos += start_pos;
   }
 
   if (invert) {
