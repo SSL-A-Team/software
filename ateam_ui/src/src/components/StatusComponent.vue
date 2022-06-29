@@ -66,16 +66,38 @@ export default {
                     y: [.6, .6, 1.5, 1.5]
                 }
 
-                //TODO: I think the order of the binary dots is wrong
+                // Order:
+                // - front left
+                // - front right
+                // - back left
+                // - back right
+                let color_patterns = new Map([
+                    [0, "PPGP"],
+                    [1, "GPGP"],
+                    [2, "GGGP"],
+                    [3, "PGGP"],
+                    [4, "PPPG"],
+                    [5, "GPPG"],
+                    [6, "GGPG"],
+                    [7, "PGPG"],
+                    [8, "GGGG"],
+                    [9, "PPPP"],
+                    [10, "PPGG"],
+                    [11, "GGPP"],
+                    [12, "GPGG"],
+                    [13, "GPPP"],
+                    [14, "PGGG"],
+                    [15, "PGPP"]
+                ]);
 
-                // Draw id circles
-                const id = "000"+this.attrs.r_id.toString(2);
+                let id_pattern = color_patterns.get(this.attrs.r_id)
+
                 for (var i = 0; i < 4; i++) {
                     ctx.beginPath();
                     ctx.arc(pos.x[i]*sr, pos.y[i]*sr, sr/5, 0, 2*Math.PI);
                     ctx.closePath();
 
-                    ctx.fillStyle = id[id.length - 1 - i] == "0" ? 'DeepPink' : 'LawnGreen';
+                    ctx.fillStyle = id_pattern[i] == "P" ? 'DeepPink' : 'LawnGreen';
                     ctx.fill();
                 }
             }
