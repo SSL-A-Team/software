@@ -18,44 +18,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_
-#define BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_
+#ifndef TRAJECTORY_GENERATION__TRAPEZOIDAL_MOTION_PROFILE_HPP_
+#define TRAJECTORY_GENERATION__TRAPEZOIDAL_MOTION_PROFILE_HPP_
 
 #include <Eigen/Dense>
 
-#include <variant>
 #include <vector>
 
-struct Sample3d
-{
-  double time;  // T=0 is now
-  Eigen::Vector3d pose;
-  Eigen::Vector3d vel;
-  Eigen::Vector3d accel;
-};
-struct Trajectory
-{
-  // TODO(jneiger): Flesh out the trajectory structure more based on Kyle's requirements
-  std::vector<Sample3d> samples;  // First element is current time/state
-};
-struct DribblerAndKickerBehavior {};
+#include "behavior/behavior_feedback.hpp"
 
-struct KickFeedback {};
-struct ReceiveFeedback {};
-struct ShotFeedback {};
-struct ReceiveShotFeedback {};
-struct MoveFeedback {};
-struct CostFeedback {};
-
-struct BehaviorFeedback
+namespace TrapezoidalMotionProfile
 {
-  std::optional<int> assigned_robot_id;
-  Trajectory trajectory;
-  DribblerAndKickerBehavior dribbler_and_kicker_behavior;
+/**
+ * Generate a trapezoidal motion profile given the initial and final states
+ * and the vel/accel limits for 3 DOF
+ */
+Trajectory Generate3d(
+  const Eigen::Vector3d & start, const Eigen::Vector3d & start_vel,
+  const Eigen::Vector3d & end, const Eigen::Vector3d & end_vel,
+  const Eigen::Vector3d & max_vel_limits,
+  const Eigen::Vector3d & max_accel_limits,
+  const double dt);
 
-  using SpecificFeedback = std::variant<KickFeedback, ReceiveFeedback, ShotFeedback,
-      ReceiveFeedback, MoveFeedback, CostFeedback>;
-  std::variant<SpecificFeedback> specific_feedback;
+struct Sample1d
+{
+  double time;  // T=0 is current time
+  double pos;
+  double vel;
+  double accel;
 };
 
-#endif  // BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_
+struct Trajectory1d
+{
+  std::vector<Sample1d> samples;  // First element is at start pos
+};
+
+/**
+ * Generate a 1d trapezoidal motion for a single dimension
+ */
+Trajectory1d Generate1d(
+  double start_pos, double start_vel, double end_pos, double end_vel,
+  const double max_vel, const double max_accel, const double dt);
+}  // namespace TrapezoidalMotionProfile
+
+#endif  // TRAJECTORY_GENERATION__TRAPEZOIDAL_MOTION_PROFILE_HPP_

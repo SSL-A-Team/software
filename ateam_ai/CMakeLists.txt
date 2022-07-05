@@ -25,6 +25,8 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior.hpp
   src/trajectory_generation/trajectory_generation.cpp
   src/trajectory_generation/trajectory_generation.hpp
+  src/trajectory_generation/trapezoidal_motion_profile.cpp
+  src/trajectory_generation/trapezoidal_motion_profile.hpp
   src/types/ball.hpp
   src/types/field.hpp
   src/types/referee_info.hpp
@@ -33,7 +35,7 @@ add_library(${PROJECT_NAME} SHARED
   src/util/directed_graph.hpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
@@ -50,6 +52,14 @@ install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(${PROJECT_NAME}_test
+    test/trajectory_generation/trapezoidal_motion_profile_test.cpp
+  )
+  target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
+  target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
+  set_target_properties(${PROJECT_NAME}_test PROPERTIES CXX_STANDARD 20)
 endif()
 
 ament_package()
