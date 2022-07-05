@@ -20,6 +20,7 @@
 
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
 
+#include <algorithm>
 #include <numeric>
 
 namespace TrapezoidalMotionProfile
@@ -162,11 +163,10 @@ Trajectory1d sample_trapezoidal_profile(
   const TrapezoidalCoeffs coeffs, const double accel_limit,
   const double dt)
 {
-  const auto sq = [](const double x) {return x * x;};
-  const auto position = [sq](const double t, const double v_initial, const double a) {
-      return v_initial * t + 1. / 2. * a * sq(t);
+  const auto position = [](const double t, const double v_initial, const double a) {
+      return v_initial * t + 1. / 2. * a * std::pow(t, 2);
     };
-  const auto velocity = [sq](const double t, const double v_initial, const double a) {
+  const auto velocity = [](const double t, const double v_initial, const double a) {
       return v_initial + a * t;
     };
 
@@ -343,9 +343,12 @@ Trajectory1d Generate1d(
   Trajectory1d output = sample_trapezoidal_profile(trapezoidal_coeffs, max_accel, dt);
 
   // Add offset start pos
-  for (auto & sample : output.samples) {
-    sample.pos += start_pos;
-  }
+  std::for_each(
+    output.samples.begin(),
+    output.samples.end(),
+    [start_pos](Sample1d & sample) {
+      sample.pos += start_pos;
+    });
 
   if (invert) {
     for (auto & sample : output.samples) {
