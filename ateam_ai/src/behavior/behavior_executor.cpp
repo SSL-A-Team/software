@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 #include "behavior/behavior_executor.hpp"
-
+#include <iostream>
 #include "behavior/behavior_feedback.hpp"
 
 BehaviorExecutor::BehaviorExecutor(BehaviorRealization & behavior_realization)
@@ -49,23 +49,31 @@ BehaviorExecutor::RobotMotionCommands BehaviorExecutor::execute_behaviors(
 
   // Send commands down to motion control
   RobotMotionCommands robot_motion_commands;
-  for (std::size_t id = 0; id < robot_motion_commands.size(); id++) {
-    // Note: This abuses the way the behaviors are supposed to be executed
-    // This is just a placeholder for now
-    Eigen::Vector2d target = std::get<MoveParam>(
-      behaviors.get_node(
-        behaviors.get_root_nodes().front()).params).target_location;
+  for (const auto & root_id : behavior_feedback.get_root_nodes()) {
+    // Assume there are no children for now
+    const auto & root_node = behavior_feedback.get_node(root_id);
 
-    Eigen::Vector2d command = (target - world.our_robots.at(id).value_or(Robot()).pos);
+    // If the behavior is assigned a robot
+    if (root_node.assigned_robot_id.has_value()) {
+      std::size_t robot_id = root_node.assigned_robot_id.value();
 
-    if (command.norm() > 1) {
-      command.normalize();
+      Sample3d command;
+      if (root_node.trajectory.samples.size() >= 2) {
+        command = root_node.trajectory.samples.at(1);  // Where I want to be next frame
+      } else if (root_node.trajectory.samples.size() == 1) {
+        // Already at target since only sample is current position
+        command = root_node.trajectory.samples.front();
+      } else {
+        continue;
+      }
+
+      ateam_msgs::msg::RobotMotionCommand motion_command;
+      // Constant chosen to minimize overshoot due to vision lag + no motion controller
+      motion_command.twist.linear.x = 0.85 * command.vel.x();
+      motion_command.twist.linear.y = 0.85 * command.vel.y();
+      motion_command.twist.angular.z = 0;
+      robot_motion_commands.at(robot_id) = motion_command;
     }
-
-    ateam_msgs::msg::RobotMotionCommand motion_command;
-    motion_command.twist.linear.x = command.x();
-    motion_command.twist.linear.y = command.y();
-    robot_motion_commands.at(id) = motion_command;
   }
 
   return robot_motion_commands;
