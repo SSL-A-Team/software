@@ -20,6 +20,8 @@
 
 #include "trajectory_generation/trajectory_generation.hpp"
 
+#include "trajectory_generation/trapezoidal_motion_profile.hpp"
+
 BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
   Behavior behavior, int assigned_robot, const World & world)
 {
@@ -28,35 +30,54 @@ BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
   switch (behavior.type) {
     case Behavior::Type::MovingKick:
     case Behavior::Type::PivotKick:
-      feedback.trajectory.target_point = std::get<KickParam>(behavior.params).target_location;
+      // std::get<KickParam>(behavior.params).target_location;
       break;
 
     case Behavior::Type::OneTouchReceiveKick:
     case Behavior::Type::TwoTouchReceiveKick:
-      feedback.trajectory.target_point = std::get<ReceiveParam>(behavior.params).receive_location;
+      // std::get<ReceiveParam>(behavior.params).receive_location;
       break;
 
     case Behavior::Type::Shot:
-      feedback.trajectory.target_point = Eigen::Vector2d{0, 0};
       break;
 
     case Behavior::Type::OneTouchShot:
-      feedback.trajectory.target_point =
-        std::get<ReceiveShotParam>(behavior.params).receive_location;
+      // std::get<ReceiveShotParam>(behavior.params).receive_location;
       break;
 
     case Behavior::Type::MoveToPoint:
-      feedback.trajectory.target_point = std::get<MoveParam>(behavior.params).target_location;
+      {
+        Eigen::Vector3d current, current_vel, target, target_vel;
+        current.x() = world.our_robots.at(assigned_robot).value().pos.x();
+        current.y() = world.our_robots.at(assigned_robot).value().pos.y();
+        current.z() = 0;  // world.our_robots.at(assigned_robot).value().theta;
+        current_vel.x() = world.our_robots.at(assigned_robot).value().vel.x();
+        current_vel.y() = world.our_robots.at(assigned_robot).value().vel.y();
+        current_vel.z() = 0;  // world.our_robots.at(assigned_robot).value().omega;
+
+        target.x() = std::get<MoveParam>(behavior.params).target_location.x();
+        target.y() = std::get<MoveParam>(behavior.params).target_location.y();
+        target.z() = 0;
+        target_vel.x() = 0;
+        target_vel.y() = 0;
+        target_vel.z() = 0;
+        Eigen::Vector3d max_vel{2, 2, 0.5};  // TODO(jneiger): Set as params
+        Eigen::Vector3d max_accel{2, 2, 0.5};
+        double dt = 0.01;  // TODO(jneiger): Feed this down from above
+        feedback.trajectory = TrapezoidalMotionProfile::Generate3d(
+          current, current_vel, target,
+          target_vel, max_vel, max_accel,
+          dt);
+      }
       break;
 
     case Behavior::Type::CostFunctionPoint:
-      feedback.trajectory.target_point = Eigen::Vector2d{0, 0};
       break;
 
     default:
-      feedback.trajectory.target_point = Eigen::Vector2d{0, 0};
       break;
   }
 
+  feedback.assigned_robot_id = assigned_robot;
   return feedback;
 }
