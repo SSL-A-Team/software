@@ -13,7 +13,7 @@
    cd ateam_ws
    mkdir src
    cd src
-   git clone git@github.com:SSL-A-Team/software.git
+   git clone --recursive git@github.com:SSL-A-Team/software.git
    ```
 
 1. Install our ROS dependencies
