@@ -38,7 +38,7 @@ Trajectory Generate3d(
   const Eigen::Vector3d & end, const Eigen::Vector3d & end_vel,
   const Eigen::Vector3d & max_vel_limits,
   const Eigen::Vector3d & max_accel_limits,
-  const double dt);
+  const double dt, const double current_time);
 
 struct Sample1d
 {

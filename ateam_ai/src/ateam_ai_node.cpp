@@ -139,7 +139,11 @@ private:
   void timer_callback()
   {
     std::lock_guard<std::mutex> lock(world_mutex_);
-    DirectedGraph<Behavior> current_behaviors;
+
+    //
+    // Preproccess world
+    //
+    world_.current_time += 0.01;
 
     //
     // Plan behavior

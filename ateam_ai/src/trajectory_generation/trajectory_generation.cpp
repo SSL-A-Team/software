@@ -67,7 +67,7 @@ BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
         feedback.trajectory = TrapezoidalMotionProfile::Generate3d(
           current, current_vel, target,
           target_vel, max_vel, max_accel,
-          dt);
+          dt, world.current_time);
       }
       break;
 

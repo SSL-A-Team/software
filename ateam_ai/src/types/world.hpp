@@ -39,6 +39,8 @@ struct BehaviorExecutorState
 
 struct World
 {
+  double current_time = 0.0;  // s
+
   Field field;
   RefereeInfo referee_info;
 
