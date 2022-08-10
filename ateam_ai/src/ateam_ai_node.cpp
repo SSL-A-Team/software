@@ -35,6 +35,7 @@
 #include "behavior/behavior_feedback.hpp"
 #include "behavior/behavior_evaluator.hpp"
 #include "behavior/behavior_executor.hpp"
+#include "behavior/behavior_follower.hpp"
 #include "behavior/behavior_realization.hpp"
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
@@ -103,6 +104,7 @@ private:
   BehaviorRealization realization_;
   BehaviorEvaluator evaluator_;
   BehaviorExecutor executor_;
+  BehaviorFollower follower_;
   std::mutex world_mutex_;
   World world_;
 
@@ -139,8 +141,14 @@ private:
     std::lock_guard<std::mutex> lock(world_mutex_);
     DirectedGraph<Behavior> current_behaviors;
 
-    current_behaviors = evaluator_.get_best_behaviors(world_);
-    auto robot_motion_commands = executor_.execute_behaviors(current_behaviors, world_);
+    //
+    // Plan behavior
+    //
+    auto current_behaviors = evaluator_.get_best_behaviors(world_);
+    auto current_trajectories = executor_.execute_behaviors(
+      current_behaviors, world_,
+      world_.behavior_executor_state);
+    auto robot_motion_commands = follower_.follow(current_trajectories, world_);
 
     send_all_motion_commands(robot_motion_commands);
   }

@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#ifndef BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+#define BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
@@ -32,25 +32,21 @@
 #include "util/directed_graph.hpp"
 
 /**
- * Given a set of behaviors
- *  - Replan trajectories as their start time approaches
- *  - Manage the trajectories
+ * Given trajectories as a function of time
+ *  - Follow them as best as possible
  */
-class BehaviorExecutor
+class BehaviorFollower
 {
 public:
   using MaybeRobotMotionCommand = std::optional<ateam_msgs::msg::RobotMotionCommand>;
   using RobotMotionCommands = std::array<MaybeRobotMotionCommand, 16>;
 
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
-
-  std::array<std::optional<Trajectory>, 16> execute_behaviors(
-    const DirectedGraph<Behavior> & behaviors,
-    const World & world,
-    BehaviorExecutorState & self_state);
+  RobotMotionCommands follow(
+    const std::array<std::optional<Trajectory>, 16> & robot_trajectories,
+    World & world);
 
 private:
-  BehaviorRealization & behavior_realization;
+  static Sample3d get_next_command(const Trajectory & t, double current_time);
 };
 
-#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#endif  // BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
