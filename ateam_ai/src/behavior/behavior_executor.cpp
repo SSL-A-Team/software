@@ -64,17 +64,17 @@ std::array<std::optional<Trajectory>, 16> BehaviorExecutor::execute_behaviors(
       Trajectory trajectory = root_node.trajectory;
       std::size_t assigned_robot = root_node.assigned_robot_id.value();
 
-      Sample3d command;
-      if (root_node.trajectory.samples.size() >= 2) {
-        command = root_node.trajectory.samples.at(1);  // Where I want to be next frame
-      } else if (root_node.trajectory.samples.size() == 1) {
-        // Already at target since only sample is current position
-        command = root_node.trajectory.samples.front();
-      } else {
-        continue;
+      if (self_state.previous_trajectories.at(assigned_robot).has_value()) {
+        const double immutable_duration = 0.1;
+        const double dt = 0.01;
+        trajectory = trajectory_editor::apply_immutable_duration(
+          self_state.previous_trajectories.at(assigned_robot).value(),
+          trajectory,
+          immutable_duration,
+          dt, world.current_time);
       }
 
-      output_trajectories.at(assigned_robot) = root_node.trajectory;
+      output_trajectories.at(root_node.assigned_robot_id.value()) = root_node.trajectory;
       self_state.previous_trajectories.at(assigned_robot) = trajectory;
     }
   }

@@ -26,6 +26,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+#include <array>
 #include <chrono>
 #include <functional>
 #include <mutex>
@@ -37,6 +38,7 @@
 #include "behavior/behavior_executor.hpp"
 #include "behavior/behavior_follower.hpp"
 #include "behavior/behavior_realization.hpp"
+#include "trajectory_generation/trajectory_editor.hpp"
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
@@ -107,6 +109,7 @@ private:
   BehaviorFollower follower_;
   std::mutex world_mutex_;
   World world_;
+  std::array<std::optional<Trajectory>, 16> previous_frame_trajectories;
 
   void robot_state_callback(
     std::array<std::optional<Robot>, 16> & robot_states,
@@ -144,6 +147,19 @@ private:
     // Preproccess world
     //
     world_.current_time += 0.01;
+    for (int i = 0; i < 16; i++) {
+      // Estimate of how long it will take for the round trip of
+      // Command -> Radio -> Robot -> Motion -> Vision change
+      const double immutable_duration = 0.1;
+      const auto & maybe_trajectory = previous_frame_trajectories.at(i);
+      if (maybe_trajectory.has_value()) {
+        world_.plan_from_our_robots.at(i) = trajectory_editor::state_at_immutable_duration(
+          maybe_trajectory.value(),
+          immutable_duration, world_.current_time);
+      } else {
+        world_.plan_from_our_robots.at(i) = world_.our_robots.at(i);
+      }
+    }
 
     //
     // Plan behavior
@@ -155,6 +171,11 @@ private:
     auto robot_motion_commands = follower_.follow(current_trajectories, world_);
 
     send_all_motion_commands(robot_motion_commands);
+
+    //
+    // Cleanup for next frame
+    //
+    previous_frame_trajectories = current_trajectories;
   }
 
   void send_all_motion_commands(

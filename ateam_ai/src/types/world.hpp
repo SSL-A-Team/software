@@ -57,6 +57,8 @@ struct World
   std::array<std::optional<Robot>, 16> our_robots;
   std::array<std::optional<Robot>, 16> their_robots;
 
+  std::array<std::optional<Robot>, 16> plan_from_our_robots;
+
   BehaviorExecutorState behavior_executor_state;
 };
 
