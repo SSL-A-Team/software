@@ -49,6 +49,10 @@ std::array<std::optional<Trajectory>, 16> BehaviorExecutor::execute_behaviors(
   // Send trajectories to follow
   //
 
+  // Clear world trajectories
+  for (auto & trajectory : self_state.previous_trajectories) {
+    trajectory.reset();
+  }
 
   std::array<std::optional<Trajectory>, 16> output_trajectories;
   for (const auto & root_id : behavior_feedback.get_root_nodes()) {
@@ -71,6 +75,7 @@ std::array<std::optional<Trajectory>, 16> BehaviorExecutor::execute_behaviors(
       }
 
       output_trajectories.at(assigned_robot) = root_node.trajectory;
+      self_state.previous_trajectories.at(assigned_robot) = trajectory;
     }
   }
 

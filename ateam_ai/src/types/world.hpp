@@ -31,6 +31,12 @@
 #include "types/referee_info.hpp"
 #include "types/robot.hpp"
 
+struct BehaviorExecutorState
+{
+  // Trajectory of each robot last frame
+  std::array<std::optional<Trajectory>, 16> previous_trajectories;
+};
+
 struct World
 {
   Field field;
@@ -48,6 +54,8 @@ struct World
   std::vector<Ball> balls;
   std::array<std::optional<Robot>, 16> our_robots;
   std::array<std::optional<Robot>, 16> their_robots;
+
+  BehaviorExecutorState behavior_executor_state;
 };
 
 #endif  // TYPES__WORLD_HPP_
