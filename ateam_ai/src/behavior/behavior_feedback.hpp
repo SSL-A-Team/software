@@ -28,7 +28,7 @@
 
 struct Sample3d
 {
-  double time;  // T=0 is now
+  double time;
   Eigen::Vector3d pose;
   Eigen::Vector3d vel;
   Eigen::Vector3d accel;
