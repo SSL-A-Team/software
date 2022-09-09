@@ -35,14 +35,14 @@ Trajectory crop_trajectory(const Trajectory & a, double new_start_time, double n
 /**
  * Given two trajectories |a| and |b|, place |a| before |b|, with no editing of sample time
  */
-Trajectory append_trajectory(const Trajectory & a, const Trajectory & b, double time_step);
+Trajectory append_trajectory(const Trajectory & a, const Trajectory & b);
 
 /**
  * Prepends only the initial |immutable_duration| from |last_frame_trajectory| in front of |this_frame_trajectory|
  */
 Trajectory apply_immutable_duration(
   const Trajectory & last_frame_trajectory, const Trajectory & this_frame_trajectory,
-  double immutable_duration, double time_step, double current_time);
+  double immutable_duration, double current_time);
 
 /**
  * Returns the robot state at the last sample before we can change our plan

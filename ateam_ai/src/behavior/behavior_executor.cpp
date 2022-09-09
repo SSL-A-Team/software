@@ -66,12 +66,11 @@ std::array<std::optional<Trajectory>, 16> BehaviorExecutor::execute_behaviors(
 
       if (self_state.previous_trajectories.at(assigned_robot).has_value()) {
         const double immutable_duration = 0.1;
-        const double dt = 0.01;
         trajectory = trajectory_editor::apply_immutable_duration(
           self_state.previous_trajectories.at(assigned_robot).value(),
           trajectory,
           immutable_duration,
-          dt, world.current_time);
+          world.current_time);
       }
 
       output_trajectories.at(root_node.assigned_robot_id.value()) = root_node.trajectory;

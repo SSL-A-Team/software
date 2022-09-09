@@ -112,7 +112,7 @@ TEST(trajectory_editor, append_trajectory_ShouldEmpty_WhenBothEmpty)
   Trajectory a;
   Trajectory b;
 
-  Trajectory ret = trajectory_editor::append_trajectory(a, b, 1);
+  Trajectory ret = trajectory_editor::append_trajectory(a, b);
 
   ASSERT_TRUE(ret.samples.empty());
 }
@@ -123,7 +123,7 @@ TEST(trajectory_editor, append_trajectory_ShouldA_WhenBEmpty)
   a.samples.push_back({.time = 0});
   Trajectory b;
 
-  Trajectory ret = trajectory_editor::append_trajectory(a, b, 1);
+  Trajectory ret = trajectory_editor::append_trajectory(a, b);
 
   ASSERT_EQ(ret.samples.size(), 1);
 }
@@ -134,7 +134,7 @@ TEST(trajectory_editor, append_trajectory_ShouldB_WhenAEmpty)
   Trajectory b;
   b.samples.push_back({.time = 0});
 
-  Trajectory ret = trajectory_editor::append_trajectory(a, b, 1);
+  Trajectory ret = trajectory_editor::append_trajectory(a, b);
 
   ASSERT_EQ(ret.samples.size(), 1);
 }
@@ -146,7 +146,7 @@ TEST(trajectory_editor, append_trajectory_ShouldBoth_WhenBothFilled)
   a.samples.push_back({.time = 0});
   b.samples.push_back({.time = 0});
 
-  Trajectory ret = trajectory_editor::append_trajectory(a, b, 1);
+  Trajectory ret = trajectory_editor::append_trajectory(a, b);
 
   ASSERT_EQ(ret.samples.size(), 2);
 }
@@ -160,7 +160,7 @@ TEST(trajectory_editor, append_trajectory_ShouldIncreaseInTime_WhenBothNoneZero)
   b.samples.push_back({.time = 8});
   b.samples.push_back({.time = 9});
 
-  Trajectory ret = trajectory_editor::append_trajectory(a, b, 1);
+  Trajectory ret = trajectory_editor::append_trajectory(a, b);
 
   ASSERT_EQ(ret.samples.size(), 4);
   EXPECT_EQ(ret.samples.at(0).time, -10);

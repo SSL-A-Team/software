@@ -35,15 +35,11 @@ Trajectory trajectory_editor::crop_trajectory(
 }
 
 Trajectory trajectory_editor::append_trajectory(
-  const Trajectory & a, const Trajectory & b,
-  double /**time_step**/)
+  const Trajectory & a, const Trajectory & b)
 {
   Trajectory output = a;
 
-  // double final_a_time = a.samples.empty() ? 0 : a.samples.back().time;
-  // double initial_b_time = b.samples.empty() ? 0 : b.samples.front().time;
   for (auto sample : b.samples) {
-    // sample.time = sample.time - initial_b_time + time_step + final_a_time;
     output.samples.push_back(sample);
   }
 
@@ -54,13 +50,12 @@ Trajectory trajectory_editor::apply_immutable_duration(
   const Trajectory & last_frame_trajectory,
   const Trajectory & this_frame_trajectory,
   double immutable_duration,
-  double time_step,
   double current_time)
 {
   Trajectory first = crop_trajectory(
     last_frame_trajectory, current_time,
     current_time + immutable_duration);
-  Trajectory output = append_trajectory(first, this_frame_trajectory, time_step);
+  Trajectory output = append_trajectory(first, this_frame_trajectory);
 
   return output;
 }
