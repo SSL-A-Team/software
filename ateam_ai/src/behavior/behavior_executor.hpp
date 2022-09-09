@@ -34,7 +34,7 @@
 /**
  * Given a set of behaviors
  *  - Replan trajectories as their start time approaches
- *  - Manage/Follow the trajectories
+ *  - Manage the trajectories
  */
 class BehaviorExecutor
 {
@@ -44,9 +44,10 @@ public:
 
   explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
 
-  RobotMotionCommands execute_behaviors(
+  std::array<std::optional<Trajectory>, 16> execute_behaviors(
     const DirectedGraph<Behavior> & behaviors,
-    const World & world);
+    const World & world,
+    BehaviorExecutorState & self_state);
 
 private:
   BehaviorRealization & behavior_realization;

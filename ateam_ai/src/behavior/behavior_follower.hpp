@@ -18,48 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+#define BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
 
-#ifndef TYPES__WORLD_HPP_
-#define TYPES__WORLD_HPP_
+#include <rclcpp/rclcpp.hpp>
+#include <ateam_msgs/msg/robot_motion_command.hpp>
 
-#include <optional>
 #include <array>
-#include <vector>
 
-#include "types/ball.hpp"
-#include "types/field.hpp"
-#include "types/referee_info.hpp"
-#include "types/robot.hpp"
+#include "behavior/behavior.hpp"
+#include "behavior/behavior_realization.hpp"
+#include "types/world.hpp"
+#include "util/directed_graph.hpp"
 
-struct BehaviorExecutorState
+/**
+ * Given trajectories as a function of time
+ *  - Follow them as best as possible
+ */
+class BehaviorFollower
 {
-  // Trajectory of each robot last frame
-  std::array<std::optional<Trajectory>, 16> previous_trajectories;
+public:
+  using MaybeRobotMotionCommand = std::optional<ateam_msgs::msg::RobotMotionCommand>;
+  using RobotMotionCommands = std::array<MaybeRobotMotionCommand, 16>;
+
+  RobotMotionCommands follow(
+    const std::array<std::optional<Trajectory>, 16> & robot_trajectories,
+    World & world);
+
+private:
+  static Sample3d get_next_command(const Trajectory & t, double current_time);
 };
 
-struct World
-{
-  double current_time = 0.0;  // s
-
-  Field field;
-  RefereeInfo referee_info;
-
-  std::optional<Ball> get_unique_ball() const
-  {
-    if (balls.size() == 1) {
-      return balls.front();
-    } else {
-      return std::nullopt;
-    }
-  }
-
-  std::vector<Ball> balls;
-  std::array<std::optional<Robot>, 16> our_robots;
-  std::array<std::optional<Robot>, 16> their_robots;
-
-  std::array<std::optional<Robot>, 16> plan_from_our_robots;
-
-  BehaviorExecutorState behavior_executor_state;
-};
-
-#endif  // TYPES__WORLD_HPP_
+#endif  // BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_

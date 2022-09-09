@@ -19,15 +19,17 @@
 // THE SOFTWARE.
 
 #include "behavior/behavior_executor.hpp"
-#include <iostream>
+
 #include "behavior/behavior_feedback.hpp"
+#include "trajectory_generation/trajectory_editor.hpp"
 
 BehaviorExecutor::BehaviorExecutor(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
 
-BehaviorExecutor::RobotMotionCommands BehaviorExecutor::execute_behaviors(
+std::array<std::optional<Trajectory>, 16> BehaviorExecutor::execute_behaviors(
   const DirectedGraph<Behavior> & behaviors,
-  const World & world)
+  const World & world,
+  BehaviorExecutorState & self_state)
 {
   //
   // Grab trajectories for everything
@@ -41,40 +43,40 @@ BehaviorExecutor::RobotMotionCommands BehaviorExecutor::execute_behaviors(
 
   // Long term planning (>10 seconds) is not valid due to the speed of robots
   // as we approach some of the later behaviors in time, we need to replan them
-  // using better planners to dodge these obsticles and everything
+  // using better planners to dodge these obstacles and everything
 
   //
-  // Follow trajectories
+  // Send trajectories to follow
   //
 
-  // Send commands down to motion control
-  RobotMotionCommands robot_motion_commands;
+  // Clear world trajectories
+  for (auto & trajectory : self_state.previous_trajectories) {
+    trajectory.reset();
+  }
+
+  std::array<std::optional<Trajectory>, 16> output_trajectories;
   for (const auto & root_id : behavior_feedback.get_root_nodes()) {
     // Assume there are no children for now
     const auto & root_node = behavior_feedback.get_node(root_id);
 
     // If the behavior is assigned a robot
     if (root_node.assigned_robot_id.has_value()) {
-      std::size_t robot_id = root_node.assigned_robot_id.value();
+      Trajectory trajectory = root_node.trajectory;
+      std::size_t assigned_robot = root_node.assigned_robot_id.value();
 
-      Sample3d command;
-      if (root_node.trajectory.samples.size() >= 2) {
-        command = root_node.trajectory.samples.at(1);  // Where I want to be next frame
-      } else if (root_node.trajectory.samples.size() == 1) {
-        // Already at target since only sample is current position
-        command = root_node.trajectory.samples.front();
-      } else {
-        continue;
+      if (self_state.previous_trajectories.at(assigned_robot).has_value()) {
+        const double immutable_duration = 0.1;
+        trajectory = trajectory_editor::apply_immutable_duration(
+          self_state.previous_trajectories.at(assigned_robot).value(),
+          trajectory,
+          immutable_duration,
+          world.current_time);
       }
 
-      ateam_msgs::msg::RobotMotionCommand motion_command;
-      // Constant chosen to minimize overshoot due to vision lag + no motion controller
-      motion_command.twist.linear.x = 0.85 * command.vel.x();
-      motion_command.twist.linear.y = 0.85 * command.vel.y();
-      motion_command.twist.angular.z = 0;
-      robot_motion_commands.at(robot_id) = motion_command;
+      output_trajectories.at(root_node.assigned_robot_id.value()) = root_node.trajectory;
+      self_state.previous_trajectories.at(assigned_robot) = trajectory;
     }
   }
 
-  return robot_motion_commands;
+  return output_trajectories;
 }

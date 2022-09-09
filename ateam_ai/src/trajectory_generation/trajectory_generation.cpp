@@ -20,6 +20,7 @@
 
 #include "trajectory_generation/trajectory_generation.hpp"
 
+#include "trajectory_generation/trajectory_editor.hpp"
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
 
 BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
@@ -47,13 +48,15 @@ BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
 
     case Behavior::Type::MoveToPoint:
       {
+        Robot current_robot = world.plan_from_our_robots.at(assigned_robot).value();
+
         Eigen::Vector3d current, current_vel, target, target_vel;
-        current.x() = world.our_robots.at(assigned_robot).value().pos.x();
-        current.y() = world.our_robots.at(assigned_robot).value().pos.y();
-        current.z() = 0;  // world.our_robots.at(assigned_robot).value().theta;
-        current_vel.x() = world.our_robots.at(assigned_robot).value().vel.x();
-        current_vel.y() = world.our_robots.at(assigned_robot).value().vel.y();
-        current_vel.z() = 0;  // world.our_robots.at(assigned_robot).value().omega;
+        current.x() = current_robot.pos.x();
+        current.y() = current_robot.pos.y();
+        current.z() = 0;  // current_robot.theta;
+        current_vel.x() = current_robot.vel.x();
+        current_vel.y() = current_robot.vel.y();
+        current_vel.z() = 0;  // current_robot.omega;
 
         target.x() = std::get<MoveParam>(behavior.params).target_location.x();
         target.y() = std::get<MoveParam>(behavior.params).target_location.y();
@@ -64,10 +67,12 @@ BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
         Eigen::Vector3d max_vel{2, 2, 0.5};  // TODO(jneiger): Set as params
         Eigen::Vector3d max_accel{2, 2, 0.5};
         double dt = 0.01;  // TODO(jneiger): Feed this down from above
-        feedback.trajectory = TrapezoidalMotionProfile::Generate3d(
+        Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
           current, current_vel, target,
           target_vel, max_vel, max_accel,
-          dt);
+          dt, world.current_time);
+
+        feedback.trajectory = trajectory;
       }
       break;
 

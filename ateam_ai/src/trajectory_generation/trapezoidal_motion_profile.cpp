@@ -30,7 +30,7 @@ Trajectory Generate3d(
   const Eigen::Vector3d & end, const Eigen::Vector3d & end_vel,
   const Eigen::Vector3d & max_vel_limits,
   const Eigen::Vector3d & max_accel_limits,
-  const double dt)
+  const double dt, const double current_time)
 {
   // Independently plan for each DOF
   std::array<Trajectory1d, 3> trajectories;
@@ -45,7 +45,7 @@ Trajectory Generate3d(
   Trajectory output;
 
   std::size_t t_idx = 0;
-  double t = 0;
+  double t = current_time;
   bool is_more_left = true;
   while (is_more_left) {
     is_more_left = false;
