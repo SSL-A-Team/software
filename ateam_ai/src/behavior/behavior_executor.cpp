@@ -43,7 +43,7 @@ std::array<std::optional<Trajectory>, 16> BehaviorExecutor::execute_behaviors(
 
   // Long term planning (>10 seconds) is not valid due to the speed of robots
   // as we approach some of the later behaviors in time, we need to replan them
-  // using better planners to dodge these obsticles and everything
+  // using better planners to dodge these obstacles and everything
 
   //
   // Send trajectories to follow
