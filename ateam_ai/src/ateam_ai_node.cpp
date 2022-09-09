@@ -147,17 +147,17 @@ private:
     // Preproccess world
     //
     world_.current_time += 0.01;
-    for (int i = 0; i < 16; i++) {
+    for (std::size_t robot_id = 0; robot_id < 16; robot_id++) {
       // Estimate of how long it will take for the round trip of
       // Command -> Radio -> Robot -> Motion -> Vision change
       const double immutable_duration = 0.1;
-      const auto & maybe_trajectory = previous_frame_trajectories.at(i);
+      const auto & maybe_trajectory = previous_frame_trajectories.at(robot_id);
       if (maybe_trajectory.has_value()) {
-        world_.plan_from_our_robots.at(i) = trajectory_editor::state_at_immutable_duration(
+        world_.plan_from_our_robots.at(robot_id) = trajectory_editor::state_at_immutable_duration(
           maybe_trajectory.value(),
           immutable_duration, world_.current_time);
       } else {
-        world_.plan_from_our_robots.at(i) = world_.our_robots.at(i);
+        world_.plan_from_our_robots.at(robot_id) = world_.our_robots.at(robot_id);
       }
     }
 
