@@ -75,13 +75,15 @@ DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors(const World & worl
   // ones we can fill later
   DirectedGraph<Behavior> simple_move;
   static double j = 0;
-  j += 0.002;
+  j += 0.005;
   for (int i = 0; i < 16; i++) {
     double theta = i / 11.0 * 3.14 * 2 + j;
     Behavior move{
       Behavior::Type::MoveToPoint,
       Behavior::Priority::Required,
-      MoveParam(Eigen::Vector2d{cos(theta) - 2, sin(theta)})};
+      MoveParam(
+        (sin(3 * theta) + 1.5) * Eigen::Vector2d{cos(theta), sin(
+            theta)} - Eigen::Vector2d{2, 0})};
 
     simple_move.add_node(move);
   }

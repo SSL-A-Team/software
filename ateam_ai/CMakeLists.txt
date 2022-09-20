@@ -20,9 +20,13 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior_executor.cpp
   src/behavior/behavior_executor.hpp
   src/behavior/behavior_feedback.hpp
+  src/behavior/behavior_follower.cpp
+  src/behavior/behavior_follower.hpp
   src/behavior/behavior_realization.cpp
   src/behavior/behavior_realization.hpp
   src/behavior/behavior.hpp
+  src/trajectory_generation/trajectory_editor.cpp
+  src/trajectory_generation/trajectory_editor.hpp
   src/trajectory_generation/trajectory_generation.cpp
   src/trajectory_generation/trajectory_generation.hpp
   src/trajectory_generation/trapezoidal_motion_profile.cpp
@@ -55,6 +59,7 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(${PROJECT_NAME}_test
+    test/trajectory_generation/trajectory_editor_test.cpp
     test/trajectory_generation/trapezoidal_motion_profile_test.cpp
   )
   target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
