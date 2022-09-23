@@ -78,7 +78,7 @@ public:
       State x_eps_n = x;
       x_eps_p(i) += eps;
       x_eps_n(i) -= eps;
-      out(i) = (cost(x_eps_p, u, t) - cost(x_eps_n, u, t)) / (2*eps);
+      out(i) = (cost(x_eps_p, u, t) - cost(x_eps_n, u, t)) / (2 * eps);
     }
 
     for (std::size_t i = 0; i < U; i++) {
@@ -86,7 +86,7 @@ public:
       Input u_eps_n = u;
       u_eps_p(i) += eps;
       u_eps_n(i) -= eps;
-      out(i + X) = (cost(x, u_eps_p, t) - cost(x, u_eps_n, t)) / (2*eps);
+      out(i + X) = (cost(x, u_eps_p, t) - cost(x, u_eps_n, t)) / (2 * eps);
     }
 
     return out;
@@ -113,11 +113,8 @@ public:
 
   Trajectory calculate(const State & initial_state)
   {
-    std::cout << "Forward rollout" << std::endl;
     forward_rollout(initial_state);
-    std::cout << "Backward pass" << std::endl;
     backward_pass();
-    std::cout << "Return" << std::endl;
 
     return trajectory;
   }
@@ -148,8 +145,6 @@ private:
       g.at(t) = gradiant(trajectory.at(t), actions.at(t), t);
       h.at(t) = hessian(trajectory.at(t), actions.at(t), t, g.at(t));
     }
-
-    std::cout << "Initial cost " << overall_cost << std::endl;
   }
 
   void backward_pass()
@@ -165,9 +160,6 @@ private:
       Hessian Q_ddxu;
       State v_dx = g.back().block(0, 0, X, 1);  // Derivative of V(x)
       Eigen::Matrix<double, X, X> v_ddx = h.back().block(0, 0, X, X);
-      // std::cout << "g.at(t).block(0, 0, X, 1) " << g.back().block(0, 0, X, 1).norm() << std::endl;
-      // std::cout << "j.at(t).block(0, 0, X, 1) " << j.back().block(0, 0, X, X).norm() << std::endl;
-      // std::cout << "h.at(t).block(0, 0, X, 1) " << h.back().block(0, 0, X, X).norm() << std::endl;
 
       k.at(T - 1).setZero();
       K.at(T - 1).setZero();
@@ -203,7 +195,10 @@ private:
           j.at(t).block(0, X, X, U);
 
         // eq 5b
-        Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, U, U>> eigensolver(Q_ddxu.block(X, X, U, U));
+        // Solve inverse with regulization to keep it from exploding
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, U, U>> eigensolver(Q_ddxu.block(
+            X, X, U,
+            U));
         if (eigensolver.info() != Eigen::Success) {
           std::cout << "Failed to solve eigen vectors" << std::endl;
           abort();
@@ -220,14 +215,6 @@ private:
         }
         Eigen::Matrix<double, U, U> eigen_vecs = eigensolver.eigenvectors();
         Eigen::Matrix<double, U, U> inv = eigen_vecs * eigen_vals_diag * eigen_vecs.transpose();
-        // std::cout << "T " << t << std::endl;
-        // std::cout << "Inv norm " << inv.norm() << std::endl;
-        // std::cout << "Q_ddxu.block(X, X, U, U) " << Q_ddxu.block(X, X, U, U).norm() << std::endl;
-        // std::cout << "v_ddx.block(0, 0, X, X) " << v_ddx.block(0, 0, X, X).norm() << std::endl;
-        // std::cout << "K " << v_ddx.block(0, 0, X, X).norm() << std::endl;
-        // std::cout << "g.at(t).block(0, 0, X, 1) " << g.at(t).block(0, 0, X, 1).norm() << std::endl;
-        // std::cout << "j.at(t).block(0, 0, X, 1) " << j.at(t).block(0, 0, X, X).norm() << std::endl;
-        // std::cout << "h.at(t).block(0, 0, X, 1) " << h.at(t).block(0, 0, X, X).norm() << std::endl;
 
         k.at(t) = -1 * inv * Q_dxu.block(X, 0, U, 1);
         K.at(t) = -1 * inv * Q_ddxu.block(X, 0, U, X);
@@ -253,11 +240,6 @@ private:
         test_actions.at(t) = actions.at(t) + k.at(t) + K.at(t) *
           (test_trajectory.at(t) - trajectory.at(t));
         test_cost = cost(test_trajectory.at(t), test_actions.at(t), t);
-      }
-
-      std::cout << "test_cost " << test_cost << std::endl;
-      for (const auto& a : test_trajectory) {
-        std::cout << a.x() << std::endl;
       }
 
       // Step 4: Compare Costs and update update size
@@ -287,7 +269,6 @@ private:
 
       num_iterations++;
     }
-    std::cout << "Iterations taken " << num_iterations << std::endl;
   }
 
   static constexpr std::size_t max_num_iterations = 1000;
