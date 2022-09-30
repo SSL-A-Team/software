@@ -21,6 +21,7 @@
 #ifndef TRAJECTORY_GENERATION__ILQR_PROBLEM_HPP_
 #define TRAJECTORY_GENERATION__ILQR_PROBLEM_HPP_
 
+#include <optional>
 #include <Eigen/Dense>
 #include <iostream>
 
@@ -111,12 +112,14 @@ public:
     return out;
   }
 
-  Trajectory calculate(const State & initial_state)
+  std::optional<Trajectory> calculate(const State & initial_state)
   {
     forward_rollout(initial_state);
-    backward_pass();
-
-    return trajectory;
+    if (backward_pass()) {
+      return trajectory;
+    } else {
+      return std::nullopt;
+    }
   }
 
 private:
@@ -130,7 +133,7 @@ private:
     // Step 1: Forward Rollout
     trajectory.front() = initial_state;
     actions.front().setZero();
-    overall_cost = cost(trajectory.at(0), actions.at(0), 0);
+    overall_cost = cost(trajectory.front(), actions.front(), 0);
 
     for (Time t = 1; t < T; t++) {
       trajectory.at(t) = dynamics(trajectory.at(t - 1), actions.at(t - 1), t);
@@ -147,11 +150,9 @@ private:
     }
   }
 
-  void backward_pass()
+  bool backward_pass()
   {
-    std::size_t num_iterations = 0;
-
-    while (num_iterations < max_num_iterations) {
+    for (std::size_t num_iterations = 0; num_iterations < max_num_iterations; num_iterations++) {
       // Step 3: Determine best control signal update
       Feedforwards k;
       Feedbacks K;
@@ -201,7 +202,7 @@ private:
             U));
         if (eigensolver.info() != Eigen::Success) {
           std::cout << "Failed to solve eigen vectors" << std::endl;
-          abort();
+          return false;
         }
         Eigen::Matrix<double, U, 1> eigen_vals = eigensolver.eigenvalues();
         Eigen::Matrix<double, U, U> eigen_vals_diag;
@@ -230,9 +231,9 @@ private:
       Cost test_cost;
       Trajectory test_trajectory;
       Actions test_actions;
-      test_trajectory.at(0) = trajectory.at(0);
-      test_actions.at(0) = actions.at(0) + k.at(0);  // xhat_0 == x_0 so Kt term goes away
-      test_cost = cost(test_trajectory.at(0), test_actions.at(0), 0);
+      test_trajectory.front() = trajectory.front();
+      test_actions.front() = actions.front() + k.front();  // xhat_0 == x_0 so Kt term goes away
+      test_cost = cost(test_trajectory.front(), test_actions.front(), 0);
       for (Time t = 1; t < T; t++) {
         test_trajectory.at(t) = dynamics(
           test_trajectory.at(
@@ -249,7 +250,7 @@ private:
 
         // If we converge, just return
         if (std::abs(test_cost - overall_cost) / test_cost < converge_threshold) {
-          return;
+          return true;
         }
 
         overall_cost = test_cost;
@@ -266,9 +267,9 @@ private:
       } else {
         alpha /= alpha_change;
       }
-
-      num_iterations++;
     }
+
+    return true;
   }
 
   static constexpr std::size_t max_num_iterations = 1000;
