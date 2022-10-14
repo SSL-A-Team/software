@@ -37,6 +37,8 @@ add_library(${PROJECT_NAME} SHARED
   src/types/referee_info.hpp
   src/types/robot.hpp
   src/types/world.hpp
+  src/util/message_conversions.cpp
+  src/util/message_conversions.hpp
   src/util/directed_graph.hpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src)
