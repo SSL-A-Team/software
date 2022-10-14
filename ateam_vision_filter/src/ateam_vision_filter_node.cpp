@@ -21,10 +21,13 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
+#include <ateam_common/topic_names.hpp>
+
 #include <chrono>
 #include <functional>
 #include <mutex>
 #include <iostream>
+#include <string>
 
 #include "world.hpp"
 #include "message_conversions.hpp"
@@ -43,21 +46,21 @@ public:
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
     ball_publisher_ = create_publisher<ateam_msgs::msg::BallState>(
-      "~/ball",
+      std::string(Topics::kBall),
       rclcpp::SystemDefaultsQoS());
 
     for (std::size_t id = 0; id < blue_robots_publisher_.size(); id++) {
       blue_robots_publisher_.at(id) = create_publisher<ateam_msgs::msg::RobotState>(
-        "~/blue_team/robot" + std::to_string(id),
+        std::string(Topics::kBlueTeamRobotPrefix) + std::to_string(id),
         rclcpp::SystemDefaultsQoS());
       yellow_robots_publisher_.at(id) = create_publisher<ateam_msgs::msg::RobotState>(
-        "~/yellow_team/robot" + std::to_string(id),
+        std::string(Topics::kYellowTeamRobotPrefix) + std::to_string(id),
         rclcpp::SystemDefaultsQoS());
     }
 
     ssl_vision_subscription_ =
       create_subscription<ssl_league_msgs::msg::VisionWrapper>(
-      "/ssl_vision_bridge/vision_messages",
+      std::string(Topics::kVisionMessages),
       10,
       std::bind(&VisionFilterNode::message_callback, this, std::placeholders::_1));
   }

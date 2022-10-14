@@ -22,6 +22,7 @@
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/protobuf_logging.hpp>
+#include <ateam_common/topic_names.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
 #include <memory>
 #include <string>
@@ -39,7 +40,7 @@ public:
     SET_ROS_PROTOBUF_LOG_HANDLER("gc_multicast_bridge.protobuf");
 
     referee_publisher_ = create_publisher<ssl_league_msgs::msg::Referee>(
-      "~/referee_messages",
+      std::string(Topics::kRefereeMessages),
       rclcpp::SystemDefaultsQoS());
 
     const auto multicast_address =

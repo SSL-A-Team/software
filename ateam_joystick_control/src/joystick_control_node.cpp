@@ -20,6 +20,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include <string>
@@ -35,7 +36,7 @@ public:
   : rclcpp::Node("joystick_control_node", options)
   {
     joy_subscription_ = create_subscription<sensor_msgs::msg::Joy>(
-      "~/joy", rclcpp::QoS{1}, std::bind(
+      std::string(Topics::kJoystick), rclcpp::QoS{1}, std::bind(
         &JoystickControlNode::JoyCallback, this,
         std::placeholders::_1));
     command_topic_template_ = declare_parameter<std::string>("command_topic_template", "");

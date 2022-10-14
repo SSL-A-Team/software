@@ -20,6 +20,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
@@ -30,7 +31,7 @@
 #include <chrono>
 #include <functional>
 #include <mutex>
-
+#include <string>
 
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_feedback.hpp"
@@ -66,18 +67,18 @@ public:
           robot_state_callback(world_.their_robots, id, robot_state_msg);
         };
       blue_robots_subscriptions_.at(id) = create_subscription<ateam_msgs::msg::RobotState>(
-        "/vision_filter/blue_team/robot" + std::to_string(id),
+        std::string(Topics::kBlueTeamRobotPrefix) + std::to_string(id),
         10,
         our_robot_callback);
       yellow_robots_subscriptions_.at(id) = create_subscription<ateam_msgs::msg::RobotState>(
-        "/vision_filter/yellow_team/robot" + std::to_string(id),
+        std::string(Topics::kYellowTeamRobotPrefix) + std::to_string(id),
         10,
         their_robot_callback);
     }
 
     for (std::size_t id = 0; id < robot_commands_publishers_.size(); id++) {
       robot_commands_publishers_.at(id) = create_publisher<ateam_msgs::msg::RobotMotionCommand>(
-        "~/robot_motion_commands/robot" + std::to_string(id),
+        std::string(Topics::kRobotMotionCommandPrefix) + std::to_string(id),
         rclcpp::SystemDefaultsQoS());
     }
 
@@ -85,7 +86,7 @@ public:
         ball_state_callback(world_.balls.at(0), ball_state_msg);
       };
     ball_subscription_ = create_subscription<ateam_msgs::msg::BallState>(
-      "/vision_filter/ball",
+      std::string(Topics::kBall),
       10,
       ball_callback);
 
