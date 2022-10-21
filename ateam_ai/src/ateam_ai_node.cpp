@@ -20,6 +20,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ateam_common/parameters.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
@@ -30,7 +31,6 @@
 #include <chrono>
 #include <functional>
 #include <mutex>
-
 
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_feedback.hpp"
@@ -53,6 +53,7 @@ public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_ai_node", options), evaluator_(realization_), executor_(realization_)
   {
+    REGISTER_NODE_PARAMS(this);
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.balls.emplace_back(Ball{});
 

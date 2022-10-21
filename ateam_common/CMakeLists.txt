@@ -14,6 +14,7 @@ find_package(Protobuf REQUIRED)
 add_library(${PROJECT_NAME} SHARED
   src/multicast_receiver.cpp
   src/bi_directional_udp.cpp
+  src/parameters.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
