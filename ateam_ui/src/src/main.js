@@ -40,8 +40,8 @@ for (var team in vm.state.teams) {
             team: team,
             pose: {
                 position: {
-                    x: (70*(i+xoffset)) - (70*(numVisible-1)/2),
-                    y: (120*yoffset) - 60
+                    x: vm.renderConfig.scale * 0.23 * (i+xoffset - ((numVisible-1)/2)),
+                    y: vm.renderConfig.scale * (0.4*yoffset) - 0.2
                 },
                 orientation: {}
             },
