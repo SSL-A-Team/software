@@ -24,12 +24,10 @@
 #include <vector>
 #include <cmath>
 
-#include "behavior/behavior_feedback.hpp"
-
 BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
 
-DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors(const World & world)
+DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & world)
 {
   //
   // Do preprocessing on world state to get important metrics like possession
@@ -63,8 +61,8 @@ DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors(const World & worl
   // parent = three_one_touch_shot.add_node(final_receiver_shot, parent);
 
 
-  // DirectedGraph<Behavior> direct_shot;
-  // Behavior shot{
+  // DirectedGraph<BehaviorGoal> direct_shot;
+  // BehaviorGoal shot{
   //   Behavior::Type::Shot,
   //   Behavior::Priority::Required,
   //   ShotParam()};
@@ -73,14 +71,14 @@ DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors(const World & worl
 
   // Generate 16 move behaviors towards the ball, we'll figure out which
   // ones we can fill later
-  DirectedGraph<Behavior> simple_move;
+  DirectedGraph<BehaviorGoal> simple_move;
   static double j = 0;
   j += 0.005;
   for (int i = 0; i < 16; i++) {
     double theta = i / 11.0 * 3.14 * 2 + j;
-    Behavior move{
-      Behavior::Type::MoveToPoint,
-      Behavior::Priority::Required,
+    BehaviorGoal move{
+      BehaviorGoal::Type::MoveToPoint,
+      BehaviorGoal::Priority::Required,
       MoveParam(
         (sin(3 * theta) + 1.5) * Eigen::Vector2d{cos(theta), sin(
             theta)} - Eigen::Vector2d{2, 0})};
@@ -133,7 +131,7 @@ DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors(const World & worl
   // choose direct shot because score chance is better or
   // maybe the total behavior completetion time is short
   // or maybe the other one can't be completed due to number of robots
-  DirectedGraph<Behavior> behavior_out = /**direct_shot**/ simple_move;
+  DirectedGraph<BehaviorGoal> behavior_out = simple_move;
 
   return behavior_out;
 }

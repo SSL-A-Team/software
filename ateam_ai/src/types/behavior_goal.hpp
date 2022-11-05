@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_HPP_
-#define BEHAVIOR__BEHAVIOR_HPP_
+#ifndef TYPES__BEHAVIOR_GOAL_HPP_
+#define TYPES__BEHAVIOR_GOAL_HPP_
 
 #include <Eigen/Dense>
 
@@ -68,7 +68,7 @@ struct CostParam
   std::optional<std::function<Eigen::Vector2d(Eigen::Vector2d)>> gradient;
 };
 
-struct Behavior
+struct BehaviorGoal
 {
   enum Type
   {
@@ -101,8 +101,8 @@ struct Behavior
   Params params;
 
   // TODO(jneiger): Add type<->param checking for consistency
-  Behavior(Type type, Priority priority, Params params)
+  BehaviorGoal(Type type, Priority priority, Params params)
   : type(type), priority(priority), params(params) {}
 };
 
-#endif  // BEHAVIOR__BEHAVIOR_HPP_
+#endif  // TYPES__BEHAVIOR_GOAL_HPP_

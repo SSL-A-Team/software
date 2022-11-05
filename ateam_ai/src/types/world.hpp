@@ -39,6 +39,7 @@ struct BehaviorExecutorState
 
 struct World
 {
+  const double immutable_duration = 0.1;  // s
   double current_time = 0.0;  // s
 
   Field field;

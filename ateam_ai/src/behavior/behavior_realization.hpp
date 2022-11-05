@@ -21,11 +21,10 @@
 #ifndef BEHAVIOR__BEHAVIOR_REALIZATION_HPP_
 #define BEHAVIOR__BEHAVIOR_REALIZATION_HPP_
 
-#include <queue>
+#include <map>
 
-#include "behavior/behavior.hpp"
-#include "behavior/behavior_feedback.hpp"
-#include "trajectory_generation/trajectory_generation.hpp"
+#include "types/behavior_goal.hpp"
+#include "types/behavior_plan.hpp"
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
@@ -38,12 +37,14 @@
 class BehaviorRealization
 {
 public:
-  DirectedGraph<BehaviorFeedback> realize_behaviors(
-    const DirectedGraph<Behavior> & behaviors,
+  DirectedGraph<BehaviorPlan> realize_behaviors(
+    const DirectedGraph<BehaviorGoal> & behaviors,
     const World & world);
 
 private:
-  TrajectoryGeneration trajectory_generation;
+  std::map<std::size_t, BehaviorGoal> assign_to_behaviors(
+    const DirectedGraph<BehaviorGoal> & behaviors, const World & world);
+  std::size_t next_avaliable_robot_id(const std::size_t last_assigned_id, const World & world);
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_REALIZATION_HPP_

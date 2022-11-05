@@ -18,47 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TRAJECTORY_GENERATION__TRAPEZOIDAL_MOTION_PROFILE_HPP_
-#define TRAJECTORY_GENERATION__TRAPEZOIDAL_MOTION_PROFILE_HPP_
+#ifndef TYPES__BEHAVIOR_PLAN_HPP_
+#define TYPES__BEHAVIOR_PLAN_HPP_
 
-#include <Eigen/Dense>
-
+#include <optional>
 #include <vector>
 
 #include "types/trajectory.hpp"
 
-namespace TrapezoidalMotionProfile
-{
-/**
- * Generate a trapezoidal motion profile given the initial and final states
- * and the vel/accel limits for 3 DOF
- */
-Trajectory Generate3d(
-  const Eigen::Vector3d & start, const Eigen::Vector3d & start_vel,
-  const Eigen::Vector3d & end, const Eigen::Vector3d & end_vel,
-  const Eigen::Vector3d & max_vel_limits,
-  const Eigen::Vector3d & max_accel_limits,
-  const double dt, const double current_time);
+struct KickFeedback {};
+struct ReceiveFeedback {};
+struct ShotFeedback {};
+struct ReceiveShotFeedback {};
+struct MoveFeedback {};
+struct CostFeedback {};
 
-struct Sample1d
+struct BehaviorPlan
 {
-  double time;  // T=0 is current time
-  double pos;
-  double vel;
-  double accel;
+  std::optional<int> assigned_robot_id;
+  Trajectory trajectory;
+  DribblerAndKickerBehavior dribbler_and_kicker_behavior;
+
+  using SpecificFeedback = std::variant<KickFeedback, ReceiveFeedback, ShotFeedback,
+      ReceiveFeedback, MoveFeedback, CostFeedback>;
+  std::variant<SpecificFeedback> specific_feedback;
 };
 
-struct Trajectory1d
-{
-  std::vector<Sample1d> samples;  // First element is at start pos
-};
-
-/**
- * Generate a 1d trapezoidal motion for a single dimension
- */
-Trajectory1d Generate1d(
-  double start_pos, double start_vel, double end_pos, double end_vel,
-  const double max_vel, const double max_accel, const double dt);
-}  // namespace TrapezoidalMotionProfile
-
-#endif  // TRAJECTORY_GENERATION__TRAPEZOIDAL_MOTION_PROFILE_HPP_
+#endif  // TYPES__BEHAVIOR_PLAN_HPP_

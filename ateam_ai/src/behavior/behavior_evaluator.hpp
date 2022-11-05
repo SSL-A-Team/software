@@ -23,8 +23,8 @@
 
 #include <vector>
 
-#include "behavior/behavior.hpp"
 #include "behavior/behavior_realization.hpp"
+#include "types/behavior_goal.hpp"
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
 
@@ -36,7 +36,7 @@ class BehaviorEvaluator
 public:
   explicit BehaviorEvaluator(BehaviorRealization & behavior_realization);
 
-  DirectedGraph<Behavior> get_best_behaviors(const World & world);
+  DirectedGraph<BehaviorGoal> get_best_behaviors(const World & world);
 
 private:
   BehaviorRealization & behavior_realization;
