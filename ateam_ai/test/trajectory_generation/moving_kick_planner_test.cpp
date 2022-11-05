@@ -18,44 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "trajectory_generation/ilqr_problem.hpp"
+#include "trajectory_generation/moving_kick_planner.hpp"
 
 #include <gtest/gtest.h>
 #include <iostream>
 
-constexpr int num_samples = 100;
-constexpr double dt = 0.1;
-class PointMass1dProblem : public iLQRProblem<2, 1, num_samples>
+TEST(moving_kick_planner, SamplePointMass)
 {
-public:
-  State dynamics(const State & x_t1, const Input & u_t1, Time t) override
-  {
-    Eigen::Matrix<double, 2, 2> A; A << 0, 1, 0, 0;
-    Eigen::Matrix<double, 2, 1> B; B << 0, 1;
+  Robot r;
+  r.pos = Eigen::Vector2d{10, 15};
 
-    return x_t1 + dt * (A * x_t1 + B * u_t1);
+  World w;
+  Ball b;
+  b.pos = Eigen::Vector2d{3, 4};
+  w.balls.emplace_back(b);
+
+  Trajectory t = moving_kick_planner::PlanMovingKick(r, 0.1, w);
+
+
+  for (const auto & item : t.samples) {
+    std::cout << item.pose.x() << " " << item.pose.y() << " : " << item.vel.x() << " " << item.vel.y() <<std::endl;
   }
-
-  Cost cost(const State & x, const Input & u, Time t) override
-  {
-    constexpr double final_gain = 1e6;
-    if (t == num_samples - 1) {
-      Eigen::Vector2d target{10, 0};
-      Eigen::Vector2d weights{1, 1};
-      return final_gain * (target - x).dot(target - x);
-    } else {
-      return dt * u.dot(u);
-    }
-  }
-};
-
-TEST(iLQRProblem, SamplePointMass)
-{
-  PointMass1dProblem problem;
-  auto maybe_trajectory = problem.calculate(Eigen::Vector2d{0, 0});
-
-
-  ASSERT_TRUE(maybe_trajectory.has_value());
-  EXPECT_NEAR(maybe_trajectory.value().back().x(), 10, 1e-1);
-  EXPECT_NEAR(maybe_trajectory.value().back().y(), 0, 1e-4);
+  EXPECT_FALSE(true);
 }

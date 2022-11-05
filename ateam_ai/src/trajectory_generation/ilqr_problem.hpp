@@ -271,9 +271,9 @@ private:
     return false;
   }
 
-  static constexpr std::size_t max_num_iterations = 10000;
+  static constexpr std::size_t max_num_iterations = 100;
   static constexpr double converge_threshold = 1e-6;
-  static constexpr double alpha_change = 0.1;
+  static constexpr double alpha_change = 0.9;
   static constexpr double eps = 1e-6;
 
   double alpha = 1;  // backtracking serach parameter

@@ -116,8 +116,14 @@ Trajectory PlanMovingKick(
   current_vel.z() = 0;  // current_robot.omega;
 
   auto maybe_ball = world.get_unique_ball();
+  Trajectory empty;
+  Sample3d sample;
+  sample.time = world.current_time + plan_from_offset;
+  sample.pose = current;
+  sample.vel = current_vel;
+  empty.samples.push_back(sample);
   if (!maybe_ball.has_value()) {
-    return Trajectory();
+    return empty;
   }
   target.x() = maybe_ball.value().pos.x();
   target.y() = maybe_ball.value().pos.y();
@@ -125,8 +131,8 @@ Trajectory PlanMovingKick(
   target_vel.x() = 0;
   target_vel.y() = 0;
   target_vel.z() = 0;
-  Eigen::Vector3d max_vel{2, 2, 0.5};  // TODO(jneiger): Set as params
-  Eigen::Vector3d max_accel{2, 2, 0.5};
+  Eigen::Vector3d max_vel{5, 5, 0.5};  // TODO(jneiger): Set as params
+  Eigen::Vector3d max_accel{5, 5, 0.5};
   Trajectory t = TrapezoidalMotionProfile::Generate3d(
     current, current_vel, target,
     target_vel, max_vel, max_accel,
@@ -135,42 +141,51 @@ Trajectory PlanMovingKick(
   std::array<Eigen::Matrix<double, 6, 1>, kNumSamples> state;
   std::array<Eigen::Matrix<double, 3, 1>, kNumSamples> input;
   int i = 0;
+  Eigen::Vector3d prev_vel;
   for (const auto& sample : t.samples) {
     if (i >= kNumSamples) {
       break;
     }
-    state.at(i)(0) = current.x();
-    state.at(i)(2) = current.y();
-    state.at(i)(4) = current.z();
-    state.at(i)(1) = current_vel.x();
-    state.at(i)(3) = current_vel.y();
-    state.at(i)(5) = current_vel.z();
+    state.at(i)(0) = sample.pose.x();
+    state.at(i)(2) = sample.pose.y();
+    state.at(i)(4) = sample.pose.z();
+    state.at(i)(1) = sample.vel.x();
+    state.at(i)(3) = sample.vel.y();
+    state.at(i)(5) = sample.vel.z();
     
-    input.at(i)(0) = current_vel.x();
-    input.at(i)(1) = current_vel.y();
-    input.at(i)(2) = current_vel.z();
+    input.at(i)(0) = sample.accel.x();
+    input.at(i)(1) = sample.accel.y();
+    input.at(i)(2) = sample.accel.z();
+    prev_vel = sample.vel;
     i++;
+    //std::cout << sample.pose.x() << " "  << sample.pose.y() << " : " <<sample.vel.x() << " "  <<sample.vel.y() << std::endl;
+  }
+  for (;i < kNumSamples; i++) {
+    state.at(i) = state.at(i - 1);
+    input.at(i) = 0*input.at(i - 1);
   }
 
   Eigen::Matrix<double, 6, 1> plan_from_state;
   plan_from_state <<
-    world.our_robots.at(1).value().pos.x(),
-    world.our_robots.at(1).value().vel.x(),
-    world.our_robots.at(1).value().pos.y(),
-    world.our_robots.at(1).value().vel.y(),
+    plan_from.pos.x(),
+    plan_from.vel.x(),
+    plan_from.pos.y(),
+    plan_from.vel.y(),
     plan_from.theta,
     plan_from.omega;
   MovingKickProblem problem;
   problem.actions = input;
-  problem.target << maybe_ball.value().pos.x(), maybe_ball.value().pos.y(), 0, 0, 0, 0;
+  problem.target << target.x(), target_vel.x(),
+                    target.y(), target_vel.y(),
+                    target.z(), target_vel.z();
   auto maybe_trajectory = problem.calculate(plan_from_state);
 
   if (!maybe_trajectory.has_value()) {
-    return Trajectory();
+    return empty;
   }
 
   Trajectory trajectory;
-  double current_time = world.current_time;
+  double current_time = world.current_time + plan_from_offset;
   Eigen::Vector3d prevvel{0,0,0};
   double mv = 0;
   for (const auto & state : maybe_trajectory.value()) {

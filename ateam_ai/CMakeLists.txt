@@ -63,6 +63,7 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(${PROJECT_NAME}_test
+    test/trajectory_generation/moving_kick_planner_test.cpp
     test/trajectory_generation/ilqr_problem_test.cpp
     test/trajectory_generation/trajectory_editor_test.cpp
     test/trajectory_generation/trapezoidal_motion_profile_test.cpp

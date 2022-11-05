@@ -161,8 +161,8 @@
 
             <v-circle ref="ball" :config="{
                                  renderConfig: renderConfig,
-                                 x: state.ball.pose.position.x,
-                                 y: state.ball.pose.position.y,
+                                 x: state.ball.pose.position.x * 256,
+                                 y: state.ball.pose.position.y * 256,
                                  visible: state.ball.visible,
                                  radius: .022 * renderConfig.scale,
                                  fill: 'orange',
