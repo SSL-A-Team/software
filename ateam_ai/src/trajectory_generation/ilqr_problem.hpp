@@ -74,20 +74,17 @@ public:
   {
     Gradiant out;
 
+    Cost c = cost(x, u, t);
     for (std::size_t i = 0; i < X; i++) {
       State x_eps_p = x;
-      State x_eps_n = x;
       x_eps_p(i) += eps;
-      x_eps_n(i) -= eps;
-      out(i) = (cost(x_eps_p, u, t) - cost(x_eps_n, u, t)) / (2 * eps);
+      out(i) = (cost(x_eps_p, u, t) - c) / (eps);
     }
 
     for (std::size_t i = 0; i < U; i++) {
       Input u_eps_p = u;
-      Input u_eps_n = u;
       u_eps_p(i) += eps;
-      u_eps_n(i) -= eps;
-      out(i + X) = (cost(x, u_eps_p, t) - cost(x, u_eps_n, t)) / (2 * eps);
+      out(i + X) = (cost(x, u_eps_p, t) - c) / (eps);
     }
 
     return out;
@@ -122,6 +119,8 @@ public:
     }
   }
 
+  Trajectory trajectory;
+  Actions actions;
 private:
   using Jacobians = std::array<Jacobian, T>;
   using Hessians = std::array<Hessian, T>;
@@ -132,12 +131,12 @@ private:
   {
     // Step 1: Forward Rollout
     trajectory.front() = initial_state;
-    actions.front().setZero();
+    //actions.front().setZero();
     overall_cost = cost(trajectory.front(), actions.front(), 0);
 
     for (Time t = 1; t < T; t++) {
       trajectory.at(t) = dynamics(trajectory.at(t - 1), actions.at(t - 1), t);
-      actions.at(t).setZero();
+      //actions.at(t).setZero();
       overall_cost += cost(trajectory.at(t), actions.at(t), t);
     }
 
@@ -269,17 +268,15 @@ private:
       }
     }
 
-    return true;
+    return false;
   }
 
-  static constexpr std::size_t max_num_iterations = 1000;
+  static constexpr std::size_t max_num_iterations = 10000;
   static constexpr double converge_threshold = 1e-6;
-  static constexpr double alpha_change = 0.99;
-  static constexpr double eps = 1e-3;
+  static constexpr double alpha_change = 0.1;
+  static constexpr double eps = 1e-6;
 
   double alpha = 1;  // backtracking serach parameter
-  Trajectory trajectory;
-  Actions actions;
 
   Jacobians j;
   Gradiants g;

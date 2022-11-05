@@ -20,6 +20,8 @@
 
 #include "trajectory_generation/trajectory_generation.hpp"
 
+#include <iostream>
+#include "trajectory_generation/moving_kick_planner.hpp"
 #include "trajectory_generation/trajectory_editor.hpp"
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
 
@@ -31,8 +33,15 @@ BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
   switch (behavior.type) {
     case Behavior::Type::MovingKick:
     case Behavior::Type::PivotKick:
+    {
       // std::get<KickParam>(behavior.params).target_location;
-      break;
+      Robot current_robot = world.plan_from_our_robots.at(assigned_robot).value();
+
+      Trajectory trajectory = moving_kick_planner::PlanMovingKick(current_robot, 0.1, world);
+
+      feedback.trajectory = trajectory;
+    }
+    break;
 
     case Behavior::Type::OneTouchReceiveKick:
     case Behavior::Type::TwoTouchReceiveKick:
@@ -66,11 +75,11 @@ BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
         target_vel.z() = 0;
         Eigen::Vector3d max_vel{2, 2, 0.5};  // TODO(jneiger): Set as params
         Eigen::Vector3d max_accel{2, 2, 0.5};
-        double dt = 0.01;  // TODO(jneiger): Feed this down from above
+        double dt = 0.1;  // TODO(jneiger): Feed this down from above
         Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
           current, current_vel, target,
           target_vel, max_vel, max_accel,
-          dt, world.current_time);
+          dt, world.current_time + 0.1);
 
         feedback.trajectory = trajectory;
       }
@@ -79,7 +88,9 @@ BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
     case Behavior::Type::CostFunctionPoint:
       break;
 
-    default:
+    default: {
+    std::cout << "Ooops default" << std::endl;
+    }
       break;
   }
 

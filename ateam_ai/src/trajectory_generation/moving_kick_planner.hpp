@@ -18,49 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef TRAJECTORY_GENERATION__MOVING_KICK_PLANNER_HPP_
+#define TRAJECTORY_GENERATION__MOVING_KICK_PLANNER_HPP_
 
-#ifndef TYPES__WORLD_HPP_
-#define TYPES__WORLD_HPP_
-
-#include <optional>
-#include <array>
-#include <vector>
-
-#include "behavior/behavior_feedback.hpp"
-#include "types/ball.hpp"
-#include "types/field.hpp"
-#include "types/referee_info.hpp"
 #include "types/robot.hpp"
+#include "types/world.hpp"
+#include "behavior/behavior_feedback.hpp"
 
-struct BehaviorExecutorState
-{
-  // Trajectory of each robot last frame
-  std::array<std::optional<Trajectory>, 16> previous_trajectories;
-};
+namespace moving_kick_planner {
 
-struct World
-{
-  double current_time = 0.0;  // s
+Trajectory PlanMovingKick(
+  const Robot & plan_from,
+  const double plan_from_offset,
+  const World & world);
 
-  Field field;
-  RefereeInfo referee_info;
+}
 
-  std::optional<Ball> get_unique_ball() const
-  {
-    if (balls.size() == 1) {
-      return balls.front();
-    } else {
-      return std::nullopt;
-    }
-  }
-
-  std::vector<Ball> balls;
-  std::array<std::optional<Robot>, 16> our_robots;
-  std::array<std::optional<Robot>, 16> their_robots;
-
-  std::array<std::optional<Robot>, 16> plan_from_our_robots;
-
-  BehaviorExecutorState behavior_executor_state;
-};
-
-#endif  // TYPES__WORLD_HPP_
+#endif  // TRAJECTORY_GENERATION__MOVING_KICK_PLANNER_HPP_

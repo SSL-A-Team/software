@@ -89,7 +89,7 @@ public:
       10,
       ball_callback);
 
-    timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
+    timer_ = create_wall_timer(100ms, std::bind(&ATeamAINode::timer_callback, this));
   }
 
 private:
@@ -146,7 +146,7 @@ private:
     //
     // Preproccess world
     //
-    world_.current_time += 0.01;
+    world_.current_time += 0.1;
     for (std::size_t robot_id = 0; robot_id < 16; robot_id++) {
       // Estimate of how long it will take for the round trip of
       // Command -> Radio -> Robot -> Motion -> Vision change

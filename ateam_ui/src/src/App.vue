@@ -17,7 +17,7 @@
 <script lang="js">
 import FieldComponent from './components/FieldComponent.vue'
 import StatusComponent from './components/StatusComponent.vue'
-import RefButtonsComponent from './components/RefButtonsComponent.vue'
+//import RefButtonsComponent from './components/RefButtonsComponent.vue'
 import { provide } from 'vue'
 
 export default {
@@ -83,7 +83,7 @@ export default {
     components: {
     FieldComponent,
     StatusComponent,
-    RefButtonsComponent
+    //RefButtonsComponent
 }
 }
 

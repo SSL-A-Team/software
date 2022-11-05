@@ -37,11 +37,12 @@ BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
 
     Sample3d command = get_next_command(maybe_trajectory.value(), world.current_time);
 
+    double p = 0.1;
     ateam_msgs::msg::RobotMotionCommand motion_command;
     motion_command.twist.linear.x = command.vel.x() +
-      (command.pose.x() - world.our_robots.at(robot_id).value().pos.x());
+      p*(command.pose.x() - world.our_robots.at(robot_id).value().pos.x());
     motion_command.twist.linear.y = command.vel.y() +
-      (command.pose.y() - world.our_robots.at(robot_id).value().pos.y());
+      p*(command.pose.y() - world.our_robots.at(robot_id).value().pos.y());
     motion_command.twist.angular.z = 0;
     robot_motion_commands.at(robot_id) = motion_command;
   }

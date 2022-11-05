@@ -74,9 +74,16 @@ DirectedGraph<Behavior> BehaviorEvaluator::get_best_behaviors(const World & worl
   // Generate 16 move behaviors towards the ball, we'll figure out which
   // ones we can fill later
   DirectedGraph<Behavior> simple_move;
+
+  Behavior moving_kick{
+    Behavior::Type::MovingKick,
+    Behavior::Priority::Required,
+    KickParam({10, 10})};
+  simple_move.add_node(moving_kick);
+
   static double j = 0;
   j += 0.005;
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 15; i++) {
     double theta = i / 11.0 * 3.14 * 2 + j;
     Behavior move{
       Behavior::Type::MoveToPoint,

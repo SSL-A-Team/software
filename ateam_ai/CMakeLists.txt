@@ -4,6 +4,7 @@ project(ateam_ai)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
+add_compile_options(-Wall -Wextra -Wpedantic -O3)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -25,6 +26,8 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior_realization.cpp
   src/behavior/behavior_realization.hpp
   src/behavior/behavior.hpp
+  src/trajectory_generation/moving_kick_planner.hpp
+  src/trajectory_generation/moving_kick_planner.cpp
   src/trajectory_generation/ilqr_problem.hpp
   src/trajectory_generation/trajectory_editor.cpp
   src/trajectory_generation/trajectory_editor.hpp
