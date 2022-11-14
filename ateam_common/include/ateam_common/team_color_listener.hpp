@@ -18,43 +18,54 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
-#define ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
+#ifndef ATEAM_COMMON__TEAM_COLOR_LISTENER_HPP_
+#define ATEAM_COMMON__TEAM_COLOR_LISTENER_HPP_
 
-#include <boost/asio.hpp>
-
-#include <functional>
+#include <rclcpp/rclcpp.hpp>
+#include <ssl_league_msgs/msg/referee.hpp>
 #include <string>
 
 namespace ateam_common
 {
-class BiDirectionalUDP
+
+/**
+ * @brief Utility for subscribing to referee messages and extracting our team color
+ *
+ */
+class TeamColorListener
 {
 public:
-  using ReceiveCallback = std::function<void (const uint8_t * const data, const size_t length)>;
+  enum class TeamColor
+  {
+    Unknown,
+    Yellow,
+    Blue
+  };
 
-  BiDirectionalUDP(
-    const std::string & udp_ip_address,
-    const int16_t udp_port,
-    ReceiveCallback receive_callback);
+  using Callback = std::function<void (TeamColor)>;
 
-  void send(const uint8_t * const data, const size_t length);
+  /**
+   * @brief Construct a new Team Color Listener object
+   *
+   * @param node ROS node
+   * @param callback Optional callback called on color change
+   */
+  explicit TeamColorListener(rclcpp::Node & node, Callback callback = {});
 
-  ~BiDirectionalUDP();
+  const TeamColor & GetTeamColor() const
+  {
+    return team_color_;
+  }
 
 private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket udp_socket_;
-  boost::asio::ip::udp::endpoint endpoint_;
-  std::array<uint8_t, 1024> send_buffer_;
-  std::array<uint8_t, 1024> receive_buffer_;
-  std::thread io_service_thread_;
+  const std::string team_name_;
+  TeamColor team_color_;
+  Callback callback_;
+  rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
 
-  void HandleUDPSendTo(const boost::system::error_code & error, std::size_t bytes_transferred);
-  void HandleUDPReceiveFrom(const boost::system::error_code & error, std::size_t bytes_transferred);
+  void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
 };
 
 }  // namespace ateam_common
 
-#endif  // ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
+#endif  // ATEAM_COMMON__TEAM_COLOR_LISTENER_HPP_

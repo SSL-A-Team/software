@@ -18,43 +18,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
-#define ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
-
-#include <boost/asio.hpp>
-
-#include <functional>
+#include "ateam_common/team_color_listener.hpp"
 #include <string>
 
 namespace ateam_common
 {
-class BiDirectionalUDP
+
+TeamColorListener::TeamColorListener(rclcpp::Node & node, Callback callback)
+: team_name_(node.declare_parameter<std::string>("gc_team_name", "A-Team")),
+  callback_(callback)
 {
-public:
-  using ReceiveCallback = std::function<void (const uint8_t * const data, const size_t length)>;
+  rclcpp::QoS qos(1);
+  qos.reliable();
+  qos.transient_local();
+  ref_subscription_ = node.create_subscription<ssl_league_msgs::msg::Referee>(
+    "/gc_multicast_bridge_node/referee_messages", qos,
+    std::bind(&TeamColorListener::RefereeMessageCallback, this, std::placeholders::_1));
+}
 
-  BiDirectionalUDP(
-    const std::string & udp_ip_address,
-    const int16_t udp_port,
-    ReceiveCallback receive_callback);
-
-  void send(const uint8_t * const data, const size_t length);
-
-  ~BiDirectionalUDP();
-
-private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket udp_socket_;
-  boost::asio::ip::udp::endpoint endpoint_;
-  std::array<uint8_t, 1024> send_buffer_;
-  std::array<uint8_t, 1024> receive_buffer_;
-  std::thread io_service_thread_;
-
-  void HandleUDPSendTo(const boost::system::error_code & error, std::size_t bytes_transferred);
-  void HandleUDPReceiveFrom(const boost::system::error_code & error, std::size_t bytes_transferred);
-};
+void TeamColorListener::RefereeMessageCallback(
+  const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
+{
+  const auto prev_color = team_color_;
+  if (msg->blue.name == team_name_) {
+    team_color_ = TeamColor::Blue;
+  } else if (msg->yellow.name == team_name_) {
+    team_color_ = TeamColor::Yellow;
+  } else {
+    team_color_ = TeamColor::Unknown;
+  }
+  if (team_color_ != prev_color && callback_) {
+    callback_(team_color_);
+  }
+}
 
 }  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_

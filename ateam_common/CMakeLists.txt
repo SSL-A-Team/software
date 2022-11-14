@@ -10,15 +10,18 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(ssl_league_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/multicast_receiver.cpp
   src/bi_directional_udp.cpp
+  src/team_color_listener.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
+  ssl_league_msgs
 )
 target_link_libraries(${PROJECT_NAME}
   Boost::boost

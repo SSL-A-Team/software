@@ -97,13 +97,13 @@ class TestUI(unittest.TestCase):
         # Rosbridge node initialized
         self.assertIsNotNone(subscriptions)
 
-        # Check subscription to /ball
-        self.assertIn(("/ball", ['ateam_msgs/msg/BallState']), subscriptions)
+        # Check subscription to /vision_filter/ball
+        self.assertIn(("/vision_filter/ball", ['ateam_msgs/msg/BallState']), subscriptions)
 
         # Check robot subscriptions
         for team in ["yellow", "blue"]:
             for id in range(0, 16):
-                topic = (f"/{team}/robot{id}", ['ateam_msgs/msg/RobotState'])
+                topic = (f"/vision_filter/{team}/robot{id}", ['ateam_msgs/msg/RobotState'])
                 self.assertIn(topic, subscriptions)
 
         # Check subscription to /overlay

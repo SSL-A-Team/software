@@ -47,7 +47,8 @@ public:
       std::placeholders::_1,
       std::placeholders::_2))
   {
-    ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
+    ateam_common::indexed_topic_helpers::create_indexed_subscribers
+    <ateam_msgs::msg::RobotMotionCommand>(
       command_subscriptions_,
       "/ateam_ai/robot_motion_commands/robot",
       rclcpp::SystemDefaultsQoS(),
@@ -69,11 +70,11 @@ public:
 
     std::string protobuf_msg;
     if (robots_control.SerializeToString(&protobuf_msg)) {
-      udp_.send(protobuf_msg.data(), protobuf_msg.size());
+      udp_.send(reinterpret_cast<uint8_t *>(protobuf_msg.data()), protobuf_msg.size());
     }
   }
 
-  void feedback_callback(const char * buffer, size_t bytes_received)
+  void feedback_callback(const uint8_t * buffer, size_t bytes_received)
   {
     RobotControlResponse feedback_proto;
     if (!feedback_proto.ParseFromArray(buffer, bytes_received - 1)) {

@@ -22,6 +22,7 @@
 
 #include <boost/bind.hpp>
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 
@@ -61,7 +62,9 @@ MulticastReceiver::~MulticastReceiver()
   }
 }
 
-void MulticastReceiver::SendTo(const std::string& address, const uint16_t port, const char * const data, const size_t length)
+void MulticastReceiver::SendTo(
+  const std::string & address, const uint16_t port,
+  const char * const data, const size_t length)
 {
   if (length >= send_buffer_.size()) {
     std::cout << "WARNING: UDP send data length is larger than buffer" << std::endl;
@@ -93,7 +96,9 @@ void MulticastReceiver::HandleMulticastReceiveFrom(
     return;
   }
 
-  receive_callback_(sender_endpoint_.address().to_string(), sender_endpoint_.port(), buffer_.data(), bytes_received);
+  receive_callback_(
+    sender_endpoint_.address().to_string(), sender_endpoint_.port(),
+    buffer_.data(), bytes_received);
 
   multicast_socket_.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,
@@ -105,7 +110,7 @@ void MulticastReceiver::HandleMulticastReceiveFrom(
 
 void MulticastReceiver::HandleUDPSendTo(const boost::system::error_code & error, size_t)
 {
-  if(error) {
+  if (error) {
     std::cerr << "Error sending UDP data: " << error.message() << std::endl;
   }
 }

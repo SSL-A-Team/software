@@ -12,7 +12,9 @@ find_package(ateam_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
+  src/conversion.cpp
   src/radio_bridge_node.cpp
+  src/rnp_packet_helpers.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 target_include_directories(${PROJECT_NAME} PRIVATE software-communication/ateam-common-packets/include)
@@ -31,8 +33,17 @@ rclcpp_components_register_node(
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  # list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_cpplint)
+  # find_package(ament_lint_auto REQUIRED)
+  # Disable auto finding of cpplint so we can customize its arguments
+  # set(ament_cmake_cpplint_FOUND TRUE)
+  # ament_lint_auto_find_test_dependencies()
+
+  # set(ament_cmake_cpplint_FOUND FALSE)
+  # find_package(ament_cmake_cpplint)
+  # ament_cpplint(EXCLUDE software-communication)
+
+  add_subdirectory(test)
 endif()
 
 ament_package()

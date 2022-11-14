@@ -63,7 +63,7 @@ BiDirectionalUDP::~BiDirectionalUDP()
   }
 }
 
-void BiDirectionalUDP::send(const char * const data, const size_t length)
+void BiDirectionalUDP::send(const uint8_t * const data, const size_t length)
 {
   if (length >= send_buffer_.size()) {
     // RCLCPP_ERROR(get_logger(), "UDP send data length is larger than buffer");

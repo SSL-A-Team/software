@@ -114,7 +114,7 @@ for (var team in vm.state.teams) {
     for (var i = 0; i < 16; i++) {
         var robotTopic = new ROSLIB.Topic({
             ros: ros,
-            name: '/vision_filter/' + team + '_team/robot' + i,
+            name: '/vision_filter/' + team + '/robot' + i,
             messageType: 'ateam_msgs/msg/RobotState'
         });
 

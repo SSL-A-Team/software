@@ -37,7 +37,9 @@ public:
    * @param data Data received in latest packet
    * @param data_length Length of data received
    */
-  using ReceiveCallback = std::function<void (const std::string& sender_address, const uint16_t sender_port, uint8_t * data, size_t data_length)>;
+  using ReceiveCallback =
+    std::function<void (const std::string & sender_address, const uint16_t sender_port,
+      uint8_t * data, size_t data_length)>;
 
   MulticastReceiver(
     std::string multicast_ip_address,
@@ -46,7 +48,9 @@ public:
 
   ~MulticastReceiver();
 
-  void SendTo(const std::string& address, const uint16_t port, const char * const data, const size_t length);
+  void SendTo(
+    const std::string & address, const uint16_t port, const char * const data,
+    const size_t length);
 
 private:
   ReceiveCallback receive_callback_;

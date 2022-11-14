@@ -26,6 +26,8 @@
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
 #include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
 
+#include <string>
+
 #include "message_conversions.hpp"
 
 namespace ateam_ssl_vision_bridge
@@ -38,7 +40,7 @@ public:
   : rclcpp::Node("ssl_vision_bridge", options),
     multicast_receiver_("224.5.23.2",
       10020,
-      [this](const std::string&, const uint16_t, auto * buffer, size_t bytes_received) {
+      [this](const std::string &, const uint16_t, auto * buffer, size_t bytes_received) {
         SSL_WrapperPacket vision_proto;
 
         // Note: "- 1" is needed due to some weird bug where if the entire buffer
