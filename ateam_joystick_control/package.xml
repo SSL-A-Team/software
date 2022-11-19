@@ -11,6 +11,7 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>ateam_common</depend>
   <depend>ateam_msgs</depend>
   <depend>sensor_msgs</depend>
 

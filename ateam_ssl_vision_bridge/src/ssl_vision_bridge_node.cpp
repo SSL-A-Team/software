@@ -23,8 +23,11 @@
 
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/protobuf_logging.hpp>
+#include <ateam_common/topic_names.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
 #include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
+
+#include <string>
 
 #include "message_conversions.hpp"
 
@@ -54,7 +57,7 @@ public:
   {
     SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
     vision_publisher_ = create_publisher<ssl_league_msgs::msg::VisionWrapper>(
-      "~/vision_messages",
+      std::string(Topics::kVisionMessages),
       rclcpp::SystemDefaultsQoS());
   }
 
