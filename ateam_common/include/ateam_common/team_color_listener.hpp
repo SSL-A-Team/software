@@ -59,7 +59,7 @@ public:
 
 private:
   const std::string team_name_;
-  TeamColor team_color_;
+  TeamColor team_color_{TeamColor::Unknown};
   Callback callback_;
   rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
 
