@@ -108,6 +108,9 @@ private:
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
+      control_msg.kick_vel = 0.0f;
+      control_msg.dribbler_speed = 0.0f;
+      control_msg.kick_request = KR_DISABLE;
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),
