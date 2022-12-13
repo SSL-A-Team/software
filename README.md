@@ -17,13 +17,17 @@
    ```
 
 1. Install our ROS dependencies
+   Remember to source the underlay script corresponding to your shell (.sh, .bash, and .zsh are available). 
 
    ```bash
+   # source the underlay
+   source /opt/ros/galactic/setup.bash
    # In the ateam_ws directory
    rosdep install --from-paths . --ignore-src -y
    ```
 
 1. Install our non-ROS dependencies
+   Remember to source the underlay script corresponding to your shell (.sh, .bash, and .zsh are available). 
 
    ```bash
    # In the ateam_ws directory

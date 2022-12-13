@@ -6,10 +6,22 @@
 
 set -e
 
+if ! command -v npm; then
+  echo "ERROR: npm is not installed"
+
+  echo "attempting to install nodejs and npm"
+  sudo apt update -y
+  sudo apt install nodejs npm -y
+  if ! command -v npm; then
+    echo "failed to install npm"
+    exit 1
+  fi
+fi
+
 install_npm_package_if_missing () {
   local package_name=$1
   echo "Checking for npm package: $package_name"
-  if npm list --depth 1 --global $package_name > /dev/null 2>&1; then
+  if npm list --depth 1 --global $package_name > /dev/null; then
     echo "$package_name already installed"
   else
     echo "Installing $package_name"
