@@ -43,7 +43,6 @@
 
 1. Build the code
 
-
    ```bash
    # In the ateam_ws directory
    source /opt/ros/galactic/setup.bash
