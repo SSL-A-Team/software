@@ -8,14 +8,8 @@ set -e
 
 if ! command -v npm; then
   echo "ERROR: npm is not installed"
-
-  echo "attempting to install nodejs and npm"
-  sudo apt update -y
-  sudo apt install nodejs npm -y
-  if ! command -v npm; then
-    echo "failed to install npm"
-    exit 1
-  fi
+  echo "it is expected this is installed by rosdep. Did something go wrong?"
+  exit 1
 fi
 
 install_npm_package_if_missing () {

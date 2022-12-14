@@ -6,6 +6,13 @@
 
    Follow the [instructions for ROS 2 Galactic](http://docs.ros.org/en/galactic/Installation.html) for your system.
 
+   Initialize rosdep with the following
+   ```bash
+   sudo rosdep init
+   # galactic went EOL Dec 1 2022 so we need the flag
+   rosdep update --include-eol-distros
+   ```
+
 1. Make a ROS workspace and clone our repo
 
    ```bash
@@ -17,17 +24,16 @@
    ```
 
 1. Install our ROS dependencies
-   Remember to source the underlay script corresponding to your shell (.sh, .bash, and .zsh are available). 
 
    ```bash
    # source the underlay
    source /opt/ros/galactic/setup.bash
+
    # In the ateam_ws directory
    rosdep install --from-paths . --ignore-src -y
    ```
 
 1. Install our non-ROS dependencies
-   Remember to source the underlay script corresponding to your shell (.sh, .bash, and .zsh are available). 
 
    ```bash
    # In the ateam_ws directory
@@ -37,10 +43,11 @@
 
 1. Build the code
 
+
    ```bash
    # In the ateam_ws directory
    source /opt/ros/galactic/setup.bash
    colcon build
    ```
 
-**Note:** You'll need to source both the underlay (`/opt/ros/galactic/setup.bash`) and our workspace's overlay (`ateam_ws/install/setup.bash`) in every terminal session before running any of our code.
+**Note:** You'll need to source both the underlay (`/opt/ros/galactic/setup.bash`) and our workspace's overlay (`ateam_ws/install/setup.bash`) in every terminal session before running any of our code. Remember to source the underlay script corresponding to your shell (.sh, .bash, and .zsh are available). 
