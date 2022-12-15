@@ -20,7 +20,7 @@
 
 #include "message_conversions.hpp"
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 
 namespace ateam_vision_filter::message_conversions

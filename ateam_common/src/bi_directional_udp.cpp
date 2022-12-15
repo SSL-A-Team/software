@@ -20,7 +20,7 @@
 
 #include "ateam_common/bi_directional_udp.hpp"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <algorithm>
 #include <iostream>

@@ -20,7 +20,7 @@
 
 #include "ateam_common/multicast_receiver.hpp"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <iostream>
 #include <string>
