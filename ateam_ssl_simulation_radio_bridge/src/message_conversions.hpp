@@ -21,11 +21,11 @@
 #ifndef MESSAGE_CONVERSIONS_HPP_
 #define MESSAGE_CONVERSIONS_HPP_
 
-#include <ateam_msgs/msg/robot_feedback.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
 #include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
 #include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
+
+#include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_msgs/msg/robot_motion_command.hpp>
 
 namespace ateam_ssl_simulation_radio_bridge::message_conversions
 {

@@ -18,13 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <string>
+#include <vector>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <sensor_msgs/msg/joy.hpp>
-#include <string>
-#include <vector>
 
 namespace ateam_joystick_control
 {

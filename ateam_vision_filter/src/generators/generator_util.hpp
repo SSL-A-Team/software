@@ -21,10 +21,10 @@
 #ifndef GENERATORS__GENERATOR_UTIL_HPP_
 #define GENERATORS__GENERATOR_UTIL_HPP_
 
-#include <optional>
 #include <Eigen/Dense>
 
 #include <array>
+#include <optional>
 
 #include "types/robot.hpp"
 
