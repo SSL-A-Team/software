@@ -4,6 +4,7 @@ project(ateam_joystick_control)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
@@ -14,6 +15,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
+  ateam_common
   ateam_msgs
   sensor_msgs
 )

@@ -21,8 +21,9 @@
 #ifndef TRAJECTORY_GENERATION__ILQR_PROBLEM_HPP_
 #define TRAJECTORY_GENERATION__ILQR_PROBLEM_HPP_
 
-#include <optional>
 #include <Eigen/Dense>
+
+#include <optional>
 #include <iostream>
 
 // Defines the abstract definition and solution to the iLQR problem

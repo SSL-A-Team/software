@@ -28,18 +28,16 @@ TeamColorListener::TeamColorListener(rclcpp::Node & node, Callback callback)
 : team_name_(node.declare_parameter<std::string>("gc_team_name", "A-Team")),
   callback_(callback)
 {
-  const auto default_team_color = node.declare_parameter<std::string>("default_team_color", "yellow");
-  if(default_team_color == "yellow")
-  {
+  const auto default_team_color =
+    node.declare_parameter<std::string>("default_team_color", "yellow");
+  if (default_team_color == "yellow") {
     team_color_ = TeamColor::Yellow;
-  }
-  else if(default_team_color == "blue")
-  {
+  } else if (default_team_color == "blue") {
     team_color_ = TeamColor::Blue;
-  }
-  else
-  {
-    RCLCPP_WARN(node.get_logger(), "Unrecognized value for param 'default_team_color'. Ignoring and defaulting to Unknown.");
+  } else {
+    RCLCPP_WARN(
+      node.get_logger(),
+      "Unrecognized value for param 'default_team_color'. Ignoring and defaulting to Unknown.");
   }
 
   rclcpp::QoS qos(1);

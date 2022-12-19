@@ -21,10 +21,11 @@
 #ifndef ATEAM_COMMON__INDEXED_TOPIC_HELPERS_HPP_
 #define ATEAM_COMMON__INDEXED_TOPIC_HELPERS_HPP_
 
-#include <rclcpp/rclcpp.hpp>
 #include <array>
 #include <functional>
 #include <string>
+
+#include <rclcpp/rclcpp.hpp>
 
 namespace ateam_common::indexed_topic_helpers
 {

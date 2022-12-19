@@ -18,43 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
-#define ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
+#ifndef ATEAM_COMMON__TOPIC_NAMES_HPP_
+#define ATEAM_COMMON__TOPIC_NAMES_HPP_
 
-#include <functional>
-#include <string>
+#include <string_view>
 
-#include <boost/asio.hpp>
-
-namespace ateam_common
+namespace Topics
 {
-class BiDirectionalUDP
-{
-public:
-  using ReceiveCallback = std::function<void (const uint8_t * const data, const size_t length)>;
+// Input from other systems
+constexpr std::string_view kVisionMessages = "/vision_messages";  // Raw vision protobufs
+constexpr std::string_view kRefereeMessages = "/referee_messages";  // Raw ref protobufs
 
-  BiDirectionalUDP(
-    const std::string & udp_ip_address,
-    const int16_t udp_port,
-    ReceiveCallback receive_callback);
+// Input from robots
+constexpr std::string_view kRobotFeedbackPrefix = "/robot_motion_commands/robot";
 
-  void send(const uint8_t * const data, const size_t length);
+// Output from vision filter
+constexpr std::string_view kBall = "/ball";
+constexpr std::string_view kYellowTeamRobotPrefix = "/yellow_team/robot";
+constexpr std::string_view kBlueTeamRobotPrefix = "/blue_team/robot";
 
-  ~BiDirectionalUDP();
+// Output from joysticks
+constexpr std::string_view kJoystick = "/joystick";
 
-private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket udp_socket_;
-  boost::asio::ip::udp::endpoint endpoint_;
-  std::array<uint8_t, 1024> send_buffer_;
-  std::array<uint8_t, 1024> receive_buffer_;
-  std::thread io_service_thread_;
+// Output from AI
+constexpr std::string_view kRobotMotionCommandPrefix = "/robot_motion_commands/robot";
+}  // namespace Topics
 
-  void HandleUDPSendTo(const boost::system::error_code & error, std::size_t bytes_transferred);
-  void HandleUDPReceiveFrom(const boost::system::error_code & error, std::size_t bytes_transferred);
-};
-
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
+#endif  // ATEAM_COMMON__TOPIC_NAMES_HPP_

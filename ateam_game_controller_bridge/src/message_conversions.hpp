@@ -21,17 +21,17 @@
 #ifndef MESSAGE_CONVERSIONS_HPP_
 #define MESSAGE_CONVERSIONS_HPP_
 
+#include <ssl_league_protobufs/ssl_gc_referee_message.pb.h>
+#include <ssl_league_protobufs/ssl_gc_game_event.pb.h>
+#include <ssl_league_protobufs/ssl_gc_common.pb.h>
+#include <ssl_league_protobufs/ssl_gc_geometry.pb.h>
+
 #include <ssl_league_msgs/msg/referee.hpp>
 #include <ssl_league_msgs/msg/team_info.hpp>
 #include <ssl_league_msgs/msg/division.hpp>
 #include <ssl_league_msgs/msg/robot_id.hpp>
 #include <ssl_league_msgs/msg/team.hpp>
 #include <geometry_msgs/msg/point32.hpp>
-
-#include <ssl_league_protobufs/ssl_gc_referee_message.pb.h>
-#include <ssl_league_protobufs/ssl_gc_game_event.pb.h>
-#include <ssl_league_protobufs/ssl_gc_common.pb.h>
-#include <ssl_league_protobufs/ssl_gc_geometry.pb.h>
 
 namespace ateam_game_controller_bridge::message_conversions
 {

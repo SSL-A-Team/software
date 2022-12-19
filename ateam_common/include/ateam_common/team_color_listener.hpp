@@ -21,9 +21,10 @@
 #ifndef ATEAM_COMMON__TEAM_COLOR_LISTENER_HPP_
 #define ATEAM_COMMON__TEAM_COLOR_LISTENER_HPP_
 
+#include <string>
+
 #include <rclcpp/rclcpp.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
-#include <string>
 
 namespace ateam_common
 {

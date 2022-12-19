@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <map>
+#include <string>
 #include <typeindex>
 #include <typeinfo>
 #include <variant>

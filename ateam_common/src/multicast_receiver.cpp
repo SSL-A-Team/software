@@ -20,11 +20,11 @@
 
 #include "ateam_common/multicast_receiver.hpp"
 
-#include <boost/bind.hpp>
-
 #include <algorithm>
 #include <iostream>
 #include <string>
+
+#include <boost/bind/bind.hpp>
 
 namespace ateam_common
 {
