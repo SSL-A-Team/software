@@ -18,14 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <memory>
+#include <string>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/protobuf_logging.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
-#include <memory>
-#include <string>
 #include "message_conversions.hpp"
 
 namespace ateam_game_controller_bridge

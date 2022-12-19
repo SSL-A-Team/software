@@ -23,6 +23,7 @@
 
 #include <Eigen/Dense>
 
+#include <optional>
 #include <variant>
 #include <vector>
 

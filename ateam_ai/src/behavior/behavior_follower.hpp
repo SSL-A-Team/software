@@ -21,10 +21,10 @@
 #ifndef BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
 #define BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
 
+#include <array>
+
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include <array>
 
 #include "behavior/behavior.hpp"
 #include "behavior/behavior_realization.hpp"

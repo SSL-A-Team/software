@@ -18,6 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
+#include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
+
+#include <array>
+#include <string>
+#include <functional>
+
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
@@ -25,12 +32,6 @@
 #include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
-#include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
-
-#include <array>
-#include <string>
-#include <functional>
 
 #include "message_conversions.hpp"
 

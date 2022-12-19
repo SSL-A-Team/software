@@ -21,10 +21,10 @@
 #ifndef ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
 #define ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
 
-#include <boost/asio.hpp>
-
 #include <functional>
 #include <string>
+
+#include <boost/asio.hpp>
 
 namespace ateam_common
 {

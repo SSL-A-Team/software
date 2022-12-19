@@ -18,6 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
+
+#include <string>
+
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
@@ -25,9 +29,6 @@
 #include <ateam_common/protobuf_logging.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
-#include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
-
-#include <string>
 
 #include "message_conversions.hpp"
 
