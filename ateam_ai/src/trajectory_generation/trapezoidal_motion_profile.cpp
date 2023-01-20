@@ -169,6 +169,9 @@ Trajectory1d sample_trapezoidal_profile(
   const auto velocity = [](const double t, const double v_initial, const double a) {
       return v_initial + a * t;
     };
+  const auto sign = [](const double x) {
+    return x / abs(x);
+  };
 
   Trajectory1d output;
 
@@ -179,8 +182,9 @@ Trajectory1d sample_trapezoidal_profile(
 
     if (t < coeffs.phase_2.start_time) {
       // Phase 1
-      sample.pos = position(t, coeffs.phase_1.start_vel, accel_limit);
-      sample.vel = velocity(t, coeffs.phase_1.start_vel, accel_limit);
+      double accel_direction = sign(coeffs.phase_1.end_vel - coeffs.phase_1.start_vel);
+      sample.pos = position(t, coeffs.phase_1.start_vel, accel_direction * accel_limit);
+      sample.vel = velocity(t, coeffs.phase_1.start_vel, accel_direction * accel_limit);
       sample.accel = accel_limit;
     } else if (t < coeffs.phase_3.start_time) {
       // Phase 2
@@ -193,9 +197,10 @@ Trajectory1d sample_trapezoidal_profile(
       // Phase 3
       double t_into_phase_3 = t - coeffs.phase_3.start_time;
       double d_into_phase_3 = coeffs.phase_3.start_dist;
+      double accel_direction = sign(coeffs.phase_3.end_vel - coeffs.phase_3.start_vel);
       sample.pos = d_into_phase_3 +
-        position(t_into_phase_3, coeffs.phase_3.start_vel, -accel_limit);
-      sample.vel = velocity(t_into_phase_3, coeffs.phase_3.start_vel, -accel_limit);
+        position(t_into_phase_3, coeffs.phase_3.start_vel, accel_direction * accel_limit);
+      sample.vel = velocity(t_into_phase_3, coeffs.phase_3.start_vel, accel_direction * accel_limit);
       sample.accel = -accel_limit;
     }
 
@@ -209,6 +214,14 @@ Trajectory1d Generate1d(
   double start_pos, double start_vel, double end_pos, double end_vel,
   const double max_vel, const double max_accel, const double dt)
 {
+  // Catch for us already at the target causing the distance to travel
+  // being so small that it creates nan values
+  if (std::abs(start_pos - end_pos) < 1e-6 && std::abs(start_vel - end_vel) < 1e-6) {
+    Trajectory1d traj;
+    traj.samples.push_back(Sample1d{.time=0, .pos=end_pos, .vel=end_vel, .accel=0});
+    return traj;
+  }
+
   // Invert so the start is always before the end
   // and we only have to deal with positive values
   bool invert = start_pos > end_pos;
@@ -325,6 +338,8 @@ Trajectory1d Generate1d(
     const AccelerationPhaseResults phase_3_from_nonlimit_vel = get_acceleration_phase_results(
       phase_3_from_nonlimit_vel_input);
 
+    trapezoidal_coeffs.phase_1.duration = phase_1_to_nonlimit_vel.time_required;
+    trapezoidal_coeffs.phase_1.end_vel = nonlimit_max_vel;
 
     // Skip phase 2
     trapezoidal_coeffs.phase_2.start_time = phase_1_to_nonlimit_vel.time_required;

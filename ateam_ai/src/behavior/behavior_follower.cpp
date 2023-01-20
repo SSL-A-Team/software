@@ -38,11 +38,18 @@ BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
     Sample3d command = get_next_command(maybe_trajectory.value(), world.current_time);
 
     ateam_msgs::msg::RobotMotionCommand motion_command;
+    double kp = 0.5;
     motion_command.twist.linear.x = command.vel.x() +
-      (command.pose.x() - world.our_robots.at(robot_id).value().pos.x());
+      kp*(command.pose.x() - world.our_robots.at(robot_id).value().pos.x());
     motion_command.twist.linear.y = command.vel.y() +
-      (command.pose.y() - world.our_robots.at(robot_id).value().pos.y());
-    motion_command.twist.angular.z = 0;
+      kp*(command.pose.y() - world.our_robots.at(robot_id).value().pos.y());
+    double theta_diff = command.pose.z() - world.our_robots.at(robot_id).value().theta;
+    motion_command.twist.angular.z = command.vel.z() +
+      kp*(atan2(sin(theta_diff), cos(theta_diff)));
+
+    std::cout << command.pose.z() << " " << world.our_robots.at(robot_id).value().theta << std::endl;
+    Eigen::Vector2d robot{world.our_robots.at(robot_id).value().pos.x(), world.our_robots.at(robot_id).value().pos.y()};
+    motion_command.kick = world.get_unique_ball().has_value() && (world.get_unique_ball().value().pos - robot).norm() < 0.1;
     robot_motion_commands.at(robot_id) = motion_command;
   }
 
@@ -54,9 +61,9 @@ Sample3d BehaviorFollower::get_next_command(const Trajectory & t, double current
   Sample3d command;
   command = t.samples.front();
 
-  // Find first sample that after current time
+  // Find first sample that is either current time or after
   for (const auto & sample : t.samples) {
-    if (sample.time > current_time) {
+    if (sample.time >= current_time) {
       command = sample;
       break;
     }
