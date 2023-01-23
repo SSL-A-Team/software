@@ -142,12 +142,12 @@ private:
       return;
     }
 
-    if (!std::holds_alternative<HelloData_t>(data_variant)) {
+    if (!std::holds_alternative<HelloData>(data_variant)) {
       RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Unexpected data type.");
       return;
     }
 
-    HelloData_t hello_data = std::get<HelloData_t>(data_variant);
+    HelloData hello_data = std::get<HelloData>(data_variant);
 
     if (!(color_listener_.GetTeamColor() == ateam_common::TeamColorListener::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&

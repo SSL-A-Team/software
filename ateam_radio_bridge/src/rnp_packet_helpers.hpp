@@ -26,10 +26,10 @@ void SetDataPayload(RadioPacket & packet, const DataTypeType & payload)
 }
 
 template<typename DataTypeType>
-RadioPacket CreatePacket(const CommandCode_t command_code, const DataTypeType & data)
+RadioPacket CreatePacket(const CommandCode command_code, const DataTypeType & data)
 {
   RadioPacket packet{
-    0
+    0,
     kProtocolVersionMajor,
     kProtocolVersionMinor,
     command_code,
@@ -42,7 +42,7 @@ RadioPacket CreatePacket(const CommandCode_t command_code, const DataTypeType & 
   return packet;
 }
 
-RadioPacket CreateEmptyPacket(const CommandCode_t command_code);
+RadioPacket CreateEmptyPacket(const CommandCode command_code);
 
 RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std::string & error);
 
