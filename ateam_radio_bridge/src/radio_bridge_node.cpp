@@ -104,7 +104,7 @@ private:
       if (connections_[id] == nullptr) {
         continue;
       }
-      BasicControl_t control_msg;
+      BasicControl control_msg;
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
@@ -123,13 +123,13 @@ private:
     uint8_t * udp_packet_data, size_t udp_packet_size)
   {
     std::string parsing_error;
-    RadioPacket_t packet = ParsePacket(udp_packet_data, udp_packet_size, parsing_error);
+    RadioPacket packet = ParsePacket(udp_packet_data, udp_packet_size, parsing_error);
     if (!parsing_error.empty()) {
       RCLCPP_WARN(get_logger(), "Ignoring discovery packet. %s", parsing_error.c_str());
       return;
     }
 
-    if (packet.command_code != CC_HELLO) {
+    if (packet.command_code != CC_HELLO_REQ) {
       RCLCPP_WARN(
         get_logger(), "Ignoring discovery packet. Unexpected command code: %d",
         packet.command_code);
@@ -205,8 +205,8 @@ private:
             RCLCPP_WARN(get_logger(), "Ignoring telemetry message. %s", error.c_str());
             return;
           }
-          if (std::holds_alternative<BasicTelemetry_t>(data_var)) {
-            feedback_publishers_[robot_id]->publish(Convert(std::get<BasicTelemetry_t>(data_var)));
+          if (std::holds_alternative<BasicTelemetry>(data_var)) {
+            feedback_publishers_[robot_id]->publish(Convert(std::get<BasicTelemetry>(data_var)));
           }
           break;
         }

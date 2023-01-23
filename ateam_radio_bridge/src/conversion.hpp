@@ -10,7 +10,7 @@
 namespace ateam_radio_bridge
 {
 
-ateam_msgs::msg::RobotFeedback Convert(const BasicTelemetry_t & basic_telemetry);
+ateam_msgs::msg::RobotFeedback Convert(const BasicTelemetry & basic_telemetry);
 
 
 }

@@ -3,13 +3,13 @@
 namespace ateam_radio_bridge
 {
 
-RadioPacket_t CreateEmptyPacket(const CommandCode_t command_code)
+RadioPacket CreateEmptyPacket(const CommandCode command_code)
 {
-  RadioPacket_t packet{
+  RadioPacket packet{
+    0,
     kProtocolVersionMajor,
     kProtocolVersionMinor,
     command_code,
-    DT_NO_DATA,
     0,
     {}
   };
@@ -17,9 +17,9 @@ RadioPacket_t CreateEmptyPacket(const CommandCode_t command_code)
   return packet;
 }
 
-RadioPacket_t ParsePacket(const uint8_t * data, const std::size_t data_length, std::string & error)
+RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std::string & error)
 {
-  RadioPacket_t packet;
+  RadioPacket packet;
 
   std::copy_n(data, kPacketHeaderSize, reinterpret_cast<uint8_t *>(&packet));
   if ((packet.data_length + kPacketHeaderSize) > data_length) {
@@ -39,13 +39,11 @@ RadioPacket_t ParsePacket(const uint8_t * data, const std::size_t data_length, s
   return packet;
 }
 
-PacketDataVariant ExtractData(const RadioPacket_t & packet, std::string & error)
+PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 {
   PacketDataVariant var;
 
   switch (packet.data_type) {
-    case DT_NO_DATA:
-      break;
     case DT_HELLO_DATA:
       {
         if (packet.data_length != sizeof(HelloData_t)) {
@@ -59,26 +57,26 @@ PacketDataVariant ExtractData(const RadioPacket_t & packet, std::string & error)
       }
     case DT_BASIC_TELEMETRY:
       {
-        if (packet.data_length != sizeof(BasicTelemetry_t)) {
+        if (packet.data_length != sizeof(BasicTelemetry)) {
           error = "Incorrect data length for BasicTelemetry type.";
           break;
         }
-        BasicTelemetry_t basic_telemetry;
+        BasicTelemetry basic_telemetry;
         std::copy_n(
-          packet.data, sizeof(BasicTelemetry_t),
+          packet.data, sizeof(BasicTelemetry),
           reinterpret_cast<uint8_t *>(&basic_telemetry));
         var = basic_telemetry;
         break;
       }
     case DT_BASIC_CONTROL:
       {
-        if (packet.data_length != sizeof(BasicControl_t)) {
+        if (packet.data_length != sizeof(BasicControl)) {
           error = "Incorrect data length for BasicControl type.";
           break;
         }
-        BasicControl_t basic_control;
+        BasicControl basic_control;
         std::copy_n(
-          packet.data, sizeof(BasicControl_t),
+          packet.data, sizeof(BasicControl),
           reinterpret_cast<uint8_t *>(&basic_control));
         var = basic_control;
         break;
