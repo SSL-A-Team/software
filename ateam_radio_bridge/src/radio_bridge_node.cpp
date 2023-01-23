@@ -142,24 +142,24 @@ private:
       return;
     }
 
-    if (!std::holds_alternative<HelloData>(data_variant)) {
+    if (!std::holds_alternative<HelloRequest>(data_variant)) {
       RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Unexpected data type.");
       return;
     }
 
-    HelloData hello_data = std::get<HelloData>(data_variant);
+    HelloRequest hello_request = std::get<HelloRequest>(data_variant);
 
     if (!(color_listener_.GetTeamColor() == ateam_common::TeamColorListener::TeamColor::Blue &&
-      hello_data.color == TC_BLUE) &&
+      hello_request.color == TC_BLUE) &&
       !(color_listener_.GetTeamColor() == ateam_common::TeamColorListener::TeamColor::Yellow &&
-      hello_data.color == TC_YELLOW))
+      hello_request.color == TC_YELLOW))
     {
       // Quietly ignore discovery packets for the other team
       return;
     }
 
-    if (hello_data.robot_id > connections_.size() ||
-      connections_[hello_data.robot_id] != nullptr)
+    if (hello_request.robot_id > connections_.size() ||
+      connections_[hello_request.robot_id] != nullptr)
     {
       // A connection already exists for this jersey number
       const auto reply_packet = CreateEmptyPacket(CC_NACK);
@@ -169,14 +169,14 @@ private:
       return;
     }
 
-    connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
+    connections_[hello_request.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
       sender_address, sender_port,
       std::bind(
-        &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_data.robot_id,
+        &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_request.robot_id,
         std::placeholders::_1, std::placeholders::_2));
 
     const auto reply_packet = CreateEmptyPacket(CC_ACK);
-    connections_[hello_data.robot_id]->send(
+    connections_[hello_request.robot_id]->send(
       reinterpret_cast<const uint8_t *>(&reply_packet),
       sizeof(reply_packet));
   }

@@ -46,12 +46,12 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
   switch (packet.data_type) {
     case DT_HELLO_DATA:
       {
-        if (packet.data_length != sizeof(HelloData)) {
-          error = "Incorrect data length for HelloData type.";
+        if (packet.data_length != sizeof(HelloRequest)) {
+          error = "Incorrect data length for HelloRequest type.";
           break;
         }
-        HelloData hello_data;
-        std::copy_n(packet.data, sizeof(HelloData), reinterpret_cast<uint8_t *>(&hello_data));
+        HelloRequest hello_data;
+        std::copy_n(packet.data, sizeof(HelloRequest), reinterpret_cast<uint8_t *>(&hello_data));
         var = hello_data;
         break;
       }
