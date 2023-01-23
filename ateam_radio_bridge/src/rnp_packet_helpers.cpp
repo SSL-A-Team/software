@@ -50,9 +50,7 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
           error = "Incorrect data length for HelloRequest type.";
           break;
         }
-        HelloRequest hello_data;
-        std::copy_n(packet.data.hello_request, sizeof(HelloRequest), reinterpret_cast<uint8_t *>(&hello_data));
-        var = hello_data;
+        var = packet.data.hello_request;
         break;
       }
     case CC_TELEMETRY:
@@ -61,11 +59,7 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
           error = "Incorrect data length for BasicTelemetry type.";
           break;
         }
-        BasicTelemetry basic_telemetry;
-        std::copy_n(
-          packet.data.telemetry, sizeof(BasicTelemetry),
-          reinterpret_cast<uint8_t *>(&basic_telemetry));
-        var = basic_telemetry;
+        var = packet.data.telemetry;
         break;
       }
     case CC_CONTROL:
@@ -74,11 +68,7 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
           error = "Incorrect data length for BasicControl type.";
           break;
         }
-        BasicControl basic_control;
-        std::copy_n(
-          packet.data.control, sizeof(BasicControl),
-          reinterpret_cast<uint8_t *>(&basic_control));
-        var = basic_control;
+        var = packet.data.control;
         break;
       }
   }
