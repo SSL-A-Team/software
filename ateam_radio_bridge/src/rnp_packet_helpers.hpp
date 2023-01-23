@@ -22,7 +22,7 @@ void SetDataPayload(RadioPacket & packet, const DataTypeType & payload)
 {
   packet.data_length = sizeof(DataTypeType);
   auto payload_ptr = reinterpret_cast<const uint8_t *>(&payload);
-  std::copy_n(payload_ptr, packet.data_length, (*uint8_t) &packet.data);
+  std::copy_n(payload_ptr, packet.data_length, (uint8_t*) &packet.data);
 }
 
 template<typename DataTypeType>
