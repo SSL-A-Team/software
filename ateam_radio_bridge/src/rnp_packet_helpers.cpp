@@ -26,7 +26,7 @@ RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std
     error = "Claimed packet size is larger than UDP packet size.";
     return {};
   }
-  std::copy_n(data + kPacketHeaderSize, packet.data_length, packet.data);
+  std::copy_n(data + kPacketHeaderSize, packet.data_length, &packet.data);
 
   if (packet.major_version != kProtocolVersionMajor ||
     packet.minor_version != kProtocolVersionMinor)
@@ -43,19 +43,19 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 {
   PacketDataVariant var;
 
-  switch (packet.data_type) {
-    case DT_HELLO_DATA:
+  switch (packet.command_code) {
+    case CC_HELLO_REQ:
       {
         if (packet.data_length != sizeof(HelloRequest)) {
           error = "Incorrect data length for HelloRequest type.";
           break;
         }
         HelloRequest hello_data;
-        std::copy_n(packet.data, sizeof(HelloRequest), reinterpret_cast<uint8_t *>(&hello_data));
+        std::copy_n(packet.data.hello_request, sizeof(HelloRequest), reinterpret_cast<uint8_t *>(&hello_data));
         var = hello_data;
         break;
       }
-    case DT_BASIC_TELEMETRY:
+    case CC_TELEMETRY:
       {
         if (packet.data_length != sizeof(BasicTelemetry)) {
           error = "Incorrect data length for BasicTelemetry type.";
@@ -63,12 +63,12 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
         }
         BasicTelemetry basic_telemetry;
         std::copy_n(
-          packet.data, sizeof(BasicTelemetry),
+          packet.data.telemetry, sizeof(BasicTelemetry),
           reinterpret_cast<uint8_t *>(&basic_telemetry));
         var = basic_telemetry;
         break;
       }
-    case DT_BASIC_CONTROL:
+    case CC_CONTROL:
       {
         if (packet.data_length != sizeof(BasicControl)) {
           error = "Incorrect data length for BasicControl type.";
@@ -76,7 +76,7 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
         }
         BasicControl basic_control;
         std::copy_n(
-          packet.data, sizeof(BasicControl),
+          packet.data.control, sizeof(BasicControl),
           reinterpret_cast<uint8_t *>(&basic_control));
         var = basic_control;
         break;
