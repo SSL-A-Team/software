@@ -26,7 +26,7 @@ RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std
     error = "Claimed packet size is larger than UDP packet size.";
     return {};
   }
-  std::copy_n(data + kPacketHeaderSize, packet.data_length, &packet.data);
+  std::copy_n(data + kPacketHeaderSize, packet.data_length, (uint8_t*) &packet.data);
 
   if (packet.major_version != kProtocolVersionMajor ||
     packet.minor_version != kProtocolVersionMinor)
