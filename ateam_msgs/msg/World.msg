@@ -1,4 +1,4 @@
-float32 current_time
+builtin_interfaces/Time current_time
 
 # Field field
 # RefereeInfo referee_info

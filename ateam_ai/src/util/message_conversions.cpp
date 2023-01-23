@@ -29,7 +29,8 @@ namespace ateam_ai::message_conversions
 ateam_msgs::msg::Sample3d toMsg(const Sample3d & obj)
 {
   ateam_msgs::msg::Sample3d sample_3d_msg;
-  sample_3d_msg.time = obj.time;
+  sample_3d_msg.time.sec = std::floor(obj.time);
+  sample_3d_msg.time.nanosec = std::floor((obj.time - std::floor(obj.time)) * 1e9);
   sample_3d_msg.pose.position.x = obj.pose.x();
   sample_3d_msg.pose.position.y = obj.pose.y();
   sample_3d_msg.pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.pose.z()));
@@ -96,7 +97,10 @@ ateam_msgs::msg::World toMsg(const World & obj)
 {
   ateam_msgs::msg::World world_msg;
 
-  world_msg.current_time = obj.current_time;
+  world_msg.current_time.sec = std::floor(obj.current_time);
+  world_msg.current_time.nanosec = std::floor(
+    (obj.current_time - std::floor(
+      obj.current_time)) * 1e9);
 
   // world_msg.field = toMsg(obj.field)
   // world_msg.referee_info = toMsg(obj.referee_info)
