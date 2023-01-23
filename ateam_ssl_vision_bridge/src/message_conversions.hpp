@@ -21,6 +21,10 @@
 #ifndef MESSAGE_CONVERSIONS_HPP_
 #define MESSAGE_CONVERSIONS_HPP_
 
+#include <ssl_league_protobufs/ssl_vision_detection.pb.h>
+#include <ssl_league_protobufs/ssl_vision_geometry.pb.h>
+#include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
+
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <ssl_league_msgs/msg/vision_detection_frame.hpp>
@@ -30,10 +34,6 @@
 #include <ssl_league_msgs/msg/vision_geometry_camera_calibration.hpp>
 #include <ssl_league_msgs/msg/vision_geometry_data.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
-
-#include <ssl_league_protobufs/ssl_vision_detection.pb.h>
-#include <ssl_league_protobufs/ssl_vision_geometry.pb.h>
-#include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
 
 namespace ateam_ssl_vision_bridge::message_conversions
 {

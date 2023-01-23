@@ -18,43 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
-#define ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+#ifndef ATEAM_COMMON__TOPIC_NAMES_HPP_
+#define ATEAM_COMMON__TOPIC_NAMES_HPP_
 
-#include <functional>
-#include <string>
+#include <string_view>
 
-#include <boost/asio.hpp>
-
-namespace ateam_common
+namespace Topics
 {
-class MulticastReceiver
-{
-public:
-  /**
-   * @param uint8_t* Data received in latest packet
-   * @param size_t Length of data received
-   */
-  using ReceiveCallback = std::function<void (uint8_t *, size_t)>;
+// Input from other systems
+constexpr std::string_view kVisionMessages = "/vision_messages";  // Raw vision protobufs
+constexpr std::string_view kRefereeMessages = "/referee_messages";  // Raw ref protobufs
 
-  MulticastReceiver(
-    std::string multicast_ip_address,
-    int16_t multicast_port,
-    ReceiveCallback receive_callback);
+// Input from robots
+constexpr std::string_view kRobotFeedbackPrefix = "/robot_motion_commands/robot";
 
-  ~MulticastReceiver();
+// Output from vision filter
+constexpr std::string_view kBall = "/ball";
+constexpr std::string_view kYellowTeamRobotPrefix = "/yellow_team/robot";
+constexpr std::string_view kBlueTeamRobotPrefix = "/blue_team/robot";
 
-private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket multicast_socket_;
-  boost::asio::ip::udp::endpoint sender_endpoint_;
-  std::array<uint8_t, 4096> buffer_;
-  std::thread io_service_thread_;
+// Output from joysticks
+constexpr std::string_view kJoystick = "/joystick";
 
-  void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
-};
+// Output from AI
+constexpr std::string_view kRobotMotionCommandPrefix = "/robot_motion_commands/robot";
+}  // namespace Topics
 
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+#endif  // ATEAM_COMMON__TOPIC_NAMES_HPP_
