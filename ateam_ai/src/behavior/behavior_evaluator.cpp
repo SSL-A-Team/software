@@ -20,12 +20,11 @@
 
 #include "behavior/behavior_evaluator.hpp"
 
-#include <ateam_common/parameters.hpp>
-
 #include <functional>
 #include <vector>
 #include <cmath>
 
+#include <ateam_common/parameters.hpp>
 #include "behavior/behavior_feedback.hpp"
 
 CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);

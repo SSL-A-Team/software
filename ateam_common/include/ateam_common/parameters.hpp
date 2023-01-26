@@ -21,12 +21,12 @@
 #ifndef ATEAM_COMMON__PARAMETERS_HPP_
 #define ATEAM_COMMON__PARAMETERS_HPP_
 
-#include <rclcpp/rclcpp.hpp>
-#include <rcl_interfaces/msg/set_parameters_result.hpp>
-
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include <rclcpp/rclcpp.hpp>
+#include <rcl_interfaces/msg/set_parameters_result.hpp>
 
 using OnSetParamCBPtr = rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr;
 
