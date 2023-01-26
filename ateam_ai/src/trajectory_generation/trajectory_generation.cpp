@@ -20,9 +20,11 @@
 
 #include "trajectory_generation/trajectory_generation.hpp"
 
+#include <iostream>
+
 #include "trajectory_generation/trajectory_editor.hpp"
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
-#include <iostream>
+
 namespace trajectory_generation
 {
 BehaviorPlan GetPlanFromGoal(

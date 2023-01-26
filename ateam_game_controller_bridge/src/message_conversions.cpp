@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 #include "message_conversions.hpp"
-#include <rclcpp/time.hpp>
 #include <algorithm>
+#include <rclcpp/time.hpp>
 
 #define CopyOptional(proto_msg, ros_msg, var_name) \
   if (proto_msg.has_ ## var_name() ) { \

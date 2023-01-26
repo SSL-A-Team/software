@@ -18,43 +18,46 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
-#define ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
-
-#include <functional>
+#include <gtest/gtest.h>
 #include <string>
+#include "ateam_common/status.hpp"
 
-#include <boost/asio.hpp>
-
-namespace ateam_common
+ateam::Status AlwaysFailStatus()
 {
-class MulticastReceiver
+  return ateam::Failure("Fail string");
+}
+
+ateam::Status AlwaysPassStatus()
 {
-public:
-  /**
-   * @param uint8_t* Data received in latest packet
-   * @param size_t Length of data received
-   */
-  using ReceiveCallback = std::function<void (uint8_t *, size_t)>;
+  return ateam::Ok();
+}
 
-  MulticastReceiver(
-    std::string multicast_ip_address,
-    int16_t multicast_port,
-    ReceiveCallback receive_callback);
+ateam::StatusOr<int> AlwaysFailInt()
+{
+  return ateam::Failure<int>("Fail string");
+}
 
-  ~MulticastReceiver();
+ateam::StatusOr<int> Always10Int()
+{
+  return ateam::Ok(10);
+}
 
-private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket multicast_socket_;
-  boost::asio::ip::udp::endpoint sender_endpoint_;
-  std::array<uint8_t, 4096> buffer_;
-  std::thread io_service_thread_;
+TEST(Status, assign_or_throw_bad)
+{
+  EXPECT_THROW(ATEAM_ASSIGN_OR_THROW(auto a, AlwaysFailInt(), "Oops failed1"), std::string);
+  EXPECT_THROW(ATEAM_ASSIGN_OR_THROW(auto b, AlwaysFailInt(), "Oops failed2"), std::string);
+}
 
-  void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
-};
+TEST(Status, assign_or_throw_good)
+{
+  ATEAM_ASSIGN_OR_THROW(auto a, Always10Int(), "Oops failed");
+  EXPECT_EQ(a, 10);
+  ATEAM_ASSIGN_OR_THROW(auto b, Always10Int(), "Oops failed");
+  EXPECT_EQ(b, 10);
+}
 
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+TEST(Status, always)
+{
+  EXPECT_NO_THROW(ATEAM_CHECK(AlwaysPassStatus(), "Oops failed1"));
+  EXPECT_THROW(ATEAM_CHECK(AlwaysFailStatus(), "Oops failed1"), std::string);
+}

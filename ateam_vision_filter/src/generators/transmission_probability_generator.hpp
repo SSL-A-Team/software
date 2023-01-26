@@ -29,6 +29,7 @@
 #include <Eigen/Dense>
 
 #include <array>
+#include <optional>
 
 #include "types/ball.hpp"
 #include "types/models.hpp"

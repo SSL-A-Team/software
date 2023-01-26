@@ -30,6 +30,7 @@
 #include "types/field.hpp"
 #include "types/referee_info.hpp"
 #include "types/robot.hpp"
+#include "types/trajectory.hpp"
 
 struct BehaviorExecutorState
 {

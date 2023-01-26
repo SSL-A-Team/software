@@ -24,6 +24,10 @@
 #include <vector>
 #include <cmath>
 
+#include <ateam_common/parameters.hpp>
+
+CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
+
 BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
 
@@ -71,6 +75,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
 
   // Generate 16 move behaviors towards the ball, we'll figure out which
   // ones we can fill later
+<<<<<<< HEAD
   // DirectedGraph<BehaviorGoal> simple_move;
   // static double j = 0;
   // j += 0.005;
@@ -84,6 +89,19 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   //           theta)} - Eigen::Vector2d{2, 0})};
   //   simple_move.add_node(move);
   // }
+=======
+  DirectedGraph<BehaviorGoal> simple_move;
+  static double j = 0;
+  j += kRotationSpeed;
+  for (int i = 0; i < 16; i++) {
+    double theta = i / 11.0 * 3.14 * 2 + j;
+    BehaviorGoal move{
+      BehaviorGoal::Type::MoveToPoint,
+      BehaviorGoal::Priority::Required,
+      MoveParam(
+        (sin(3 * theta) + 1.5) * Eigen::Vector2d{cos(theta), sin(
+            theta)} - Eigen::Vector2d{2, 0})};
+>>>>>>> main
 
   //
   // Qual Video Behaviors
@@ -157,7 +175,11 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   // choose direct shot because score chance is better or
   // maybe the total behavior completetion time is short
   // or maybe the other one can't be completed due to number of robots
+<<<<<<< HEAD
   DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
+=======
+  DirectedGraph<BehaviorGoal> behavior_out = simple_move;
+>>>>>>> main
 
   return behavior_out;
 }
