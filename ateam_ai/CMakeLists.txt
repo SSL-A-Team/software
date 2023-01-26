@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
@@ -38,6 +39,8 @@ add_library(${PROJECT_NAME} SHARED
   src/types/referee_info.hpp
   src/types/robot.hpp
   src/types/world.hpp
+  src/util/message_conversions.cpp
+  src/util/message_conversions.hpp
   src/util/directed_graph.hpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src)
@@ -48,6 +51,8 @@ ament_target_dependencies(${PROJECT_NAME}
   ateam_common
   ateam_msgs
   Eigen3
+  tf2
+  tf2_geometry_msgs
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}

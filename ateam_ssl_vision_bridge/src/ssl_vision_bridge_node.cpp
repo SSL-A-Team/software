@@ -18,13 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
+
+#include <string>
+
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/protobuf_logging.hpp>
+#include <ateam_common/topic_names.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
-#include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
 
 #include "message_conversions.hpp"
 
@@ -54,7 +58,7 @@ public:
   {
     SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
     vision_publisher_ = create_publisher<ssl_league_msgs::msg::VisionWrapper>(
-      "~/vision_messages",
+      std::string(Topics::kVisionMessages),
       rclcpp::SystemDefaultsQoS());
   }
 
