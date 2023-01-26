@@ -20,40 +20,67 @@
 
 #include "behavior/behavior_realization.hpp"
 
+#include <map>
 #include <vector>
+#include <utility>
 #include <queue>
 
-DirectedGraph<BehaviorFeedback> BehaviorRealization::realize_behaviors(
-  const DirectedGraph<Behavior> & behaviors, const World & world)
+#include "trajectory_generation/trajectory_generation.hpp"
+
+DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors(
+  const DirectedGraph<BehaviorGoal> & behaviors, const World & world)
 {
-  DirectedGraph<BehaviorFeedback> behavior_results;
+  DirectedGraph<BehaviorPlan> behavior_results;
 
   // Assign robots to behaviors
-  // Calculate the BehaviorFeedback and build the same directed graph shape
+  auto robot_id_to_behavior_goal = assign_to_behaviors(behaviors, world);
 
+  // Built trajectories for each assigned behavior_goal
+  for (const auto & [robot_id, behavior_goal] : robot_id_to_behavior_goal) {
+    BehaviorPlan plan =
+      trajectory_generation::GetPlanFromGoal(
+      behavior_goal,
+      robot_id,
+      world);
+    behavior_results.add_node(plan);
+  }
+
+  return behavior_results;
+}
+
+std::map<std::size_t, BehaviorGoal> BehaviorRealization::assign_to_behaviors(
+  const DirectedGraph<BehaviorGoal> & behaviors, const World & world)
+{
+  std::map<std::size_t, BehaviorGoal> output;
 
   // Just assign robots in number order if they are available
   std::size_t robot_id = 0;
   for (const auto & root_id : behaviors.get_root_nodes()) {
     // Assume there are no children for now
-    const auto & root_node = behaviors.get_node(root_id);
+    auto root_node = behaviors.get_node(root_id);
 
-    while (robot_id < world.our_robots.size() && !world.our_robots.at(robot_id).has_value()) {
-      robot_id++;
-    }
+    // Get next avaliable robot id
+    robot_id = next_avaliable_robot_id(robot_id, world);
+
+    // Is valid id
     if (robot_id < world.our_robots.size()) {
-      BehaviorFeedback feedback =
-        trajectory_generation.get_feedback_from_behavior(
-        root_node,
-        robot_id,
-        world);
-      behavior_results.add_node(feedback);
+      output.insert(std::make_pair(robot_id, root_node));
       robot_id++;
-    } else {
-      // If we don't have enough robots, show the behavior isn't assigned
-      behavior_results.add_node(BehaviorFeedback());
     }
   }
 
-  return behavior_results;
+  return output;
+}
+
+std::size_t BehaviorRealization::next_avaliable_robot_id(
+  const std::size_t last_assigned_id,
+  const World & world)
+{
+  // Get next avaliable robot id
+  std::size_t robot_id = last_assigned_id;
+  while (robot_id < world.our_robots.size() && !world.our_robots.at(robot_id).has_value()) {
+    robot_id++;
+  }
+
+  return robot_id;
 }

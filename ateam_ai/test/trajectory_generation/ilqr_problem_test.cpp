@@ -18,43 +18,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
-#define ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+#include "trajectory_generation/ilqr_problem.hpp"
 
-#include <functional>
-#include <string>
+#include <gtest/gtest.h>
+#include <iostream>
 
-#include <boost/asio.hpp>
-
-namespace ateam_common
-{
-class MulticastReceiver
+constexpr int num_samples = 100;
+constexpr double dt = 0.01;
+class PointMass1dProblem : public iLQRProblem<2, 1, num_samples>
 {
 public:
-  /**
-   * @param uint8_t* Data received in latest packet
-   * @param size_t Length of data received
-   */
-  using ReceiveCallback = std::function<void (uint8_t *, size_t)>;
+  State dynamics(const State & x_t1, const Input & u_t1, Time t) override
+  {
+    Eigen::Matrix<double, 2, 2> A; A << 0, 1, 0, 0;
+    Eigen::Matrix<double, 2, 1> B; B << 0, 1;
 
-  MulticastReceiver(
-    std::string multicast_ip_address,
-    int16_t multicast_port,
-    ReceiveCallback receive_callback);
+    return x_t1 + dt * (A * x_t1 + B * u_t1);
+  }
 
-  ~MulticastReceiver();
-
-private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket multicast_socket_;
-  boost::asio::ip::udp::endpoint sender_endpoint_;
-  std::array<uint8_t, 4096> buffer_;
-  std::thread io_service_thread_;
-
-  void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
+  Cost cost(const State & x, const Input & u, Time t) override
+  {
+    constexpr double final_gain = 1e6;
+    if (t == num_samples - 1) {
+      Eigen::Vector2d target{10, 0};
+      Eigen::Vector2d weights{1, 1};
+      return final_gain * (target - x).dot(target - x);
+    } else {
+      return dt * u.dot(u);
+    }
+  }
 };
 
-}  // namespace ateam_common
+TEST(iLQRProblem, SamplePointMass)
+{
+  PointMass1dProblem problem;
+  auto maybe_trajectory = problem.calculate(Eigen::Vector2d{0, 0});
 
-#endif  // ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+  ASSERT_TRUE(maybe_trajectory.has_value());
+  EXPECT_NEAR(maybe_trajectory.value().back().x(), 10, 1e-1);
+  EXPECT_NEAR(maybe_trajectory.value().back().y(), 0, 1e-4);
+}

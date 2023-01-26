@@ -21,10 +21,10 @@
 #ifndef ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
 #define ATEAM_COMMON__BI_DIRECTIONAL_UDP_HPP_
 
-#include <boost/asio.hpp>
-
 #include <functional>
 #include <string>
+
+#include <boost/asio.hpp>
 
 namespace ateam_common
 {

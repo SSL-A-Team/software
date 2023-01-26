@@ -21,7 +21,7 @@
 #ifndef TRAJECTORY_GENERATION__TRAJECTORY_EDITOR_HPP_
 #define TRAJECTORY_GENERATION__TRAJECTORY_EDITOR_HPP_
 
-#include "behavior/behavior_feedback.hpp"
+#include "types/trajectory.hpp"
 #include "types/robot.hpp"
 
 namespace trajectory_editor

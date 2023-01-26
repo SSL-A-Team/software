@@ -25,7 +25,7 @@
 
 #include <vector>
 
-#include "behavior/behavior_feedback.hpp"
+#include "types/trajectory.hpp"
 
 namespace TrapezoidalMotionProfile
 {

@@ -21,19 +21,18 @@
 #ifndef TRAJECTORY_GENERATION__TRAJECTORY_GENERATION_HPP_
 #define TRAJECTORY_GENERATION__TRAJECTORY_GENERATION_HPP_
 
-#include "behavior/behavior.hpp"
-#include "behavior/behavior_feedback.hpp"
+#include "types/behavior_goal.hpp"
+#include "types/behavior_plan.hpp"
 #include "types/world.hpp"
 
 /**
  * Given a behavior and assigned robot, build a motion plan needed to fully execute it
  */
-class TrajectoryGeneration
+namespace trajectory_generation
 {
-public:
-  BehaviorFeedback get_feedback_from_behavior(
-    Behavior behavior, int assigned_robot,
-    const World & world);
-};
+BehaviorPlan GetPlanFromGoal(
+  BehaviorGoal behavior, int assigned_robot,
+  const World & world);
+}
 
 #endif  // TRAJECTORY_GENERATION__TRAJECTORY_GENERATION_HPP_
