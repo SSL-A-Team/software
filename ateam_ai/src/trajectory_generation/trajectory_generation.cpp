@@ -22,6 +22,8 @@
 
 #include <iostream>
 
+#include <ateam_common/angle.hpp>
+
 #include "trajectory_generation/trajectory_editor.hpp"
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
 
@@ -51,7 +53,7 @@ BehaviorPlan GetPlanFromGoal(
         if (!ball.has_value() || ball.value().vel.norm() > 0.05) {
           target.x() = current_robot.pos.x();
           target.y() = current_robot.pos.y();
-          target.z() = 0;
+          target.z() = current_robot.theta;
           target_vel.x() = 0;
           target_vel.y() = 0;
           target_vel.z() = 0;
@@ -61,10 +63,23 @@ BehaviorPlan GetPlanFromGoal(
           Eigen::Vector2d current_robot_pos = current_robot.pos;
           Eigen::Vector2d target_goal = Eigen::Vector2d{-6, 0};
           Eigen::Vector2d target_setup_pos = ball_pos + 0.3 * (ball_pos - target_goal).normalized();
-          bool is_aligned = (ball_pos - current_robot_pos).normalized().dot((target_goal - current_robot_pos).normalized()) > 0.99;
-          is_aligned &= (Eigen::Vector2d{cos(current_robot.theta), sin(current_robot.theta)} - (target_goal - current_robot_pos).normalized()).norm() < 0.1;
+
+          Eigen::Vector2d robot_to_goal = target_goal - current_robot_pos;
+          double robot_to_goal_angle = ateam_common::geometry::VectorToAngle(robot_to_goal);
+          double angle_diff = ateam_common::geometry::SignedSmallestAngleDifference(robot_to_goal_angle, current_robot.theta);
+
+          Eigen::Vector2d robot_to_ball = ball_pos - current_robot_pos;
+          Eigen::Vector2d ball_to_goal = target_goal - ball_pos;
+
+          // Aligned means
+          //  * Ball is directly between the robot and goal
+          //  * Angle difference between heading and robot to goal is low
+          //  * Robot is almost stopped
+          bool is_aligned = ateam_common::geometry::IsVectorAligned(robot_to_goal, robot_to_ball, 0.1);
+          is_aligned &= std::abs(angle_diff) < 0.1;
           is_aligned &= current_robot.vel.norm() < 0.5;
-          std::cout << "Angle Diff " <<  (Eigen::Vector2d{cos(current_robot.theta), sin(current_robot.theta)} - (target_goal - current_robot_pos).normalized()).norm() << std::endl;
+          //std::cout << "Angle Diff " <<  angle_diff << std::endl;
+
           if (!is_aligned) {
             double projection = (target_setup_pos - current_robot_pos).dot(ball_pos - current_robot_pos) / ((target_setup_pos - current_robot_pos).norm() * (target_setup_pos - current_robot_pos).norm());
             projection = std::max(std::min(projection, 1.0), 0.0);
@@ -73,29 +88,29 @@ BehaviorPlan GetPlanFromGoal(
             if (dist < 0.1) {
               target.x() = target_setup_pos.x();
               target.y() = target_setup_pos.y() - 1;
-              target.z() = atan2((ball_pos - current_robot_pos).y(), (ball_pos - current_robot_pos).x());
+              target.z() = atan2(ball_to_goal.y(), ball_to_goal.x());
               target_vel.x() = 0;
               target_vel.y() = 0;
               target_vel.z() = 0;
-              std::cout << "Rerouting" << std::endl;
+              //std::cout << "Rerouting" << std::endl;
             } else {
               target.x() = target_setup_pos.x();
               target.y() = target_setup_pos.y();
-              target.z() = atan2((ball_pos - current_robot_pos).y(), (ball_pos - current_robot_pos).x());
+              target.z() = atan2(ball_to_goal.y(), ball_to_goal.x());
               target_vel.x() = 0;
               target_vel.y() = 0;
               target_vel.z() = 0;
             }
-            std::cout << "Aligning" << std::endl;
+            //std::cout << "Aligning" << std::endl;
           } else {
             // Kick
             target.x() = ball_pos.x();
             target.y() = ball_pos.y();
-            target.z() = atan2((ball_pos - current_robot_pos).y(), (ball_pos - current_robot_pos).x());
+            target.z() = atan2(ball_to_goal.y(), ball_to_goal.x());
             target_vel.x() = 0;
             target_vel.y() = 0;
             target_vel.z() = 0;
-            std::cout << "Kick" << std::endl;
+            //std::cout << "Kick" << std::endl;
           }
         }
 

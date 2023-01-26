@@ -22,6 +22,9 @@
 
 #include <algorithm>
 #include <numeric>
+#include <iostream>
+
+#include <ateam_common/angle.hpp>
 
 namespace TrapezoidalMotionProfile
 {
@@ -37,6 +40,15 @@ Trajectory Generate3d(
 
   // TODO(jneiger): Scale plans to longest DOF trajectory time length
   for (std::size_t i = 0; i < trajectories.size(); i++) {
+    double s = start(i);
+    double e = end(i);
+
+    // If we're planning the angle, minimize the difference between the two by unwrapping
+    if (i == 2) {
+      double angle_diff = ateam_common::geometry::SignedSmallestAngleDifference(e, s);
+      e = s + angle_diff;
+    }
+
     trajectories.at(i) = Generate1d(
       start(i), start_vel(i), end(i), end_vel(i), max_vel_limits(
         i), max_accel_limits(i), dt);
