@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+
 #include <tf2/LinearMath/Quaternion.h>
 
 #include <array>
@@ -32,6 +33,7 @@
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
+#include <ateam_msgs/msg/world.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 
@@ -44,6 +46,7 @@
 #include "trajectory_generation/trajectory_editor.hpp"
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
+#include "util/message_conversions.hpp"
 
 using namespace std::chrono_literals;
 
@@ -92,6 +95,10 @@ public:
       10,
       ball_callback);
 
+    world_publisher_ = create_publisher<ateam_msgs::msg::World>(
+      "~/world",
+      rclcpp::SystemDefaultsQoS());
+
     timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
   }
 
@@ -105,6 +112,8 @@ private:
     16> yellow_robots_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
+
+  rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
   BehaviorRealization realization_;
   BehaviorEvaluator evaluator_;
@@ -163,6 +172,9 @@ private:
         world_.plan_from_our_robots.at(robot_id) = world_.our_robots.at(robot_id);
       }
     }
+
+    // Save off the world to the rosbag
+    world_publisher_->publish(ateam_ai::message_conversions::toMsg(world_));
 
     //
     // Plan behavior
