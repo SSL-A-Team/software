@@ -21,14 +21,14 @@
 #ifndef TEAM_CLIENT_HPP_
 #define TEAM_CLIENT_HPP_
 
-#include <boost/asio.hpp>
-#include <rclcpp/rclcpp.hpp>
 #include <ssl_league_protobufs/ssl_gc_rcon_team.pb.h>
 #include <array>
 #include <atomic>
 #include <mutex>
 #include <string>
 #include <vector>
+#include <boost/asio.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 namespace ateam_game_controller_bridge
 {

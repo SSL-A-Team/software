@@ -18,43 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
-#define ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
 
-#include <functional>
-#include <string>
+#ifndef UTIL__MESSAGE_CONVERSIONS_HPP_
+#define UTIL__MESSAGE_CONVERSIONS_HPP_
 
-#include <boost/asio.hpp>
+#include <ateam_msgs/msg/world.hpp>
+#include <ateam_msgs/msg/behavior_executor_state.hpp>
+#include <ateam_msgs/msg/trajectory.hpp>
+#include <ateam_msgs/msg/ball_state.hpp>
+#include <ateam_msgs/msg/robot_state.hpp>
 
-namespace ateam_common
+#include "types/world.hpp"
+
+namespace ateam_ai::message_conversions
 {
-class MulticastReceiver
-{
-public:
-  /**
-   * @param uint8_t* Data received in latest packet
-   * @param size_t Length of data received
-   */
-  using ReceiveCallback = std::function<void (uint8_t *, size_t)>;
 
-  MulticastReceiver(
-    std::string multicast_ip_address,
-    int16_t multicast_port,
-    ReceiveCallback receive_callback);
+ateam_msgs::msg::Sample3d toMsg(const Sample3d & obj);
+ateam_msgs::msg::Trajectory toMsg(const Trajectory & obj);
+ateam_msgs::msg::BehaviorExecutorState toMsg(const BehaviorExecutorState & obj);
 
-  ~MulticastReceiver();
+ateam_msgs::msg::BallState toMsg(const Ball & obj);
+ateam_msgs::msg::RobotState toMsg(const Robot & obj);
 
-private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket multicast_socket_;
-  boost::asio::ip::udp::endpoint sender_endpoint_;
-  std::array<uint8_t, 4096> buffer_;
-  std::thread io_service_thread_;
+ateam_msgs::msg::World toMsg(const World & obj);
 
-  void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
-};
+}  // namespace ateam_ai::message_conversions
 
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+#endif  // UTIL__MESSAGE_CONVERSIONS_HPP_

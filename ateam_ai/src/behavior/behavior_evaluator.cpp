@@ -24,6 +24,10 @@
 #include <vector>
 #include <cmath>
 
+#include <ateam_common/parameters.hpp>
+
+CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
+
 BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
 
@@ -73,7 +77,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   // ones we can fill later
   DirectedGraph<BehaviorGoal> simple_move;
   static double j = 0;
-  j += 0.005;
+  j += kRotationSpeed;
   for (int i = 0; i < 16; i++) {
     double theta = i / 11.0 * 3.14 * 2 + j;
     BehaviorGoal move{

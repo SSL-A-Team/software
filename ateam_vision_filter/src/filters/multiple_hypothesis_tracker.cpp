@@ -20,14 +20,14 @@
 
 #include "filters/multiple_hypothesis_tracker.hpp"
 
-#include <boost/graph/successive_shortest_path_nonnegative_weights.hpp>
-
 #include <algorithm>
 #include <map>
 #include <set>
 #include <utility>
 #include <vector>
 #include <iostream>
+
+#include <boost/graph/successive_shortest_path_nonnegative_weights.hpp>
 
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {

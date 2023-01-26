@@ -27,11 +27,12 @@
 // Returns best track
 
 #include <Eigen/Dense>
-#include <boost/graph/adjacency_list.hpp>
 
 #include <map>
 #include <utility>
 #include <vector>
+
+#include <boost/graph/adjacency_list.hpp>
 
 #include "filters/interacting_multiple_model_filter.hpp"
 

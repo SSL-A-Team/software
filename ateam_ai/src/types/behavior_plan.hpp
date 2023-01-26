@@ -21,7 +21,10 @@
 #ifndef TYPES__BEHAVIOR_PLAN_HPP_
 #define TYPES__BEHAVIOR_PLAN_HPP_
 
+#include <Eigen/Dense>
+
 #include <optional>
+#include <variant>
 #include <vector>
 
 #include "types/trajectory.hpp"

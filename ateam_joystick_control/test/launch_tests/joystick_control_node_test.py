@@ -56,7 +56,7 @@ class TestJoystickControlNode(unittest.TestCase):
         self.message_pump = launch_testing_ros.MessagePump(
             self.node, context=self.context)
         self.pub = self.node.create_publisher(
-            sensor_msgs.msg.Joy, '/joystick_control_node/joy', 1)
+            sensor_msgs.msg.Joy, '/joystick', 1)
 
         self.sub_0 = self.node.create_subscription(
             ateam_msgs.msg.RobotMotionCommand, '/motion_commands/robot_0', self.callback_0, 1)

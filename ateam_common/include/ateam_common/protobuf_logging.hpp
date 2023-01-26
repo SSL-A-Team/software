@@ -21,10 +21,10 @@
 #ifndef ATEAM_COMMON__PROTOBUF_LOGGING_HPP_
 #define ATEAM_COMMON__PROTOBUF_LOGGING_HPP_
 
-#include <rclcpp/logger.hpp>
-#include <rclcpp/logging.hpp>
 #include <google/protobuf/stubs/logging.h>
 #include <string>
+#include <rclcpp/logger.hpp>
+#include <rclcpp/logging.hpp>
 
 /**
  * @brief Sets up the protobuf log handler to redirect all messages through ROS.
