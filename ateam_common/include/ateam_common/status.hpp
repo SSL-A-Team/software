@@ -24,12 +24,12 @@
 // Use backtrace so we get line numbers and files
 #define BOOST_STACKTRACE_USE_ADDR2LINE
 
-#include <boost/outcome.hpp>
-#include <boost/stacktrace.hpp>
-
 #include <utility>
 #include <string>
 #include <iostream>
+
+#include <boost/outcome.hpp>
+#include <boost/stacktrace.hpp>
 
 // Utilities to improve the error checking workflow
 //
