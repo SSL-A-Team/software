@@ -23,30 +23,32 @@
 #include "trajectory_generation/trajectory_editor.hpp"
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
 
-BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
-  Behavior behavior, int assigned_robot, const World & world)
+namespace trajectory_generation
 {
-  BehaviorFeedback feedback;
+BehaviorPlan GetPlanFromGoal(
+  BehaviorGoal behavior, int assigned_robot, const World & world)
+{
+  BehaviorPlan plan;
 
   switch (behavior.type) {
-    case Behavior::Type::MovingKick:
-    case Behavior::Type::PivotKick:
+    case BehaviorGoal::Type::MovingKick:
+    case BehaviorGoal::Type::PivotKick:
       // std::get<KickParam>(behavior.params).target_location;
       break;
 
-    case Behavior::Type::OneTouchReceiveKick:
-    case Behavior::Type::TwoTouchReceiveKick:
+    case BehaviorGoal::Type::OneTouchReceiveKick:
+    case BehaviorGoal::Type::TwoTouchReceiveKick:
       // std::get<ReceiveParam>(behavior.params).receive_location;
       break;
 
-    case Behavior::Type::Shot:
+    case BehaviorGoal::Type::Shot:
       break;
 
-    case Behavior::Type::OneTouchShot:
+    case BehaviorGoal::Type::OneTouchShot:
       // std::get<ReceiveShotParam>(behavior.params).receive_location;
       break;
 
-    case Behavior::Type::MoveToPoint:
+    case BehaviorGoal::Type::MoveToPoint:
       {
         Robot current_robot = world.plan_from_our_robots.at(assigned_robot).value();
 
@@ -70,19 +72,20 @@ BehaviorFeedback TrajectoryGeneration::get_feedback_from_behavior(
         Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
           current, current_vel, target,
           target_vel, max_vel, max_accel,
-          dt, world.current_time);
+          dt, world.current_time + world.immutable_duration);
 
-        feedback.trajectory = trajectory;
+        plan.trajectory = trajectory;
       }
       break;
 
-    case Behavior::Type::CostFunctionPoint:
+    case BehaviorGoal::Type::CostFunctionPoint:
       break;
 
     default:
       break;
   }
 
-  feedback.assigned_robot_id = assigned_robot;
-  return feedback;
+  plan.assigned_robot_id = assigned_robot;
+  return plan;
 }
+}  // namespace trajectory_generation

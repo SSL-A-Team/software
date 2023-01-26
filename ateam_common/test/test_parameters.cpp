@@ -18,43 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
-#define ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+#include <gtest/gtest.h>
+#include "ateam_common/parameters.hpp"
 
-#include <functional>
-#include <string>
+CREATE_PARAM(int, "int/", intparam, 10);
+CREATE_PARAM(double, "double/", doubleparam, 5.6);
+CREATE_PARAM(bool, "bool/", boolparam, true);
 
-#include <boost/asio.hpp>
-
-namespace ateam_common
+TEST(TestParameters, BasicParametersAreDefaultValues)
 {
-class MulticastReceiver
-{
-public:
-  /**
-   * @param uint8_t* Data received in latest packet
-   * @param size_t Length of data received
-   */
-  using ReceiveCallback = std::function<void (uint8_t *, size_t)>;
-
-  MulticastReceiver(
-    std::string multicast_ip_address,
-    int16_t multicast_port,
-    ReceiveCallback receive_callback);
-
-  ~MulticastReceiver();
-
-private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket multicast_socket_;
-  boost::asio::ip::udp::endpoint sender_endpoint_;
-  std::array<uint8_t, 4096> buffer_;
-  std::thread io_service_thread_;
-
-  void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
-};
-
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+  EXPECT_EQ(intparam, 10);
+  EXPECT_EQ(doubleparam, 5.6);
+  EXPECT_TRUE(boolparam);
+}

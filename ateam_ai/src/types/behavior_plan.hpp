@@ -18,43 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
-#define ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+#ifndef TYPES__BEHAVIOR_PLAN_HPP_
+#define TYPES__BEHAVIOR_PLAN_HPP_
 
-#include <functional>
-#include <string>
+#include <Eigen/Dense>
 
-#include <boost/asio.hpp>
+#include <optional>
+#include <variant>
+#include <vector>
 
-namespace ateam_common
+#include "types/trajectory.hpp"
+
+struct KickFeedback {};
+struct ReceiveFeedback {};
+struct ShotFeedback {};
+struct ReceiveShotFeedback {};
+struct MoveFeedback {};
+struct CostFeedback {};
+
+struct BehaviorPlan
 {
-class MulticastReceiver
-{
-public:
-  /**
-   * @param uint8_t* Data received in latest packet
-   * @param size_t Length of data received
-   */
-  using ReceiveCallback = std::function<void (uint8_t *, size_t)>;
+  std::optional<int> assigned_robot_id;
+  Trajectory trajectory;
+  DribblerAndKickerBehavior dribbler_and_kicker_behavior;
 
-  MulticastReceiver(
-    std::string multicast_ip_address,
-    int16_t multicast_port,
-    ReceiveCallback receive_callback);
-
-  ~MulticastReceiver();
-
-private:
-  ReceiveCallback receive_callback_;
-  boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket multicast_socket_;
-  boost::asio::ip::udp::endpoint sender_endpoint_;
-  std::array<uint8_t, 4096> buffer_;
-  std::thread io_service_thread_;
-
-  void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
+  using SpecificFeedback = std::variant<KickFeedback, ReceiveFeedback, ShotFeedback,
+      ReceiveFeedback, MoveFeedback, CostFeedback>;
+  std::variant<SpecificFeedback> specific_feedback;
 };
 
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__MULTICAST_RECEIVER_HPP_
+#endif  // TYPES__BEHAVIOR_PLAN_HPP_

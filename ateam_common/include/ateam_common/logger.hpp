@@ -21,11 +21,12 @@
 #ifndef ATEAM_COMMON__LOGGER_HPP_
 #define ATEAM_COMMON__LOGGER_HPP_
 
-#include <rclcpp/logger.hpp>
-#include <rclcpp/logging.hpp>
 #include <optional>
 #include <string>
 #include <utility>
+
+#include <rclcpp/logger.hpp>
+#include <rclcpp/logging.hpp>
 
 /**
  * @brief Sets up the global logger to redirect all logged output through ROS.
@@ -86,16 +87,16 @@ public:
     if (ros_logger.has_value()) {
       switch (level) {
         case Level::INFO:
-          RCLCPP_INFO(ros_logger.value(), format, std::forward<Args>(args)...);
+          RCLCPP_INFO(ros_logger.value(), format.c_str(), std::forward<Args>(args)...);
           break;
         case Level::WARN:
-          RCLCPP_WARN(ros_logger.value(), format, std::forward<Args>(args)...);
+          RCLCPP_WARN(ros_logger.value(), format.c_str(), std::forward<Args>(args)...);
           break;
         case Level::ERROR:
-          RCLCPP_ERROR(ros_logger.value(), format, std::forward<Args>(args)...);
+          RCLCPP_ERROR(ros_logger.value(), format.c_str(), std::forward<Args>(args)...);
           break;
         case Level::FATAL:
-          RCLCPP_FATAL(ros_logger.value(), format, std::forward<Args>(args)...);
+          RCLCPP_FATAL(ros_logger.value(), format.c_str(), std::forward<Args>(args)...);
           break;
       }
     } else {

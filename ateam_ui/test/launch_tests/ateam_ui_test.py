@@ -103,7 +103,7 @@ class TestUI(unittest.TestCase):
         # Check robot subscriptions
         for team in ["yellow", "blue"]:
             for id in range(0, 16):
-                topic = (f"/{team}/robot{id}", ['ateam_msgs/msg/RobotState'])
+                topic = (f"/{team}_team/robot{id}", ['ateam_msgs/msg/RobotState'])
                 self.assertIn(topic, subscriptions)
 
         # Check subscription to /overlay

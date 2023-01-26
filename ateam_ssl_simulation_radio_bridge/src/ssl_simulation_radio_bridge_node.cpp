@@ -18,18 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
-#include <ateam_common/bi_directional_udp.hpp>
-#include <ateam_msgs/msg/robot_feedback.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
 #include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
 
 #include <array>
 #include <string>
 #include <functional>
+
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
+#include <ateam_common/bi_directional_udp.hpp>
+#include <ateam_common/topic_names.hpp>
+#include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_msgs/msg/robot_motion_command.hpp>
 
 #include "message_conversions.hpp"
 
@@ -58,12 +60,12 @@ public:
 
       command_subscriptions_.at(robot_id) =
         create_subscription<ateam_msgs::msg::RobotMotionCommand>(
-        "/ateam_ai/robot_motion_commands/robot" + std::to_string(robot_id),
+        std::string(Topics::kRobotMotionCommandPrefix) + std::to_string(robot_id),
         10,
         callback);
 
       feedback_publishers_.at(robot_id) = create_publisher<ateam_msgs::msg::RobotFeedback>(
-        "~/robot_feedback/robot" + std::to_string(robot_id),
+        std::string(Topics::kRobotFeedbackPrefix) + std::to_string(robot_id),
         rclcpp::SystemDefaultsQoS());
     }
   }

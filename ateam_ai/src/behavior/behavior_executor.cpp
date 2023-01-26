@@ -20,21 +20,21 @@
 
 #include "behavior/behavior_executor.hpp"
 
-#include "behavior/behavior_feedback.hpp"
+#include "types/behavior_plan.hpp"
 #include "trajectory_generation/trajectory_editor.hpp"
 
 BehaviorExecutor::BehaviorExecutor(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
 
 std::array<std::optional<Trajectory>, 16> BehaviorExecutor::execute_behaviors(
-  const DirectedGraph<Behavior> & behaviors,
+  const DirectedGraph<BehaviorGoal> & behaviors,
   const World & world,
   BehaviorExecutorState & self_state)
 {
   //
   // Grab trajectories for everything
   //
-  DirectedGraph<BehaviorFeedback> behavior_feedback = behavior_realization.realize_behaviors(
+  DirectedGraph<BehaviorPlan> behavior_feedback = behavior_realization.realize_behaviors(
     behaviors, world);
 
   //
@@ -65,11 +65,10 @@ std::array<std::optional<Trajectory>, 16> BehaviorExecutor::execute_behaviors(
       std::size_t assigned_robot = root_node.assigned_robot_id.value();
 
       if (self_state.previous_trajectories.at(assigned_robot).has_value()) {
-        const double immutable_duration = 0.1;
         trajectory = trajectory_editor::apply_immutable_duration(
           self_state.previous_trajectories.at(assigned_robot).value(),
           trajectory,
-          immutable_duration,
+          world.immutable_duration,
           world.current_time);
       }
 

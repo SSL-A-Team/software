@@ -30,6 +30,7 @@
 #include "types/field.hpp"
 #include "types/referee_info.hpp"
 #include "types/robot.hpp"
+#include "types/trajectory.hpp"
 
 struct BehaviorExecutorState
 {
@@ -39,6 +40,7 @@ struct BehaviorExecutorState
 
 struct World
 {
+  const double immutable_duration = 0.1;  // s
   double current_time = 0.0;  // s
 
   Field field;
