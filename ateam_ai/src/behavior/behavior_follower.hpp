@@ -21,15 +21,15 @@
 #ifndef BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
 #define BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
 
+#include <optional>
 #include <array>
 
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
-#include "behavior/behavior.hpp"
 #include "behavior/behavior_realization.hpp"
+#include "types/trajectory.hpp"
 #include "types/world.hpp"
-#include "util/directed_graph.hpp"
 
 /**
  * Given trajectories as a function of time

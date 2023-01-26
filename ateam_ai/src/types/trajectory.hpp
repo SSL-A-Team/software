@@ -18,13 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_
-#define BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_
+#ifndef TYPES__TRAJECTORY_HPP_
+#define TYPES__TRAJECTORY_HPP_
 
 #include <Eigen/Dense>
 
-#include <optional>
-#include <variant>
 #include <vector>
 
 struct Sample3d
@@ -34,29 +32,11 @@ struct Sample3d
   Eigen::Vector3d vel;
   Eigen::Vector3d accel;
 };
+
 struct Trajectory
 {
-  // TODO(jneiger): Flesh out the trajectory structure more based on Kyle's requirements
-  std::vector<Sample3d> samples;  // First element is current time/state
+  std::vector<Sample3d> samples;
 };
 struct DribblerAndKickerBehavior {};
 
-struct KickFeedback {};
-struct ReceiveFeedback {};
-struct ShotFeedback {};
-struct ReceiveShotFeedback {};
-struct MoveFeedback {};
-struct CostFeedback {};
-
-struct BehaviorFeedback
-{
-  std::optional<int> assigned_robot_id;
-  Trajectory trajectory;
-  DribblerAndKickerBehavior dribbler_and_kicker_behavior;
-
-  using SpecificFeedback = std::variant<KickFeedback, ReceiveFeedback, ShotFeedback,
-      ReceiveFeedback, MoveFeedback, CostFeedback>;
-  std::variant<SpecificFeedback> specific_feedback;
-};
-
-#endif  // BEHAVIOR__BEHAVIOR_FEEDBACK_HPP_
+#endif  // TYPES__TRAJECTORY_HPP_

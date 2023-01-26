@@ -30,7 +30,7 @@ constexpr std::string_view kVisionMessages = "/vision_messages";  // Raw vision 
 constexpr std::string_view kRefereeMessages = "/referee_messages";  // Raw ref protobufs
 
 // Input from robots
-constexpr std::string_view kRobotFeedbackPrefix = "/robot_motion_commands/robot";
+constexpr std::string_view kRobotFeedbackPrefix = "/robot_feedback/robot";
 
 // Output from vision filter
 constexpr std::string_view kBall = "/ball";

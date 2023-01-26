@@ -21,12 +21,10 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior_evaluator.hpp
   src/behavior/behavior_executor.cpp
   src/behavior/behavior_executor.hpp
-  src/behavior/behavior_feedback.hpp
   src/behavior/behavior_follower.cpp
   src/behavior/behavior_follower.hpp
   src/behavior/behavior_realization.cpp
   src/behavior/behavior_realization.hpp
-  src/behavior/behavior.hpp
   src/trajectory_generation/ilqr_problem.hpp
   src/trajectory_generation/trajectory_editor.cpp
   src/trajectory_generation/trajectory_editor.hpp
@@ -35,9 +33,12 @@ add_library(${PROJECT_NAME} SHARED
   src/trajectory_generation/trapezoidal_motion_profile.cpp
   src/trajectory_generation/trapezoidal_motion_profile.hpp
   src/types/ball.hpp
+  src/types/behavior_goal.hpp
+  src/types/behavior_plan.hpp
   src/types/field.hpp
   src/types/referee_info.hpp
   src/types/robot.hpp
+  src/types/trajectory.hpp
   src/types/world.hpp
   src/util/message_conversions.cpp
   src/util/message_conversions.hpp

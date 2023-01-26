@@ -18,30 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef TYPES__BEHAVIOR_PLAN_HPP_
+#define TYPES__BEHAVIOR_PLAN_HPP_
 
-#ifndef UTIL__MESSAGE_CONVERSIONS_HPP_
-#define UTIL__MESSAGE_CONVERSIONS_HPP_
+#include <Eigen/Dense>
 
-#include <ateam_msgs/msg/world.hpp>
-#include <ateam_msgs/msg/behavior_executor_state.hpp>
-#include <ateam_msgs/msg/trajectory.hpp>
-#include <ateam_msgs/msg/ball_state.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
+#include <optional>
+#include <variant>
+#include <vector>
 
-#include "types/world.hpp"
+#include "types/trajectory.hpp"
 
-namespace ateam_ai::message_conversions
+struct KickFeedback {};
+struct ReceiveFeedback {};
+struct ShotFeedback {};
+struct ReceiveShotFeedback {};
+struct MoveFeedback {};
+struct CostFeedback {};
+
+struct BehaviorPlan
 {
+  std::optional<int> assigned_robot_id;
+  Trajectory trajectory;
+  DribblerAndKickerBehavior dribbler_and_kicker_behavior;
 
-ateam_msgs::msg::Sample3d toMsg(const Sample3d & obj);
-ateam_msgs::msg::Trajectory toMsg(const Trajectory & obj);
-ateam_msgs::msg::BehaviorExecutorState toMsg(const BehaviorExecutorState & obj);
+  using SpecificFeedback = std::variant<KickFeedback, ReceiveFeedback, ShotFeedback,
+      ReceiveFeedback, MoveFeedback, CostFeedback>;
+  std::variant<SpecificFeedback> specific_feedback;
+};
 
-ateam_msgs::msg::BallState toMsg(const Ball & obj);
-ateam_msgs::msg::RobotState toMsg(const Robot & obj);
-
-ateam_msgs::msg::World toMsg(const World & obj);
-
-}  // namespace ateam_ai::message_conversions
-
-#endif  // UTIL__MESSAGE_CONVERSIONS_HPP_
+#endif  // TYPES__BEHAVIOR_PLAN_HPP_
