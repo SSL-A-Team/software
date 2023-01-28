@@ -40,9 +40,10 @@ add_library(${PROJECT_NAME} SHARED
   src/types/robot.hpp
   src/types/trajectory.hpp
   src/types/world.hpp
+  src/util/directed_graph.hpp
   src/util/message_conversions.cpp
   src/util/message_conversions.hpp
-  src/util/directed_graph.hpp
+  src/util/pid.hpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
@@ -71,6 +72,7 @@ if(BUILD_TESTING)
     test/trajectory_generation/ilqr_problem_test.cpp
     test/trajectory_generation/trajectory_editor_test.cpp
     test/trajectory_generation/trapezoidal_motion_profile_test.cpp
+    test/util/pid_test.cpp
   )
   target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
   target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})

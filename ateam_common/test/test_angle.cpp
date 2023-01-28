@@ -18,11 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_common/angle.hpp"
+#include <gtest/gtest.h>
 
 #include <cmath>
 
-#include <gtest/gtest.h>
+#include "ateam_common/angle.hpp"
 
 namespace geometry = ateam_common::geometry;
 
