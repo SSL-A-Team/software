@@ -30,7 +30,7 @@ namespace TrapezoidalMotionProfile
 {
 /**
  * @brief Unwrap heading target to move through the shortest angle distance
- * 
+ *
  * @param start Start XYtheta
  * @param end End XYtheta
  * @return Eigen::Vector3d XYtheta with modified theta
@@ -192,8 +192,8 @@ Trajectory1d sample_trapezoidal_profile(
       return v_initial + a * t;
     };
   const auto sign = [](const double x) {
-    return x / abs(x);
-  };
+      return x / abs(x);
+    };
 
   Trajectory1d output;
 
@@ -222,7 +222,8 @@ Trajectory1d sample_trapezoidal_profile(
       double accel_direction = sign(coeffs.phase_3.end_vel - coeffs.phase_3.start_vel);
       sample.pos = d_into_phase_3 +
         position(t_into_phase_3, coeffs.phase_3.start_vel, accel_direction * accel_limit);
-      sample.vel = velocity(t_into_phase_3, coeffs.phase_3.start_vel, accel_direction * accel_limit);
+      sample.vel =
+        velocity(t_into_phase_3, coeffs.phase_3.start_vel, accel_direction * accel_limit);
       sample.accel = -accel_limit;
     }
 
@@ -240,7 +241,7 @@ Trajectory1d Generate1d(
   // being so small that it creates nan values
   if (std::abs(start_pos - end_pos) < 1e-6 && std::abs(start_vel - end_vel) < 1e-6) {
     Trajectory1d traj;
-    traj.samples.push_back(Sample1d{.time=0, .pos=end_pos, .vel=end_vel, .accel=0});
+    traj.samples.push_back(Sample1d{.time = 0, .pos = end_pos, .vel = end_vel, .accel = 0});
     return traj;
   }
 

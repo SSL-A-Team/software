@@ -42,17 +42,22 @@ BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
     ateam_msgs::msg::RobotMotionCommand motion_command;
     double kp = 0.5;
     motion_command.twist.linear.x = command.vel.x() +
-      kp*(command.pose.x() - world.our_robots.at(robot_id).value().pos.x());
+      kp * (command.pose.x() - world.our_robots.at(robot_id).value().pos.x());
     motion_command.twist.linear.y = command.vel.y() +
-      kp*(command.pose.y() - world.our_robots.at(robot_id).value().pos.y());
-    double theta_diff = ateam_common::geometry::SignedSmallestAngleDifference(command.pose.z(), world.our_robots.at(robot_id).value().theta);
-    motion_command.twist.angular.z = command.vel.z() - kp*theta_diff;
+      kp * (command.pose.y() - world.our_robots.at(robot_id).value().pos.y());
+    double theta_diff = ateam_common::geometry::SignedSmallestAngleDifference(
+      command.pose.z(), world.our_robots.at(robot_id).value().theta);
+    motion_command.twist.angular.z = command.vel.z() - kp * theta_diff;
 
-    if (robot_id == 1)
-      std::cout << theta_diff << " " << command.pose.z() << " " << world.our_robots.at(robot_id).value().theta << std::endl;
+    if (robot_id == 1) {
+      std::cout << theta_diff << " " << command.pose.z() << " " <<
+        world.our_robots.at(robot_id).value().theta << std::endl;
+    }
 
-    Eigen::Vector2d robot{world.our_robots.at(robot_id).value().pos.x(), world.our_robots.at(robot_id).value().pos.y()};
-    motion_command.kick = world.get_unique_ball().has_value() && (world.get_unique_ball().value().pos - robot).norm() < 0.1;
+    Eigen::Vector2d robot{world.our_robots.at(robot_id).value().pos.x(), world.our_robots.at(
+        robot_id).value().pos.y()};
+    motion_command.kick = world.get_unique_ball().has_value() &&
+      (world.get_unique_ball().value().pos - robot).norm() < 0.1;
     robot_motion_commands.at(robot_id) = motion_command;
   }
 

@@ -20,9 +20,9 @@
 
 #include "ateam_common/angle.hpp"
 
-#include <gtest/gtest.h>
-
 #include <cmath>
+
+#include <gtest/gtest.h>
 
 namespace geometry = ateam_common::geometry;
 

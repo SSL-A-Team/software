@@ -193,7 +193,7 @@ TEST(TrapezoidalMotionProfile, Trajectory3d_ShouldReturnOneLong_WhenAlreadyAtTar
   EXPECT_EQ(ret.samples.front().pose, end);
   EXPECT_EQ(ret.samples.front().vel, start_vel);
   EXPECT_EQ(ret.samples.front().vel, end_vel);
-  Eigen::Vector3d zero{0,0,0};  // Get around #define weirdness
+  Eigen::Vector3d zero{0, 0, 0};  // Get around #define weirdness
   EXPECT_EQ(ret.samples.front().accel, zero);
 }
 

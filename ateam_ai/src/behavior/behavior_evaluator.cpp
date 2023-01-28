@@ -93,8 +93,9 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   //
   DirectedGraph<BehaviorGoal> qual_goalie_and_shot;
   double ball_y = 0;
-  if (world.get_unique_ball().has_value())
+  if (world.get_unique_ball().has_value()) {
     ball_y = world.get_unique_ball().value().pos.y();
+  }
   BehaviorGoal goalie{
     BehaviorGoal::Type::MoveToPoint,
     BehaviorGoal::Priority::Required,
@@ -111,7 +112,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
     BehaviorGoal move{
       BehaviorGoal::Type::MoveToPoint,
       BehaviorGoal::Priority::Required,
-      MoveParam(Eigen::Vector2d{i/-2.0, 4})};
+      MoveParam(Eigen::Vector2d{i / -2.0, 4})};
     qual_goalie_and_shot.add_node(move);
   }
 

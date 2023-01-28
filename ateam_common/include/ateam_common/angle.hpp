@@ -21,40 +21,46 @@
 #ifndef ATEAM_COMMON__ANGLE_HPP_
 #define ATEAM_COMMON__ANGLE_HPP_
 
-#include <cmath>
-
 #include <Eigen/Dense>
 
-namespace ateam_common {
-namespace geometry {
+#include <cmath>
+
+namespace ateam_common
+{
+namespace geometry
+{
 
 /**
  * @brief Wraps to -PI through PI inclusive
- * 
- * @param a Angle to wrap
- * @return double Wrapped angle
  */
-inline double WrapToNPiPi(double a) {
+inline double WrapToNPiPi(double a)
+{
   return atan2(sin(a), cos(a));
 }
 
 /**
  * @brief Returns the smallest angle (a - b) in signed format
  */
-inline double SignedSmallestAngleDifference(double a, double b) {
+inline double SignedSmallestAngleDifference(double a, double b)
+{
   double unbound_angle_diff = a - b;
   return atan2(sin(unbound_angle_diff), cos(unbound_angle_diff));
 }
 
-inline double VectorToAngle(const Eigen::Vector2d & vector) {
+inline double VectorToAngle(const Eigen::Vector2d & vector)
+{
   return atan2(vector.y(), vector.x());
 }
 
-inline double SmallestAngleBetween(const Eigen::Vector2d & a, const Eigen::Vector2d & b) {
+inline double SmallestAngleBetween(const Eigen::Vector2d & a, const Eigen::Vector2d & b)
+{
   return acos(a.normalized().dot(b.normalized()));
 }
 
-inline bool IsVectorAligned(const Eigen::Vector2d & a, const Eigen::Vector2d & b, double max_angle_diff = 0.1) {
+inline bool IsVectorAligned(
+  const Eigen::Vector2d & a, const Eigen::Vector2d & b,
+  double max_angle_diff = 0.1)
+{
   double a_angle = VectorToAngle(a);
   double b_angle = VectorToAngle(b);
   return SignedSmallestAngleDifference(a_angle, b_angle) < max_angle_diff;

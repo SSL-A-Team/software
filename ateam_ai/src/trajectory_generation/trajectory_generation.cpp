@@ -20,6 +20,7 @@
 
 #include "trajectory_generation/trajectory_generation.hpp"
 
+#include <algorithm>
 #include <iostream>
 
 #include <ateam_common/angle.hpp>
@@ -49,7 +50,7 @@ BehaviorPlan GetPlanFromGoal(
         current_vel.y() = current_robot.vel.y();
         current_vel.z() = current_robot.omega;
 
-        const auto& ball = world.get_unique_ball();
+        const auto & ball = world.get_unique_ball();
         if (!ball.has_value() || ball.value().vel.norm() > 0.05) {
           target.x() = current_robot.pos.x();
           target.y() = current_robot.pos.y();
@@ -66,7 +67,8 @@ BehaviorPlan GetPlanFromGoal(
 
           Eigen::Vector2d robot_to_goal = target_goal - current_robot_pos;
           double robot_to_goal_angle = ateam_common::geometry::VectorToAngle(robot_to_goal);
-          double angle_diff = ateam_common::geometry::SignedSmallestAngleDifference(robot_to_goal_angle, current_robot.theta);
+          double angle_diff = ateam_common::geometry::SignedSmallestAngleDifference(
+            robot_to_goal_angle, current_robot.theta);
 
           Eigen::Vector2d robot_to_ball = ball_pos - current_robot_pos;
           Eigen::Vector2d ball_to_goal = target_goal - ball_pos;
@@ -75,15 +77,20 @@ BehaviorPlan GetPlanFromGoal(
           //  * Ball is directly between the robot and goal
           //  * Angle difference between heading and robot to goal is low
           //  * Robot is almost stopped
-          bool is_aligned = ateam_common::geometry::IsVectorAligned(robot_to_goal, robot_to_ball, 0.1);
+          bool is_aligned = ateam_common::geometry::IsVectorAligned(
+            robot_to_goal, robot_to_ball,
+            0.1);
           is_aligned &= std::abs(angle_diff) < 0.1;
           is_aligned &= current_robot.vel.norm() < 0.5;
-          //std::cout << "Angle Diff " <<  angle_diff << std::endl;
 
           if (!is_aligned) {
-            double projection = (target_setup_pos - current_robot_pos).dot(ball_pos - current_robot_pos) / ((target_setup_pos - current_robot_pos).norm() * (target_setup_pos - current_robot_pos).norm());
+            double projection = (target_setup_pos - current_robot_pos).dot(
+              ball_pos - current_robot_pos) /
+              ((target_setup_pos - current_robot_pos).norm() *
+              (target_setup_pos - current_robot_pos).norm());
             projection = std::max(std::min(projection, 1.0), 0.0);
-            Eigen::Vector2d ball_projected_on_move_line = projection * (target_setup_pos - current_robot_pos) + current_robot_pos;
+            Eigen::Vector2d ball_projected_on_move_line = projection *
+              (target_setup_pos - current_robot_pos) + current_robot_pos;
             double dist = (ball_projected_on_move_line - ball_pos).norm();
             if (dist < 0.1) {
               target.x() = target_setup_pos.x();
@@ -92,7 +99,6 @@ BehaviorPlan GetPlanFromGoal(
               target_vel.x() = 0;
               target_vel.y() = 0;
               target_vel.z() = 0;
-              //std::cout << "Rerouting" << std::endl;
             } else {
               target.x() = target_setup_pos.x();
               target.y() = target_setup_pos.y();
@@ -101,7 +107,6 @@ BehaviorPlan GetPlanFromGoal(
               target_vel.y() = 0;
               target_vel.z() = 0;
             }
-            //std::cout << "Aligning" << std::endl;
           } else {
             // Kick
             target.x() = ball_pos.x();
@@ -110,7 +115,6 @@ BehaviorPlan GetPlanFromGoal(
             target_vel.x() = 0;
             target_vel.y() = 0;
             target_vel.z() = 0;
-            //std::cout << "Kick" << std::endl;
           }
         }
 
