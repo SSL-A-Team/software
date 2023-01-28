@@ -28,6 +28,24 @@
 
 namespace TrapezoidalMotionProfile
 {
+/**
+ * @brief Unwrap heading target to move through the shortest angle distance
+ * 
+ * @param start Start XYtheta
+ * @param end End XYtheta
+ * @return Eigen::Vector3d XYtheta with modified theta
+ */
+Eigen::Vector3d minimize_angle_goal_target(
+  const Eigen::Vector3d & start,
+  const Eigen::Vector3d & end)
+{
+  Eigen::Vector3d new_end = end;
+  double angle_diff = ateam_common::geometry::SignedSmallestAngleDifference(end.z(), start.z());
+  new_end.z() = start.z() + angle_diff;
+
+  return new_end;
+}
+
 Trajectory Generate3d(
   const Eigen::Vector3d & start, const Eigen::Vector3d & start_vel,
   const Eigen::Vector3d & end, const Eigen::Vector3d & end_vel,
@@ -37,20 +55,12 @@ Trajectory Generate3d(
 {
   // Independently plan for each DOF
   std::array<Trajectory1d, 3> trajectories;
+  Eigen::Vector3d modified_end = minimize_angle_goal_target(start, end);
 
   // TODO(jneiger): Scale plans to longest DOF trajectory time length
   for (std::size_t i = 0; i < trajectories.size(); i++) {
-    double s = start(i);
-    double e = end(i);
-
-    // If we're planning the angle, minimize the difference between the two by unwrapping
-    if (i == 2) {
-      double angle_diff = ateam_common::geometry::SignedSmallestAngleDifference(e, s);
-      e = s + angle_diff;
-    }
-
     trajectories.at(i) = Generate1d(
-      start(i), start_vel(i), end(i), end_vel(i), max_vel_limits(
+      start(i), start_vel(i), modified_end(i), end_vel(i), max_vel_limits(
         i), max_accel_limits(i), dt);
   }
 

@@ -28,10 +28,19 @@
 namespace ateam_common {
 namespace geometry {
 
+/**
+ * @brief Wraps to -PI through PI inclusive
+ * 
+ * @param a Angle to wrap
+ * @return double Wrapped angle
+ */
 inline double WrapToNPiPi(double a) {
   return atan2(sin(a), cos(a));
 }
 
+/**
+ * @brief Returns the smallest angle (a - b) in signed format
+ */
 inline double SignedSmallestAngleDifference(double a, double b) {
   double unbound_angle_diff = a - b;
   return atan2(sin(unbound_angle_diff), cos(unbound_angle_diff));
