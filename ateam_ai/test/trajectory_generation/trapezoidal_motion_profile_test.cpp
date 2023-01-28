@@ -235,3 +235,42 @@ TEST(TrapezoidalMotionProfile, Trajectory3d_ShouldGoShortAngle_WhenLargeNegToPos
     prev_angle = cur_angle;
   }
 }
+
+TEST(TrapezoidalMotionProfile, Trajectory3d_ShouldGoShortAngle_WhenLargePosToNeg)
+{
+  Eigen::Vector3d start{10, 10, 3};
+  Eigen::Vector3d end{11, 11, -3};
+  Eigen::Vector3d start_vel{0, 0, 0};
+  Eigen::Vector3d end_vel{0, 0, 0};
+  Eigen::Vector3d max_vel{10, 10, 1};
+  Eigen::Vector3d max_accel{10, 10, 1};
+  double dt = 0.01;
+  double current_time = 1;
+
+  Trajectory ret = TrapezoidalMotionProfile::Generate3d(
+    start,
+    start_vel,
+    end,
+    end_vel,
+    max_vel,
+    max_accel,
+    dt,
+    current_time);
+
+  ASSERT_GT(ret.samples.size(), 1);
+  double prev_angle = start.z();
+  bool has_wrapped_angle = false;
+  for (std::size_t i = 1; i < ret.samples.size(); i++) {
+    double cur_angle = ret.samples.at(i).pose.z();
+
+    // Wrap happens if perv angle is near PI and cur angle is near -PI
+    // for one frame
+    if (cur_angle < prev_angle && cur_angle < -3 && prev_angle > 3) {
+      EXPECT_FALSE(has_wrapped_angle);  // Only wrap once
+      has_wrapped_angle = true;
+    } else {
+      EXPECT_GT(cur_angle, prev_angle);
+    }
+    prev_angle = cur_angle;
+  }
+}
