@@ -63,7 +63,7 @@ BehaviorPlan GetPlanFromGoal(
           Eigen::Vector2d ball_pos = ball.value().pos;
           Eigen::Vector2d current_robot_pos = current_robot.pos;
           Eigen::Vector2d target_goal = Eigen::Vector2d{-6, 0};
-          Eigen::Vector2d target_setup_pos = ball_pos + 0.3 * (ball_pos - target_goal).normalized();
+          Eigen::Vector2d target_setup_pos = ball_pos + 0.4 * (ball_pos - target_goal).normalized();
 
           Eigen::Vector2d robot_to_goal = target_goal - current_robot_pos;
           double robot_to_goal_angle = ateam_common::geometry::VectorToAngle(robot_to_goal);
@@ -120,7 +120,7 @@ BehaviorPlan GetPlanFromGoal(
 
         Eigen::Vector3d max_vel{1, 1, 1};  // TODO(jneiger): Set as params
         Eigen::Vector3d max_accel{1, 1, 1};
-        double dt = 0.01;  // TODO(jneiger): Feed this down from above
+        double dt = 0.1;  // TODO(jneiger): Feed this down from above
         Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
           current, current_vel, target,
           target_vel, max_vel, max_accel,
@@ -162,7 +162,7 @@ BehaviorPlan GetPlanFromGoal(
         target_vel.z() = 0;
         Eigen::Vector3d max_vel{2, 2, 0.5};  // TODO(jneiger): Set as params
         Eigen::Vector3d max_accel{2, 2, 0.5};
-        double dt = 0.01;  // TODO(jneiger): Feed this down from above
+        double dt = 0.1;  // TODO(jneiger): Feed this down from above
         Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
           current, current_vel, target,
           target_vel, max_vel, max_accel,

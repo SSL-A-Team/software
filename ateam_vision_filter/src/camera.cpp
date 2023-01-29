@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <utility>
+#include <iostream>
 #include <vector>
 
 #include "filters/kalman_filter.hpp"
@@ -108,6 +109,7 @@ void Camera::setup_ball_interacting_multiple_model_filter(
   base_kf_model.set_H(Models::Ball::H);
   base_kf_model.set_Q(Models::Ball::Q);
   base_kf_model.set_R(Models::Ball::R);
+  base_kf_model.set_AngleMask(Models::Ball::AngleMask);
   base_kf_model.set_initial_x_hat(Eigen::Matrix<double, 6, 1>::Zero());
   base_kf_model.set_initial_p(Eigen::Matrix<double, 6, 6>::Identity());
 
@@ -138,6 +140,7 @@ void Camera::setup_robot_interacting_multiple_model_filter(
   base_kf_model.set_H(Models::Robot::H);
   base_kf_model.set_Q(Models::Robot::Q);
   base_kf_model.set_R(Models::Robot::R);
+  base_kf_model.set_AngleMask(Models::Robot::AngleMask);
   base_kf_model.set_initial_x_hat(Eigen::Matrix<double, 9, 1>::Zero());
   base_kf_model.set_initial_p(Eigen::Matrix<double, 9, 9>::Identity());
 
@@ -203,6 +206,9 @@ std::array<std::optional<Camera::RobotWithScore>, 16> Camera::get_robot_estimate
     auto robot_state_with_score = robot.get_state_estimate();
     if (robot_state_with_score.has_value()) {
       const auto & value = robot_state_with_score.value();
+      if (i == 1) {
+        std::cout << Robot(std::get<0>(value)).theta << std::endl;
+      }
       output.at(i) = std::make_pair(Robot(std::get<0>(value)), std::get<1>(value));
     }
   }

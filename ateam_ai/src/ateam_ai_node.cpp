@@ -99,7 +99,7 @@ public:
       rclcpp::SystemDefaultsQoS());
 
     overlay_publisher_ = create_publisher<ateam_msgs::msg::Overlay>(
-      "~/overlay",
+      "/overlay",
       rclcpp::SystemDefaultsQoS());
     ateam_common::Overlay::GetOverlay().SetOverlayPublishCallback(
       [&](ateam_msgs::msg::Overlay overlay) {
@@ -144,6 +144,9 @@ private:
     tf2::Quaternion tf2_quat;
     tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
     robot_states.at(id).value().theta = tf2_quat.getAngle();
+    if (id == 1) {
+      std::cout << tf2_quat.getAngle() << std::endl;
+    }
     robot_states.at(id).value().vel.x() = robot_state_msg->twist.linear.x;
     robot_states.at(id).value().vel.y() = robot_state_msg->twist.linear.y;
     robot_states.at(id).value().omega = robot_state_msg->twist.angular.z;
@@ -167,7 +170,7 @@ private:
     //
     // Preproccess world
     //
-    world_.current_time += 0.01;
+    world_.current_time += 0.1;
     for (std::size_t robot_id = 0; robot_id < 16; robot_id++) {
       // Estimate of how long it will take for the round trip of
       // Command -> Radio -> Robot -> Motion -> Vision change
