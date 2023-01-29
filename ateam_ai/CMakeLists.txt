@@ -44,6 +44,7 @@ add_library(${PROJECT_NAME} SHARED
   src/util/message_conversions.cpp
   src/util/message_conversions.hpp
   src/util/pid.hpp
+  src/util/viz.hpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)

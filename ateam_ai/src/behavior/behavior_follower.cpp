@@ -24,6 +24,7 @@
 #include <ateam_common/parameters.hpp>
 
 #include "util/pid.hpp"
+#include "util/viz.hpp"
 
 CREATE_PARAM(double, "follower/pid/x_kp", x_kp, 0.5);
 CREATE_PARAM(double, "follower/pid/y_kp", y_kp, 0.5);
@@ -63,6 +64,10 @@ BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
       command.pose.y(), our_robot.pos.y());
     motion_command.twist.angular.z = command.vel.z() + t_controller.execute(
       command.pose.z(), our_robot.theta, true);
+
+    if (robot_id == 1) {
+      viz::DrawTrajectory(maybe_trajectory.value());
+    }
 
     Eigen::Vector2d robot{world.our_robots.at(robot_id).value().pos.x(), world.our_robots.at(
         robot_id).value().pos.y()};

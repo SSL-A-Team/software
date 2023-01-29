@@ -14,6 +14,7 @@
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>ateam_common</depend>
+  <depend>ateam_msgs</depend>
   <depend>ssl_league_msgs</depend>
   <depend>ssl_league_protobufs</depend>
 
