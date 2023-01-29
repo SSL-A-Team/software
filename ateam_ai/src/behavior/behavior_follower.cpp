@@ -26,9 +26,9 @@
 #include "util/pid.hpp"
 #include "util/viz.hpp"
 
-CREATE_PARAM(double, "follower/pid/x_kp", x_kp, 0.5);
-CREATE_PARAM(double, "follower/pid/y_kp", y_kp, 0.5);
-CREATE_PARAM(double, "follower/pid/t_kp", t_kp, 0.5);
+CREATE_PARAM(double, "follower/pid/x_kp", x_kp, 2);
+CREATE_PARAM(double, "follower/pid/y_kp", y_kp, 2);
+CREATE_PARAM(double, "follower/pid/t_kp", t_kp, 3);
 
 BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
   const std::array<std::optional<Trajectory>, 16> & robot_trajectories,
@@ -66,7 +66,8 @@ BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
       command.pose.z(), our_robot.theta, true);
 
     if (robot_id == 1) {
-      viz::DrawTrajectory(maybe_trajectory.value());
+      // viz::DrawTrajectory(maybe_trajectory.value());
+      std::cout << command.pose.z() << " " << our_robot.theta << std::endl;
     }
 
     Eigen::Vector2d robot{world.our_robots.at(robot_id).value().pos.x(), world.our_robots.at(

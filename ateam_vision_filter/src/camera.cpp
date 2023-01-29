@@ -206,9 +206,9 @@ std::array<std::optional<Camera::RobotWithScore>, 16> Camera::get_robot_estimate
     auto robot_state_with_score = robot.get_state_estimate();
     if (robot_state_with_score.has_value()) {
       const auto & value = robot_state_with_score.value();
-      if (i == 1) {
-        std::cout << Robot(std::get<0>(value)).theta << std::endl;
-      }
+      // if (i == 1) {
+      //   std::cout << Robot(std::get<0>(value)).theta << std::endl;
+      // }
       output.at(i) = std::make_pair(Robot(std::get<0>(value)), std::get<1>(value));
     }
   }

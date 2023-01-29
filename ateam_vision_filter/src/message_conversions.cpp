@@ -20,6 +20,7 @@
 
 #include "message_conversions.hpp"
 
+#include <tf2/utils.h>
 #include <tf2/LinearMath/Quaternion.h>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -88,7 +89,7 @@ RobotMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionRobot & ros_
   robotDetection.position.x() = ros_msg.pose.position.x;
   robotDetection.position.y() = ros_msg.pose.position.y;
   tf2::fromMsg(ros_msg.pose.orientation, tf2_quat);
-  robotDetection.theta = tf2_quat.getAngle();
+  robotDetection.theta = tf2::getYaw(tf2_quat);
   return robotDetection;
 }
 

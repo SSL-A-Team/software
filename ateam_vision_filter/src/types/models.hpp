@@ -154,8 +154,8 @@ const Eigen::MatrixXd H =
 const double dt4 = dt * dt * dt * dt / 4.0;
 const double dt3 = dt * dt * dt / 2.0;
 const double dt2 = dt * dt / 2.0;
-const double sigma_linear_alpha_squared = .01;  // Linear acceleration std dev
-const double sigma_angular_alpha_squared = .01;  // Angular acceleration std dev
+const double sigma_linear_alpha_squared = .1;  // Linear acceleration std dev
+const double sigma_angular_alpha_squared = .1;  // Angular acceleration std dev
 // Split into linear and angular portion
 const Eigen::MatrixXd Q =
   (Eigen::MatrixXd(9, 9) <<

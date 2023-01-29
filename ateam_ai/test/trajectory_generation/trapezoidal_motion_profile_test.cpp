@@ -65,7 +65,7 @@ TEST(TrapezoidalMotionProfile, Trajectory1d_ShouldReturnValidTrajectory_WhenSimp
   double end_vel = 0;
   double max_vel = 1;
   double max_accel = 1;
-  double dt = 0.1;
+  double dt = 0.01;
 
   TrapezoidalMotionProfile::Trajectory1d ret = TrapezoidalMotionProfile::Generate1d(
     start,
@@ -87,7 +87,7 @@ TEST(TrapezoidalMotionProfile, Trajectory1d_ShouldReturnValidTrajectory_WhenNega
   double end_vel = 0;
   double max_vel = 1;
   double max_accel = 1;
-  double dt = 0.1;
+  double dt = 0.01;
 
   TrapezoidalMotionProfile::Trajectory1d ret = TrapezoidalMotionProfile::Generate1d(
     start,
@@ -109,7 +109,7 @@ TEST(TrapezoidalMotionProfile, Trajectory1d_ShouldReturnValidTrajectory_WhenNega
   double end_vel = 0;
   double max_vel = 1;
   double max_accel = 1;
-  double dt = 0.1;
+  double dt = 0.01;
 
   TrapezoidalMotionProfile::Trajectory1d ret = TrapezoidalMotionProfile::Generate1d(
     start,
@@ -131,7 +131,7 @@ TEST(TrapezoidalMotionProfile, Trajectory1d_ShouldReturnValidTrajectory_WhenShor
   double end_vel = 0;
   double max_vel = 1;
   double max_accel = 1;
-  double dt = 0.1;
+  double dt = 0.01;
 
   TrapezoidalMotionProfile::Trajectory1d ret = TrapezoidalMotionProfile::Generate1d(
     start,
@@ -153,7 +153,7 @@ TEST(TrapezoidalMotionProfile, Trajectory1d_ShouldReturnValidTrajectory_WhenShor
   double end_vel = 0;
   double max_vel = 1;
   double max_accel = 1;
-  double dt = 0.1;
+  double dt = 0.01;
 
   TrapezoidalMotionProfile::Trajectory1d ret = TrapezoidalMotionProfile::Generate1d(
     start,
@@ -175,7 +175,7 @@ TEST(TrapezoidalMotionProfile, Trajectory3d_ShouldReturnOneLong_WhenAlreadyAtTar
   Eigen::Vector3d end_vel{10, 10, 1};
   Eigen::Vector3d max_vel{10, 10, 1};
   Eigen::Vector3d max_accel{10, 10, 1};
-  double dt = 0.1;
+  double dt = 0.01;
   double current_time = 1;
 
   Trajectory ret = TrapezoidalMotionProfile::Generate3d(
@@ -205,7 +205,7 @@ TEST(TrapezoidalMotionProfile, Trajectory3d_ShouldGoShortAngle_WhenLargeNegToPos
   Eigen::Vector3d end_vel{0, 0, 0};
   Eigen::Vector3d max_vel{10, 10, 1};
   Eigen::Vector3d max_accel{10, 10, 1};
-  double dt = 0.1;
+  double dt = 0.01;
   double current_time = 1;
 
   Trajectory ret = TrapezoidalMotionProfile::Generate3d(
@@ -244,7 +244,7 @@ TEST(TrapezoidalMotionProfile, Trajectory3d_ShouldGoShortAngle_WhenLargePosToNeg
   Eigen::Vector3d end_vel{0, 0, 0};
   Eigen::Vector3d max_vel{10, 10, 1};
   Eigen::Vector3d max_accel{10, 10, 1};
-  double dt = 0.1;
+  double dt = 0.01;
   double current_time = 1;
 
   Trajectory ret = TrapezoidalMotionProfile::Generate3d(

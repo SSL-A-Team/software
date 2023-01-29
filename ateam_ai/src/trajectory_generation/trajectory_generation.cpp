@@ -118,9 +118,9 @@ BehaviorPlan GetPlanFromGoal(
           }
         }
 
-        Eigen::Vector3d max_vel{1, 1, 1};  // TODO(jneiger): Set as params
+        Eigen::Vector3d max_vel{3, 3, 1};  // TODO(jneiger): Set as params
         Eigen::Vector3d max_accel{1, 1, 1};
-        double dt = 0.1;  // TODO(jneiger): Feed this down from above
+        double dt = 0.01;  // TODO(jneiger): Feed this down from above
         Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
           current, current_vel, target,
           target_vel, max_vel, max_accel,
@@ -162,7 +162,7 @@ BehaviorPlan GetPlanFromGoal(
         target_vel.z() = 0;
         Eigen::Vector3d max_vel{2, 2, 0.5};  // TODO(jneiger): Set as params
         Eigen::Vector3d max_accel{2, 2, 0.5};
-        double dt = 0.1;  // TODO(jneiger): Feed this down from above
+        double dt = 0.01;  // TODO(jneiger): Feed this down from above
         Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
           current, current_vel, target,
           target_vel, max_vel, max_accel,

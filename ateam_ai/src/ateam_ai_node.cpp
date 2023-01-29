@@ -35,6 +35,7 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_msgs/msg/world.hpp>
+#include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "behavior/behavior_evaluator.hpp"
@@ -143,10 +144,7 @@ private:
     robot_states.at(id).value().pos.y() = robot_state_msg->pose.position.y;
     tf2::Quaternion tf2_quat;
     tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
-    robot_states.at(id).value().theta = tf2_quat.getAngle();
-    if (id == 1) {
-      std::cout << tf2_quat.getAngle() << std::endl;
-    }
+    robot_states.at(id).value().theta = tf2::getYaw(tf2_quat);
     robot_states.at(id).value().vel.x() = robot_state_msg->twist.linear.x;
     robot_states.at(id).value().vel.y() = robot_state_msg->twist.linear.y;
     robot_states.at(id).value().omega = robot_state_msg->twist.angular.z;
@@ -170,7 +168,7 @@ private:
     //
     // Preproccess world
     //
-    world_.current_time += 0.1;
+    world_.current_time += 0.01;
     for (std::size_t robot_id = 0; robot_id < 16; robot_id++) {
       // Estimate of how long it will take for the round trip of
       // Command -> Radio -> Robot -> Motion -> Vision change
