@@ -79,8 +79,8 @@ BehaviorPlan GetPlanFromGoal(
           //  * Robot is almost stopped
           bool is_aligned = ateam_common::geometry::IsVectorAligned(
             robot_to_goal, robot_to_ball,
-            0.1);
-          is_aligned &= std::abs(angle_diff) < 0.1;
+            0.01);
+          is_aligned &= std::abs(angle_diff) < 0.05;
           is_aligned &= current_robot.vel.norm() < 0.5;
 
           if (!is_aligned) {
