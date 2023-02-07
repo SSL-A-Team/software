@@ -63,8 +63,8 @@ for (var team in vm.state.teams) {
 }
 
 // Configure Default Overlays
-vm.state.underlays = {};
-vm.state.overlays = {};
+vm.state.underlays = [];
+vm.state.overlays = [];
 
 
 // Configure ROS

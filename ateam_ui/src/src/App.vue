@@ -47,8 +47,8 @@ export default {
                         robots: [],
                     }
                 },
-                underlays: {},
-                overlays: {},
+                underlays: [],
+                overlays: [],
                 // Using Div A dimensions
                 fieldDimensions: {
                     length: 12,
