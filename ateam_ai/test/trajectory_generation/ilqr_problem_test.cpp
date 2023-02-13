@@ -24,7 +24,7 @@
 #include <iostream>
 
 constexpr int num_samples = 100;
-constexpr double dt = 0.1;
+constexpr double dt = 0.01;
 class PointMass1dProblem : public iLQRProblem<2, 1, num_samples>
 {
 public:

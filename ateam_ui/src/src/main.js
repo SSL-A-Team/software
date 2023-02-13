@@ -93,8 +93,8 @@ var ballTopic = new ROSLIB.Topic({
 });
 
 ballTopic.subscribe(function(msg) {
-    vm.state.ball.pose.position.x = msg.pose.position.x;
-    vm.state.ball.pose.position.y = msg.pose.position.y;
+    vm.state.ball.position.x = msg.pose.position.x;
+    vm.state.ball.position.y = msg.pose.position.y;
 });
 
 //TODO: add publisher for moving sim ball
@@ -107,7 +107,7 @@ function getRobotCallback(team, id){
         robot.pose = msg.pose;
 
         //TODO: Check if our ROS quaternions can exceed -1:1
-        robot.rotation = 180/3.14*2.0*Math.acos(robot.pose.orientation.z);
+        robot.rotation = 2.0*Math.acos(robot.pose.orientation.z);
     };
 };
 

@@ -22,7 +22,6 @@
 
 #include <algorithm>
 #include <numeric>
-#include <iostream>
 
 #include <ateam_common/angle.hpp>
 

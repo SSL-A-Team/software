@@ -65,15 +65,14 @@ BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
     motion_command.twist.angular.z = command.vel.z() + t_controller.execute(
       command.pose.z(), our_robot.theta, true);
 
-    if (robot_id == 1) {
-      // viz::DrawTrajectory(maybe_trajectory.value());
-      std::cout << command.pose.z() << " " << our_robot.theta << std::endl;
-    }
+    viz::DrawTrajectory(maybe_trajectory.value());
 
+    // TODO(jneiger): move this to a better spot
     Eigen::Vector2d robot{world.our_robots.at(robot_id).value().pos.x(), world.our_robots.at(
         robot_id).value().pos.y()};
     motion_command.kick = world.get_unique_ball().has_value() &&
       (world.get_unique_ball().value().pos - robot).norm() < 0.1;
+    motion_command.kick_speed = 5;  // m/s
     robot_motion_commands.at(robot_id) = motion_command;
   }
 

@@ -21,7 +21,6 @@
 #include "trajectory_generation/trajectory_generation.hpp"
 
 #include <algorithm>
-#include <iostream>
 
 #include <ateam_common/angle.hpp>
 

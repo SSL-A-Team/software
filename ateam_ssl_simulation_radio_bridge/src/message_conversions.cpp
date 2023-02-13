@@ -40,7 +40,7 @@ RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int ro
   proto_robot_command->set_id(robot_id);
   proto_robot_command->set_dribbler_speed(2000);
   if (ros_msg.kick) {
-    proto_robot_command->set_kick_speed(5);
+    proto_robot_command->set_kick_speed(ros_msg.kick_speed);
   }
 
   RobotMoveCommand * robot_move_command = proto_robot_command->mutable_move_command();

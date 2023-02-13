@@ -145,8 +145,8 @@
                 dragBoundFunc: dragBound,
                 r_id: robot.id,
                 team: robot.team,
-                x: robot.pose.position.y * 300,
-                y: robot.pose.position.x * 300,
+                x: robot.pose.position.x,
+                y: robot.pose.position.y,
                 offsetX: -.09*renderConfig.scale,
                 offsetY: -.09*renderConfig.scale,
                 rot: robot.rotation,
@@ -161,13 +161,12 @@
 
             <v-circle ref="ball" :config="{
                                  renderConfig: renderConfig,
-                                 x: state.ball.pose.position.y * 300,
-                                 y: state.ball.pose.position.x * 300,
+                                 x: state.ball.pose.position.x,
+                                 y: state.ball.pose.position.y,
                                  visible: state.ball.visible,
                                  radius: .022 * renderConfig.scale,
                                  fill: 'orange',
-                                 dragBoundFunc: dragBound,
-                cache: true
+                                 dragBoundFunc: dragBound
                                  }">
             </v-circle>
         </v-layer>
