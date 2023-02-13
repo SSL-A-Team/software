@@ -113,7 +113,7 @@
                          visible: underlay.visible,
                          fill: underlay.fill_color,
                          stroke: underlay.stroke_color,
-                         strokeWidth: 2,
+                         strokeWidth: underlay.stroke_width,
                          draggable: false,
                          cache: true
                      }">
@@ -191,7 +191,7 @@
                          visible: overlay.visible,
                          fill: overlay.fill_color,
                          stroke: overlay.stroke_color,
-                         strokeWidth: 2,
+                         strokeWidth: overlay.stroke_width,
                          draggable: false,
                          cache: true
                      }">
@@ -262,8 +262,12 @@ export default {
                     case 1:
                         if (overlay.points.length >= 2) {
                             ctx.beginPath();
-                            ctx.moveTo(overlay.points[0].x, overlay.points[0].y);
-                            ctx.lineTo(overlay.points[1].x, overlay.points[1].y);
+                            ctx.lineWidth = overlay.stroke_width;
+                            ctx.strokeStyle = overlay.stroke_color;
+                            ctx.moveTo(scale*overlay.points[0].x, scale*overlay.points[0].y);
+                            for (var i = 1; i < overlay.points.length; i++) {
+                                ctx.lineTo(scale*overlay.points[i].x, scale*overlay.points[i].y);
+                            }
                             ctx.stroke();
                         }
                         break;
