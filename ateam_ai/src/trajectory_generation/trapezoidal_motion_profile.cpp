@@ -80,9 +80,9 @@ Trajectory Generate3d(
         sample.accel(i) = trajectory.samples.at(t_idx).accel;
         is_more_left = true;
       } else {
-        sample.pose(i) = end(i);
-        sample.vel(i) = end_vel(i);
-        sample.accel(i) = 0;
+        sample.pose(i) = trajectory.samples.back().pos;
+        sample.vel(i) = trajectory.samples.back().vel;
+        sample.accel(i) = trajectory.samples.back().accel;
       }
     }
 

@@ -65,7 +65,7 @@ BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
     motion_command.twist.angular.z = command.vel.z() + t_controller.execute(
       command.pose.z(), our_robot.theta, true);
 
-    viz::DrawTrajectory(maybe_trajectory.value());
+    viz::DrawTrajectory(robot_id, maybe_trajectory.value());
 
     // TODO(jneiger): move this to a better spot
     Eigen::Vector2d robot{world.our_robots.at(robot_id).value().pos.x(), world.our_robots.at(

@@ -51,18 +51,20 @@ public:
     this->ns = ns;
   }
 
-  void DrawLine(const std::vector<Eigen::Vector2d> & line)
+  void DrawLine(const std::vector<Eigen::Vector2d> & line, const std::string name)
   {
     ateam_msgs::msg::Overlay overlay_msg;
     overlay_msg.ns = ns;
-    overlay_msg.name = "trajectory";
+    overlay_msg.name = name;
     overlay_msg.visible = true;
     overlay_msg.type = ateam_msgs::msg::Overlay::LINE;
     overlay_msg.command = ateam_msgs::msg::Overlay::REPLACE;
     overlay_msg.position.x = 0;
     overlay_msg.position.y = 0;
-    overlay_msg.stroke_color = "#FF00FF88";
-    overlay_msg.lifetime = 10;
+    overlay_msg.stroke_color = "white";
+    overlay_msg.lifetime = 100;
+    overlay_msg.stroke_width = 10;
+    overlay_msg.depth = 1;
 
     for (const auto & pt : line) {
       geometry_msgs::msg::Point p;

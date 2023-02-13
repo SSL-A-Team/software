@@ -1,23 +1,23 @@
 <template>
     <v-stage ref="stage" :config="{
-                         width: 100+(state.fieldDimensions.floorWidth*renderConfig.scale),
-                         height: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
+                         width: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
+                         height: 100+(state.fieldDimensions.floorWidth*renderConfig.scale),
                          scaleX: renderConfig.factor,
                          scaleY: renderConfig.factor
                          }">
 
         <!-- layer for field background and outlines -->>
         <v-layer ref="field" :config="{
-                             offsetX: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
-                             offsetY: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+                             offsetX: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+                             offsetY: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
                              listening: false
                              }">
 
             <v-rect ref="background" :config="{
-                                     x: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
-                                     y: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
-                                     width: 100+(state.fieldDimensions.floorWidth*renderConfig.scale),
-                                     height: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
+                                     x: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+                                     y: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
+                                     width: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
+                                     height: 100+(state.fieldDimensions.floorWidth*renderConfig.scale),
                                      fill:'green'
                                      }"/>
 
@@ -28,10 +28,10 @@
                                          }">
 
                 <v-rect ref="fieldLines" :config="{
-                                         x: -state.fieldDimensions.width*renderConfig.scale/2,
-                                         y: -state.fieldDimensions.length*renderConfig.scale/2,
-                                         width: state.fieldDimensions.width*renderConfig.scale,
-                                         height: state.fieldDimensions.length*renderConfig.scale,
+                                         x: -state.fieldDimensions.length*renderConfig.scale/2,
+                                         y: -state.fieldDimensions.width*renderConfig.scale/2,
+                                         width: state.fieldDimensions.length*renderConfig.scale,
+                                         height: state.fieldDimensions.width*renderConfig.scale,
                                          stroke:'white',
                                          strokeWidth: 4
                                          }"></v-rect>
@@ -47,10 +47,10 @@
                 <v-line ref="centerLine" :config="{
                                          x: 0,
                                          y: 0,
-                                         points: [-state.fieldDimensions.width*renderConfig.scale/2,0,
-                                             state.fieldDimensions.width*renderConfig.scale/2, 0],
+                                         points: [0, -state.fieldDimensions.width*renderConfig.scale/2,
+                                             0, state.fieldDimensions.width*renderConfig.scale/2],
                                          stroke: 'white',
-                                         strokeWidth: 4
+                                         strokeWidth: 4,
                                          }"></v-line>
 
                 <!-- The goal/box for each team is programtically generated horizontally and then rotated into position -->>
@@ -59,7 +59,7 @@
                                                      y: 0,
                                                      offsetX: state.fieldDimensions.length*renderConfig.scale/2,
                                                      offsetY: 0,
-                                                     rotation: team.defending*90
+                                                     rotation: team.defending*90 - 90
                                                      }">
 
                     <!-- Goal box -->>
@@ -96,8 +96,8 @@
         <!-- layer for only underlays -->>
         <v-layer ref="underlay"
             :config="{
-            offsetX: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
-            offsetY: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+            offsetX: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+            offsetY: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
             listening: false
             }">
             <v-shape v-for="underlay in Object.entries(state.underlays).map(i => {return i[1]} )"
@@ -108,7 +108,7 @@
                          overlay: underlay,
                          fieldDimensions: state.fieldDimensions,
                          x: underlay.position.x*renderConfig.scale,
-                         y: underlay.position.y*renderConfig.scale,
+                         y: -underlay.position.y*renderConfig.scale,
                          rotation: underlay.position.z,
                          visible: underlay.visible,
                          fill: underlay.fill_color,
@@ -125,15 +125,15 @@
             @dragstart="handleDragStart" @dragmove="handleDrag" @dragEnd="handleDragEnd"
             @mousedown="handleDown" @mousemove="handleMouse" @mouseup="handleUp"
             :config="{
-            offsetX: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
-            offsetY: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+            offsetX: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+            offsetY: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
             }">
 
             <v-rect ref="collision" :config="{
-                                     x: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
-                                     y: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
-                                     width: 100+(state.fieldDimensions.floorWidth*renderConfig.scale),
-                                     height: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
+                                     x: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+                                     y: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
+                                     width: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
+                                     height: 100+(state.fieldDimensions.floorWidth*renderConfig.scale),
                                      }"/>
 
             <!-- programatically generate each robot -->>
@@ -145,8 +145,8 @@
                 dragBoundFunc: dragBound,
                 r_id: robot.id,
                 team: robot.team,
-                x: robot.pose.position.x,
-                y: robot.pose.position.y,
+                x: robot.pose.position.x*renderConfig.scale,
+                y: -robot.pose.position.y*renderConfig.scale,
                 offsetX: -.09*renderConfig.scale,
                 offsetY: -.09*renderConfig.scale,
                 rot: robot.rotation,
@@ -161,8 +161,8 @@
 
             <v-circle ref="ball" :config="{
                                  renderConfig: renderConfig,
-                                 x: state.ball.pose.position.x,
-                                 y: state.ball.pose.position.y,
+                                 x: state.ball.pose.position.x*renderConfig.scale,
+                                 y: -state.ball.pose.position.y*renderConfig.scale,
                                  visible: state.ball.visible,
                                  radius: .022 * renderConfig.scale,
                                  fill: 'orange',
@@ -174,8 +174,8 @@
         <!-- layer for only overlays -->>
         <v-layer ref="overlay"
             :config="{
-            offsetX: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
-            offsetY: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+            offsetX: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
+            offsetY: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
             listening: false
             }">
             <v-shape v-for="overlay in Object.entries(state.overlays).map(i => {return i[1]} )"
@@ -186,7 +186,7 @@
                          overlay: overlay,
                          fieldDimensions: state.fieldDimensions,
                          x: overlay.position.x*renderConfig.scale,
-                         y: overlay.position.y*renderConfig.scale,
+                         y: -overlay.position.y*renderConfig.scale,
                          rotation: overlay.position.z,
                          visible: overlay.visible,
                          fill: overlay.fill_color,
@@ -264,9 +264,9 @@ export default {
                             ctx.beginPath();
                             ctx.lineWidth = overlay.stroke_width;
                             ctx.strokeStyle = overlay.stroke_color;
-                            ctx.moveTo(scale*overlay.points[0].x, scale*overlay.points[0].y);
+                            ctx.moveTo(scale*overlay.points[0].x, -scale*overlay.points[0].y);
                             for (var i = 1; i < overlay.points.length; i++) {
-                                ctx.lineTo(scale*overlay.points[i].x, scale*overlay.points[i].y);
+                                ctx.lineTo(scale*overlay.points[i].x, -scale*overlay.points[i].y);
                             }
                             ctx.stroke();
                         }

@@ -59,6 +59,8 @@ public:
   : rclcpp::Node("ateam_ai_node", options), evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
+    ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
+
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.balls.emplace_back(Ball{});
 

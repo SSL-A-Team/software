@@ -30,7 +30,7 @@
 
 namespace viz
 {
-void DrawTrajectory(const Trajectory & trajectory)
+void DrawTrajectory(const int robot_id, const Trajectory & trajectory)
 {
   if (trajectory.samples.size() <= 1) {
     return;
@@ -41,7 +41,7 @@ void DrawTrajectory(const Trajectory & trajectory)
     line_pts.push_back(Eigen::Vector2d{sample.pose.x(), sample.pose.y()});
   }
 
-  ateam_common::Overlay::GetOverlay().DrawLine(line_pts);
+  ateam_common::Overlay::GetOverlay().DrawLine(line_pts, "trajectory_" + std::to_string(robot_id));
 }
 
 }  // namespace viz
