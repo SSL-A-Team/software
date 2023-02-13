@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/utils.h>
 
 #include <array>
 #include <chrono>
@@ -35,7 +36,6 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_msgs/msg/world.hpp>
-#include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "behavior/behavior_evaluator.hpp"

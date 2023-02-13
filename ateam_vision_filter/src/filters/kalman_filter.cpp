@@ -59,7 +59,7 @@ void KalmanFilter::set_Q(const Eigen::MatrixXd & Q)
 
 void KalmanFilter::set_AngleMask(const Eigen::MatrixXd & angleMask)
 {
-  this->AngleMask = angleMask;  
+  this->AngleMask = angleMask;
 }
 
 void KalmanFilter::predict(const Eigen::VectorXd & u)
@@ -77,7 +77,7 @@ void KalmanFilter::update(const Eigen::VectorXd & z)
   for (int i = 0; i < AngleMask.rows(); i++) {
     if (AngleMask(i) == 1) {
       double masked_angle = ateam_common::geometry::WrapToNPiPi(z(i));
-      y(i) = ateam_common::geometry::SignedSmallestAngleDifference(masked_angle, z_hat(i));
+      y(i) = ateam_common::geometry::SignedSmallestAngleDifference(masked_angle, (H * x_hat)(i));
     }
   }
 
