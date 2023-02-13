@@ -1,6 +1,6 @@
 <template>
     <v-app>
-        <v-app-bar app ref="Top Bar" color="red" density="compact">
+        <v-app-bar app ref="Top Bar" color="#cbb26b" density="compact">
             <v-app-bar-title> ATeam UI </v-app-bar-title>
         </v-app-bar>
         <v-main>
@@ -47,8 +47,8 @@ export default {
                         robots: [],
                     }
                 },
-                underlays: {},
-                overlays: {},
+                underlays: [],
+                overlays: [],
                 // Using Div A dimensions
                 fieldDimensions: {
                     length: 12,
