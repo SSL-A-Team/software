@@ -12,6 +12,7 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>boost</depend>
+  <depend>ssl_league_msgs</depend>
 
   <build_depend>protobuf-dev</build_depend>
   <exec_depend>protobuf</exec_depend>
