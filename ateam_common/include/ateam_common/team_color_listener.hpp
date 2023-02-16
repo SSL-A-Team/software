@@ -35,15 +35,15 @@ namespace ateam_common
  * The SSL game controller (GC) is the authoritative source for which color is assigned to which team. This utility
  * provides a simple interface for any node to query our currently assigned team color. This class subscribes to
  * and parses the referee messages from the GC to check our team's color.
- * 
+ *
  * Users can query the current team color using TeamColorListener::GetTeamColor() or provide a callback to be called
  * when the team color changes.
- * 
+ *
  * This class adds two parameters to the node:
- * 
+ *
  * - gc_team_name  (string)
  *   The name of our team as it appears in the GC.
- * 
+ *
  * - default_team_color  (string)
  *   The team color assumed before the first referee message is received. Can be set to 'yellow', 'blue', or 'unknown'
  */
