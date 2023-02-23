@@ -134,7 +134,6 @@ var overlayTopic = new ROSLIB.Topic({
 overlayTopic.subscribe(function(msg) {
     var id = msg.ns+"/"+msg.name;
     var location = (msg.depth==0) ? vm.state.underlays : vm.state.overlays;
-    console.log(id)
     switch(msg.command) {
         // REPLACE
         case 0:
