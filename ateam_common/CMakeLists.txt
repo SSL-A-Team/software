@@ -12,6 +12,7 @@ find_package(Boost REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(ateam_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/multicast_receiver.cpp
@@ -23,6 +24,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
   Eigen3
+  ateam_msgs
 )
 target_link_libraries(${PROJECT_NAME}
   Boost::boost

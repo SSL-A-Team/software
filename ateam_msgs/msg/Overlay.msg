@@ -55,3 +55,6 @@ ateam_msgs/Mesh1d[] mesh_alpha
 
 # When using the TEXT type place the text here, when using the CUSTOM type put arbitrary javascript in this variable
 string text
+
+# 0 is background, upwards
+uint32 depth
