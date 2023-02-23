@@ -30,6 +30,7 @@
 #include "behavior/behavior_realization.hpp"
 #include "types/trajectory.hpp"
 #include "types/world.hpp"
+#include "util/pid.hpp"
 
 /**
  * Given trajectories as a function of time
@@ -47,6 +48,8 @@ public:
 
 private:
   static Sample3d get_next_command(const Trajectory & t, double current_time);
+
+  std::array<std::array<PID, 3>, 16> trajectory_controllers;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_

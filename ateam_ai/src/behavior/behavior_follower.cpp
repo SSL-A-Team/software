@@ -20,6 +20,15 @@
 
 #include "behavior/behavior_follower.hpp"
 
+#include <ateam_common/angle.hpp>
+#include <ateam_common/parameters.hpp>
+
+#include "util/pid.hpp"
+
+CREATE_PARAM(double, "follower/pid/x_kp", x_kp, 2);
+CREATE_PARAM(double, "follower/pid/y_kp", y_kp, 2);
+CREATE_PARAM(double, "follower/pid/t_kp", t_kp, 3);
+
 BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
   const std::array<std::optional<Trajectory>, 16> & robot_trajectories,
   World & world)
@@ -35,14 +44,25 @@ BehaviorFollower::RobotMotionCommands BehaviorFollower::follow(
       continue;
     }
 
+    auto & robot_controllers = trajectory_controllers.at(robot_id);
+    auto & x_controller = robot_controllers.at(0);
+    x_controller.set_kp(x_kp);
+    auto & y_controller = robot_controllers.at(1);
+    y_controller.set_kp(y_kp);
+    auto & t_controller = robot_controllers.at(2);
+    t_controller.set_kp(t_kp);
+
     Sample3d command = get_next_command(maybe_trajectory.value(), world.current_time);
 
+    const auto & our_robot = world.our_robots.at(robot_id).value();
+
     ateam_msgs::msg::RobotMotionCommand motion_command;
-    motion_command.twist.linear.x = command.vel.x() +
-      (command.pose.x() - world.our_robots.at(robot_id).value().pos.x());
-    motion_command.twist.linear.y = command.vel.y() +
-      (command.pose.y() - world.our_robots.at(robot_id).value().pos.y());
-    motion_command.twist.angular.z = 0;
+    motion_command.twist.linear.x = command.vel.x() + x_controller.execute(
+      command.pose.x(), our_robot.pos.x());
+    motion_command.twist.linear.y = command.vel.y() + y_controller.execute(
+      command.pose.y(), our_robot.pos.y());
+    motion_command.twist.angular.z = command.vel.z() + t_controller.execute(
+      command.pose.z(), our_robot.theta, true);
     robot_motion_commands.at(robot_id) = motion_command;
   }
 
