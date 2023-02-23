@@ -29,8 +29,9 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-#include <ateam_common/topic_names.hpp>
 #include <ateam_common/parameters.hpp>
+#include <ateam_common/overlay.hpp>
+#include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
@@ -58,6 +59,8 @@ public:
   : rclcpp::Node("ateam_ai_node", options), evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
+    ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
+
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.balls.emplace_back(Ball{});
 
@@ -98,6 +101,15 @@ public:
       "~/world",
       rclcpp::SystemDefaultsQoS());
 
+    overlay_publisher_ = create_publisher<ateam_msgs::msg::Overlay>(
+      "/overlay",
+      rclcpp::SystemDefaultsQoS());
+    ateam_common::Overlay::GetOverlay().SetOverlayPublishCallback(
+      [&](ateam_msgs::msg::Overlay overlay) {
+        overlay_publisher_->publish(overlay);
+      }
+    );
+
     timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
   }
 
@@ -111,6 +123,7 @@ private:
     16> yellow_robots_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
+  rclcpp::Publisher<ateam_msgs::msg::Overlay>::SharedPtr overlay_publisher_;
 
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
