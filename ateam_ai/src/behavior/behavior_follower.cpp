@@ -84,9 +84,9 @@ Sample3d BehaviorFollower::get_next_command(const Trajectory & t, double current
   Sample3d command;
   command = t.samples.front();
 
-  // Find first sample that after current time
+  // Find first sample that is either current time or after
   for (const auto & sample : t.samples) {
-    if (sample.time > current_time) {
+    if (sample.time >= current_time) {
       command = sample;
       break;
     }
