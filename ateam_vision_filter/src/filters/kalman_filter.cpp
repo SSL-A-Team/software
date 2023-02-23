@@ -20,6 +20,8 @@
 
 #include "filters/kalman_filter.hpp"
 
+#include <ateam_common/angle.hpp>
+
 void KalmanFilter::set_initial_x_hat(const Eigen::VectorXd & x_hat)
 {
   this->x_hat = x_hat;
@@ -55,6 +57,11 @@ void KalmanFilter::set_Q(const Eigen::MatrixXd & Q)
   this->Q = Q;
 }
 
+void KalmanFilter::set_AngleMask(const Eigen::MatrixXd & angleMask)
+{
+  this->AngleMask = angleMask;
+}
+
 void KalmanFilter::predict(const Eigen::VectorXd & u)
 {
   x_hat = F * x_hat + B * u;
@@ -63,7 +70,17 @@ void KalmanFilter::predict(const Eigen::VectorXd & u)
 
 void KalmanFilter::update(const Eigen::VectorXd & z)
 {
+  Eigen::VectorXd z_hat = H * x_hat;
   Eigen::VectorXd y = z - H * x_hat;
+
+  // Account for angle differences not respecting normal math due to this -PI/PI
+  for (int i = 0; i < AngleMask.rows(); i++) {
+    if (AngleMask(i) == 1) {
+      double masked_angle = ateam_common::geometry::WrapToNPiPi(z(i));
+      y(i) = ateam_common::geometry::SignedSmallestAngleDifference(masked_angle, (H * x_hat)(i));
+    }
+  }
+
   Eigen::MatrixXd S = H * P * H.transpose() + R;
   Eigen::MatrixXd K = P * H.transpose() * S.inverse();
   x_hat = x_hat + K * y;

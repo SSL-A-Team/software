@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/utils.h>
 
 #include <array>
 #include <chrono>
@@ -132,7 +133,7 @@ private:
     robot_states.at(id).value().pos.y() = robot_state_msg->pose.position.y;
     tf2::Quaternion tf2_quat;
     tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
-    robot_states.at(id).value().theta = tf2_quat.getAngle();
+    robot_states.at(id).value().theta = tf2::getYaw(tf2_quat);
     robot_states.at(id).value().vel.x() = robot_state_msg->twist.linear.x;
     robot_states.at(id).value().vel.y() = robot_state_msg->twist.linear.y;
     robot_states.at(id).value().omega = robot_state_msg->twist.angular.z;
