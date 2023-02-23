@@ -75,19 +75,45 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
 
   // Generate 16 move behaviors towards the ball, we'll figure out which
   // ones we can fill later
-  DirectedGraph<BehaviorGoal> simple_move;
-  static double j = 0;
-  j += kRotationSpeed;
-  for (int i = 0; i < 16; i++) {
-    double theta = i / 11.0 * 3.14 * 2 + j;
+  // DirectedGraph<BehaviorGoal> simple_move;
+  // static double j = 0;
+  // j += kRotationSpeed;
+  // for (int i = 0; i < 16; i++) {
+  //   double theta = i / 11.0 * 3.14 * 2 + j;
+  //   BehaviorGoal move{
+  //     BehaviorGoal::Type::MoveToPoint,
+  //     BehaviorGoal::Priority::Required,
+  //     MoveParam(
+  //       (sin(3 * theta) + 1.5) * Eigen::Vector2d{cos(theta), sin(
+  //           theta)} - Eigen::Vector2d{2, 0})};
+  // }
+
+  //
+  // Qual Video Behaviors
+  //
+  DirectedGraph<BehaviorGoal> qual_goalie_and_shot;
+  double ball_y = 0;
+  if (world.get_unique_ball().has_value()) {
+    ball_y = world.get_unique_ball().value().pos.y();
+  }
+  BehaviorGoal goalie{
+    BehaviorGoal::Type::MoveToPoint,
+    BehaviorGoal::Priority::Required,
+    MoveParam(Eigen::Vector2d{-5, ball_y})};
+  qual_goalie_and_shot.add_node(goalie);
+
+  BehaviorGoal kicker{
+    BehaviorGoal::Type::MovingKick,
+    BehaviorGoal::Priority::Required,
+    MoveParam(Eigen::Vector2d{0, 1})};
+  qual_goalie_and_shot.add_node(kicker);
+
+  for (int i = 2; i < 16; i++) {
     BehaviorGoal move{
       BehaviorGoal::Type::MoveToPoint,
       BehaviorGoal::Priority::Required,
-      MoveParam(
-        (sin(3 * theta) + 1.5) * Eigen::Vector2d{cos(theta), sin(
-            theta)} - Eigen::Vector2d{2, 0})};
-
-    simple_move.add_node(move);
+      MoveParam(Eigen::Vector2d{i / -2.0, 4})};
+    qual_goalie_and_shot.add_node(move);
   }
 
   //
@@ -135,7 +161,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   // choose direct shot because score chance is better or
   // maybe the total behavior completetion time is short
   // or maybe the other one can't be completed due to number of robots
-  DirectedGraph<BehaviorGoal> behavior_out = simple_move;
+  DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
 
   return behavior_out;
 }
