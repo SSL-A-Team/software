@@ -53,14 +53,20 @@ public:
       "mapping", {
         {"linear.x.axis", 1},
         {"linear.y.axis", 0},
-        {"angular.z.axis", 3}
+        {"angular.z.axis", 3},
+        {"kick", 5},
+        {"dribbler.increment", 3},
+        {"dribbler.decrement", 2},
+        {"dribbler.spin", 4}
       });
 
     declare_parameters<double>(
       "mapping", {
         {"linear.x.scale", 1.0},
         {"linear.y.scale", 1.0},
-        {"angular.z.scale", 1.0}
+        {"angular.z.scale", 1.0},
+        {"dribbler.max", 1000.0},
+        {"dribbler.min", 0.0}
       });
 
     CreatePublisher(declare_parameter<int>("robot_id", 0));
@@ -72,10 +78,12 @@ public:
   }
 
 private:
+  std::string command_topic_template_;
+  float dribbler_speed_ = 0.0f;
+  sensor_msgs::msg::Joy prev_joy_msg_;
   rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr control_publisher_;
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscription_;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
-  std::string command_topic_template_;
 
   void CreatePublisher(const int robot_id)
   {
@@ -99,10 +107,30 @@ private:
     command_message.twist.angular.z = get_parameter("mapping.angular.z.scale").as_double() *
       joy_message->axes[get_parameter("mapping.angular.z.axis").as_int()];
 
-    // TODO(barulicm) Kick controls
-    // TODO(barulicm) Dribbler controls
+    const auto kick_button = get_parameter("mapping.kick").as_int();
+    command_message.kick = joy_message->buttons[kick_button] && !prev_joy_msg_.buttons[kick_button];
+
+    const auto dribbler_inc_button = get_parameter("mapping.dribbler.increment").as_int();
+    const auto dribbler_dec_button = get_parameter("mapping.dribbler.decrement").as_int();
+
+    if (joy_message->buttons[dribbler_inc_button] && !prev_joy_msg_.buttons[dribbler_inc_button]) {
+      dribbler_speed_ += 10;  // TODO(barulicm) parameterize
+    }
+    if (joy_message->buttons[dribbler_dec_button] && !prev_joy_msg_.buttons[dribbler_dec_button]) {
+      dribbler_speed_ -= 10;
+    }
+    dribbler_speed_ =
+      std::clamp(
+      dribbler_speed_, static_cast<float>(get_parameter("mapping.dribbler.min").as_double()),
+      static_cast<float>(get_parameter("mapping.dribbler.max").as_double()));
+    if (joy_message->buttons[get_parameter("mapping.dribbler.spin").as_int()]) {
+      command_message.dribbler_speed = dribbler_speed_;
+    } else {
+      command_message.dribbler_speed = 0.0;
+    }
 
     control_publisher_->publish(command_message);
+    prev_joy_msg_ = *joy_message;
   }
 
   rcl_interfaces::msg::SetParametersResult SetParameterCallback(
