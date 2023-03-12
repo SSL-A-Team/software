@@ -69,6 +69,9 @@ public:
         {"dribbler.min", 0.0}
       });
 
+    // controls the size of steps when changing dribbler speed
+    declare_parameter<double>("dribbler_speed_step", 10.0);
+
     CreatePublisher(declare_parameter<int>("robot_id", 0));
     parameter_callback_handle_ =
       add_on_set_parameters_callback(
@@ -114,10 +117,10 @@ private:
     const auto dribbler_dec_button = get_parameter("mapping.dribbler.decrement").as_int();
 
     if (joy_message->buttons[dribbler_inc_button] && !prev_joy_msg_.buttons[dribbler_inc_button]) {
-      dribbler_speed_ += 10;  // TODO(barulicm) parameterize
+      dribbler_speed_ += get_parameter("dribbler_speed_step").as_double();
     }
     if (joy_message->buttons[dribbler_dec_button] && !prev_joy_msg_.buttons[dribbler_dec_button]) {
-      dribbler_speed_ -= 10;
+      dribbler_speed_ -= get_parameter("dribbler_speed_step").as_double();
     }
     dribbler_speed_ =
       std::clamp(
