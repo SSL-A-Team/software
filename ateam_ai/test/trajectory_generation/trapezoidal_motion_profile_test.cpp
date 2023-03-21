@@ -223,7 +223,7 @@ TEST(TrapezoidalMotionProfile, Trajectory3d_ShouldGoShortAngle_WhenLargeNegToPos
   for (std::size_t i = 1; i < ret.samples.size(); i++) {
     double cur_angle = ret.samples.at(i).pose.z();
 
-    // Wrap happens if perv angle is near -PI and cur angle is near PI
+    // Wrap happens if prev angle is near -PI and cur angle is near PI
     // for one frame
     if (cur_angle > prev_angle && cur_angle > 3 && prev_angle < -3) {
       EXPECT_FALSE(has_wrapped_angle);  // Only wrap once
