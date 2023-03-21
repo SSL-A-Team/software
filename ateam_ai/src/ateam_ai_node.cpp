@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/utils.h>
 
 #include <array>
 #include <chrono>
@@ -28,8 +29,9 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-#include <ateam_common/topic_names.hpp>
 #include <ateam_common/parameters.hpp>
+#include <ateam_common/overlay.hpp>
+#include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
@@ -57,6 +59,8 @@ public:
   : rclcpp::Node("ateam_ai_node", options), evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
+    ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
+
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.balls.emplace_back(Ball{});
 
@@ -97,6 +101,15 @@ public:
       "~/world",
       rclcpp::SystemDefaultsQoS());
 
+    overlay_publisher_ = create_publisher<ateam_msgs::msg::Overlay>(
+      "/overlay",
+      rclcpp::SystemDefaultsQoS());
+    ateam_common::Overlay::GetOverlay().SetOverlayPublishCallback(
+      [&](ateam_msgs::msg::Overlay overlay) {
+        overlay_publisher_->publish(overlay);
+      }
+    );
+
     timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
   }
 
@@ -110,6 +123,7 @@ private:
     16> yellow_robots_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
+  rclcpp::Publisher<ateam_msgs::msg::Overlay>::SharedPtr overlay_publisher_;
 
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
@@ -132,7 +146,7 @@ private:
     robot_states.at(id).value().pos.y() = robot_state_msg->pose.position.y;
     tf2::Quaternion tf2_quat;
     tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
-    robot_states.at(id).value().theta = tf2_quat.getAngle();
+    robot_states.at(id).value().theta = tf2::getYaw(tf2_quat);
     robot_states.at(id).value().vel.x() = robot_state_msg->twist.linear.x;
     robot_states.at(id).value().vel.y() = robot_state_msg->twist.linear.y;
     robot_states.at(id).value().omega = robot_state_msg->twist.angular.z;

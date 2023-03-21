@@ -18,38 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
-#define BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+#ifndef ATEAM_COMMON__ANGLE_HPP_
+#define ATEAM_COMMON__ANGLE_HPP_
 
-#include <optional>
-#include <array>
+#include <Eigen/Dense>
 
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <angles/angles.h>
 
-#include "behavior/behavior_realization.hpp"
-#include "types/trajectory.hpp"
-#include "types/world.hpp"
-#include "util/pid.hpp"
+#include <cmath>
 
-/**
- * Given trajectories as a function of time
- *  - Follow them as best as possible
- */
-class BehaviorFollower
+namespace ateam_common
 {
-public:
-  using MaybeRobotMotionCommand = std::optional<ateam_msgs::msg::RobotMotionCommand>;
-  using RobotMotionCommands = std::array<MaybeRobotMotionCommand, 16>;
+namespace geometry
+{
 
-  RobotMotionCommands follow(
-    const std::array<std::optional<Trajectory>, 16> & robot_trajectories,
-    World & world);
+inline double VectorToAngle(const Eigen::Vector2d & vector)
+{
+  return atan2(vector.y(), vector.x());
+}
 
-private:
-  static Sample3d get_next_command(const Trajectory & t, double current_time);
+inline bool IsVectorAligned(
+  const Eigen::Vector2d & a, const Eigen::Vector2d & b,
+  double max_angle_diff = 0.1)
+{
+  double a_angle = VectorToAngle(a);
+  double b_angle = VectorToAngle(b);
+  return std::abs(angles::shortest_angular_distance(a_angle, b_angle)) < max_angle_diff;
+}
 
-  std::array<std::array<PID, 3>, 16> trajectory_controllers;
-};
+}  // namespace geometry
+}  // namespace ateam_common
 
-#endif  // BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+#endif  // ATEAM_COMMON__ANGLE_HPP_
