@@ -190,9 +190,6 @@ Trajectory1d sample_trapezoidal_profile(
   const auto velocity = [](const double t, const double v_initial, const double a) {
       return v_initial + a * t;
     };
-  const auto sign = [](const double x) {
-      return x / abs(x);
-    };
 
   Trajectory1d output;
 
@@ -203,10 +200,10 @@ Trajectory1d sample_trapezoidal_profile(
 
     if (t < coeffs.phase_2.start_time) {
       // Phase 1
-      double accel_direction = sign(coeffs.phase_1.end_vel - coeffs.phase_1.start_vel);
-      sample.pos = position(t, coeffs.phase_1.start_vel, accel_direction * accel_limit);
-      sample.vel = velocity(t, coeffs.phase_1.start_vel, accel_direction * accel_limit);
-      sample.accel = accel_limit;
+      double accel = std::copysign(accel_limit, coeffs.phase_1.end_vel - coeffs.phase_1.start_vel);
+      sample.pos = position(t, coeffs.phase_1.start_vel, accel);
+      sample.vel = velocity(t, coeffs.phase_1.start_vel, accel);
+      sample.accel = accel;
     } else if (t < coeffs.phase_3.start_time) {
       // Phase 2
       double t_into_phase_2 = t - coeffs.phase_2.start_time;
@@ -218,12 +215,12 @@ Trajectory1d sample_trapezoidal_profile(
       // Phase 3
       double t_into_phase_3 = t - coeffs.phase_3.start_time;
       double d_into_phase_3 = coeffs.phase_3.start_dist;
-      double accel_direction = sign(coeffs.phase_3.end_vel - coeffs.phase_3.start_vel);
+      double accel = std::copysign(accel_limit, coeffs.phase_3.end_vel - coeffs.phase_3.start_vel);
       sample.pos = d_into_phase_3 +
-        position(t_into_phase_3, coeffs.phase_3.start_vel, accel_direction * accel_limit);
+        position(t_into_phase_3, coeffs.phase_3.start_vel, accel);
       sample.vel =
-        velocity(t_into_phase_3, coeffs.phase_3.start_vel, accel_direction * accel_limit);
-      sample.accel = -accel_limit;
+        velocity(t_into_phase_3, coeffs.phase_3.start_vel, accel);
+      sample.accel = accel;
     }
 
     output.samples.push_back(sample);
