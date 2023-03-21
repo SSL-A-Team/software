@@ -21,7 +21,7 @@
 #ifndef UTIL__PID_HPP_
 #define UTIL__PID_HPP_
 
-#include <ateam_common/angle.hpp>
+#include <angles/angles.h>
 
 class PID
 {
@@ -47,7 +47,7 @@ public:
       double error = target - current;
       return kp * error;
     } else {
-      double error = ateam_common::geometry::SignedSmallestAngleDifference(target, current);
+      double error = angles::shortest_angular_distance(current, target);
       return kp * error;
     }
   }

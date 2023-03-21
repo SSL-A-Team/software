@@ -20,6 +20,8 @@
 
 #include "trajectory_generation/trajectory_generation.hpp"
 
+#include <angles/angles.h>
+
 #include <algorithm>
 
 #include <ateam_common/angle.hpp>
@@ -66,8 +68,8 @@ BehaviorPlan GetPlanFromGoal(
 
           Eigen::Vector2d robot_to_goal = target_goal - current_robot_pos;
           double robot_to_goal_angle = ateam_common::geometry::VectorToAngle(robot_to_goal);
-          double angle_diff = ateam_common::geometry::SignedSmallestAngleDifference(
-            robot_to_goal_angle, current_robot.theta);
+          double angle_diff = angles::shortest_angular_distance(
+            current_robot.theta, robot_to_goal_angle);
 
           Eigen::Vector2d robot_to_ball = ball_pos - current_robot_pos;
           Eigen::Vector2d ball_to_goal = target_goal - ball_pos;

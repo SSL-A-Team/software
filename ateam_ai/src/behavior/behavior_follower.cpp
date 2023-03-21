@@ -20,7 +20,6 @@
 
 #include "behavior/behavior_follower.hpp"
 
-#include <ateam_common/angle.hpp>
 #include <ateam_common/parameters.hpp>
 
 #include "util/pid.hpp"

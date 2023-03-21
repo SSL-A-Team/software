@@ -23,6 +23,8 @@
 
 #include <Eigen/Dense>
 
+#include <angles/angles.h>
+
 #include <cmath>
 
 namespace ateam_common
@@ -30,31 +32,9 @@ namespace ateam_common
 namespace geometry
 {
 
-/**
- * @brief Wraps to -PI through PI inclusive
- */
-inline double WrapToNPiPi(double a)
-{
-  return atan2(sin(a), cos(a));
-}
-
-/**
- * @brief Returns the smallest angle (a - b) in signed format
- */
-inline double SignedSmallestAngleDifference(double a, double b)
-{
-  double unbound_angle_diff = a - b;
-  return atan2(sin(unbound_angle_diff), cos(unbound_angle_diff));
-}
-
 inline double VectorToAngle(const Eigen::Vector2d & vector)
 {
   return atan2(vector.y(), vector.x());
-}
-
-inline double SmallestAngleBetween(const Eigen::Vector2d & a, const Eigen::Vector2d & b)
-{
-  return acos(a.normalized().dot(b.normalized()));
 }
 
 inline bool IsVectorAligned(
@@ -63,7 +43,7 @@ inline bool IsVectorAligned(
 {
   double a_angle = VectorToAngle(a);
   double b_angle = VectorToAngle(b);
-  return SignedSmallestAngleDifference(a_angle, b_angle) < max_angle_diff;
+  return std::abs(angles::shortest_angular_distance(a_angle, b_angle)) < max_angle_diff;
 }
 
 }  // namespace geometry

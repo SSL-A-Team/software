@@ -26,68 +26,12 @@
 
 namespace geometry = ateam_common::geometry;
 
-TEST(Angle, WrapToNPiPi)
+TEST(Angle, IsVectorAligned)
 {
-  // No wrap
-  EXPECT_NEAR(geometry::WrapToNPiPi(-M_PI), -M_PI, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(-3), -3, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(-2), -2, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(-1), -1, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(0), 0, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(1), 1, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(2), 2, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(3), 3, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(M_PI), M_PI, 1e-5);
+  EXPECT_TRUE(geometry::IsVectorAligned(Eigen::Vector2d{1, 0}, Eigen::Vector2d{1, 0}, 0.1));
+  EXPECT_TRUE(geometry::IsVectorAligned(Eigen::Vector2d{0, 1}, Eigen::Vector2d{1, 0}, 0.75 * M_PI));
+  EXPECT_TRUE(geometry::IsVectorAligned(Eigen::Vector2d{1, 0}, Eigen::Vector2d{0, 1}, 0.75 * M_PI));
 
-  // Wrap up
-  EXPECT_NEAR(geometry::WrapToNPiPi(-6 * M_PI), 0, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(-5 * M_PI), -M_PI, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(-4 * M_PI), 0, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(-3 * M_PI), -M_PI, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(-4), -4 + 2 * M_PI, 1e-5);
-
-  // Wrap down
-  EXPECT_NEAR(geometry::WrapToNPiPi(6 * M_PI), 0, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(5 * M_PI), M_PI, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(4 * M_PI), 0, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(3 * M_PI), M_PI, 1e-5);
-  EXPECT_NEAR(geometry::WrapToNPiPi(4), 4 - 2 * M_PI, 1e-5);
-}
-
-TEST(Angle, SignedSmallestAngleDifferent)
-{
-  // Positive difference no wrap
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(3, 2), 1, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(3, 1), 2, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(3, 0), 3, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(2, 1), 1, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(2, 0), 2, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(2, -1), 3, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(1, 0), 1, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(1, -1), 2, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(1, -2), 3, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(0, -1), 1, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(0, -2), 2, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(0, -3), 3, 1e-5);
-
-
-  // Negative difference no wrap
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(2, 3), -1, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(1, 3), -2, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(0, 3), -3, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(1, 2), -1, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(0, 2), -2, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(-1, 2), -3, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(0, 1), -1, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(-1, 1), -2, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(-2, 1), -3, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(-1, 0), -1, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(-2, 0), -2, 1e-5);
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(-3, 0), -3, 1e-5);
-
-  // Positive difference wrap
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(-3, 3), 2 * M_PI - 6, 1e-5);
-
-  // Negative difference wrap
-  EXPECT_NEAR(geometry::SignedSmallestAngleDifference(3, -3), -(2 * M_PI - 6), 1e-5);
+  EXPECT_FALSE(geometry::IsVectorAligned(Eigen::Vector2d{0, 1}, Eigen::Vector2d{1, 0}, 0.1));
+  EXPECT_FALSE(geometry::IsVectorAligned(Eigen::Vector2d{1, 0}, Eigen::Vector2d{0, 1}, 0.1));
 }

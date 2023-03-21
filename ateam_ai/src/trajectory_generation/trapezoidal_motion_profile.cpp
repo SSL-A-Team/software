@@ -20,10 +20,10 @@
 
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
 
+#include <angles/angles.h>
+
 #include <algorithm>
 #include <numeric>
-
-#include <ateam_common/angle.hpp>
 
 namespace TrapezoidalMotionProfile
 {
@@ -39,7 +39,7 @@ Eigen::Vector3d minimize_angle_goal_target(
   const Eigen::Vector3d & end)
 {
   Eigen::Vector3d new_end = end;
-  double angle_diff = ateam_common::geometry::SignedSmallestAngleDifference(end.z(), start.z());
+  double angle_diff = angles::shortest_angular_distance(start.z(), end.z());
   new_end.z() = start.z() + angle_diff;
 
   return new_end;

@@ -20,7 +20,7 @@
 
 #include "filters/kalman_filter.hpp"
 
-#include <ateam_common/angle.hpp>
+#include <angles/angles.h>
 
 void KalmanFilter::set_initial_x_hat(const Eigen::VectorXd & x_hat)
 {
@@ -76,8 +76,8 @@ void KalmanFilter::update(const Eigen::VectorXd & z)
   // Account for angle differences not respecting normal math due to this -PI/PI
   for (int i = 0; i < AngleMask.rows(); i++) {
     if (AngleMask(i) == 1) {
-      double masked_angle = ateam_common::geometry::WrapToNPiPi(z(i));
-      y(i) = ateam_common::geometry::SignedSmallestAngleDifference(masked_angle, (H * x_hat)(i));
+      double masked_angle = angles::normalize_angle(z(i));
+      y(i) = angles::shortest_angular_distance((H * x_hat)(i), masked_angle);
     }
   }
 
