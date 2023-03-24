@@ -27,6 +27,8 @@
 #include <map>
 #include <memory>
 
+#include <ateam_msgs/msg/vision_world_state.hpp>
+
 #include "camera.hpp"
 #include "generators/model_input_generator.hpp"
 #include "generators/transmission_probability_generator.hpp"
@@ -68,6 +70,11 @@ public:
    * @return The best possible estimate for each blue robot (if one exists)
    */
   std::array<std::optional<Robot>, 16> get_blue_robots_estimate();
+
+  /**
+   * @return ROS2 msg containing the current internal state
+   */
+  ateam_msgs::msg::VisionWorldState get_vision_world_state() const;
 
 private:
   std::shared_ptr<ModelInputGenerator> model_input_generator;

@@ -36,6 +36,7 @@ constexpr std::string_view kRobotFeedbackPrefix = "/robot_feedback/robot";
 constexpr std::string_view kBall = "/ball";
 constexpr std::string_view kYellowTeamRobotPrefix = "/yellow_team/robot";
 constexpr std::string_view kBlueTeamRobotPrefix = "/blue_team/robot";
+constexpr std::string_view kVisionState = "/vision_state";  // Internal vision filter state
 
 // Output from joysticks
 constexpr std::string_view kJoystick = "/joystick";
