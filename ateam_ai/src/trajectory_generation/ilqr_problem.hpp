@@ -275,10 +275,10 @@ private:
 
   static constexpr std::size_t max_num_iterations = 1000;
   static constexpr double converge_threshold = 1e-6;
-  static constexpr double alpha_change = 0.99;
+  static constexpr double alpha_change = 0.5;
   static constexpr double eps = 1e-3;
 
-  double alpha = 1;  // backtracking serach parameter
+  double alpha = 1e-3;  // backtracking serach parameter
   Trajectory trajectory;
   Actions actions;
 
