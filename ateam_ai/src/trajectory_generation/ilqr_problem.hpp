@@ -261,21 +261,26 @@ private:
         V_xx = Q_xx - K.at(t).transpose() * Q_uu * K.at(t);
       }
 
-      // Step 3.5: Update possible control signal, states, costs
+      // Step 3.5: Compute candidate solution
+      // Eq 7a/b/c
       Cost test_cost;
       Trajectory test_trajectory;
       Actions test_actions;
       test_trajectory.front() = trajectory.front();
-      test_actions.front() = actions.front() + k.front();  // xhat_0 == x_0 so Kt term goes away
+      test_actions.front() = actions.front() + alpha * k.front();  // xhat_0 == x_0 so Kt term goes away
+      test_trajectory.at(1) = dynamics(test_trajectory.at(0), test_actions.at(0), 0);
       test_cost = cost(test_trajectory.front(), test_actions.front(), 0);
-      for (Time t = 1; t < T; t++) {
-        test_trajectory.at(t) = dynamics(
-          test_trajectory.at(
-            t - 1), test_actions.at(t - 1), t);
-        test_actions.at(t) = actions.at(t) + k.at(t) + K.at(t) *
-          (test_trajectory.at(t) - trajectory.at(t));
-        test_cost = cost(test_trajectory.at(t), test_actions.at(t), t);
+
+      for (Time t = 1; t < T - 1; t++) {
+        const State & x_hat_i = test_trajectory.at(t);
+        const State & x_i = trajectory.at(t);
+        const Input & u_i = actions.at(t);
+        const Input & u_hat_i = u_i + alpha * k.at(t) + K.at(t) * (x_hat_i - x_i);
+        test_actions.at(t) = u_hat_i;
+        test_trajectory.at(t  + 1) = dynamics(x_hat_i, u_hat_i, t);
+        test_cost += cost(test_trajectory.at(t), test_actions.at(t), t);
       }
+      test_cost += cost(test_trajectory.back(), test_actions.back(), T);
 
       // Step 4: Compare Costs and update update size
       if (test_cost < overall_cost) {
@@ -308,13 +313,13 @@ private:
 
   static constexpr std::size_t max_num_iterations = 1;
   static constexpr double converge_threshold = 1e-6;
-  static constexpr double alpha_change = 0.5;
+  static constexpr double gamma = 0.5;  // Backtracking scaling param
   static constexpr double eps = 1e-3;
 
   // Ridge parameter for the Tikhonov regularization
   static constexpr double lambda = 1e-1;
 
-  double alpha = 1e-3;  // backtracking serach parameter
+  double alpha = 1e-3;  // Backtracking search parameter
   Trajectory trajectory;
   Actions actions;
 
