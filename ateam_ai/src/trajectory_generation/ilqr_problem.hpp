@@ -129,7 +129,7 @@ public:
 
   std::optional<Trajectory> calculate(const State & initial_state)
   {
-    forward_rollout(initial_state);
+    initial_rollout(initial_state);
     if (backward_pass()) {
       return trajectory;
     } else {
@@ -142,7 +142,7 @@ private:
   using CostHessians = std::array<CostHessian, T>;
   using CostGradiants = std::array<CostGradiant, T>;
 
-  void forward_rollout(const State & initial_state)
+  void initial_rollout(const State & initial_state)
   {
     // Step 1: Forward Rollout
     trajectory.front() = initial_state;
@@ -205,10 +205,11 @@ private:
 
   bool backward_pass()
   {
-    for (std::size_t num_iterations = 0; num_iterations < max_num_iterations; num_iterations++) {
+    for (std::size_t num_ilqr_iterations = 0; num_ilqr_iterations < max_ilqr_iterations; num_ilqr_iterations++) {
       // Step 3: Determine best control signal update
       Feedforwards k;
       Feedbacks K;
+      std::array<double, T> delta_v;
 
       // Q-function - pseudo-Hamiltonian
       Eigen::Matrix<double, X, 1> Q_x;
@@ -255,44 +256,72 @@ private:
         k.at(t) = -1 * Q_uu_inv * Q_u;
         K.at(t) = -1 * Q_uu_inv * Q_ux;
 
+        // eq 6a
+        // Eigen doesn't like converting a 1x1 matrix to double :(
+        delta_v.at(t) = -0.5 * (k.at(t).transpose() * Q_uu * k.at(t)).value();
         // eq 6b
         V_x = Q_x - K.at(t).transpose() * Q_uu * k.at(t);
         // eq 6c
         V_xx = Q_xx - K.at(t).transpose() * Q_uu * K.at(t);
       }
 
-      // Step 3.5: Compute candidate solution
+      // Step 3.5: Forward Pass
       // Eq 7a/b/c
-      Cost test_cost;
-      Trajectory test_trajectory;
-      Actions test_actions;
-      test_trajectory.front() = trajectory.front();
-      test_actions.front() = actions.front() + alpha * k.front();  // xhat_0 == x_0 so Kt term goes away
-      test_trajectory.at(1) = dynamics(test_trajectory.at(0), test_actions.at(0), 0);
-      test_cost = cost(test_trajectory.front(), test_actions.front(), 0);
+      Cost candidate_cost;
+      Trajectory candidate_trajectory;
+      Actions candidate_actions;
 
-      for (Time t = 1; t < T - 1; t++) {
-        const State & x_hat_i = test_trajectory.at(t);
-        const State & x_i = trajectory.at(t);
-        const Input & u_i = actions.at(t);
-        const Input & u_hat_i = u_i + alpha * k.at(t) + K.at(t) * (x_hat_i - x_i);
-        test_actions.at(t) = u_hat_i;
-        test_trajectory.at(t  + 1) = dynamics(x_hat_i, u_hat_i, t);
-        test_cost += cost(test_trajectory.at(t), test_actions.at(t), t);
+      bool valid_forward_pass_found = false;
+      for (std::size_t num_forward_pass_iterations = 0; num_forward_pass_iterations < max_forward_pass_iterations; num_forward_pass_iterations++) {
+        // Generate likely forward pass
+        double alpha = 1;
+
+        candidate_trajectory.front() = trajectory.front();
+        candidate_actions.front() = actions.front() + alpha * k.front();  // xhat_0 == x_0 so Kt term goes away
+        candidate_trajectory.at(1) = dynamics(candidate_trajectory.at(0), candidate_actions.at(0), 0);
+        candidate_cost = cost(candidate_trajectory.front(), candidate_actions.front(), 0);
+
+        for (Time t = 1; t < T - 1; t++) {
+          const State & x_hat_i = candidate_trajectory.at(t);
+          const State & x_i = trajectory.at(t);
+          const Input & u_i = actions.at(t);
+          const Input & u_hat_i = u_i + alpha * k.at(t) + K.at(t) * (x_hat_i - x_i);
+          candidate_actions.at(t) = u_hat_i;
+          candidate_trajectory.at(t  + 1) = dynamics(x_hat_i, u_hat_i, t);
+          candidate_cost += cost(candidate_trajectory.at(t), candidate_actions.at(t), t);
+        }
+        candidate_cost += cost(candidate_trajectory.back(), candidate_actions.back(), T);
+
+        // From https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf
+        // We can calculate the expected cost decrease
+        double overall_candidate_cost_change = 0;
+        for (const double dv : delta_v) {
+          overall_candidate_cost_change += dv;
+        }
+        overall_candidate_cost_change *= alpha*alpha;
+        double z = (overall_cost - candidate_cost) / -overall_candidate_cost_change;
+
+        // Accept the solution if we are closeish to the actual expected decrease
+        if (z > 1e-4 && z < 10) {
+          valid_forward_pass_found = true;
+          break;
+        }
+
+        // If it's not accepted, decrease the scale and retry
+        alpha *= gamma;
       }
-      test_cost += cost(test_trajectory.back(), test_actions.back(), T);
 
       // Step 4: Compare Costs and update update size
-      if (test_cost < overall_cost) {
-        trajectory = test_trajectory;
-        actions = test_actions;
+      if (valid_forward_pass_found && candidate_cost < overall_cost) {
+        trajectory = candidate_trajectory;
+        actions = candidate_actions;
 
         // If we converge, just return
-        if (std::abs(test_cost - overall_cost) / test_cost < converge_threshold) {
+        if (std::abs(candidate_cost - overall_cost) / candidate_cost < converge_threshold) {
           return true;
         }
 
-        overall_cost = test_cost;
+        overall_cost = candidate_cost;
 
         // Step 4.5: Calculate jacobian/hessian for x,u
         for (Time t = 0; t < T; t++) {
@@ -301,24 +330,24 @@ private:
           g.at(t) = cost_gradiant(trajectory.at(t), actions.at(t), t);
           h.at(t) = cost_hessian(trajectory.at(t), actions.at(t), t, g.at(t));
         }
-
-        alpha *= alpha_change;
       } else {
-        alpha /= alpha_change;
+        // Forward pass probably blew up
+        lambda *= lambda_scale;
       }
     }
 
     return true;
   }
 
-  static constexpr std::size_t max_num_iterations = 1;
+  static constexpr std::size_t max_ilqr_iterations = 1e3;
+  static constexpr std::size_t max_forward_pass_iterations = 1e3;
   static constexpr double converge_threshold = 1e-6;
+  static constexpr double eps = 1e-3;  // Auto differentiation epsilon
+
   static constexpr double gamma = 0.5;  // Backtracking scaling param
-  static constexpr double eps = 1e-3;
+  static constexpr double lambda_scale = 2;  // When forward pass blows up, increase regularization
 
-  // Ridge parameter for the Tikhonov regularization
-  static constexpr double lambda = 1e-1;
-
+  double lambda = 1e-1;  // Ridge parameter for the Tikhonov regularization
   double alpha = 1e-3;  // Backtracking search parameter
   Trajectory trajectory;
   Actions actions;
