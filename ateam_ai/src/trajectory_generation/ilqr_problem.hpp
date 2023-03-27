@@ -195,6 +195,14 @@ private:
     return h.block(X, X, U, U);
   }
 
+  inline Eigen::Matrix<double, U, U> tikhonov_regularization(const Eigen::Matrix<double, U, U> & m)
+  {
+    // https://en.wikipedia.org/wiki/Ridge_regression#
+    const Eigen::Matrix<double, U, U> & m_T = m.transpose();
+    const Eigen::Matrix<double, U, U> & I = Eigen::Matrix<double, U, U>::Identity();
+    return (m_T * m + lambda * I).inverse() * m_T;
+  }
+
   bool backward_pass()
   {
     for (std::size_t num_iterations = 0; num_iterations < max_num_iterations; num_iterations++) {
@@ -242,24 +250,7 @@ private:
 
         // eq 5b
         // Solve inverse with regulization to keep it from exploding
-        Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, U, U>> eigensolver(Q_uu);
-        if (eigensolver.info() != Eigen::Success) {
-          std::cout << "Failed to solve eigen vectors" << std::endl;
-          return false;
-        }
-        Eigen::Matrix<double, U, 1> eigen_vals = eigensolver.eigenvalues();
-        Eigen::Matrix<double, U, U> eigen_vals_diag;
-        eigen_vals_diag.setZero();
-        for (int i = 0; i < U; i++) {
-          if (eigen_vals[i] < 0) {
-            eigen_vals[i] = 0;
-          }
-          eigen_vals[i] += alpha;
-          eigen_vals_diag(i, i) = 1.0 / eigen_vals[i];
-        }
-        Eigen::Matrix<double, U, U> eigen_vecs = eigensolver.eigenvectors();
-        Eigen::Matrix<double, U,
-          U> Q_uu_inv = eigen_vecs * eigen_vals_diag * eigen_vecs.transpose();
+        Eigen::Matrix<double, U, U> Q_uu_inv = tikhonov_regularization(Q_uu);
 
         k.at(t) = -1 * Q_uu_inv * Q_u;
         K.at(t) = -1 * Q_uu_inv * Q_ux;
@@ -315,10 +306,13 @@ private:
     return true;
   }
 
-  static constexpr std::size_t max_num_iterations = 1000;
+  static constexpr std::size_t max_num_iterations = 1;
   static constexpr double converge_threshold = 1e-6;
   static constexpr double alpha_change = 0.5;
   static constexpr double eps = 1e-3;
+
+  // Ridge parameter for the Tikhonov regularization
+  static constexpr double lambda = 1e-1;
 
   double alpha = 1e-3;  // backtracking serach parameter
   Trajectory trajectory;
