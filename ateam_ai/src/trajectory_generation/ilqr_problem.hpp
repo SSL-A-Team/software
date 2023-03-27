@@ -35,11 +35,25 @@ class iLQRProblem
 {
 public:
   using State = Eigen::Matrix<double, X, 1>;
+  using StateJacobian = Eigen::Matrix<double, X, X + U>;
+  using StateJacobian_x = Eigen::Matrix<double, X, X>;
+  using StateJacobian_x_T = Eigen::Matrix<double, X, X>;
+  using StateJacobian_u = Eigen::Matrix<double, X, U>;
+  using StateJacobian_u_T = Eigen::Matrix<double, U, X>;
+
   using Input = Eigen::Matrix<double, U, 1>;
-  using Jacobian = Eigen::Matrix<double, X, X + U>;
+
   using Cost = double;
-  using Gradiant = Eigen::Matrix<double, X + U, 1>;
-  using Hessian = Eigen::Matrix<double, X + U, X + U>;
+
+  using CostGradiant = Eigen::Matrix<double, X + U, 1>;
+  using CostGradiant_x = Eigen::Matrix<double, X, 1>;
+  using CostGradiant_u = Eigen::Matrix<double, U, 1>;
+
+  using CostHessian = Eigen::Matrix<double, X + U, X + U>;
+  using CostHessian_xx = Eigen::Matrix<double, X, X>;
+  using CostHessian_ux = Eigen::Matrix<double, U, X>;
+  using CostHessian_uu = Eigen::Matrix<double, U, U>;
+
   using Time = int;
 
   using Trajectory = std::array<State, T>;
@@ -50,9 +64,9 @@ public:
 
   // Assume second derivative of dynamics is 0 so we don't have do tensor math
   virtual State dynamics(const State & x_t1, const Input & u_t1, Time t) = 0;
-  virtual Jacobian jacobian(const State & x, const Input & u, Time t)
+  virtual StateJacobian dynamics_jacobian(const State & x, const Input & u, Time t)
   {
-    Jacobian out;
+    StateJacobian out;
 
     State d = dynamics(x, u, t);
     for (std::size_t i = 0; i < X; i++) {
@@ -71,9 +85,9 @@ public:
   }
 
   virtual Cost cost(const State & x, const Input & u, Time t) = 0;
-  virtual Gradiant gradiant(const State & x, const Input & u, Time t)
+  virtual CostGradiant cost_gradiant(const State & x, const Input & u, Time t)
   {
-    Gradiant out;
+    CostGradiant out;
 
     for (std::size_t i = 0; i < X; i++) {
       State x_eps_p = x;
@@ -94,20 +108,20 @@ public:
     return out;
   }
 
-  virtual Hessian hessian(const State & x, const Input & u, Time t, const Gradiant & g)
+  virtual CostHessian cost_hessian(const State & x, const Input & u, Time t, const CostGradiant & g)
   {
-    Hessian out;
+    CostHessian out;
 
     for (std::size_t i = 0; i < X; i++) {
       State x_eps = x;
       x_eps(i) += eps;
-      out.col(i) = (gradiant(x_eps, u, t) - g) / eps;
+      out.col(i) = (cost_gradiant(x_eps, u, t) - g) / eps;
     }
 
     for (std::size_t i = 0; i < U; i++) {
       Input u_eps = u;
       u_eps(i) += eps;
-      out.col(i + X) = (gradiant(x, u_eps, t) - g) / eps;
+      out.col(i + X) = (cost_gradiant(x, u_eps, t) - g) / eps;
     }
 
     return out;
@@ -124,10 +138,9 @@ public:
   }
 
 private:
-  using Jacobians = std::array<Jacobian, T>;
-  using Hessians = std::array<Hessian, T>;
-  using Gradiants = std::array<Gradiant, T>;
-
+  using StateJacobians = std::array<StateJacobian, T>;
+  using CostHessians = std::array<CostHessian, T>;
+  using CostGradiants = std::array<CostGradiant, T>;
 
   void forward_rollout(const State & initial_state)
   {
@@ -144,11 +157,42 @@ private:
 
     // Step 2: Calculate jacobian/hessian for x,u
     for (Time t = 0; t < T; t++) {
-      j.at(t) = jacobian(trajectory.at(t), actions.at(t), t);
+      j.at(t) = dynamics_jacobian(trajectory.at(t), actions.at(t), t);
 
-      g.at(t) = gradiant(trajectory.at(t), actions.at(t), t);
-      h.at(t) = hessian(trajectory.at(t), actions.at(t), t, g.at(t));
+      g.at(t) = cost_gradiant(trajectory.at(t), actions.at(t), t);
+      h.at(t) = cost_hessian(trajectory.at(t), actions.at(t), t, g.at(t));
     }
+  }
+
+  inline StateJacobian_x state_jacobian_x(const StateJacobian & j)
+  {
+    return j.block(0, 0, X, X);
+  }
+  inline StateJacobian_u state_jacobian_u(const StateJacobian & j)
+  {
+    return j.block(0, X, X, U);
+  }
+
+  inline CostGradiant_x cost_gradiant_x(const CostGradiant & g)
+  {
+    return g.block(0, 0, X, 1);
+  }
+  inline CostGradiant_u cost_gradiant_u(const CostGradiant & g)
+  {
+    return g.block(X, 0, U, 1);
+  }
+
+  inline CostHessian_xx cost_hessian_xx(const CostHessian & h)
+  {
+    return h.block(0, 0, X, X);
+  }
+  inline CostHessian_ux cost_hessian_ux(const CostHessian & h)
+  {
+    return h.block(X, 0, U, X);
+  }
+  inline CostHessian_uu cost_hessian_uu(const CostHessian & h)
+  {
+    return h.block(X, X, U, U);
   }
 
   bool backward_pass()
@@ -158,49 +202,47 @@ private:
       Feedforwards k;
       Feedbacks K;
 
-      Gradiant Q_dxu;  // Derivative of V(f(x, u))
-      Hessian Q_ddxu;
-      State v_dx = g.back().block(0, 0, X, 1);  // Derivative of V(x)
-      Eigen::Matrix<double, X, X> v_ddx = h.back().block(0, 0, X, X);
+      // Q-function - pseudo-Hamiltonian
+      Eigen::Matrix<double, X, 1> Q_x;
+      Eigen::Matrix<double, U, 1> Q_u;
+      Eigen::Matrix<double, X, X> Q_xx;
+      Eigen::Matrix<double, U, X> Q_ux;
+      Eigen::Matrix<double, U, U> Q_uu;
+
+      // Value at final time is the final cost
+      CostGradiant_x V_x = cost_gradiant_x(g.back());
+      CostHessian_xx V_xx = cost_hessian_xx(h.back());
 
       k.at(T - 1).setZero();
       K.at(T - 1).setZero();
 
       for (Time t = T - 2; t >= 0; t--) {
+        const CostGradiant_x & l_x = cost_gradiant_x(g.at(t));
+        const CostGradiant_u & l_u = cost_gradiant_u(g.at(t));
+
+        const StateJacobian_x & f_x = state_jacobian_x(j.at(t));
+        const StateJacobian_x_T & f_x_T = f_x.transpose();
+        const StateJacobian_u & f_u = state_jacobian_u(j.at(t));
+        const StateJacobian_u_T & f_u_T = f_u.transpose();
+
+        const CostHessian_xx & l_xx = cost_hessian_xx(h.at(t));
+        const CostHessian_ux & l_ux = cost_hessian_ux(h.at(t));
+        const CostHessian_uu & l_uu = cost_hessian_uu(h.at(t));
+
         // eq 4a
-        Q_dxu.block(0, 0, X, 1) =
-          g.at(t).block(0, 0, X, 1) +
-          j.at(t).block(0, 0, X, X).transpose() *
-          v_dx.block(0, 0, X, 1);
+        Q_x = l_x + f_x_T * V_x;
         // eq 4b
-        Q_dxu.block(X, 0, U, 1) =
-          g.at(t).block(X, 0, U, 1) +
-          j.at(t).block(0, X, X, U).transpose() *
-          v_dx.block(0, 0, X, 1);
+        Q_u = l_u + f_u_T * V_x;
         // eq 4c
-        Q_ddxu.block(0, 0, X, X) =
-          h.at(t).block(0, 0, X, X) +
-          j.at(t).block(0, 0, X, X).transpose() *
-          v_ddx.block(0, 0, X, X) *
-          j.at(t).block(0, 0, X, X);
+        Q_xx = l_xx + f_x_T * V_xx * f_x;
         // eq 4d
-        Q_ddxu.block(X, 0, U, X) =
-          h.at(t).block(X, 0, U, X) +
-          j.at(t).block(0, X, X, U).transpose() *
-          v_ddx.block(0, 0, X, X) *
-          j.at(t).block(0, 0, X, X);
+        Q_ux = l_ux + f_u_T * V_xx * f_x;
         // eq 4e
-        Q_ddxu.block(X, X, U, U) =
-          h.at(t).block(X, X, U, U) +
-          j.at(t).block(0, X, X, U).transpose() *
-          v_ddx.block(0, 0, X, X) *
-          j.at(t).block(0, X, X, U);
+        Q_uu = l_uu + f_u_T * V_xx * f_u;
 
         // eq 5b
         // Solve inverse with regulization to keep it from exploding
-        Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, U, U>> eigensolver(Q_ddxu.block(
-            X, X, U,
-            U));
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, U, U>> eigensolver(Q_uu);
         if (eigensolver.info() != Eigen::Success) {
           std::cout << "Failed to solve eigen vectors" << std::endl;
           return false;
@@ -216,16 +258,16 @@ private:
           eigen_vals_diag(i, i) = 1.0 / eigen_vals[i];
         }
         Eigen::Matrix<double, U, U> eigen_vecs = eigensolver.eigenvectors();
-        Eigen::Matrix<double, U, U> inv = eigen_vecs * eigen_vals_diag * eigen_vecs.transpose();
+        Eigen::Matrix<double, U,
+          U> Q_uu_inv = eigen_vecs * eigen_vals_diag * eigen_vecs.transpose();
 
-        k.at(t) = -1 * inv * Q_dxu.block(X, 0, U, 1);
-        K.at(t) = -1 * inv * Q_ddxu.block(X, 0, U, X);
+        k.at(t) = -1 * Q_uu_inv * Q_u;
+        K.at(t) = -1 * Q_uu_inv * Q_ux;
 
         // eq 6b
-        v_dx = Q_dxu.block(0, 0, X, 1) - K.at(t).transpose() * Q_ddxu.block(X, X, U, U) * k.at(t);
+        V_x = Q_x - K.at(t).transpose() * Q_uu * k.at(t);
         // eq 6c
-        v_ddx =
-          Q_ddxu.block(0, 0, X, X) - K.at(t).transpose() * Q_ddxu.block(X, X, U, U) * K.at(t);
+        V_xx = Q_xx - K.at(t).transpose() * Q_uu * K.at(t);
       }
 
       // Step 3.5: Update possible control signal, states, costs
@@ -258,10 +300,10 @@ private:
 
         // Step 4.5: Calculate jacobian/hessian for x,u
         for (Time t = 0; t < T; t++) {
-          j.at(t) = jacobian(trajectory.at(t), actions.at(t), t);
+          j.at(t) = dynamics_jacobian(trajectory.at(t), actions.at(t), t);
 
-          g.at(t) = gradiant(trajectory.at(t), actions.at(t), t);
-          h.at(t) = hessian(trajectory.at(t), actions.at(t), t, g.at(t));
+          g.at(t) = cost_gradiant(trajectory.at(t), actions.at(t), t);
+          h.at(t) = cost_hessian(trajectory.at(t), actions.at(t), t, g.at(t));
         }
 
         alpha *= alpha_change;
@@ -282,9 +324,9 @@ private:
   Trajectory trajectory;
   Actions actions;
 
-  Jacobians j;
-  Gradiants g;
-  Hessians h;
+  StateJacobians j;
+  CostGradiants g;
+  CostHessians h;
 
   Cost overall_cost;
 };
