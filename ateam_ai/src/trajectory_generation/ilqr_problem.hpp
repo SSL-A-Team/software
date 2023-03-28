@@ -130,7 +130,7 @@ public:
   std::optional<Trajectory> calculate(const State & initial_state)
   {
     initial_rollout(initial_state);
-    if (backward_pass()) {
+    if (converge()) {
       return trajectory;
     } else {
       return std::nullopt;
@@ -141,6 +141,25 @@ private:
   using StateJacobians = std::array<StateJacobian, T>;
   using CostHessians = std::array<CostHessian, T>;
   using CostGradiants = std::array<CostGradiant, T>;
+
+  void update_derivatives(const Trajectory & traj, const Actions & actions)
+  {
+    for (Time t = 0; t < T; t++) {
+      j.at(t) = dynamics_jacobian(traj.at(t), actions.at(t), t);
+
+      g.at(t) = cost_gradiant(traj.at(t), actions.at(t), t);
+      h.at(t) = cost_hessian(traj.at(t), actions.at(t), t, g.at(t));
+    }
+  }
+
+  Cost trajectory_action_cost(const Trajectory & traj, const Actions & actions)
+  {
+    Cost c = 0.0;
+    for (Time t = 0; t < T; t++) {
+      c += cost(traj.at(t), actions.at(t), t);
+    }
+    return c;
+  }
 
   void initial_rollout(const State & initial_state)
   {
@@ -156,12 +175,148 @@ private:
     }
 
     // Step 2: Calculate jacobian/hessian for x,u
-    for (Time t = 0; t < T; t++) {
-      j.at(t) = dynamics_jacobian(trajectory.at(t), actions.at(t), t);
+    update_derivatives(trajectory, actions);
+  }
 
-      g.at(t) = cost_gradiant(trajectory.at(t), actions.at(t), t);
-      h.at(t) = cost_hessian(trajectory.at(t), actions.at(t), t, g.at(t));
+  std::tuple<Feedforwards, Feedbacks, std::array<double, T>> backward_pass()
+  {
+    Feedforwards k;
+    Feedbacks K;
+    std::array<double, T> delta_v;
+
+    // Q-function - pseudo-Hamiltonian
+    Eigen::Matrix<double, X, 1> Q_x;
+    Eigen::Matrix<double, U, 1> Q_u;
+    Eigen::Matrix<double, X, X> Q_xx;
+    Eigen::Matrix<double, U, X> Q_ux;
+    Eigen::Matrix<double, U, U> Q_uu;
+
+    // Value at final time is the final cost
+    CostGradiant_x V_x = cost_gradiant_x(g.back());
+    CostHessian_xx V_xx = cost_hessian_xx(h.back());
+
+    k.at(T - 1).setZero();
+    K.at(T - 1).setZero();
+
+    for (Time t = T - 2; t >= 0; t--) {
+      const CostGradiant_x & l_x = cost_gradiant_x(g.at(t));
+      const CostGradiant_u & l_u = cost_gradiant_u(g.at(t));
+
+      const StateJacobian_x & f_x = state_jacobian_x(j.at(t));
+      const StateJacobian_x_T & f_x_T = f_x.transpose();
+      const StateJacobian_u & f_u = state_jacobian_u(j.at(t));
+      const StateJacobian_u_T & f_u_T = f_u.transpose();
+
+      const CostHessian_xx & l_xx = cost_hessian_xx(h.at(t));
+      const CostHessian_ux & l_ux = cost_hessian_ux(h.at(t));
+      const CostHessian_uu & l_uu = cost_hessian_uu(h.at(t));
+
+      // eq 4a
+      Q_x = l_x + f_x_T * V_x;
+      // eq 4b
+      Q_u = l_u + f_u_T * V_x;
+      // eq 4c
+      Q_xx = l_xx + f_x_T * V_xx * f_x;
+      // eq 4d
+      Q_ux = l_ux + f_u_T * V_xx * f_x;
+      // eq 4e
+      Q_uu = l_uu + f_u_T * V_xx * f_u;
+
+      // eq 5b
+      // Solve inverse with regulization to keep it from exploding
+      Eigen::Matrix<double, U, U> Q_uu_inv = tikhonov_regularization(Q_uu);
+
+      k.at(t) = -1 * Q_uu_inv * Q_u;
+      K.at(t) = -1 * Q_uu_inv * Q_ux;
+
+      // eq 6a
+      // Eigen doesn't like converting a 1x1 matrix to double :(
+      delta_v.at(t) = -0.5 * (k.at(t).transpose() * Q_uu * k.at(t)).value();
+      // eq 6b
+      V_x = Q_x - K.at(t).transpose() * Q_uu * k.at(t);
+      // eq 6c
+      V_xx = Q_xx - K.at(t).transpose() * Q_uu * K.at(t);
     }
+
+    return std::make_tuple(k, K, delta_v);
+  }
+
+  std::pair<Trajectory, Actions> ammend_trajectory_actions(
+    const Trajectory & reference_traj,
+    const Actions & reference_action,
+    const Feedforwards & k,
+    const Feedbacks & K,
+    const double alpha)
+  {
+    // Eq 7a/b/c
+    Trajectory candidate_trajectory;
+    Actions candidate_actions;
+
+    candidate_trajectory.front() = trajectory.front();
+    for (Time t = 0; t < T - 1; t++) {
+      const State & x_hat_i = candidate_trajectory.at(t);
+      const State & x_i = trajectory.at(t);
+      const Input & u_i = actions.at(t);
+      const Input & u_hat_i = u_i + alpha * k.at(t) + K.at(t) * (x_hat_i - x_i);
+      candidate_actions.at(t) = u_hat_i;
+      candidate_trajectory.at(t  + 1) = dynamics(x_hat_i, u_hat_i, t);
+    }
+
+    return std::make_pair(candidate_trajectory, candidate_actions);
+  }
+
+  std::optional<std::tuple<Trajectory, Actions, Cost>> do_backtracking_line_search(
+    const Feedforwards & k,
+    const Feedbacks & K,
+    const std::array<double, T> & delta_v)
+  {
+    Cost candidate_cost;
+    Trajectory candidate_trajectory;
+    Actions candidate_actions;
+    bool valid_forward_pass_found = false;
+    double alpha = 1;
+
+    for (std::size_t num_forward_pass_iterations = 0; num_forward_pass_iterations < max_forward_pass_iterations; num_forward_pass_iterations++) {
+      // Generate likely forward pass
+      std::tie(candidate_trajectory, candidate_actions) = ammend_trajectory_actions(trajectory, actions, k, K, alpha);
+      candidate_cost = trajectory_action_cost(candidate_trajectory, candidate_actions);
+
+      // From https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf
+      // We can calculate the expected cost decrease
+      double overall_candidate_cost_change = 0;
+      for (const double dv : delta_v) {
+        overall_candidate_cost_change += dv;
+      }
+      overall_candidate_cost_change *= alpha*alpha;
+      double z = (overall_cost - candidate_cost) / overall_cost;
+
+      // Accept the solution if we are closeish to the actual expected decrease
+      if (z > 1e-4 && z < 10) {
+        std::cout << "Z " << z << std::endl;
+        return std::make_tuple(candidate_trajectory, candidate_actions, candidate_cost);
+      }
+
+      // If it's not accepted, decrease the scale and retry
+      alpha *= gamma;
+    }
+
+    return std::nullopt;
+  }
+
+  void decrease_regulation()
+  {
+    delta = std::min(1/delta_zero, delta / delta_zero);
+    if (lambda * delta > lambda_min) {
+      lambda = lambda * delta;
+    } else {
+      lambda = 0;
+    }
+  }
+
+  void increase_regulation()
+  {
+    delta = std::max(delta_zero, delta * delta_zero);
+    lambda = std::max(lambda_min, lambda * delta);
   }
 
   inline StateJacobian_x state_jacobian_x(const StateJacobian & j)
@@ -203,7 +358,7 @@ private:
     return (m_T * m + lambda * I).inverse() * m_T;
   }
 
-  bool backward_pass()
+  bool converge()
   {
     for (std::size_t num_ilqr_iterations = 0; num_ilqr_iterations < max_ilqr_iterations; num_ilqr_iterations++) {
       // Step 3: Determine best control signal update
@@ -211,108 +366,23 @@ private:
       Feedbacks K;
       std::array<double, T> delta_v;
 
-      // Q-function - pseudo-Hamiltonian
-      Eigen::Matrix<double, X, 1> Q_x;
-      Eigen::Matrix<double, U, 1> Q_u;
-      Eigen::Matrix<double, X, X> Q_xx;
-      Eigen::Matrix<double, U, X> Q_ux;
-      Eigen::Matrix<double, U, U> Q_uu;
-
-      // Value at final time is the final cost
-      CostGradiant_x V_x = cost_gradiant_x(g.back());
-      CostHessian_xx V_xx = cost_hessian_xx(h.back());
-
-      k.at(T - 1).setZero();
-      K.at(T - 1).setZero();
-
-      for (Time t = T - 2; t >= 0; t--) {
-        const CostGradiant_x & l_x = cost_gradiant_x(g.at(t));
-        const CostGradiant_u & l_u = cost_gradiant_u(g.at(t));
-
-        const StateJacobian_x & f_x = state_jacobian_x(j.at(t));
-        const StateJacobian_x_T & f_x_T = f_x.transpose();
-        const StateJacobian_u & f_u = state_jacobian_u(j.at(t));
-        const StateJacobian_u_T & f_u_T = f_u.transpose();
-
-        const CostHessian_xx & l_xx = cost_hessian_xx(h.at(t));
-        const CostHessian_ux & l_ux = cost_hessian_ux(h.at(t));
-        const CostHessian_uu & l_uu = cost_hessian_uu(h.at(t));
-
-        // eq 4a
-        Q_x = l_x + f_x_T * V_x;
-        // eq 4b
-        Q_u = l_u + f_u_T * V_x;
-        // eq 4c
-        Q_xx = l_xx + f_x_T * V_xx * f_x;
-        // eq 4d
-        Q_ux = l_ux + f_u_T * V_xx * f_x;
-        // eq 4e
-        Q_uu = l_uu + f_u_T * V_xx * f_u;
-
-        // eq 5b
-        // Solve inverse with regulization to keep it from exploding
-        Eigen::Matrix<double, U, U> Q_uu_inv = tikhonov_regularization(Q_uu);
-
-        k.at(t) = -1 * Q_uu_inv * Q_u;
-        K.at(t) = -1 * Q_uu_inv * Q_ux;
-
-        // eq 6a
-        // Eigen doesn't like converting a 1x1 matrix to double :(
-        delta_v.at(t) = -0.5 * (k.at(t).transpose() * Q_uu * k.at(t)).value();
-        // eq 6b
-        V_x = Q_x - K.at(t).transpose() * Q_uu * k.at(t);
-        // eq 6c
-        V_xx = Q_xx - K.at(t).transpose() * Q_uu * K.at(t);
-      }
+      std::cout << trajectory.back()(0) << std::endl;
+      std::tie(k, K, delta_v) = backward_pass();
 
       // Step 3.5: Forward Pass
-      // Eq 7a/b/c
+      auto maybe_traj_actions_costs = do_backtracking_line_search(k, K, delta_v);
+
+      // Step 4: Compare Costs and update update size
+      if (!maybe_traj_actions_costs.has_value()) {
+        increase_regulation();
+        continue;
+      }
+
       Cost candidate_cost;
       Trajectory candidate_trajectory;
       Actions candidate_actions;
-
-      bool valid_forward_pass_found = false;
-      for (std::size_t num_forward_pass_iterations = 0; num_forward_pass_iterations < max_forward_pass_iterations; num_forward_pass_iterations++) {
-        // Generate likely forward pass
-        double alpha = 1;
-
-        candidate_trajectory.front() = trajectory.front();
-        candidate_actions.front() = actions.front() + alpha * k.front();  // xhat_0 == x_0 so Kt term goes away
-        candidate_trajectory.at(1) = dynamics(candidate_trajectory.at(0), candidate_actions.at(0), 0);
-        candidate_cost = cost(candidate_trajectory.front(), candidate_actions.front(), 0);
-
-        for (Time t = 1; t < T - 1; t++) {
-          const State & x_hat_i = candidate_trajectory.at(t);
-          const State & x_i = trajectory.at(t);
-          const Input & u_i = actions.at(t);
-          const Input & u_hat_i = u_i + alpha * k.at(t) + K.at(t) * (x_hat_i - x_i);
-          candidate_actions.at(t) = u_hat_i;
-          candidate_trajectory.at(t  + 1) = dynamics(x_hat_i, u_hat_i, t);
-          candidate_cost += cost(candidate_trajectory.at(t), candidate_actions.at(t), t);
-        }
-        candidate_cost += cost(candidate_trajectory.back(), candidate_actions.back(), T);
-
-        // From https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf
-        // We can calculate the expected cost decrease
-        double overall_candidate_cost_change = 0;
-        for (const double dv : delta_v) {
-          overall_candidate_cost_change += dv;
-        }
-        overall_candidate_cost_change *= alpha*alpha;
-        double z = (overall_cost - candidate_cost) / -overall_candidate_cost_change;
-
-        // Accept the solution if we are closeish to the actual expected decrease
-        if (z > 1e-4 && z < 10) {
-          valid_forward_pass_found = true;
-          break;
-        }
-
-        // If it's not accepted, decrease the scale and retry
-        alpha *= gamma;
-      }
-
-      // Step 4: Compare Costs and update update size
-      if (valid_forward_pass_found && candidate_cost < overall_cost) {
+      std::tie(candidate_trajectory, candidate_actions, candidate_cost) = maybe_traj_actions_costs.value();
+      if (candidate_cost < overall_cost) {
         trajectory = candidate_trajectory;
         actions = candidate_actions;
 
@@ -324,31 +394,29 @@ private:
         overall_cost = candidate_cost;
 
         // Step 4.5: Calculate jacobian/hessian for x,u
-        for (Time t = 0; t < T; t++) {
-          j.at(t) = dynamics_jacobian(trajectory.at(t), actions.at(t), t);
+        update_derivatives(trajectory, actions);
 
-          g.at(t) = cost_gradiant(trajectory.at(t), actions.at(t), t);
-          h.at(t) = cost_hessian(trajectory.at(t), actions.at(t), t, g.at(t));
-        }
+        decrease_regulation();
       } else {
         // Forward pass probably blew up
-        lambda *= lambda_scale;
+        increase_regulation();
       }
     }
 
     return true;
   }
 
-  static constexpr std::size_t max_ilqr_iterations = 1e3;
-  static constexpr std::size_t max_forward_pass_iterations = 1e3;
-  static constexpr double converge_threshold = 1e-6;
+  static constexpr std::size_t max_ilqr_iterations = 1;
+  static constexpr std::size_t max_forward_pass_iterations = 1;
+  static constexpr double converge_threshold = 1e-1;
   static constexpr double eps = 1e-3;  // Auto differentiation epsilon
 
   static constexpr double gamma = 0.5;  // Backtracking scaling param
-  static constexpr double lambda_scale = 2;  // When forward pass blows up, increase regularization
+  static constexpr double lambda_min = 1e-6;
+  static constexpr double delta_zero = 2;
 
+  double delta = delta_zero;
   double lambda = 1e-1;  // Ridge parameter for the Tikhonov regularization
-  double alpha = 1e-3;  // Backtracking search parameter
   Trajectory trajectory;
   Actions actions;
 
