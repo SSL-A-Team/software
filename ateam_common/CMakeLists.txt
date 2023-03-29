@@ -14,11 +14,13 @@ find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(angles REQUIRED)
+find_package(ssl_league_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/multicast_receiver.cpp
   src/bi_directional_udp.cpp
   src/parameters.cpp
+  src/team_color_listener.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
@@ -27,6 +29,7 @@ ament_target_dependencies(${PROJECT_NAME}
   Eigen3
   ateam_msgs
   angles
+  ssl_league_msgs
 )
 target_link_libraries(${PROJECT_NAME}
   Boost::boost
