@@ -18,38 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
-#define BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+#ifndef UTIL__VIZ_HPP_
+#define UTIL__VIZ_HPP_
 
-#include <optional>
-#include <array>
+#include <Eigen/Dense>
+#include <vector>
 
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_common/overlay.hpp>
 
-#include "behavior/behavior_realization.hpp"
 #include "types/trajectory.hpp"
-#include "types/world.hpp"
-#include "util/pid.hpp"
 
-/**
- * Given trajectories as a function of time
- *  - Follow them as best as possible
- */
-class BehaviorFollower
+namespace viz
 {
-public:
-  using MaybeRobotMotionCommand = std::optional<ateam_msgs::msg::RobotMotionCommand>;
-  using RobotMotionCommands = std::array<MaybeRobotMotionCommand, 16>;
+void DrawTrajectory(const int robot_id, const Trajectory & trajectory)
+{
+  if (trajectory.samples.size() <= 1) {
+    return;
+  }
 
-  RobotMotionCommands follow(
-    const std::array<std::optional<Trajectory>, 16> & robot_trajectories,
-    World & world);
+  std::vector<Eigen::Vector2d> line_pts;
+  for (const auto & sample : trajectory.samples) {
+    line_pts.push_back(Eigen::Vector2d{sample.pose.x(), sample.pose.y()});
+  }
 
-private:
-  static Sample3d get_next_command(const Trajectory & t, double current_time);
+  ateam_common::Overlay::GetOverlay().DrawLine(line_pts, "trajectory_" + std::to_string(robot_id));
+}
 
-  std::array<std::array<PID, 3>, 16> trajectory_controllers;
-};
+}  // namespace viz
 
-#endif  // BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+#endif  // UTIL__VIZ_HPP_

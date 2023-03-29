@@ -10,6 +10,10 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(ateam_msgs REQUIRED)
+find_package(angles REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
@@ -22,6 +26,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
+  Eigen3
+  ateam_msgs
+  angles
   ssl_league_msgs
 )
 target_link_libraries(${PROJECT_NAME}
@@ -38,7 +45,7 @@ target_include_directories(${PROJECT_NAME}
 set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(Boost Protobuf)
+ament_export_dependencies(Boost Protobuf angles)
 
 install(
   DIRECTORY include/

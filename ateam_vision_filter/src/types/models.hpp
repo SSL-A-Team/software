@@ -52,6 +52,10 @@ const double rolling_friction_accel = 0.1;  // m/s^2 decel of rolling friction
 const double sliding_friction_accel = 0.1;  // m/s^2 decel of sliding friction
 
 // pos_x, pos_y, vel_x, vel_y, accel_x, accel_y
+
+const Eigen::MatrixXd AngleMask =
+  (Eigen::MatrixXd(6, 1) << 0, 0, 0, 0, 0, 0).finished();
+
 const double dt22 = dt * dt / 2;  // accel -> position
 const Eigen::MatrixXd F =
   (Eigen::MatrixXd(6, 6) <<
@@ -92,7 +96,7 @@ const Eigen::MatrixXd Q =
   dt2, 0, dt, 0, 1, 0,
   0, dt2, 0, dt, 0, 1).finished() * sigma_alpha_squared;
 
-const double sigma_pos_squared = 0.1;  // Position measurement error
+const double sigma_pos_squared = 0.01;  // Position measurement error
 const Eigen::MatrixXd R =
   (Eigen::MatrixXd(2, 2) <<
   sigma_pos_squared, 0,
@@ -109,6 +113,10 @@ const double max_speed = 6;
 const double max_acceleration = 12;
 
 // pos_x, pos_y, theta, vel_x, vel_y, omega, accel_x, accel_y, alpha
+
+const Eigen::MatrixXd AngleMask =
+  (Eigen::MatrixXd(9, 1) << 0, 0, 1, 0, 0, 0, 0, 0, 0).finished();
+
 const double dt22 = dt * dt / 2;  // accel -> position
 const Eigen::MatrixXd F =
   (Eigen::MatrixXd(9, 9) <<
@@ -171,8 +179,8 @@ const Eigen::MatrixXd Q =
   0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, dt2, 0, 0, dt, 0, 0, 1).finished() * sigma_angular_alpha_squared;
 
-const double sigma_pos_squared = 0.1;  // Position measurement error
-const double sigma_theta_squared = 0.1;  // Angular heading measurement error
+const double sigma_pos_squared = 0.01;  // Position measurement error
+const double sigma_theta_squared = 0.01;  // Angular heading measurement error
 const Eigen::MatrixXd R =
   (Eigen::MatrixXd(3, 3) <<
   sigma_pos_squared, 0, 0,

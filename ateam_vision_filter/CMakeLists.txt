@@ -16,6 +16,7 @@ find_package(ssl_league_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
+find_package(angles REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/filters/interacting_multiple_model_filter.cpp
@@ -55,6 +56,7 @@ ament_target_dependencies(${PROJECT_NAME}
   Eigen3
   tf2
   tf2_geometry_msgs
+  angles
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}

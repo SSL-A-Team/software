@@ -18,38 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
-#define BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+#include <gtest/gtest.h>
 
-#include <optional>
-#include <array>
-
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include "behavior/behavior_realization.hpp"
-#include "types/trajectory.hpp"
-#include "types/world.hpp"
 #include "util/pid.hpp"
 
-/**
- * Given trajectories as a function of time
- *  - Follow them as best as possible
- */
-class BehaviorFollower
+TEST(PID, AngleControllerValid)
 {
-public:
-  using MaybeRobotMotionCommand = std::optional<ateam_msgs::msg::RobotMotionCommand>;
-  using RobotMotionCommands = std::array<MaybeRobotMotionCommand, 16>;
-
-  RobotMotionCommands follow(
-    const std::array<std::optional<Trajectory>, 16> & robot_trajectories,
-    World & world);
-
-private:
-  static Sample3d get_next_command(const Trajectory & t, double current_time);
-
-  std::array<std::array<PID, 3>, 16> trajectory_controllers;
-};
-
-#endif  // BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+  PID pid;
+  EXPECT_NEAR(pid.execute(1, 0, true), 1, 1e-5);
+  EXPECT_NEAR(pid.execute(-1, 0, true), -1, 1e-5);
+  EXPECT_NEAR(pid.execute(-2, -1, true), -1, 1e-5);
+  EXPECT_NEAR(pid.execute(3, -3, true), -(2 * M_PI - 6), 1e-5);
+  EXPECT_NEAR(pid.execute(-3, 3, true), 2 * M_PI - 6, 1e-5);
+}

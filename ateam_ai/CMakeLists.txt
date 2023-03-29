@@ -14,35 +14,18 @@ find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(angles REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/ateam_ai_node.cpp
   src/behavior/behavior_evaluator.cpp
-  src/behavior/behavior_evaluator.hpp
   src/behavior/behavior_executor.cpp
-  src/behavior/behavior_executor.hpp
   src/behavior/behavior_follower.cpp
-  src/behavior/behavior_follower.hpp
   src/behavior/behavior_realization.cpp
-  src/behavior/behavior_realization.hpp
-  src/trajectory_generation/ilqr_problem.hpp
   src/trajectory_generation/trajectory_editor.cpp
-  src/trajectory_generation/trajectory_editor.hpp
   src/trajectory_generation/trajectory_generation.cpp
-  src/trajectory_generation/trajectory_generation.hpp
   src/trajectory_generation/trapezoidal_motion_profile.cpp
-  src/trajectory_generation/trapezoidal_motion_profile.hpp
-  src/types/ball.hpp
-  src/types/behavior_goal.hpp
-  src/types/behavior_plan.hpp
-  src/types/field.hpp
-  src/types/referee_info.hpp
-  src/types/robot.hpp
-  src/types/trajectory.hpp
-  src/types/world.hpp
   src/util/message_conversions.cpp
-  src/util/message_conversions.hpp
-  src/util/directed_graph.hpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
@@ -54,6 +37,7 @@ ament_target_dependencies(${PROJECT_NAME}
   Eigen3
   tf2
   tf2_geometry_msgs
+  angles
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}
@@ -71,6 +55,7 @@ if(BUILD_TESTING)
     test/trajectory_generation/ilqr_problem_test.cpp
     test/trajectory_generation/trajectory_editor_test.cpp
     test/trajectory_generation/trapezoidal_motion_profile_test.cpp
+    test/util/pid_test.cpp
   )
   target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
   target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})

@@ -35,6 +35,7 @@ public:
   void set_H(const Eigen::MatrixXd & H);
   void set_Q(const Eigen::MatrixXd & Q);
   void set_R(const Eigen::MatrixXd & R);
+  void set_AngleMask(const Eigen::MatrixXd & angleMask);
 
   void predict(const Eigen::VectorXd & u);
   void update(const Eigen::VectorXd & z);
@@ -46,6 +47,7 @@ public:
   Eigen::VectorXd get_potential_measurement_error(const Eigen::VectorXd & z);
 
 private:
+  Eigen::MatrixXd AngleMask;
   Eigen::MatrixXd F;
   Eigen::MatrixXd B;
   Eigen::MatrixXd H;
