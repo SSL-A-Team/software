@@ -18,38 +18,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
-#define BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+#ifndef UTIL__PID_HPP_
+#define UTIL__PID_HPP_
 
-#include <optional>
-#include <array>
+#include <angles/angles.h>
 
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include "behavior/behavior_realization.hpp"
-#include "types/trajectory.hpp"
-#include "types/world.hpp"
-#include "util/pid.hpp"
-
-/**
- * Given trajectories as a function of time
- *  - Follow them as best as possible
- */
-class BehaviorFollower
+class PID
 {
 public:
-  using MaybeRobotMotionCommand = std::optional<ateam_msgs::msg::RobotMotionCommand>;
-  using RobotMotionCommands = std::array<MaybeRobotMotionCommand, 16>;
+  void set_kp(double kp)
+  {
+    this->kp = kp;
+  }
 
-  RobotMotionCommands follow(
-    const std::array<std::optional<Trajectory>, 16> & robot_trajectories,
-    World & world);
+  void set_ki(double ki)
+  {
+    this->ki = ki;
+  }
+
+  void set_kd(double kd)
+  {
+    this->kd = kd;
+  }
+
+  double execute(double target, double current, bool is_angle = false)
+  {
+    if (!is_angle) {
+      double error = target - current;
+      return kp * error;
+    } else {
+      double error = angles::shortest_angular_distance(current, target);
+      return kp * error;
+    }
+  }
 
 private:
-  static Sample3d get_next_command(const Trajectory & t, double current_time);
-
-  std::array<std::array<PID, 3>, 16> trajectory_controllers;
+  double kp = 1;
+  double ki = 0;
+  double kd = 0;
 };
 
-#endif  // BEHAVIOR__BEHAVIOR_FOLLOWER_HPP_
+#endif  // UTIL__PID_HPP_

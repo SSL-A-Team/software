@@ -12,6 +12,11 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>boost</depend>
+  <depend>eigen3_cmake_module</depend>
+  <depend>eigen</depend>
+  <depend>ateam_msgs</depend>
+  <depend>angles</depend>
+  <depend>ssl_league_msgs</depend>
 
   <build_depend>protobuf-dev</build_depend>
   <exec_depend>protobuf</exec_depend>

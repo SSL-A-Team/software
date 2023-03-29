@@ -108,6 +108,7 @@ void Camera::setup_ball_interacting_multiple_model_filter(
   base_kf_model.set_H(Models::Ball::H);
   base_kf_model.set_Q(Models::Ball::Q);
   base_kf_model.set_R(Models::Ball::R);
+  base_kf_model.set_AngleMask(Models::Ball::AngleMask);
   base_kf_model.set_initial_x_hat(Eigen::Matrix<double, 6, 1>::Zero());
   base_kf_model.set_initial_p(Eigen::Matrix<double, 6, 6>::Identity());
 
@@ -138,6 +139,7 @@ void Camera::setup_robot_interacting_multiple_model_filter(
   base_kf_model.set_H(Models::Robot::H);
   base_kf_model.set_Q(Models::Robot::Q);
   base_kf_model.set_R(Models::Robot::R);
+  base_kf_model.set_AngleMask(Models::Robot::AngleMask);
   base_kf_model.set_initial_x_hat(Eigen::Matrix<double, 9, 1>::Zero());
   base_kf_model.set_initial_p(Eigen::Matrix<double, 9, 9>::Identity());
 

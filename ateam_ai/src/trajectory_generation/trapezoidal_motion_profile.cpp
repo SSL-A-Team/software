@@ -20,11 +20,31 @@
 
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
 
+#include <angles/angles.h>
+
 #include <algorithm>
 #include <numeric>
 
 namespace TrapezoidalMotionProfile
 {
+/**
+ * @brief Unwrap heading target to move through the shortest angle distance
+ *
+ * @param start Start XYtheta
+ * @param end End XYtheta
+ * @return Eigen::Vector3d XYtheta with modified theta
+ */
+Eigen::Vector3d minimize_angle_goal_target(
+  const Eigen::Vector3d & start,
+  const Eigen::Vector3d & end)
+{
+  Eigen::Vector3d new_end = end;
+  double angle_diff = angles::shortest_angular_distance(start.z(), end.z());
+  new_end.z() = start.z() + angle_diff;
+
+  return new_end;
+}
+
 Trajectory Generate3d(
   const Eigen::Vector3d & start, const Eigen::Vector3d & start_vel,
   const Eigen::Vector3d & end, const Eigen::Vector3d & end_vel,
@@ -34,11 +54,12 @@ Trajectory Generate3d(
 {
   // Independently plan for each DOF
   std::array<Trajectory1d, 3> trajectories;
+  Eigen::Vector3d modified_end = minimize_angle_goal_target(start, end);
 
   // TODO(jneiger): Scale plans to longest DOF trajectory time length
   for (std::size_t i = 0; i < trajectories.size(); i++) {
     trajectories.at(i) = Generate1d(
-      start(i), start_vel(i), end(i), end_vel(i), max_vel_limits(
+      start(i), start_vel(i), modified_end(i), end_vel(i), max_vel_limits(
         i), max_accel_limits(i), dt);
   }
 
@@ -59,9 +80,9 @@ Trajectory Generate3d(
         sample.accel(i) = trajectory.samples.at(t_idx).accel;
         is_more_left = true;
       } else {
-        sample.pose(i) = end(i);
-        sample.vel(i) = end_vel(i);
-        sample.accel(i) = 0;
+        sample.pose(i) = trajectory.samples.back().pos;
+        sample.vel(i) = trajectory.samples.back().vel;
+        sample.accel(i) = trajectory.samples.back().accel;
       }
     }
 
@@ -179,9 +200,10 @@ Trajectory1d sample_trapezoidal_profile(
 
     if (t < coeffs.phase_2.start_time) {
       // Phase 1
-      sample.pos = position(t, coeffs.phase_1.start_vel, accel_limit);
-      sample.vel = velocity(t, coeffs.phase_1.start_vel, accel_limit);
-      sample.accel = accel_limit;
+      double accel = std::copysign(accel_limit, coeffs.phase_1.end_vel - coeffs.phase_1.start_vel);
+      sample.pos = position(t, coeffs.phase_1.start_vel, accel);
+      sample.vel = velocity(t, coeffs.phase_1.start_vel, accel);
+      sample.accel = accel;
     } else if (t < coeffs.phase_3.start_time) {
       // Phase 2
       double t_into_phase_2 = t - coeffs.phase_2.start_time;
@@ -193,10 +215,12 @@ Trajectory1d sample_trapezoidal_profile(
       // Phase 3
       double t_into_phase_3 = t - coeffs.phase_3.start_time;
       double d_into_phase_3 = coeffs.phase_3.start_dist;
+      double accel = std::copysign(accel_limit, coeffs.phase_3.end_vel - coeffs.phase_3.start_vel);
       sample.pos = d_into_phase_3 +
-        position(t_into_phase_3, coeffs.phase_3.start_vel, -accel_limit);
-      sample.vel = velocity(t_into_phase_3, coeffs.phase_3.start_vel, -accel_limit);
-      sample.accel = -accel_limit;
+        position(t_into_phase_3, coeffs.phase_3.start_vel, accel);
+      sample.vel =
+        velocity(t_into_phase_3, coeffs.phase_3.start_vel, accel);
+      sample.accel = accel;
     }
 
     output.samples.push_back(sample);
@@ -209,6 +233,14 @@ Trajectory1d Generate1d(
   double start_pos, double start_vel, double end_pos, double end_vel,
   const double max_vel, const double max_accel, const double dt)
 {
+  // Catch for us already at the target causing the distance to travel
+  // being so small that it creates nan values
+  if (std::abs(start_pos - end_pos) < 1e-6 && std::abs(start_vel - end_vel) < 1e-6) {
+    Trajectory1d traj;
+    traj.samples.push_back(Sample1d{.time = 0, .pos = end_pos, .vel = end_vel, .accel = 0});
+    return traj;
+  }
+
   // Invert so the start is always before the end
   // and we only have to deal with positive values
   bool invert = start_pos > end_pos;
@@ -325,6 +357,8 @@ Trajectory1d Generate1d(
     const AccelerationPhaseResults phase_3_from_nonlimit_vel = get_acceleration_phase_results(
       phase_3_from_nonlimit_vel_input);
 
+    trapezoidal_coeffs.phase_1.duration = phase_1_to_nonlimit_vel.time_required;
+    trapezoidal_coeffs.phase_1.end_vel = nonlimit_max_vel;
 
     // Skip phase 2
     trapezoidal_coeffs.phase_2.start_time = phase_1_to_nonlimit_vel.time_required;
