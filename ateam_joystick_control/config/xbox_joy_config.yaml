@@ -3,12 +3,17 @@
     mapping:
       linear:
         x:
-          axis: 1
-          scale: 1.0
-        y:
           axis: 0
-          scale: 1.0
+          scale: 0.01
+        y:
+          axis: 1
+          scale: 0.01
       angular:
         z:
           axis: 3
-          scale: 1.0
+          scale: 0.01
+      kick: 5
+      dribbler:
+        increment: 3
+        decrement: 2
+        spin: 4

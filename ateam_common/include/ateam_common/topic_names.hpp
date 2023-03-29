@@ -38,7 +38,7 @@ constexpr std::string_view kYellowTeamRobotPrefix = "/yellow_team/robot";
 constexpr std::string_view kBlueTeamRobotPrefix = "/blue_team/robot";
 
 // Output from joysticks
-constexpr std::string_view kJoystick = "/joystick";
+constexpr std::string_view kJoystick = "/joy";
 
 // Output from AI
 constexpr std::string_view kRobotMotionCommandPrefix = "/robot_motion_commands/robot";
