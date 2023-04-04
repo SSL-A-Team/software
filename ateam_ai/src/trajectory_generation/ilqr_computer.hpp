@@ -47,7 +47,6 @@ class iLQRComputer
 {
 public:
   using State = Eigen::Matrix<double, X, 1>;
-  using StateJacobian = Eigen::Matrix<double, X, X + U>;
   using StateJacobian_x = Eigen::Matrix<double, X, X>;
   using StateJacobian_x_T = Eigen::Matrix<double, X, X>;
   using StateJacobian_u = Eigen::Matrix<double, X, U>;
@@ -57,11 +56,9 @@ public:
 
   using Cost = double;
 
-  using CostGradiant = Eigen::Matrix<double, X + U, 1>;
   using CostGradiant_x = Eigen::Matrix<double, X, 1>;
   using CostGradiant_u = Eigen::Matrix<double, U, 1>;
 
-  using CostHessian = Eigen::Matrix<double, X + U, X + U>;
   using CostHessian_xx = Eigen::Matrix<double, X, X>;
   using CostHessian_ux = Eigen::Matrix<double, U, X>;
   using CostHessian_uu = Eigen::Matrix<double, U, U>;
@@ -88,17 +85,23 @@ public:
   }
 
 private:
-  using StateJacobians = std::array<StateJacobian, T>;
-  using CostHessians = std::array<CostHessian, T>;
-  using CostGradiants = std::array<CostGradiant, T>;
+  using StateJacobians_x = std::array<StateJacobian_x, T>;
+  using StateJacobians_u = std::array<StateJacobian_u, T>;
+  using CostGradiants_x = std::array<CostGradiant_x, T>;
+  using CostGradiants_u = std::array<CostGradiant_u, T>;
+  using CostHessians_xx = std::array<CostHessian_xx, T>;
+  using CostHessians_ux = std::array<CostHessian_ux, T>;
+  using CostHessians_uu = std::array<CostHessian_uu, T>;
 
   void update_derivatives(const Trajectory & traj, const Actions & actions)
   {
     for (Time t = 0; t < T; t++) {
-      j.at(t) = problem.dynamics_jacobian(traj.at(t), actions.at(t), t);
+      std::tie(j_x.at(t), j_u.at(t)) = problem.dynamics_jacobian(traj.at(t), actions.at(t), t);
 
-      g.at(t) = problem.cost_gradiant(traj.at(t), actions.at(t), t);
-      h.at(t) = problem.cost_hessian(traj.at(t), actions.at(t), t, g.at(t));
+      std::tie(g_x.at(t), g_u.at(t)) = problem.cost_gradiant(traj.at(t), actions.at(t), t);
+      std::tie(h_xx.at(t), h_ux.at(t), h_uu.at(t)) = problem.cost_hessian(
+        traj.at(t), actions.at(
+          t), t, g_x.at(t), g_u.at(t));
     }
   }
 
@@ -142,24 +145,24 @@ private:
     Eigen::Matrix<double, U, U> Q_uu;
 
     // Value at final time is the final cost
-    CostGradiant_x V_x = cost_gradiant_x(g.back());
-    CostHessian_xx V_xx = cost_hessian_xx(h.back());
+    CostGradiant_x V_x = g_x.back();
+    CostHessian_xx V_xx = h_xx.back();
 
     k.at(T - 1).setZero();
     K.at(T - 1).setZero();
 
     for (Time t = T - 2; t >= 0; t--) {
-      const CostGradiant_x & l_x = cost_gradiant_x(g.at(t));
-      const CostGradiant_u & l_u = cost_gradiant_u(g.at(t));
+      const CostGradiant_x & l_x = g_x.at(t);
+      const CostGradiant_u & l_u = g_u.at(t);
 
-      const StateJacobian_x & f_x = state_jacobian_x(j.at(t));
+      const StateJacobian_x & f_x = j_x.at(t);
       const StateJacobian_x_T & f_x_T = f_x.transpose();
-      const StateJacobian_u & f_u = state_jacobian_u(j.at(t));
+      const StateJacobian_u & f_u = j_u.at(t);
       const StateJacobian_u_T & f_u_T = f_u.transpose();
 
-      const CostHessian_xx & l_xx = cost_hessian_xx(h.at(t));
-      const CostHessian_ux & l_ux = cost_hessian_ux(h.at(t));
-      const CostHessian_uu & l_uu = cost_hessian_uu(h.at(t));
+      const CostHessian_xx & l_xx = h_xx.at(t);
+      const CostHessian_ux & l_ux = h_ux.at(t);
+      const CostHessian_uu & l_uu = h_uu.at(t);
 
       // eq 4a
       Q_x = l_x + f_x_T * V_x;
@@ -223,37 +226,6 @@ private:
   void increase_regulation()
   {
     alpha /= params.alpha_change;
-  }
-
-  inline StateJacobian_x state_jacobian_x(const StateJacobian & j)
-  {
-    return j.block(0, 0, X, X);
-  }
-  inline StateJacobian_u state_jacobian_u(const StateJacobian & j)
-  {
-    return j.block(0, X, X, U);
-  }
-
-  inline CostGradiant_x cost_gradiant_x(const CostGradiant & g)
-  {
-    return g.block(0, 0, X, 1);
-  }
-  inline CostGradiant_u cost_gradiant_u(const CostGradiant & g)
-  {
-    return g.block(X, 0, U, 1);
-  }
-
-  inline CostHessian_xx cost_hessian_xx(const CostHessian & h)
-  {
-    return h.block(0, 0, X, X);
-  }
-  inline CostHessian_ux cost_hessian_ux(const CostHessian & h)
-  {
-    return h.block(X, 0, U, X);
-  }
-  inline CostHessian_uu cost_hessian_uu(const CostHessian & h)
-  {
-    return h.block(X, X, U, U);
   }
 
   inline Eigen::Matrix<double, U, U> inverse(const Eigen::Matrix<double, U, U> & m)
@@ -336,9 +308,13 @@ private:
   Trajectory trajectory;
   Actions actions;
 
-  StateJacobians j;
-  CostGradiants g;
-  CostHessians h;
+  StateJacobians_x j_x;
+  StateJacobians_u j_u;
+  CostGradiants_x g_x;
+  CostGradiants_u g_u;
+  CostHessians_xx h_xx;
+  CostHessians_ux h_ux;
+  CostHessians_uu h_uu;
 
   Cost overall_cost;
 };

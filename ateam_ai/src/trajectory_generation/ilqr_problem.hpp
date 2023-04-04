@@ -25,6 +25,8 @@
 
 #include <optional>
 #include <iostream>
+#include <tuple>
+#include <utility>
 
 // Defines the abstract definition and solution to the iLQR problem
 // https://homes.cs.washington.edu/~todorov/papers/TassaICRA14.pdf
@@ -35,7 +37,6 @@ class iLQRProblem
 {
 public:
   using State = Eigen::Matrix<double, X, 1>;
-  using StateJacobian = Eigen::Matrix<double, X, X + U>;
   using StateJacobian_x = Eigen::Matrix<double, X, X>;
   using StateJacobian_x_T = Eigen::Matrix<double, X, X>;
   using StateJacobian_u = Eigen::Matrix<double, X, U>;
@@ -45,11 +46,9 @@ public:
 
   using Cost = double;
 
-  using CostGradiant = Eigen::Matrix<double, X + U, 1>;
   using CostGradiant_x = Eigen::Matrix<double, X, 1>;
   using CostGradiant_u = Eigen::Matrix<double, U, 1>;
 
-  using CostHessian = Eigen::Matrix<double, X + U, X + U>;
   using CostHessian_xx = Eigen::Matrix<double, X, X>;
   using CostHessian_ux = Eigen::Matrix<double, U, X>;
   using CostHessian_uu = Eigen::Matrix<double, U, U>;
@@ -58,67 +57,81 @@ public:
 
   // Assume second derivative of dynamics is 0 so we don't have do tensor math
   virtual State dynamics(const State & x_t1, const Input & u_t1, Time t) = 0;
-  virtual StateJacobian dynamics_jacobian(const State & x, const Input & u, Time t)
+  virtual std::pair<StateJacobian_x, StateJacobian_u> dynamics_jacobian(
+    const State & x,
+    const Input & u, Time t)
   {
-    StateJacobian out;
-
     State d = dynamics(x, u, t);
+
+    StateJacobian_x out_x;
     for (std::size_t i = 0; i < X; i++) {
       State x_eps = x;
       x_eps(i) += eps;
-      out.col(i) = (dynamics(x_eps, u, t) - d) / eps;
+      out_x.col(i) = (dynamics(x_eps, u, t) - d) / eps;
     }
 
+    StateJacobian_u out_u;
     for (std::size_t i = 0; i < U; i++) {
       Input u_eps = u;
       u_eps(i) += eps;
-      out.col(i + X) = (dynamics(x, u_eps, t) - d) / eps;
+      out_u.col(i) = (dynamics(x, u_eps, t) - d) / eps;
     }
 
-    return out;
+    return std::make_pair(out_x, out_u);
   }
 
   virtual Cost cost(const State & x, const Input & u, Time t) = 0;
-  virtual CostGradiant cost_gradiant(const State & x, const Input & u, Time t)
+  virtual std::pair<CostGradiant_x, CostGradiant_u> cost_gradiant(
+    const State & x, const Input & u,
+    Time t)
   {
-    CostGradiant out;
-
+    CostGradiant_x out_x;
     for (std::size_t i = 0; i < X; i++) {
       State x_eps_p = x;
       State x_eps_n = x;
       x_eps_p(i) += eps;
       x_eps_n(i) -= eps;
-      out(i) = (cost(x_eps_p, u, t) - cost(x_eps_n, u, t)) / (2 * eps);
+      out_x(i) = (cost(x_eps_p, u, t) - cost(x_eps_n, u, t)) / (2 * eps);
     }
 
+    CostGradiant_u out_u;
     for (std::size_t i = 0; i < U; i++) {
       Input u_eps_p = u;
       Input u_eps_n = u;
       u_eps_p(i) += eps;
       u_eps_n(i) -= eps;
-      out(i + X) = (cost(x, u_eps_p, t) - cost(x, u_eps_n, t)) / (2 * eps);
+      out_u(i) = (cost(x, u_eps_p, t) - cost(x, u_eps_n, t)) / (2 * eps);
     }
 
-    return out;
+    return std::make_pair(out_x, out_u);
   }
 
-  virtual CostHessian cost_hessian(const State & x, const Input & u, Time t, const CostGradiant & g)
+  virtual std::tuple<CostHessian_xx, CostHessian_ux, CostHessian_uu> cost_hessian(
+    const State & x, const Input & u, Time t, const CostGradiant_x & g_x,
+    const CostGradiant_u & g_u)
   {
-    CostHessian out;
+    CostGradiant_x new_g_x;
+    CostGradiant_u new_g_u;
 
+    CostHessian_xx out_xx;
+    CostHessian_ux out_ux;
+    CostHessian_uu out_uu;
     for (std::size_t i = 0; i < X; i++) {
       State x_eps = x;
       x_eps(i) += eps;
-      out.col(i) = (cost_gradiant(x_eps, u, t) - g) / eps;
+      std::tie(new_g_x, new_g_u) = cost_gradiant(x_eps, u, t);
+      out_ux.col(i) = (new_g_u - g_u) / eps;
+      out_xx.col(i) = (new_g_x - g_x) / eps;
     }
 
     for (std::size_t i = 0; i < U; i++) {
       Input u_eps = u;
       u_eps(i) += eps;
-      out.col(i + X) = (cost_gradiant(x, u_eps, t) - g) / eps;
+      std::tie(new_g_x, new_g_u) = cost_gradiant(x, u_eps, t);
+      out_uu.col(i) = (new_g_u - g_u) / eps;
     }
 
-    return out;
+    return std::make_tuple(out_xx, out_ux, out_uu);
   }
 
 private:
