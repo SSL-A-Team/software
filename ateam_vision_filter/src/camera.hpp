@@ -28,6 +28,8 @@
 #include <utility>
 #include <vector>
 
+#include <ateam_msgs/msg/vision_camera_state.hpp>
+
 #include "filters/multiple_hypothesis_tracker.hpp"
 #include "generators/model_input_generator.hpp"
 #include "generators/transmission_probability_generator.hpp"
@@ -69,6 +71,11 @@ public:
    * @return Returns blue robots with a corresponding likelihood score (if exists)
    */
   std::array<std::optional<RobotWithScore>, 16> get_blue_robot_estimates_with_score();
+
+  /**
+   * @return ROS2 msg containing the current internal state
+   */
+  ateam_msgs::msg::VisionCameraState get_vision_camera_state() const;
 
 private:
   void setup_ball_interacting_multiple_model_filter(

@@ -58,6 +58,10 @@ public:
         rclcpp::SystemDefaultsQoS());
     }
 
+    vision_state_publisher_ = create_publisher<ateam_msgs::msg::VisionWorldState>(
+      std::string(Topics::kVisionState),
+      rclcpp::SystemDefaultsQoS());
+
     ssl_vision_subscription_ =
       create_subscription<ssl_league_msgs::msg::VisionWrapper>(
       std::string(Topics::kVisionMessages),
@@ -78,6 +82,8 @@ public:
   void timer_callback()
   {
     const std::lock_guard<std::mutex> lock(world_mutex_);
+    vision_state_publisher_->publish(world_.get_vision_world_state());
+
     world_.predict();
 
     std::optional<Ball> maybe_ball = world_.get_ball_estimate();
@@ -108,6 +114,7 @@ private:
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotState>::SharedPtr, 16> blue_robots_publisher_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_publisher_;
+  rclcpp::Publisher<ateam_msgs::msg::VisionWorldState>::SharedPtr vision_state_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
 
   std::mutex world_mutex_;
