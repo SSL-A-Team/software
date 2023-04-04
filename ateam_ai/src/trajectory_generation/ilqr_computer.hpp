@@ -25,6 +25,7 @@
 
 #include <Eigen/Dense>
 
+#include <algorithm>
 #include <optional>
 #include <tuple>
 #include <utility>
@@ -35,10 +36,14 @@ struct iLQRParams
   std::size_t max_ilqr_iterations = 1;
   // Max number of forward pass iterations
   std::size_t max_forward_pass_iterations = 1;
-  // Max change in the regulation on success/failure
-  double alpha_change = 0.5;
   // Convergence threshold for stopping (delta cost)
   double converge_threshold = 1e-1;
+  // Backtracking scaling param
+  double gamma = 0.5;
+  // Minimum regularization value
+  double lambda_min = 1e-6;
+  // Initial regularization scale value
+  double delta_zero = 2;
 };
 
 // Actually computes the calculations on a given iLQRProblem
@@ -218,14 +223,65 @@ private:
     return std::make_pair(candidate_trajectory, candidate_actions);
   }
 
+  std::optional<std::tuple<Trajectory, Actions, Cost>> do_backtracking_line_search(
+    const Feedforwards & k,
+    const Feedbacks & K,
+    const std::array<double, T> & delta_v)
+  {
+    Cost candidate_cost;
+    Trajectory candidate_trajectory;
+    Actions candidate_actions;
+    bool valid_forward_pass_found = false;
+    double alpha = 1;
+
+    for (std::size_t num_forward_pass_iterations = 0;
+      num_forward_pass_iterations < params.max_forward_pass_iterations;
+      num_forward_pass_iterations++)
+    {
+      // Generate likely forward pass
+      std::tie(candidate_trajectory, candidate_actions) = ammend_trajectory_actions(
+        trajectory,
+        actions, k, K,
+        alpha);
+      candidate_cost = trajectory_action_cost(candidate_trajectory, candidate_actions);
+
+      // From https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf
+      // We can calculate the expected cost decrease
+      double overall_candidate_cost_change = 0;
+      for (const double dv : delta_v) {
+        overall_candidate_cost_change += dv;
+      }
+      overall_candidate_cost_change *= alpha * alpha;
+      double z = (overall_cost - candidate_cost) / overall_cost;
+
+      // Accept the solution if we are closeish to the actual expected decrease
+      if (z > 1e-4 && z < 10) {
+        return std::make_tuple(candidate_trajectory, candidate_actions, candidate_cost);
+      }
+
+      // If it's not accepted, decrease the scale and retry
+      alpha *= params.gamma;
+    }
+
+    return std::nullopt;
+  }
+
+  // Regulaization strategy from 2.F
+  // https://homes.cs.washington.edu/~todorov/papers/TassaIROS12.pdf
   void decrease_regulation()
   {
-    alpha *= params.alpha_change;
+    delta = std::min(1 / params.delta_zero, delta / params.delta_zero);
+    if (lambda * delta > params.lambda_min) {
+      lambda = lambda * delta;
+    } else {
+      lambda = 0;
+    }
   }
 
   void increase_regulation()
   {
-    alpha /= params.alpha_change;
+    delta = std::max(params.delta_zero, delta * params.delta_zero);
+    lambda = std::max(params.lambda_min, lambda * delta);
   }
 
   Eigen::Matrix<double, U, U> tikhonov_regularization(const Eigen::Matrix<double, U, U> & m)
@@ -250,15 +306,20 @@ private:
       std::tie(k, K, delta_v) = backward_pass();
 
       // Step 3.5: Forward Pass
+      auto maybe_traj_actions_costs = do_backtracking_line_search(k, K, delta_v);
+
+      // Step 4: Compare Costs and update update size
+      if (!maybe_traj_actions_costs.has_value()) {
+        increase_regulation();
+        continue;
+      }
+
       Cost candidate_cost;
       Trajectory candidate_trajectory;
       Actions candidate_actions;
-      std::tie(candidate_trajectory, candidate_actions) = ammend_trajectory_actions(
-        trajectory,
-        actions, k, K,
-        1.0);
-      candidate_cost = trajectory_action_cost(candidate_trajectory, candidate_actions);
-
+      std::tie(
+        candidate_trajectory, candidate_actions,
+        candidate_cost) = maybe_traj_actions_costs.value();
 
       if (candidate_cost < overall_cost) {
         trajectory = candidate_trajectory;
@@ -288,7 +349,7 @@ private:
 
   iLQRParams params;
 
-  double alpha = 1;
+  double delta = params.delta_zero;
   double lambda = 1e-1;  // Ridge parameter for the Tikhonov regularization
 
   Trajectory trajectory;

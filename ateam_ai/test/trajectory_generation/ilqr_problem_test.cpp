@@ -56,8 +56,10 @@ TEST(iLQRProblem, SamplePointMass)
   iLQRParams params{
     .max_ilqr_iterations = 1,
     .max_forward_pass_iterations = 1,
-    .alpha_change = 0.5,
-    .converge_threshold = 1e-1
+    .converge_threshold = 1e-1,
+    .gamma = 0.5,
+    .lambda_min = 1e-6,
+    .delta_zero = 2
   };
   iLQRComputer computer(point_mass_problem, params);
   auto maybe_trajectory = computer.calculate(Eigen::Vector2d{0, 0});
