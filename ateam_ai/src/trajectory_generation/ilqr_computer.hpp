@@ -26,8 +26,11 @@
 #include <Eigen/Dense>
 
 #include <optional>
+#include <tuple>
+#include <utility>
 
-struct iLQRParams {
+struct iLQRParams
+{
   // Max number of outer loop iterations
   std::size_t max_ilqr_iterations = 1;
   // Max number of forward pass iterations
@@ -71,7 +74,8 @@ public:
   using Feedforwards = std::array<Input, T>;
   using Feedbacks = std::array<Eigen::Matrix<double, U, X>, T>;
 
-  iLQRComputer(iLQRProblem<X, U, T> & problem, const iLQRParams & params) : problem(problem), params(params) {}
+  iLQRComputer(iLQRProblem<X, U, T> & problem, const iLQRParams & params)
+  : problem(problem), params(params) {}
 
   std::optional<Trajectory> calculate(const State & initial_state)
   {
@@ -157,19 +161,19 @@ private:
       const CostHessian_ux & l_ux = cost_hessian_ux(h.at(t));
       const CostHessian_uu & l_uu = cost_hessian_uu(h.at(t));
 
-        // eq 4a
+      // eq 4a
       Q_x = l_x + f_x_T * V_x;
-        // eq 4b
+      // eq 4b
       Q_u = l_u + f_u_T * V_x;
-        // eq 4c
+      // eq 4c
       Q_xx = l_xx + f_x_T * V_xx * f_x;
-        // eq 4d
+      // eq 4d
       Q_ux = l_ux + f_u_T * V_xx * f_x;
-        // eq 4e
+      // eq 4e
       Q_uu = l_uu + f_u_T * V_xx * f_u;
 
-        // eq 5b
-        // Solve inverse with regulization to keep it from exploding
+      // eq 5b
+      // Solve inverse with regulization to keep it from exploding
       Eigen::Matrix<double, U, U> Q_uu_inv = inverse(Q_uu);
 
       k.at(t) = -1 * Q_uu_inv * Q_u;
@@ -205,7 +209,7 @@ private:
       const Input & u_i = actions.at(t);
       const Input & u_hat_i = u_i + alpha * k.at(t) + K.at(t) * (x_hat_i - x_i);
       candidate_actions.at(t) = u_hat_i;
-      candidate_trajectory.at(t  + 1) = problem.dynamics(x_hat_i, u_hat_i, t);
+      candidate_trajectory.at(t + 1) = problem.dynamics(x_hat_i, u_hat_i, t);
     }
 
     return std::make_pair(candidate_trajectory, candidate_actions);
@@ -278,7 +282,9 @@ private:
 
   bool converge()
   {
-    for (std::size_t num_ilqr_iterations = 0; num_ilqr_iterations < params.max_ilqr_iterations; num_ilqr_iterations++) {
+    for (std::size_t num_ilqr_iterations = 0; num_ilqr_iterations < params.max_ilqr_iterations;
+      num_ilqr_iterations++)
+    {
       // Step 3: Determine best control signal update
       Feedforwards k;
       Feedbacks K;
@@ -291,7 +297,10 @@ private:
       Cost candidate_cost;
       Trajectory candidate_trajectory;
       Actions candidate_actions;
-      std::tie(candidate_trajectory, candidate_actions) = ammend_trajectory_actions(trajectory, actions, k, K, 1.0);
+      std::tie(candidate_trajectory, candidate_actions) = ammend_trajectory_actions(
+        trajectory,
+        actions, k, K,
+        1.0);
       candidate_cost = trajectory_action_cost(candidate_trajectory, candidate_actions);
 
 
