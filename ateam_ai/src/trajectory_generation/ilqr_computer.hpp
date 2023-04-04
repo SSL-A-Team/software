@@ -177,7 +177,7 @@ private:
 
       // eq 5b
       // Solve inverse with regulization to keep it from exploding
-      Eigen::Matrix<double, U, U> Q_uu_inv = inverse(Q_uu);
+      Eigen::Matrix<double, U, U> Q_uu_inv = tikhonov_regularization(Q_uu);
 
       k.at(t) = -1 * Q_uu_inv * Q_u;
       K.at(t) = -1 * Q_uu_inv * Q_ux;
@@ -228,28 +228,12 @@ private:
     alpha /= params.alpha_change;
   }
 
-  inline Eigen::Matrix<double, U, U> inverse(const Eigen::Matrix<double, U, U> & m)
+  Eigen::Matrix<double, U, U> tikhonov_regularization(const Eigen::Matrix<double, U, U> & m)
   {
-    // Solve inverse with regulization to keep it from exploding
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, U, U>> eigensolver(m);
-    if (eigensolver.info() != Eigen::Success) {
-      std::cout << "Failed to solve eigen vectors" << std::endl;
-      // TODO(jneiger): Replace with tikhonov regularization + inverse which can't fail
-      return m;
-    }
-    Eigen::Matrix<double, U, 1> eigen_vals = eigensolver.eigenvalues();
-    Eigen::Matrix<double, U, U> eigen_vals_diag;
-    eigen_vals_diag.setZero();
-    for (int i = 0; i < U; i++) {
-      if (eigen_vals[i] < 0) {
-        eigen_vals[i] = 0;
-      }
-      eigen_vals[i] += alpha;
-      eigen_vals_diag(i, i) = 1.0 / eigen_vals[i];
-    }
-    Eigen::Matrix<double, U, U> eigen_vecs = eigensolver.eigenvectors();
-    Eigen::Matrix<double, U, U> inv = eigen_vecs * eigen_vals_diag * eigen_vecs.transpose();
-    return inv;
+    // https://en.wikipedia.org/wiki/Ridge_regression#
+    const Eigen::Matrix<double, U, U> & m_T = m.transpose();
+    const Eigen::Matrix<double, U, U> & I = Eigen::Matrix<double, U, U>::Identity();
+    return (m_T * m + lambda * I).inverse() * m_T;
   }
 
   bool converge()
@@ -305,6 +289,8 @@ private:
   iLQRParams params;
 
   double alpha = 1;
+  double lambda = 1e-1;  // Ridge parameter for the Tikhonov regularization
+
   Trajectory trajectory;
   Actions actions;
 
