@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "trajectory_generation/ilqr_problem.hpp"
+#include "trajectory_generation/ilqr_computer.hpp"
 
 #include <gtest/gtest.h>
 #include <iostream>
@@ -51,8 +52,9 @@ public:
 
 TEST(iLQRProblem, SamplePointMass)
 {
-  PointMass1dProblem problem;
-  auto maybe_trajectory = problem.calculate(Eigen::Vector2d{0, 0});
+  PointMass1dProblem point_mass_problem;
+  iLQRComputer computer(point_mass_problem);;
+  auto maybe_trajectory = computer.calculate(Eigen::Vector2d{0, 0});
 
   ASSERT_TRUE(maybe_trajectory.has_value());
   EXPECT_NEAR(maybe_trajectory.value().back().x(), 10, 1e-1);
