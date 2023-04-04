@@ -27,6 +27,17 @@
 
 #include <optional>
 
+struct iLQRParams {
+  // Max number of outer loop iterations
+  std::size_t max_ilqr_iterations = 1;
+  // Max number of forward pass iterations
+  std::size_t max_forward_pass_iterations = 1;
+  // Max change in the regulation on success/failure
+  double alpha_change = 0.5;
+  // Convergence threshold for stopping (delta cost)
+  double converge_threshold = 1e-1;
+};
+
 // Actually computes the calculations on a given iLQRProblem
 template<int X, int U, int T>
 class iLQRComputer
@@ -60,7 +71,7 @@ public:
   using Feedforwards = std::array<Input, T>;
   using Feedbacks = std::array<Eigen::Matrix<double, U, X>, T>;
 
-  iLQRComputer(iLQRProblem<X, U, T> & problem) : problem(problem) {}
+  iLQRComputer(iLQRProblem<X, U, T> & problem, const iLQRParams & params) : problem(problem), params(params) {}
 
   std::optional<Trajectory> calculate(const State & initial_state)
   {
@@ -202,12 +213,12 @@ private:
 
   void decrease_regulation()
   {
-    alpha *= alpha_change;
+    alpha *= params.alpha_change;
   }
 
   void increase_regulation()
   {
-    alpha /= alpha_change;
+    alpha /= params.alpha_change;
   }
 
   inline StateJacobian_x state_jacobian_x(const StateJacobian & j)
@@ -267,7 +278,7 @@ private:
 
   bool converge()
   {
-    for (std::size_t num_ilqr_iterations = 0; num_ilqr_iterations < max_ilqr_iterations; num_ilqr_iterations++) {
+    for (std::size_t num_ilqr_iterations = 0; num_ilqr_iterations < params.max_ilqr_iterations; num_ilqr_iterations++) {
       // Step 3: Determine best control signal update
       Feedforwards k;
       Feedbacks K;
@@ -289,7 +300,7 @@ private:
         actions = candidate_actions;
 
         // If we converge, just return
-        if (std::abs(candidate_cost - overall_cost) / candidate_cost < converge_threshold) {
+        if (std::abs(candidate_cost - overall_cost) / candidate_cost < params.converge_threshold) {
           return true;
         }
 
@@ -310,11 +321,7 @@ private:
 
   iLQRProblem<X, U, T> & problem;
 
-  static constexpr std::size_t max_ilqr_iterations = 1;
-  static constexpr std::size_t max_forward_pass_iterations = 1;
-  static constexpr double alpha_change = 0.5;
-  static constexpr double converge_threshold = 1e-1;
-  static constexpr double eps = 1e-3;  // Auto differentiation epsilon
+  iLQRParams params;
 
   double alpha = 1;
   Trajectory trajectory;

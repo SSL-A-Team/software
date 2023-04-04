@@ -53,7 +53,13 @@ public:
 TEST(iLQRProblem, SamplePointMass)
 {
   PointMass1dProblem point_mass_problem;
-  iLQRComputer computer(point_mass_problem);;
+  iLQRParams params{
+    .max_ilqr_iterations = 1,
+    .max_forward_pass_iterations = 1,
+    .alpha_change = 0.5,
+    .converge_threshold = 1e-1
+  };
+  iLQRComputer computer(point_mass_problem, params);;
   auto maybe_trajectory = computer.calculate(Eigen::Vector2d{0, 0});
 
   ASSERT_TRUE(maybe_trajectory.has_value());
