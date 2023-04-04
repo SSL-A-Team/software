@@ -20,29 +20,14 @@ find_package(angles REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/filters/interacting_multiple_model_filter.cpp
-  src/filters/interacting_multiple_model_filter.hpp
   src/filters/kalman_filter.cpp
-  src/filters/kalman_filter.hpp
   src/filters/multiple_hypothesis_tracker.cpp
-  src/filters/multiple_hypothesis_tracker.hpp
   src/generators/generator_util.cpp
-  src/generators/generator_util.hpp
   src/generators/model_input_generator.cpp
-  src/generators/model_input_generator.hpp
   src/generators/transmission_probability_generator.cpp
-  src/generators/transmission_probability_generator.hpp
-  src/types/ball_measurement.hpp
-  src/types/ball.hpp
-  src/types/camera_measurement.hpp
-  src/types/models.hpp
-  src/types/robot_measurement.hpp
-  src/types/robot.hpp
   src/ateam_vision_filter_node.cpp
-  src/camera.hpp
   src/camera.cpp
-  src/message_conversions.hpp
   src/message_conversions.cpp
-  src/world.hpp
   src/world.cpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src)
