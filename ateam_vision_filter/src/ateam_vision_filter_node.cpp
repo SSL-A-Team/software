@@ -28,6 +28,7 @@
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <ateam_common/topic_names.hpp>
+#include <ateam_common/indexed_topic_helpers.hpp>
 
 #include "world.hpp"
 #include "message_conversions.hpp"
@@ -49,14 +50,20 @@ public:
       std::string(Topics::kBall),
       rclcpp::SystemDefaultsQoS());
 
-    for (std::size_t id = 0; id < blue_robots_publisher_.size(); id++) {
-      blue_robots_publisher_.at(id) = create_publisher<ateam_msgs::msg::RobotState>(
-        std::string(Topics::kBlueTeamRobotPrefix) + std::to_string(id),
-        rclcpp::SystemDefaultsQoS());
-      yellow_robots_publisher_.at(id) = create_publisher<ateam_msgs::msg::RobotState>(
-        std::string(Topics::kYellowTeamRobotPrefix) + std::to_string(id),
-        rclcpp::SystemDefaultsQoS());
-    }
+    ateam_common::indexed_topic_helpers::create_indexed_publishers
+    <ateam_msgs::msg::RobotState>(
+      blue_robots_publisher_,
+      Topics::kBlueTeamRobotPrefix,
+      rclcpp::SystemDefaultsQoS(),
+      this
+    );
+    ateam_common::indexed_topic_helpers::create_indexed_publishers
+    <ateam_msgs::msg::RobotState>(
+      yellow_robots_publisher_,
+      Topics::kYellowTeamRobotPrefix,
+      rclcpp::SystemDefaultsQoS(),
+      this
+    );
 
     vision_state_publisher_ = create_publisher<ateam_msgs::msg::VisionWorldState>(
       std::string(Topics::kVisionState),
