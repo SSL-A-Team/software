@@ -52,14 +52,14 @@ public:
     ateam_common::indexed_topic_helpers::create_indexed_subscribers
     <ateam_msgs::msg::RobotMotionCommand>(
       command_subscriptions_,
-      "/ateam_ai/robot_motion_commands/robot",
+      Topics::kRobotMotionCommandPrefix,
       rclcpp::SystemDefaultsQoS(),
       &SSLSimulationRadioBridgeNode::message_callback,
       this);
 
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotFeedback>(
       feedback_publishers_,
-      "~/robot_feedback/robot",
+      Topics::kRobotFeedbackPrefix,
       rclcpp::SystemDefaultsQoS(),
       this);
   }
