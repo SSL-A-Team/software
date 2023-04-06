@@ -47,6 +47,7 @@ struct iLQRParams
 };
 
 // Actually computes the calculations on a given iLQRProblem
+// Based on https://homes.cs.washington.edu/~todorov/papers/TassaIROS12.pdf
 template<int X, int U, int T>
 class iLQRComputer
 {
@@ -136,11 +137,11 @@ private:
     update_derivatives(trajectory, actions);
   }
 
-  std::tuple<Feedforwards, Feedbacks, std::array<double, T>> backward_pass()
+  std::tuple<Feedforwards, Feedbacks, std::array<std::pair<double, double>, T>> backward_pass()
   {
     Feedforwards k;
     Feedbacks K;
-    std::array<double, T> delta_v;
+    std::array<std::pair<double, double>, T> delta_v;
 
     // Q-function - pseudo-Hamiltonian
     Eigen::Matrix<double, X, 1> Q_x;
@@ -148,6 +149,8 @@ private:
     Eigen::Matrix<double, X, X> Q_xx;
     Eigen::Matrix<double, U, X> Q_ux;
     Eigen::Matrix<double, U, U> Q_uu;
+    Eigen::Matrix<double, U, X> Q_ux_regu;
+    Eigen::Matrix<double, U, U> Q_uu_regu;
 
     // Value at final time is the final cost
     CostGradiant_x V_x = g_x.back();
@@ -169,54 +172,62 @@ private:
       const CostHessian_ux & l_ux = h_ux.at(t);
       const CostHessian_uu & l_uu = h_uu.at(t);
 
-      // eq 4a
+      // eq 5a
       Q_x = l_x + f_x_T * V_x;
-      // eq 4b
+      // eq 5b
       Q_u = l_u + f_u_T * V_x;
-      // eq 4c
+      // eq 5c
       Q_xx = l_xx + f_x_T * V_xx * f_x;
-      // eq 4d
+      // eq 5d
       Q_ux = l_ux + f_u_T * V_xx * f_x;
-      // eq 4e
+      // eq 5e
       Q_uu = l_uu + f_u_T * V_xx * f_u;
 
-      // eq 5b
-      // Solve inverse with regulization to keep it from exploding
-      Eigen::Matrix<double, U, U> Q_uu_inv = tikhonov_regularization(Q_uu);
+      // eq 10a/10b
+      Q_uu_regu = l_uu + f_u_T * (V_xx + lambda * Eigen::Matrix<double, X, X>::Identity()) * f_u;
+      Q_ux_regu = l_ux + f_u_T * (V_xx + lambda * Eigen::Matrix<double, X, X>::Identity()) * f_x;
 
-      k.at(t) = -1 * Q_uu_inv * Q_u;
-      K.at(t) = -1 * Q_uu_inv * Q_ux;
+      // eq 10c/10d
+      k.at(t) = -1 * Q_uu_regu.inverse() * Q_u;
+      K.at(t) = -1 * Q_uu_regu.inverse() * Q_ux_regu;
 
-      // eq 6a
-      // Eigen doesn't like converting a 1x1 matrix to double :(
-      delta_v.at(t) = -0.5 * (k.at(t).transpose() * Q_uu * k.at(t)).value();
-      // eq 6b
-      V_x = Q_x - K.at(t).transpose() * Q_uu * k.at(t);
-      // eq 6c
-      V_xx = Q_xx - K.at(t).transpose() * Q_uu * K.at(t);
+      // eq 11b
+      V_x = Q_x + K.at(t).transpose() * Q_uu * k.at(t) + K.at(t).transpose() * Q_u +
+        Q_ux.transpose() * k.at(t);
+      // eq 11c
+      V_xx = Q_xx + K.at(t).transpose() * Q_uu * K.at(t) + K.at(t).transpose() * Q_ux +
+        Q_ux.transpose() * K.at(t);
+      // eq 11a
+      // Split up into 2 halves, allows for simple computation of delta J(alpha)
+      // when computing the line search
+      // The first half can be scaled by alpha, the second half can be scaled by alpha^2
+      delta_v.at(t) =
+        std::make_pair(
+        (k.at(t).transpose() * Q_u).value(),
+        (0.5 * k.at(t).transpose() * Q_uu * k.at(t)).value());
     }
 
     return std::make_tuple(k, K, delta_v);
   }
 
   std::pair<Trajectory, Actions> ammend_trajectory_actions(
-    const Trajectory & reference_traj,
-    const Actions & reference_action,
     const Feedforwards & k,
     const Feedbacks & K,
     const double alpha)
   {
-    // Eq 7a/b/c
     Trajectory candidate_trajectory;
     Actions candidate_actions;
 
+    // eq 8a
     candidate_trajectory.front() = trajectory.front();
     for (Time t = 0; t < T - 1; t++) {
       const State & x_hat_i = candidate_trajectory.at(t);
       const State & x_i = trajectory.at(t);
       const Input & u_i = actions.at(t);
+      // eq 12
       const Input & u_hat_i = u_i + alpha * k.at(t) + K.at(t) * (x_hat_i - x_i);
       candidate_actions.at(t) = u_hat_i;
+      // eq 8c
       candidate_trajectory.at(t + 1) = problem.dynamics(x_hat_i, u_hat_i, t);
     }
 
@@ -226,12 +237,11 @@ private:
   std::optional<std::tuple<Trajectory, Actions, Cost>> do_backtracking_line_search(
     const Feedforwards & k,
     const Feedbacks & K,
-    const std::array<double, T> & delta_v)
+    const std::array<std::pair<double, double>, T> & delta_v)
   {
     Cost candidate_cost;
     Trajectory candidate_trajectory;
     Actions candidate_actions;
-    bool valid_forward_pass_found = false;
     double alpha = 1;
 
     for (std::size_t num_forward_pass_iterations = 0;
@@ -239,20 +249,17 @@ private:
       num_forward_pass_iterations++)
     {
       // Generate likely forward pass
-      std::tie(candidate_trajectory, candidate_actions) = ammend_trajectory_actions(
-        trajectory,
-        actions, k, K,
-        alpha);
+      std::tie(candidate_trajectory, candidate_actions) = ammend_trajectory_actions(k, K, alpha);
       candidate_cost = trajectory_action_cost(candidate_trajectory, candidate_actions);
 
-      // From https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf
       // We can calculate the expected cost decrease
-      double overall_candidate_cost_change = 0;
-      for (const double dv : delta_v) {
-        overall_candidate_cost_change += dv;
+      double delta_j = 0;
+      for (const auto & dv : delta_v) {
+        // Note we can split up the cost into two parts, one with
+        // a alpha coefficient, the second with an alpha^2 coefficient
+        delta_j += alpha * dv.first + alpha * alpha * dv.second;
       }
-      overall_candidate_cost_change *= alpha * alpha;
-      double z = (overall_cost - candidate_cost) / overall_cost;
+      double z = (candidate_cost - overall_cost) / delta_j;
 
       // Accept the solution if we are closeish to the actual expected decrease
       if (z > 1e-4 && z < 10) {
@@ -284,14 +291,6 @@ private:
     lambda = std::max(params.lambda_min, lambda * delta);
   }
 
-  Eigen::Matrix<double, U, U> tikhonov_regularization(const Eigen::Matrix<double, U, U> & m)
-  {
-    // https://en.wikipedia.org/wiki/Ridge_regression#
-    const Eigen::Matrix<double, U, U> & m_T = m.transpose();
-    const Eigen::Matrix<double, U, U> & I = Eigen::Matrix<double, U, U>::Identity();
-    return (m_T * m + lambda * I).inverse() * m_T;
-  }
-
   bool converge()
   {
     for (std::size_t num_ilqr_iterations = 0; num_ilqr_iterations < params.max_ilqr_iterations;
@@ -300,9 +299,8 @@ private:
       // Step 3: Determine best control signal update
       Feedforwards k;
       Feedbacks K;
-      std::array<double, T> delta_v;
+      std::array<std::pair<double, double>, T> delta_v;
 
-      std::cout << trajectory.back()(0) << std::endl;
       std::tie(k, K, delta_v) = backward_pass();
 
       // Step 3.5: Forward Pass
@@ -326,7 +324,7 @@ private:
         actions = candidate_actions;
 
         // If we converge, just return
-        if (std::abs(candidate_cost - overall_cost) / candidate_cost < params.converge_threshold) {
+        if (std::abs(candidate_cost - overall_cost) < params.converge_threshold) {
           return true;
         }
 
@@ -350,7 +348,7 @@ private:
   iLQRParams params;
 
   double delta = params.delta_zero;
-  double lambda = 1e-1;  // Ridge parameter for the Tikhonov regularization
+  double lambda = 1e-1;  // Regularization
 
   Trajectory trajectory;
   Actions actions;
