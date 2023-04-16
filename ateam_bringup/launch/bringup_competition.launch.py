@@ -18,26 +18,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import os
 import launch
+from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
-import os
+from launch.actions import DeclareLaunchArgument
 from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
+    ssl_vision_port_value = LaunchConfiguration('ssl_vision_port')
+    ssl_vision_port_arg = DeclareLaunchArgument(
+        'ssl_vision_port',
+        default_value="10006"
+    )
+
     ateam_bringup_path = os.path.join(get_package_share_directory('ateam_bringup') , 'launch')
-    grsim_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource([ateam_bringup_path, '/ssl_grsim.launch.xml']))
-    game_controller_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource([ateam_bringup_path, '/ssl_game_controller.launch.xml']))
-    autonomy_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource([ateam_bringup_path, '/autonomy.launch.xml']))  
+    game_controller_bridge_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource([ateam_bringup_path, '/game_controller_nodes.launch.xml']))
+    autonomy_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource([ateam_bringup_path, '/autonomy.launch.xml']), launch_arguments={'ssl_vision_port' : ssl_vision_port_value}.items())  
 
     ui_path = os.path.join(get_package_share_directory('ateam_ui') , 'launch')
     ui_launch = launch.actions.IncludeLaunchDescription(PythonLaunchDescriptionSource([ui_path, '/ateam_ui_launch.py']))
 
     return launch.LaunchDescription([
-        grsim_launch,
-        game_controller_launch,
+        ssl_vision_port_arg,
         autonomy_launch,
+        game_controller_bridge_launch,
         ui_launch,
     ])
 
