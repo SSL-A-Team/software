@@ -1,8 +1,8 @@
 <launch>
   <arg name="headless" default="true"/>
 
-  <executable if="$(var headless)" cmd="docker run --net host --rm robocupssl/grsim" output="screen" />
-  <executable unless="$(var headless)" cmd="docker run --net host -eVNC_PASSWORD=vnc -eVNC_GEOMETRY=1920x1080 --rm robocupssl/grsim vnc" output="screen" />
+  <executable if="$(var headless)" cmd="docker run --net host --rm robocupssl/grsim" output="screen" respawn="True"/>
+  <executable unless="$(var headless)" cmd="docker run --net host -eVNC_PASSWORD=vnc -eVNC_GEOMETRY=1920x1080 --rm robocupssl/grsim vnc" output="screen" respawn="True"/>
 
-  <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node" />
+  <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node" respawn="True"/>
 </launch>
