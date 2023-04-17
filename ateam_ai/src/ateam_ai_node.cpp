@@ -60,6 +60,10 @@ public:
   {
     REGISTER_NODE_PARAMS(this);
     ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
+ ball_subscription_ = create_subscription<ateam_msgs::msg::BallState>(
+      std::string(Topics::kBall),
+      10,
+      ball_callback);
 
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.balls.emplace_back(Ball{});
@@ -110,6 +114,11 @@ public:
       }
     );
 
+    field_subscription_ = create_subscription<ateam_msgs::msg::VisionGeometryFieldSize>(
+      std::string(Topics::kField),
+      10,
+      field_callback);
+
     timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
   }
 
@@ -121,6 +130,7 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
+  rclcpp::Subscription<ateam_msgs::msg::VisionGeometryFieldSize>::SharedPtr field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
   rclcpp::Publisher<ateam_msgs::msg::Overlay>::SharedPtr overlay_publisher_;
@@ -161,6 +171,27 @@ private:
     ball_state.pos.y() = ball_state_msg->pose.position.y;
     ball_state.vel.x() = ball_state_msg->twist.linear.x;
     ball_state.vel.y() = ball_state_msg->twist.linear.y;
+  }
+
+  void field_callback(
+    Field & ball_state,
+    const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
+  {
+    std::lock_guard<std::mutex> lock(world_mutex_);
+    
+    float field_length;
+    float field_width;
+    float goal_width;
+    float goal_depth;
+    float boundary_width;
+    std::array<Eigen::Vector2d, 4> field_corners;
+    FieldSidedInfo ours;
+    std::array<Eigen::Vector2d, 4> goalie_corners;
+    std::array<Eigen::Vector2d, 2> goal_posts;
+    FieldSidedInfo theirs;
+    std::array<Eigen::Vector2d, 4> goalie_corners;
+    std::array<Eigen::Vector2d, 2> goal_posts;
+
   }
 
   void timer_callback()
