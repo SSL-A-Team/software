@@ -36,6 +36,7 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_msgs/msg/world.hpp>
+#include <ssl_league_msgs/msg/vision_geometry_field_size.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "behavior/behavior_evaluator.hpp"
@@ -60,10 +61,6 @@ public:
   {
     REGISTER_NODE_PARAMS(this);
     ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
- ball_subscription_ = create_subscription<ateam_msgs::msg::BallState>(
-      std::string(Topics::kBall),
-      10,
-      ball_callback);
 
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.balls.emplace_back(Ball{});
@@ -114,10 +111,10 @@ public:
       }
     );
 
-    field_subscription_ = create_subscription<ateam_msgs::msg::VisionGeometryFieldSize>(
+    field_subscription_ = create_subscription<ssl_league_msgs::msg::VisionGeometryFieldSize>(
       std::string(Topics::kField),
       10,
-      field_callback);
+      std::bind(&ATeamAINode::field_callback, this, std::placeholders::_1));
 
     timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
   }
@@ -130,7 +127,7 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
-  rclcpp::Subscription<ateam_msgs::msg::VisionGeometryFieldSize>::SharedPtr field_subscription_;
+  rclcpp::Subscription<ssl_league_msgs::msg::VisionGeometryFieldSize>::SharedPtr field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
   rclcpp::Publisher<ateam_msgs::msg::Overlay>::SharedPtr overlay_publisher_;
@@ -173,25 +170,43 @@ private:
     ball_state.vel.y() = ball_state_msg->twist.linear.y;
   }
 
-  void field_callback(
-    Field & ball_state,
-    const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
+  void field_callback(const ssl_league_msgs::msg::VisionGeometryFieldSize::SharedPtr field_msg)
   {
-    std::lock_guard<std::mutex> lock(world_mutex_);
-    
-    float field_length;
-    float field_width;
-    float goal_width;
-    float goal_depth;
-    float boundary_width;
-    std::array<Eigen::Vector2d, 4> field_corners;
-    FieldSidedInfo ours;
-    std::array<Eigen::Vector2d, 4> goalie_corners;
-    std::array<Eigen::Vector2d, 2> goal_posts;
-    FieldSidedInfo theirs;
-    std::array<Eigen::Vector2d, 4> goalie_corners;
-    std::array<Eigen::Vector2d, 2> goal_posts;
 
+    Field field {
+        .field_length   = field_msg->field_length,
+        .field_width    = field_msg->field_width,
+        .goal_width     = field_msg->goal_width,
+        .goal_depth     = field_msg->goal_depth,
+        .boundary_width = field_msg->boundary_width
+    };
+
+    auto check_field_line_name = [](ssl_league_msgs::msg::VisionFieldLineSegment line_msg, std::string target_name) -> bool {
+        return line_msg.name == target_name; 
+    };
+    std::array<std::string, 4> field_bound_names = {"TopTouchLine", "BottomTouchLine", "LeftGoalLine", "RightGoalLine"};
+    size_t i = 0;
+    for (auto& name : field_bound_names) {
+        if (auto itr = std::find_if(begin(field_msg->field_lines), end(field_msg->field_lines), std::bind(check_field_line_name, std::placeholders::_1, name))) != end(field_msg->field_lines)) {
+            field.field_corners.at(i)(0) = itr->p1.x;
+            field.field_corners.at(i)(1) = itr->p1.y;
+        }
+        i++;     
+    }
+
+     std::array<std::string, 4> left_bound_names = {"LeftFieldLeftPenaltyStretch", "LeftPenaltyStretch", "LeftFieldRightPenaltyStretch"}
+
+    "RightFieldLeftPenaltyStretch"
+    "RightPenaltyStretch"
+    "RightFieldRightPenaltyStretch"
+    FieldSidedInfo _side_info {};
+
+
+
+
+
+    std::lock_guard<std::mutex> lock(world_mutex_);
+    world_->field = field;
   }
 
   void timer_callback()

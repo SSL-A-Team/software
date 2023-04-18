@@ -9,7 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_common REQUIRED)
-find_package(ateam_msgs fcdneiger)
+find_package(ateam_msgs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
