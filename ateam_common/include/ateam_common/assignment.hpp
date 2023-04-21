@@ -22,6 +22,7 @@
 #define ATEAM_COMMON__HUNGARIAN_HPP_
 
 #include <unordered_map>
+#include <optional>
 
 #include <Eigen/Dense>
 
@@ -81,15 +82,49 @@ namespace internal
   */
   Eigen::MatrixXi ApplyStep3(const Eigen::MatrixXd & matrix);
 
+  /**
+   * Returns a mask vector corresponding to columns with a starred zero in the mark matrix
+   */
+  Eigen::VectorXi star_zero_cols(const Eigen::MatrixXi & mark_matrix);
+
+  /**
+   * Returns the matrix coordinates of the next uncovered zero
+   * If none is found, return -1, -1
+  */
+  std::optional<Eigen::Vector2i> next_uncovered_zero(const Eigen::MatrixXd & cost_matrix, const Eigen::VectorXi & row_covers, const Eigen::VectorXi & col_covers);
+
+  /**
+   * Returns the matrix coordinates of the zero type requested in the same row as the start location
+   * If none is found, return -1, -1
+  */
+  std::optional<Eigen::Vector2i> find_zero_type_in_row(
+    const Eigen::MatrixXi & mark_matrix,
+    const Eigen::Vector2i & start,
+    const ZerosType & target_type);
+
+  /**
+   * Returns the matrix coordinates of the zero type requested in the same col as the start location
+   * If none is found, return -1, -1
+  */
+  std::optional<Eigen::Vector2i> find_zero_type_in_col(
+    const Eigen::MatrixXi & mark_matrix,
+    const Eigen::Vector2i & start,
+    const ZerosType & target_type);
+
   struct Covers {
     Eigen::VectorXi row_covers;
     Eigen::VectorXi col_covers;
   };
 
   /**
-   * Using the mark matrix, optimize line coverage
+   * Using the mark matrix, optimize line coverage to as few lines as possible
   */
   Covers ApplyStep4(Eigen::MatrixXi mark_matrix, const Eigen::MatrixXd & cost_matrix);
+
+  /**
+   * Find the lowest uncovered value. Subtract this from every unmarked element and add it to every element covered by two lines.
+  */
+  Eigen::MatrixXd ApplyStep5(const Eigen::MatrixXi & mark_matrix, const Covers & covers);
 }  // namespace internal
 }  // namespace assignment
 }  // namespace ateam_common
