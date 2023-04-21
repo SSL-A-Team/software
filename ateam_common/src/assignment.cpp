@@ -1,6 +1,9 @@
 #include "ateam_common/assignment.hpp"
 
 #include <unordered_set>
+#include <vector>
+
+#include <iostream>
 
 namespace ateam_common::assignment
 {
@@ -92,7 +95,7 @@ Eigen::MatrixXi ApplyStep3(const Eigen::MatrixXd & matrix)
 
       bool is_zero = matrix(i, j) == 0;
       if (is_zero) {
-        marks(i, j) = 1;
+        marks(i, j) = ZerosType::STARRED;
         row_covers(i) = 1;
         col_covers(j) = 1;
         break;
@@ -103,58 +106,104 @@ Eigen::MatrixXi ApplyStep3(const Eigen::MatrixXd & matrix)
   return marks;
 }
 
-Eigen::MatrixXi ApplyStep4(Eigen::MatrixXi mark_matrix, const Eigen::MatrixXd & cost_matrix)
+Covers ApplyStep4(Eigen::MatrixXi mark_matrix, const Eigen::MatrixXd & cost_matrix)
 {
-  Eigen::VectorXi row_covers = Eigen::VectorXi::Zero(matrix.rows());
-  Eigen::VectorXi col_covers = Eigen::VectorXi::Zero(matrix.cols());
-
 start:
-  // Cover all cols containing a marked 0
+  Eigen::VectorXi row_covers = Eigen::VectorXi::Zero(cost_matrix.rows());
+  Eigen::VectorXi col_covers = Eigen::VectorXi::Zero(cost_matrix.cols());
+
+  // Cover all cols containing a starred 0
   Eigen::VectorXi marked_col_coeff = mark_matrix.colwise().maxCoeff();
   for (int j = 0; j < mark_matrix.cols(); j++) {
-    bool is_marked_zero = min_col_coeff(j) == 1;
-    if (is_marked_zero) {
-      col_covers(i) = 1;
+    bool is_starred_zero = marked_col_coeff(j) == ZerosType::STARRED;
+    if (is_starred_zero) {
+      col_covers(j) = 1;
     }
   }
 
+skip:
+  int i, j;
   // Find any non-covered 0, and "prime" it
-  for (int i = 0; i < cost_matrix.rows(); i++) {
-    for (int j = 0; j < cost_matrix.cols(); j++) {
-      bool is_covered_col = col_covers(i) == 1;
-      bool is_zero = cost_col_coeff(i) == 0;
-      if (!is_covered_col && is_zero) {
-        mark_matrix(i, j) = 2;
+  for (i = 0; i < cost_matrix.rows(); i++) {
+    for (j = 0; j < cost_matrix.cols(); j++) {
+      bool is_covered_col = col_covers(j) == 1;
+      bool is_covered_row = row_covers(i) == 1;
+      bool is_zero = cost_matrix(i, j) == 0;
+      if (!is_covered_col && !is_covered_row && is_zero) {
+        mark_matrix(i, j) = ZerosType::PRIMED;
+        goto ee;
+      }
+    }
+  }
+  return Covers{.row_covers=row_covers, col_covers=col_covers};
 
-        // If the zero is on the same row as a marked 0
-        // Cover the corresponding row, and uncover the column of the
-        // marked 0
-        for (int jj = 0; jj < cost_matrix.cols(); jj++) {
-          bool is_covered_zero = mark_matrix(i, jj) == 1;
-          if (is_covered_zero) {
-            row_covers(i) = 1;
-            col_covers(jj) = 0;
-            goto start;
-          } else {
-            // 2 step part
-            // Find a zero in the col
-            int iii = -1;
-            for (int ii = 0; ii < cost_matrix.rows(); ii++) {
-              bool is_covered_zero = mark_matrix(ii, j) == 1;
-              if (is_covered_zero) {
-                iii = i;
-              }
-            }
-            if (iii != -1) {
-              // find primed zero on corrisponding row
-              // goto step one
-            }
-          }
-        }
+ee:
+  // If the zero is on the same row as a starred 0
+  // Cover the corresponding row, and uncover the column of the
+  // starred 0
+  for (int jj = 0; jj < cost_matrix.cols(); jj++) {
+    bool is_starred_zero = mark_matrix(i, jj) == ZerosType::STARRED;
+    if (is_starred_zero) {
+      row_covers(i) = 1;
+      col_covers(jj) = 0;
+      goto skip;
+    }
+  }
+
+  // Non-covered zero has no assigned zero in row
+  // Create path of zeros
+  std::vector<int> i_path{i};
+  std::vector<int> j_path{j};
+
+substep1:
+  // Find starred zero in col
+  bool found_starred_zero_in_col = false;
+  for (int iii = 0; iii < cost_matrix.rows(); iii++) {
+    bool is_starred_zero = mark_matrix(iii, j_path.back()) == ZerosType::STARRED;
+    if (is_starred_zero) {
+      i_path.push_back(iii);
+      j_path.push_back(j_path.back());
+      found_starred_zero_in_col = true;
+      break;
+    }
+  }
+
+  if (!found_starred_zero_in_col) {
+    goto stop;
+  }
+
+  // Find primed zero on the row
+  for (int jjj = 0; jjj < cost_matrix.cols(); jjj++) {
+    bool is_prime_zero = mark_matrix(i_path.back(), jjj) == ZerosType::PRIMED;
+    if (is_prime_zero) {
+      i_path.push_back(i_path.back());
+      j_path.push_back(jjj);
+      break;
+    }
+  }
+
+  goto substep1;
+stop:
+
+  // For all zeros, star primed zeros and unstar starred zeros
+  for (std::size_t k = 0; k < i_path.size(); k++) {
+    if (mark_matrix(i_path.at(k), j_path.at(k)) == ZerosType::PRIMED) {
+      mark_matrix(i_path.at(k), j_path.at(k)) = ZerosType::STARRED;
+    } else if (mark_matrix(i_path.at(k), j_path.at(k)) == ZerosType::STARRED) {
+      mark_matrix(i_path.at(k), j_path.at(k)) = ZerosType::NONE;
+    }
+  }
+
+  // Unprime all primed zeros
+  for (int ii = 0; ii < mark_matrix.rows(); ii++) {
+    for (int jj = 0; jj < mark_matrix.cols(); jj++) {
+      if (mark_matrix(ii, jj) == ZerosType::PRIMED) {
+        mark_matrix(ii, jj) = ZerosType::NONE;
       }
     }
   }
 
+  goto start;
 }
 
 }

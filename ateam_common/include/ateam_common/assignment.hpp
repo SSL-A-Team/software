@@ -46,6 +46,12 @@ namespace internal
   // Unfilled data when squarizing the matrix will be set to this value
   constexpr double UNFILLED_LARGE_VALUE = 1e10;
 
+  enum ZerosType {
+    NONE = 0,
+    STARRED = 1,
+    PRIMED = 2
+  };
+
   /**
    * Given a non-square matrix, make the matrix square by adding the least number of rows/cols needed.
    * All new cells will be filled with some "large" cost
@@ -75,10 +81,15 @@ namespace internal
   */
   Eigen::MatrixXi ApplyStep3(const Eigen::MatrixXd & matrix);
 
+  struct Covers {
+    Eigen::VectorXi row_covers;
+    Eigen::VectorXi col_covers;
+  };
+
   /**
    * Using the mark matrix, optimize line coverage
   */
-  Eigen::MatrixXi ApplyStep4(const Eigen::MatrixXi & mark_matrix, const Eigen::MatrixXd & cost_matrix);
+  Covers ApplyStep4(Eigen::MatrixXi mark_matrix, const Eigen::MatrixXd & cost_matrix);
 }  // namespace internal
 }  // namespace assignment
 }  // namespace ateam_common
