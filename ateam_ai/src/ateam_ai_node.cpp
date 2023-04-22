@@ -189,8 +189,8 @@ private:
         auto& name = field_bound_names.at(i);
         auto itr = std::find_if(begin(field_msg->field_lines), end(field_msg->field_lines), std::bind(check_field_line_name, std::placeholders::_1, name));
         if (itr != end(field_msg->field_lines)) {
-            field.field_corners.at(i)(0) = itr->p1.x;
-            field.field_corners.at(i)(1) = itr->p1.y;
+            field.field_corners.at(i).x() = itr->p1.x;
+            field.field_corners.at(i).y() = itr->p1.y;
         }
     }
 
@@ -205,17 +205,6 @@ private:
     //TODO assign based off known team info
     field.ours = left_side_info;
     field.theirs = right_side_info;
-
-    // Cant really find anything in the message that gives us goal position that isnt centered
-    // If people want more info will have to update in the future
-
-    // std::array<std::string, 4> left_bound_names = {"LeftFieldLeftPenaltyStretch", "LeftPenaltyStretch", "LeftFieldRightPenaltyStretch"}
-    // FieldSidedInfo left_side_info {};
-    // size_t i = 0;
-    // for (auto& name : field_bound_names) {
-
-    // }
-    //  std::array<std::string, 4> right_bound_names = {"RightFieldLeftPenaltyStretch", "RightPenaltyStretch", "RightFieldRightPenaltyStretch")
 
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.field = field;

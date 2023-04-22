@@ -30,17 +30,4 @@ rclcpp_components_register_node(
 )
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
-# if(BUILD_TESTING)
-#   find_package(ament_lint_auto REQUIRED)
-#   ament_lint_auto_find_test_dependencies()
-
-#   find_package(ament_cmake_gtest REQUIRED)
-#   ament_add_gtest(${PROJECT_NAME}_test
-#    
-#   )
-#   target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
-#   target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
-#   set_target_properties(${PROJECT_NAME}_test PROPERTIES CXX_STANDARD 17)
-# endif()
-
 ament_package()
