@@ -18,18 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include "ateam_common/game_state_listener.hpp"
+#include <string>
 
-#ifndef TYPES__REFEREE_INFO_HPP_
-#define TYPES__REFEREE_INFO_HPP_
-
-#include <ateam_common/game_state_listener.hpp>
-
-struct RefereeInfo
+namespace ateam_common
 {
-  int our_goalie_id;
-  int their_goalie_id;
-  GameStage current_game_stage;
-  GameCommand running_command;
-};
 
-#endif  // TYPES__REFEREE_INFO_HPP_
+GameStateListener::GameStateListener(rclcpp::Node & node, Callback callback)
+: callback_(callback)
+{
+  rclcpp::QoS qos(1);
+  qos.reliable();
+  qos.transient_local();
+  ref_subscription_ = node.create_subscription<ssl_league_msgs::msg::Referee>(
+    "/gc_multicast_bridge_node/referee_messages", qos,
+    std::bind(&GameStateListener::RefereeMessageCallback, this, std::placeholders::_1));
+}
+
+void GameStateListener::RefereeMessageCallback(
+  const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
+{
+
+  const auto prev_command = game_command_;
+
+  if (msg->blue.name == team_name_) {
+    team_color_ = TeamColor::Blue;
+  } else if (msg->yellow.name == team_name_) {
+    team_color_ = TeamColor::Yellow;
+  } else {
+    team_color_ = TeamColor::Unknown;
+  }
+  // If the command has changed, make sure we run the callback
+  if (game_command_ != prev_command && callback_) {
+    callback_(team_color_);
+  }
+}
+
+}  // namespace ateam_common

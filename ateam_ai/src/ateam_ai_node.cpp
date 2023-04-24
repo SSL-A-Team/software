@@ -184,6 +184,10 @@ private:
       }
     }
 
+    // Get current game state for world
+    // 1. Get command
+    // 2. Get the game stage
+
     // Save off the world to the rosbag
     world_publisher_->publish(ateam_ai::message_conversions::toMsg(world_));
 
