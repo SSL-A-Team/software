@@ -39,7 +39,7 @@ void GameStateListener::RefereeMessageCallback(
   const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
 {
   const auto prev_command = game_command_;
-  const int prev_stage_msg_ = 0;
+  const int prev_stage_msg = prev_stage_msg_;
 
   switch (msg->command){
     case 0:
@@ -81,6 +81,7 @@ void GameStateListener::RefereeMessageCallback(
   }
 
   // Only check the game stage if it has changed
+  // Use callback for this instead?
   if (msg->stage != prev_stage_msg_){
     game_stage_ = ConvertNewGameState(msg->stage);
   }

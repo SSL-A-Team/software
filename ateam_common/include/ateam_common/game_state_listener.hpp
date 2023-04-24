@@ -73,6 +73,7 @@ public:
   }
 
 private:
+  int prev_stage_msg_ = 18;
   GameStage game_stage_{GameStage::Unknown};
   GameCommand game_command_{GameCommand::Halt};
   Callback callback_;
