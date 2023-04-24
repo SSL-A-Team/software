@@ -38,19 +38,94 @@ GameStateListener::GameStateListener(rclcpp::Node & node, Callback callback)
 void GameStateListener::RefereeMessageCallback(
   const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
 {
-
   const auto prev_command = game_command_;
+  const int prev_stage_msg_ = 0;
 
-  if (msg->blue.name == team_name_) {
-    team_color_ = TeamColor::Blue;
-  } else if (msg->yellow.name == team_name_) {
-    team_color_ = TeamColor::Yellow;
-  } else {
-    team_color_ = TeamColor::Unknown;
+  switch (msg->command){
+    case 0:
+      game_command_ = GameCommand::Halt;
+    case 1:
+      game_command_ = GameCommand::Stop;
+    case 2:
+      game_command_ = GameCommand::NormalStart;
+    case 3:
+      game_command_ = GameCommand::ForceStart;
+    case 4:
+      game_command_ = GameCommand::PrepareKickoffYellow;
+    case 5:
+      game_command_ = GameCommand::PrepareKickoffBlue;
+    case 6:
+      game_command_ = GameCommand::PreparePenaltyYellow;
+    case 7:
+      game_command_ = GameCommand::PreparePenaltyBlue;
+    case 8:
+      game_command_ = GameCommand::DirectFreeYellow;
+    case 9:
+      game_command_ = GameCommand::DirectFreeBlue;
+    case 10:
+      game_command_ = GameCommand::IndirectFreeYellow;
+    case 11:
+      game_command_ = GameCommand::IndirectFreeBlue;
+    // Simplify to one timeout?
+    case 12:
+      game_command_ = GameCommand::TimeoutYellow;
+    case 13:
+      game_command_ = GameCommand::TimeoutBlue;
+    case 16:
+      game_command_ = GameCommand::BallPlacementYellow;
+    case 17:
+      game_command_ = GameCommand::BallPlacementBlue;
+    // Default to Halt command
+    default:
+      game_command_ = GameCommand::Halt;
   }
+
+  // Only check the game stage if it has changed
+  if (msg->stage != prev_stage_msg_){
+    game_stage_ = ConvertNewGameState(msg->stage);
+  }
+
   // If the command has changed, make sure we run the callback
+  // if it exists
   if (game_command_ != prev_command && callback_) {
-    callback_(team_color_);
+    callback_(game_command_);
+  }
+}
+
+GameStage GameStateListener::ConvertNewGameState(const int state)
+{
+  // Convert the int for the game stage to the game stage type
+  switch (state){
+    case 0:
+      return GameStage::PreFirstHalf;
+    case 1:
+      return GameStage::FirstHalf;
+    case 2:
+      return GameStage::Halftime;
+    case 3:
+      return GameStage::PreSecondHalf;
+    case 4:
+      return GameStage::SecondHalf;
+    case 5:
+      return GameStage::ExtraTimeBreak;
+    case 6:
+      return GameStage::ExtraTimePreFirstHalf;
+    case 7:
+      return GameStage::ExtraTimeFirstHalf;
+    case 8:
+      return GameStage::ExtraTimeHalftime;
+    case 9:
+      return GameStage::ExtraTimePreSecondHalf;
+    case 10:
+      return GameStage::ExtraTimeSecondHalf;
+    case 11:
+      return GameStage::PenaltyBreak;
+    case 12:
+      return GameStage::Penalty;
+    case 13:
+      return GameStage::PostGame;
+    default:
+      return GameStage::Unknown;
   }
 }
 

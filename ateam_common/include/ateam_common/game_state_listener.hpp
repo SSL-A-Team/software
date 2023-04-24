@@ -52,7 +52,7 @@ class GameStateListener
 {
 public:
 
-  using Callback = std::function<void ()>;
+  using Callback = std::function<void (GameCommand)>;
 
   /**
    * @brief Construct a new Game State Listener object
@@ -73,10 +73,12 @@ public:
   }
 
 private:
-  GameStage game_stage_{GameStage::PreFirstHalf};
+  GameStage game_stage_{GameStage::Unknown};
   GameCommand game_command_{GameCommand::Halt};
   Callback callback_;
   rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
+
+  GameStage ConvertNewGameState(const int state);
 
   void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
 };
@@ -98,7 +100,8 @@ enum class GameStage
     ExtraTimeSecondHalf,
     PenaltyBreak,
     Penalty,
-    PostGame
+    PostGame,
+    Unknown
   };
 
 enum class GameCommand

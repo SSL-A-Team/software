@@ -33,6 +33,7 @@
 #include <ateam_common/overlay.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/team_color_listener.hpp>
+#include <ateam_common/game_state_listener.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
@@ -136,6 +137,7 @@ private:
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
   ateam_common::TeamColorListener color_listener_;
+  ateam_common::GameStateListener game_state_listener_;
 
   BehaviorRealization realization_;
   BehaviorEvaluator evaluator_;
@@ -196,9 +198,9 @@ private:
 
     // Get current game state for world
     // 1. Get command
-    
+    world_.referee_info.running_command = game_state_listener_.GetGameCommand();
     // 2. Get the game stage
-
+    world_.referee_info.current_game_stage = game_state_listener_.GetGameStage();
     // Save off the world to the rosbag
     world_publisher_->publish(ateam_ai::message_conversions::toMsg(world_));
 
