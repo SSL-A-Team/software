@@ -237,9 +237,34 @@ Covers ApplyStep4(Eigen::MatrixXi mark_matrix, const Eigen::MatrixXd & cost_matr
   }
 }
 
-Eigen::MatrixXd ApplyStep5(const Eigen::MatrixXi & mark_matrix, const Covers & covers)
+Eigen::MatrixXd ApplyStep5(Eigen::MatrixXd cost_matrix, const Covers & covers)
 {
-  
+  // Find the lowest uncovered value
+  double min_value = UNFILLED_LARGE_VALUE;
+  for (int i = 0; i < cost_matrix.rows(); i++) {
+    for (int j = 0; j < cost_matrix.cols(); j++) {
+      bool is_row_covered = covers.row_covers(i) == 1;
+      bool is_col_covered = covers.col_covers(j) == 1;
+      if (!is_row_covered && !is_col_covered && cost_matrix(i, j) < min_value) {
+        min_value = cost_matrix(i, j);
+      }
+    }
+  }
+
+  // Subtract this from every unmarked element and add it to every element covered by two lines
+  for (int i = 0; i < cost_matrix.rows(); i++) {
+    for (int j = 0; j < cost_matrix.cols(); j++) {
+      bool is_row_covered = covers.row_covers(i) == 1;
+      bool is_col_covered = covers.col_covers(j) == 1;
+      if (!is_row_covered && !is_col_covered) {
+        cost_matrix(i, j) -= min_value;
+      } else if (is_row_covered && is_col_covered) {
+        cost_matrix(i, j) += min_value;
+      }
+    }
+  }
+
+  return cost_matrix;
 }
 }
 }

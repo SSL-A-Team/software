@@ -118,13 +118,17 @@ namespace internal
 
   /**
    * Using the mark matrix, optimize line coverage to as few lines as possible
+   *
+   * Returns covers
   */
   Covers ApplyStep4(Eigen::MatrixXi mark_matrix, const Eigen::MatrixXd & cost_matrix);
 
   /**
    * Find the lowest uncovered value. Subtract this from every unmarked element and add it to every element covered by two lines.
+   *
+   * Return the new cost matrix
   */
-  Eigen::MatrixXd ApplyStep5(const Eigen::MatrixXi & mark_matrix, const Covers & covers);
+  Eigen::MatrixXd ApplyStep5(Eigen::MatrixXd cost_matrix, const Covers & covers);
 }  // namespace internal
 }  // namespace assignment
 }  // namespace ateam_common

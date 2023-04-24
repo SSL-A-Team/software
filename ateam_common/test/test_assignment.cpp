@@ -212,7 +212,25 @@ TEST(Assignment, ApplyStep4)
   auto covers4x4 = ainternal::ApplyStep4(mark4x4, cost4x4);
   EXPECT_THAT(covers4x4.row_covers, IsSame(row4));
   EXPECT_THAT(covers4x4.col_covers, IsSame(col4));
+}
 
+TEST(Assignment, ApplyStep5)
+{  
+  Eigen::Matrix<double, 1, 1> cost1x1{{1}};
+  ainternal::Covers covers1x1{
+    .row_covers = Eigen::Vector<int, 1>{0},
+    .col_covers = Eigen::Vector<int, 1>{0}
+  };
+  Eigen::Matrix<double, 1, 1> out1x1{{0}};
+  EXPECT_THAT(ainternal::ApplyStep5(cost1x1, covers1x1), IsSame(out1x1));
+  
+  Eigen::Matrix<double, 4, 4> cost4x4{{0, 12, 0, 14}, {21, 0, 23, 0}, {0, 32, 33, 34}, {0, 42, 43, 44}};
+  ainternal::Covers covers4x4{
+    .row_covers = Eigen::Vector<int, 4>{0, 1, 0, 0},
+    .col_covers = Eigen::Vector<int, 4>{1, 0, 1, 0}
+  };
+  Eigen::Matrix<double, 4, 4> out4x4{{0, 0, 0, 2}, {33, 0, 35, 0}, {0, 20, 33, 22}, {0, 30, 43, 32}};
+  EXPECT_THAT(ainternal::ApplyStep5(cost4x4, covers4x4), IsSame(out4x4));
 }
 
 TEST(Assignment, HasUniqueAssignments)
