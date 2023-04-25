@@ -26,6 +26,16 @@
 namespace assignment = ateam_common::assignment;
 namespace ainternal = ateam_common::assignment::internal;
 
+TEST(Assignment, optimize_assignment) {
+  Eigen::Matrix<double, 3, 3> cost3x3{{8, 4, 7}, {5, 2, 3}, {9, 4, 8}};
+  auto out3x3 = assignment::optimize_assignment(cost3x3);
+
+  EXPECT_EQ(out3x3.size(), 3);
+  EXPECT_EQ(out3x3.at(0), 0);
+  EXPECT_EQ(out3x3.at(1), 2);
+  EXPECT_EQ(out3x3.at(2), 1);
+}
+
 MATCHER_P(IsSameSize, m, "") {
   *result_listener << "where the size (" << arg.rows() << ", " << arg.cols() << ") ";
   *result_listener << "!= expected (" << m.rows() << ", " << m.cols() << ")";
@@ -246,62 +256,4 @@ TEST(Assignment, ApplyStep5)
   cmc4x4.col_covers = Eigen::Vector<int, 4>{1, 0, 1, 0};
   ainternal::ApplyStep5(cmc4x4);
   EXPECT_THAT(cmc4x4.cost_matrix, IsSame(Eigen::Matrix<double, 4, 4>{{0, 0, 0, 2}, {33, 0, 35, 0}, {0, 20, 33, 22}, {0, 30, 43, 32}}));
-}
-
-TEST(Assignment, HasUniqueAssignments)
-{
-  // Valid
-  ainternal::CostMarkCovers valid1x1;
-  valid1x1.mark_matrix = Eigen::Matrix<int, 1, 1>{{1}};
-  EXPECT_TRUE(ainternal::HasUniqueAssignments(valid1x1));
-  ainternal::CostMarkCovers valid2x2_1;
-  valid2x2_1.mark_matrix = Eigen::Matrix2i{{1, 0}, {0, 1}};
-  EXPECT_TRUE(ainternal::HasUniqueAssignments(valid2x2_1));
-  ainternal::CostMarkCovers valid2x2_2;
-  valid2x2_2.mark_matrix = Eigen::Matrix2i{{0, 1}, {1, 0}};
-  EXPECT_TRUE(ainternal::HasUniqueAssignments(valid2x2_2));
-  ainternal::CostMarkCovers valid3x3;
-  valid3x3.mark_matrix = Eigen::Matrix3i{{0, 1, 0}, {1, 0, 0}, {0, 0, 1}};
-  EXPECT_TRUE(ainternal::HasUniqueAssignments(valid3x3));
-
-  // Invalid
-  ainternal::CostMarkCovers invalid1x1;
-  invalid1x1.mark_matrix = Eigen::Matrix<int, 1, 1>{{0}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid1x1));
-  ainternal::CostMarkCovers invalid2x2_1;
-  invalid2x2_1.mark_matrix = Eigen::Matrix2i{{1, 1}, {0, 1}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_1));
-  ainternal::CostMarkCovers invalid2x2_2;
-  invalid2x2_2.mark_matrix = Eigen::Matrix2i{{1, 1}, {1, 0}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_2));
-  ainternal::CostMarkCovers invalid2x2_3;
-  invalid2x2_3.mark_matrix = Eigen::Matrix2i{{1, 1}, {0, 0}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_3));
-  ainternal::CostMarkCovers invalid2x2_4;
-  invalid2x2_4.mark_matrix = Eigen::Matrix2i{{1, 0}, {1, 0}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_4));
-  ainternal::CostMarkCovers invalid2x2_5;
-  invalid2x2_5.mark_matrix = Eigen::Matrix2i{{1, 0}, {0, 0}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_5));
-  ainternal::CostMarkCovers invalid2x2_6;
-  invalid2x2_6.mark_matrix = Eigen::Matrix2i{{0, 1}, {0, 1}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_6));
-  ainternal::CostMarkCovers invalid2x2_7;
-  invalid2x2_7.mark_matrix = Eigen::Matrix2i{{0, 1}, {0, 0}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_7));
-  ainternal::CostMarkCovers invalid2x2_8;
-  invalid2x2_8.mark_matrix = Eigen::Matrix2i{{0, 0}, {0, 1}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_8));
-  ainternal::CostMarkCovers invalid2x2_9;
-  invalid2x2_9.mark_matrix = Eigen::Matrix2i{{0, 0}, {1, 1}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_9));
-  ainternal::CostMarkCovers invalid2x2_10;
-  invalid2x2_10.mark_matrix = Eigen::Matrix2i{{0, 0}, {1, 0}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_10));
-  ainternal::CostMarkCovers invalid2x2_11;
-  invalid2x2_11.mark_matrix = Eigen::Matrix2i{{0, 0}, {0, 0}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid2x2_11));
-  ainternal::CostMarkCovers invalid3x3;
-  invalid3x3.mark_matrix = Eigen::Matrix3i{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}};
-  EXPECT_FALSE(ainternal::HasUniqueAssignments(invalid3x3));
 }

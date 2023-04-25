@@ -9,7 +9,27 @@ namespace ateam_common::assignment
 {
 std::unordered_map<std::size_t, std::size_t> optimize_assignment(const Eigen::MatrixXd& cost_matrix)
 {
-  return {};
+  internal::CostMarkCovers cmc;
+  cmc.cost_matrix = internal::SquarizeMatrix(cost_matrix);
+
+  internal::ApplyStep1(cmc);
+  internal::ApplyStep2(cmc);
+  internal::ApplyStep3(cmc);
+
+  do {
+    internal::ApplyStep4(cmc);
+    internal::ApplyStep5(cmc);
+  } while (!internal::HasUniqueAssignments(cmc));
+
+  std::unordered_map<std::size_t, std::size_t> assignment;
+  for (int i = 0; i < cmc.mark_matrix.rows(); i++) {
+    for (int j = 0; j < cmc.mark_matrix.cols(); j++) {
+      if (cmc.mark_matrix(i, j) == internal::ZerosType::STARRED) {
+        assignment[i] = j;
+      }
+    }
+  }
+  return assignment;
 }
 
 namespace internal
@@ -30,28 +50,14 @@ Eigen::MatrixXd SquarizeMatrix(const Eigen::MatrixXd& matrix)
 
 bool HasUniqueAssignments(const CostMarkCovers & cmc)
 {
-  std::unordered_set<int> filled_rows(cmc.mark_matrix.rows());
-  std::unordered_set<int> filled_cols(cmc.mark_matrix.cols());
-  for (int i = 0; i < cmc.mark_matrix.cols(); i++) {
-    for (int j = 0; j < cmc.mark_matrix.rows(); j++) {
-      bool is_marked = cmc.mark_matrix(i, j) > 0;
-      if (is_marked) {
-
-        // If already marked in the row / col, we know isn't invalid
-        bool already_marked_row = filled_rows.count(i) > 0;
-        bool already_marked_col = filled_cols.count(j) > 0;
-        if (!already_marked_row && !already_marked_col) {
-          filled_rows.insert(i);
-          filled_cols.insert(j);
-        } else {
-          return false;
-        }
-      }
-    }
+  // The count of marked rows and columns should be the size of the matrix
+  int num_marked = 0;
+  for (int i = 0; i < cmc.cost_matrix.rows(); i++) {
+    num_marked += cmc.row_covers(i);
+    num_marked += cmc.col_covers(i);
   }
 
-  return static_cast<int>(filled_rows.size()) == cmc.mark_matrix.rows() && \
-    static_cast<int>(filled_cols.size()) == cmc.mark_matrix.cols();
+  return num_marked == cmc.cost_matrix.rows();
 }
 
 void ApplyStep1(CostMarkCovers & cmc)
