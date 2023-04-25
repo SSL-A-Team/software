@@ -1,3 +1,23 @@
+// Copyright 2021 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 #include "ateam_common/assignment.hpp"
 
 #include <unordered_set>
@@ -7,7 +27,8 @@
 
 namespace ateam_common::assignment
 {
-std::unordered_map<std::size_t, std::size_t> optimize_assignment(const Eigen::MatrixXd& cost_matrix)
+std::unordered_map<std::size_t, std::size_t> optimize_assignment(
+  const Eigen::MatrixXd & cost_matrix)
 {
   internal::CostMarkCovers cmc;
   cmc.cost_matrix = internal::SquarizeMatrix(cost_matrix);
@@ -34,14 +55,15 @@ std::unordered_map<std::size_t, std::size_t> optimize_assignment(const Eigen::Ma
 
 namespace internal
 {
-Eigen::MatrixXd SquarizeMatrix(const Eigen::MatrixXd& matrix)
+Eigen::MatrixXd SquarizeMatrix(const Eigen::MatrixXd & matrix)
 {
   if (matrix.rows() == matrix.cols()) {
     return matrix;
   }
 
   std::size_t new_row_col = std::max(matrix.rows(), matrix.cols());
-  Eigen::MatrixXd new_mat = Eigen::MatrixXd::Constant(new_row_col, new_row_col, UNFILLED_LARGE_VALUE);
+  Eigen::MatrixXd new_mat =
+    Eigen::MatrixXd::Constant(new_row_col, new_row_col, UNFILLED_LARGE_VALUE);
 
   new_mat.block(0, 0, matrix.rows(), matrix.cols()) = matrix;
 
@@ -82,7 +104,7 @@ void ApplyStep3(CostMarkCovers & cmc)
   cmc.col_covers = Eigen::VectorXi::Zero(cmc.cost_matrix.cols());
   cmc.mark_matrix = Eigen::MatrixXi::Zero(cmc.cost_matrix.rows(), cmc.cost_matrix.cols());
 
-  // Mark uncovered zeros one at a time, 
+  // Mark uncovered zeros one at a time
   for (int i = 0; i < cmc.cost_matrix.rows(); i++) {
     bool is_row_covered = cmc.row_covers(i) > 0;
     if (is_row_covered) {
@@ -193,7 +215,7 @@ void ApplyStep4(CostMarkCovers & cmc)
     // Else the non-covered zero has no assigned zero on its row.
     // We make a path starting from the zero by performing the following steps:
     std::vector<Eigen::Vector2i> path{uncovered_zero.value()};
-    while(true) {
+    while (true) {
       // Substep 1: Find a starred zero on the corresponding column.
       // If there is one, go to Substep 2, else, stop.
       auto starred_in_row = find_zero_type_in_col(cmc, path.back(), ZerosType::STARRED);
@@ -227,7 +249,7 @@ void ApplyStep4(CostMarkCovers & cmc)
     }
     cmc.row_covers = Eigen::VectorXi::Zero(cmc.cost_matrix.rows());
     cmc.col_covers = Eigen::VectorXi::Zero(cmc.cost_matrix.cols());
-    
+
     // Cover all columns containing a (starred) zero.
     star_zero_cols(cmc);
   }
@@ -260,5 +282,6 @@ void ApplyStep5(CostMarkCovers & cmc)
     }
   }
 }
-}
-}
+
+}  // namespace internal
+}  // namespace ateam_common::assignment

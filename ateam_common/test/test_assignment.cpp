@@ -46,7 +46,9 @@ MATCHER_P(HasOriginalData, original, "") {
   // The original data should stay the same
   *result_listener << "where the new data:\n\r" << arg << "\n\r";
   *result_listener << "is not the original data:\n\r" << original << "\n\r";
-  return (arg.block(0, 0, original.rows(), original.cols()).array() - original.array()).matrix().sum() < 1e-6;
+  return (arg.block(
+           0, 0, original.rows(),
+           original.cols()).array() - original.array()).matrix().sum() < 1e-6;
 }
 
 MATCHER_P(HasUnfilledData, original, "") {
@@ -59,7 +61,8 @@ MATCHER_P(HasUnfilledData, original, "") {
   // Average cell value in the non-original cells should be UNFILLED_LARGE_VALUE
   Eigen::MatrixXd temp = arg;
   std::size_t diff = arg.size() - original.size();
-  temp.block(0, 0, original.rows(), original.cols()) = Eigen::MatrixXd::Zero(original.rows(), original.cols());
+  temp.block(0, 0, original.rows(), original.cols()) = Eigen::MatrixXd::Zero(
+    original.rows(), original.cols());
   return temp.sum() / diff == ainternal::UNFILLED_LARGE_VALUE;
 }
 
@@ -137,7 +140,9 @@ TEST(Assignment, ApplyStep1)
   ainternal::CostMarkCovers cmc3x3;
   cmc3x3.cost_matrix = Eigen::Matrix3d{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
   ainternal::ApplyStep1(cmc3x3);
-  EXPECT_THAT(cmc3x3.cost_matrix, Has0ReferencedRows(Eigen::Matrix3d{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}));
+  EXPECT_THAT(
+    cmc3x3.cost_matrix,
+    Has0ReferencedRows(Eigen::Matrix3d{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}));
 }
 
 MATCHER_P(Has0ReferencedCols, original, "") {
@@ -173,7 +178,9 @@ TEST(Assignment, ApplyStep2)
   ainternal::CostMarkCovers cmc3x3;
   cmc3x3.cost_matrix = Eigen::Matrix3d{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
   ainternal::ApplyStep2(cmc3x3);
-  EXPECT_THAT(cmc3x3.cost_matrix, Has0ReferencedCols(Eigen::Matrix3d{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}));
+  EXPECT_THAT(
+    cmc3x3.cost_matrix,
+    Has0ReferencedCols(Eigen::Matrix3d{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}));
 }
 
 MATCHER_P(IsSame, original, "") {
@@ -232,8 +239,10 @@ TEST(Assignment, ApplyStep4)
   EXPECT_THAT(cmc1x1.col_covers, IsSame(Eigen::Vector<int, 1>{1}));
 
   ainternal::CostMarkCovers cmc4x4;
-  cmc4x4.cost_matrix = Eigen::Matrix<double, 4, 4>{{0, 12, 0, 14}, {21, 0, 23, 0}, {0, 32, 33, 34}, {0, 42, 43, 44}};
-  cmc4x4.mark_matrix = Eigen::Matrix<int, 4, 4>{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+  cmc4x4.cost_matrix =
+    Eigen::Matrix<double, 4, 4>{{0, 12, 0, 14}, {21, 0, 23, 0}, {0, 32, 33, 34}, {0, 42, 43, 44}};
+  cmc4x4.mark_matrix =
+    Eigen::Matrix<int, 4, 4>{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
   ainternal::ApplyStep4(cmc4x4);
   EXPECT_THAT(cmc4x4.row_covers, IsSame(Eigen::Vector<int, 4>{0, 1, 0, 0}));
   EXPECT_THAT(cmc4x4.col_covers, IsSame(Eigen::Vector<int, 4>{1, 0, 1, 0}));
@@ -250,10 +259,15 @@ TEST(Assignment, ApplyStep5)
   EXPECT_THAT(cmc1x1.cost_matrix, IsSame(Eigen::Matrix<double, 1, 1>{{0}}));
 
   ainternal::CostMarkCovers cmc4x4;
-  cmc4x4.cost_matrix = Eigen::Matrix<double, 4, 4>{{0, 12, 0, 14}, {21, 0, 23, 0}, {0, 32, 33, 34}, {0, 42, 43, 44}};
+  cmc4x4.cost_matrix =
+    Eigen::Matrix<double, 4, 4>{{0, 12, 0, 14}, {21, 0, 23, 0}, {0, 32, 33, 34}, {0, 42, 43, 44}};
   cmc4x4.mark_matrix = Eigen::Matrix<int, 4, 4>::Zero();
   cmc4x4.row_covers = Eigen::Vector<int, 4>{0, 1, 0, 0};
   cmc4x4.col_covers = Eigen::Vector<int, 4>{1, 0, 1, 0};
   ainternal::ApplyStep5(cmc4x4);
-  EXPECT_THAT(cmc4x4.cost_matrix, IsSame(Eigen::Matrix<double, 4, 4>{{0, 0, 0, 2}, {33, 0, 35, 0}, {0, 20, 33, 22}, {0, 30, 43, 32}}));
+  EXPECT_THAT(
+    cmc4x4.cost_matrix,
+    IsSame(
+      Eigen::Matrix<double, 4, 4>{{0, 0, 0, 2}, {33, 0, 35, 0}, {0, 20, 33, 22},
+        {0, 30, 43, 32}}));
 }
