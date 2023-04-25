@@ -53,6 +53,16 @@ namespace internal
     PRIMED = 2
   };
 
+  struct Covers {
+  };
+
+  struct CostMarkCovers {
+    Eigen::MatrixXi mark_matrix;
+    Eigen::MatrixXd cost_matrix;
+    Eigen::VectorXi row_covers;
+    Eigen::VectorXi col_covers;
+  };
+
   /**
    * Given a non-square matrix, make the matrix square by adding the least number of rows/cols needed.
    * All new cells will be filled with some "large" cost
@@ -62,17 +72,17 @@ namespace internal
   /**
    * Confirms that each row AND column have only 1 marked cell
   */
-  bool HasUniqueAssignments(const Eigen::MatrixXi & mark_matrix);
+  bool HasUniqueAssignments(const CostMarkCovers & cmc);
 
   /**
-   * For each row, the min element is subtracted from every element in that row
+   * For each row in the cost matrix, the min element is subtracted from every element in that row
   */
-  Eigen::MatrixXd ApplyStep1(const Eigen::MatrixXd & matrix);
+  void ApplyStep1(CostMarkCovers & cmc);
 
   /**
-   * For each col, the min element is subtracted from every element in that row
+   * For each col in the cost matrix, the min element is subtracted from every element in that row
   */
-  Eigen::MatrixXd ApplyStep2(const Eigen::MatrixXd & matrix);
+  void ApplyStep2(CostMarkCovers & cmc);
 
   /**
    * Returns the mark matrix, each mark will be unique for that col/row
@@ -80,25 +90,25 @@ namespace internal
    *  * From top left to bottom right, row-wise, each zero will be marked
    *  * Only 1 mark in each row and column is allowed
   */
-  Eigen::MatrixXi ApplyStep3(const Eigen::MatrixXd & matrix);
+  void ApplyStep3(CostMarkCovers & cmc);
 
   /**
    * Returns a mask vector corresponding to columns with a starred zero in the mark matrix
    */
-  Eigen::VectorXi star_zero_cols(const Eigen::MatrixXi & mark_matrix);
+  void star_zero_cols(CostMarkCovers & cmc);
 
   /**
    * Returns the matrix coordinates of the next uncovered zero
    * If none is found, return -1, -1
   */
-  std::optional<Eigen::Vector2i> next_uncovered_zero(const Eigen::MatrixXd & cost_matrix, const Eigen::VectorXi & row_covers, const Eigen::VectorXi & col_covers);
+  std::optional<Eigen::Vector2i> next_uncovered_zero(const CostMarkCovers & cmc);
 
   /**
    * Returns the matrix coordinates of the zero type requested in the same row as the start location
    * If none is found, return -1, -1
   */
   std::optional<Eigen::Vector2i> find_zero_type_in_row(
-    const Eigen::MatrixXi & mark_matrix,
+    const CostMarkCovers & cmc,
     const Eigen::Vector2i & start,
     const ZerosType & target_type);
 
@@ -107,28 +117,23 @@ namespace internal
    * If none is found, return -1, -1
   */
   std::optional<Eigen::Vector2i> find_zero_type_in_col(
-    const Eigen::MatrixXi & mark_matrix,
+    const CostMarkCovers & cmc,
     const Eigen::Vector2i & start,
     const ZerosType & target_type);
-
-  struct Covers {
-    Eigen::VectorXi row_covers;
-    Eigen::VectorXi col_covers;
-  };
 
   /**
    * Using the mark matrix, optimize line coverage to as few lines as possible
    *
    * Returns covers
   */
-  Covers ApplyStep4(Eigen::MatrixXi mark_matrix, const Eigen::MatrixXd & cost_matrix);
+  void ApplyStep4(CostMarkCovers & cmc);
 
   /**
    * Find the lowest uncovered value. Subtract this from every unmarked element and add it to every element covered by two lines.
    *
    * Return the new cost matrix
   */
-  Eigen::MatrixXd ApplyStep5(Eigen::MatrixXd cost_matrix, const Covers & covers);
+  void ApplyStep5(CostMarkCovers & cmc);
 }  // namespace internal
 }  // namespace assignment
 }  // namespace ateam_common
