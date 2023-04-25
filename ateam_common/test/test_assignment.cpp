@@ -29,11 +29,44 @@ namespace ainternal = ateam_common::assignment::internal;
 TEST(Assignment, optimize_assignment) {
   Eigen::Matrix<double, 3, 3> cost3x3{{8, 4, 7}, {5, 2, 3}, {9, 4, 8}};
   auto out3x3 = assignment::optimize_assignment(cost3x3);
-
   EXPECT_EQ(out3x3.size(), 3);
   EXPECT_EQ(out3x3.at(0), 0);
   EXPECT_EQ(out3x3.at(1), 2);
   EXPECT_EQ(out3x3.at(2), 1);
+
+  Eigen::Matrix<double, 5, 5> cost5x5{
+    {10, 5, 13, 15, 16},
+    {3, 9, 18, 13, 6},
+    {10, 7, 2, 2, 2},
+    {7, 11, 9, 7, 12},
+    {7, 9, 10, 4, 12}
+  };
+  auto out5x5 = assignment::optimize_assignment(cost5x5);
+  EXPECT_EQ(out5x5.size(), 5);
+  EXPECT_EQ(out5x5.at(0), 1);
+  EXPECT_EQ(out5x5.at(1), 0);
+  EXPECT_EQ(out5x5.at(2), 4);
+  EXPECT_EQ(out5x5.at(3), 2);
+  EXPECT_EQ(out5x5.at(4), 3);
+
+  Eigen::Matrix<double, 3, 2> cost3x2{
+    {1, 10},
+    {10, 1},
+    {5, 5}
+  };
+  auto out3x2 = assignment::optimize_assignment(cost3x2);
+  EXPECT_EQ(out3x2.size(), 2);
+  EXPECT_EQ(out3x2.at(0), 0);
+  EXPECT_EQ(out3x2.at(1), 1);
+
+  Eigen::Matrix<double, 2, 3> cost2x3{
+    {1, 10, 5},
+    {10, 1, 5},
+  };
+  auto out2x3 = assignment::optimize_assignment(cost2x3);
+  EXPECT_EQ(out2x3.size(), 2);
+  EXPECT_EQ(out2x3.at(0), 0);
+  EXPECT_EQ(out2x3.at(1), 1);
 }
 
 MATCHER_P(IsSameSize, m, "") {

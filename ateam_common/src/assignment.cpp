@@ -45,7 +45,8 @@ std::unordered_map<std::size_t, std::size_t> optimize_assignment(
   std::unordered_map<std::size_t, std::size_t> assignment;
   for (int i = 0; i < cmc.mark_matrix.rows(); i++) {
     for (int j = 0; j < cmc.mark_matrix.cols(); j++) {
-      if (cmc.mark_matrix(i, j) == internal::ZerosType::STARRED) {
+      bool is_inbounds = i < cost_matrix.rows() && j < cost_matrix.cols();
+      if (is_inbounds && cmc.mark_matrix(i, j) == internal::ZerosType::STARRED) {
         assignment[i] = j;
       }
     }
