@@ -31,16 +31,16 @@ std::unordered_map<std::size_t, std::size_t> optimize_assignment(
   const Eigen::MatrixXd & cost_matrix)
 {
   internal::CostMarkCovers cmc;
-  cmc.cost_matrix = internal::SquarizeMatrix(cost_matrix);
+  cmc.cost_matrix = internal::squarize_matrix(cost_matrix);
 
-  internal::ApplyStep1(cmc);
-  internal::ApplyStep2(cmc);
-  internal::ApplyStep3(cmc);
+  internal::apply_step_1(cmc);
+  internal::apply_step_2(cmc);
+  internal::apply_step_3(cmc);
 
   do {
-    internal::ApplyStep4(cmc);
-    internal::ApplyStep5(cmc);
-  } while (!internal::HasUniqueAssignments(cmc));
+    internal::apply_step_4(cmc);
+    internal::apply_step_5(cmc);
+  } while (!internal::has_unique_assignments(cmc));
 
   std::unordered_map<std::size_t, std::size_t> assignment;
   for (int i = 0; i < cmc.mark_matrix.rows(); i++) {
@@ -55,7 +55,7 @@ std::unordered_map<std::size_t, std::size_t> optimize_assignment(
 
 namespace internal
 {
-Eigen::MatrixXd SquarizeMatrix(const Eigen::MatrixXd & matrix)
+Eigen::MatrixXd squarize_matrix(const Eigen::MatrixXd & matrix)
 {
   if (matrix.rows() == matrix.cols()) {
     return matrix;
@@ -70,7 +70,7 @@ Eigen::MatrixXd SquarizeMatrix(const Eigen::MatrixXd & matrix)
   return new_mat;
 }
 
-bool HasUniqueAssignments(const CostMarkCovers & cmc)
+bool has_unique_assignments(const CostMarkCovers & cmc)
 {
   // The count of marked rows and columns should be the size of the matrix
   int num_marked = 0;
@@ -82,7 +82,7 @@ bool HasUniqueAssignments(const CostMarkCovers & cmc)
   return num_marked == cmc.cost_matrix.rows();
 }
 
-void ApplyStep1(CostMarkCovers & cmc)
+void apply_step_1(CostMarkCovers & cmc)
 {
   Eigen::VectorXd min_coeff = cmc.cost_matrix.rowwise().minCoeff();
   for (int i = 0; i < cmc.cost_matrix.rows(); i++) {
@@ -90,7 +90,7 @@ void ApplyStep1(CostMarkCovers & cmc)
   }
 }
 
-void ApplyStep2(CostMarkCovers & cmc)
+void apply_step_2(CostMarkCovers & cmc)
 {
   Eigen::VectorXd min_coeff = cmc.cost_matrix.colwise().minCoeff();
   for (int i = 0; i < cmc.cost_matrix.cols(); i++) {
@@ -98,7 +98,7 @@ void ApplyStep2(CostMarkCovers & cmc)
   }
 }
 
-void ApplyStep3(CostMarkCovers & cmc)
+void apply_step_3(CostMarkCovers & cmc)
 {
   cmc.row_covers = Eigen::VectorXi::Zero(cmc.cost_matrix.rows());
   cmc.col_covers = Eigen::VectorXi::Zero(cmc.cost_matrix.cols());
@@ -182,7 +182,7 @@ std::optional<Eigen::Vector2i> find_zero_type_in_col(
   return std::nullopt;
 }
 
-void ApplyStep4(CostMarkCovers & cmc)
+void apply_step_4(CostMarkCovers & cmc)
 {
   // Cover all columns containing a (starred) zero.
   cmc.row_covers = Eigen::VectorXi::Zero(cmc.cost_matrix.rows());
@@ -255,7 +255,7 @@ void ApplyStep4(CostMarkCovers & cmc)
   }
 }
 
-void ApplyStep5(CostMarkCovers & cmc)
+void apply_step_5(CostMarkCovers & cmc)
 {
   // Find the lowest uncovered value
   double min_value = UNFILLED_LARGE_VALUE;

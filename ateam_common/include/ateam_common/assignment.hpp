@@ -68,22 +68,22 @@ struct CostMarkCovers
  * Given a non-square matrix, make the matrix square by adding the least number of rows/cols needed.
  * All new cells will be filled with some "large" cost
 */
-Eigen::MatrixXd SquarizeMatrix(const Eigen::MatrixXd & matrix);
+Eigen::MatrixXd squarize_matrix(const Eigen::MatrixXd & matrix);
 
 /**
  * @return True if there is an unique and optimial assignment
 */
-bool HasUniqueAssignments(const CostMarkCovers & cmc);
+bool has_unique_assignments(const CostMarkCovers & cmc);
 
 /**
  * For each row in the cost matrix, the min element is subtracted from every element in that row
 */
-void ApplyStep1(CostMarkCovers & cmc);
+void apply_step_1(CostMarkCovers & cmc);
 
 /**
  * For each col in the cost matrix, the min element is subtracted from every element in that row
 */
-void ApplyStep2(CostMarkCovers & cmc);
+void apply_step_2(CostMarkCovers & cmc);
 
 /**
  * Creates the mark matrix, each mark will be unique for that col/row
@@ -91,7 +91,7 @@ void ApplyStep2(CostMarkCovers & cmc);
  *  * From top left to bottom right, row-wise, each zero will be marked
  *  * Only 1 mark in each row and column is allowed
 */
-void ApplyStep3(CostMarkCovers & cmc);
+void apply_step_3(CostMarkCovers & cmc);
 
 /**
  * Create the col covers for all starred zeros in the mark matrix
@@ -126,12 +126,12 @@ std::optional<Eigen::Vector2i> find_zero_type_in_col(
  * Using the mark matrix, optimize line coverage to as few lines as possible.
  * Lines refer to the col/row covers
 */
-void ApplyStep4(CostMarkCovers & cmc);
+void apply_step_4(CostMarkCovers & cmc);
 
 /**
  * Find the lowest uncovered value. Subtract this from every unmarked element and add it to every element covered by two lines.
 */
-void ApplyStep5(CostMarkCovers & cmc);
+void apply_step_5(CostMarkCovers & cmc);
 }  // namespace internal
 }  // namespace assignment
 }  // namespace ateam_common
