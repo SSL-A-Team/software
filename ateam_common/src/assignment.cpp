@@ -145,11 +145,18 @@ std::optional<Eigen::Vector2i> next_uncovered_zero(
   const CostMarkCovers & cmc)
 {
   for (int i = 0; i < cmc.cost_matrix.rows(); i++) {
+    bool is_covered_row = cmc.row_covers(i) == 1;
+    if (is_covered_row) {
+      continue;
+    }
     for (int j = 0; j < cmc.cost_matrix.cols(); j++) {
       bool is_covered_col = cmc.col_covers(j) == 1;
-      bool is_covered_row = cmc.row_covers(i) == 1;
+      if (is_covered_col) {
+        continue;
+      }
+
       bool is_zero = cmc.cost_matrix(i, j) == 0;
-      if (!is_covered_col && !is_covered_row && is_zero) {
+      if (is_zero) {
         return Eigen::Vector2i{i, j};
       }
     }
