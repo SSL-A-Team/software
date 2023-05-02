@@ -78,8 +78,6 @@ private:
   Callback callback_;
   rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
 
-  GameStage ConvertNewGameState(const int state);
-
   void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
 };
 
