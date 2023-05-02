@@ -93,41 +93,4 @@ void GameStateListener::RefereeMessageCallback(
   }
 }
 
-GameStage GameStateListener::ConvertNewGameState(const int state)
-{
-  // Convert the int for the game stage to the game stage type
-  switch (state){
-    case 0:
-      return GameStage::PreFirstHalf;
-    case 1:
-      return GameStage::FirstHalf;
-    case 2:
-      return GameStage::Halftime;
-    case 3:
-      return GameStage::PreSecondHalf;
-    case 4:
-      return GameStage::SecondHalf;
-    case 5:
-      return GameStage::ExtraTimeBreak;
-    case 6:
-      return GameStage::ExtraTimePreFirstHalf;
-    case 7:
-      return GameStage::ExtraTimeFirstHalf;
-    case 8:
-      return GameStage::ExtraTimeHalftime;
-    case 9:
-      return GameStage::ExtraTimePreSecondHalf;
-    case 10:
-      return GameStage::ExtraTimeSecondHalf;
-    case 11:
-      return GameStage::PenaltyBreak;
-    case 12:
-      return GameStage::Penalty;
-    case 13:
-      return GameStage::PostGame;
-    default:
-      return GameStage::Unknown;
-  }
-}
-
 }  // namespace ateam_common
