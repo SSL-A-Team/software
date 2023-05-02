@@ -52,7 +52,7 @@ class GameStateListener
 {
 public:
 
-  using Callback = std::function<void (GameCommand)>;
+  using Callback = std::function<void (GameStage, GameCommand)>;
 
   /**
    * @brief Construct a new Game State Listener object
@@ -73,7 +73,6 @@ public:
   }
 
 private:
-  int prev_stage_msg_ = 18;
   GameStage game_stage_{GameStage::Unknown};
   GameCommand game_command_{GameCommand::Halt};
   Callback callback_;
@@ -88,21 +87,21 @@ private:
 
 enum class GameStage
   {
-    PreFirstHalf,
-    FirstHalf,
-    Halftime,
-    PreSecondHalf,
-    SecondHalf,
-    ExtraTimeBreak,
-    ExtraTimePreFirstHalf,
-    ExtraTimeFirstHalf,
-    ExtraTimeHalftime,
-    ExtraTimePreSecondHalf,
-    ExtraTimeSecondHalf,
-    PenaltyBreak,
-    Penalty,
-    PostGame,
-    Unknown
+    PreFirstHalf = 0,
+    FirstHalf = 1,
+    Halftime = 2,
+    PreSecondHalf = 3,
+    SecondHalf = 4,
+    ExtraTimeBreak = 5,
+    ExtraTimePreFirstHalf = 6,
+    ExtraTimeFirstHalf = 7,
+    ExtraTimeHalftime = 8,
+    ExtraTimePreSecondHalf = 9,
+    ExtraTimeSecondHalf = 10,
+    PenaltyBreak = 11,
+    Penalty = 12,
+    PostGame = 13,
+    Unknown = 14
   };
 
 enum class GameCommand
