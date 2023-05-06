@@ -32,6 +32,7 @@
 #include <ateam_common/parameters.hpp>
 #include <ateam_common/overlay.hpp>
 #include <ateam_common/topic_names.hpp>
+#include <ateam_common/team_color_listener.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
@@ -57,7 +58,8 @@ class ATeamAINode : public rclcpp::Node
 {
 public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ateam_ai_node", options), evaluator_(realization_), executor_(realization_)
+  : rclcpp::Node("ateam_ai_node", options), color_listener_(*this), \
+    evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
     ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
@@ -66,22 +68,28 @@ public:
     world_.balls.emplace_back(Ball{});
 
     for (std::size_t id = 0; id < blue_robots_subscriptions_.size(); id++) {
-      auto our_robot_callback =
+      auto blue_robot_callback =
         [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          robot_state_callback(world_.our_robots, id, robot_state_msg);
+          const auto are_we_blue = color_listener_.GetTeamColor() == \
+            ateam_common::TeamColorListener::TeamColor::Blue;
+          auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
+          robot_state_callback(robot_state_array, id, robot_state_msg);
         };
-      auto their_robot_callback =
+      auto yellow_robot_callback =
         [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          robot_state_callback(world_.their_robots, id, robot_state_msg);
+          const auto are_we_yellow = color_listener_.GetTeamColor() == \
+            ateam_common::TeamColorListener::TeamColor::Yellow;
+          auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
+          robot_state_callback(robot_state_array, id, robot_state_msg);
         };
       blue_robots_subscriptions_.at(id) = create_subscription<ateam_msgs::msg::RobotState>(
         std::string(Topics::kBlueTeamRobotPrefix) + std::to_string(id),
         10,
-        our_robot_callback);
+        blue_robot_callback);
       yellow_robots_subscriptions_.at(id) = create_subscription<ateam_msgs::msg::RobotState>(
         std::string(Topics::kYellowTeamRobotPrefix) + std::to_string(id),
         10,
-        their_robot_callback);
+        yellow_robot_callback);
     }
 
     for (std::size_t id = 0; id < robot_commands_publishers_.size(); id++) {
@@ -133,6 +141,8 @@ private:
   rclcpp::Publisher<ateam_msgs::msg::Overlay>::SharedPtr overlay_publisher_;
 
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
+
+  ateam_common::TeamColorListener color_listener_;
 
   BehaviorRealization realization_;
   BehaviorEvaluator evaluator_;
