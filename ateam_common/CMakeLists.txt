@@ -17,8 +17,9 @@ find_package(angles REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
-  src/multicast_receiver.cpp
+  src/assignment.cpp
   src/bi_directional_udp.cpp
+  src/multicast_receiver.cpp
   src/parameters.cpp
   src/team_color_listener.cpp
 )
