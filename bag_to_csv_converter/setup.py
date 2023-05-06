@@ -11,7 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools', 'flatdict'],
+    install_requires=['setuptools'],
     zip_safe=True,
     maintainer='Collin Avidano',
     maintainer_email='collin.avidano@gmail.com',
@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'bag_to_csv_converter = bag_to_csv_converter.bag_to_csv_converter:main'
+            'bag_to_csv_converter = bag_to_csv_converter.bag_to_csv_converter:main',
+            'test = bag_to_csv_converter.test:main'
         ],
     },
 )

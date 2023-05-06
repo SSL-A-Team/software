@@ -15,7 +15,7 @@ import flatdict
 
 import rosbag2_py
 
-I 
+
 # TODO add a catch statement on the get param to tell the user (and remind me) how to give a param override because they are annoying in ros2
 # ros2 run bag_to_csv_converter bag_to_csv_converter --ros-args -p bag_path:="..."
 class BagToCSVConverter(Node):
@@ -58,6 +58,7 @@ class BagToCSVConverter(Node):
             # Unlikely as its in the meta data table but something I saw when I was looking at this stuff because apparently this can happen if a bag is filtered
             # Also we use the first message for metadata
             i = 0
+
             if self.reader.has_next():
                 with open(output_csv_path, 'w') as output_csv:
                     # Use the first messages ordered dict then flattened to write out the header for this topics csv 
@@ -65,7 +66,7 @@ class BagToCSVConverter(Node):
 
                     msg = deserialize_message(s_msg, msg_type)
                     flat_fields = flatdict.FlatDict(message_to_ordereddict(msg), delimiter='.').keys()
-                    header = ','.join(list(flat_fields))
+                    header = ','.join(["timestamp"] + list(flat_fields))
                     output_csv.write(header + "\n")
 
                     msg_csv = message_to_csv(msg)
@@ -77,7 +78,7 @@ class BagToCSVConverter(Node):
                         msg_topic, s_msg, timestamp = self.reader.read_next()
                         msg = deserialize_message(s_msg, msg_type)
                         msg_csv = message_to_csv(msg)
-                        output_csv.write(msg_csv + "\n")
+                        output_csv.write(f'{str(timestamp)},{msg_csv}\n')
                         i += 1
 
             print(f"number of messages for topic {topic_name}: {i}")
