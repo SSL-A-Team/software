@@ -50,9 +50,7 @@ MulticastReceiver::MulticastReceiver(
 
   io_service_thread_ = std::thread(
     [this]() {
-      std::cout << "Multicast io_service START" << std::endl;
       io_service_.run();
-      std::cout << "Multicast io_service STOP" << std::endl;
     });
 }
 
