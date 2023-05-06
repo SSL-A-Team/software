@@ -31,24 +31,32 @@ namespace ateam_common
 class BiDirectionalUDP
 {
 public:
-  using ReceiveCallback = std::function<void (const char * const data, const size_t length)>;
+  using ReceiveCallback = std::function<void (const uint8_t * const data, const size_t length)>;
 
   BiDirectionalUDP(
     const std::string & udp_ip_address,
     const int16_t udp_port,
     ReceiveCallback receive_callback);
 
-  void send(const char * const data, const size_t length);
+  void send(const uint8_t * const data, const size_t length);
 
   ~BiDirectionalUDP();
+
+  uint16_t GetLocalPort() const;
+
+  std::string GetLocalIPAddress() const;
+
+  uint16_t GetRemotePort() const;
+
+  std::string GetRemoteIPAddress() const;
 
 private:
   ReceiveCallback receive_callback_;
   boost::asio::io_service io_service_;
   boost::asio::ip::udp::socket udp_socket_;
   boost::asio::ip::udp::endpoint endpoint_;
-  std::array<char, 1024> send_buffer_;
-  std::array<char, 1024> receive_buffer_;
+  std::array<uint8_t, 1024> send_buffer_;
+  std::array<uint8_t, 1024> receive_buffer_;
   std::thread io_service_thread_;
 
   void HandleUDPSendTo(const boost::system::error_code & error, std::size_t bytes_transferred);
