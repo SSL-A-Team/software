@@ -73,7 +73,7 @@ public:
     std::vector<uint8_t> buffer;
     buffer.resize(robots_control.ByteSizeLong());
     if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
-      udp_.send(static_cast<uint8_t*>(buffer.data()), buffer.size());
+      udp_.send(static_cast<uint8_t *>(buffer.data()), buffer.size());
     }
   }
 

@@ -42,7 +42,8 @@ BiDirectionalUDP::BiDirectionalUDP(
   udp_socket_.open(endpoint_.protocol());
 
   // Binding to port 0 assigns an arbitrary available port number
-  // Doing this now allows the local port info to be queried before any data is sent (needed for radio bridge)
+  // Doing this now allows the local port info to be queried before any data is sent
+  // (needed for radio bridge)
   udp_socket_.bind(boost::asio::ip::udp::endpoint(endpoint_.protocol(), 0));
 
   udp_socket_.async_receive_from(
