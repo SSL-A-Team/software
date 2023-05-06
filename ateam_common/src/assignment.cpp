@@ -44,9 +44,19 @@ std::unordered_map<std::size_t, std::size_t> optimize_assignment(
 
   std::unordered_map<std::size_t, std::size_t> assignment;
   for (int i = 0; i < cmc.mark_matrix.rows(); i++) {
+    bool is_row_inbounds = i < cost_matrix.rows();
+    if (!is_row_inbounds) {
+      continue;
+    }
+
     for (int j = 0; j < cmc.mark_matrix.cols(); j++) {
-      bool is_inbounds = i < cost_matrix.rows() && j < cost_matrix.cols();
-      if (is_inbounds && cmc.mark_matrix(i, j) == internal::ZerosType::STARRED) {
+      bool is_col_inbounds = j < cost_matrix.cols();
+      if (!is_col_inbounds) {
+        continue;
+      }
+
+      bool is_starred = cmc.mark_matrix(i, j) == internal::ZerosType::STARRED;
+      if (is_starred) {
         assignment[i] = j;
       }
     }
