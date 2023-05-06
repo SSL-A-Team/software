@@ -39,6 +39,8 @@
 #include <memory>
 #include <vector>
 
+#include <ateam_msgs/msg/vision_imm_state.hpp>
+
 #include "filters/kalman_filter.hpp"
 #include "types/models.hpp"
 #include "generators/model_input_generator.hpp"
@@ -92,6 +94,11 @@ public:
    * @return Score of how far off a potential measurement error is
    */
   double get_potential_measurement_error(const Eigen::VectorXd & measurement);
+
+  /**
+   * @return ROS2 msg containing the current internal state
+   */
+  ateam_msgs::msg::VisionIMMState get_vision_imm_state() const;
 
 private:
   void update_mu(const Eigen::VectorXd & zt);
