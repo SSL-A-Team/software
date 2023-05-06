@@ -20,6 +20,7 @@
 
 #include "ateam_common/multicast_receiver.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 
@@ -30,7 +31,7 @@ namespace ateam_common
 
 MulticastReceiver::MulticastReceiver(
   std::string multicast_address_string,
-  int16_t multicast_port,
+  uint16_t multicast_port,
   ReceiveCallback receive_callback)
 : receive_callback_(receive_callback),
   multicast_socket_(io_service_)
@@ -61,6 +62,31 @@ MulticastReceiver::~MulticastReceiver()
   }
 }
 
+void MulticastReceiver::SendTo(
+  const std::string & address, const uint16_t port,
+  const char * const data, const size_t length)
+{
+  if (length >= send_buffer_.size()) {
+    std::cout << "WARNING: UDP send data length is larger than buffer" << std::endl;
+
+    return;
+  }
+
+  // Copy to buffer
+  // Better to send an invalid packet than to overrun the buffer
+  // With the if statement above, this should never happen
+  memcpy(send_buffer_.data(), data, std::min(send_buffer_.size(), length));
+
+  boost::asio::ip::udp::endpoint endpoint(boost::asio::ip::address::from_string(address), port);
+
+  multicast_socket_.async_send_to(
+    boost::asio::buffer(send_buffer_, length),
+    endpoint,
+    boost::bind(
+      &MulticastReceiver::HandleUDPSendTo, this,
+      boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+}
+
 void MulticastReceiver::HandleMulticastReceiveFrom(
   const boost::system::error_code & error,
   size_t bytes_received)
@@ -70,13 +96,23 @@ void MulticastReceiver::HandleMulticastReceiveFrom(
     return;
   }
 
-  receive_callback_(buffer_.data(), bytes_received);
+  receive_callback_(
+    sender_endpoint_.address().to_string(), sender_endpoint_.port(),
+    buffer_.data(), bytes_received);
 
   multicast_socket_.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,
     boost::bind(
       &MulticastReceiver::HandleMulticastReceiveFrom, this,
       boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+}
+
+
+void MulticastReceiver::HandleUDPSendTo(const boost::system::error_code & error, size_t)
+{
+  if (error) {
+    std::cerr << "Error sending UDP data: " << error.message() << std::endl;
+  }
 }
 
 }  // namespace ateam_common

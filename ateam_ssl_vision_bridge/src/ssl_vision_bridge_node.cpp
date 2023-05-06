@@ -42,7 +42,7 @@ public:
   : rclcpp::Node("ssl_vision_bridge", options),
     multicast_receiver_("224.5.23.2",
       (declare_parameter("ssl_vision_port", 10020), get_parameter("ssl_vision_port").as_int()),
-      [this](auto * buffer, size_t bytes_received) {
+      [this](const std::string &, const uint16_t, auto * buffer, size_t bytes_received) {
         SSL_WrapperPacket vision_proto;
 
         // Note: "- 1" is needed due to some weird bug where if the entire buffer
