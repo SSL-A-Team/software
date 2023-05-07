@@ -194,23 +194,38 @@ private:
     auto check_field_line_name = [](ssl_league_msgs::msg::VisionFieldLineSegment line_msg, std::string target_name) -> bool {
         return line_msg.name == target_name; 
     };
-    std::array<std::string, 4> field_bound_names = {"TopTouchLine", "BottomTouchLine", "LeftGoalLine", "RightGoalLine"};
-    for (size_t i = 0; i < field_bound_names.size(); i++) {
-        auto& name = field_bound_names.at(i);
-        auto itr = std::find_if(begin(field_msg->field_lines), end(field_msg->field_lines), std::bind(check_field_line_name, std::placeholders::_1, name));
-        if (itr != end(field_msg->field_lines)) {
-            field.field_corners.at(i).x() = itr->p1.x;
-            field.field_corners.at(i).y() = itr->p1.y;
-        }
-    }
 
+    auto lines_to_points = [&](auto name_array, auto& target_array) {
+      for (size_t i = 0; i < name_array.size(); i++) {
+          auto& name = name_array.at(i);
+          auto itr = std::find_if(begin(field_msg->field_lines), end(field_msg->field_lines), std::bind(check_field_line_name, std::placeholders::_1, name));
+          if (itr != end(field_msg->field_lines)) {
+              target_array.at(i).x() = itr->p1.x;
+              target_array.at(i).y() = itr->p1.y;
+              target_array.at(2*i+1).x() = itr->p2.x;
+              target_array.at(2*i+1).y() = itr->p2.y;
+          }
+      }
+    };
+    std::array<std::string, 4> field_bound_names = {"TopTouchLine", "BottomTouchLine"};
+    lines_to_points(field_bound_names, field.field_corners);
+    
+    
     FieldSidedInfo left_side_info {};
-    Eigen::Vector2d(-field.field_length/2.0, field.goal_width/2.0);
-    Eigen::Vector2d(-field.field_length/2.0, -field.goal_width/2.0);
+    left_side_info.goal_posts.at(0) = Eigen::Vector2d(-field.field_length/2.0, field.goal_width/2.0);
+    left_side_info.goal_posts.at(1) = Eigen::Vector2d(-field.field_length/2.0, -field.goal_width/2.0);
+
+    std::array<std::string, 2> left_penalty_names = {"LeftFieldLeftPenaltyStretch", "LeftFieldRightPenaltyStretch"};
+    lines_to_points(left_penalty_names, left_side_info.goalie_corners);
+
 
     FieldSidedInfo right_side_info {};
-    Eigen::Vector2d(field.field_length/2.0, field.goal_width/2.0);
-    Eigen::Vector2d(field.field_length/2.0, -field.goal_width/2.0);
+    right_side_info.goal_posts.at(0) = Eigen::Vector2d(field.field_length/2.0, field.goal_width/2.0);
+    right_side_info.goal_posts.at(1) = Eigen::Vector2d(field.field_length/2.0, -field.goal_width/2.0);
+
+    std::array<std::string, 2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
+    lines_to_points(right_penalty_names, right_side_info.goalie_corners);
+
 
     //TODO assign based off known team info
     field.ours = left_side_info;

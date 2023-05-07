@@ -36,6 +36,7 @@ public:
       std::bind(&FieldGeometryRepublisherNode::message_callback, this, std::placeholders::_1));
   }
 
+  // Wrapper comes with both robot state and field dimensions this node just splits out the field dims so the vision filter doesnt need to and other nodes have a common subscription for the field
   void message_callback(
     const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
   {
