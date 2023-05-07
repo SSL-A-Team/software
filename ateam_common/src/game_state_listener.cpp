@@ -38,52 +38,8 @@ GameStateListener::GameStateListener(rclcpp::Node & node)
 void GameStateListener::RefereeMessageCallback(
   const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
 {
-  const auto prev_command = game_command_;
-  const auto prev_stage_msg = game_stage_;
-
-  switch (msg->command) {
-    case 0:
-      game_command_ = GameCommand::Halt;
-    case 1:
-      game_command_ = GameCommand::Stop;
-    case 2:
-      game_command_ = GameCommand::NormalStart;
-    case 3:
-      game_command_ = GameCommand::ForceStart;
-    case 4:
-      game_command_ = GameCommand::PrepareKickoffYellow;
-    case 5:
-      game_command_ = GameCommand::PrepareKickoffBlue;
-    case 6:
-      game_command_ = GameCommand::PreparePenaltyYellow;
-    case 7:
-      game_command_ = GameCommand::PreparePenaltyBlue;
-    case 8:
-      game_command_ = GameCommand::DirectFreeYellow;
-    case 9:
-      game_command_ = GameCommand::DirectFreeBlue;
-    case 10:
-      game_command_ = GameCommand::IndirectFreeYellow;
-    case 11:
-      game_command_ = GameCommand::IndirectFreeBlue;
-    // Simplify to one timeout?
-    case 12:
-      game_command_ = GameCommand::TimeoutYellow;
-    case 13:
-      game_command_ = GameCommand::TimeoutBlue;
-    case 16:
-      game_command_ = GameCommand::BallPlacementYellow;
-    case 17:
-      game_command_ = GameCommand::BallPlacementBlue;
-    // Default to Halt command
-    default:
-      game_command_ = GameCommand::Halt;
-  }
-
-  // Only check the game stage if it has changed
-  if (static_cast<GameStage>(msg->stage) != game_stage_) {
-    game_stage_ = static_cast<GameStage>(msg->stage);
-  }
+  game_command_ = static_cast<GameCommand>(msg->command);
+  game_stage_ = static_cast<GameStage>(msg->stage);
 }
 
 }  // namespace ateam_common

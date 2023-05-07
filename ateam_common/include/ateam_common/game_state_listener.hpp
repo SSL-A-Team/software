@@ -63,22 +63,24 @@ enum class GameStage
 
 enum class GameCommand
 {
-  Halt,
-  Stop,
-  NormalStart,
-  ForceStart,
-  PrepareKickoffYellow,
-  PrepareKickoffBlue,
-  PreparePenaltyYellow,
-  PreparePenaltyBlue,
-  DirectFreeYellow,
-  DirectFreeBlue,
-  IndirectFreeYellow,
-  IndirectFreeBlue,
-  TimeoutYellow,
-  TimeoutBlue,
-  BallPlacementYellow,
-  BallPlacementBlue
+  Halt = 0,
+  Stop = 1,
+  NormalStart = 2,
+  ForceStart = 3,
+  PrepareKickoffYellow = 4,
+  PrepareKickoffBlue = 5,
+  PreparePenaltyYellow = 6,
+  PreparePenaltyBlue = 7,
+  DirectFreeYellow = 8,
+  DirectFreeBlue = 9,
+  IndirectFreeYellow = 10,
+  IndirectFreeBlue = 11,
+  TimeoutYellow = 12,
+  TimeoutBlue = 13,
+  GoalYellow = 14,
+  GoalBlue = 15,
+  BallPlacementYellow = 16,
+  BallPlacementBlue = 17
 };
 
 class GameStateListener

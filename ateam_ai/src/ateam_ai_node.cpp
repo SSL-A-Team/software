@@ -197,9 +197,7 @@ private:
     }
 
     // Get current game state for world
-    // 1. Get command
     world_.referee_info.running_command = game_state_listener_.GetGameCommand();
-    // 2. Get the game stage
     world_.referee_info.current_game_stage = game_state_listener_.GetGameStage();
     // Save off the world to the rosbag
     world_publisher_->publish(ateam_ai::message_conversions::toMsg(world_));
