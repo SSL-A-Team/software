@@ -18,14 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_common/game_state_listener.hpp"
 #include <string>
+
+#include "ateam_common/game_state_listener.hpp"
 
 namespace ateam_common
 {
 
-GameStateListener::GameStateListener(rclcpp::Node & node, Callback callback)
-: callback_(callback)
+GameStateListener::GameStateListener(rclcpp::Node & node)
 {
   rclcpp::QoS qos(1);
   qos.reliable();
@@ -41,7 +41,7 @@ void GameStateListener::RefereeMessageCallback(
   const auto prev_command = game_command_;
   const auto prev_stage_msg = game_stage_;
 
-  switch (msg->command){
+  switch (msg->command) {
     case 0:
       game_command_ = GameCommand::Halt;
     case 1:
@@ -81,15 +81,8 @@ void GameStateListener::RefereeMessageCallback(
   }
 
   // Only check the game stage if it has changed
-  // Use callback for this instead?
-  if (static_cast<GameStage>(msg->stage) != game_stage_){
-    game_stage_ = static_cast<GameStage>(msg -> stage);
-  }
-
-  // If the stage or command has changed, run the callback
-  // if it exists
-  if ((game_command_ != prev_command || game_stage_ != prev_stage_msg)&& callback_) {
-    callback_();
+  if (static_cast<GameStage>(msg->stage) != game_stage_) {
+    game_stage_ = static_cast<GameStage>(msg->stage);
   }
 }
 

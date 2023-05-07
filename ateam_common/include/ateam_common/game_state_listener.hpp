@@ -33,74 +33,64 @@ namespace ateam_common
  * @brief Utility for subscribing to referee messages and extracting the current game stage, command, and stage time remaining
  *
  * The SSL game controller (GC) is the authoritative source for information about the current game state.
- * This utility provides a simple interface for any node to query the current game stage, the time remaining in that stage,
- * and the current command (play type) that is running. This class subscribes to and parses the referee messages from the GC 
- * to check these items.
+ * This utility provides a simple interface for any node to query the current game stage and the current command (play type)
+ * that is running. This class subscribes to and parses the referee messages from the GC to check these items.
  *
- * Users can query the current team color using TeamColorListener::GetTeamColor() or provide a callback to be called
- * when the team color changes.
- *
- * This class adds two parameters to the node:
- *
- * - gc_team_name  (string)
- *   The name of our team as it appears in the GC.
- *
- * - default_team_color  (string)
- *   The team color assumed before the first referee message is received. Can be set to 'yellow', 'blue', or 'unknown'
+ * Users can query the current game stage using GameStateListener::GetGameStage() and the current running
+ * command using GameStateListener::GetGameCommand(). This class does not currently provide a callback to be run
+ * on change of either of these items, but could easily be added in the future.
  */
 
+
 enum class GameStage
-  {
-    PreFirstHalf = 0,
-    FirstHalf = 1,
-    Halftime = 2,
-    PreSecondHalf = 3,
-    SecondHalf = 4,
-    ExtraTimeBreak = 5,
-    ExtraTimePreFirstHalf = 6,
-    ExtraTimeFirstHalf = 7,
-    ExtraTimeHalftime = 8,
-    ExtraTimePreSecondHalf = 9,
-    ExtraTimeSecondHalf = 10,
-    PenaltyBreak = 11,
-    Penalty = 12,
-    PostGame = 13,
-    Unknown = 14
-  };
+{
+  PreFirstHalf = 0,
+  FirstHalf = 1,
+  Halftime = 2,
+  PreSecondHalf = 3,
+  SecondHalf = 4,
+  ExtraTimeBreak = 5,
+  ExtraTimePreFirstHalf = 6,
+  ExtraTimeFirstHalf = 7,
+  ExtraTimeHalftime = 8,
+  ExtraTimePreSecondHalf = 9,
+  ExtraTimeSecondHalf = 10,
+  PenaltyBreak = 11,
+  Penalty = 12,
+  PostGame = 13,
+  Unknown = 14
+};
 
 enum class GameCommand
-  {
-    Halt,
-    Stop,
-    NormalStart,
-    ForceStart,
-    PrepareKickoffYellow,
-    PrepareKickoffBlue,
-    PreparePenaltyYellow,
-    PreparePenaltyBlue,
-    DirectFreeYellow,
-    DirectFreeBlue,
-    IndirectFreeYellow,
-    IndirectFreeBlue,
-    TimeoutYellow,
-    TimeoutBlue,
-    BallPlacementYellow,
-    BallPlacementBlue
-  };
+{
+  Halt,
+  Stop,
+  NormalStart,
+  ForceStart,
+  PrepareKickoffYellow,
+  PrepareKickoffBlue,
+  PreparePenaltyYellow,
+  PreparePenaltyBlue,
+  DirectFreeYellow,
+  DirectFreeBlue,
+  IndirectFreeYellow,
+  IndirectFreeBlue,
+  TimeoutYellow,
+  TimeoutBlue,
+  BallPlacementYellow,
+  BallPlacementBlue
+};
 
 class GameStateListener
 {
 public:
-
-  using Callback = std::function<void ()>;
-
   /**
    * @brief Construct a new Game State Listener object
    *
    * @param node ROS node
    * @param callback Optional callback called on changed game state - currently takes no arguments
    */
-  explicit GameStateListener(rclcpp::Node & node, Callback callback = {});
+  explicit GameStateListener(rclcpp::Node & node);
 
   const GameStage & GetGameStage() const
   {
@@ -115,14 +105,11 @@ public:
 private:
   GameStage game_stage_{GameStage::Unknown};
   GameCommand game_command_{GameCommand::Halt};
-  Callback callback_;
   rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
 
   void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
 };
 
-}  
-
-// namespace ateam_common
+}  // namespace ateam_common
 
 #endif  // ATEAM_COMMON__GAME_STATE_LISTENER_HPP_
