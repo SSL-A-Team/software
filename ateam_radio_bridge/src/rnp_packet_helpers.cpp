@@ -88,8 +88,6 @@ RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std
     return {};
   }
 
-  std::copy_n(data+kPacketHeaderSize, packet_size - kPacketHeaderSize, reinterpret_cast<uint8_t*>(&packet.data));
-
   if (packet.major_version != kProtocolVersionMajor ||
     packet.minor_version != kProtocolVersionMinor)
   {
@@ -97,6 +95,8 @@ RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std
     error = "Protocol versions do not match.";
     return {};
   }
+  
+  std::copy_n(data+kPacketHeaderSize, packet_size - kPacketHeaderSize, reinterpret_cast<uint8_t*>(&packet.data));
 
   // TODO(barulicm) Firmware doesn't implement CRCs yet
   // if(!HasCorrectCRC(packet)) {
