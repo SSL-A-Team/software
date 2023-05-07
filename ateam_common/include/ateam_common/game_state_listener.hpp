@@ -48,40 +48,6 @@ namespace ateam_common
  * - default_team_color  (string)
  *   The team color assumed before the first referee message is received. Can be set to 'yellow', 'blue', or 'unknown'
  */
-class GameStateListener
-{
-public:
-
-  using Callback = std::function<void (GameStage, GameCommand)>;
-
-  /**
-   * @brief Construct a new Game State Listener object
-   *
-   * @param node ROS node
-   * @param callback Optional callback called on changed game state
-   */
-  explicit GameStateListener(rclcpp::Node & node, Callback callback = {});
-
-  const GameStage & GetGameStage() const
-  {
-    return game_stage_;
-  }
-
-  const GameCommand & GetGameCommand() const
-  {
-    return game_command_;
-  }
-
-private:
-  GameStage game_stage_{GameStage::Unknown};
-  GameCommand game_command_{GameCommand::Halt};
-  Callback callback_;
-  rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
-
-  void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
-};
-
-}  
 
 enum class GameStage
   {
@@ -121,6 +87,41 @@ enum class GameCommand
     BallPlacementYellow,
     BallPlacementBlue
   };
+
+class GameStateListener
+{
+public:
+
+  using Callback = std::function<void ()>;
+
+  /**
+   * @brief Construct a new Game State Listener object
+   *
+   * @param node ROS node
+   * @param callback Optional callback called on changed game state - currently takes no arguments
+   */
+  explicit GameStateListener(rclcpp::Node & node, Callback callback = {});
+
+  const GameStage & GetGameStage() const
+  {
+    return game_stage_;
+  }
+
+  const GameCommand & GetGameCommand() const
+  {
+    return game_command_;
+  }
+
+private:
+  GameStage game_stage_{GameStage::Unknown};
+  GameCommand game_command_{GameCommand::Halt};
+  Callback callback_;
+  rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
+
+  void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
+};
+
+}  
 
 // namespace ateam_common
 

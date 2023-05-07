@@ -89,7 +89,7 @@ void GameStateListener::RefereeMessageCallback(
   // If the stage or command has changed, run the callback
   // if it exists
   if ((game_command_ != prev_command || game_stage_ != prev_stage_msg)&& callback_) {
-    callback_(game_stage_, game_command_);
+    callback_();
   }
 }
 

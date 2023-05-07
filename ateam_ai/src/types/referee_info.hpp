@@ -28,8 +28,8 @@ struct RefereeInfo
 {
   int our_goalie_id;
   int their_goalie_id;
-  GameStage current_game_stage;
-  GameCommand running_command;
+  ateam_common::GameStage current_game_stage;
+  ateam_common::GameCommand running_command;
 };
 
 #endif  // TYPES__REFEREE_INFO_HPP_
