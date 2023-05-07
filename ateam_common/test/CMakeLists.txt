@@ -17,3 +17,6 @@ target_link_libraries(test_parameters ${PROJECT_NAME})
 
 ament_add_gtest(test_geometry test_angle.cpp)
 target_link_libraries(test_geometry ${PROJECT_NAME})
+
+ament_add_gmock(test_assignment test_assignment.cpp)
+target_link_libraries(test_assignment ${PROJECT_NAME})

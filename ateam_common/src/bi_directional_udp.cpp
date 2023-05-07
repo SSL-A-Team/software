@@ -41,6 +41,11 @@ BiDirectionalUDP::BiDirectionalUDP(
 {
   udp_socket_.open(endpoint_.protocol());
 
+  // Binding to port 0 assigns an arbitrary available port number
+  // Doing this now allows the local port info to be queried before any data is sent
+  // (needed for radio bridge)
+  udp_socket_.bind(boost::asio::ip::udp::endpoint(endpoint_.protocol(), 0));
+
   udp_socket_.async_receive_from(
     boost::asio::buffer(receive_buffer_, receive_buffer_.size()),
     endpoint_,
@@ -63,7 +68,7 @@ BiDirectionalUDP::~BiDirectionalUDP()
   }
 }
 
-void BiDirectionalUDP::send(const char * const data, const size_t length)
+void BiDirectionalUDP::send(const uint8_t * const data, const size_t length)
 {
   if (length >= send_buffer_.size()) {
     // RCLCPP_ERROR(get_logger(), "UDP send data length is larger than buffer");
@@ -85,9 +90,30 @@ void BiDirectionalUDP::send(const char * const data, const size_t length)
       boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
+
+uint16_t BiDirectionalUDP::GetLocalPort() const
+{
+  return udp_socket_.local_endpoint().port();
+}
+
+std::string BiDirectionalUDP::GetLocalIPAddress() const
+{
+  return udp_socket_.local_endpoint().address().to_string();
+}
+
+uint16_t BiDirectionalUDP::GetRemotePort() const
+{
+  return endpoint_.port();
+}
+
+std::string BiDirectionalUDP::GetRemoteIPAddress() const
+{
+  return endpoint_.address().to_string();
+}
+
 void BiDirectionalUDP::HandleUDPSendTo(
   const boost::system::error_code & error,
-  std::size_t /** bytes_transferred **/)
+  std::size_t bytes_transferred)
 {
   if (error) {
     // RCLCPP_ERROR(get_logger(), "Error during udp send");
