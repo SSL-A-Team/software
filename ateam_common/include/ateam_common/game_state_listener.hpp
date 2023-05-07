@@ -90,7 +90,6 @@ public:
    * @brief Construct a new Game State Listener object
    *
    * @param node ROS node
-   * @param callback Optional callback called on changed game state - currently takes no arguments
    */
   explicit GameStateListener(rclcpp::Node & node);
 
