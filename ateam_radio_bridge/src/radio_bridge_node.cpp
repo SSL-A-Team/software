@@ -46,12 +46,14 @@ public:
 
     connection_check_timer_ =
       create_wall_timer(
-        std::chrono::duration<double>(1.0/declare_parameter<double>("connection_check_frequency", 10.0)),
+      std::chrono::duration<double>(
+        1.0 /
+        declare_parameter<double>("connection_check_frequency", 10.0)),
       std::bind(&RadioBridgeNode::ConnectionCheckCallback, this));
 
     command_send_timer_ =
       create_wall_timer(
-        std::chrono::duration<double>(1.0/declare_parameter<double>("command_frequency", 60.0)),
+      std::chrono::duration<double>(1.0 / declare_parameter<double>("command_frequency", 60.0)),
       std::bind(&RadioBridgeNode::SendCommandsCallback, this));
 
     RCLCPP_INFO(get_logger(), "Radio bridge node ready.");

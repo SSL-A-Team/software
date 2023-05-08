@@ -10,8 +10,7 @@ namespace ateam_radio_bridge
 std::size_t GetPacketSize(const CommandCode & command_code)
 {
   // For now, packet size only depends on command code
-  switch(command_code)
-  {
+  switch (command_code) {
     case CC_ACK:
       return kPacketHeaderSize;
       break;
@@ -46,7 +45,9 @@ void SetCRC(RadioPacket & packet)
   const auto crc_size = sizeof(packet.crc32);
   const auto packet_size = GetPacketSize(packet.command_code);
   boost::crc_32_type crc;
-  crc.process_bytes(reinterpret_cast<void*>(reinterpret_cast<uint8_t*>(&packet)+crc_size), packet_size-crc_size);
+  crc.process_bytes(
+    reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(&packet) + crc_size),
+    packet_size - crc_size);
   packet.crc32 = crc.checksum();
 }
 
@@ -55,7 +56,9 @@ bool HasCorrectCRC(const RadioPacket & packet)
   const auto crc_size = sizeof(packet.crc32);
   const auto packet_size = GetPacketSize(packet.command_code);
   boost::crc_32_type crc;
-  crc.process_bytes(reinterpret_cast<const void*>(reinterpret_cast<const uint8_t*>(&packet)+crc_size), packet_size-crc_size);
+  crc.process_bytes(
+    reinterpret_cast<const void *>(reinterpret_cast<const uint8_t *>(&packet) +
+    crc_size), packet_size - crc_size);
   return packet.crc32 == crc.checksum();
 }
 
@@ -83,8 +86,9 @@ RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std
 
   const auto packet_size = GetPacketSize(packet.command_code);
 
-  if(data_length != packet_size) {
-    error = "Wrong number of bytes. Expected " + std::to_string(packet_size) + " but got " + std::to_string(data_length) + ".";
+  if (data_length != packet_size) {
+    error = "Wrong number of bytes. Expected " + std::to_string(packet_size) + " but got " +
+      std::to_string(data_length) + ".";
     return {};
   }
 
@@ -95,8 +99,10 @@ RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std
     error = "Protocol versions do not match.";
     return {};
   }
-  
-  std::copy_n(data+kPacketHeaderSize, packet_size - kPacketHeaderSize, reinterpret_cast<uint8_t*>(&packet.data));
+
+  std::copy_n(
+    data + kPacketHeaderSize, packet_size - kPacketHeaderSize,
+    reinterpret_cast<uint8_t *>(&packet.data));
 
   // TODO(barulicm) Firmware doesn't implement CRCs yet
   // if(!HasCorrectCRC(packet)) {
@@ -139,9 +145,9 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
         var = packet.data.control;
         break;
       }
-      default:
-        // No data payload associated with given command code
-        break;
+    default:
+      // No data payload associated with given command code
+      break;
   }
 
   return var;

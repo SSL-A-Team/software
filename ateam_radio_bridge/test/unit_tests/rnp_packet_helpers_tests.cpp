@@ -30,7 +30,7 @@ TEST(HasCorrectCRC, BasicTest)
   };
   EXPECT_TRUE(ateam_radio_bridge::HasCorrectCRC(packet));
 
-  
+
   packet.crc32 = 12; // arbitrary bad CRC value
   EXPECT_FALSE(ateam_radio_bridge::HasCorrectCRC(packet));
 }
@@ -112,10 +112,11 @@ TEST(ExtractData, HelloRequest)
     0,
     CC_HELLO_REQ,
     2,
-    HelloRequest{4,TC_BLUE}
+    HelloRequest{4, TC_BLUE}
   };
   std::string error_msg;
-  ateam_radio_bridge::PacketDataVariant data_var = ateam_radio_bridge::ExtractData(packet, error_msg);
+  ateam_radio_bridge::PacketDataVariant data_var =
+    ateam_radio_bridge::ExtractData(packet, error_msg);
   EXPECT_TRUE(error_msg.empty()) << "Unexpected error message: " << error_msg;
   ASSERT_TRUE(std::holds_alternative<HelloRequest>(data_var));
   HelloRequest data = std::get<HelloRequest>(data_var);

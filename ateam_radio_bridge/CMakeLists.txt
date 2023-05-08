@@ -35,15 +35,9 @@ rclcpp_components_register_node(
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
 if(BUILD_TESTING)
-  # list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_cpplint)
-  # find_package(ament_lint_auto REQUIRED)
-  # Disable auto finding of cpplint so we can customize its arguments
-  # set(ament_cmake_cpplint_FOUND TRUE)
-  # ament_lint_auto_find_test_dependencies()
-
-  # set(ament_cmake_cpplint_FOUND FALSE)
-  # find_package(ament_cmake_cpplint)
-  # ament_cpplint(EXCLUDE software-communication)
+  # TODO(barulicm) Linters are omitted from this package because the software-communication repo
+  # doesn't respect our style rules and setting exclusion rules for ament linters doesn't seem
+  # to actually work in Humble
 
   add_subdirectory(test)
 endif()
