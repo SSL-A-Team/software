@@ -69,7 +69,7 @@ vm.state.overlays = [];
 
 // Configure ROS
 var ros = new window.ROSLIB.Ros({
-    url : 'ws://localhost:9090'
+    url : 'ws://' + location.hostname + ':9090'
 });
 
 ros.on('connection', function() {
