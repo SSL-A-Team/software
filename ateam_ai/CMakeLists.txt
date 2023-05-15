@@ -22,6 +22,10 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior_executor.cpp
   src/behavior/behavior_follower.cpp
   src/behavior/behavior_realization.cpp
+  src/dag_generation/defend.cpp
+  src/dag_generation/halt.cpp
+  src/dag_generation/kickoff.cpp
+  src/dag_generation/shoot.cpp
   src/trajectory_generation/trajectory_editor.cpp
   src/trajectory_generation/trajectory_generation.cpp
   src/trajectory_generation/trapezoidal_motion_profile.cpp

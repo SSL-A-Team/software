@@ -18,24 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "dag_generation/halt.hpp"
-#include "types/world.hpp"
+#include "util/directed_graph.hpp"
 #include "types/behavior_goal.hpp"
-
-#include <Eigen/Dense>
-
-DirectedGraph<BehaviorGoal> generate_halt(const World & world) {
-    DirectedGraph<BehaviorGoal> halt_graph;
-    for (std::size_t id = 0; id < world.our_robots.size(); id++) {
-        // Get the current position of each robot
-        const robot_position_ = robot_states.at(id).value().pos;
-        // Tell it to go to that position
-        BehaviorGoal halt {
-            BehaviorGoal::Type::MoveToPoint,
-            BehaviorGoal::Priority::Required,
-            MoveParam(Eigen::Vector2d{robot_position_.x, robot_position_.y})
-        };
-        halt_graph.add_node(halt);
-    }
-    return halt_graph;
-}
+#include "types/world.hpp"
