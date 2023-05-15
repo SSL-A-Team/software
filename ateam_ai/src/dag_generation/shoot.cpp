@@ -21,3 +21,9 @@
 #include "util/directed_graph.hpp"
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
+
+DirectedGraph<BehaviorGoal> generate_basic_shoot(const World & world){
+    DirectedGraph<BehaviorGoal> basic_shoot;
+
+    return basic_shoot;
+};

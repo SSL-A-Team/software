@@ -26,6 +26,8 @@
 #include "types/world.hpp"
 
 DirectedGraph<BehaviorGoal> generate_our_kickoff(const World & world);
-DirectedGraph<BehaviorGoal> generate_their_kickoff(const World & world);
+
+// For now, we simply call the defense play in the below case
+// DirectedGraph<BehaviorGoal> generate_their_kickoff(const World & world);
 
 #endif  // DAG_GENERATION__KICKOFF_HPP_

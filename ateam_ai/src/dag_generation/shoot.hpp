@@ -25,4 +25,6 @@
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
 
+DirectedGraph<BehaviorGoal> generate_basic_shoot(const World & world);
+
 #endif  // DAG_GENERATION__SHOOT_HPP_
