@@ -25,6 +25,7 @@
 #include <cmath>
 
 #include <ateam_common/parameters.hpp>
+#include <ateam_common/game_state_listener.hpp>
 
 CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
 
@@ -33,65 +34,37 @@ BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
 
 DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & world)
 {
-  //
-  // Do preprocessing on world state to get important metrics like possession
-  //
+  // Create a DirectedGraph of BehaviorPlans we are going to return
+  DirectedGraph<BehaviorGoal> best_behaviors;
+  // Get team color from world
+  current_color_ = world.referee_info.our_team_color;
+  // Get current command from world
+  current_command_ = world.referee_info.running_command;
 
-  //
-  // Setup different behavior options
-  //
+  // Check if we need to halt
+  /*if (
+      current_command_ == ateam_common::GameCommand::Halt) {
+  }*/
 
-  // DirectedGraph<Behavior> three_one_touch_shot;
-  // Behavior initial_pass_start{
-  //   Behavior::Type::MovingKick,
-  //   Behavior::Priority::Required,
-  //   KickParam({0, 0})};
-  // Behavior first_receiver{
-  //   Behavior::Type::OneTouchReceiveKick,
-  //   Behavior::Priority::Required,
-  //   ReceiveParam({0, 0}, {10, 10})};
-  // Behavior second_receiver{
-  //   Behavior::Type::OneTouchReceiveKick,
-  //   Behavior::Priority::Required,
-  //   ReceiveParam({10, 10}, {-10, -10})};
-  // Behavior final_receiver_shot{
-  //   Behavior::Type::OneTouchShot,
-  //   Behavior::Priority::Required,
-  //   ReceiveShotParam({-10, -10})};
+  // Note: make sure we wait for a "start" before executing any of the plays
+  // Have a setup function for whatever play is called to account for "stop" time
+  // Check for special states
 
-  // std::size_t parent = three_one_touch_shot.add_node(initial_pass_start);
-  // parent = three_one_touch_shot.add_node(first_receiver, parent);
-  // parent = three_one_touch_shot.add_node(second_receiver, parent);
-  // parent = three_one_touch_shot.add_node(final_receiver_shot, parent);
+  // Check for kickoff
+  // If our kickoff, basic kickoff play
+  // If their kickoff, basic defensive play
 
+  // Check for free kick
+  // If their free kick, basic free kick defense
+  // If our free kick, basic shoot
 
-  // DirectedGraph<BehaviorGoal> direct_shot;
-  // BehaviorGoal shot{
-  //   Behavior::Type::Shot,
-  //   Behavior::Priority::Required,
-  //   ShotParam()};
+  // Check if there if we are in a penalty
 
-  // direct_shot.add_node(shot);
+  // Check if the ball is out of bounds
 
-  // Generate 16 move behaviors towards the ball, we'll figure out which
-  // ones we can fill later
-  // DirectedGraph<BehaviorGoal> simple_move;
-  // static double j = 0;
-  // j += kRotationSpeed;
-  // for (int i = 0; i < 16; i++) {
-  //   double theta = i / 11.0 * 3.14 * 2 + j;
-  //   BehaviorGoal move{
-  //     BehaviorGoal::Type::MoveToPoint,
-  //     BehaviorGoal::Priority::Required,
-  //     MoveParam(
-  //       (sin(3 * theta) + 1.5) * Eigen::Vector2d{cos(theta), sin(
-  //           theta)} - Eigen::Vector2d{2, 0})};
-  // }
+  // Else, implement either simple offense or simple defense
 
-  //
-  // Qual Video Behaviors
-  //
-  DirectedGraph<BehaviorGoal> qual_goalie_and_shot;
+  /*DirectedGraph<BehaviorGoal> qual_goalie_and_shot;   
   double ball_y = 0;
   if (world.get_unique_ball().has_value()) {
     ball_y = world.get_unique_ball().value().pos.y();
@@ -114,7 +87,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
       BehaviorGoal::Priority::Required,
       MoveParam(Eigen::Vector2d{i / -2.0, 4})};
     qual_goalie_and_shot.add_node(move);
-  }
+  }*/
 
   //
   // Add background behaviors
@@ -161,7 +134,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   // choose direct shot because score chance is better or
   // maybe the total behavior completetion time is short
   // or maybe the other one can't be completed due to number of robots
-  DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
+  //DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
 
   return behavior_out;
 }

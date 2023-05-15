@@ -40,6 +40,7 @@ public:
 
 private:
   BehaviorRealization & behavior_realization;
+
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_EVALUATOR_HPP_

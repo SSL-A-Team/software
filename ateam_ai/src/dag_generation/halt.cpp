@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,21 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include "dag_generation/halt.hpp"
+#include "types/world.hpp"
+#include "types/behavior_goal.hpp"
 
-#ifndef TYPES__REFEREE_INFO_HPP_
-#define TYPES__REFEREE_INFO_HPP_
 
-#include <ateam_common/game_state_listener.hpp>
-#include <ateam_common/team_color_listener.hpp>
-
-struct RefereeInfo
-{
-  int our_goalie_id;
-  int their_goalie_id;
-  ateam_common::GameStage current_game_stage;
-  ateam_common::GameCommand running_command;
-  ateam_common::TeamColorListener::TeamColor our_team_color;
-  ateam_common::TeamColorListener::TeamColor their_team_color;
-};
-
-#endif  // TYPES__REFEREE_INFO_HPP_
+DirectedGraph<BehaviorGoal> generate_halt(const World & world) {
+    DirectedGraph<BehaviorGoal> halt_graph;
+    for (std::size_t id = 0; id < world.our_robots.size(); id++) {
+        // Get the current position of each robot
+        const robot_position_ = robot_states.at(id).value().pos;
+        // Tell it to go to that position
+        BehaviorGoal halt {
+            BehaviorGoal::Type::MoveToPoint,
+            BehaviorGoal::Priority::Required,
+            MoveParam(Eigen::Vector2d{robot_position_.x, robot_position_.y})
+        };
+        halt_graph.add_node(halt);
+    }
+    return halt_graph;
+}
