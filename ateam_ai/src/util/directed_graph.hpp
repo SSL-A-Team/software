@@ -24,6 +24,9 @@
 #include <unordered_map>
 #include <vector>
 
+template<typename Node>
+class DirectedGraph;
+
 /**
  * Directed graph of nodes. The graph must not be looping
  */
@@ -73,10 +76,33 @@ public:
     return parent_to_child_relationship.at(node_idx);
   }
 
+  // Self friend because template classes of different types are "difference classes"
+  // so we need to friend ourself so we can access the private members of all
+  // templated versions of the DirectedGraph<T> from DirectedGraph<Node>
+  template<typename T>
+  friend class DirectedGraph;
+
+  template<typename T>
+  DirectedGraph<T> copy_shape_with_new_type(std::map<std::size_t, T> new_nodes) const {
+    DirectedGraph<T> new_graph;
+    new_graph.root_nodes = root_nodes;
+    new_graph.parent_to_child_relationship = parent_to_child_relationship;
+    for (std::size_t i = 0; i < nodes.size(); i++) {
+      if (new_nodes.count(i) > 0) {
+        new_graph.nodes.push_back(new_nodes.at(i));
+      } else {
+        new_graph.nodes.push_back(T());
+      }
+    }
+
+    return new_graph;
+  }
+
 private:
   std::vector<Node> nodes;
   std::vector<std::size_t> root_nodes;
   std::unordered_map<std::size_t, std::vector<std::size_t>> parent_to_child_relationship;
 };
+
 
 #endif  // UTIL__DIRECTED_GRAPH_HPP_

@@ -42,9 +42,9 @@ public:
     const World & world);
 
 private:
-  std::map<std::size_t, BehaviorGoal> assign_to_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors, const World & world);
-  std::size_t next_avaliable_robot_id(const std::size_t last_assigned_id, const World & world);
+  using BehaviorGoalNodeIdx = std::size_t;
+  using RobotID = std::size_t;
+  using Priority = int;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_REALIZATION_HPP_
