@@ -40,14 +40,20 @@ def generate_launch_description():
         default_value='True'
     )
 
-    ateam_bringup_path = os.path.join(get_package_share_directory('ateam_bringup') , 'launch')
-    grsim_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource([ateam_bringup_path, '/ssl_grsim.launch.xml']), launch_arguments={'headless' : headless_value}.items())
-    game_controller_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource([ateam_bringup_path, '/ssl_game_controller.launch.xml']))
-    game_controller_bridge_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource([ateam_bringup_path, '/game_controller_nodes.launch.xml']))
-    autonomy_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource([ateam_bringup_path, '/autonomy.launch.xml']), launch_arguments={'ssl_vision_port' : ssl_vision_port_value}.items())  
+    ateam_bringup_path = os.path.join(
+        get_package_share_directory('ateam_bringup'), 'launch')
+    grsim_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource(
+        [ateam_bringup_path, '/ssl_grsim.launch.xml']), launch_arguments={'headless': headless_value}.items())
+    game_controller_launch = launch.actions.IncludeLaunchDescription(
+        FrontendLaunchDescriptionSource([ateam_bringup_path, '/ssl_game_controller.launch.xml']))
+    game_controller_bridge_launch = launch.actions.IncludeLaunchDescription(
+        FrontendLaunchDescriptionSource([ateam_bringup_path, '/game_controller_nodes.launch.xml']))
+    autonomy_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource(
+        [ateam_bringup_path, '/autonomy.launch.xml']), launch_arguments={'ssl_vision_port': ssl_vision_port_value}.items())
 
-    ui_path = os.path.join(get_package_share_directory('ateam_ui') , 'launch')
-    ui_launch = launch.actions.IncludeLaunchDescription(PythonLaunchDescriptionSource([ui_path, '/ateam_ui_launch.py']))
+    ui_path = os.path.join(get_package_share_directory('ateam_ui'), 'launch')
+    ui_launch = launch.actions.IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([ui_path, '/ateam_ui_launch.py']))
 
     return launch.LaunchDescription([
         ssl_vision_port_arg,
@@ -58,4 +64,3 @@ def generate_launch_description():
         autonomy_launch,
         ui_launch,
     ])
-
