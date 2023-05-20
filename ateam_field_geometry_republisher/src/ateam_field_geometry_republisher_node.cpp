@@ -23,7 +23,10 @@ public:
   explicit FieldGeometryRepublisherNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_field_geometry_republisher", options)
   {
-    timer_ = create_wall_timer(1000ms, std::bind(&FieldGeometryRepublisherNode::timer_callback, this));
+    timer_ = create_wall_timer(
+      1000ms, std::bind(
+        &FieldGeometryRepublisherNode::timer_callback,
+        this));
 
     field_publisher_ = create_publisher<ssl_league_msgs::msg::VisionGeometryFieldSize>(
       std::string(Topics::kField),
@@ -40,9 +43,10 @@ public:
   void message_callback(
     const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
   {
-    ssl_league_msgs::msg::VisionGeometryFieldSize& field_report = vision_wrapper_msg->geometry.field;
+    ssl_league_msgs::msg::VisionGeometryFieldSize & field_report =
+      vision_wrapper_msg->geometry.field;
     if (field_report.field_length < 1.0 || field_report.field_width < 1.0) {
-        return;
+      return;
     }
 
     const std::lock_guard<std::mutex> lock(field_mutex_);

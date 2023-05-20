@@ -24,20 +24,22 @@
 #include <array>
 #include <Eigen/Dense>
 
-struct FieldSidedInfo {
-    std::array<Eigen::Vector2d, 4> goalie_corners;
-    std::array<Eigen::Vector2d, 2> goal_posts;
+struct FieldSidedInfo
+{
+  std::array<Eigen::Vector2d, 4> goalie_corners;
+  std::array<Eigen::Vector2d, 2> goal_posts;
 };
-struct Field {
-    // we will definetly change the format of this at some point this is preliminary since we dont really have a geometry library yet
-    float field_length;
-    float field_width;
-    float goal_width;
-    float goal_depth;
-    float boundary_width;
-    std::array<Eigen::Vector2d, 4> field_corners;
-    FieldSidedInfo ours;
-    FieldSidedInfo theirs;
+struct Field
+{
+  // we will definetly change the format of this at some point this is preliminary since we dont really have a geometry library yet
+  float field_length;
+  float field_width;
+  float goal_width;
+  float goal_depth;
+  float boundary_width;
+  std::array<Eigen::Vector2d, 4> field_corners;
+  FieldSidedInfo ours;
+  FieldSidedInfo theirs;
 };
 
 
