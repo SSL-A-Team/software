@@ -22,6 +22,7 @@ add_library(${PROJECT_NAME} SHARED
   src/multicast_receiver.cpp
   src/parameters.cpp
   src/team_color_listener.cpp
+  src/game_state_listener.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 ament_target_dependencies(${PROJECT_NAME}
