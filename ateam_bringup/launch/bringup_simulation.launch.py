@@ -43,7 +43,8 @@ def generate_launch_description():
     ateam_bringup_path = os.path.join(
         get_package_share_directory('ateam_bringup'), 'launch')
     grsim_launch = launch.actions.IncludeLaunchDescription(FrontendLaunchDescriptionSource(
-        [ateam_bringup_path, '/ssl_grsim.launch.xml']), launch_arguments={'headless': headless_value}.items())
+        [ateam_bringup_path, '/ssl_grsim.launch.xml']),
+            launch_arguments={'headless': headless_value}.items())
     game_controller_launch = launch.actions.IncludeLaunchDescription(
         FrontendLaunchDescriptionSource([ateam_bringup_path, '/ssl_game_controller.launch.xml']))
     game_controller_bridge_launch = launch.actions.IncludeLaunchDescription(
