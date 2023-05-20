@@ -31,7 +31,7 @@ struct FieldSidedInfo
 };
 struct Field
 {
-  // we will definetly change the format of this at some point this is preliminary 
+  // we will definetly change the format of this at some point this is preliminary
   // since we dont really have a geometry library yet
   float field_length;
   float field_width;

@@ -136,7 +136,7 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
-  rclcpp::Subscription<ssl_league_msgs::msg::VisionGeometryFieldSize>::SharedPtr 
+  rclcpp::Subscription<ssl_league_msgs::msg::VisionGeometryFieldSize>::SharedPtr
     field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
