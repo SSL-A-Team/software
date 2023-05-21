@@ -38,6 +38,7 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_msgs/msg/world.hpp>
+#include <ssl_league_msgs/msg/vision_geometry_field_size.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "behavior/behavior_evaluator.hpp"
@@ -119,6 +120,11 @@ public:
       }
     );
 
+    field_subscription_ = create_subscription<ssl_league_msgs::msg::VisionGeometryFieldSize>(
+      std::string(Topics::kField),
+      10,
+      std::bind(&ATeamAINode::field_callback, this, std::placeholders::_1));
+
     timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
   }
 
@@ -130,6 +136,8 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
+  rclcpp::Subscription<ssl_league_msgs::msg::VisionGeometryFieldSize>::SharedPtr
+    field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
   rclcpp::Publisher<ateam_msgs::msg::Overlay>::SharedPtr overlay_publisher_;
@@ -173,6 +181,74 @@ private:
     ball_state.pos.y() = ball_state_msg->pose.position.y;
     ball_state.vel.x() = ball_state_msg->twist.linear.x;
     ball_state.vel.y() = ball_state_msg->twist.linear.y;
+  }
+
+  void field_callback(const ssl_league_msgs::msg::VisionGeometryFieldSize::SharedPtr field_msg)
+  {
+    Field field {
+      .field_length = field_msg->field_length,
+      .field_width = field_msg->field_width,
+      .goal_width = field_msg->goal_width,
+      .goal_depth = field_msg->goal_depth,
+      .boundary_width = field_msg->boundary_width
+    };
+
+    auto check_field_line_name =
+      [](ssl_league_msgs::msg::VisionFieldLineSegment line_msg, std::string target_name) -> bool {
+        return line_msg.name == target_name;
+      };
+
+    auto lines_to_points = [&](auto name_array, auto & target_array) {
+        for (size_t i = 0; i < name_array.size(); i++) {
+          auto & name = name_array.at(i);
+          auto itr = std::find_if(
+            begin(field_msg->field_lines), end(
+              field_msg->field_lines),
+            std::bind(check_field_line_name, std::placeholders::_1, name));
+          if (itr != end(field_msg->field_lines)) {
+            target_array.at(i).x() = itr->p1.x;
+            target_array.at(i).y() = itr->p1.y;
+            target_array.at(2 * i + 1).x() = itr->p2.x;
+            target_array.at(2 * i + 1).y() = itr->p2.y;
+          }
+        }
+      };
+    std::array<std::string, 4> field_bound_names = {"TopTouchLine", "BottomTouchLine"};
+    lines_to_points(field_bound_names, field.field_corners);
+
+
+    FieldSidedInfo left_side_info {};
+    left_side_info.goal_posts.at(0) = Eigen::Vector2d(
+      -field.field_length / 2.0,
+      field.goal_width / 2.0);
+    left_side_info.goal_posts.at(1) = Eigen::Vector2d(
+      -field.field_length / 2.0,
+      -field.goal_width / 2.0);
+
+    std::array<std::string,
+      2> left_penalty_names = {"LeftFieldLeftPenaltyStretch", "LeftFieldRightPenaltyStretch"};
+    lines_to_points(left_penalty_names, left_side_info.goalie_corners);
+
+
+    FieldSidedInfo right_side_info {};
+    right_side_info.goal_posts.at(0) = Eigen::Vector2d(
+      field.field_length / 2.0,
+      field.goal_width / 2.0);
+    right_side_info.goal_posts.at(1) = Eigen::Vector2d(
+      field.field_length / 2.0,
+      -field.goal_width / 2.0);
+
+    std::array<std::string,
+      2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
+    lines_to_points(right_penalty_names, right_side_info.goalie_corners);
+
+
+    // TODO(cavidano): assign based off known team info
+    field.ours = left_side_info;
+    field.theirs = right_side_info;
+
+    std::lock_guard<std::mutex> lock(world_mutex_);
+    world_.field = field;
   }
 
   void timer_callback()
