@@ -26,6 +26,6 @@
 #include "types/world.hpp"
 #include "types/field.hpp"
 
-DirectedGraph<BehaviorGoal> generate_basic_shoot(const World & world, const FieldSidedInfo & their_field_side);
+DirectedGraph<BehaviorGoal> generate_basic_shoot(const World & world, const Field & field);
 
 #endif  // DAG_GENERATION__SHOOT_HPP_
