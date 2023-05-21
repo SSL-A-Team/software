@@ -23,10 +23,22 @@
 #include "types/world.hpp"
 #include "dag_generation/kickoff.hpp"
 
-DirectedGraph<BehaviorGoal> generate_our_kickoff(const World & world) {
+DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world) {
     DirectedGraph<BehaviorGoal> our_kickoff;
+
+    // Have the kicker robot go to the edge of the center circle to prepare for kick
+    BehaviorGoal kicker_setup {
+        BehaviorGoal::Type::MoveToPoint,
+        BehaviorGoal::Priority::Required,
+        MoveParam(Eigen::Vector2d{robot_position_.x(), robot_position_.y()})
+    }
+
+    // Have the goalie defend the goal
+
+    // Generate optional defenders for the rest of the robots that might exist
+
 };
 
-DirectedGraph<BehaviorGoal> generate_their_kickoff(const World & world) {
+DirectedGraph<BehaviorGoal> setup_their_kickoff(const World & world) {
     DirectedGraph<BehaviorGoal> their_kickoff;
 };
