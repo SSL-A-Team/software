@@ -1,0 +1,9 @@
+bool valid;
+float field_length;
+float field_width;
+float goal_width;
+float goal_depth;
+float boundary_width;
+geometry_msgs/Point[] field_corners;
+FieldSidedInfo ours;
+FieldSidedInfo theirs;

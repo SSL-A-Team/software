@@ -29,6 +29,7 @@
 
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
+#include <ateam_common/team_color_listener.hpp>
 
 #include "world.hpp"
 #include "message_conversions.hpp"
@@ -69,6 +70,10 @@ public:
       std::string(Topics::kVisionState),
       rclcpp::SystemDefaultsQoS());
 
+    field_publisher_ = create_publisher<ateam_msgs::msg::FieldInfo>(
+      std::string(Topics::kField),
+      rclcpp::SystemDefaultsQoS());
+
     ssl_vision_subscription_ =
       create_subscription<ssl_league_msgs::msg::VisionWrapper>(
       std::string(Topics::kVisionMessages),
@@ -80,11 +85,22 @@ public:
     const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
   {
     int camera_id = vision_wrapper_msg->detection.camera_id;
-    CameraMeasurement camera_measurement = message_conversions::fromMsg(*vision_wrapper_msg);
+    CameraMeasurement camera_measurement = message_conversions::getCameraMeasurement(*vision_wrapper_msg);
+    ateam_msgs::msg::FieldInfo field_msg = message_conversions::getFieldGeometry(*vision_wrapper_msg);
 
-    const std::lock_guard<std::mutex> lock(world_mutex_);
-    world_.update_camera(camera_id, camera_measurement);
+    {
+        const std::lock_guard<std::mutex> lock(world_mutex_);
+        world_.update_camera(camera_id, camera_measurement);
+    }
+
+    // const std::lock_guard<std::mutex> lock(field_mutex_);
+    // field_msg_ = field_msg;
+    if (field_msg.valid) {
+        field_publisher_->publish(field_msg);
+    }
   }
+
+
 
   void timer_callback()
   {
@@ -122,10 +138,15 @@ private:
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::VisionWorldState>::SharedPtr vision_state_publisher_;
+  rclcpp::Publisher<ateam_msgs::msg::FieldInfo>::SharedPtr field_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
+  ateam_common::TeamColorListener color_listener_;
 
   std::mutex world_mutex_;
   World world_;
+
+//   std::mutex field_mutex_;
+//   ateam_msgs::msg::FieldInfo field_msg_;
 };
 }  // namespace ateam_vision_filter
 

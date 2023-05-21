@@ -57,9 +57,92 @@ ateam_msgs::msg::RobotState toMsg(const Robot & obj)
   return robot_state_msg;
 }
 
-CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionWrapper & ros_msg)
+CameraMeasurement getCameraMeasurement(const ssl_league_msgs::msg::VisionWrapper & ros_msg)
 {
   return fromMsg(ros_msg.detection);
+}
+
+ateam_msgs::msg::FieldInfo getFieldGeometry(const ssl_league_msgs::msg::VisionWrapper & ros_msg)
+{
+  return fromMsg(ros_msg.geometry);
+}
+
+    // note left and right can be different according to Joe
+ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryData & ros_msg)
+{
+    // calibration left out but should be included in field info message if needed
+    ssl_league_msgs::msg::VisionGeometryFieldSize & field_report =
+      vision_wrapper_msg->ros_msg.field;
+
+    ateam_msgs::msg::FieldInfo field_info {};
+    // check for if invalid since we cant see the original optional and this
+    // is a rough estimate of the smallest field
+    if (field_report.field_length < 1.0 || field_report.field_width < 1.0) {
+        field_info.valid = false;
+        return field_info;
+    }
+
+    field_info.field_length = ros_msg->field_length;
+    field_info.field_width = ros_msg->field_width;
+    field_info.goal_width = ros_msg->goal_width;
+    field_info.goal_depth = ros_msg->goal_depth;
+    field_info.boundary_width = ros_msg->boundary_width;
+
+    auto check_field_line_name =
+      [](ssl_league_msgs::msg::VisionFieldLineSegment line_msg, std::string target_name) -> bool {
+        return line_msg.name == target_name;
+      };
+
+    auto lines_to_points = [&](auto name_array, auto & target_array) {
+        for (size_t i = 0; i < name_array.size(); i++) {
+          auto & name = name_array.at(i);
+          auto itr = std::find_if(
+            begin(ros_msg->field_lines), end(
+              ros_msg->field_lines),
+            std::bind(check_field_line_name, std::placeholders::_1, name));
+          if (itr != end(ros_msg->field_lines)) {
+            target_array.at(i).x() = itr->p1.x;
+            target_array.at(i).y() = itr->p1.y;
+            target_array.at(2 * i + 1).x() = itr->p2.x;
+            target_array.at(2 * i + 1).y() = itr->p2.y;
+          }
+        }
+      };
+    std::array<std::string, 4> field_bound_names = {"TopTouchLine", "BottomTouchLine"};
+    lines_to_points(field_bound_names, field.field_corners);
+
+
+    ateam_msgs::msg::FieldSidedInfo left_side_info {};
+    left_side_info.goal_posts.at(0) = Eigen::Vector2d(
+      -field.field_length / 2.0,
+      field.goal_width / 2.0);
+    left_side_info.goal_posts.at(1) = Eigen::Vector2d(
+      -field.field_length / 2.0,
+      -field.goal_width / 2.0);
+
+    std::array<std::string,
+      2> left_penalty_names = {"LeftFieldLeftPenaltyStretch", "LeftFieldRightPenaltyStretch"};
+    lines_to_points(left_penalty_names, left_side_info.goalie_corners);
+
+
+    ateam_msgs::msg::FieldSidedInfo right_side_info {};
+    right_side_info.goal_posts.at(0) = Eigen::Vector2d(
+      field.field_length / 2.0,
+      field.goal_width / 2.0);
+    right_side_info.goal_posts.at(1) = Eigen::Vector2d(
+      field.field_length / 2.0,
+      -field.goal_width / 2.0);
+
+    std::array<std::string,
+      2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
+    lines_to_points(right_penalty_names, right_side_info.goalie_corners);
+
+    // TODO(cavidano): assign based off known team info
+    // note left and right can be different according to Joe
+    field.ours = left_side_info;
+    field.theirs = right_side_info;
+
+    //
 }
 
 CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg)
