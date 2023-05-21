@@ -24,7 +24,8 @@
 #include "util/directed_graph.hpp"
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
+#include "types/field.hpp"
 
-DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world);
+DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const FieldSidedInfo & our_side_info);
 
 #endif  // DAG_GENERATION__DEFEND_HPP_

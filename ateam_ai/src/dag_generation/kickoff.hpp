@@ -25,7 +25,7 @@
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
 
-DirectedGraph<BehaviorGoal> generate_our_kickoff(const World & world);
+DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSidedInfo & our_side_info);
 
 // For now, we simply call the defense play in the below case
 // DirectedGraph<BehaviorGoal> generate_their_kickoff(const World & world);

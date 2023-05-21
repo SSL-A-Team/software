@@ -35,6 +35,8 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSi
         MoveParam(Eigen::Vector2d{-1, 0})
     };
 
+    our_kickoff.add_node(kicker_setup);
+
     // Go to the middle of the goalie area
     Eigen::Vector2d _goalie_point = Eigen::Vector2d(
         // Here I'm assuming these are opposite corners of the goal
@@ -50,11 +52,6 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSi
         MoveParam(_goalie_point)
     };
 
-
+    our_kickoff.add_node(goalie);
     // TODO: Generate optional defenders for the rest of the robots that might exist
-
-};
-
-DirectedGraph<BehaviorGoal> setup_their_kickoff(const World & world) {
-    DirectedGraph<BehaviorGoal> their_kickoff;
 };
