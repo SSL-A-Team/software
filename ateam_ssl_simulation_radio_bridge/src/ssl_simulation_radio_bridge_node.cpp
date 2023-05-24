@@ -29,6 +29,7 @@
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <ateam_common/bi_directional_udp.hpp>
+#include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
@@ -48,26 +49,19 @@ public:
       std::placeholders::_1,
       std::placeholders::_2))
   {
-    for (int robot_id = 0; robot_id < 16; robot_id++) {
-      // Full type is required
-      // https://answers.ros.org/question/289207/function-callback-using-stdbind-in-ros-2-subscription/
-      std::function<void(const ateam_msgs::msg::RobotMotionCommand::SharedPtr)> callback =
-        std::bind(
-        &SSLSimulationRadioBridgeNode::message_callback,
-        this,
-        std::placeholders::_1,
-        robot_id);
+    ateam_common::indexed_topic_helpers::create_indexed_subscribers
+    <ateam_msgs::msg::RobotMotionCommand>(
+      command_subscriptions_,
+      Topics::kRobotMotionCommandPrefix,
+      rclcpp::SystemDefaultsQoS(),
+      &SSLSimulationRadioBridgeNode::message_callback,
+      this);
 
-      command_subscriptions_.at(robot_id) =
-        create_subscription<ateam_msgs::msg::RobotMotionCommand>(
-        std::string(Topics::kRobotMotionCommandPrefix) + std::to_string(robot_id),
-        10,
-        callback);
-
-      feedback_publishers_.at(robot_id) = create_publisher<ateam_msgs::msg::RobotFeedback>(
-        std::string(Topics::kRobotFeedbackPrefix) + std::to_string(robot_id),
-        rclcpp::SystemDefaultsQoS());
-    }
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotFeedback>(
+      feedback_publishers_,
+      Topics::kRobotFeedbackPrefix,
+      rclcpp::SystemDefaultsQoS(),
+      this);
   }
 
   void message_callback(
@@ -76,13 +70,14 @@ public:
   {
     RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);
 
-    std::string protobuf_msg;
-    if (robots_control.SerializeToString(&protobuf_msg)) {
-      udp_.send(protobuf_msg.data(), protobuf_msg.size());
+    std::vector<uint8_t> buffer;
+    buffer.resize(robots_control.ByteSizeLong());
+    if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
+      udp_.send(static_cast<uint8_t *>(buffer.data()), buffer.size());
     }
   }
 
-  void feedback_callback(const char * buffer, size_t bytes_received)
+  void feedback_callback(const uint8_t * buffer, size_t bytes_received)
   {
     RobotControlResponse feedback_proto;
     if (!feedback_proto.ParseFromArray(buffer, bytes_received - 1)) {

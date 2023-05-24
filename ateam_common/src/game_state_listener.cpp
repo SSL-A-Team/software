@@ -18,30 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TYPES__FIELD_HPP_
-#define TYPES__FIELD_HPP_
+#include <string>
 
-#include <Eigen/Dense>
-#include <array>
+#include "ateam_common/game_state_listener.hpp"
 
-struct FieldSidedInfo
+namespace ateam_common
 {
-  std::array<Eigen::Vector2d, 4> goalie_corners;
-  std::array<Eigen::Vector2d, 2> goal_posts;
-};
-struct Field
+
+GameStateListener::GameStateListener(rclcpp::Node & node)
 {
-  // we will definetly change the format of this at some point this is preliminary
-  // since we dont really have a geometry library yet
-  float field_length;
-  float field_width;
-  float goal_width;
-  float goal_depth;
-  float boundary_width;
-  std::array<Eigen::Vector2d, 4> field_corners;
-  FieldSidedInfo ours;
-  FieldSidedInfo theirs;
-};
+  rclcpp::QoS qos(1);
+  qos.reliable();
+  qos.transient_local();
+  ref_subscription_ = node.create_subscription<ssl_league_msgs::msg::Referee>(
+    "/gc_multicast_bridge_node/referee_messages", qos,
+    std::bind(&GameStateListener::RefereeMessageCallback, this, std::placeholders::_1));
+}
 
+void GameStateListener::RefereeMessageCallback(
+  const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
+{
+  game_command_ = static_cast<GameCommand>(msg->command);
+  game_stage_ = static_cast<GameStage>(msg->stage);
+}
 
-#endif  // TYPES__FIELD_HPP_
+}  // namespace ateam_common

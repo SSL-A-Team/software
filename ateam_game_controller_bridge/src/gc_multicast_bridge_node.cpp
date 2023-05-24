@@ -52,8 +52,8 @@ public:
     multicast_receiver_ = std::make_unique<ateam_common::MulticastReceiver>(
       multicast_address,
       multicast_port, std::bind(
-        &GCMulticastBridgeNode::PublishMulticastMessage, this, std::placeholders::_1,
-        std::placeholders::_2));
+        &GCMulticastBridgeNode::PublishMulticastMessage, this, std::placeholders::_3,
+        std::placeholders::_4));
   }
 
 private:
