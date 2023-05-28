@@ -40,7 +40,6 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSi
     // Go to the middle of the goalie area
     Eigen::Vector2d _goalie_point = Eigen::Vector2d(
         // Here I'm assuming these are opposite corners of the goal
-        // Does this need to be negative to match our conventions?
         (our_side_info.goalie_corners.at(0).x() + our_side_info.goalie_corners.at(2).x()) / 2,
         (our_side_info.goalie_corners.at(0).y() + our_side_info.goalie_corners.at(2).y()) / 2
     );
@@ -53,5 +52,37 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSi
     };
 
     our_kickoff.add_node(goalie);
-    // TODO: Generate optional defenders for the rest of the robots that might exist
+    // Generate optional defenders for the rest of the robots that might exist
+    // Create an arc around the center circle, get points evenly spaced around this arc
+    // Generate points the robot's radius away from the arc points (using a line) so we are 
+    // definitely behind the lines.
+    return our_kickoff;
+};
+
+DirectedGraph<BehaviorGoal> setup_their_kickoff(const World & world, const FieldSidedInfo & our_side_info) {
+    DirectedGraph<BehaviorGoal> their_kickoff;
+
+    // Generate goalie first
+    Eigen::Vector2d _goalie_point = Eigen::Vector2d(
+        // Here I'm assuming these are opposite corners of the goal
+        (our_side_info.goalie_corners.at(0).x() + our_side_info.goalie_corners.at(2).x()) / 2,
+        (our_side_info.goalie_corners.at(0).y() + our_side_info.goalie_corners.at(2).y()) / 2
+    );
+
+    BehaviorGoal goalie {
+        BehaviorGoal::Type::MoveToPoint,
+        BehaviorGoal::Priority::Required,
+        MoveParam(_goalie_point)
+    };
+
+    // Have 1 robot behind arc of center circle
+    // Get the center point of the arc
+
+    // Have 2 other robots on each side of center line, just outside of the arc
+
+    // Generate 2 defenders
+    // Just have them go halfway in between the center and edge of the field,
+    // one on each side, halfway between the center and the edge
+
+    return their_kickoff;
 };

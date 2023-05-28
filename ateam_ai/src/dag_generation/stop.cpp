@@ -18,15 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DAG_GENERATION__KICKOFF_HPP_
-#define DAG_GENERATION__KICKOFF_HPP_
-
-#include "util/directed_graph.hpp"
-#include "types/behavior_goal.hpp"
+#include "dag_generation/stop.hpp"
 #include "types/world.hpp"
+#include "types/behavior_goal.hpp"
 
-DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSidedInfo & our_side_info);
+#include <Eigen/Dense>
 
-DirectedGraph<BehaviorGoal> setup_their_kickoff(const World & world);
+DirectedGraph<BehaviorGoal> generate_stop(const World & world) {
+    DirectedGraph<BehaviorGoal> stop_graph;
 
-#endif  // DAG_GENERATION__KICKOFF_HPP_
+    for (std::size_t id = 0; id < world.our_robots.size(); id++) {
+        // Get the current position
+        const Eigen::Vector2d robot_position_ = world.our_robots.at(id).value().pos;
+
+        // Check if this robot is within 0.5 m of the ball
+        // Get the distance of a line defined by the current position of the robot and the ball
+        // Is it less than 0.5 + the radius of the robot?
+
+        // If so, generate a close trajectory to be away from the ball (in the direction the robot
+        // is currently facing, or as close as possible if we are facing the ball)
+
+        // Else, tell it to go to the current position
+        BehaviorGoal stop {
+            BehaviorGoal::Type::MoveToPoint,
+            BehaviorGoal::Priority::Required,
+            MoveParam(Eigen::Vector2d{robot_position_.x(), robot_position_.y()})
+        };
+        stop_graph.add_node(stop);
+    }
+    return stop_graph;
+}

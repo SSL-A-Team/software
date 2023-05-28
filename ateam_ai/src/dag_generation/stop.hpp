@@ -18,15 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DAG_GENERATION__KICKOFF_HPP_
-#define DAG_GENERATION__KICKOFF_HPP_
+#ifndef DAG_GENERATION__STOP_HPP_
+#define DAG_GENERATION__STOP_HPP_
 
 #include "util/directed_graph.hpp"
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
+#include "types/field.hpp"
 
-DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSidedInfo & our_side_info);
+DirectedGraph<BehaviorGoal> generate_stop(const World & world, const Field & field);
 
-DirectedGraph<BehaviorGoal> setup_their_kickoff(const World & world);
-
-#endif  // DAG_GENERATION__KICKOFF_HPP_
+#endif  // DAG_GENERATION__STOP_HPP_

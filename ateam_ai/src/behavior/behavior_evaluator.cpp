@@ -29,6 +29,8 @@
 #include <ateam_common/team_color_listener.hpp>
 
 #include "dag_generation/halt.hpp"
+#include "dag_generation/defend.hpp"
+#include "dag_generation/shoot.hpp"
 
 CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
 
@@ -46,20 +48,21 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
         return generate_halt(world);
   }
 
-  // Note: make sure we wait for a "start" before executing any of the plays
-  // Have a setup function for whatever play is called to account for "stop" time
-  // Check for special states: kickoff, free kick, penalty
+  // Check if we need to stop
 
-  // Check for kickoff
-  // If our kickoff, basic kickoff play
-  // If their kickoff, basic defensive play
+  // Check for kickoff - indicates setup, normal start means to actually execute the play
+  // If our kickoff, setup for basic kickoff play (shoot)
+  // If their kickoff, setup for basic defensive play
 
-  // Check for free kick
+  // Check for free kick - same as kickoff, means we should setup not actually kick
   // Call defense or offense with extra parameters
 
-  // Check if there if we are in a penalty
+  // Check if we are in a penalty
 
-  // Else, implement either simple offense or simple defense
+  // If we get a normal start, check what the previous play was 
+  // If it was either kickoff or free kick
+
+
 
   // If we can't identify what is going on, default to halt
   return generate_halt(world);

@@ -18,15 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DAG_GENERATION__KICKOFF_HPP_
-#define DAG_GENERATION__KICKOFF_HPP_
-
-#include "util/directed_graph.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-
-DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSidedInfo & our_side_info);
-
-DirectedGraph<BehaviorGoal> setup_their_kickoff(const World & world);
-
-#endif  // DAG_GENERATION__KICKOFF_HPP_
+// Create a line between two points
+// Make a line a certain distance away
+// Get the midpoint of a line
