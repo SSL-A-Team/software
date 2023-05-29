@@ -1,5 +1,5 @@
 <launch>
-    Just a nice file for replaying ssl logs over the bridge and through the vision filter and into a ros bag
+    <!-- Just a nice file for replaying ssl logs over the bridge and through the vision filter and into a ros bag -->
     <arg name="logfile" default="./log.gz"/>
 
     <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node" />
@@ -11,5 +11,6 @@
 
     <executable cmd="ros2 bag record -a" output="screen" />
 
-    <executable cmd="ssl-log-player -file $(var logfile)" output="screen" />
+    <!-- <executable cmd="ssl-log-player -file $(var logfile)"/> -->
+    <!-- <executable cmd="xterm -e ssl-log-player -file $(var logfile)"/> -->
 </launch>
