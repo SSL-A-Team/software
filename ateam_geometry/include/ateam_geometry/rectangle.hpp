@@ -18,25 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__LINE_HPP
-#define ATEAM_GEOMETRY__LINE_HPP
+#ifndef ATEAM_GEOMETRY__RECTANGLE_HPP
+#define ATEAM_GEOMETRY__RECTANGLE_HPP
 
-#include <Eigen/Dense>
-
-namespace ateam_geometry {
-    class Line {
-        public:
-            Line(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
-
-            Eigen::Vector2d get_midpoint();
-
-            Eigen::Vector2d p1;
-            Eigen::Vector2d p2;
-            double length;
-    };
-
-    Line get_line_of_length_from_point(const Eigen::Vector2d & start, const double & length,
-    const double & angle);
-}
-
-#endif  // ATEAM_GEOMETRY__LINE_HPP_
+#endif //ATEAM_GEOMETRY__RECTANGLE_HPP

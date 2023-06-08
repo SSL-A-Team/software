@@ -18,25 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__LINE_HPP
-#define ATEAM_GEOMETRY__LINE_HPP
-
+#include "ateam_geometry/line.hpp"
 #include <Eigen/Dense>
+#include <math.h>
 
 namespace ateam_geometry {
-    class Line {
-        public:
-            Line(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
+    Line::Line(const Eigen::Vector2d & start, const Eigen::Vector2d & end) {
+        p1 = start;
+        p2 = end;
 
-            Eigen::Vector2d get_midpoint();
+        // Length is Euclidian, we can change later if desired
+        double length = std::sqrt(std::pow(p1.x() - p2.x(), 2) + std::pow(p1.y() - p2.y(), 2));
+    }
+    
+    Eigen::Vector2d Line::get_midpoint(){
+        Eigen::Vector2d midpoint;
 
-            Eigen::Vector2d p1;
-            Eigen::Vector2d p2;
-            double length;
+        midpoint.x() = (p1.x() + p2.x()) / 2;
+        midpoint.y() = (p1.y() + p2.y()) / 2;
+
+        return midpoint;
+    }
+
+    Line get_line_of_length_from_point(const Eigen::Vector2d & start, const double & length, const double & angle) {
+        Eigen::Vector2d endpoint;
+        endpoint.x() =  start.x() + (length * cos(angle));
+        endpoint.y() = start.y() + (length * sin(angle));
+        
+        Line line = Line(start, endpoint);
+
+        return line;
     };
-
-    Line get_line_of_length_from_point(const Eigen::Vector2d & start, const double & length,
-    const double & angle);
 }
-
-#endif  // ATEAM_GEOMETRY__LINE_HPP_
