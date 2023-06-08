@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,27 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__ARC_HPP_
-#define ATEAM_GEOMETRY__ARC_HPP_
-
+#include "ateam_geometry/line.hpp"
 #include <Eigen/Dense>
-#include <vector>
+#include <math.h>
 
 namespace ateam_geometry {
-    class Arc {
-        public:
-            Arc(const Eigen::Vector2d p1, const Eigen::Vector2d p2, const double radius);
+    Arc::Arc(const Eigen::Vector2d p1, const Eigen::Vector2d p2, const double radius){
+        Eigen::Vector2d p1 = p1;
+        Eigen::Vector2d p2 = p2;
+        float radius = radius;
 
-            Eigen::Vector2d center;
-            Eigen::Vector2d p1;
-            Eigen::Vector2d p2;
+        // Using law of cosines to find the angle of the arc
+        Line a = Line(p1, p2);
+        float angle = acos((2 * pow(radius, 2) - pow(a.length, 2)) / (2 * pow(radius, 2)));
 
-            double radius;
-            double angle;
-            double length;
-            
-            std::vector<Eigen::Vector2d> get_equally_spaced_points(int num_points);
+        Line r = get_line_of_length_from_point(p1, radius, );
+
+    }
+
+
+    std::vector<Eigen::Vector2d> Arc::get_equally_spaced_points(int num_points){
+        // Divide the angle into the given number of equally sized angles
+        double angle_size = self.angle / num_points;
+
+        // Start from the first endpoint
+        
+
+
     };
 }
-
-#endif //ATEAM_GEOMETRY__ARC_HPP_
