@@ -22,6 +22,8 @@
 #define BEHAVIOR__BEHAVIOR_REALIZATION_HPP_
 
 #include <map>
+#include <set>
+#include <vector>
 
 #include "types/behavior_goal.hpp"
 #include "types/behavior_plan.hpp"
@@ -41,10 +43,48 @@ public:
     const DirectedGraph<BehaviorGoal> & behaviors,
     const World & world);
 
-private:
+  using GetPlanFromGoalFnc = std::function<BehaviorPlan(BehaviorGoal, int, const World&)>;
+  DirectedGraph<BehaviorPlan> realize_behaviors_impl(
+    const DirectedGraph<BehaviorGoal> & behaviors,
+    const World & world,
+    const GetPlanFromGoalFnc & GetPlanFromGoal);
+
   using BehaviorGoalNodeIdx = std::size_t;
   using RobotID = std::size_t;
-  using Priority = int;
+  using Priority = BehaviorGoal::Priority;
+  using PriorityGoalListMap = std::map<Priority, std::vector<BehaviorGoalNodeIdx>>;
+  using GoalToPlanMap = std::map<BehaviorGoalNodeIdx, BehaviorPlan>;
+  using CandidatePlans = std::map<RobotID, std::map<BehaviorGoalNodeIdx, BehaviorPlan>>;
+
+  /**
+   * Flattens DAG into a list of goals in each priority
+  */
+  PriorityGoalListMap get_priority_to_assignment_group(
+    const DirectedGraph<BehaviorGoal> & behaviors);
+
+  /**
+   * Gets list of robot ids on our team that are available to assign
+   * Eg: All robots we have tracking data for
+  */
+  std::set<RobotID> get_available_robots(const World & world);
+
+  /**
+   * Generate a plan for each robot to each goal
+  */
+  CandidatePlans generate_candidate_plans(
+    const std::vector<BehaviorGoalNodeIdx> & goals_nodes_idxs_to_assign,
+    const std::set<RobotID> & available_robots,
+    const DirectedGraph<BehaviorGoal> & behaviors,
+    const World & world,
+    const GetPlanFromGoalFnc & GetPlanFromGoal);
+
+  GoalToPlanMap assign_goals_to_plans(
+    const std::vector<BehaviorGoalNodeIdx> & goals_to_assign,
+    const std::set<RobotID> & available_robots,
+    const CandidatePlans & candidate_plans,
+    const World & world);
+
+  double cost(const BehaviorPlan & bp, const World & world);
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_REALIZATION_HPP_

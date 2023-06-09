@@ -21,6 +21,8 @@
 #ifndef UTIL__DIRECTED_GRAPH_HPP_
 #define UTIL__DIRECTED_GRAPH_HPP_
 
+#include <ateam_common/status.hpp>
+
 #include <unordered_map>
 #include <vector>
 
@@ -46,23 +48,26 @@ public:
 
   std::size_t add_node(Node node, std::size_t parent_idx)
   {
-    return add_node(node, {parent_idx});
+    return add_node(node, std::vector<std::size_t>{parent_idx});
   }
 
   std::size_t add_node(Node node, std::vector<std::size_t> parent_idxs)
   {
-    std::size_t node_idx = nodes.size();
+    std::size_t child_idx = nodes.size();
     nodes.push_back(node);
+    parent_to_child_relationship[child_idx] = {};
 
     for (auto parent_idx : parent_idxs) {
-      parent_to_child_relationship[parent_idx].push_back(node_idx);
+      ATEAM_CHECK(parent_to_child_relationship.count(parent_idx) > 0, "Given parent ID does not exist in parent->child relationship");
+      parent_to_child_relationship.at(parent_idx).push_back(child_idx);
     }
 
-    return node_idx;
+    return child_idx;
   }
 
   Node get_node(std::size_t node_idx) const
   {
+    ATEAM_CHECK(node_idx < nodes.size(), "node_idx must be smaller than the number of nodes");
     return nodes.at(node_idx);
   }
 

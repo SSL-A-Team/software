@@ -29,14 +29,90 @@
 #include "trajectory_generation/trajectory_generation.hpp"
 
 #include <ateam_common/assignment.hpp>
+#include <ateam_common/status.hpp>
 
 DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors(
   const DirectedGraph<BehaviorGoal> & behaviors, const World & world)
+{
+  return realize_behaviors_impl(behaviors, world, trajectory_generation::GetPlanFromGoal);
+}
+
+DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
+  const DirectedGraph<BehaviorGoal> & behaviors, const World & world,
+  const GetPlanFromGoalFnc & GetPlanFromGoal)
 {
   // See the following for the implementation
   // https://docs.google.com/document/d/1VRBgCGCAwEGkH0RJALpWob7kBlKYvFso6VbcEfTUHZo/edit?usp=sharing
 
   // Generate list of availabe robots
+  std::set<RobotID> available_robots = get_available_robots(world);
+
+  // Collect nodes by priority
+  PriorityGoalListMap priority_to_assignment_group = get_priority_to_assignment_group(behaviors);
+
+  std::map<BehaviorGoalNodeIdx, BehaviorPlan> assigned_goals_to_plans;
+
+  auto generate_plans_and_assign = [this, &behaviors, &world, &GetPlanFromGoal, &available_robots, &priority_to_assignment_group, &assigned_goals_to_plans] (std::vector<BehaviorGoalNodeIdx> goals_to_assign) {
+    if (available_robots.empty()) {
+      return;
+    }
+
+    CandidatePlans candidate_plans = generate_candidate_plans(
+      goals_to_assign, available_robots, behaviors, world, GetPlanFromGoal);
+    GoalToPlanMap goal_to_plans = assign_goals_to_plans(
+      goals_to_assign, available_robots, candidate_plans, world);
+
+    for (const auto & [goal_idx, plan] : goal_to_plans) {
+      available_robots.erase(plan.assigned_robot_id.value());
+    }
+  };
+
+  // Assign all robots to goals accoring to the goal priority
+  for (const auto & [priority, list_of_goal_idxs_at_priority] : priority_to_assignment_group) {
+    // For each required node, assign independently
+    if (priority == BehaviorGoal::Priority::Required) {
+      for (const auto & goal_idx : list_of_goal_idxs_at_priority) {
+        generate_plans_and_assign({goal_idx});
+      }
+    } else {
+      generate_plans_and_assign(list_of_goal_idxs_at_priority);
+    }
+  }
+
+  return behaviors.copy_shape_with_new_type(assigned_goals_to_plans);
+}
+
+BehaviorRealization::PriorityGoalListMap BehaviorRealization::get_priority_to_assignment_group(
+    const DirectedGraph<BehaviorGoal> & behaviors)
+{
+  PriorityGoalListMap priority_to_assignment_group{
+    {BehaviorGoal::Priority::Required, {}},
+    {BehaviorGoal::Priority::Medium, {}},
+    {BehaviorGoal::Priority::Low, {}}
+  };
+
+  std::vector<BehaviorGoalNodeIdx> root_nodes = behaviors.get_root_nodes();
+  for (auto root_node_id : behaviors.get_root_nodes()) {
+    std::deque<BehaviorGoalNodeIdx> nodes_to_add{root_node_id};
+    while (nodes_to_add.size() > 0) {
+      BehaviorGoalNodeIdx front_node = nodes_to_add.front();
+      nodes_to_add.pop_front();
+
+      BehaviorGoal behavior = behaviors.get_node(front_node);
+      priority_to_assignment_group.at(behavior.priority).emplace_back(front_node);
+
+      std::vector<BehaviorGoalNodeIdx> children = behaviors.get_children(front_node);
+      for (const auto & child_node_id : children) {
+        nodes_to_add.emplace_back(child_node_id);
+      }
+    }
+  }
+
+  return priority_to_assignment_group;
+}
+
+std::set<BehaviorRealization::RobotID> BehaviorRealization::get_available_robots(const World & world)
+{
   std::set<RobotID> available_robots;
   for (std::size_t i = 0; i < 15; i++) {
     if (world.our_robots.at(i).has_value()) {
@@ -44,124 +120,77 @@ DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors(
     }
   }
 
-  // Collect nodes by priority
-  std::map<Priority, std::vector<BehaviorGoalNodeIdx>> priority_to_assignment_group{
-    {BehaviorGoal::Priority::Required, {}},
-    {BehaviorGoal::Priority::Medium, {}},
-    {BehaviorGoal::Priority::Low, {}}
-  };
-  std::vector<BehaviorGoalNodeIdx> root_nodes = behaviors.get_root_nodes();
-  for (auto root_node_id : behaviors.get_root_nodes()) {
-    std::deque<BehaviorGoalNodeIdx> nodes_to_add{root_node_id};
-    while (nodes_to_add.size() > 0) {
-      BehaviorGoal behavior = behaviors.get_node(nodes_to_add.front());
-      priority_to_assignment_group[behavior.priority].emplace_back(nodes_to_add.front());
-      std::vector<BehaviorGoalNodeIdx> children = behaviors.get_children(nodes_to_add.front());
-      nodes_to_add.pop_front();
+  return available_robots;
+}
 
-      for (const auto & child_node_id : children) {
-        nodes_to_add.emplace_back(child_node_id);
-      }
-    }
-  }
-
-  std::map<BehaviorGoalNodeIdx, BehaviorPlan> assigned_goals_to_plans;
-
-  // Assign each required node independently
-  for (const auto & required_node_id : priority_to_assignment_group[BehaviorGoal::Priority::Required]) {
-    std::map<RobotID, BehaviorPlan> candidate_plans;
-    BehaviorGoal behavior_goal = behaviors.get_node(required_node_id);
-
-    // Quit early if no robots to assign
-    if (available_robots.size() == 0) {
-      break;
-    }
-
-    for (const auto & robot_id : available_robots) {
-      candidate_plans[robot_id] =
-        trajectory_generation::GetPlanFromGoal(
-        behavior_goal,
-        robot_id,
-        world);
-    }
-
-    // Make cost matrix
-    // Only 1 role
-    Eigen::MatrixXd robot_to_role_cost_matrix(available_robots.size(), 1);
-    auto cost = [&world](BehaviorPlan bp) { return bp.trajectory.samples.back().time - world.current_time; };
-    std::map<int, RobotID> idx_to_robot_id;
-    int idx = 0;
-    for (const auto & [robot_id, behavior_plan] : candidate_plans) {
-      robot_to_role_cost_matrix(idx, 0) = cost(behavior_plan);
-      idx_to_robot_id[idx] = robot_id;
-      idx++;
-    }
-
-    // Do assignment
-    auto assignment = ateam_common::assignment::optimize_assignment(robot_to_role_cost_matrix);
-
-    // There is only 1 role, so we can just grab the first robot id assigned
-    RobotID assigned_robot_id = idx_to_robot_id.at(assignment.begin()->first);
-    assigned_goals_to_plans[required_node_id] = candidate_plans.at(assigned_robot_id);
-    available_robots.erase(assigned_robot_id);
-  }
-
-  // Assign each non-required node as a group
-  for (const auto & [priority, list_of_non_required_roles] : priority_to_assignment_group) {
-    // Skip the required role as we already assigned it
-    if (priority == BehaviorGoal::Priority::Required) {
-      continue;
-    }
-
-    // Quit early if no robots to assign
-    if (available_robots.size() == 0) {
-      break;
-    }
-    // Continue to next priority if no roles at this priority
-    if (list_of_non_required_roles.size() == 0) {
-      continue;
-    }
-
-    std::map<RobotID, std::map<BehaviorGoalNodeIdx, BehaviorPlan>> candidate_plans;
-    for (const auto & robot_id : available_robots) {
-      for (const auto & goal_node_idx : list_of_non_required_roles) {
-        BehaviorGoal behavior_goal = behaviors.get_node(goal_node_idx);
-        candidate_plans[robot_id][goal_node_idx] =
-          trajectory_generation::GetPlanFromGoal(
-          behavior_goal,
+BehaviorRealization::CandidatePlans BehaviorRealization::generate_candidate_plans(
+  const std::vector<BehaviorGoalNodeIdx> & goals_node_idxs_to_assign,
+  const std::set<RobotID> & available_robots,
+  const DirectedGraph<BehaviorGoal> & behaviors,
+  const World & world,
+  const GetPlanFromGoalFnc & GetPlanFromGoal)
+{
+  CandidatePlans candidate_plans;
+  for (const auto & robot_id : available_robots) {
+    for (const auto & goal_node_idx : goals_node_idxs_to_assign) {
+      candidate_plans[robot_id][goal_node_idx] =
+        GetPlanFromGoal(
+          behaviors.get_node(goal_node_idx),
           robot_id,
           world);
-      }
-    }
-
-    auto cost = [&world](BehaviorPlan bp) { return bp.trajectory.samples.back().time - world.current_time; };
-    Eigen::MatrixXd robot_to_role_cost_matrix(available_robots.size(), list_of_non_required_roles.size());
-    std::map<int, RobotID> idx_to_robot_id;
-    std::map<int, BehaviorGoalNodeIdx> idx_to_behavior_goal;
-    int robot_id_idx = 0;
-    for (const auto & robot_id : available_robots) {
-      int role_idx = 0;
-      for (const auto & role : list_of_non_required_roles) {
-        robot_to_role_cost_matrix(robot_id_idx, role_idx) = cost(candidate_plans.at(robot_id).at(role));
-        idx_to_behavior_goal[role_idx] = role;
-        role_idx++;
-      }
-      idx_to_robot_id[robot_id_idx] = robot_id;
-      robot_id_idx++;
-    }
-
-    // Do assignment
-    auto assignment = ateam_common::assignment::optimize_assignment(robot_to_role_cost_matrix);
-
-    // Pull out assignemnts and add to assigned_goals_to_plans list
-    for (const auto & [robot_id_idx, role_idx] : idx_to_robot_id) {
-      RobotID robot_to_assign = idx_to_robot_id.at(robot_id_idx);
-      BehaviorGoalNodeIdx goal_to_assign = idx_to_behavior_goal.at(role_idx);
-
-      assigned_goals_to_plans[goal_to_assign] = candidate_plans.at(robot_to_assign).at(goal_to_assign);
-      available_robots.erase(robot_to_assign);
     }
   }
 
-  return behaviors.copy_shape_with_new_type(assigned_goals_to_plans);
+  return candidate_plans;
+}
+
+BehaviorRealization::GoalToPlanMap BehaviorRealization::assign_goals_to_plans(
+  const std::vector<BehaviorGoalNodeIdx> & goals_to_assign,
+  const std::set<BehaviorRealization::RobotID> & available_robots,
+  const CandidatePlans & candidate_plans,
+  const World & world)
+{
+  if (goals_to_assign.empty() || available_robots.empty()) {
+    return {};
+  }
+
+  ATEAM_CHECK(candidate_plans.size() == available_robots.size(), "Must have one plan per robot");
+  ATEAM_CHECK(candidate_plans.begin()->second.size() == goals_to_assign.size(), "Must have one plan per goal");
+
+  // Create cost matrix
+  std::map<std::size_t, RobotID> row_idx_to_robot_id;
+  std::map<std::size_t, BehaviorGoalNodeIdx> col_idx_to_goal_node_idx;
+  Eigen::MatrixXd robot_to_goal_cost_matrix(available_robots.size(), goals_to_assign.size());
+
+  int robot_id_idx = 0;
+  for (const auto & robot_id : available_robots) {
+    int goal_idx = 0;
+    for (const auto & goal : goals_to_assign) {
+        robot_to_goal_cost_matrix(robot_id_idx, goal_idx) = cost(candidate_plans.at(robot_id).at(goal), world);
+        col_idx_to_goal_node_idx[goal_idx] = goal;
+        goal_idx++;
+    }
+    row_idx_to_robot_id[robot_id_idx] = robot_id;
+    robot_id_idx++;
+  }
+
+  // Do assignment
+  auto assignment = ateam_common::assignment::optimize_assignment(robot_to_goal_cost_matrix);
+
+  // Map cost matrix row/col back to behavior plans / robots
+  GoalToPlanMap assigned_goals_to_plans;
+  for (const auto & [row_idx, col_idx] : assignment) {
+    RobotID robot_to_assign = row_idx_to_robot_id.at(row_idx);
+    BehaviorGoalNodeIdx goal_to_assign = col_idx_to_goal_node_idx.at(col_idx);
+
+    assigned_goals_to_plans[goal_to_assign] = candidate_plans.at(robot_to_assign).at(goal_to_assign);
+    assigned_goals_to_plans[goal_to_assign].assigned_robot_id = robot_to_assign;
+  }
+
+  return assigned_goals_to_plans;
+}
+
+double BehaviorRealization::cost(const BehaviorPlan & bp, const World & world)
+{
+  return bp.trajectory.samples.back().time - world.current_time;
 }
