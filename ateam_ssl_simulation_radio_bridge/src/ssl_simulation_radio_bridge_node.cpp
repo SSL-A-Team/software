@@ -70,13 +70,14 @@ public:
   {
     RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);
 
-    std::string protobuf_msg;
-    if (robots_control.SerializeToString(&protobuf_msg)) {
-      udp_.send(protobuf_msg.data(), protobuf_msg.size());
+    std::vector<uint8_t> buffer;
+    buffer.resize(robots_control.ByteSizeLong());
+    if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
+      udp_.send(static_cast<uint8_t *>(buffer.data()), buffer.size());
     }
   }
 
-  void feedback_callback(const char * buffer, size_t bytes_received)
+  void feedback_callback(const uint8_t * buffer, size_t bytes_received)
   {
     RobotControlResponse feedback_proto;
     if (!feedback_proto.ParseFromArray(buffer, bytes_received - 1)) {
