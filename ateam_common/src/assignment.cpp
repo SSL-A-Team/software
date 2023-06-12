@@ -30,17 +30,32 @@ namespace ateam_common::assignment
 std::unordered_map<std::size_t, std::size_t> optimize_assignment(
   const Eigen::MatrixXd & cost_matrix)
 {
-  internal::CostMarkCovers cmc;
-  cmc.cost_matrix = internal::squarize_matrix(cost_matrix);
+  if (cost_matrix.rows() > cost_matrix.cols()) {
+    auto transpose_ret = internal::optimize_assignment_impl(cost_matrix.transpose());
+    std::unordered_map<std::size_t, std::size_t> ret;
+    for (const auto & [key, value] : transpose_ret) {
+      ret[value] = key;
+    }
+    return ret;
+  } else {
+    return internal::optimize_assignment_impl(cost_matrix);
+  }
+}
 
-  internal::apply_step_1(cmc);
-  internal::apply_step_2(cmc);
-  internal::apply_step_3(cmc);
+std::unordered_map<std::size_t, std::size_t> internal::optimize_assignment_impl(
+  const Eigen::MatrixXd & cost_matrix)
+{
+  CostMarkCovers cmc;
+  cmc.cost_matrix = squarize_matrix(cost_matrix);
+
+  apply_step_1(cmc);
+  apply_step_2(cmc);
+  apply_step_3(cmc);
 
   do {
-    internal::apply_step_4(cmc);
-    internal::apply_step_5(cmc);
-  } while (!internal::has_unique_assignments(cmc));
+    apply_step_4(cmc);
+    apply_step_5(cmc);
+  } while (!has_unique_assignments(cmc));
 
   std::unordered_map<std::size_t, std::size_t> assignment;
   for (int i = 0; i < cmc.mark_matrix.rows(); i++) {
@@ -55,7 +70,7 @@ std::unordered_map<std::size_t, std::size_t> optimize_assignment(
         continue;
       }
 
-      bool is_starred = cmc.mark_matrix(i, j) == internal::ZerosType::STARRED;
+      bool is_starred = cmc.mark_matrix(i, j) == ZerosType::STARRED;
       if (is_starred) {
         assignment[i] = j;
       }
