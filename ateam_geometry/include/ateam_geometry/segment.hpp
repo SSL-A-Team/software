@@ -24,19 +24,24 @@
 #include <Eigen/Dense>
 
 namespace ateam_geometry {
-    class Line {
+    class LineSegment {
         public:
-            Line(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
+            LineSegment(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
 
             Eigen::Vector2d get_midpoint();
+
+            bool is_point_on_line(const Eigen::Vector2d & point);
 
             Eigen::Vector2d p1;
             Eigen::Vector2d p2;
             double length;
     };
 
-    Line get_line_of_length_from_point(const Eigen::Vector2d & start, const double & length,
+    LineSegment get_lineseg_of_length_from_point(const Eigen::Vector2d & start, const double & length,
     const double & angle);
+
+    bool do_segments_intersect(const LineSegment & ls1, const LineSegment & ls2);
+    Eigen::Vector2d get_segment_intersection(const LineSegment & ls1, const LineSegment & ls2);
 }
 
 #endif  // ATEAM_GEOMETRY__LINE_HPP_
