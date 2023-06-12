@@ -23,9 +23,12 @@
 
 namespace ateam_geometry {
     double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v) {
-        // Used for determining whether two line segments intersect
-        // The implementation used is based off of this StackOverflow post
-        // https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+        /* We define the 2D cross product here between two vectors w and v
+        as w_x * v_y - w_y * w_x
+        This is used for determining whether two line segments intersect
+        
+        The implementation used is based off of this StackOverflow post
+        https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect*/
         return (w.x() * v.y()) - (w.y() * v.x());
     }
 }

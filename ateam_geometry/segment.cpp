@@ -43,6 +43,8 @@ namespace ateam_geometry {
 
     LineSegment get_line_of_length_from_point(const Eigen::Vector2d & start, const double & length, const double & angle) {
         Eigen::Vector2d endpoint;
+        // Essentially we convert a given polar coordinate/vector 
+        // (length and angle) to an x, y plane
         endpoint.x() =  start.x() + (length * cos(angle));
         endpoint.y() = start.y() + (length * sin(angle));
         
@@ -58,11 +60,35 @@ namespace ateam_geometry {
         Based on the algorithm implementation provided here:
         https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
         
-        There are 4 possible cases of whether or not 2 line segments intersect:
+        There are two line segments, one running from p to p + r and another spanning
+        q to q + s.
+
+        Any point on this first line can be represented as p + tr (with scalar
+        parameter t) and any point on the second can be represented as q + us
+        (with scalar parameter u).
+
+        The two lines intersect if we can find t and u such that:
+        p + t r = q + u s
+
+        We can solve for t:
+        t = (q − p) × s / (r × s)
+
+        And we can solve for u:
+        u = (q − p) × r / (r × s)
+
+        (See Stack Overflow for the algebra, I'm lazy.)
+
+        Based on these definitions, there are 4 possible cases of 
+        whether or not 2 line segments intersect:
+        
         1.If r x s = 0 && (q - p) x r = 0
             - The two segments are colinear
         2. If r x s = 0 && (q - p) x r != 0
-            - 
+            - Segments are parallel and non-intersecting
+        3. If r x s != 0 && 0 <= t <= 1 && 0 <= u <= 1
+            - Segments meet at p + tr = q + us
+        4. Else
+            - Segments are not parallel and do not intersect
         */
         Eigen::Vector2d p = ls1.p1;
         Eigen::Vector2d q = ls2.p1;

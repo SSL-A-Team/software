@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_geometry/line.hpp"
+#include "ateam_geometry/segment.hpp"
+#include "ateam_geometry/arc.hpp"
 #include <Eigen/Dense>
 #include <math.h>
 
@@ -29,11 +30,10 @@ namespace ateam_geometry {
         float radius = radius;
 
         // Using law of cosines to find the angle of the arc
-        Line a = Line(p1, p2);
+        LineSegment a = LineSegment(p1, p2);
         float angle = acos((2 * pow(radius, 2) - pow(a.length, 2)) / (2 * pow(radius, 2)));
 
-        Line r = get_line_of_length_from_point(p1, radius, );
-
+        //LineSegment r = get_lineseg_of_length_from_point();
     }
 
 
@@ -45,5 +45,5 @@ namespace ateam_geometry {
         
 
 
-    };
+    }
 }
