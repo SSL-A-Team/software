@@ -39,11 +39,23 @@
 class BehaviorRealization
 {
 public:
+  /**
+   * Generate plans and assign robots to the set of goals in an "optimal" way.
+   * Each required behavior is assigned in order of when they are added to the DAG
+   * in a depth first way.
+   *
+   * Non-required nodes at each stage are assigned in a "globally optimial" way for all
+   * available robots and goals in each non-required priority level.
+   *
+   * Note that since the required goals are assigned in a highly greedy way, placing too many
+   * required goals will results in "starvation" of any non-required nodes.
+  */
   DirectedGraph<BehaviorPlan> realize_behaviors(
     const DirectedGraph<BehaviorGoal> & behaviors,
     const World & world);
 
-  using GetPlanFromGoalFnc = std::function<BehaviorPlan(BehaviorGoal, int, const World&)>;
+  // ---------------- internal ----------------
+  using GetPlanFromGoalFnc = std::function<BehaviorPlan(BehaviorGoal, int, const World &)>;
   DirectedGraph<BehaviorPlan> realize_behaviors_impl(
     const DirectedGraph<BehaviorGoal> & behaviors,
     const World & world,
@@ -78,6 +90,9 @@ public:
     const World & world,
     const GetPlanFromGoalFnc & GetPlanFromGoal);
 
+  /**
+   * Assigns goals to their optimal plans in a globally optimal way
+  */
   GoalToPlanMap assign_goals_to_plans(
     const std::vector<BehaviorGoalNodeIdx> & goals_to_assign,
     const std::set<RobotID> & available_robots,

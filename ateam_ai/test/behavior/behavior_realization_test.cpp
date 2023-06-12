@@ -22,11 +22,15 @@
 
 #include <gtest/gtest.h>
 
-BehaviorGoal create_behavior(BehaviorGoal::Priority priority) {
-  return BehaviorGoal(BehaviorGoal::Type::MoveToPoint, priority, MoveParam(Eigen::Vector2d{0, 0}));
+BehaviorGoal create_behavior(
+  BehaviorGoal::Priority priority,
+  Eigen::Vector2d target = Eigen::Vector2d{0, 0})
+{
+  return BehaviorGoal(BehaviorGoal::Type::MoveToPoint, priority, MoveParam(target));
 }
 
-World create_world_with_x_robots(int num_robots) {
+World create_world_with_x_robots(int num_robots)
+{
   World w;
   for (int i = 0; i < num_robots; i++) {
     w.our_robots.at(i) = Robot();
@@ -34,7 +38,8 @@ World create_world_with_x_robots(int num_robots) {
   return w;
 }
 
-BehaviorPlan create_behavior_plan_with_t_end(double t_end) {
+BehaviorPlan create_behavior_plan_with_t_end(double t_end)
+{
   BehaviorPlan bp;
   bp.trajectory.samples.push_back(Sample3d{.time = t_end});
 
@@ -46,7 +51,8 @@ TEST(BehaviorRealization, get_priority_to_assignment_group_ReturnEmpty_WhenNoBeh
   BehaviorRealization realization;
   DirectedGraph<BehaviorGoal> behaviors;
 
-  BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(behaviors);
+  BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(
+    behaviors);
 
   ASSERT_EQ(ret.size(), 3);
   EXPECT_TRUE(ret.at(BehaviorGoal::Priority::Required).empty());
@@ -58,10 +64,13 @@ TEST(BehaviorRealization, get_priority_to_assignment_group_ReturnRequired_WhenOn
 {
   BehaviorRealization realization;
   DirectedGraph<BehaviorGoal> behaviors;
-  BehaviorRealization::BehaviorGoalNodeIdx beh1 = behaviors.add_node(create_behavior(BehaviorGoal::Required));
-  BehaviorRealization::BehaviorGoalNodeIdx beh2 = behaviors.add_node(create_behavior(BehaviorGoal::Required));
+  BehaviorRealization::BehaviorGoalNodeIdx beh1 =
+    behaviors.add_node(create_behavior(BehaviorGoal::Required));
+  BehaviorRealization::BehaviorGoalNodeIdx beh2 =
+    behaviors.add_node(create_behavior(BehaviorGoal::Required));
 
-  BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(behaviors);
+  BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(
+    behaviors);
 
   ASSERT_EQ(ret.size(), 3);
   ASSERT_EQ(ret.at(BehaviorGoal::Priority::Required).size(), 2);
@@ -75,10 +84,13 @@ TEST(BehaviorRealization, get_priority_to_assignment_group_ReturnRequired_WhenOn
 {
   BehaviorRealization realization;
   DirectedGraph<BehaviorGoal> behaviors;
-  BehaviorRealization::BehaviorGoalNodeIdx beh1 = behaviors.add_node(create_behavior(BehaviorGoal::Required));
-  BehaviorRealization::BehaviorGoalNodeIdx beh2 = behaviors.add_node(create_behavior(BehaviorGoal::Required), beh1);
+  BehaviorRealization::BehaviorGoalNodeIdx beh1 = behaviors.add_node(
+    create_behavior(BehaviorGoal::Required));
+  BehaviorRealization::BehaviorGoalNodeIdx beh2 = behaviors.add_node(
+    create_behavior(BehaviorGoal::Required), beh1);
 
-  BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(behaviors);
+  BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(
+    behaviors);
 
   ASSERT_EQ(ret.size(), 3);
   ASSERT_EQ(ret.at(BehaviorGoal::Priority::Required).size(), 2);
@@ -92,14 +104,21 @@ TEST(BehaviorRealization, get_priority_to_assignment_group_ReturnAll_WhenAll)
 {
   BehaviorRealization realization;
   DirectedGraph<BehaviorGoal> behaviors;
-  BehaviorRealization::BehaviorGoalNodeIdx beh1 = behaviors.add_node(create_behavior(BehaviorGoal::Required));
-  BehaviorRealization::BehaviorGoalNodeIdx beh2 = behaviors.add_node(create_behavior(BehaviorGoal::Required), beh1);
-  BehaviorRealization::BehaviorGoalNodeIdx beh3 = behaviors.add_node(create_behavior(BehaviorGoal::Medium));
-  BehaviorRealization::BehaviorGoalNodeIdx beh4 = behaviors.add_node(create_behavior(BehaviorGoal::Medium), beh3);
-  BehaviorRealization::BehaviorGoalNodeIdx beh5 = behaviors.add_node(create_behavior(BehaviorGoal::Low));
-  BehaviorRealization::BehaviorGoalNodeIdx beh6 = behaviors.add_node(create_behavior(BehaviorGoal::Low), beh5);
+  BehaviorRealization::BehaviorGoalNodeIdx beh1 = behaviors.add_node(
+    create_behavior(BehaviorGoal::Required));
+  BehaviorRealization::BehaviorGoalNodeIdx beh2 = behaviors.add_node(
+    create_behavior(BehaviorGoal::Required), beh1);
+  BehaviorRealization::BehaviorGoalNodeIdx beh3 = behaviors.add_node(
+    create_behavior(BehaviorGoal::Medium));
+  BehaviorRealization::BehaviorGoalNodeIdx beh4 = behaviors.add_node(
+    create_behavior(BehaviorGoal::Medium), beh3);
+  BehaviorRealization::BehaviorGoalNodeIdx beh5 = behaviors.add_node(
+    create_behavior(BehaviorGoal::Low));
+  BehaviorRealization::BehaviorGoalNodeIdx beh6 = behaviors.add_node(
+    create_behavior(BehaviorGoal::Low), beh5);
 
-  BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(behaviors);
+  BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(
+    behaviors);
 
   ASSERT_EQ(ret.size(), 3);
   ASSERT_EQ(ret.at(BehaviorGoal::Priority::Required).size(), 2);
@@ -148,9 +167,9 @@ TEST(BehaviorRealization, get_available_robots_ReturnsCorrectMapping_WhenNonZero
     count_of_calls[i] = 0;
   }
   auto plan_fnc = [&count_of_calls](BehaviorGoal goal, int robot_id, const World & world) {
-    count_of_calls.at(robot_id)++;
-    return BehaviorPlan();
-  };
+      count_of_calls.at(robot_id)++;
+      return BehaviorPlan();
+    };
 
   BehaviorRealization::CandidatePlans ret = realization.generate_candidate_plans(
     idxs_to_plan, available_robots, behaviors, create_world_with_x_robots(16), plan_fnc);
@@ -169,7 +188,7 @@ TEST(BehaviorRealization, assign_goals_to_plans_ReturnEmpty_WhenEmpty) {
   EXPECT_EQ(ret.size(), 0);
 }
 
-TEST(BehaviorRealization, assign_goals_to_plans_ReturnCorrect) {
+TEST(BehaviorRealization, assign_goals_to_plans_ReturnCorrect_WithFakePlans) {
   BehaviorRealization realization;
   std::vector<BehaviorRealization::BehaviorGoalNodeIdx> goals_to_assign{0, 2};
   std::set<BehaviorRealization::RobotID> available_robots{1, 3};
@@ -181,7 +200,11 @@ TEST(BehaviorRealization, assign_goals_to_plans_ReturnCorrect) {
   World world;
   world.current_time = 0.0;
 
-  BehaviorRealization::GoalToPlanMap ret = realization.assign_goals_to_plans(goals_to_assign, available_robots, candidate_plans, world);
+  BehaviorRealization::GoalToPlanMap ret = realization.assign_goals_to_plans(
+    goals_to_assign,
+    available_robots,
+    candidate_plans,
+    world);
 
   EXPECT_EQ(ret.size(), 2);
   EXPECT_EQ(ret.at(0).trajectory.samples.front().time, 11);
@@ -190,5 +213,39 @@ TEST(BehaviorRealization, assign_goals_to_plans_ReturnCorrect) {
   EXPECT_EQ(ret.at(2).assigned_robot_id.value(), 1);
 }
 
-TEST(BehaviorRealization, assign_goals_to_plans_ReturnCorrect) {
+TEST(BehaviorRealization, realize_behaviors_ReturnCorrect_WithRealisticInput) {
+  BehaviorRealization realization;
+  DirectedGraph<BehaviorGoal> behaviors;
+  BehaviorRealization::BehaviorGoalNodeIdx beh1 =
+    behaviors.add_node(create_behavior(BehaviorGoal::Required, Eigen::Vector2d{0, 0}));
+  BehaviorRealization::BehaviorGoalNodeIdx beh2 =
+    behaviors.add_node(create_behavior(BehaviorGoal::Required, Eigen::Vector2d{10, 0}), beh1);
+  BehaviorRealization::BehaviorGoalNodeIdx beh3 =
+    behaviors.add_node(create_behavior(BehaviorGoal::Medium, Eigen::Vector2d{20, 0}));
+  BehaviorRealization::BehaviorGoalNodeIdx beh4 =
+    behaviors.add_node(create_behavior(BehaviorGoal::Low, Eigen::Vector2d{30, 0}));
+
+  World world = create_world_with_x_robots(3);
+  world.current_time = 0.0;
+  world.our_robots.at(0).value().pos = Eigen::Vector2d{30, 1};
+  world.our_robots.at(1).value().pos = Eigen::Vector2d{20, 1};
+  world.our_robots.at(2).value().pos = Eigen::Vector2d{19, 1};
+
+  auto get_plan_from_goal = [](BehaviorGoal bg, int id, const World & world) {
+      // Trajectory time is directly related to the position different
+      double diff = (std::get<MoveParam>(bg.params).target_location - world.our_robots.at(
+          id).value().pos).norm();
+      return create_behavior_plan_with_t_end(diff);
+    };
+
+  DirectedGraph<BehaviorPlan> plans = realization.realize_behaviors_impl(
+    behaviors, world,
+    get_plan_from_goal);
+  ASSERT_TRUE(plans.get_node(beh1).assigned_robot_id.has_value());
+  ASSERT_TRUE(plans.get_node(beh2).assigned_robot_id.has_value());
+  ASSERT_TRUE(plans.get_node(beh3).assigned_robot_id.has_value());
+  EXPECT_EQ(plans.get_node(beh1).assigned_robot_id.value(), 2);
+  EXPECT_EQ(plans.get_node(beh2).assigned_robot_id.value(), 1);
+  EXPECT_EQ(plans.get_node(beh3).assigned_robot_id.value(), 0);
+  EXPECT_FALSE(plans.get_node(beh4).assigned_robot_id.has_value());
 }

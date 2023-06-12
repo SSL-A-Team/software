@@ -21,10 +21,11 @@
 #ifndef UTIL__DIRECTED_GRAPH_HPP_
 #define UTIL__DIRECTED_GRAPH_HPP_
 
-#include <ateam_common/status.hpp>
-
+#include <map>
 #include <unordered_map>
 #include <vector>
+
+#include <ateam_common/status.hpp>
 
 template<typename Node>
 class DirectedGraph;
@@ -58,7 +59,9 @@ public:
     parent_to_child_relationship[child_idx] = {};
 
     for (auto parent_idx : parent_idxs) {
-      ATEAM_CHECK(parent_to_child_relationship.count(parent_idx) > 0, "Given parent ID does not exist in parent->child relationship");
+      ATEAM_CHECK(
+        parent_to_child_relationship.count(
+          parent_idx) > 0, "Given parent ID does not exist in parent->child relationship");
       parent_to_child_relationship.at(parent_idx).push_back(child_idx);
     }
 
@@ -88,7 +91,8 @@ public:
   friend class DirectedGraph;
 
   template<typename T>
-  DirectedGraph<T> copy_shape_with_new_type(std::map<std::size_t, T> new_nodes) const {
+  DirectedGraph<T> copy_shape_with_new_type(std::map<std::size_t, T> new_nodes) const
+  {
     DirectedGraph<T> new_graph;
     new_graph.root_nodes = root_nodes;
     new_graph.parent_to_child_relationship = parent_to_child_relationship;

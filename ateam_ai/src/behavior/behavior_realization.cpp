@@ -23,8 +23,7 @@
 #include <map>
 #include <vector>
 #include <utility>
-#include <queue>
-#include <set>
+#include <deque>
 
 #include "trajectory_generation/trajectory_generation.hpp"
 
@@ -41,9 +40,6 @@ DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
   const DirectedGraph<BehaviorGoal> & behaviors, const World & world,
   const GetPlanFromGoalFnc & GetPlanFromGoal)
 {
-  // See the following for the implementation
-  // https://docs.google.com/document/d/1VRBgCGCAwEGkH0RJALpWob7kBlKYvFso6VbcEfTUHZo/edit?usp=sharing
-
   // Generate list of availabe robots
   std::set<RobotID> available_robots = get_available_robots(world);
 
@@ -52,20 +48,23 @@ DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
 
   std::map<BehaviorGoalNodeIdx, BehaviorPlan> assigned_goals_to_plans;
 
-  auto generate_plans_and_assign = [this, &behaviors, &world, &GetPlanFromGoal, &available_robots, &priority_to_assignment_group, &assigned_goals_to_plans] (std::vector<BehaviorGoalNodeIdx> goals_to_assign) {
-    if (available_robots.empty()) {
-      return;
-    }
+  auto generate_plans_and_assign =
+    [this, &behaviors, &world, &GetPlanFromGoal, &available_robots, &priority_to_assignment_group,
+      &assigned_goals_to_plans](std::vector<BehaviorGoalNodeIdx> goals_to_assign) {
+      if (available_robots.empty()) {
+        return;
+      }
 
-    CandidatePlans candidate_plans = generate_candidate_plans(
-      goals_to_assign, available_robots, behaviors, world, GetPlanFromGoal);
-    GoalToPlanMap goal_to_plans = assign_goals_to_plans(
-      goals_to_assign, available_robots, candidate_plans, world);
+      CandidatePlans candidate_plans = generate_candidate_plans(
+        goals_to_assign, available_robots, behaviors, world, GetPlanFromGoal);
+      GoalToPlanMap goal_to_plans = assign_goals_to_plans(
+        goals_to_assign, available_robots, candidate_plans, world);
 
-    for (const auto & [goal_idx, plan] : goal_to_plans) {
-      available_robots.erase(plan.assigned_robot_id.value());
-    }
-  };
+      for (const auto & [goal_idx, plan] : goal_to_plans) {
+        assigned_goals_to_plans[goal_idx] = plan;
+        available_robots.erase(plan.assigned_robot_id.value());
+      }
+    };
 
   // Assign all robots to goals accoring to the goal priority
   for (const auto & [priority, list_of_goal_idxs_at_priority] : priority_to_assignment_group) {
@@ -83,7 +82,7 @@ DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
 }
 
 BehaviorRealization::PriorityGoalListMap BehaviorRealization::get_priority_to_assignment_group(
-    const DirectedGraph<BehaviorGoal> & behaviors)
+  const DirectedGraph<BehaviorGoal> & behaviors)
 {
   PriorityGoalListMap priority_to_assignment_group{
     {BehaviorGoal::Priority::Required, {}},
@@ -111,7 +110,8 @@ BehaviorRealization::PriorityGoalListMap BehaviorRealization::get_priority_to_as
   return priority_to_assignment_group;
 }
 
-std::set<BehaviorRealization::RobotID> BehaviorRealization::get_available_robots(const World & world)
+std::set<BehaviorRealization::RobotID> BehaviorRealization::get_available_robots(
+  const World & world)
 {
   std::set<RobotID> available_robots;
   for (std::size_t i = 0; i < 15; i++) {
@@ -135,9 +135,9 @@ BehaviorRealization::CandidatePlans BehaviorRealization::generate_candidate_plan
     for (const auto & goal_node_idx : goals_node_idxs_to_assign) {
       candidate_plans[robot_id][goal_node_idx] =
         GetPlanFromGoal(
-          behaviors.get_node(goal_node_idx),
-          robot_id,
-          world);
+        behaviors.get_node(goal_node_idx),
+        robot_id,
+        world);
     }
   }
 
@@ -155,7 +155,9 @@ BehaviorRealization::GoalToPlanMap BehaviorRealization::assign_goals_to_plans(
   }
 
   ATEAM_CHECK(candidate_plans.size() == available_robots.size(), "Must have one plan per robot");
-  ATEAM_CHECK(candidate_plans.begin()->second.size() == goals_to_assign.size(), "Must have one plan per goal");
+  ATEAM_CHECK(
+    candidate_plans.begin()->second.size() == goals_to_assign.size(),
+    "Must have one plan per goal");
 
   // Create cost matrix
   std::map<std::size_t, RobotID> row_idx_to_robot_id;
@@ -166,9 +168,11 @@ BehaviorRealization::GoalToPlanMap BehaviorRealization::assign_goals_to_plans(
   for (const auto & robot_id : available_robots) {
     int goal_idx = 0;
     for (const auto & goal : goals_to_assign) {
-        robot_to_goal_cost_matrix(robot_id_idx, goal_idx) = cost(candidate_plans.at(robot_id).at(goal), world);
-        col_idx_to_goal_node_idx[goal_idx] = goal;
-        goal_idx++;
+      robot_to_goal_cost_matrix(robot_id_idx, goal_idx) = cost(
+        candidate_plans.at(robot_id).at(
+          goal), world);
+      col_idx_to_goal_node_idx[goal_idx] = goal;
+      goal_idx++;
     }
     row_idx_to_robot_id[robot_id_idx] = robot_id;
     robot_id_idx++;
@@ -183,7 +187,8 @@ BehaviorRealization::GoalToPlanMap BehaviorRealization::assign_goals_to_plans(
     RobotID robot_to_assign = row_idx_to_robot_id.at(row_idx);
     BehaviorGoalNodeIdx goal_to_assign = col_idx_to_goal_node_idx.at(col_idx);
 
-    assigned_goals_to_plans[goal_to_assign] = candidate_plans.at(robot_to_assign).at(goal_to_assign);
+    assigned_goals_to_plans[goal_to_assign] =
+      candidate_plans.at(robot_to_assign).at(goal_to_assign);
     assigned_goals_to_plans[goal_to_assign].assigned_robot_id = robot_to_assign;
   }
 
