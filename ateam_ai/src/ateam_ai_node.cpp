@@ -59,7 +59,7 @@ class ATeamAINode : public rclcpp::Node
 {
 public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ateam_ai_node", options), color_listener_(*this), \
+  : rclcpp::Node("ateam_ai_node", options), info_listener_(*this), \
     game_state_listener_(*this), evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
@@ -71,15 +71,15 @@ public:
     for (std::size_t id = 0; id < blue_robots_subscriptions_.size(); id++) {
       auto blue_robot_callback =
         [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          const auto are_we_blue = color_listener_.GetTeamColor() == \
-            ateam_common::TeamColorListener::TeamColor::Blue;
+          const auto are_we_blue = info_listener_.GetTeamColor() == \
+            ateam_common::TeamInfoListener::TeamColor::Blue;
           auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
           robot_state_callback(robot_state_array, id, robot_state_msg);
         };
       auto yellow_robot_callback =
         [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          const auto are_we_yellow = color_listener_.GetTeamColor() == \
-            ateam_common::TeamColorListener::TeamColor::Yellow;
+          const auto are_we_yellow = info_listener_.GetTeamColor() == \
+            ateam_common::TeamInfoListener::TeamColor::Yellow;
           auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
           robot_state_callback(robot_state_array, id, robot_state_msg);
         };
@@ -144,7 +144,7 @@ private:
 
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
-  ateam_common::TeamColorListener color_listener_;
+  ateam_common::TeamInfoListener info_listener_;
   ateam_common::GameStateListener game_state_listener_;
 
   BehaviorRealization realization_;

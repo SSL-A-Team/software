@@ -93,32 +93,32 @@ ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryDat
         return line_msg.name == target_name;
       };
 
+    // did just realize I could have done this as a std transform
     auto lines_to_points = [&](auto name_array, auto & target_array) {
-        for (size_t i = 0; i < name_array.size(); i++) {
-          auto & name = name_array.at(i);
-          auto itr = std::find_if(
-            begin(ros_msg->field_lines), end(
-              ros_msg->field_lines),
-            std::bind(check_field_line_name, std::placeholders::_1, name));
-          if (itr != end(ros_msg->field_lines)) {
-            target_array.at(i).x() = itr->p1.x;
-            target_array.at(i).y() = itr->p1.y;
-            target_array.at(2 * i + 1).x() = itr->p2.x;
-            target_array.at(2 * i + 1).y() = itr->p2.y;
-          }
+      target_array.resize(name_array.size())
+      for (size_t i = 0; i < name_array.size(); i++) {
+        auto & name = name_array.at(i);
+        auto itr = std::find_if(
+          begin(ros_msg->field_lines), end(
+            ros_msg->field_lines),
+          std::bind(check_field_line_name, std::placeholders::_1, name));
+        if (itr != end(ros_msg->field_lines)) {
+          target_array.at(i).x = itr->p1.x;
+          target_array.at(i).y = itr->p1.y;
+          target_array.at(2 * i + 1).x = itr->p2.x;
+          target_array.at(2 * i + 1).y = itr->p2.y;
         }
-      };
-    std::array<std::string, 4> field_bound_names = {"TopTouchLine", "BottomTouchLine"};
+      }
+    };
+
+    std::array<std::string, 2> field_bound_names = {"TopTouchLine", "BottomTouchLine"};
     lines_to_points(field_bound_names, field.field_corners);
 
-
     ateam_msgs::msg::FieldSidedInfo left_side_info {};
-    left_side_info.goal_posts.at(0) = Eigen::Vector2d(
-      -field.field_length / 2.0,
-      field.goal_width / 2.0);
-    left_side_info.goal_posts.at(1) = Eigen::Vector2d(
-      -field.field_length / 2.0,
-      -field.goal_width / 2.0);
+    left_side_info.goal_posts.at(0).x = -field.field_length / 2.0;
+    left_side_info.goal_posts.at(0).y = field.goal_width / 2.0;
+    left_side_info.goal_posts.at(1).x = -field.field_length / 2.0;
+    left_side_info.goal_posts.at(1).y = -field.goal_width / 2.0;
 
     std::array<std::string,
       2> left_penalty_names = {"LeftFieldLeftPenaltyStretch", "LeftFieldRightPenaltyStretch"};
@@ -126,12 +126,10 @@ ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryDat
 
 
     ateam_msgs::msg::FieldSidedInfo right_side_info {};
-    right_side_info.goal_posts.at(0) = Eigen::Vector2d(
-      field.field_length / 2.0,
-      field.goal_width / 2.0);
-    right_side_info.goal_posts.at(1) = Eigen::Vector2d(
-      field.field_length / 2.0,
-      -field.goal_width / 2.0);
+    right_side_info.goal_posts.at(0).x = field.field_length / 2.0;
+    right_side_info.goal_posts.at(0).y = field.goal_width / 2.0;
+    right_side_info.goal_posts.at(1).x = field.field_length / 2.0;
+    right_side_info.goal_posts.at(1).y = -field.goal_width / 2.0;
 
     std::array<std::string,
       2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
@@ -139,10 +137,28 @@ ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryDat
 
     // TODO(cavidano): assign based off known team info
     // note left and right can be different according to Joe
+    // Temporary stupid assignment working under the assumption we are on left side inverted if side is not right
     field.ours = left_side_info;
     field.theirs = right_side_info;
+    return field;
+}
 
-    //
+// I hate all my code...
+// because we really dont have access to the structs of the ros message just did it here
+void invert_field_info(ateam_msgs::msg::FieldInfo& info)
+{
+    auto invert_point_array = [&](auto& target_array) {
+        for (auto& point : target_array) {
+            point.x *= -1.0;
+            point.y *= -1.0;
+        }
+    };
+
+    invert_point_array(info.field_corners);
+    invert_point_array(info.ours.goalie_corners);
+    invert_point_array(info.ours.goal_posts);
+    invert_point_array(info.theirs.goalie_corners);
+    invert_point_array(info.theirs.goal_posts);
 }
 
 CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg)

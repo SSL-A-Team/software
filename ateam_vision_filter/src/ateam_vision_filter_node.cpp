@@ -29,7 +29,7 @@
 
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
-#include <ateam_common/team_color_listener.hpp>
+#include <ateam_common/team_info_listener.hpp>
 
 #include "world.hpp"
 #include "message_conversions.hpp"
@@ -78,15 +78,21 @@ public:
       create_subscription<ssl_league_msgs::msg::VisionWrapper>(
       std::string(Topics::kVisionMessages),
       10,
-      std::bind(&VisionFilterNode::message_callback, this, std::placeholders::_1));
-  }
+      std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
 
-  void message_callback(
-    const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
+  void vision_callback(
+    const ssl_league_msgs::msg::Referee::SharedPtr vision_wrapper_msg)
   {
     int camera_id = vision_wrapper_msg->detection.camera_id;
     CameraMeasurement camera_measurement = message_conversions::getCameraMeasurement(*vision_wrapper_msg);
     ateam_msgs::msg::FieldInfo field_msg = message_conversions::getFieldGeometry(*vision_wrapper_msg);
+
+    // Our field convention is we should always been on the negative half.
+    // So if this is positive for our team we should invert coords
+    if (info_listener_.GetTeamSide() == TeamSide::PositiveHalf) {
+        camera_measurement.invert();
+        invert_field_info(field_msg);
+    }
 
     {
         const std::lock_guard<std::mutex> lock(world_mutex_);
@@ -99,8 +105,6 @@ public:
         field_publisher_->publish(field_msg);
     }
   }
-
-
 
   void timer_callback()
   {
@@ -140,7 +144,9 @@ private:
   rclcpp::Publisher<ateam_msgs::msg::VisionWorldState>::SharedPtr vision_state_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::FieldInfo>::SharedPtr field_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
-  ateam_common::TeamColorListener color_listener_;
+
+  rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
+  ateam_common::TeamInfoListener info_listener_;
 
   std::mutex world_mutex_;
   World world_;

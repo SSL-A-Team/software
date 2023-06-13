@@ -32,6 +32,15 @@ struct CameraMeasurement
   std::array<std::vector<RobotMeasurement>, 16> yellow_robots;
   std::array<std::vector<RobotMeasurement>, 16> blue_robots;
   std::vector<BallMeasurement> ball;
+
+  void invert() {
+    auto invert_array = [&](auto& target_array) {
+        for (auto& data : target_array) {data.invert();}
+    };
+    invert_array(yellow_robots);
+    invert_array(blue_robots);
+    invert_array(ball);
+  }
 };
 
 #endif  // TYPES__CAMERA_MEASUREMENT_HPP_
