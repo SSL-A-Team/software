@@ -23,40 +23,38 @@
 
 #include <Eigen/Dense>
 
-#include <Eigen/Dense>
-
 struct RobotMeasurement
 {
   Eigen::Vector2d position;
   double theta;
 
-  void invert() {
+  void invert()
+  {
     position *= -1.0;
     theta = angle_wrap_pi(theta + M_PI);
   }
 
-  // TODO MOVE THIS MATH TO A COMMON PLACE
-  double angle_wrap_2pi(double angle_rad) {
+  // TODO(Cavidano) MOVE THIS CONVERSION TO A COMMON PLACE
+  double angle_wrap_2pi(double angle_rad)
+  {
     double pi2 = 2 * M_PI;
     if (angle_rad >= pi2) {
-        angle_rad -= pi2 * std::floor(angle_rad / pi2);
+      angle_rad -= pi2 * std::floor(angle_rad / pi2);
     }
 
     if (angle_rad < 0) {
-        angle_rad += pi2 * std::ceil(std::abs(angle_rad)/ pi2);
-    }
-    return angle_rad;
-   }
-
-  double angle_wrap_pi(double angle_rad) {
-    if (angle_rad < -M_PI || M_PI < angle_rad) {
-        return angle_wrap_2pi(angle_rad + M_PI) - M_PI;
+      angle_rad += pi2 * std::ceil(std::abs(angle_rad) / pi2);
     }
     return angle_rad;
   }
 
+  double angle_wrap_pi(double angle_rad)
+  {
+    if (angle_rad < -M_PI || M_PI < angle_rad) {
+      return angle_wrap_2pi(angle_rad + M_PI) - M_PI;
+    }
+    return angle_rad;
+  }
 };
-
-
 
 #endif  // TYPES__ROBOT_MEASUREMENT_HPP_

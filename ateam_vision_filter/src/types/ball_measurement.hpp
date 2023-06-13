@@ -27,10 +27,10 @@ struct BallMeasurement
 {
   Eigen::Vector2d position;
 
-  void invert() {
+  void invert()
+  {
     position *= -1.0;
   }
-
 };
 
 #endif  // TYPES__BALL_MEASUREMENT_HPP_

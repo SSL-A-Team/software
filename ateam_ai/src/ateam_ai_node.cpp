@@ -195,13 +195,15 @@ private:
       .boundary_width = field_msg->boundary_width
     };
 
-    // I could have just defined conversion operators for all of this but Im pretty sure joe wanted ros separate from cpp
-    auto convert_point_array = [&](auto& starting_array, auto final_array_iter) {
-        std::transform(starting_array.begin(), starting_array.end(), final_array_iter,
-            [&](auto& val)->Eigen::Vector2d {
-                return {val.x, val.y};
-            });
-    };
+    // I could have just defined conversion operators for all of this but
+    // Im pretty sure joe wanted ros separate from cpp
+    auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
+        std::transform(
+          starting_array.begin(), starting_array.end(), final_array_iter,
+          [&](auto & val)->Eigen::Vector2d {
+            return {val.x, val.y};
+          });
+      };
 
     convert_point_array(field_msg->field_corners, field.field_corners.begin());
     convert_point_array(field_msg->ours.goalie_corners, field.ours.goalie_corners.begin());

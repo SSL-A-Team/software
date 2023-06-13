@@ -24,7 +24,9 @@
 namespace ateam_common
 {
 
-TeamInfoListener::TeamInfoListener(rclcpp::Node & node, ColorCallback color_callback, SideCallback side_callback)
+TeamInfoListener::TeamInfoListener(
+  rclcpp::Node & node, ColorCallback color_callback,
+  SideCallback side_callback)
 : team_name_(node.declare_parameter<std::string>("gc_team_name", "A-Team")),
   color_callback_(color_callback),
   side_callback_(side_callback)
@@ -92,7 +94,6 @@ void TeamInfoListener::RefereeMessageCallback(
   if (team_side_ != prev_side && side_callback_) {
     side_callback_(team_side_);
   }
-
 }
 
 }  // namespace ateam_common

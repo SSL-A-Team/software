@@ -33,19 +33,20 @@ struct CameraMeasurement
   std::array<std::vector<RobotMeasurement>, 16> blue_robots;
   std::vector<BallMeasurement> ball;
 
-  void invert() {
-    auto invert_array = [&](auto& target_array) {
-        for (auto& data : target_array) {
-            data.invert();
+  void invert()
+  {
+    auto invert_array = [&](auto & target_array) {
+        for (auto & data : target_array) {
+          data.invert();
         }
-    };
+      };
 
-    for (auto& measurement_array : yellow_robots) {
-        invert_array(measurement_array);
+    for (auto & measurement_array : yellow_robots) {
+      invert_array(measurement_array);
     }
 
-    for (auto& measurement_array : blue_robots) {
-        invert_array(measurement_array);
+    for (auto & measurement_array : blue_robots) {
+      invert_array(measurement_array);
     }
 
     invert_array(ball);

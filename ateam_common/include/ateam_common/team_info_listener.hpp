@@ -58,7 +58,7 @@ public:
     Blue
   };
 
- enum class TeamSide
+  enum class TeamSide
   {
     Unknown,
     PositiveHalf,
@@ -74,7 +74,9 @@ public:
    * @param node ROS node
    * @param callback Optional callback called on color change
    */
-  explicit TeamInfoListener(rclcpp::Node & node, ColorCallback color_callback = {}, SideCallback side_callback = {});
+  explicit TeamInfoListener(
+    rclcpp::Node & node, ColorCallback color_callback = {},
+    SideCallback side_callback = {});
 
   const TeamColor & GetTeamColor() const
   {

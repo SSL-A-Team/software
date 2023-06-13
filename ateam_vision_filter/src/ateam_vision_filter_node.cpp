@@ -86,25 +86,27 @@ public:
     const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
   {
     int camera_id = vision_wrapper_msg->detection.camera_id;
-    CameraMeasurement camera_measurement = message_conversions::getCameraMeasurement(*vision_wrapper_msg);
-    ateam_msgs::msg::FieldInfo field_msg = message_conversions::getFieldGeometry(*vision_wrapper_msg);
+    CameraMeasurement camera_measurement = message_conversions::getCameraMeasurement(
+      *vision_wrapper_msg);
+    ateam_msgs::msg::FieldInfo field_msg =
+      message_conversions::getFieldGeometry(*vision_wrapper_msg);
 
     // Our field convention is we should always been on the negative half.
     // So if this is positive for our team we should invert coords
     if (info_listener_.GetTeamSide() == ateam_common::TeamInfoListener::TeamSide::PositiveHalf) {
-        camera_measurement.invert();
-        message_conversions::invert_field_info(field_msg);
+      camera_measurement.invert();
+      message_conversions::invert_field_info(field_msg);
     }
 
     {
-        const std::lock_guard<std::mutex> lock(world_mutex_);
-        world_.update_camera(camera_id, camera_measurement);
+      const std::lock_guard<std::mutex> lock(world_mutex_);
+      world_.update_camera(camera_id, camera_measurement);
     }
 
     // const std::lock_guard<std::mutex> lock(field_mutex_);
     // field_msg_ = field_msg;
     if (field_msg.valid) {
-        field_publisher_->publish(field_msg);
+      field_publisher_->publish(field_msg);
     }
   }
 
