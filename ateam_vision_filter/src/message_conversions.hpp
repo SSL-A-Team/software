@@ -47,6 +47,7 @@ CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros
 RobotMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionRobot & ros_msg);
 BallMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionBall & ros_msg);
 
+void invert_field_info(ateam_msgs::msg::FieldInfo& info);
 
 ateam_msgs::msg::FieldInfo getFieldGeometry(const ssl_league_msgs::msg::VisionWrapper & ros_msg);
 ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryData & ros_msg);

@@ -8,7 +8,7 @@
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
-#include <ateam_common/team_color_listener.hpp>
+#include <ateam_common/team_info_listener.hpp>
 
 #include "rnp_packet_helpers.hpp"
 #include "conversion.hpp"

@@ -35,10 +35,19 @@ struct CameraMeasurement
 
   void invert() {
     auto invert_array = [&](auto& target_array) {
-        for (auto& data : target_array) {data.invert();}
+        for (auto& data : target_array) {
+            data.invert();
+        }
     };
-    invert_array(yellow_robots);
-    invert_array(blue_robots);
+
+    for (auto& measurement_array : yellow_robots) {
+        invert_array(measurement_array);
+    }
+
+    for (auto& measurement_array : blue_robots) {
+        invert_array(measurement_array);
+    }
+
     invert_array(ball);
   }
 };

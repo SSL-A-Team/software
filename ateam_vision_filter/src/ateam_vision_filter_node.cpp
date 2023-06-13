@@ -43,7 +43,8 @@ class VisionFilterNode : public rclcpp::Node
 {
 public:
   explicit VisionFilterNode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ateam_vision_filter", options)
+  : rclcpp::Node("ateam_vision_filter", options),
+    info_listener_(*this)
   {
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
@@ -79,9 +80,10 @@ public:
       std::string(Topics::kVisionMessages),
       10,
       std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
+  }
 
   void vision_callback(
-    const ssl_league_msgs::msg::Referee::SharedPtr vision_wrapper_msg)
+    const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
   {
     int camera_id = vision_wrapper_msg->detection.camera_id;
     CameraMeasurement camera_measurement = message_conversions::getCameraMeasurement(*vision_wrapper_msg);
@@ -89,9 +91,9 @@ public:
 
     // Our field convention is we should always been on the negative half.
     // So if this is positive for our team we should invert coords
-    if (info_listener_.GetTeamSide() == TeamSide::PositiveHalf) {
+    if (info_listener_.GetTeamSide() == ateam_common::TeamInfoListener::TeamSide::PositiveHalf) {
         camera_measurement.invert();
-        invert_field_info(field_msg);
+        message_conversions::invert_field_info(field_msg);
     }
 
     {

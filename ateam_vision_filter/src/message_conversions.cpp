@@ -67,26 +67,26 @@ ateam_msgs::msg::FieldInfo getFieldGeometry(const ssl_league_msgs::msg::VisionWr
   return fromMsg(ros_msg.geometry);
 }
 
-    // note left and right can be different according to Joe
-ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryData & ros_msg)
+// note left and right can be different according to Joe
+ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryData & vision_wrapper_msg)
 {
     // calibration left out but should be included in field info message if needed
-    ssl_league_msgs::msg::VisionGeometryFieldSize & field_report =
-      vision_wrapper_msg->ros_msg.field;
+    const ssl_league_msgs::msg::VisionGeometryFieldSize& ros_msg =
+      vision_wrapper_msg.field;
 
     ateam_msgs::msg::FieldInfo field_info {};
     // check for if invalid since we cant see the original optional and this
     // is a rough estimate of the smallest field
-    if (field_report.field_length < 1.0 || field_report.field_width < 1.0) {
+    if (ros_msg.field_length < 1.0 || ros_msg.field_width < 1.0) {
         field_info.valid = false;
         return field_info;
     }
 
-    field_info.field_length = ros_msg->field_length;
-    field_info.field_width = ros_msg->field_width;
-    field_info.goal_width = ros_msg->goal_width;
-    field_info.goal_depth = ros_msg->goal_depth;
-    field_info.boundary_width = ros_msg->boundary_width;
+    field_info.field_length = ros_msg.field_length;
+    field_info.field_width = ros_msg.field_width;
+    field_info.goal_width = ros_msg.goal_width;
+    field_info.goal_depth = ros_msg.goal_depth;
+    field_info.boundary_width = ros_msg.boundary_width;
 
     auto check_field_line_name =
       [](ssl_league_msgs::msg::VisionFieldLineSegment line_msg, std::string target_name) -> bool {
@@ -94,15 +94,13 @@ ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryDat
       };
 
     // did just realize I could have done this as a std transform
-    auto lines_to_points = [&](auto name_array, auto & target_array) {
-      target_array.resize(name_array.size())
+    auto lines_to_points = [&](auto& name_array, auto& target_array) {
+      target_array.resize(name_array.size());
       for (size_t i = 0; i < name_array.size(); i++) {
-        auto & name = name_array.at(i);
-        auto itr = std::find_if(
-          begin(ros_msg->field_lines), end(
-            ros_msg->field_lines),
+        auto& name = name_array.at(i);
+        auto itr = std::find_if(ros_msg.field_lines.begin(), ros_msg.field_lines.end(),
           std::bind(check_field_line_name, std::placeholders::_1, name));
-        if (itr != end(ros_msg->field_lines)) {
+        if (itr != ros_msg.field_lines.end()) {
           target_array.at(i).x = itr->p1.x;
           target_array.at(i).y = itr->p1.y;
           target_array.at(2 * i + 1).x = itr->p2.x;
@@ -112,13 +110,13 @@ ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryDat
     };
 
     std::array<std::string, 2> field_bound_names = {"TopTouchLine", "BottomTouchLine"};
-    lines_to_points(field_bound_names, field.field_corners);
+    lines_to_points(field_bound_names, field_info.field_corners);
 
     ateam_msgs::msg::FieldSidedInfo left_side_info {};
-    left_side_info.goal_posts.at(0).x = -field.field_length / 2.0;
-    left_side_info.goal_posts.at(0).y = field.goal_width / 2.0;
-    left_side_info.goal_posts.at(1).x = -field.field_length / 2.0;
-    left_side_info.goal_posts.at(1).y = -field.goal_width / 2.0;
+    left_side_info.goal_posts.at(0).x = -field_info.field_length / 2.0;
+    left_side_info.goal_posts.at(0).y = field_info.goal_width / 2.0;
+    left_side_info.goal_posts.at(1).x = -field_info.field_length / 2.0;
+    left_side_info.goal_posts.at(1).y = -field_info.goal_width / 2.0;
 
     std::array<std::string,
       2> left_penalty_names = {"LeftFieldLeftPenaltyStretch", "LeftFieldRightPenaltyStretch"};
@@ -126,10 +124,10 @@ ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryDat
 
 
     ateam_msgs::msg::FieldSidedInfo right_side_info {};
-    right_side_info.goal_posts.at(0).x = field.field_length / 2.0;
-    right_side_info.goal_posts.at(0).y = field.goal_width / 2.0;
-    right_side_info.goal_posts.at(1).x = field.field_length / 2.0;
-    right_side_info.goal_posts.at(1).y = -field.goal_width / 2.0;
+    right_side_info.goal_posts.at(0).x = field_info.field_length / 2.0;
+    right_side_info.goal_posts.at(0).y = field_info.goal_width / 2.0;
+    right_side_info.goal_posts.at(1).x = field_info.field_length / 2.0;
+    right_side_info.goal_posts.at(1).y = -field_info.goal_width / 2.0;
 
     std::array<std::string,
       2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
@@ -138,9 +136,9 @@ ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryDat
     // TODO(cavidano): assign based off known team info
     // note left and right can be different according to Joe
     // Temporary stupid assignment working under the assumption we are on left side inverted if side is not right
-    field.ours = left_side_info;
-    field.theirs = right_side_info;
-    return field;
+    field_info.ours = left_side_info;
+    field_info.theirs = right_side_info;
+    return field_info;
 }
 
 // I hate all my code...

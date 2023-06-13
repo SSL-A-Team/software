@@ -32,7 +32,7 @@ struct RobotMeasurement
 
   void invert() {
     position *= -1.0;
-    theta = angle_wrap_pi(theta + M_PI)
+    theta = angle_wrap_pi(theta + M_PI);
   }
 
   // TODO MOVE THIS MATH TO A COMMON PLACE
