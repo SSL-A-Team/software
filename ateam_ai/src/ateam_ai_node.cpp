@@ -183,10 +183,8 @@ private:
     ball_state.vel.y() = ball_state_msg->twist.linear.y;
   }
 
-  void field_callback(const ssl_league_msgs::msg::FieldInfo::SharedPtr field_msg)
+  void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
   {
-    // in field info define a constructor from field info message, points to eigen vectors of specific names are really what this handles
-    // in util file we need a from point to eigen vector conversion operator
     Field field {
       .field_length = field_msg->field_length,
       .field_width = field_msg->field_width,
@@ -194,6 +192,21 @@ private:
       .goal_depth = field_msg->goal_depth,
       .boundary_width = field_msg->boundary_width
     };
+
+    // I could have just defined conversion operators for all of this but Im pretty sure joe wanted ros separate from cpp
+    auto convert_point_array = [&](auto& starting_array, auto& final_array_iter) {
+        std::transform(starting_array.begin(), starting_array.end(), final_array_iter,
+            [&](auto& val)->Eigen::Vector2d {
+                return {val.x, val.y};
+            });
+    };
+
+    convert_point_array(field_msg.field_corners, field.field_corners.begin());
+    convert_point_array(field_msg.ours.goalie_corners, std::back_inserter(field.ours.goalie_corners));
+    convert_point_array(field_msg.ours.goal_posts, std::back_inserter(field.ours.goal_posts));
+    convert_point_array(field_msg.theirs.goalie_corners, std::back_inserter(field.ours.goalie_corners));
+    convert_point_array(field_msg.theirs.goal_posts, std::back_inserter(field.ours.goal_posts));
+
 
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.field = field;

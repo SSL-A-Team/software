@@ -34,6 +34,7 @@ struct Field
   // we will definetly change the format of this at some point this is preliminary
   // since we dont really have a geometry library yet
   // all of this should be in our coordinate system
+  // There is a mirroring ros message of this type
   float field_length;
   float field_width;
   float goal_width;
