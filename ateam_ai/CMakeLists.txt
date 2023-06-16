@@ -44,6 +44,10 @@ rclcpp_components_register_node(
   PLUGIN "ateam_ai::ATeamAINode"
   EXECUTABLE ateam_ai_node
 )
+
+# Export symbols so we can backtrace
+set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
+
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
 if(BUILD_TESTING)

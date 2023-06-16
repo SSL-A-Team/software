@@ -127,6 +127,7 @@ StatusOr<T> Failure(std::string && s)
       if (!__status_or_lhs) { \
         std::stringstream s; \
         s << text << "\n" << __status_or_lhs.error() << std::endl; \
+        std::cout << s.str(); \
         throw s.str(); \
       } __status_or_lhs.value();});
 
@@ -144,6 +145,7 @@ StatusOr<T> Failure(std::string && s)
     if (!__value) { \
       std::stringstream s; \
       s << ateam::Failure(text).error() << std::endl; \
+      std::cout << s.str(); \
       throw s.str(); \
     } \
   } while (false);
