@@ -7,7 +7,6 @@
   <maintainer email="collin.avidano@gmail.com">collin</maintainer>
   <license>TODO: License declaration</license>
 
-  <depend>flatdict</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

@@ -1,6 +1,7 @@
 import rclpy
 import os
 import shutil
+
 from rclpy.node import Node
 from rclpy.serialization import deserialize_message
 from std_msgs.msg import String
@@ -38,15 +39,15 @@ class BagToCSVConverter(Node):
         self.reader.open(storage_options, converter_options)
 
         topics_meta = self.reader.get_all_topics_and_types()
-        topics_table = {topic_meta.name : get_message(topic_meta.type) for topic_meta in topics_meta} 
+        topics_table = {topic_meta.name : get_message(topic_meta.type) for topic_meta in topics_meta}
         # get_message takes the string for message type and finds the MsgType object (message definition) for it from your ros env
         # so really just make ourselves a lookup table of topic name to MsgType/defs not message type strings ahead of time for deserialization
         # IMPORTANT this does require you have built the messages for any topic in the bag file
         # Rolling ros2 has updates which store the defs in the rosbag files but we are on humble so...
 
 
-        all_topics_count = 0 
-        # for every topic we pulled out of the meta data we start a csv file for it. If 
+        all_topics_count = 0
+        # for every topic we pulled out of the meta data we start a csv file for it. If
         for topic_name, msg_type in topics_table.items():
             output_csv_path = os.path.join(output_dir, topic_name.replace("/", "") + ".csv")
             print(output_csv_path)
@@ -54,14 +55,14 @@ class BagToCSVConverter(Node):
             filter = rosbag2_py.StorageFilter([topic_name])
             self.reader.set_filter(filter)
 
-            # Only if there is one message of that type do we want to even make a file for it. 
+            # Only if there is one message of that type do we want to even make a file for it.
             # Unlikely as its in the meta data table but something I saw when I was looking at this stuff because apparently this can happen if a bag is filtered
             # Also we use the first message for metadata
             i = 0
 
             if self.reader.has_next():
                 with open(output_csv_path, 'w') as output_csv:
-                    # Use the first messages ordered dict then flattened to write out the header for this topics csv 
+                    # Use the first messages ordered dict then flattened to write out the header for this topics csv
                     msg_topic, s_msg, timestamp = self.reader.read_next()
 
                     msg = deserialize_message(s_msg, msg_type)
@@ -73,7 +74,7 @@ class BagToCSVConverter(Node):
                     output_csv.write(msg_csv + "\n")
                     i += 1
 
-                    # read and convert the remaining messages 
+                    # read and convert the remaining messages
                     while self.reader.has_next():
                         msg_topic, s_msg, timestamp = self.reader.read_next()
                         msg = deserialize_message(s_msg, msg_type)
