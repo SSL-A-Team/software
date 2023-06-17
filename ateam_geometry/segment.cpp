@@ -34,14 +34,12 @@ namespace ateam_geometry {
     
     Eigen::Vector2d LineSegment::get_midpoint(){
         Eigen::Vector2d midpoint;
-
         midpoint.x() = (p1.x() + p2.x()) / 2;
         midpoint.y() = (p1.y() + p2.y()) / 2;
-
         return midpoint;
     }
 
-    LineSegment get_line_of_length_from_point(const Eigen::Vector2d & start, const double & length, const double & angle) {
+    LineSegment get_lineseg_of_length_from_point(const Eigen::Vector2d & start, const double & length, const double & angle) {
         Eigen::Vector2d endpoint;
         // Essentially we convert a given polar coordinate/vector 
         // (length and angle) to an x, y plane
@@ -51,6 +49,11 @@ namespace ateam_geometry {
         LineSegment segment = LineSegment(start, endpoint);
 
         return segment;
+    }
+
+    bool is_point_on_segment(const Eigen::Vector2d & point, const LineSegment & segment) {
+        // TODO: Implement this
+        return false;
     }
 
     bool do_segments_intersect(const LineSegment & ls1, const LineSegment & ls2) {
@@ -80,7 +83,7 @@ namespace ateam_geometry {
 
         Based on these definitions, there are 4 possible cases of 
         whether or not 2 line segments intersect:
-        
+
         1.If r x s = 0 && (q - p) x r = 0
             - The two segments are colinear
         2. If r x s = 0 && (q - p) x r != 0

@@ -30,8 +30,6 @@ namespace ateam_geometry {
 
             Eigen::Vector2d get_midpoint();
 
-            bool is_point_on_line(const Eigen::Vector2d & point);
-
             Eigen::Vector2d p1;
             Eigen::Vector2d p2;
             double length;
@@ -39,6 +37,8 @@ namespace ateam_geometry {
 
     LineSegment get_lineseg_of_length_from_point(const Eigen::Vector2d & start, const double & length,
     const double & angle);
+
+    bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment);
 
     bool do_segments_intersect(const LineSegment & ls1, const LineSegment & ls2);
     Eigen::Vector2d get_segment_intersection(const LineSegment & ls1, const LineSegment & ls2);
