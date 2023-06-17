@@ -18,30 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__SEGMENT_HPP
-#define ATEAM_GEOMETRY__SEGMENT_HPP
+#ifndef ATEAM_GEOMETRY__CIRCLE_HPP
+#define ATEAM_GEOMETRY__CIRCLE_HPP
 
 #include <Eigen/Dense>
 
 namespace ateam_geometry {
-    class LineSegment {
+    class Circle {
         public:
-            LineSegment(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
+            Circle(const Eigen::Vector2d & center, const double & radius);
 
-            Eigen::Vector2d get_midpoint();
+            std::vector<Eigen::Vector2d> get_equally_spaced_points(const int & num_points, const double & offset);
 
-            Eigen::Vector2d p1;
-            Eigen::Vector2d p2;
-            double length;
+            Eigen::Vector2d center;
+            double radius;
     };
 
-    LineSegment get_lineseg_of_length_from_point(const Eigen::Vector2d & start, const double & length,
-    const double & angle);
-
-    bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment);
-
-    bool do_segments_intersect(const LineSegment & ls1, const LineSegment & ls2);
-    Eigen::Vector2d get_segment_intersection(const LineSegment & ls1, const LineSegment & ls2);
+    bool is_point_in_circle(const Eigen::Vector2d & point, const Circle & circle);
 }
 
-#endif  // ATEAM_GEOMETRY__SEGMENT_HPP_
+#endif //ATEAM_GEOMETRY__CIRCLE_HPP
