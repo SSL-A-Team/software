@@ -26,6 +26,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/VisionWorldState.msg
   msg/World.msg
 
+  msg/FieldInfo.msg
+  msg/FieldSidedInfo.msg
+
   srv/ReconnectTeamClient.srv
   srv/SetDesiredKeeper.srv
   srv/SetTeamAdvantageChoice.srv
