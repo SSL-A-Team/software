@@ -22,6 +22,8 @@
 #define ATEAM_GEOMETRY__SEGMENT_HPP
 
 #include <Eigen/Dense>
+#include <tuple>
+#include <optional>
 
 namespace ateam_geometry {
     class LineSegment {
@@ -29,6 +31,7 @@ namespace ateam_geometry {
             LineSegment(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
 
             Eigen::Vector2d get_midpoint();
+            std::vector<Eigen::Vector2d> get_equally_spaced_points(const int & num_points);
 
             Eigen::Vector2d p1;
             Eigen::Vector2d p2;
@@ -40,8 +43,7 @@ namespace ateam_geometry {
 
     bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment);
 
-    bool do_segments_intersect(const LineSegment & ls1, const LineSegment & ls2);
-    Eigen::Vector2d get_segment_intersection(const LineSegment & ls1, const LineSegment & ls2);
+    std::tuple<bool, std::optional<Eigen::Vector2d>> get_segment_intersection(const LineSegment & ls1, const LineSegment & ls2);
 }
 
 #endif  // ATEAM_GEOMETRY__SEGMENT_HPP_

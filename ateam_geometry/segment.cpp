@@ -22,6 +22,8 @@
 #include "ateam_geometry/utilities.hpp"
 #include <Eigen/Dense>
 #include <math.h>
+#include <optional>
+#include <tuple>
 
 namespace ateam_geometry {
     LineSegment::LineSegment(const Eigen::Vector2d & start, const Eigen::Vector2d & end) {
@@ -39,6 +41,23 @@ namespace ateam_geometry {
         return midpoint;
     }
 
+    std::vector<Eigen::Vector2d> LineSegment::get_equally_spaced_points(const int & num_points) {
+        /*
+        Get equally spaced points along the line segement this is called from.
+        If we only get one point, it will be the first endpoint.
+        */
+        std::vector<Eigen::Vector2d> points;
+        double x_spacing = p2.x() - p1.x() / num_points;
+        double y_spacing = p2.y() - p1.y() / num_points;
+        for (int i; i < num_points; ++i) {
+            Eigen::Vector2d point;
+            point.x() = p1.x() + (x_spacing * i);
+            point.y() = p1.y() + (y_spacing * i);
+            points.push_back(point);
+        }
+        return points;
+    }
+
     LineSegment get_lineseg_of_length_from_point(const Eigen::Vector2d & start, const double & length, const double & angle) {
         Eigen::Vector2d endpoint;
         // Essentially we convert a given polar coordinate/vector 
@@ -52,13 +71,30 @@ namespace ateam_geometry {
     }
 
     bool is_point_on_segment(const Eigen::Vector2d & point, const LineSegment & segment) {
-        // TODO: Implement this
-        return false;
+        /*
+        https://computergraphics.stackexchange.com/questions/2105/test-if-a-point-is-on-a-line-segment
+        https://lucidar.me/en/mathematics/check-if-a-point-belongs-on-a-line-segment/
+        */
+        Eigen::Vector2d direction; // Projection of B onto A
+        direction.x() = segment.p2.x() - segment.p1.x();
+        direction.y() = segment.p2.y() - segment.p2.y();
+        direction.normalize();
+
+        Eigen::Vector2d p_relative; // projection of P onto A
+        p_relative.x() = point.x() - segment.p1.x();
+        p_relative.y() = point.y() - segment.p1.y();
+        double projection = direction.dot(p_relative);
+        
+        if (projection < 0 || projection > segment.length) {
+            return false;
+        }
+        return true;
     }
 
-    bool do_segments_intersect(const LineSegment & ls1, const LineSegment & ls2) {
-        /* Given two 2d line segments, return a bool corresponding to whether or not
-        they intersect.
+    std::tuple<bool, std::optional<Eigen::Vector2d>> get_segment_intersection(const LineSegment & ls1, const LineSegment & ls2) {
+        /* Given two 2d line segments, return a tuple of
+        a <bool, std::optional<Eigen::Vector2d>> corresponding to whether or not
+        they intersect and if applicable, the point of intersection.
 
         Based on the algorithm implementation provided here:
         https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
@@ -86,6 +122,7 @@ namespace ateam_geometry {
 
         1.If r x s = 0 && (q - p) x r = 0
             - The two segments are colinear
+            **NOTE: In this case, we simply return the first endpoint of the first line segment**
         2. If r x s = 0 && (q - p) x r != 0
             - Segments are parallel and non-intersecting
         3. If r x s != 0 && 0 <= t <= 1 && 0 <= u <= 1
@@ -104,24 +141,29 @@ namespace ateam_geometry {
         s.y() = ls2.p2.y() - ls2.p1.y();
 
         double rxs = cross_product_2d(r, s);
-        /* Need to change this to be within epsilon? */
+        // Need to change this to be within epsilon?
         if (rxs == 0) {
             if (cross_product_2d(q - p, r) == 0) {
-                return true;
+                // The two segments are colinear
+                return {true, p};
             } else {
-                return false;
+                // Lines are parallel and non-intersecting
+                return {false, std::nullopt};
             }
         } 
         else {
             double t = cross_product_2d(q - p, s) / rxs;
             double u = cross_product_2d(q - p, r) / rxs;
             if (0 <= t <= 1 && 0 <= u <= 1) {
-                return true;
+                // The intersection is at p + tr = q + us
+                Eigen::Vector2d intersection;
+                intersection.x() = p.x() + (t * r.x());
+                intersection.y() = p.y() + (t * r.y());
+                return {true, intersection};
             } else {
-                return false;
+                // Segments are not parallel and do not intersect
+                return {false, std::nullopt};
             }
         }
-    }
-
-    Eigen::Vector2d get_segment_intersection(const LineSegment & ls1, const LineSegment & ls2);
+    };
 }

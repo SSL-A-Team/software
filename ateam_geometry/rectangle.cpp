@@ -49,7 +49,30 @@ namespace ateam_geometry {
     };
 
     bool is_point_in_rectangle(Eigen::Vector2d & point, const Rectangle & rect) {
-        double max_x, min_x, max_y, min_y;
+        double max_x = rect.corners[0].x();
+        double max_y = rect.corners[0].y();
+        double min_x = rect.corners[0].x();
+        double min_y = rect.corners[0].y();
         
+        for (Eigen::Vector2d & corner : rect.corners) {
+            if (corner.x() > max_x) {
+                max_x = corner.x();
+            }
+            if (corner.y() > max_y) {
+                max_y = corner.y();
+            }
+            if (corner.x() < min_x) {
+                min_x = corner.x();
+            }
+            if (corner.y() < min_y) {
+                min_y = corner.y();
+            }
+        }
+        if (point.x() <= max_x && point.x() >= min_x) {
+            if (point.y() <= max_y && point.y() >= min_y) {
+                return true;
+            }
+        }
+        return false;
     };
 }
