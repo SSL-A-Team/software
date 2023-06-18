@@ -21,7 +21,7 @@ add_library(${PROJECT_NAME} SHARED
   src/bi_directional_udp.cpp
   src/multicast_receiver.cpp
   src/parameters.cpp
-  src/team_color_listener.cpp
+  src/team_info_listener.cpp
   src/game_state_listener.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
