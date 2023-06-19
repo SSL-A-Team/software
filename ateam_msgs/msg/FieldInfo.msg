@@ -1,9 +1,0 @@
-bool valid
-float32 field_length
-float32 field_width
-float32 goal_width
-float32 goal_depth
-float32 boundary_width
-geometry_msgs/Point[] field_corners
-FieldSidedInfo ours
-FieldSidedInfo theirs

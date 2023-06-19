@@ -23,8 +23,6 @@
 
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
-#include <ateam_msgs/msg/field_info.hpp>
-#include <ateam_msgs/msg/field_sided_info.hpp>
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <ssl_league_msgs/msg/vision_detection_frame.hpp>
@@ -42,15 +40,10 @@ namespace ateam_vision_filter::message_conversions
 ateam_msgs::msg::BallState toMsg(const Ball & obj);
 ateam_msgs::msg::RobotState toMsg(const Robot & obj);
 
-CameraMeasurement getCameraMeasurement(const ssl_league_msgs::msg::VisionWrapper & ros_msg);
+CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionWrapper & ros_msg);
 CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg);
 RobotMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionRobot & ros_msg);
 BallMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionBall & ros_msg);
-
-void invert_field_info(ateam_msgs::msg::FieldInfo & info);
-
-ateam_msgs::msg::FieldInfo getFieldGeometry(const ssl_league_msgs::msg::VisionWrapper & ros_msg);
-ateam_msgs::msg::FieldInfo fromMsg(const ssl_league_msgs::msg::VisionGeometryData & ros_msg);
 
 }  // namespace ateam_vision_filter::message_conversions
 

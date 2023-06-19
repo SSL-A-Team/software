@@ -40,11 +40,8 @@ class SSLVisionBridgeNode : public rclcpp::Node
 public:
   explicit SSLVisionBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ssl_vision_bridge", options),
-    multicast_receiver_(
-      (declare_parameter("ssl_vision_ip", "224.5.23.2"),
-      get_parameter("ssl_vision_ip").as_string()),
-      (declare_parameter("ssl_vision_port", 10020),
-      get_parameter("ssl_vision_port").as_int()),
+    multicast_receiver_("224.5.23.2",
+      10020,
       [this](const std::string &, const uint16_t, auto * buffer, size_t bytes_received) {
         SSL_WrapperPacket vision_proto;
 

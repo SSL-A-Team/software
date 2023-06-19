@@ -44,11 +44,7 @@ class SSLSimulationRadioBridgeNode : public rclcpp::Node
 public:
   explicit SSLSimulationRadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_ssl_simulation_radio_bridge", options),
-    udp_((declare_parameter("ssl_sim_radio_ip", "127.0.0.1"),
-      get_parameter("ssl_sim_radio_ip").as_string()),
-      (declare_parameter("ssl_sim_radio_port", 10301),
-      get_parameter("ssl_sim_radio_port").as_int()),
-      std::bind(&SSLSimulationRadioBridgeNode::feedback_callback,
+    udp_("127.0.0.1", 10301, std::bind(&SSLSimulationRadioBridgeNode::feedback_callback,
       this,
       std::placeholders::_1,
       std::placeholders::_2))
