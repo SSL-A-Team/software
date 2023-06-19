@@ -54,7 +54,7 @@ namespace ateam_geometry {
         double min_x = rect.corners[0].x();
         double min_y = rect.corners[0].y();
         
-        for (Eigen::Vector2d & corner : rect.corners) {
+        for (const Eigen::Vector2d & corner : rect.corners) {
             if (corner.x() > max_x) {
                 max_x = corner.x();
             }
