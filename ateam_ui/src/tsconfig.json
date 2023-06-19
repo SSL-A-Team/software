@@ -1,6 +1,7 @@
 {
   "include": ["src/**/*", "src/**/*.vue"],
   "compilerOptions": {
+    "esModuleInterop": true,
     "allowJs":true,
     "baseUrl": ".",
     "paths": {

@@ -1,23 +1,23 @@
 <template>
     <v-stage ref="stage" :config="{
-                         width: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
-                         height: 100+(state.fieldDimensions.floorWidth*renderConfig.scale),
+                         width: 100+(state.world.field.fieldDimensions.floorLength*renderConfig.scale),
+                         height: 100+(state.world.field.fieldDimensions.floorWidth*renderConfig.scale),
                          scaleX: renderConfig.factor,
                          scaleY: renderConfig.factor
                          }">
 
         <!-- layer for field background and outlines -->>
         <v-layer ref="field" :config="{
-                             offsetX: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
-                             offsetY: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
+                             offsetX: -(100+(state.world.field.fieldDimensions.floorLength*renderConfig.scale))/2,
+                             offsetY: -(100+(state.world.field.fieldDimensions.floorWidth*renderConfig.scale))/2,
                              listening: false
                              }">
 
             <v-rect ref="background" :config="{
-                                     x: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
-                                     y: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
-                                     width: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
-                                     height: 100+(state.fieldDimensions.floorWidth*renderConfig.scale),
+                                     x: -(100+(state.world.field.fieldDimensions.floorLength*renderConfig.scale))/2,
+                                     y: -(100+(state.world.field.fieldDimensions.floorWidth*renderConfig.scale))/2,
+                                     width: 100+(state.world.field.fieldDimensions.floorLength*renderConfig.scale),
+                                     height: 100+(state.world.field.fieldDimensions.floorWidth*renderConfig.scale),
                                      fill:'green'
                                      }"/>
 
@@ -28,10 +28,10 @@
                                          }">
 
                 <v-rect ref="fieldLines" :config="{
-                                         x: -state.fieldDimensions.length*renderConfig.scale/2,
-                                         y: -state.fieldDimensions.width*renderConfig.scale/2,
-                                         width: state.fieldDimensions.length*renderConfig.scale,
-                                         height: state.fieldDimensions.width*renderConfig.scale,
+                                         x: -state.world.field.fieldDimensions.length*renderConfig.scale/2,
+                                         y: -state.world.field.fieldDimensions.width*renderConfig.scale/2,
+                                         width: state.world.field.fieldDimensions.length*renderConfig.scale,
+                                         height: state.world.field.fieldDimensions.width*renderConfig.scale,
                                          stroke:'white',
                                          strokeWidth: 4
                                          }"></v-rect>
@@ -39,7 +39,7 @@
                 <v-circle ref="centerCircle" :config="{
                                              x: 0,
                                              y: 0,
-                                             radius: state.fieldDimensions.centerRadius*renderConfig.scale,
+                                             radius: state.world.field.fieldDimensions.centerRadius*renderConfig.scale,
                                              stroke: 'white',
                                              strokeWidth: 4
                                              }"></v-circle>
@@ -47,17 +47,17 @@
                 <v-line ref="centerLine" :config="{
                                          x: 0,
                                          y: 0,
-                                         points: [0, -state.fieldDimensions.width*renderConfig.scale/2,
-                                             0, state.fieldDimensions.width*renderConfig.scale/2],
+                                         points: [0, -state.world.field.fieldDimensions.width*renderConfig.scale/2,
+                                             0, state.world.field.fieldDimensions.width*renderConfig.scale/2],
                                          stroke: 'white',
                                          strokeWidth: 4,
                                          }"></v-line>
 
                 <!-- The goal/box for each team is programtically generated horizontally and then rotated into position -->>
-                <v-group v-for="team in state.teams" :key="team.color" :config="{
+                <v-group v-for="team in state.world.teams" :key="team.color" :config="{
                                                      x: 0,
                                                      y: 0,
-                                                     offsetX: state.fieldDimensions.length*renderConfig.scale/2,
+                                                     offsetX: state.world.field.fieldDimensions.length*renderConfig.scale/2,
                                                      offsetY: 0,
                                                      rotation: team.defending*90 - 90
                                                      }">
@@ -67,10 +67,10 @@
                             x:0,
                             y:0,
                             points:[
-                                0, -state.fieldDimensions.goalWidth*renderConfig.scale,
-                                state.fieldDimensions.goalWidth*renderConfig.scale, -state.fieldDimensions.goalWidth*renderConfig.scale,
-                                state.fieldDimensions.goalWidth*renderConfig.scale, state.fieldDimensions.goalWidth*renderConfig.scale,
-                                0, state.fieldDimensions.goalWidth*renderConfig.scale,
+                                0, -state.world.field.fieldDimensions.goalWidth*renderConfig.scale,
+                                state.world.field.fieldDimensions.goalWidth*renderConfig.scale, -state.world.field.fieldDimensions.goalWidth*renderConfig.scale,
+                                state.world.field.fieldDimensions.goalWidth*renderConfig.scale, state.world.field.fieldDimensions.goalWidth*renderConfig.scale,
+                                0, state.world.field.fieldDimensions.goalWidth*renderConfig.scale,
                             ],
                             stroke: 'white',
                             strokeWidth: 4
@@ -81,10 +81,10 @@
                             x:0,
                             y:0,
                             points:[
-                                0, -state.fieldDimensions.goalWidth*renderConfig.scale/2,
-                                -state.fieldDimensions.goalDepth*renderConfig.scale, -state.fieldDimensions.goalWidth*renderConfig.scale/2,
-                                -state.fieldDimensions.goalDepth*renderConfig.scale, state.fieldDimensions.goalWidth*renderConfig.scale/2,
-                                0, state.fieldDimensions.goalWidth*renderConfig.scale/2,
+                                0, -state.world.field.fieldDimensions.goalWidth*renderConfig.scale/2,
+                                -state.world.field.fieldDimensions.goalDepth*renderConfig.scale, -state.world.field.fieldDimensions.goalWidth*renderConfig.scale/2,
+                                -state.world.field.fieldDimensions.goalDepth*renderConfig.scale, state.world.field.fieldDimensions.goalWidth*renderConfig.scale/2,
+                                0, state.world.field.fieldDimensions.goalWidth*renderConfig.scale/2,
                             ],
                             stroke: team.color,
                             strokeWidth: 4
@@ -94,10 +94,11 @@
         </v-layer>
 
         <!-- layer for only underlays -->>
+        <!--
         <v-layer ref="underlay"
             :config="{
-            offsetX: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
-            offsetY: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
+            offsetX: -(100+(state.world.field.fieldDimensions.floorLength*renderConfig.scale))/2,
+            offsetY: -(100+(state.world.field.fieldDimensions.floorWidth*renderConfig.scale))/2,
             listening: false
             }">
             <v-shape v-for="underlay in Object.entries(state.underlays).map(i => {return i[1]} )"
@@ -106,7 +107,7 @@
                          renderConfig: renderConfig,
                          sceneFunc: overlayShape,
                          overlay: underlay,
-                         fieldDimensions: state.fieldDimensions,
+                         fieldDimensions: state.world.field.fieldDimensions,
                          x: underlay.position.x*renderConfig.scale,
                          y: -underlay.position.y*renderConfig.scale,
                          rotation: underlay.position.z,
@@ -119,25 +120,26 @@
                      }">
             </v-shape>
         </v-layer>
-
+        -->
+        
         <!-- layer for game elements (robots and the ball) -->>
         <v-layer ref="game"
             @dragstart="handleDragStart" @dragmove="handleDrag" @dragEnd="handleDragEnd"
             @mousedown="handleDown" @mousemove="handleMouse" @mouseup="handleUp"
             :config="{
-            offsetX: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
-            offsetY: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
+            offsetX: -(100+(state.world.field.fieldDimensions.floorLength*renderConfig.scale))/2,
+            offsetY: -(100+(state.world.field.fieldDimensions.floorWidth*renderConfig.scale))/2,
             }">
 
             <v-rect ref="collision" :config="{
-                                     x: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
-                                     y: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
-                                     width: 100+(state.fieldDimensions.floorLength*renderConfig.scale),
-                                     height: 100+(state.fieldDimensions.floorWidth*renderConfig.scale),
+                                     x: -(100+(state.world.field.fieldDimensions.floorLength*renderConfig.scale))/2,
+                                     y: -(100+(state.world.field.fieldDimensions.floorWidth*renderConfig.scale))/2,
+                                     width: 100+(state.world.field.fieldDimensions.floorLength*renderConfig.scale),
+                                     height: 100+(state.world.field.fieldDimensions.floorWidth*renderConfig.scale),
                                      }"/>
 
             <!-- programatically generate each robot -->>
-            <v-shape v-for="robot in Object.entries(state.teams).map(i => {return i[1].robots}).flat()"
+            <v-shape v-for="robot in Object.entries(state.world.teams).map(i => {return i[1].robots}).flat()"
                 :key="robot.team + '/' + robot.id"
                 :config="{
                 renderConfig: renderConfig,
@@ -161,9 +163,9 @@
 
             <v-circle ref="ball" :config="{
                                  renderConfig: renderConfig,
-                                 x: state.ball.pose.position.x*renderConfig.scale,
-                                 y: -state.ball.pose.position.y*renderConfig.scale,
-                                 visible: state.ball.visible,
+                                 x: state.world.ball.pose.position.x*renderConfig.scale,
+                                 y: -state.world.ball.pose.position.y*renderConfig.scale,
+                                 visible: state.world.ball.visible,
                                  radius: .022 * renderConfig.scale,
                                  fill: 'orange',
                                  dragBoundFunc: dragBound
@@ -172,10 +174,11 @@
         </v-layer>
 
         <!-- layer for only overlays -->>
+        <!--
         <v-layer ref="overlay"
             :config="{
-            offsetX: -(100+(state.fieldDimensions.floorLength*renderConfig.scale))/2,
-            offsetY: -(100+(state.fieldDimensions.floorWidth*renderConfig.scale))/2,
+            offsetX: -(100+(state.world.field.fieldDimensions.floorLength*renderConfig.scale))/2,
+            offsetY: -(100+(state.world.field.fieldDimensions.floorWidth*renderConfig.scale))/2,
             listening: false
             }">
             <v-shape v-for="overlay in Object.entries(state.overlays).map(i => {return i[1]} )"
@@ -184,7 +187,7 @@
                          renderConfig: renderConfig,
                          sceneFunc: overlayShape,
                          overlay: overlay,
-                         fieldDimensions: state.fieldDimensions,
+                         fieldDimensions: state.world.field.fieldDimensions,
                          x: overlay.position.x*renderConfig.scale,
                          y: -overlay.position.y*renderConfig.scale,
                          rotation: overlay.position.z,
@@ -197,6 +200,7 @@
                      }">
             </v-shape>
         </v-layer>
+        -->
     </v-stage>
 </template>
 
@@ -405,7 +409,7 @@ export default {
         this.stage = this.$refs["stage"].getStage();
         this.field = this.$refs["field"].getNode();
         this.game = this.$refs["game"].getNode();
-        this.overlay = this.$refs["overlay"].getNode();
+        //this.overlay = this.$refs["overlay"].getNode();
     },
     onBeforeUpdate() {
         this.teams.value = [];
@@ -438,7 +442,7 @@ export default {
 
                 const ball = this.$refs.ball.getNode()
                 const pos = this.game.getRelativePointerPosition();
-                this.state.ball.pose.position = pos;
+                this.state.world.ball.pose.position = pos;
                 ball.x(pos.x);
                 ball.y(pos.y);
 
@@ -452,7 +456,7 @@ export default {
                    mouse is moving as you click */
                 const ball = this.$refs.ball.getNode()
                 const pos = this.game.getRelativePointerPosition();
-                this.state.ball.pose.position = pos;
+                this.state.world.ball.pose.position = pos;
                 ball.x(pos.x);
                 ball.y(pos.y);
                 this.$refs.ball.getNode().startDrag();

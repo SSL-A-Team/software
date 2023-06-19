@@ -4,7 +4,7 @@
             Add Goalie, STATUS, manual control here
         </div>
         <v-container class="d-flex flex-column">
-            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of state.teams[state.team].robots">
+            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of state.world.teams[state.world.team].robots">
                     {{robot.id}}
                     <!-- this might be really bad for performance -->
                     <v-stage ref="stage" :config="{
@@ -36,7 +36,7 @@
 import { ref, inject } from 'vue';
 
 export default {
-    inject: ['state', 'renderConfig'],
+    inject: ['state'],
     data() {
         return {
             blank: null,
