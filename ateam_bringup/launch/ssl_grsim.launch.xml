@@ -1,8 +1,14 @@
 <launch>
   <arg name="headless" default="true"/>
+ <arg name="ssl_sim_radio_ip" default="127.0.0.1"/>
+
+  <arg name="ssl_sim_radio_port" default="10020"/>
 
   <executable if="$(var headless)" cmd="docker run --net host --rm robocupssl/grsim" output="screen" />
   <executable unless="$(var headless)" cmd="docker run --net host -eVNC_PASSWORD=vnc -eVNC_GEOMETRY=1920x1080 --rm robocupssl/grsim vnc" output="screen" />
 
-  <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node" />
+  <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node">
+    <param name="ssl_sim_radio_ip" value="$(var ssl_sim_radio_ip)"/>
+    <param name="ssl_sim_radio_port" value="$(var ssl_sim_radio_port)"/>
+  </node>
 </launch>
