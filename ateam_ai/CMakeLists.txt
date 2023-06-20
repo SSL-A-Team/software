@@ -44,6 +44,10 @@ rclcpp_components_register_node(
   PLUGIN "ateam_ai::ATeamAINode"
   EXECUTABLE ateam_ai_node
 )
+
+# Export symbols so we can backtrace
+set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
+
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
 if(BUILD_TESTING)
@@ -52,6 +56,7 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(${PROJECT_NAME}_test
+    test/behavior/behavior_realization_test.cpp
     test/trajectory_generation/ilqr_problem_test.cpp
     test/trajectory_generation/trajectory_editor_test.cpp
     test/trajectory_generation/trapezoidal_motion_profile_test.cpp

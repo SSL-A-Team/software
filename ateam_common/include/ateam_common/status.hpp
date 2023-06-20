@@ -91,11 +91,7 @@ public:
   }
 };
 
-std::ostream & operator<<(std::ostream & os, const ErrorType & error)
-{
-  os << error.cause << "\n\n" << error.stack_trace.str();
-  return os;
-}
+std::ostream & operator<<(std::ostream & os, const ErrorType & error);
 
 using Status = BOOST_OUTCOME_V2_NAMESPACE::result<void, ErrorType,
     BOOST_OUTCOME_V2_NAMESPACE::policy::terminate>;
@@ -105,14 +101,8 @@ using StatusOr = BOOST_OUTCOME_V2_NAMESPACE::result<T, ErrorType,
     BOOST_OUTCOME_V2_NAMESPACE::policy::terminate>;
 
 // Wrappers around success / failure so we can simplify the interface
-Status Ok()
-{
-  return BOOST_OUTCOME_V2_NAMESPACE::success();
-}
-Status Failure(std::string && s)
-{
-  return ErrorType(std::move(s));
-}
+Status Ok();
+Status Failure(std::string && s);
 
 template<typename T>
 StatusOr<T> Ok(T && s)
@@ -137,6 +127,7 @@ StatusOr<T> Failure(std::string && s)
       if (!__status_or_lhs) { \
         std::stringstream s; \
         s << text << "\n" << __status_or_lhs.error() << std::endl; \
+        std::cerr << s.str(); \
         throw s.str(); \
       } __status_or_lhs.value();});
 
@@ -154,6 +145,7 @@ StatusOr<T> Failure(std::string && s)
     if (!__value) { \
       std::stringstream s; \
       s << ateam::Failure(text).error() << std::endl; \
+      std::cerr << s.str(); \
       throw s.str(); \
     } \
   } while (false);
