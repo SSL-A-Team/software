@@ -16,4 +16,3 @@ import VueKonva from 'vue-konva';
 app.use(VueKonva);
 
 const vm = app.mount('#app');
-console.log(vm.state);

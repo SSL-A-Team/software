@@ -31,7 +31,7 @@ export class Robot {
     }
 
     rotation(): number {
-        return 2*Math.acos(this.pose.orientation.z) * 180/Math.PI;
+        return (2.0*Math.acos(this.pose.orientation.z) * 180.0)/Math.PI;
     }
     
     setRotation(degrees: number) {

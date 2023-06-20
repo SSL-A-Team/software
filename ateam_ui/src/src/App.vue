@@ -4,10 +4,10 @@
             <v-app-bar-title> ATeam UI </v-app-bar-title>
         </v-app-bar>
         <v-main>
-            <v-container class="d-flex flex-row" ref="Main Components">
+            <v-container class="d-flex flex-row" ref="mainComponents">
                 <RefButtonsComponent/>
                 <StatusComponent/>
-                <FieldComponent/>
+                <FieldComponent ref="mainField"/>
             </v-container>
         </v-main>
     </v-app>
@@ -24,9 +24,11 @@ import { defineComponent } from 'vue'
 
 import { AppState } from '@/state'
 
+
 export default {
     data() {
         return {
+            intervalId: null,
             state: new AppState(),
             renderConfig: {
                 angle: 0,
@@ -40,6 +42,22 @@ export default {
             state: this.state,
             renderConfig: this.renderConfig
         }
+    },
+    methods: {
+        update: function() {
+            if (this.state.history.length < 10) {
+                this.state.history.push(this.state.world);
+            }
+
+            // update components
+            this.$refs.mainField.update();
+        }
+    },
+    beforeUnmount() {
+        clearInterval(this.intervalId);
+    },
+    created() {
+        this.intervalId = setInterval(this.update, 1000);
     },
     components: {
         FieldComponent,

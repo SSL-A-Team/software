@@ -1,4 +1,5 @@
 import ROSLIB from "roslib"
+import * as PIXI from 'pixi.js';
 
 // Types used for field data and overlays
 
@@ -40,31 +41,46 @@ export class Overlay {
 }
 
 export class Field {
-    pixelsPerMeter: number = 300;
+    pixelsPerMeter: number = 50;
     canvasScale: number = 0.25; // Scales the size of the canvas in the window
     fieldDimensions: FieldDimensions;
     overlays: Overlay[];
 
     constructor() {
         this.fieldDimensions = new FieldDimensions();
-    }
-    
-    drawField(ctx: HTMLCanvasElement) {
-        // Background
-        // rectangle field outline
-        // center circle
-        // center line
-        // goal boxes
-        // goal
+        this.overlays = [];
     }
 
-    drawOverlays( underCtx: HTMLCanvasElement, overCtx: HTMLCanvasElement) {
+    initializePixi(app: PIXI.Application) {
+        console.log("initialize pixi");
+        const fieldLines = new PIXI.Graphics();
+
+        const robots = new PIXI.Container();
+        const ball = new PIXI.Container();
+
+        const underlay = new PIXI.Container();
+        const overlay = new PIXI.Container();
+
+        // Draw the Field Lines
+        fieldLines.lineStyle(2, 0xFFFFFF, 2);
+        fieldLines.drawRect(0, 0,
+                            this.fieldDimensions.width * this.pixelsPerMeter,
+                            this.fieldDimensions.length * this.pixelsPerMeter
+                           );
+
+        app.stage.addChild(fieldLines);
+        app.stage.addChild(robots);
+        app.stage.addChild(ball);
+        app.stage.addChild(underlay);
+        app.stage.addChild(overlay);
+    }
+
+    update(app: PIXI.Application) {
+        // update field dimensions (probably want to break this into its own function)
+        // update robot locations
+        // update ball locations
+
         for (var overlay of this.overlays) {
-            let ctx = overCtx;
-            if (overlay.depth == 0) {
-                ctx = underCtx;
-            }
-
             // handle overlays
         }
     }

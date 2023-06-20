@@ -20,7 +20,6 @@ export class Team {
     //TODO: figure out how to store the current DAG(t) or whatever play structure we use
 
     constructor(name:string, color:TeamColor, defending:number) {
-        console.log("constructing team");
         this.color = color;
         this.defending = defending;
 
@@ -29,22 +28,20 @@ export class Team {
         // initialize robots
         const numVisible = 16;
         for (let i = 0; i < maxRobots; i++) {
-            // TODO: figure out the proper way to get pixelsPerMeter in here
-            const tempPixelsPerMeter = 300;
         
             let visible = (i < numVisible);
             // TODO: convert this to use the new coordinate system that centers the origin on our goal
             let pose = new ROSLIB.Pose({
                 position: {
-                    x: tempPixelsPerMeter * 0.23 * (i - (numVisible-1)/2),
-                    y: tempPixelsPerMeter * 0.2 * this.defending,
+                    x: 0.4 * -this.defending,
+                    y: 0.23 * (i - (numVisible-1)/2),
                     z: 0
                 },
                 orientation: {
                     x: 0,
                     y: 0,
-                    z: this.defending * Math.sqrt(2),
-                    w: Math.sqrt(2)
+                    z: this.defending * Math.sqrt(2)/2,
+                    w: Math.sqrt(2)/2
                 }
             })
         

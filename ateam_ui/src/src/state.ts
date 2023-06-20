@@ -39,6 +39,8 @@ export class AppState {
     robotTopics: ROSLIB.Topic[];
     overlayTopic: ROSLIB.Topic;
 
+    sim: boolean = true;
+
     // TODO: figure out how to type ROSLIB Messages, the Message type doesn't seem to work properly
     ballCallback(msg: any) {
         this.world.ball.pose = msg.pose;
@@ -76,8 +78,6 @@ export class AppState {
     }
 
     constructor() {
-        this.team = team;
-        console.log("constructing AppState");
         this.world = new WorldState();
         this.history = [];
 
