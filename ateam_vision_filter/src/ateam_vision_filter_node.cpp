@@ -146,7 +146,7 @@ private:
   rclcpp::Publisher<ateam_msgs::msg::VisionWorldState>::SharedPtr vision_state_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::FieldInfo>::SharedPtr field_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
-  clcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
+  rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
   ateam_common::TeamInfoListener info_listener_;
 
   std::mutex world_mutex_;

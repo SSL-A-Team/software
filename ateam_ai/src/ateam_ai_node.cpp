@@ -38,6 +38,8 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_msgs/msg/world.hpp>
+#include <ateam_msgs/msg/field_info.hpp>
+#include <ateam_msgs/msg/field_sided_info.hpp>
 #include <ssl_league_msgs/msg/vision_geometry_field_size.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
@@ -193,12 +195,15 @@ private:
       .boundary_width = field_msg->boundary_width
     };
 
+    // I could have just defined conversion operators for all of this but
+    // Im pretty sure joe wanted ros separate from cpp
     auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
         std::transform(
           starting_array.begin(), starting_array.end(), final_array_iter,
           [&](auto & val)->Eigen::Vector2d {
             return {val.x, val.y};
           });
+    };
 
     convert_point_array(field_msg->field_corners, field.field_corners.begin());
     convert_point_array(field_msg->ours.goalie_corners, field.ours.goalie_corners.begin());

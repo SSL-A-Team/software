@@ -64,4 +64,5 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
 
   DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
   return behavior_out;
+  }
 }

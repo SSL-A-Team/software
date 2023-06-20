@@ -49,6 +49,9 @@ public:
       (declare_parameter("ssl_sim_radio_port", 10301),
       get_parameter("ssl_sim_radio_port").as_int()),
       std::bind(&SSLSimulationRadioBridgeNode::feedback_callback,
+      this,
+      std::placeholders::_1,
+      std::placeholders::_2))
   {
     ateam_common::indexed_topic_helpers::create_indexed_subscribers
     <ateam_msgs::msg::RobotMotionCommand>(

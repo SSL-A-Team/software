@@ -46,6 +46,8 @@ namespace ateam_common
  *
  * - default_team_color  (string)
  *   The team color assumed before the first referee message is received. Can be set to 'yellow', 'blue', or 'unknown'
+ *
+ * - default_team_side  (string) options are positive_half, negative_half
  */
 class TeamInfoListener
 {
