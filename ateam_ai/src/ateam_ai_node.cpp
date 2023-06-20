@@ -32,7 +32,7 @@
 #include <ateam_common/parameters.hpp>
 #include <ateam_common/overlay.hpp>
 #include <ateam_common/topic_names.hpp>
-#include <ateam_common/team_color_listener.hpp>
+#include <ateam_common/team_info_listener.hpp>
 #include <ateam_common/game_state_listener.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
@@ -59,7 +59,7 @@ class ATeamAINode : public rclcpp::Node
 {
 public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ateam_ai_node", options), color_listener_(*this), \
+  : rclcpp::Node("ateam_ai_node", options), info_listener_(*this), \
     game_state_listener_(*this), evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
@@ -71,15 +71,15 @@ public:
     for (std::size_t id = 0; id < blue_robots_subscriptions_.size(); id++) {
       auto blue_robot_callback =
         [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          const auto are_we_blue = color_listener_.GetTeamColor() == \
-            ateam_common::TeamColorListener::TeamColor::Blue;
+          const auto are_we_blue = info_listener_.GetTeamColor() == \
+            ateam_common::TeamInfoListener::TeamColor::Blue;
           auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
           robot_state_callback(robot_state_array, id, robot_state_msg);
         };
       auto yellow_robot_callback =
         [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          const auto are_we_yellow = color_listener_.GetTeamColor() == \
-            ateam_common::TeamColorListener::TeamColor::Yellow;
+          const auto are_we_yellow = info_listener_.GetTeamColor() == \
+            ateam_common::TeamInfoListener::TeamColor::Yellow;
           auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
           robot_state_callback(robot_state_array, id, robot_state_msg);
         };
@@ -120,7 +120,7 @@ public:
       }
     );
 
-    field_subscription_ = create_subscription<ssl_league_msgs::msg::VisionGeometryFieldSize>(
+    field_subscription_ = create_subscription<ateam_msgs::msg::FieldInfo>(
       std::string(Topics::kField),
       10,
       std::bind(&ATeamAINode::field_callback, this, std::placeholders::_1));
@@ -136,7 +136,7 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
-  rclcpp::Subscription<ssl_league_msgs::msg::VisionGeometryFieldSize>::SharedPtr
+  rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr
     field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
@@ -144,7 +144,7 @@ private:
 
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
-  ateam_common::TeamColorListener color_listener_;
+  ateam_common::TeamInfoListener info_listener_;
   ateam_common::GameStateListener game_state_listener_;
 
   BehaviorRealization realization_;
@@ -183,7 +183,7 @@ private:
     ball_state.vel.y() = ball_state_msg->twist.linear.y;
   }
 
-  void field_callback(const ssl_league_msgs::msg::VisionGeometryFieldSize::SharedPtr field_msg)
+   void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
   {
     Field field {
       .field_length = field_msg->field_length,
@@ -193,59 +193,18 @@ private:
       .boundary_width = field_msg->boundary_width
     };
 
-    auto check_field_line_name =
-      [](ssl_league_msgs::msg::VisionFieldLineSegment line_msg, std::string target_name) -> bool {
-        return line_msg.name == target_name;
-      };
+    auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
+        std::transform(
+          starting_array.begin(), starting_array.end(), final_array_iter,
+          [&](auto & val)->Eigen::Vector2d {
+            return {val.x, val.y};
+          });
 
-    auto lines_to_points = [&](auto name_array, auto & target_array) {
-        for (size_t i = 0; i < name_array.size(); i++) {
-          auto & name = name_array.at(i);
-          auto itr = std::find_if(
-            begin(field_msg->field_lines), end(
-              field_msg->field_lines),
-            std::bind(check_field_line_name, std::placeholders::_1, name));
-          if (itr != end(field_msg->field_lines)) {
-            target_array.at(i).x() = itr->p1.x;
-            target_array.at(i).y() = itr->p1.y;
-            target_array.at(2 * i + 1).x() = itr->p2.x;
-            target_array.at(2 * i + 1).y() = itr->p2.y;
-          }
-        }
-      };
-    std::array<std::string, 4> field_bound_names = {"TopTouchLine", "BottomTouchLine"};
-    lines_to_points(field_bound_names, field.field_corners);
-
-
-    FieldSidedInfo left_side_info {};
-    left_side_info.goal_posts.at(0) = Eigen::Vector2d(
-      -field.field_length / 2.0,
-      field.goal_width / 2.0);
-    left_side_info.goal_posts.at(1) = Eigen::Vector2d(
-      -field.field_length / 2.0,
-      -field.goal_width / 2.0);
-
-    std::array<std::string,
-      2> left_penalty_names = {"LeftFieldLeftPenaltyStretch", "LeftFieldRightPenaltyStretch"};
-    lines_to_points(left_penalty_names, left_side_info.goalie_corners);
-
-
-    FieldSidedInfo right_side_info {};
-    right_side_info.goal_posts.at(0) = Eigen::Vector2d(
-      field.field_length / 2.0,
-      field.goal_width / 2.0);
-    right_side_info.goal_posts.at(1) = Eigen::Vector2d(
-      field.field_length / 2.0,
-      -field.goal_width / 2.0);
-
-    std::array<std::string,
-      2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
-    lines_to_points(right_penalty_names, right_side_info.goalie_corners);
-
-
-    // TODO(cavidano): assign based off known team info
-    field.ours = left_side_info;
-    field.theirs = right_side_info;
+    convert_point_array(field_msg->field_corners, field.field_corners.begin());
+    convert_point_array(field_msg->ours.goalie_corners, field.ours.goalie_corners.begin());
+    convert_point_array(field_msg->ours.goal_posts, field.ours.goal_posts.begin());
+    convert_point_array(field_msg->theirs.goalie_corners, field.theirs.goalie_corners.begin());
+    convert_point_array(field_msg->theirs.goal_posts, field.theirs.goal_posts.begin());
 
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.field = field;
