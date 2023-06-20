@@ -17,7 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-#pragma once
+
 #ifndef ATEAM_COMMON__STATUS_HPP_
 #define ATEAM_COMMON__STATUS_HPP_
 
@@ -127,7 +127,7 @@ StatusOr<T> Failure(std::string && s)
       if (!__status_or_lhs) { \
         std::stringstream s; \
         s << text << "\n" << __status_or_lhs.error() << std::endl; \
-        std::cout << s.str(); \
+        std::cerr << s.str(); \
         throw s.str(); \
       } __status_or_lhs.value();});
 
@@ -145,7 +145,7 @@ StatusOr<T> Failure(std::string && s)
     if (!__value) { \
       std::stringstream s; \
       s << ateam::Failure(text).error() << std::endl; \
-      std::cout << s.str(); \
+      std::cerr << s.str(); \
       throw s.str(); \
     } \
   } while (false);
