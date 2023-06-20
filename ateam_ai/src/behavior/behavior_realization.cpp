@@ -19,13 +19,12 @@
 // THE SOFTWARE.
 
 #include "behavior/behavior_realization.hpp"
+#include "trajectory_generation/trajectory_generation.hpp"
 
 #include <map>
 #include <vector>
 #include <utility>
 #include <queue>
-
-#include "trajectory_generation/trajectory_generation.hpp"
 
 DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors(
   const DirectedGraph<BehaviorGoal> & behaviors, const World & world)
