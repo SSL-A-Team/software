@@ -39,15 +39,32 @@ BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
 
 DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & world)
 {
-  // Get important world info
-  ateam_common::TeamColorListener::TeamColor our_team_color_ = world.referee_info.our_team_color;
-  ateam_common::GameCommand current_command_ = world.referee_info.running_command;
-
-  // Check if we need to halt
-  if (current_command_ == ateam_common::GameCommand::Halt) {
-        return generate_halt(world);
+  //
+  // Qual Video Behaviors
+  //
+  DirectedGraph<BehaviorGoal> qual_goalie_and_shot;
+  double ball_y = 0;
+  if (world.get_unique_ball().has_value()) {
+    ball_y = world.get_unique_ball().value().pos.y();
   }
+  BehaviorGoal goalie{
+    BehaviorGoal::Type::MoveToPoint,
+    BehaviorGoal::Priority::Required,
+    MoveParam(Eigen::Vector2d{-5, ball_y})};
+  qual_goalie_and_shot.add_node(goalie);
 
+  BehaviorGoal kicker{
+    BehaviorGoal::Type::MovingKick,
+    BehaviorGoal::Priority::Required,
+    MoveParam(Eigen::Vector2d{0, 1})};
+  qual_goalie_and_shot.add_node(kicker);
+
+  for (int i = 2; i < 16; i++) {
+    BehaviorGoal move{
+      BehaviorGoal::Type::MoveToPoint,
+      BehaviorGoal::Priority::Required,
+      MoveParam(Eigen::Vector2d{i / -2.0, 4})};
+  qual_goalie_and_shot.add_node(move);
   // Check if we need to stop
 
   // Check for kickoff - indicates setup, normal start means to actually execute the play
@@ -64,6 +81,6 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
 
 
 
-  // If we can't identify what is going on, default to halt
-  return generate_halt(world);
+  DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
+  return behavior_out;
 }

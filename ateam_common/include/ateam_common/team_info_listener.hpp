@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__TEAM_COLOR_LISTENER_HPP_
-#define ATEAM_COMMON__TEAM_COLOR_LISTENER_HPP_
+#ifndef ATEAM_COMMON__TEAM_INFO_LISTENER_HPP_
+#define ATEAM_COMMON__TEAM_INFO_LISTENER_HPP_
 
 #include <string>
 
@@ -36,7 +36,7 @@ namespace ateam_common
  * provides a simple interface for any node to query our currently assigned team color. This class subscribes to
  * and parses the referee messages from the GC to check our team's color.
  *
- * Users can query the current team color using TeamColorListener::GetTeamColor() or provide a callback to be called
+ * Users can query the current team color using TeamInfoListener::GetTeamColor() or provide a callback to be called
  * when the team color changes.
  *
  * This class adds two parameters to the node:
@@ -47,7 +47,7 @@ namespace ateam_common
  * - default_team_color  (string)
  *   The team color assumed before the first referee message is received. Can be set to 'yellow', 'blue', or 'unknown'
  */
-class TeamColorListener
+class TeamInfoListener
 {
 public:
   enum class TeamColor
@@ -57,7 +57,15 @@ public:
     Blue
   };
 
-  using Callback = std::function<void (TeamColor)>;
+  enum class TeamSide
+  {
+    Unknown,
+    PositiveHalf,
+    NegativeHalf
+  };
+
+  using ColorCallback = std::function<void (TeamColor)>;
+  using SideCallback = std::function<void (TeamSide)>;
 
   /**
    * @brief Construct a new Team Color Listener object
@@ -65,17 +73,27 @@ public:
    * @param node ROS node
    * @param callback Optional callback called on color change
    */
-  explicit TeamColorListener(rclcpp::Node & node, Callback callback = {});
+  explicit TeamInfoListener(
+    rclcpp::Node & node, ColorCallback color_callback = {},
+    SideCallback side_callback = {});
 
   const TeamColor & GetTeamColor() const
   {
     return team_color_;
   }
 
+  const TeamSide & GetTeamSide() const
+  {
+    return team_side_;
+  }
+
 private:
   const std::string team_name_;
   TeamColor team_color_{TeamColor::Unknown};
-  Callback callback_;
+  TeamSide team_side_{TeamSide::Unknown};
+  // I feel like we should have just made one callback that returned this object
+  ColorCallback color_callback_;
+  SideCallback side_callback_;
   rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
 
   void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
@@ -83,4 +101,4 @@ private:
 
 }  // namespace ateam_common
 
-#endif  // ATEAM_COMMON__TEAM_COLOR_LISTENER_HPP_
+#endif  // ATEAM_COMMON__TEAM_INFO_LISTENER_HPP_
