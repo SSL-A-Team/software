@@ -26,7 +26,7 @@
 
 #include <ateam_common/parameters.hpp>
 #include <ateam_common/game_state_listener.hpp>
-#include <ateam_common/team_color_listener.hpp>
+#include <ateam_common/team_info_listener.hpp>
 
 CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
 
