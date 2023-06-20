@@ -18,34 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__TOPIC_NAMES_HPP_
-#define ATEAM_COMMON__TOPIC_NAMES_HPP_
+#include <string>
 
-#include <string_view>
+#include "ateam_common/game_state_listener.hpp"
 
-namespace Topics
+namespace ateam_common
 {
-// Input from other systems
-constexpr std::string_view kVisionMessages = "/vision_messages";  // Raw vision protobufs
-constexpr std::string_view kRefereeMessages = "/referee_messages";  // Raw ref protobufs
 
-// Input from robots
-constexpr std::string_view kRobotFeedbackPrefix = "/robot_feedback/robot";
+GameStateListener::GameStateListener(rclcpp::Node & node)
+{
+  rclcpp::QoS qos(1);
+  qos.reliable();
+  qos.transient_local();
+  ref_subscription_ = node.create_subscription<ssl_league_msgs::msg::Referee>(
+    "/gc_multicast_bridge_node/referee_messages", qos,
+    std::bind(&GameStateListener::RefereeMessageCallback, this, std::placeholders::_1));
+}
 
-// Output from vision filter
-constexpr std::string_view kBall = "/ball";
-constexpr std::string_view kYellowTeamRobotPrefix = "/yellow_team/robot";
-constexpr std::string_view kBlueTeamRobotPrefix = "/blue_team/robot";
-constexpr std::string_view kVisionState = "/vision_state";  // Internal vision filter state
+void GameStateListener::RefereeMessageCallback(
+  const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
+{
+  game_command_ = static_cast<GameCommand>(msg->command);
+  game_stage_ = static_cast<GameStage>(msg->stage);
+}
 
-// from field republisher
-constexpr std::string_view kField = "/field";  // Internal vision filter state
-
-// Output from joysticks
-constexpr std::string_view kJoystick = "/joy";
-
-// Output from AI
-constexpr std::string_view kRobotMotionCommandPrefix = "/robot_motion_commands/robot";
-}  // namespace Topics
-
-#endif  // ATEAM_COMMON__TOPIC_NAMES_HPP_
+}  // namespace ateam_common

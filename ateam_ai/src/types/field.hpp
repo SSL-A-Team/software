@@ -18,12 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
 #ifndef TYPES__FIELD_HPP_
 #define TYPES__FIELD_HPP_
 
+#include <Eigen/Dense>
+#include <array>
+
+struct FieldSidedInfo
+{
+  std::array<Eigen::Vector2d, 4> goalie_corners;
+  std::array<Eigen::Vector2d, 2> goal_posts;
+};
 struct Field
 {
+  // we will definetly change the format of this at some point this is preliminary
+  // since we dont really have a geometry library yet
+  // all of this should be in our coordinate system
+  // There is a mirroring ros message of this type
+  float field_length;
+  float field_width;
+  float goal_width;
+  float goal_depth;
+  float boundary_width;
+  std::array<Eigen::Vector2d, 4> field_corners;
+  FieldSidedInfo ours;
+  FieldSidedInfo theirs;
 };
+
 
 #endif  // TYPES__FIELD_HPP_

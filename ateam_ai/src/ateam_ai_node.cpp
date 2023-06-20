@@ -32,11 +32,15 @@
 #include <ateam_common/parameters.hpp>
 #include <ateam_common/overlay.hpp>
 #include <ateam_common/topic_names.hpp>
-#include <ateam_common/team_color_listener.hpp>
+#include <ateam_common/team_info_listener.hpp>
+#include <ateam_common/game_state_listener.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_msgs/msg/world.hpp>
+#include <ateam_msgs/msg/field_info.hpp>
+#include <ateam_msgs/msg/field_sided_info.hpp>
+#include <ssl_league_msgs/msg/vision_geometry_field_size.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "behavior/behavior_evaluator.hpp"
@@ -57,8 +61,8 @@ class ATeamAINode : public rclcpp::Node
 {
 public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ateam_ai_node", options), color_listener_(*this), \
-    evaluator_(realization_), executor_(realization_)
+  : rclcpp::Node("ateam_ai_node", options), info_listener_(*this), \
+    game_state_listener_(*this), evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
     ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
@@ -69,15 +73,15 @@ public:
     for (std::size_t id = 0; id < blue_robots_subscriptions_.size(); id++) {
       auto blue_robot_callback =
         [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          const auto are_we_blue = color_listener_.GetTeamColor() == \
-            ateam_common::TeamColorListener::TeamColor::Blue;
+          const auto are_we_blue = info_listener_.GetTeamColor() == \
+            ateam_common::TeamInfoListener::TeamColor::Blue;
           auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
           robot_state_callback(robot_state_array, id, robot_state_msg);
         };
       auto yellow_robot_callback =
         [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          const auto are_we_yellow = color_listener_.GetTeamColor() == \
-            ateam_common::TeamColorListener::TeamColor::Yellow;
+          const auto are_we_yellow = info_listener_.GetTeamColor() == \
+            ateam_common::TeamInfoListener::TeamColor::Yellow;
           auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
           robot_state_callback(robot_state_array, id, robot_state_msg);
         };
@@ -118,6 +122,11 @@ public:
       }
     );
 
+    field_subscription_ = create_subscription<ateam_msgs::msg::FieldInfo>(
+      std::string(Topics::kField),
+      10,
+      std::bind(&ATeamAINode::field_callback, this, std::placeholders::_1));
+
     timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
   }
 
@@ -129,13 +138,16 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
+  rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr
+    field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
   rclcpp::Publisher<ateam_msgs::msg::Overlay>::SharedPtr overlay_publisher_;
 
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
-  ateam_common::TeamColorListener color_listener_;
+  ateam_common::TeamInfoListener info_listener_;
+  ateam_common::GameStateListener game_state_listener_;
 
   BehaviorRealization realization_;
   BehaviorEvaluator evaluator_;
@@ -173,6 +185,37 @@ private:
     ball_state.vel.y() = ball_state_msg->twist.linear.y;
   }
 
+  void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
+  {
+    Field field {
+      .field_length = field_msg->field_length,
+      .field_width = field_msg->field_width,
+      .goal_width = field_msg->goal_width,
+      .goal_depth = field_msg->goal_depth,
+      .boundary_width = field_msg->boundary_width
+    };
+
+    // I could have just defined conversion operators for all of this but
+    // Im pretty sure joe wanted ros separate from cpp
+    auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
+        std::transform(
+          starting_array.begin(), starting_array.end(), final_array_iter,
+          [&](auto & val)->Eigen::Vector2d {
+            return {val.x, val.y};
+          });
+      };
+
+    convert_point_array(field_msg->field_corners, field.field_corners.begin());
+    convert_point_array(field_msg->ours.goalie_corners, field.ours.goalie_corners.begin());
+    convert_point_array(field_msg->ours.goal_posts, field.ours.goal_posts.begin());
+    convert_point_array(field_msg->theirs.goalie_corners, field.theirs.goalie_corners.begin());
+    convert_point_array(field_msg->theirs.goal_posts, field.theirs.goal_posts.begin());
+
+
+    std::lock_guard<std::mutex> lock(world_mutex_);
+    world_.field = field;
+  }
+
   void timer_callback()
   {
     std::lock_guard<std::mutex> lock(world_mutex_);
@@ -194,6 +237,9 @@ private:
       }
     }
 
+    // Get current game state for world
+    world_.referee_info.running_command = game_state_listener_.GetGameCommand();
+    world_.referee_info.current_game_stage = game_state_listener_.GetGameStage();
     // Save off the world to the rosbag
     world_publisher_->publish(ateam_ai::message_conversions::toMsg(world_));
 

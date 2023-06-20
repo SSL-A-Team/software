@@ -143,16 +143,6 @@ ssl_league_msgs::msg::GameEvent fromProto(const GameEvent & proto_msg)
   CopyOptionalStruct(proto_msg, ros_msg, emergency_stop);
   CopyOptionalStruct(proto_msg, ros_msg, unsporting_behavior_minor);
   CopyOptionalStruct(proto_msg, ros_msg, unsporting_behavior_major);
-  CopyOptionalStruct(proto_msg, ros_msg, prepared);
-  CopyOptionalStruct(proto_msg, ros_msg, indirect_goal);
-  CopyOptionalStruct(proto_msg, ros_msg, chipped_goal);
-  CopyOptionalStruct(proto_msg, ros_msg, kick_timeout);
-  CopyOptionalStruct(proto_msg, ros_msg, attacker_touched_opponent_in_defense_area);
-  CopyOptionalStruct(proto_msg, ros_msg, attacker_touched_opponent_in_defense_area_skipped);
-  CopyOptionalStruct(proto_msg, ros_msg, bot_crash_unique_skipped);
-  CopyOptionalStruct(proto_msg, ros_msg, bot_pushed_bot_skipped);
-  CopyOptionalStruct(proto_msg, ros_msg, defender_in_defense_area_partially);
-  CopyOptionalStruct(proto_msg, ros_msg, multiple_placement_failures);
   return ros_msg;
 }
 
