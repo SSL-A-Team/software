@@ -23,22 +23,24 @@
 
 #include <Eigen/Dense>
 
-namespace ateam_geometry {
-    class Rectangle {
-        public:
-            Rectangle(const Eigen::Vector2d & v1, const Eigen::Vector2d & v2);
+namespace ateam_geometry
+{
+class Rectangle
+{
+public:
+  Rectangle(const Eigen::Vector2d & v1, const Eigen::Vector2d & v2);
 
-            Eigen::Vector2d get_center();
+  Eigen::Vector2d get_center();
 
-            double width;
-            double height;
-            double area;
-            Eigen::Vector2d center;
-            Eigen::Vector2d corners[4];
-    };
+  double width;
+  double height;
+  double area;
+  Eigen::Vector2d center;
+  Eigen::Vector2d corners[4];
+};
 
-    bool is_point_in_rectangle(Eigen::Vector2d & point, const Rectangle & rect);
+bool is_point_in_rectangle(Eigen::Vector2d & point, const Rectangle & rect);
 
-}
+} //namespace ateam_geometry
 
 #endif //ATEAM_GEOMETRY__RECTANGLE_HPP

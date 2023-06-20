@@ -18,21 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <chrono>
-#include <functional>
-#include <mutex>
-#include <iostream>
-#include <string>
-
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
+#include "world.hpp"
+#include "message_conversions.hpp"
 
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/team_info_listener.hpp>
 
-#include "world.hpp"
-#include "message_conversions.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
+#include <chrono>
+#include <functional>
+#include <mutex>
+#include <iostream>
+#include <string>
 
 using namespace std::chrono_literals;
 
@@ -43,8 +43,8 @@ class VisionFilterNode : public rclcpp::Node
 {
 public:
   explicit VisionFilterNode(const rclcpp::NodeOptions & options)
-  :rclcpp::Node("ateam_vision_filter", options),
-  info_listener_(*this)
+  : rclcpp::Node("ateam_vision_filter", options),
+    info_listener_(*this)
   {
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
@@ -152,8 +152,8 @@ private:
   std::mutex world_mutex_;
   World world_;
 
-  //std::mutex field_mutex_;
-  //ateam_msgs::msg::FieldInfo field_msg_;
+  // std::mutex field_mutex_;
+  // ateam_msgs::msg::FieldInfo field_msg_;
 };
 }  // namespace ateam_vision_filter
 

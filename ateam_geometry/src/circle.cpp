@@ -24,36 +24,43 @@
 #include "ateam_geometry/circle.hpp"
 #include "ateam_geometry/segment.hpp"
 
-namespace ateam_geometry {
-    Circle::Circle(const Eigen::Vector2d & c, const double & r) {
-        center = c;
-        radius = r;
-    }
-
-    std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(const int & num_points, const double &offset = 0.0) {
-        std::vector<Eigen::Vector2d> points;
-        // Assume we want to return more than 1 point...
-        // If this is not the case, don't do any more calculations and return
-        // an empty vector
-        if (num_points < 2) {
-            return points;
-        }
-        double spacing = (2 * M_PI) / num_points;
-        for (int i = 0; i < num_points; ++i) {
-            Eigen::Vector2d point = get_lineseg_of_length_from_point(center, radius, offset + (i * spacing)).p2;
-            points.push_back(point);
-        }
-        return points;
-    }
-
-    bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle) {
-        Eigen::Vector2d line_to_center = Eigen::Vector2d(
-            point.x() - circle.center.x(), point.y() - circle.center.y()
-        );
-        if (line_to_center.norm() <= circle.radius) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+namespace ateam_geometry
+{
+Circle::Circle(const Eigen::Vector2d & c, const double & r)
+{
+  center = c;
+  radius = r;
 }
+
+std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
+  const int & num_points,
+  const double & offset = 0.0)
+{
+  std::vector<Eigen::Vector2d> points;
+  // Assume we want to return more than 1 point...
+  // If this is not the case, don't do any more calculations and return
+  // an empty vector
+  if (num_points < 2) {
+    return points;
+  }
+  double spacing = (2 * M_PI) / num_points;
+  for (int i = 0; i < num_points; ++i) {
+    Eigen::Vector2d point =
+      get_lineseg_of_length_from_point(center, radius, offset + (i * spacing)).p2;
+    points.push_back(point);
+  }
+  return points;
+}
+
+bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle)
+{
+  Eigen::Vector2d line_to_center = Eigen::Vector2d(
+    point.x() - circle.center.x(), point.y() - circle.center.y()
+  );
+  if (line_to_center.norm() <= circle.radius) {
+    return true;
+  } else {
+    return false;
+  }
+}
+} // namespace ateam_geometry

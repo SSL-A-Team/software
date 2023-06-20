@@ -23,18 +23,22 @@
 
 #include <Eigen/Dense>
 
-namespace ateam_geometry {
-    class Circle {
-        public:
-            Circle(const Eigen::Vector2d & center, const double & radius);
+namespace ateam_geometry
+{
+class Circle
+{
+public:
+  Circle(const Eigen::Vector2d & center, const double & radius);
 
-            std::vector<Eigen::Vector2d> get_equally_spaced_points(const int & num_points, const double & offset);
+  std::vector<Eigen::Vector2d> get_equally_spaced_points(
+    const int & num_points,
+    const double & offset);
 
-            Eigen::Vector2d center;
-            double radius;
-    };
+  Eigen::Vector2d center;
+  double radius;
+};
 
-    bool is_point_in_circle(const Eigen::Vector2d & point, const Circle & circle);
-}
+bool is_point_in_circle(const Eigen::Vector2d & point, const Circle & circle);
+} //namespace ateam_geometry
 
 #endif //ATEAM_GEOMETRY__CIRCLE_HPP
