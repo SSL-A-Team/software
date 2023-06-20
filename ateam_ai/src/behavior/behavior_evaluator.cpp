@@ -28,10 +28,6 @@
 #include <ateam_common/game_state_listener.hpp>
 #include <ateam_common/team_color_listener.hpp>
 
-#include "dag_generation/halt.hpp"
-#include "dag_generation/defend.hpp"
-#include "dag_generation/shoot.hpp"
-
 CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
 
 BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
@@ -65,21 +61,6 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
       BehaviorGoal::Priority::Required,
       MoveParam(Eigen::Vector2d{i / -2.0, 4})};
   qual_goalie_and_shot.add_node(move);
-  // Check if we need to stop
-
-  // Check for kickoff - indicates setup, normal start means to actually execute the play
-  // If our kickoff, setup for basic kickoff play (shoot)
-  // If their kickoff, setup for basic defensive play
-
-  // Check for free kick - same as kickoff, means we should setup not actually kick
-  // Call defense or offense with extra parameters
-
-  // Check if we are in a penalty
-
-  // If we get a normal start, check what the previous play was 
-  // If it was either kickoff or free kick
-
-
 
   DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
   return behavior_out;

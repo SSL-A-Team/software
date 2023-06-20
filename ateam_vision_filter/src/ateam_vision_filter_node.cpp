@@ -102,7 +102,6 @@ public:
       const std::lock_guard<std::mutex> lock(world_mutex_);
       world_.update_camera(camera_id, camera_measurement);
     }
-    CameraMeasurement camera_measurement = message_conversions::fromMsg(*vision_wrapper_msg);
 
     if (field_msg.valid) {
       field_publisher_->publish(field_msg);
@@ -149,9 +148,12 @@ private:
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
   clcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
   ateam_common::TeamInfoListener info_listener_;
-  
+
   std::mutex world_mutex_;
   World world_;
+
+  //std::mutex field_mutex_;
+  //ateam_msgs::msg::FieldInfo field_msg_;
 };
 }  // namespace ateam_vision_filter
 
