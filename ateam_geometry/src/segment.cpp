@@ -17,13 +17,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-#include "ateam_geometry/segment.hpp"
-#include "ateam_geometry/utilities.hpp"
-#include <Eigen/Dense>
 #include <math.h>
+#include <Eigen/Dense>
+
 #include <optional>
 #include <tuple>
+#include <vector>
 
+#include "ateam_geometry/segment.hpp"
+#include "ateam_geometry/utilities.hpp"
 
 namespace ateam_geometry
 {
@@ -176,4 +178,4 @@ std::tuple<bool, std::optional<Eigen::Vector2d>> get_segment_intersection(
     }
   }
 }
-} // namespace ateam_geometry
+}  // namespace ateam_geometry

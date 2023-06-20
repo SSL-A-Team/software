@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__RECTANGLE_HPP
-#define ATEAM_GEOMETRY__RECTANGLE_HPP
+#ifndef ATEAM_GEOMETRY__RECTANGLE_HPP_
+#define ATEAM_GEOMETRY__RECTANGLE_HPP_
 
 #include <Eigen/Dense>
 
@@ -41,6 +41,6 @@ public:
 
 bool is_point_in_rectangle(Eigen::Vector2d & point, const Rectangle & rect);
 
-} //namespace ateam_geometry
+}  // namespace ateam_geometry
 
-#endif //ATEAM_GEOMETRY__RECTANGLE_HPP
+#endif  // ATEAM_GEOMETRY__RECTANGLE_HPP_

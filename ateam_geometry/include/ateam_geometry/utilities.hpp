@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__UTILITIES_HPP
-#define ATEAM_GEOMETRY__UTILITIES_HPP
+#ifndef ATEAM_GEOMETRY__UTILITIES_HPP_
+#define ATEAM_GEOMETRY__UTILITIES_HPP_
 
 #include <Eigen/Dense>
 #include <math.h>
@@ -27,6 +27,6 @@
 namespace ateam_geometry
 {
 double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v);
-} //namespace ateam_geometry
+}  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__UTILITIES_HPP_

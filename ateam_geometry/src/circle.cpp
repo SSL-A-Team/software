@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 #define _USE_MATH_DEFINES
 
-#include <Eigen/Dense>
 #include <math.h>
+#include <Eigen/Dense>
 #include "ateam_geometry/circle.hpp"
 #include "ateam_geometry/segment.hpp"
 
@@ -63,4 +63,4 @@ bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle)
     return false;
   }
 }
-} // namespace ateam_geometry
+}  // namespace ateam_geometry

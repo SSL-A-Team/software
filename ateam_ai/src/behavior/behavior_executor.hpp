@@ -21,18 +21,17 @@
 #ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
 #define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
 
+#include <optional>
+#include <array>
+
+#include <rclcpp/rclcpp.hpp>
+#include <ateam_msgs/msg/robot_motion_command.hpp>
 
 #include "behavior/behavior_realization.hpp"
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
 #include "types/trajectory.hpp"
 #include "util/directed_graph.hpp"
-
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include <optional>
-#include <array>
 
 
 /**

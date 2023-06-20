@@ -185,7 +185,7 @@ private:
     ball_state.vel.y() = ball_state_msg->twist.linear.y;
   }
 
-   void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
+  void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
   {
     Field field {
       .field_length = field_msg->field_length,
@@ -203,7 +203,7 @@ private:
           [&](auto & val)->Eigen::Vector2d {
             return {val.x, val.y};
           });
-    };
+      };
 
     convert_point_array(field_msg->field_corners, field.field_corners.begin());
     convert_point_array(field_msg->ours.goalie_corners, field.ours.goalie_corners.begin());

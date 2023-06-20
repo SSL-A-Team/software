@@ -33,4 +33,4 @@ double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v)
       https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect*/
   return (w.x() * v.y()) - (w.y() * v.x());
 }
-} // namespace ateam_geometry
+}  // namespace ateam_geometry

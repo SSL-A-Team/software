@@ -18,10 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__CIRCLE_HPP
-#define ATEAM_GEOMETRY__CIRCLE_HPP
+#ifndef ATEAM_GEOMETRY__CIRCLE_HPP_
+#define ATEAM_GEOMETRY__CIRCLE_HPP_
 
 #include <Eigen/Dense>
+#include <vector>
 
 namespace ateam_geometry
 {
@@ -39,6 +40,6 @@ public:
 };
 
 bool is_point_in_circle(const Eigen::Vector2d & point, const Circle & circle);
-} //namespace ateam_geometry
+}  // namespace ateam_geometry
 
-#endif //ATEAM_GEOMETRY__CIRCLE_HPP
+#endif  // ATEAM_GEOMETRY__CIRCLE_HPP_

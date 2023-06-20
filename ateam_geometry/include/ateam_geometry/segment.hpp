@@ -18,10 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__SEGMENT_HPP
-#define ATEAM_GEOMETRY__SEGMENT_HPP
+#ifndef ATEAM_GEOMETRY__SEGMENT_HPP_
+#define ATEAM_GEOMETRY__SEGMENT_HPP_
 
 #include <Eigen/Dense>
+
+#include <vector>
 #include <tuple>
 #include <optional>
 
@@ -49,6 +51,6 @@ bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment);
 std::tuple<bool, std::optional<Eigen::Vector2d>> get_segment_intersection(
   const LineSegment & ls1,
   const LineSegment & ls2);
-} //namespace ateam_geometry
+}  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__SEGMENT_HPP_
+#endif   // ATEAM_GEOMETRY__SEGMENT_HPP_

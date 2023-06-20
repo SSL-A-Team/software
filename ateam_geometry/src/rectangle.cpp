@@ -78,4 +78,4 @@ bool is_point_in_rectangle(Eigen::Vector2d & point, const Rectangle & rect)
   }
   return false;
 }
-} // namespace ateam_geometry
+}  // namespace ateam_geometry
