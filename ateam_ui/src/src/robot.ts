@@ -1,4 +1,5 @@
 import { TeamColor } from "@/team"
+import * as PIXI from "pixi.js"
 import ROSLIB from "roslib"
 
 // Types used for team data, our team and the opponent team intentionally both use the same class
@@ -39,25 +40,51 @@ export class Robot {
         this.pose.orientation.w = Math.cos(degrees/2 * Math.PI/180);
     }
 
-    draw(ctx: any) {
+    update(container: PIXI.Container) {
+        const scale = 140;
+        container.position.x = this.pose.position.x * scale;
+        container.position.y = this.pose.position.y * scale;
+        container.getChildAt(0).angle = this.rotation();
+    }
+
+    draw(container: PIXI.Container) {
         // TODO: figure out how to pass scale around
-        const scale = 300;
+        const scale = 140;
         const radius = .09;
         const sr = scale*radius;
 
-        const start = ((this.rotation()-50)/180)*Math.PI;
-        const end =  ((this.rotation()+230)/180)*Math.PI;
+        const start = (-50/180)*Math.PI;
+        const end =  (230/180)*Math.PI;
 
-        ctx.beginPath();
-        ctx.arc(-sr, -sr, sr, start, end);
-        ctx.closePath();
-        ctx.fillStrokeShape(this);
+        const robot = new PIXI.Container();
 
-        ctx.fillStyle = this.team == TeamColor.Yellow ? "black" : "white";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = "29px sans-serif";
-        ctx.fillText(this.id, -sr, -sr + 3);
+        // Could possibly improve caching by using RenderTexture instead
+        const graphic = new PIXI.Graphics();
+        graphic.name = "robot";
+
+        graphic.lineStyle(2, "black");
+        graphic.beginFill(this.team);
+        graphic.arc(0, 0, sr, start, end);
+        graphic.closePath();
+        graphic.endFill();
+
+        // Maybe find a better font
+        const text = new PIXI.Text(this.id, {
+            fontSize: 16,
+            fill: (this.team == TeamColor.Blue ? "white" : "black"),
+        });
+        text.name = "id";
+        text.anchor.set(0.5, 0.5);
+
+        robot.position.x = this.pose.position.x * scale;
+        robot.position.y = this.pose.position.y * scale;
+        graphic.angle = this.rotation();
+
+        robot.addChild(graphic);
+        robot.addChild(text);
+        robot.visible = this.visible;
+
+        container.addChild(robot);
     }   
 }
 

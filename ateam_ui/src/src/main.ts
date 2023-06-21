@@ -12,6 +12,7 @@ const app = createApp(App);
 
 app.use(vuetify);
 
+//TODO: remove konva after replacing the StatusComponent
 import VueKonva from 'vue-konva';
 app.use(VueKonva);
 

@@ -17,8 +17,8 @@ export class WorldState {
     constructor() {
         this.team = TeamColor.Yellow;
         this.teams = [];
-        this.teams[TeamColor.Yellow] = new Team("A-Team", TeamColor.Yellow, 1);
-        this.teams[TeamColor.Blue] = new Team("Opponent", TeamColor.Blue, -1);
+        this.teams[TeamColor.Blue] = new Team("A-Team", TeamColor.Blue, -1);
+        this.teams[TeamColor.Yellow] = new Team("Opponent", TeamColor.Yellow, 1);
 
         this.ball = new Ball();
 
@@ -135,5 +135,7 @@ export class AppState {
         });
 
         overlayTopic.subscribe(this.overlayCallback);
+
+        //TODO: add all other pub/subs (field dimensions, referee, etc)
     }
 }

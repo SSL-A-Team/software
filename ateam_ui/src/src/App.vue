@@ -20,7 +20,7 @@ import FieldComponent from './components/FieldComponent.vue'
 import StatusComponent from './components/StatusComponent.vue'
 import RefButtonsComponent from './components/RefButtonsComponent.vue'
 import { provide } from 'vue'
-import { defineComponent } from 'vue'
+import { defineComponent, toRaw } from 'vue'
 
 import { AppState } from '@/state'
 
@@ -32,8 +32,8 @@ export default {
             state: new AppState(),
             renderConfig: {
                 angle: 0,
-                scale: 300, // Pixels per meter (in the rendering canvas)
-                factor: .25 // Field Scaling Factor (applied to the canvas when it's added to the UI)
+                scale: 75, // Pixels per meter (in the rendering canvas)
+                factor: 1 // Field Scaling Factor (applied to the canvas when it's added to the UI)
             }
         }
     },
@@ -44,9 +44,13 @@ export default {
         }
     },
     methods: {
+        // Stores History and renders field at 100fps
         update: function() {
-            if (this.state.history.length < 10) {
-                this.state.history.push(this.state.world);
+            // This should store a bit over 15 minutes of history, we can bump it higher
+            // if the memory usage isn't too excessive (I think this should only be ~50MB)
+            if (this.state.history.length < 100000) {
+                // if this doesn't properly deep copy we may need Lodash
+                this.state.history.push(structuredClone(toRaw(this.state.world)));
             }
 
             // update components
@@ -57,7 +61,7 @@ export default {
         clearInterval(this.intervalId);
     },
     created() {
-        this.intervalId = setInterval(this.update, 1000);
+        this.intervalId = setInterval(this.update, 1);
     },
     components: {
         FieldComponent,

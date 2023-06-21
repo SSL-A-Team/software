@@ -30,17 +30,16 @@ export class Team {
         for (let i = 0; i < maxRobots; i++) {
         
             let visible = (i < numVisible);
-            // TODO: convert this to use the new coordinate system that centers the origin on our goal
             let pose = new ROSLIB.Pose({
                 position: {
-                    x: 0.4 * -this.defending,
+                    x: 0.4 * this.defending,
                     y: 0.23 * (i - (numVisible-1)/2),
                     z: 0
                 },
                 orientation: {
                     x: 0,
                     y: 0,
-                    z: this.defending * Math.sqrt(2)/2,
+                    z: -this.defending * Math.sqrt(2)/2,
                     w: Math.sqrt(2)/2
                 }
             })
