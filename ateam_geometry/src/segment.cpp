@@ -30,8 +30,8 @@ namespace ateam_geometry
 {
 LineSegment::LineSegment(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2)
 {
-  this -> p1 = p1;
-  this -> p2 = p2;
+  this->p1 = p1;
+  this->p2 = p2;
 }
 
 LineSegment::LineSegment(
@@ -47,14 +47,15 @@ LineSegment::LineSegment(
   p2 = endpoint;
 }
 
-double LineSegment::get_length(){
+double LineSegment::get_length()
+{
   // Length is Euclidian, we can change later if desired
   return (p2 - p1).norm();
 }
 
 Eigen::Vector2d LineSegment::get_midpoint()
 {
-  return p1 + 0.5 * (p2 - p1);;
+  return p1 + 0.5 * (p2 - p1);
 }
 
 std::vector<Eigen::Vector2d> LineSegment::get_equally_spaced_points(const int & num_points)
@@ -75,7 +76,7 @@ std::vector<Eigen::Vector2d> LineSegment::get_equally_spaced_points(const int & 
   return points;
 }
 
-bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment, double tolerance = 0.001)
+bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment, double tolerance)
 {
   /*
       https://computergraphics.stackexchange.com/questions/2105/test-if-a-point-is-on-a-line-segment
@@ -94,7 +95,7 @@ std::optional<Eigen::Vector2d> get_segment_intersection(
   const LineSegment & ls1,
   const LineSegment & ls2)
 {
-  /* 
+  /*
       Based on the algorithm implementation provided here:
       https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
 

@@ -28,7 +28,7 @@ Rectangle::Rectangle(const Eigen::Vector2d & v1, const Eigen::Vector2d & v2)
   width = std::abs(v1.x() - v2.x());
   height = std::abs(v1.y() - v2.y());
 
-  // TODO: Ensure standard order of corners, with
+  // TODO(Christian): Ensure standard order of corners, with
   // min x/y at index 0.
   corners.at(0) = v1;
   corners.at(1) = v2;
@@ -43,8 +43,7 @@ Eigen::Vector2d Rectangle::get_center()
   Eigen::Vector2d center;
   double x_sum = 0;
   double y_sum = 0;
-  for (auto& corner : corners)
-  {
+  for (auto & corner : corners) {
     x_sum += corner.x();
     y_sum += corner.y();
   }

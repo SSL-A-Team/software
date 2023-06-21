@@ -19,14 +19,15 @@
 // THE SOFTWARE.
 #define _USE_MATH_DEFINES
 
-#include <cmath>
 #include <Eigen/Dense>
+#include <cmath>
 #include "ateam_geometry/circle.hpp"
 #include "ateam_geometry/segment.hpp"
 
 namespace ateam_geometry
 {
-Circle::Circle(const Eigen::Vector2d & c, const double & r) : center(c), radius(r) {}
+Circle::Circle(const Eigen::Vector2d & c, const double & r)
+: center(c), radius(r) {}
 
 std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
   const int & num_points,
