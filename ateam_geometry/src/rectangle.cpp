@@ -25,39 +25,53 @@ namespace ateam_geometry
 {
 Rectangle::Rectangle(const Eigen::Vector2d & v1, const Eigen::Vector2d & v2)
 {
-  width = std::abs(v1.x() - v1.y());
+  width = std::abs(v1.x() - v2.x());
   height = std::abs(v1.y() - v2.y());
 
-  corners[0] = v1;
-  corners[1] = v2;
-  corners[2] = Eigen::Vector2d(v1.x(), v2.y());
-  corners[3] = Eigen::Vector2d(v2.x(), v1.y());
+  // TODO: Ensure standard order of corners, with
+  // min x/y at index 0.
+  corners.at(0) = v1;
+  corners.at(1) = v2;
+  corners.at(2) = Eigen::Vector2d(v1.x(), v2.y());
+  corners.at(3) = Eigen::Vector2d(v2.x(), v1.y());
 
   area = width * height;
 }
 
 Eigen::Vector2d Rectangle::get_center()
 {
-  Eigen::Vector2d * least_positive = &corners[0];
-  for (Eigen::Vector2d & corner : corners) {
-    if (corner.x() <= least_positive->x() && corner.y() <= least_positive->y()) {
-      least_positive = &corner;
-    }
-  }
   Eigen::Vector2d center;
-  center.x() = least_positive->x() + (width / 2);
-  center.y() = least_positive->y() + (height / 2);
+  double x_sum = 0;
+  double y_sum = 0;
+  for (auto& corner : corners)
+  {
+    x_sum += corner.x();
+    y_sum += corner.y();
+  }
+  center.x() = x_sum / 4;
+  center.y() = y_sum / 4;
   return center;
 }
 
-bool is_point_in_rectangle(Eigen::Vector2d & point, const Rectangle & rect)
+double Rectangle::get_area()
 {
-  double max_x = rect.corners[0].x();
-  double max_y = rect.corners[0].y();
-  double min_x = rect.corners[0].x();
-  double min_y = rect.corners[0].y();
+  return width * height;
+}
 
-  for (const Eigen::Vector2d & corner : rect.corners) {
+std::array<Eigen::Vector2d, 4> Rectangle::get_corners()
+{
+  return corners;
+}
+
+bool is_point_in_rectangle(Eigen::Vector2d & point, Rectangle & rect)
+{
+  std::array<Eigen::Vector2d, 4> corners = rect.get_corners();
+  double max_x = corners.at(0).x();
+  double max_y = corners.at(0).y();
+  double min_x = corners.at(0).x();
+  double min_y = corners.at(0).y();
+
+  for (const Eigen::Vector2d & corner : corners) {
     if (corner.x() > max_x) {
       max_x = corner.x();
     }

@@ -18,8 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "world.hpp"
-#include "message_conversions.hpp"
+#include <chrono>
+#include <functional>
+#include <mutex>
+#include <iostream>
+#include <string>
 
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
@@ -28,11 +31,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include <chrono>
-#include <functional>
-#include <mutex>
-#include <iostream>
-#include <string>
+#include "world.hpp"
+#include "message_conversions.hpp"
 
 using namespace std::chrono_literals;
 

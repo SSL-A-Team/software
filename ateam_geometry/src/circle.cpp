@@ -19,18 +19,14 @@
 // THE SOFTWARE.
 #define _USE_MATH_DEFINES
 
-#include <math.h>
+#include <cmath>
 #include <Eigen/Dense>
 #include "ateam_geometry/circle.hpp"
 #include "ateam_geometry/segment.hpp"
 
 namespace ateam_geometry
 {
-Circle::Circle(const Eigen::Vector2d & c, const double & r)
-{
-  center = c;
-  radius = r;
-}
+Circle::Circle(const Eigen::Vector2d & c, const double & r) : center(c), radius(r) {}
 
 std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
   const int & num_points,
@@ -46,7 +42,7 @@ std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
   double spacing = (2 * M_PI) / num_points;
   for (int i = 0; i < num_points; ++i) {
     Eigen::Vector2d point =
-      get_lineseg_of_length_from_point(center, radius, offset + (i * spacing)).p2;
+      LineSegment(center, radius, offset + (i * spacing)).p2;
     points.push_back(point);
   }
   return points;
@@ -54,13 +50,6 @@ std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
 
 bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle)
 {
-  Eigen::Vector2d line_to_center = Eigen::Vector2d(
-    point.x() - circle.center.x(), point.y() - circle.center.y()
-  );
-  if (line_to_center.norm() <= circle.radius) {
-    return true;
-  } else {
-    return false;
-  }
+  return (point - circle.center).norm() <= circle.radius;
 }
 }  // namespace ateam_geometry

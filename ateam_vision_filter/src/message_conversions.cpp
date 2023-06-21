@@ -20,9 +20,9 @@
 
 #include "message_conversions.hpp"
 
-#include <string>
 #include <tf2/utils.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <string>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 

@@ -24,7 +24,6 @@
 #include <Eigen/Dense>
 
 #include <vector>
-#include <tuple>
 #include <optional>
 
 namespace ateam_geometry
@@ -33,22 +32,22 @@ class LineSegment
 {
 public:
   LineSegment(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
+  LineSegment(const Eigen::Vector2d & start, const double & length, const double & angle);
 
+  double get_length();
   Eigen::Vector2d get_midpoint();
   std::vector<Eigen::Vector2d> get_equally_spaced_points(const int & num_points);
 
   Eigen::Vector2d p1;
   Eigen::Vector2d p2;
-  double length;
 };
 
-LineSegment get_lineseg_of_length_from_point(
-  const Eigen::Vector2d & start, const double & length,
-  const double & angle);
+bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment, double tolerance = 0.001);
 
-bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment);
-
-std::tuple<bool, std::optional<Eigen::Vector2d>> get_segment_intersection(
+/*Given two 2d line segments, return a < std::optional<Eigen::Vector2d> 
+corresponding to whether or not they intersect and if applicable, 
+the point of intersection.*/
+std::optional<Eigen::Vector2d> get_segment_intersection(
   const LineSegment & ls1,
   const LineSegment & ls2);
 }  // namespace ateam_geometry

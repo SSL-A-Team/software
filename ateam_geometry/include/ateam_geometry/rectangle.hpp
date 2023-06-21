@@ -22,6 +22,7 @@
 #define ATEAM_GEOMETRY__RECTANGLE_HPP_
 
 #include <Eigen/Dense>
+#include <array>
 
 namespace ateam_geometry
 {
@@ -31,12 +32,15 @@ public:
   Rectangle(const Eigen::Vector2d & v1, const Eigen::Vector2d & v2);
 
   Eigen::Vector2d get_center();
+  double get_area();
+  std::array<Eigen::Vector2d, 4> get_corners();
 
+private:
   double width;
   double height;
   double area;
   Eigen::Vector2d center;
-  Eigen::Vector2d corners[4];
+  std::array<Eigen::Vector2d, 4> corners;
 };
 
 bool is_point_in_rectangle(Eigen::Vector2d & point, const Rectangle & rect);
