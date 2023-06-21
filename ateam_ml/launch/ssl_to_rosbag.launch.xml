@@ -2,9 +2,25 @@
     <!-- Just a nice file for replaying ssl logs over the bridge and through the vision filter and into a ros bag -->
     <arg name="logfile" default="./log.gz"/>
 
-    <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node" />
-    <node name="ssl_vision_bridge" pkg="ateam_ssl_vision_bridge" exec="ssl_vision_bridge_node" />
-    <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" />
+    <arg name="ssl_sim_radio_ip" default="127.0.0.1"/>
+    <!-- <arg name="ssl_sim_radio_port" default="10020"/> -->
+    <arg name="ssl_sim_radio_port" default="10005"/>
+    <arg name="ssl_vision_ip" default="224.5.23.2"/>
+    <arg name="ssl_vision_port" default="10006"/>
+    <!-- MAY NEED TO USE WIRESHARK TO FIGURE OUT WHAT THE ACTUAL VISION PORT IS IN USE ITS USALLY 10006 -->
+
+    <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node">
+        <param name="ssl_sim_radio_ip" value="$(var ssl_sim_radio_ip)"/>
+        <param name="ssl_sim_radio_port" value="$(var ssl_sim_radio_port)"/>
+    </node>
+
+    <node name="ssl_vision_bridge" pkg="ateam_ssl_vision_bridge" exec="ssl_vision_bridge_node" >
+        <param name="ssl_vision_ip" value="$(var ssl_vision_ip)"/>
+        <param name="ssl_vision_port" value="$(var ssl_vision_port)"/>
+    </node>
+
+    <node launch-prefix="xterm -e gdb --args " name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" />
+    <!-- <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" /> -->
 
     <include file="$(find-pkg-share ateam_ui)/launch/ateam_ui_debug_launch.py"/>
     <!-- <executable cmd="chrome 127.0.0.1:3000" output="screen"/> -->

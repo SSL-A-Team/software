@@ -98,7 +98,7 @@ ateam_msgs::msg::FieldInfo fromMsg(
 
   // did just realize I could have done this as a std transform
   auto lines_to_points = [&](auto & name_array, auto & target_array) {
-      target_array.resize(name_array.size());
+      target_array.resize(name_array.size() * 2);
       for (size_t i = 0; i < name_array.size(); i++) {
         auto & name = name_array.at(i);
         auto itr = std::find_if(
@@ -117,6 +117,7 @@ ateam_msgs::msg::FieldInfo fromMsg(
   lines_to_points(field_bound_names, field_info.field_corners);
 
   ateam_msgs::msg::FieldSidedInfo left_side_info {};
+  left_side_info.goal_posts.resize(2);
   left_side_info.goal_posts.at(0).x = -field_info.field_length / 2.0;
   left_side_info.goal_posts.at(0).y = field_info.goal_width / 2.0;
   left_side_info.goal_posts.at(1).x = -field_info.field_length / 2.0;
@@ -128,6 +129,7 @@ ateam_msgs::msg::FieldInfo fromMsg(
 
 
   ateam_msgs::msg::FieldSidedInfo right_side_info {};
+  right_side_info.goal_posts.resize(2);
   right_side_info.goal_posts.at(0).x = field_info.field_length / 2.0;
   right_side_info.goal_posts.at(0).y = field_info.goal_width / 2.0;
   right_side_info.goal_posts.at(1).x = field_info.field_length / 2.0;

@@ -1,7 +1,6 @@
 <launch>
   <arg name="headless" default="true"/>
- <arg name="ssl_sim_radio_ip" default="127.0.0.1"/>
-
+  <arg name="ssl_sim_radio_ip" default="127.0.0.1"/>
   <arg name="ssl_sim_radio_port" default="10020"/>
 
   <executable if="$(var headless)" cmd="docker run --net host --rm robocupssl/grsim" output="screen" />
