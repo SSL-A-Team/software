@@ -34,6 +34,7 @@
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/team_info_listener.hpp>
 #include <ateam_common/game_state_listener.hpp>
+#include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
@@ -53,6 +54,8 @@
 #include "util/message_conversions.hpp"
 
 using namespace std::chrono_literals;
+using ateam_common::indexed_topic_helpers::create_indexed_subscribers;
+using ateam_common::indexed_topic_helpers::create_indexed_publishers;
 
 namespace ateam_ai
 {
@@ -70,36 +73,23 @@ public:
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.balls.emplace_back(Ball{});
 
-    for (std::size_t id = 0; id < blue_robots_subscriptions_.size(); id++) {
-      auto blue_robot_callback =
-        [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          const auto are_we_blue = info_listener_.GetTeamColor() == \
-            ateam_common::TeamInfoListener::TeamColor::Blue;
-          auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
-          robot_state_callback(robot_state_array, id, robot_state_msg);
-        };
-      auto yellow_robot_callback =
-        [&, id](const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg) {
-          const auto are_we_yellow = info_listener_.GetTeamColor() == \
-            ateam_common::TeamInfoListener::TeamColor::Yellow;
-          auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
-          robot_state_callback(robot_state_array, id, robot_state_msg);
-        };
-      blue_robots_subscriptions_.at(id) = create_subscription<ateam_msgs::msg::RobotState>(
-        std::string(Topics::kBlueTeamRobotPrefix) + std::to_string(id),
-        10,
-        blue_robot_callback);
-      yellow_robots_subscriptions_.at(id) = create_subscription<ateam_msgs::msg::RobotState>(
-        std::string(Topics::kYellowTeamRobotPrefix) + std::to_string(id),
-        10,
-        yellow_robot_callback);
-    }
+    create_indexed_subscribers<ateam_msgs::msg::RobotState>(
+      blue_robots_subscriptions_,
+      Topics::kBlueTeamRobotPrefix,
+      10,
+      &ATeamAINode::blue_robot_state_callback,
+      this);
 
-    for (std::size_t id = 0; id < robot_commands_publishers_.size(); id++) {
-      robot_commands_publishers_.at(id) = create_publisher<ateam_msgs::msg::RobotMotionCommand>(
-        std::string(Topics::kRobotMotionCommandPrefix) + std::to_string(id),
-        rclcpp::SystemDefaultsQoS());
-    }
+    create_indexed_subscribers<ateam_msgs::msg::RobotState>(
+      yellow_robots_subscriptions_,
+      Topics::kYellowTeamRobotPrefix,
+      10,
+      &ATeamAINode::yellow_robot_state_callback,
+      this);
+
+    create_indexed_publishers<ateam_msgs::msg::RobotMotionCommand>(
+      robot_commands_publishers_, Topics::kRobotMotionCommandPrefix,
+      rclcpp::SystemDefaultsQoS(), this);
 
     auto ball_callback = [&](const ateam_msgs::msg::BallState::SharedPtr ball_state_msg) {
         ball_state_callback(world_.balls.at(0), ball_state_msg);
@@ -156,6 +146,26 @@ private:
   std::mutex world_mutex_;
   World world_;
   std::array<std::optional<Trajectory>, 16> previous_frame_trajectories;
+
+  void blue_robot_state_callback(
+    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
+    int id)
+  {
+    const auto are_we_blue = info_listener_.GetTeamColor() ==
+      ateam_common::TeamInfoListener::TeamColor::Blue;
+    auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
+    robot_state_callback(robot_state_array, id, robot_state_msg);
+  }
+
+  void yellow_robot_state_callback(
+    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
+    int id)
+  {
+    const auto are_we_yellow = info_listener_.GetTeamColor() ==
+      ateam_common::TeamInfoListener::TeamColor::Yellow;
+    auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
+    robot_state_callback(robot_state_array, id, robot_state_msg);
+  }
 
   void robot_state_callback(
     std::array<std::optional<Robot>, 16> & robot_states,
