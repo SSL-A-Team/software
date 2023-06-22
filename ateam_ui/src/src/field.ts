@@ -1,3 +1,4 @@
+import { Overlay } from "@/overlay"
 import { TeamColor} from "@/team"
 import { WorldState } from "@/state"
 import ROSLIB from "roslib"
@@ -20,26 +21,6 @@ export class FieldDimensions {
     goalFlat: number = 0.5;
     floorLength: number = 13.4;
     floorWidth: number = 10.4
-}
-
-// Overlay Types
-export class Overlay {
-    namespace: string
-    name: string
-    visible: boolean
-    type: number
-    command: number
-    position: Point
-    scale: Point
-    stroke_color: string
-    fill_color: string
-    stroke_width: number
-    lifetime: number
-    points: Point[] | null
-    mesh: Mesh1d[] | null
-    mesh_alpha: Mesh1d[] | null
-    text: string | null
-    depth: number
 }
 
 export class Field {
@@ -138,12 +119,16 @@ export class Field {
         const robotArray = Object.entries(state.world.teams).map(i => {return i[1].robots}).flat()
         const robots = app.stage.getChildByName("robots").children;
         for (var i = 0; i < robotArray.length; i++) {
-            robotArray[i].update(robots[i]);
+            if (robotArray[i].visible) {
+                robotArray[i].update(robots[i]);
+            }
         }
 
         state.world.ball.update(app.stage.getChildByName("ball").children[0]);
 
-        //TODO: handle overlays
+        for (const id in this.overlays) {
+            this.overlays[id].update(app.stage.getChildByName("overlay"), app.stage.getChildByName("underlay"));
+        }
     }
 }
 

@@ -46,9 +46,9 @@ export default {
     methods: {
         // Stores History and renders field at 100fps
         update: function() {
-            // This should store a bit over 15 minutes of history, we can bump it higher
-            // if the memory usage isn't too excessive (I think this should only be ~50MB)
-            if (this.state.history.length < 100000) {
+            // This should store a bit over 8 minutes of history, we can bump it higher
+            // if the memory usage isn't too excessive (I think this should be ~1.1GB)
+            if (this.state.history.length < 50000) {
                 // if this doesn't properly deep copy we may need Lodash
                 this.state.history.push(structuredClone(toRaw(this.state.world)));
             }
@@ -61,7 +61,7 @@ export default {
         clearInterval(this.intervalId);
     },
     created() {
-        this.intervalId = setInterval(this.update, 1);
+        this.intervalId = setInterval(this.update, 10);
     },
     components: {
         FieldComponent,

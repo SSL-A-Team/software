@@ -1,6 +1,7 @@
 import ROSLIB from "roslib"
 // import 'roslib/build/roslib';
 import { Team, TeamColor } from "@/team"
+import { Overlay } from "@/overlay"
 import { Ball } from "@/ball"
 import { Field } from "@/field"
 
@@ -42,13 +43,17 @@ export class AppState {
     sim: boolean = true;
 
     // TODO: figure out how to type ROSLIB Messages, the Message type doesn't seem to work properly
-    ballCallback(msg: any) {
-        this.world.ball.pose = msg.pose;
+    getBallCallback() {
+        const state = this; // fix dumb javascript things
+        return function(msg: any) {
+            state.world.ball.pose = msg.pose;
+        }
     }
 
     getRobotCallback(team: string, id: number) {
+	const state = this; // fix dumb javascript things
         return function(msg: any) {
-            let robot = this.world.teams[team].robots[id];
+            let robot = state.world.teams[team].robots[id];
             robot.pose = msg.pose;
             robot.twist = msg.twist;
             robot.accel = msg.accel;
@@ -56,25 +61,27 @@ export class AppState {
 
     }
 
-    overlayCallback(msg: any) {
+    getOverlayCallback(msg: any) {
+	    const state = this; // fix dumb javascript things
+	    return function(msg:any) {
             let id = msg.ns+"/"+msg.name;
             switch(msg.command) {
                 // REPLACE
                 case 0:
-                    this.world.field.overlays[id] = msg;
+                    state.world.field.overlays[id] = new Overlay(id, msg);
                     break;
                 // EDIT
                 case 1:
                     //TODO: Not sure if this command is necessary, will implement later if it is
                     // Might need to handle moving overlay between z-depths
-                    this.world.field.overlays[id] = msg;
+                    state.world.field.overlays[id] = new Overlay(id, msg);
                     break;
                 // REMOVE
                 case 2:
-                    delete this.world.field.overlays[id];
+                    delete state.world.field.overlays[id];
                     break;
             }
-
+        }
     }
 
     constructor() {
@@ -108,7 +115,7 @@ export class AppState {
             messageType: 'ateam_msgs/msg/BallState'
         });
 
-        this.ballTopic.subscribe(this.ballCallback);
+        this.ballTopic.subscribe(this.getBallCallback());
         //TODO: add publisher for moving sim ball
 
 
@@ -134,7 +141,7 @@ export class AppState {
             messageType: 'ateam_msgs/msg/Overlay'
         });
 
-        overlayTopic.subscribe(this.overlayCallback);
+        overlayTopic.subscribe(this.getOverlayCallback());
 
         //TODO: add all other pub/subs (field dimensions, referee, etc)
     }

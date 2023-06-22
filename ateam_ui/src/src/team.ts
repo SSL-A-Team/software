@@ -26,7 +26,7 @@ export class Team {
         this.robots = [];
 
         // initialize robots
-        const numVisible = 16;
+        const numVisible = 11;
         for (let i = 0; i < maxRobots; i++) {
         
             let visible = (i < numVisible);
