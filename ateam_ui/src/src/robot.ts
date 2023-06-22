@@ -1,4 +1,5 @@
 import { TeamColor } from "@/team"
+import { RenderConfig } from "@/state"
 import * as PIXI from "pixi.js"
 import ROSLIB from "roslib"
 
@@ -40,16 +41,15 @@ export class Robot {
         this.pose.orientation.w = Math.cos(degrees/2 * Math.PI/180);
     }
 
-    update(container: PIXI.Container) {
-        const scale = 140;
+    update(container: PIXI.Container, renderConfig: RenderConfig) {
+        const scale = renderConfig.scale;
         container.position.x = this.pose.position.x * scale;
         container.position.y = this.pose.position.y * scale;
         container.getChildAt(0).angle = this.rotation();
     }
 
-    draw(container: PIXI.Container) {
-        // TODO: figure out how to pass scale around
-        const scale = 140;
+    draw(container: PIXI.Container, renderConfig: RenderConfig) {
+        const scale = renderConfig.scale;
         const radius = .09;
         const sr = scale*radius;
 

@@ -15,7 +15,8 @@
                         <v-layer>
                             <v-rect :config="{
                                             x: 20,
-                                            y: 9,
+                                            y: 1,
+                                            renderScale: state.renderConfig.scale,
                                             r_id: robot.id,
                                             team: robot.team,
                                             sceneFunc: robotStatus,
@@ -41,7 +42,7 @@ export default {
         return {
             blank: null,
             robotStatus: function(ctx) {
-                const scale = 200;
+                const scale = 2 * this.attrs.renderScale; // need higher resolution to display dots
                 const radius = .09;
                 const sr = scale*radius;
 

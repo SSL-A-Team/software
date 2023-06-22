@@ -1,4 +1,5 @@
 import { Team, TeamColor } from "@/team"
+import { RenderConfig } from "@state"
 import { Field } from "@/field"
 import ROSLIB from "roslib"
 import * as PIXI from "pixi.js";
@@ -20,16 +21,16 @@ export class Ball {
         })
     }
 
-    update(container: PIXI.Container) {
-        const scale = 140;
+    update(container: PIXI.Container, renderConfig: RenderConfig) {
+        const scale = renderConfig.scale;
         container.position.x = this.pose.position.x * scale;
         container.position.y = this.pose.position.y * scale;
         container.visible = this.visible;
     }
 
-    draw(container: PIXI.Container) {
+    draw(container: PIXI.Container, renderConfig: RenderConfig) {
         // TODO: figure out how to pass scale around
-        const scale = 140;
+        const scale = renderConfig.scale;
 
         const graphic = new PIXI.Graphics();
 

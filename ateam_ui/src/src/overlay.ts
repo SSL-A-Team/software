@@ -1,3 +1,4 @@
+import { RenderConfig } from "@state"
 import { Field } from "@/field"
 import * as PIXI from "pixi.js";
 
@@ -22,7 +23,6 @@ export class Overlay {
     depth: number
 
     pixelsPerMeter: number = 140;
-    canvasScale: number = 1; // Scales the size of the canvas in the window
     
     constructor(id: string, msg: any) {
         this.id = id;
@@ -31,7 +31,7 @@ export class Overlay {
         }
     }
 
-    update(overlay: PIXI.Container, underlay: PIXI.Container) {
+    update(overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig) {
         let container = underlay;
         if (this.depth == 0) {
             container = overlay;
@@ -54,7 +54,9 @@ export class Overlay {
         }
     }
 
-    draw(graphic: PIXI.Container) {
+    draw(graphic: PIXI.Container, renderConfig: RenderConfig) {
+        const scale = renderConfig.scale;
+
         graphic.position.x = this.position.x;
         graphic.position.y = this.position.y;
         
@@ -63,16 +65,16 @@ export class Overlay {
             case 0:
                 graphic.beginFill(this.fill_color);
                 graphic.lineStyle(0, this.stroke_color);
-                graphic.drawEllipse(0, 0, this.pixelsPerMeter/30, this.pixelsPerMeter/30);
+                graphic.drawEllipse(0, 0, scale/30, scale/30);
                 graphic.endFill();
                 break;
             // LINE
             case 1:
                 if (this.points.length >= 2) {
                     graphic.lineStyle(this.stroke_width, this.stroke_color);
-                    graphic.moveTo(this.pixelsPerMeter*this.points[0].x, this.pixelsPerMeter*this.points[0].y);
+                    graphic.moveTo(scale*this.points[0].x, scale*this.points[0].y);
                     for (var i = 1; i < this.points.length; i++) {
-                        graphic.lineTo(this.pixelsPerMeter*this.points[i].x, this.pixelsPerMeter*this.points[i].y);
+                        graphic.lineTo(scale*this.points[i].x, scale*this.points[i].y);
                     }
                 }
                 break;
@@ -80,24 +82,24 @@ export class Overlay {
             case 2:
                 graphic.beginFill(this.fill_color);
                 graphic.lineStyle(this.stroke_width, this.stroke_color);
-                graphic.drawRect(-this.pixelsPerMeter*this.scale.x/2, -this.pixelsPerMeter*this.scale.y/2, this.pixelsPerMeter*this.scale.x, this.pixelsPerMeter*this.scale.y);
+                graphic.drawRect(-scale*this.scale.x/2, -scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
                 graphic.endFill();
                 break;
             // ELLIPSE
             case 3:
                 graphic.beginFill(this.fill_color);
                 graphic.lineStyle(this.stroke_width, this.stroke_color);
-                graphic.drawEllipse(0, 0, this.pixelsPerMeter*this.scale.x, this.pixelsPerMeter*this.scale.y);
+                graphic.drawEllipse(0, 0, scale*this.scale.x, scale*this.scale.y);
                 graphic.endFill();
                 break;
             // POLYGON
             case 4:
                 if (this.points.length >= 2){
-                    graphic.moveTo(this.pixelsPerMeter*this.points.at(-1).x, this.pixelsPerMeter*this.points.at(-1).y);
+                    graphic.moveTo(scale*this.points.at(-1).x, scale*this.points.at(-1).y);
                     graphic.beginFill(this.fill_color);
                     graphic.lineStyle(this.stroke_width, this.stroke_color);
                     for (const point of this.points) {
-                        graphic.lineTo(this.pixelsPerMeter*point.x, this.pixelsPerMeter*point.y);
+                        graphic.lineTo(scale*point.x, scale*point.y);
                     }
                     graphic.endFill();
                 }

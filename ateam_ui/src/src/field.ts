@@ -24,8 +24,6 @@ export class FieldDimensions {
 }
 
 export class Field {
-    pixelsPerMeter: number = 140;
-    canvasScale: number = 1; // Scales the size of the canvas in the window
     fieldDimensions: FieldDimensions;
     overlays: Overlay[];
 
@@ -35,6 +33,7 @@ export class Field {
     }
 
     initializePixi(app: PIXI.Application, state: WorldState) {
+        const scale = state.renderConfig.scale;
 
         // Set origin to center of field
         const offsetX = app.screen.width/2;
@@ -60,50 +59,50 @@ export class Field {
         fieldLines.lineStyle(4, 0xFFFFFF);
 
         // Field Outline
-        fieldLines.drawRect(this.pixelsPerMeter * this.fieldDimensions.border - offsetX,
-                            this.pixelsPerMeter * this.fieldDimensions.border - offsetY,
-                            this.fieldDimensions.length * this.pixelsPerMeter,
-                            this.fieldDimensions.width * this.pixelsPerMeter
+        fieldLines.drawRect(scale * this.fieldDimensions.border - offsetX,
+                            scale * this.fieldDimensions.border - offsetY,
+                            this.fieldDimensions.length * scale,
+                            this.fieldDimensions.width * scale
                            );
 
         // Center Circle
-        fieldLines.drawCircle(0, 0, this.pixelsPerMeter * this.fieldDimensions.centerRadius);
+        fieldLines.drawCircle(0, 0, scale * this.fieldDimensions.centerRadius);
 
         // Width Center Line
-        fieldLines.moveTo(0, -this.pixelsPerMeter * this.fieldDimensions.width/2);
-        fieldLines.lineTo(0, this.pixelsPerMeter * this.fieldDimensions.width/2);
+        fieldLines.moveTo(0, -scale * this.fieldDimensions.width/2);
+        fieldLines.lineTo(0, scale * this.fieldDimensions.width/2);
 
         // Length Center Line
-        fieldLines.moveTo(-this.pixelsPerMeter * this.fieldDimensions.length/2, 0);
-        fieldLines.lineTo(this.pixelsPerMeter * this.fieldDimensions.length/2, 0);
+        fieldLines.moveTo(-scale * this.fieldDimensions.length/2, 0);
+        fieldLines.lineTo(scale * this.fieldDimensions.length/2, 0);
 
         // Team Goal Boxes
         for (const color in state.world.teams) {
             const team = state.world.teams[color];
-            const goalX = team.defending * this.pixelsPerMeter * this.fieldDimensions.length/2
+            const goalX = team.defending * scale * this.fieldDimensions.length/2
 
             // Goal Box
             fieldLines.lineStyle(4, 0xFFFFFF);
-            fieldLines.moveTo(goalX, -this.pixelsPerMeter * this.fieldDimensions.goalWidth);
-            fieldLines.lineTo(goalX - team.defending * this.pixelsPerMeter * this.fieldDimensions.goalWidth, -this.pixelsPerMeter * this.fieldDimensions.goalWidth);
-            fieldLines.lineTo(goalX - team.defending * this.pixelsPerMeter * this.fieldDimensions.goalWidth, this.pixelsPerMeter * this.fieldDimensions.goalWidth);
-            fieldLines.lineTo(goalX, this.pixelsPerMeter * this.fieldDimensions.goalWidth);
+            fieldLines.moveTo(goalX, -scale * this.fieldDimensions.goalWidth);
+            fieldLines.lineTo(goalX - team.defending * scale * this.fieldDimensions.goalWidth, -scale * this.fieldDimensions.goalWidth);
+            fieldLines.lineTo(goalX - team.defending * scale * this.fieldDimensions.goalWidth, scale * this.fieldDimensions.goalWidth);
+            fieldLines.lineTo(goalX, scale * this.fieldDimensions.goalWidth);
 
             // Goal
             fieldLines.lineStyle(4, color);
-            fieldLines.moveTo(goalX, -this.pixelsPerMeter * this.fieldDimensions.goalWidth/2);
-            fieldLines.lineTo(goalX + team.defending * this.pixelsPerMeter * this.fieldDimensions.goalDepth, -this.pixelsPerMeter * this.fieldDimensions.goalWidth/2);
-            fieldLines.lineTo(goalX + team.defending * this.pixelsPerMeter * this.fieldDimensions.goalDepth, this.pixelsPerMeter * this.fieldDimensions.goalWidth/2);
-            fieldLines.lineTo(goalX, this.pixelsPerMeter * this.fieldDimensions.goalWidth/2);
+            fieldLines.moveTo(goalX, -scale * this.fieldDimensions.goalWidth/2);
+            fieldLines.lineTo(goalX + team.defending * scale * this.fieldDimensions.goalDepth, -scale * this.fieldDimensions.goalWidth/2);
+            fieldLines.lineTo(goalX + team.defending * scale * this.fieldDimensions.goalDepth, scale * this.fieldDimensions.goalWidth/2);
+            fieldLines.lineTo(goalX, scale * this.fieldDimensions.goalWidth/2);
         }
 
         // Robots
         // surely there is a more elegant way to do this
         for (const robot of Object.entries(state.world.teams).map(i => {return i[1].robots}).flat()) {
-            robot.draw(robots);
+            robot.draw(robots, state.renderConfig);
         }
 
-        state.world.ball.draw(ball);
+        state.world.ball.draw(ball, state.renderConfig);
 
         app.stage.addChild(fieldLines);
         app.stage.addChild(underlay);
@@ -120,14 +119,14 @@ export class Field {
         const robots = app.stage.getChildByName("robots").children;
         for (var i = 0; i < robotArray.length; i++) {
             if (robotArray[i].visible) {
-                robotArray[i].update(robots[i]);
+                robotArray[i].update(robots[i], state.renderConfig);
             }
         }
 
-        state.world.ball.update(app.stage.getChildByName("ball").children[0]);
+        state.world.ball.update(app.stage.getChildByName("ball").children[0], state.renderConfig);
 
         for (const id in this.overlays) {
-            this.overlays[id].update(app.stage.getChildByName("overlay"), app.stage.getChildByName("underlay"));
+            this.overlays[id].update(app.stage.getChildByName("overlay"), app.stage.getChildByName("underlay"), state.renderConfig);
         }
     }
 }

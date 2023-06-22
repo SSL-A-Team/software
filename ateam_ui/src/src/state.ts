@@ -5,6 +5,11 @@ import { Overlay } from "@/overlay"
 import { Ball } from "@/ball"
 import { Field } from "@/field"
 
+export class RenderConfig {
+    angle: number = 0;
+    scale: number = 140; // Pixels per meter (in the rendering canvas)   
+}
+
 export class WorldState {
     team: TeamColor;
     teams: Team[];
@@ -31,6 +36,7 @@ export class WorldState {
 }
 
 export class AppState {
+    renderConfig: RenderConfig;
     world: WorldState;
     history: WorldState[];
     
@@ -85,6 +91,7 @@ export class AppState {
     }
 
     constructor() {
+        this.renderConfig = new RenderConfig();
         this.world = new WorldState();
         this.history = [];
 
