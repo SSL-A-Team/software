@@ -82,13 +82,16 @@ bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment, d
       https://computergraphics.stackexchange.com/questions/2105/test-if-a-point-is-on-a-line-segment
       https://lucidar.me/en/mathematics/check-if-a-point-belongs-on-a-line-segment/
       */
-  Eigen::Vector2d direction = (segment.p2 - segment.p1).normalized();
-  double projection = direction.dot(point - segment.p1);
+  Eigen::Vector2d start = segment.p1;
+  Eigen::Vector2d direction = (segment.p2 - start).normalized();
+  double projection = direction.dot(point - start);
 
-  if (projection < -tolerance || projection > segment.get_length() + tolerance) {
-    return false;
+  Eigen::Vector2d closest_point_on_line = start + (projection * direction);
+
+  if ((point - closest_point_on_line).norm() <= tolerance) {
+    return true;
   }
-  return true;
+  return false;
 }
 
 std::optional<Eigen::Vector2d> get_segment_intersection(
