@@ -9,11 +9,39 @@ import ROSLIB from "roslib"
 
 export class RobotStatus {
     connected: boolean
-    kickerAvail: boolean
-    chipperAvail: boolean
-    batteryLevel: number
-    name: string
     message: string
+
+    sequence_number: number
+    robot_revision_major: number
+    robot_revision_minor: number
+    battery_level: number        // volts
+    battery_temperature: number  // deg C
+    power_error: boolean
+    tipped_error: boolean
+    breakbeam_error: boolean
+    breakbeam_ball_detected: boolean
+    accelerometer_0_error: boolean
+    accelerometer_1_error: boolean
+    gyroscope_0_error: boolean
+    gyroscope_1_error: boolean
+    motor_0_general_error: boolean
+    motor_0_hall_error: boolean
+    motor_1_general_error: boolean
+    motor_1_hall_error: boolean
+    motor_2_general_error: boolean
+    motor_2_hall_error: boolean
+    motor_3_general_error: boolean
+    motor_3_hall_error: boolean
+    motor_4_general_error: boolean
+    motor_4_hall_error: boolean
+    chipper_available: boolean
+    kicker_available: boolean
+    motor_0_temperature: number  // deg C
+    motor_1_temperature: number  // deg C
+    motor_2_temperature: number  // deg C
+    motor_3_temperature: number  // deg C
+    motor_4_temperature: number  // deg C
+    kicker_charge_level: number  // volts
 }
 
 export class Robot {
@@ -23,13 +51,15 @@ export class Robot {
     pose: Pose;
     twist: Twist;
     accel: Accel;
-    status: RobotStatus | null;
+    status: RobotStatus;
 
     constructor(id:number, visible:boolean, team:TeamColor, pose:Pose) {
         this.id = id;
         this.visible = visible;
         this.team = team;
         this.pose = pose;
+
+        this.status = new RobotStatus();
     }
 
     rotation(): number {

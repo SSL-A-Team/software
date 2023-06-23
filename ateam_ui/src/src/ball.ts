@@ -1,5 +1,5 @@
 import { Team, TeamColor } from "@/team"
-import { RenderConfig } from "@state"
+import { RenderConfig } from "@/state"
 import { Field } from "@/field"
 import ROSLIB from "roslib"
 import * as PIXI from "pixi.js";

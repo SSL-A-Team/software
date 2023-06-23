@@ -1,6 +1,6 @@
 import ROSLIB from "roslib"
 // import 'roslib/build/roslib';
-import { Team, TeamColor } from "@/team"
+import { Team, TeamInfo, TeamColor } from "@/team"
 import { Overlay } from "@/overlay"
 import { Ball } from "@/ball"
 import { Field } from "@/field"
@@ -16,10 +16,6 @@ export class WorldState {
     ball: Ball;
     field: Field;
 
-    // TODO: Move these into a ref class once we have a full ref ui element
-    refStage: string;
-    refCommand: string;
-
     constructor() {
         this.team = TeamColor.Yellow;
         this.teams = [];
@@ -27,10 +23,6 @@ export class WorldState {
         this.teams[TeamColor.Yellow] = new Team("Opponent", TeamColor.Yellow, 1);
 
         this.ball = new Ball();
-
-        this.refStage = "First Half";
-        this.refCommand = "HALT";
-
         this.field = new Field();
     }
 }
@@ -39,12 +31,12 @@ export class AppState {
     renderConfig: RenderConfig;
     world: WorldState;
     history: WorldState[];
-    
+
+    teamInfo: TeamInfo[];
+
     // I'm not sure if we will need ongoing access to these
     ros: ROSLIB.Ros;
-    ballTopic: ROSLIB.Topic;
-    robotTopics: ROSLIB.Topic[];
-    overlayTopic: ROSLIB.Topic;
+    topics: ROSLIB.Topic[]
 
     sim: boolean = true;
 
@@ -67,7 +59,18 @@ export class AppState {
 
     }
 
-    getOverlayCallback(msg: any) {
+    getRobotStatusCallback(id: number) {
+	const state = this; // fix dumb javascript things
+        return function(msg: any) {
+            let robot = state.world.teams[this.team].robots[id];
+            for (const member of Object.getOwnPropertyNames(robot.status)) {
+                robot.status[member] = msg[member];
+            }
+        };
+
+    }
+
+    getOverlayCallback() {
 	    const state = this; // fix dumb javascript things
 	    return function(msg:any) {
             let id = msg.ns+"/"+msg.name;
@@ -90,10 +93,33 @@ export class AppState {
         }
     }
 
+    getFieldDimensionCallback() {
+	    const state = this; // fix dumb javascript things
+	    return function(msg:any) {
+            state.world.field.fieldDimensions.length = msg.field_length;
+            state.world.field.fieldDimensions.width = msg.field_width;
+            state.world.field.fieldDimensions.goalWidth = msg.goal_width;
+            state.world.field.fieldDimensions.goalDepth = msg.goal_depth;
+            state.world.field.fieldDimensions.border = msg.boundary_width;
+        }
+    }
+
+    getRefereeCallback() {
+	    const state = this; // fix dumb javascript things
+	    return function(msg:any) {
+            // TODO: Check how well this works, the referee class doesn't exactly match Referee.msg type
+            for (const member of Object.getOwnPropertyNames(this.referee)) {
+                this.referee[member] = msg[member];
+            }
+        }
+    }
+
     constructor() {
         this.renderConfig = new RenderConfig();
         this.world = new WorldState();
         this.history = [];
+        this.teamInfo = [];
+        this.topics = [];
 
         // Configure ROS
         this.ros = new ROSLIB.Ros({
@@ -115,19 +141,21 @@ export class AppState {
             //Neutralino.app.exit();
         });
 
+        // TODO: add a way to handle ROS namespaces
+
         // Set up ball subscribers and publishers
-        this.ballTopic = new ROSLIB.Topic({
+        let ballTopic = new ROSLIB.Topic({
             ros: this.ros,
             name: '/ball',
             messageType: 'ateam_msgs/msg/BallState'
         });
 
-        this.ballTopic.subscribe(this.getBallCallback());
+        ballTopic.subscribe(this.getBallCallback());
+        this.topics["ball"] = ballTopic;
         //TODO: add publisher for moving sim ball
 
-
-        for (var team in this.world.teams) {
-            for (var i = 0; i < 16; i++) {
+        for (var i = 0; i < 16; i++) {
+            for (var team in this.world.teams) {
                 let robotTopic = new ROSLIB.Topic({
                     ros: this.ros,
                     name: '/' + team + '_team/robot' + i,
@@ -135,21 +163,50 @@ export class AppState {
                 });
 
                 robotTopic.subscribe(this.getRobotCallback(team, i));
+                this.topics['/' + team + '_team/robot' + i] = robotTopic;
 
-                //TODO: add subscriber for robot status
+
                 //TODO: add publisher for moving sim robots
             }
+
+            let robotStatusTopic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/robot_feedback/robot' + i,
+                messageType: 'ateam_msgs/msg/RobotFeedback'
+            });
+
+            robotStatusTopic.subscribe(this.getRobotStatusCallback(i));
+            this.topics['/robot_feedback/robot' + i] = robotStatusTopic;
         }
 
         // Set up overlay subscriber
-        var overlayTopic = new ROSLIB.Topic({
+        let overlayTopic = new ROSLIB.Topic({
             ros: this.ros,
             name: '/overlay',
             messageType: 'ateam_msgs/msg/Overlay'
         });
 
         overlayTopic.subscribe(this.getOverlayCallback());
+        this.topics["overlay"] = overlayTopic;
 
-        //TODO: add all other pub/subs (field dimensions, referee, etc)
+        // Set up fieldDimension subscriber
+        let fieldDimensionTopic = new ROSLIB.Topic({
+            ros: this.ros,
+            name: '/field',
+            messageType: 'ateam_msgs/msg/FieldInfo'
+        });
+
+        fieldDimensionTopic.subscribe(this.getFieldDimensionCallback());
+        this.topics["fieldDimension"] = fieldDimensionTopic;
+
+        // Set up referee subscriber
+        let refereeTopic = new ROSLIB.Topic({
+            ros: this.ros,
+            name: '/referee_messages',
+            messageType: 'ssl_league_msgs/msg/Referee'
+        });
+
+        refereeTopic.subscribe(this.getRefereeCallback());
+        this.topics["referee"] = refereeTopic;
     }
 }

@@ -1,6 +1,7 @@
+import { Robot } from "@/robot"
 import { Overlay } from "@/overlay"
 import { TeamColor} from "@/team"
-import { WorldState } from "@/state"
+import { RenderConfig, AppState } from "@/state"
 import ROSLIB from "roslib"
 import * as PIXI from "pixi.js";
 
@@ -32,35 +33,17 @@ export class Field {
         this.overlays = [];
     }
 
-    initializePixi(app: PIXI.Application, state: WorldState) {
+    drawFieldLines(fieldLines: PIXI.Graphics, state: AppState) {
         const scale = state.renderConfig.scale;
 
-        // Set origin to center of field
-        const offsetX = app.screen.width/2;
-        const offsetY = app.screen.height/2;
-        app.stage.position.set(offsetX, offsetY);
-
-        const fieldLines = new PIXI.Graphics();
-        fieldLines.name = "fieldLines";
-
-        const robots = new PIXI.Container();
-        robots.name = "robots";
-
-        const ball = new PIXI.Container();
-        ball.name = "ball";
-        //ball.eventMode = 'static';
-
-        const underlay = new PIXI.Container();
-        underlay.name = "underlay";
-        const overlay = new PIXI.Container();
-        overlay.name = "overlay";
+        fieldLines.clear();
 
         // Draw the Field Lines
         fieldLines.lineStyle(4, 0xFFFFFF);
 
         // Field Outline
-        fieldLines.drawRect(scale * this.fieldDimensions.border - offsetX,
-                            scale * this.fieldDimensions.border - offsetY,
+        fieldLines.drawRect(-scale * this.fieldDimensions.length/2,
+                            -scale * this.fieldDimensions.width/2,
                             this.fieldDimensions.length * scale,
                             this.fieldDimensions.width * scale
                            );
@@ -95,6 +78,32 @@ export class Field {
             fieldLines.lineTo(goalX + team.defending * scale * this.fieldDimensions.goalDepth, scale * this.fieldDimensions.goalWidth/2);
             fieldLines.lineTo(goalX, scale * this.fieldDimensions.goalWidth/2);
         }
+    }
+
+    initializePixi(app: PIXI.Application, state: AppState) {
+
+        // Set origin to center of field
+        const offsetX = app.screen.width/2;
+        const offsetY = app.screen.height/2;
+        app.stage.position.set(offsetX, offsetY);
+
+        const fieldLines = new PIXI.Graphics();
+        fieldLines.name = "fieldLines";
+
+        const robots = new PIXI.Container();
+        robots.name = "robots";
+
+        const ball = new PIXI.Container();
+        ball.name = "ball";
+        //ball.eventMode = 'static';
+
+        const underlay = new PIXI.Container();
+        underlay.name = "underlay";
+        const overlay = new PIXI.Container();
+        overlay.name = "overlay";
+
+        // Field Lines
+        this.drawFieldLines(fieldLines, state);
 
         // Robots
         // surely there is a more elegant way to do this
@@ -102,6 +111,7 @@ export class Field {
             robot.draw(robots, state.renderConfig);
         }
 
+        // Ball
         state.world.ball.draw(ball, state.renderConfig);
 
         app.stage.addChild(fieldLines);
@@ -111,19 +121,21 @@ export class Field {
         app.stage.addChild(overlay);
     }
 
-    update(app: PIXI.Application, state: WorldState) {
-        // update field dimensions (probably want to break this into its own function)
+    update(app: PIXI.Application, state: AppState) {
+        // TODO: figure out how to trigger field dimension update
+        // drawFieldLines(app.stage.getChildByName("fieldLines");
 
         // this also seems like an inefficient way to do this
         const robotArray = Object.entries(state.world.teams).map(i => {return i[1].robots}).flat()
         const robots = app.stage.getChildByName("robots").children;
         for (var i = 0; i < robotArray.length; i++) {
             if (robotArray[i].visible) {
-                robotArray[i].update(robots[i], state.renderConfig);
+                const robot = robots[i] as PIXI.Container;
+                robotArray[i].update(robot, state.renderConfig);
             }
         }
 
-        state.world.ball.update(app.stage.getChildByName("ball").children[0], state.renderConfig);
+        state.world.ball.update(app.stage.getChildByName("ball").children[0] as PIXI.Container, state.renderConfig);
 
         for (const id in this.overlays) {
             this.overlays[id].update(app.stage.getChildByName("overlay"), app.stage.getChildByName("underlay"), state.renderConfig);

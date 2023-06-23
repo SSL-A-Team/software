@@ -8,7 +8,7 @@ import { ref, inject } from 'vue';
 import * as PIXI from 'pixi.js';
 
 export default {
-    inject: ['state', 'renderConfig'],
+    inject: ['state'],
     data() {
         return {
             pixi: {}
@@ -42,7 +42,6 @@ export default {
             // TODO: Replace this with ball/robot drag code. Currently having an issue where
             // enabling event handling on field elements throws an error about not having
             // a propagation path
-            console.log(event.global);
         }
     }
 }

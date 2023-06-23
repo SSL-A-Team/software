@@ -4,102 +4,124 @@
             Add Goalie, STATUS, manual control here
         </div>
         <v-container class="d-flex flex-column">
-            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of state.world.teams[state.world.team].robots">
+            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots">
                     {{robot.id}}
-                    <!-- this might be really bad for performance -->
-                    <v-stage ref="stage" :config="{
-                                        width: 100,
-                                        height: 55,
-                                        listening: false
-                                        }">
-                        <v-layer>
-                            <v-rect :config="{
-                                            x: 20,
-                                            y: 1,
-                                            renderScale: state.renderConfig.scale,
-                                            r_id: robot.id,
-                                            team: robot.team,
-                                            sceneFunc: robotStatus,
-                                            fill: 'DarkBlue',
-                                            stroke: 'black',
-                                            strokeWidth: 2,
-                                            cache: true
-                                            }"/>
-                        </v-layer>
-                    </v-stage>
+                    <canvas ref="canvases" height=100 width=100 style="width:70px; height:70px;"/>
             </v-card>
         </v-container>
     </v-container>
 </template>
 
 
-<script lang="js">
-import { ref, inject } from 'vue';
+<script lang="ts">
+import { ref, inject } from "vue";
+import { Robot } from "@/robot";
 
 export default {
     inject: ['state'],
-    data() {
-        return {
-            blank: null,
-            robotStatus: function(ctx) {
-                const scale = 2 * this.attrs.renderScale; // need higher resolution to display dots
-                const radius = .09;
-                const sr = scale*radius;
+    mounted() {
+        this.update();
+    },
+    methods: {
+        update: function() {
+            // if this has performance issues we could try using reactivity on the robot statuses so it only renders when they change
+            for(const robot of this.state.world.teams[this.state.world.team].robots) {
+                this.drawStatus(robot, this.$refs.canvases[robot.id].getContext("2d"));
+            }
+        },
+        drawStatus: function(robot: Robot, ctx: CanvasRenderingContext2D) {
+            // @ts-ignore // TS doesn't know about the new canvas reset function
+            ctx.reset(); // if performance becomes an issue we can look for other ways to handle this
 
-                const start = (-50/180)*Math.PI;
-                const end =  (230/180)*Math.PI;
+            const scale = 400; // This is seperate from the field based renderConfig.scale
+            const radius = .09;
+            const sr = scale*radius;
 
-                // Draw robot shell
+            const start = (-50/180)*Math.PI;
+            const end =  (230/180)*Math.PI;
+
+            ctx.translate(50, 50);
+            ctx.fillStyle = "green";
+            ctx.fillRect(-50, -50, 100, 100);
+            ctx.fillStyle = "DarkBlue";
+
+            // Draw robot shell
+            ctx.beginPath();
+            ctx.arc(0, 0, sr, start, end);
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw team circle
+            ctx.beginPath();
+            ctx.arc(0, 0, .025*scale, 0, 2*Math.PI);
+            ctx.closePath();
+            ctx.fillStyle = robot.team;
+            ctx.fill();
+
+            const pos = {
+                x: [-.055, .055, -.035, .035],
+                y: [-.035, -.035, .055, .055]
+            }
+
+            // Order:
+            // - front left
+            // - front right
+            // - back left
+            // - back right
+            let color_patterns = new Map([
+                [0, "PPGP"],
+                [1, "GPGP"],
+                [2, "GGGP"],
+                [3, "PGGP"],
+                [4, "PPPG"],
+                [5, "GPPG"],
+                [6, "GGPG"],
+                [7, "PGPG"],
+                [8, "GGGG"],
+                [9, "PPPP"],
+                [10, "PPGG"],
+                [11, "GGPP"],
+                [12, "GPGG"],
+                [13, "GPPP"],
+                [14, "PGGG"],
+                [15, "PGPP"]
+            ]);
+
+            let id_pattern = color_patterns.get(robot.id)
+
+            for (var i = 0; i < 4; i++) {
                 ctx.beginPath();
-                ctx.arc(sr, sr, sr, start, end);
+                // radius increased by .005 for visibility
+                ctx.arc(pos.x[i]*scale, pos.y[i]*scale, .025*scale, 0, 2*Math.PI);
                 ctx.closePath();
-                ctx.fillStrokeShape(this);
 
-                // Draw team circle
-                ctx.beginPath();
-                ctx.arc(sr, sr, sr/4, 0, 2*Math.PI);
-                ctx.closePath();
-                ctx.fillStyle = this.attrs.team;
+                ctx.fillStyle = id_pattern[i] == "P" ? 'DeepPink' : 'LawnGreen';
                 ctx.fill();
+            }
 
-                const pos = {
-                    x: [.5, 1.5, .55, 1.45],
-                    y: [.6, .6, 1.5, 1.5]
-                }
+            // Generate wheel status error indicators
+            // TODO: Figure out how much we want this to show i.e.  distinguish between general and hall errors? show over temperature warnings?
+            // TODO: Make these look less terrible
 
-                // Order:
-                // - front left
-                // - front right
-                // - back left
-                // - back right
-                let color_patterns = new Map([
-                    [0, "PPGP"],
-                    [1, "GPGP"],
-                    [2, "GGGP"],
-                    [3, "PGGP"],
-                    [4, "PPPG"],
-                    [5, "GPPG"],
-                    [6, "GGPG"],
-                    [7, "PGPG"],
-                    [8, "GGGG"],
-                    [9, "PPPP"],
-                    [10, "PPGG"],
-                    [11, "GGPP"],
-                    [12, "GPGG"],
-                    [13, "GPPP"],
-                    [14, "PGGG"],
-                    [15, "PGPP"]
-                ]);
+            // Theres probably a better way to do this
+            const wheels = {
+                startX: [-.075, .075, -.035, .035],
+                startY: [-.095, -.095, .12, .12],
+                endX: [-.12, .12, -.1, .1],
+                endY: [-.03, -.03, .07, .07]
+            }
 
-                let id_pattern = color_patterns.get(this.attrs.r_id)
+            for (var i = 0; i < 4; i++) {
+                let general = robot.status["motor_" + i + "general_error"];
+                let hall = robot.status["motor_" + i + "hall_error"];
 
-                for (var i = 0; i < 4; i++) {
+                if (general || hall) {
                     ctx.beginPath();
-                    ctx.arc(pos.x[i]*sr, pos.y[i]*sr, sr/5, 0, 2*Math.PI);
-                    ctx.closePath();
-
-                    ctx.fillStyle = id_pattern[i] == "P" ? 'DeepPink' : 'LawnGreen';
-                    ctx.fill();
+                    ctx.strokeStyle = "red";
+                    ctx.lineWidth = .02 * scale;
+                    ctx.moveTo(scale*wheels.startX[i], scale*wheels.startY[i]);
+                    ctx.lineTo(scale*wheels.endX[i], scale*wheels.endY[i]);
+                    ctx.stroke();
                 }
             }
         }

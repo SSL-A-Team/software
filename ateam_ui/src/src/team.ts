@@ -11,6 +11,23 @@ export enum TeamColor {
     Blue = "blue"
 }
 
+export class TeamInfo {
+    name: string
+    score: number
+    red_cards: number
+    yellow_card_times: number[]
+    yellow_cards: number
+    timeouts: number
+    timeout_time: number
+    goalkeeper: number
+    foul_counter: number
+    ball_placement_failures: number
+    can_place_ball: boolean
+    max_allowed_bots: number
+    bot_substitution_intent: boolean
+    ball_placement_failures_reached: boolean
+}
+
 export class Team {
     name: string;
     color: TeamColor;

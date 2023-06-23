@@ -1,4 +1,4 @@
-import { RenderConfig } from "@state"
+import { RenderConfig } from "@/state"
 import { Field } from "@/field"
 import * as PIXI from "pixi.js";
 
@@ -38,23 +38,23 @@ export class Overlay {
         }
 
         // this could get slow if we have hundreds of overlays, hopefully its not a problem
-        let graphic = container.getChildByName(this.id);
+        let graphic = container.getChildByName(this.id) as PIXI.Graphics;
     
         if (graphic) {
             // There might be a way to improve performance if we can confirm that
             // we are just translating the overlay without changing its internal points
             graphic.clear();
-            this.draw(graphic);
+            this.draw(graphic, renderConfig);
         } else {
             console.log("creating graphic");
             graphic = new PIXI.Graphics();
             graphic.name = this.id;
-            this.draw(graphic);
+            this.draw(graphic, renderConfig);
             container.addChild(graphic);
         }
     }
 
-    draw(graphic: PIXI.Container, renderConfig: RenderConfig) {
+    draw(graphic: PIXI.Graphics, renderConfig: RenderConfig) {
         const scale = renderConfig.scale;
 
         graphic.position.x = this.position.x;
@@ -106,10 +106,12 @@ export class Overlay {
                 break;
             // TEXT
             case 5:
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.font = overlay.stroke_width + "sans-serif";
-                ctx.fillText(overlay.text, 0, 0);
+                const text = new PIXI.Text(this.text, {
+                    fontSize: this.stroke_width,
+                    fill: this.fill_color
+                });
+                text.anchor.set(0.5, 0.5);
+                graphic.addChild(text);
                 break;
             // MESH
             case 6:
