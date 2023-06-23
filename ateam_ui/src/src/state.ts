@@ -2,6 +2,7 @@ import ROSLIB from "roslib"
 // import 'roslib/build/roslib';
 import { Team, TeamInfo, TeamColor } from "@/team"
 import { Overlay } from "@/overlay"
+import { Referee } from "@/referee"
 import { Ball } from "@/ball"
 import { Field } from "@/field"
 
@@ -62,7 +63,7 @@ export class AppState {
     getRobotStatusCallback(id: number) {
 	const state = this; // fix dumb javascript things
         return function(msg: any) {
-            let robot = state.world.teams[this.team].robots[id];
+            let robot = state.world.teams[state.world.team].robots[id];
             for (const member of Object.getOwnPropertyNames(robot.status)) {
                 robot.status[member] = msg[member];
             }
@@ -108,8 +109,8 @@ export class AppState {
 	    const state = this; // fix dumb javascript things
 	    return function(msg:any) {
             // TODO: Check how well this works, the referee class doesn't exactly match Referee.msg type
-            for (const member of Object.getOwnPropertyNames(this.referee)) {
-                this.referee[member] = msg[member];
+            for (const member of Object.getOwnPropertyNames(state.referee)) {
+                state.referee[member] = msg[member];
             }
         }
     }
@@ -120,6 +121,7 @@ export class AppState {
         this.history = [];
         this.teamInfo = [];
         this.topics = [];
+        this.referee = new Referee();
 
         // Configure ROS
         this.ros = new ROSLIB.Ros({
@@ -189,6 +191,7 @@ export class AppState {
         overlayTopic.subscribe(this.getOverlayCallback());
         this.topics["overlay"] = overlayTopic;
 
+        /* // Need to merge master to get this
         // Set up fieldDimension subscriber
         let fieldDimensionTopic = new ROSLIB.Topic({
             ros: this.ros,
@@ -198,6 +201,7 @@ export class AppState {
 
         fieldDimensionTopic.subscribe(this.getFieldDimensionCallback());
         this.topics["fieldDimension"] = fieldDimensionTopic;
+        */
 
         // Set up referee subscriber
         let refereeTopic = new ROSLIB.Topic({
