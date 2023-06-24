@@ -67,6 +67,12 @@ TEST(Assignment, optimize_assignment) {
   EXPECT_EQ(out2x3.size(), 2);
   EXPECT_EQ(out2x3.at(0), 0);
   EXPECT_EQ(out2x3.at(1), 1);
+
+  Eigen::Matrix<double, 8, 1> cost8x1{{3.1}, {3.09}, {3.64}, {3.44}, {3.47}, {3.44}, {3.85},
+    {3.44}};
+  auto out8x1 = assignment::optimize_assignment(cost8x1.transpose());
+  EXPECT_EQ(out8x1.size(), 1);
+  EXPECT_EQ(out8x1.at(0), 1);
 }
 
 MATCHER_P(IsSameSize, m, "") {

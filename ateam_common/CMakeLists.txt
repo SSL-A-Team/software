@@ -21,7 +21,8 @@ add_library(${PROJECT_NAME} SHARED
   src/bi_directional_udp.cpp
   src/multicast_receiver.cpp
   src/parameters.cpp
-  src/team_color_listener.cpp
+  src/status.cpp
+  src/team_info_listener.cpp
   src/game_state_listener.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
@@ -43,6 +44,7 @@ target_include_directories(${PROJECT_NAME}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+
 # Export symbols so we can backtrace
 set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 

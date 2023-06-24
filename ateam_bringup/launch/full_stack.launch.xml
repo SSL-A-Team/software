@@ -1,0 +1,11 @@
+<launch>
+  <arg name="ssl_vision_ip" default="224.5.23.2"/>
+  <arg name="ssl_vision_port" default="10020"/>
+
+  <node name="ssl_vision_bridge" pkg="ateam_ssl_vision_bridge" exec="ssl_vision_bridge_node">
+    <param name="ssl_vision_ip" value="$(var ssl_vision_ip)"/>
+    <param name="ssl_vision_port" value="$(var ssl_vision_port)"/>
+  </node>
+  <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node"/>
+  <node name="ateam_ai" pkg="ateam_ai" exec="ateam_ai_node" />
+</launch>
