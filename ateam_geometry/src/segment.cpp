@@ -66,10 +66,14 @@ std::vector<Eigen::Vector2d> LineSegment::get_equally_spaced_points(const int & 
       If we only get one point, it will be the first endpoint.
       */
   std::vector<Eigen::Vector2d> points;
+  if (num_points == 1) {
+    points.push_back(this->p1);
+    return points;
+  }
   Eigen::Vector2d spacing;
-  spacing.x() = p2.x() - p1.x() / num_points;
-  spacing.y() = p2.y() - p1.y() / num_points;
-  for (int i; i < num_points; ++i) {
+  spacing.x() = (p2.x() - p1.x()) / (num_points - 1);
+  spacing.y() = (p2.y() - p1.y()) / (num_points - 1);
+  for (int i = 0; i < num_points; ++i) {
     Eigen::Vector2d point = this->p1;
     point = point + (spacing * i);
     points.push_back(point);
@@ -132,7 +136,7 @@ std::optional<Eigen::Vector2d> get_segment_intersection(
 
       1.If r x s = 0 && (q - p) x r = 0
           - The two segments are colinear
-          **NOTE: In this case, we simply return the first endpoint of the first line segment**
+          - See the inline comments for this one, it's complicated
       2. If r x s = 0 && (q - p) x r != 0
           - Segments are parallel and non-intersecting
       3. If r x s != 0 && 0 <= t <= 1 && 0 <= u <= 1
@@ -162,19 +166,48 @@ std::optional<Eigen::Vector2d> get_segment_intersection(
       double s_dot_r = s.dot(r);
       // Check if the first end point is too far away
       double t_0 = (q - p).dot(r) / r.dot(r);
-      double t_1 = t_0 + s.dot(r) / r.dot(r);
+      double t_1 = t_0 + s_dot_r / r.dot(r);
       // Vectors point in the same direction
       if (s_dot_r > tolerance) {
-        if (t_0 < tolerance || t_1 > 1) {
-          return std::nullopt;
+        if (t_0 < tolerance) {
+          // LS2 starts before LS1
+          if (t_1 < tolerance) {
+            // It does not interesct at all
+            return std::nullopt;
+          } else {
+            // Return the start of LS1
+            return p;
+          }
+        } else {
+          // LS2 starts exactly on or after the first
+          // endpoint of LS1
+          if (t_1 > 1 + tolerance) {
+            if (t_0 > 1 + tolerance) {
+              return std::nullopt;
+            }
+          }
+          // Return the starting point of LS2/LS1
+          // (they are the same)
+          return q;
         }
+        // LS point in the opposite direction
       } else {
-        // Vectors point in the opposite direction
-        if (t_1 < tolerance || t_0 > 1) {
-          return std::nullopt;
+        // LS2 starts exactly on or after LS1 starts
+        if (t_0 > 1 + tolerance) {
+          if (t_1 > 1 + tolerance) {
+            // LS2 is past LS1
+            return std::nullopt;
+          } else {
+            // Return the ending point of LS1
+            // since we are in opposite directions
+            return ls1.p2;
+          }
+          // Return the starting point of LS2
+          // Flipped because the LS are in opposite directions
+        } else {
+          return ls2.p2;
         }
       }
-      return p;
     } else {
       // Lines are parallel and non-intersecting
       return std::nullopt;

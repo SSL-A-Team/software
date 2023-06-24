@@ -92,6 +92,13 @@ TEST(Segment, intersection) {
       origin)
   );
 
+  // Check collinear case
+  EXPECT_TRUE(
+    common::allCloseDense(
+      geometry::get_segment_intersection(segment1, segment1).value(),
+      segment1.p1)
+  );
+
   geometry::LineSegment doesnt_intersect = geometry::LineSegment(
     Eigen::Vector2d(
       3,
@@ -116,7 +123,7 @@ TEST(Segment, intersection) {
     testing::Eq(std::nullopt));
 }
 
-/*TEST(Segment, get_segment_points) {
+TEST(Segment, get_segment_points) {
   geometry::LineSegment long_boi =
     geometry::LineSegment(Eigen::Vector2d(-10, -10), Eigen::Vector2d(10, 10));
 
@@ -129,12 +136,22 @@ TEST(Segment, intersection) {
 
   auto two_points = long_boi.get_equally_spaced_points(2);
   EXPECT_THAT(two_points, SizeIs(2));
-  EXPECT_EQ(two_points[0], long_boi.p1);
-  EXPECT_EQ(two_points[1], long_boi.p2);
+  EXPECT_TRUE(
+    common::allCloseDense(
+      two_points[0],
+      long_boi.p1
+    )
+  );
+  EXPECT_TRUE(
+    common::allCloseDense(
+      two_points[1],
+      long_boi.p2
+    )
+  );
 
   auto three_points = long_boi.get_equally_spaced_points(3);
   EXPECT_THAT(three_points, SizeIs(3));
   EXPECT_EQ(three_points[0], long_boi.p1);
   EXPECT_EQ(three_points[1], midpoint);
   EXPECT_EQ(three_points[2], long_boi.p2);
-}*/
+}
