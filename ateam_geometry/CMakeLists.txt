@@ -52,7 +52,7 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
   # Will add this subdirectory once I've written tests
-  #add_subdirectory(test)
+  add_subdirectory(test)
 endif()
 
 ament_package()
