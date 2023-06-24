@@ -69,7 +69,7 @@ std::vector<Eigen::Vector2d> LineSegment::get_equally_spaced_points(const int & 
   spacing.x() = p2.x() - p1.x() / num_points;
   spacing.y() = p2.y() - p1.y() / num_points;
   for (int i; i < num_points; ++i) {
-    Eigen::Vector2d point;
+    Eigen::Vector2d point = this->p1;
     point = point + (spacing * i);
     points.push_back(point);
   }
@@ -89,14 +89,20 @@ bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment, d
   Eigen::Vector2d closest_point_on_line = start + (projection * direction);
 
   if ((point - closest_point_on_line).norm() <= tolerance) {
-    return true;
+    // Check if the closest point lies within the line segment
+    double dot1 = (segment.p1 - closest_point_on_line).dot(segment.p2 - closest_point_on_line);
+    double dot2 = (segment.p2 - closest_point_on_line).dot(segment.p1 - closest_point_on_line);
+    if (dot1 >= 0 && dot2 >= 0) {
+      return true;
+    }
   }
   return false;
 }
 
 std::optional<Eigen::Vector2d> get_segment_intersection(
   const LineSegment & ls1,
-  const LineSegment & ls2)
+  const LineSegment & ls2,
+  double tolerance)
 {
   /*
       Based on the algorithm implementation provided here:
@@ -145,9 +151,29 @@ std::optional<Eigen::Vector2d> get_segment_intersection(
 
   double rxs = cross_product_2d(r, s);
   // Need to change this to be within epsilon?
-  if (rxs == 0) {
+  if (rxs <= tolerance && rxs >= -tolerance) {
     if (cross_product_2d(q - p, r) == 0) {
       // The two segments are colinear
+      // See if they intersect by getting the 2nd segments' two end points'
+      // position relative to a projection on the 1st line
+      // Which interval (either [t_0, t_1] or [t_1, t_0]) we need to check depends on the two segments'
+      // relative direction.
+      double s_dot_r = s.dot(r);
+      // Check if the first end point is too far away
+      double t_0 = (q - p).dot(r) / r.dot(r);
+      double t_1 = t_0 + s.dot(r) / r.dot(r);
+      // Vectors point in the same direction
+      if (s_dot_r > 0) {
+        if (t_0 < -tolerance || t_1 > 1 + tolerance) {
+          return std::nullopt;
+        }
+      }
+      // Vectors point in the opposite direction
+      else {
+        if (t_1 < -tolerance || t_0 > 1 + tolerance) {
+          return std::nullopt;
+        }
+      }
       return p;
     } else {
       // Lines are parallel and non-intersecting
