@@ -164,13 +164,13 @@ std::optional<Eigen::Vector2d> get_segment_intersection(
       double t_1 = t_0 + s.dot(r) / r.dot(r);
       // Vectors point in the same direction
       if (s_dot_r > 0) {
-        if (t_0 < -tolerance || t_1 > 1 + tolerance) {
+        if (t_0 < 0 || t_1 > 1) {
           return std::nullopt;
         }
       }
       // Vectors point in the opposite direction
       else {
-        if (t_1 < -tolerance || t_0 > 1 + tolerance) {
+        if (t_1 < 0 || t_0 > 1) {
           return std::nullopt;
         }
       }

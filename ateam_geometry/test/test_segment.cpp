@@ -94,8 +94,8 @@ TEST(Segment, intersection) {
     Eigen::Vector2d(2.01, 2.01)
   );
 
-  //EXPECT_THAT(geometry::get_segment_intersection(segment1, also_doesnt_intersect), testing::Eq(std::nullopt));
-  //EXPECT_EQ(geometry::get_segment_intersection(segment2, doesnt_intersect), std::nullopt);
+  EXPECT_THAT(geometry::get_segment_intersection(segment1, also_doesnt_intersect), testing::Eq(std::nullopt));
+  EXPECT_THAT(geometry::get_segment_intersection(segment2, doesnt_intersect), testing::Eq(std::nullopt));
   /*EXPECT_EQ(
     geometry::get_segment_intersection(segment1, also_doesnt_intersect),
     std::nullopt);
