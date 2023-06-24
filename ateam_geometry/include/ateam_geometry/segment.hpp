@@ -44,7 +44,7 @@ public:
 
 bool is_point_on_segment(
   const Eigen::Vector2d & point, LineSegment & segment,
-  double tolerance = 0.0001);
+  double tolerance = 1e-6);
 
 /*Given two 2d line segments, return a < std::optional<Eigen::Vector2d>
 corresponding to whether or not they intersect and if applicable,
@@ -52,7 +52,7 @@ the point of intersection.*/
 std::optional<Eigen::Vector2d> get_segment_intersection(
   const LineSegment & ls1,
   const LineSegment & ls2,
-  double tolerance = 0.0001);
+  double tolerance = 1e-6);
 }  // namespace ateam_geometry
 
 #endif   // ATEAM_GEOMETRY__SEGMENT_HPP_

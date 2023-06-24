@@ -25,6 +25,7 @@
 
 #include "ateam_geometry/segment.hpp"
 #include "ateam_geometry/utilities.hpp"
+#include "ateam_common/equality_utilities.hpp"
 
 namespace ateam_geometry
 {
@@ -151,26 +152,25 @@ std::optional<Eigen::Vector2d> get_segment_intersection(
 
   double rxs = cross_product_2d(r, s);
   // Need to change this to be within epsilon?
-  if (rxs <= tolerance && rxs >= -tolerance) {
-    if (cross_product_2d(q - p, r) == 0) {
+  if (ateam_common::floatsClose(rxs, 0.0)) {
+    if (ateam_common::floatsClose(cross_product_2d(q - p, r), 0.0)) {
       // The two segments are colinear
       // See if they intersect by getting the 2nd segments' two end points'
       // position relative to a projection on the 1st line
-      // Which interval (either [t_0, t_1] or [t_1, t_0]) we need to check depends on the two segments'
-      // relative direction.
+      // Which interval (either [t_0, t_1] or [t_1, t_0]) we need to check
+      // depends on the two segments' relative directions.
       double s_dot_r = s.dot(r);
       // Check if the first end point is too far away
       double t_0 = (q - p).dot(r) / r.dot(r);
       double t_1 = t_0 + s.dot(r) / r.dot(r);
       // Vectors point in the same direction
-      if (s_dot_r > 0) {
-        if (t_0 < 0 || t_1 > 1) {
+      if (s_dot_r > tolerance) {
+        if (t_0 < tolerance || t_1 > 1) {
           return std::nullopt;
         }
-      }
-      // Vectors point in the opposite direction
-      else {
-        if (t_1 < 0 || t_0 > 1) {
+      } else {
+        // Vectors point in the opposite direction
+        if (t_1 < tolerance || t_0 > 1) {
           return std::nullopt;
         }
       }
@@ -182,7 +182,7 @@ std::optional<Eigen::Vector2d> get_segment_intersection(
   } else {
     double t = cross_product_2d(q - p, s) / rxs;
     double u = cross_product_2d(q - p, r) / rxs;
-    if (0 <= t <= 1 && 0 <= u <= 1) {
+    if (0 <= t && t <= 1 && 0 <= u && u <= 1) {
       // The intersection is at p + tr = q + us
       Eigen::Vector2d intersection;
       intersection.x() = p.x() + (t * r.x());

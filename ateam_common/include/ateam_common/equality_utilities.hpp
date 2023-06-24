@@ -18,19 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef ATEAM_COMMON__EIGEN_UTILITIES_HPP_
+#define ATEAM_COMMON__EIGEN_UTILITIES_HPP_
+
+#include <iostream>
 #include <Eigen/Dense>
-#include <math.h>
+#include <cmath>
 
-namespace ateam_geometry
-{
-double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v)
-{
-  /* We define the 2D cross product here between two vectors w and v
-      as w_x * v_y - w_y * w_x
-      This is used for determining whether two line segments intersect
+namespace ateam_common {
 
-      The implementation used is based off of this StackOverflow post
-      https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect*/
-  return (w.x() * v.y()) - (w.y() * v.x());
+template<typename DerivedA, typename DerivedB>
+bool allCloseDense(const Eigen::DenseBase<DerivedA>& a,
+              const Eigen::DenseBase<DerivedB>& b,
+              const typename DerivedA::RealScalar& rtol
+                  = Eigen::NumTraits<typename DerivedA::RealScalar>::dummy_precision(),
+              const typename DerivedA::RealScalar& atol
+                  = Eigen::NumTraits<typename DerivedA::RealScalar>::epsilon())
+{
+  return ((a.derived() - b.derived()).array().abs()
+          <= (atol + rtol * b.derived().array().abs())).all();
 }
-}  // namespace ateam_geometry
+
+template<typename FloatType>
+inline bool floatsClose(const FloatType& x, const FloatType& y)
+{
+  const FloatType epsilon = static_cast<FloatType>(1e-6);
+  return std::abs(x - y) <= epsilon * std::abs(x);
+}
+} // namespace ateam_common
+#endif // ATEAM_COMMON__EIGEN_UTILITIES_HPP_

@@ -22,8 +22,10 @@
 #include "gmock/gmock.h"
 
 #include "ateam_geometry/segment.hpp"
+#include "ateam_common/equality_utilities.hpp"
 
 namespace geometry = ateam_geometry;
+namespace common = ateam_common;
 using ::testing::SizeIs;
 
 /*TEST(Segment, points_on_segment) {
@@ -62,27 +64,33 @@ TEST(Segment, intersection) {
   geometry::LineSegment segment4 = geometry::LineSegment(
     Eigen::Vector2d(-1, 1), 2 * sqrt(
       2), 7 * M_PI / 4);
+  Eigen::Vector2d origin = Eigen::Vector2d(0, 0);
 
-
-  EXPECT_THAT(
-    geometry::get_segment_intersection(segment1, segment2),
-    testing::Optional(testing::Eq(Eigen::Vector2d(0, 0))));
-  EXPECT_THAT(
-    geometry::get_segment_intersection(segment1, segment4),
-    testing::Optional(testing::Eq(Eigen::Vector2d(0, 0))));
-  EXPECT_THAT(
-    geometry::get_segment_intersection(segment3, segment4),
-    testing::Optional(testing::Eq(Eigen::Vector2d(0, 0))));
-  EXPECT_THAT(
-    geometry::get_segment_intersection(segment3, segment2),
-    testing::Optional(testing::Eq(Eigen::Vector2d(0, 0))));
-
-  EXPECT_THAT(
-    geometry::get_segment_intersection(segment2, segment4),
-    testing::Optional(testing::Eq(Eigen::Vector2d(-1, 1))));
-  EXPECT_THAT(
-    geometry::get_segment_intersection(segment1, segment3),
-    testing::Optional(testing::Eq(Eigen::Vector2d(-1, -1))));
+  EXPECT_TRUE(
+    common::allCloseDense(
+      geometry::get_segment_intersection(segment1, segment2).value(),
+      origin)
+  );
+  EXPECT_TRUE(
+    common::allCloseDense(
+      geometry::get_segment_intersection(segment1, segment4).value(),
+      origin)
+  );
+  EXPECT_TRUE(
+    common::allCloseDense(
+      geometry::get_segment_intersection(segment3, segment4).value(),
+      origin)
+  );
+  EXPECT_TRUE(
+    common::allCloseDense(
+      geometry::get_segment_intersection(segment3, segment2).value(),
+      origin)
+  );
+  EXPECT_TRUE(
+    common::allCloseDense(
+      geometry::get_segment_intersection(segment3, segment2).value(),
+      origin)
+  );
 
   geometry::LineSegment doesnt_intersect = geometry::LineSegment(
     Eigen::Vector2d(
@@ -94,14 +102,18 @@ TEST(Segment, intersection) {
     Eigen::Vector2d(2.01, 2.01)
   );
 
-  EXPECT_THAT(geometry::get_segment_intersection(segment1, also_doesnt_intersect), testing::Eq(std::nullopt));
-  EXPECT_THAT(geometry::get_segment_intersection(segment2, doesnt_intersect), testing::Eq(std::nullopt));
-  /*EXPECT_EQ(
+  EXPECT_THAT(
     geometry::get_segment_intersection(segment1, also_doesnt_intersect),
-    std::nullopt);
-  EXPECT_EQ(
+    testing::Eq(std::nullopt));
+  EXPECT_THAT(
+    geometry::get_segment_intersection(segment2, doesnt_intersect),
+    testing::Eq(std::nullopt));
+  EXPECT_THAT(
+    geometry::get_segment_intersection(segment1, also_doesnt_intersect),
+    testing::Eq(std::nullopt));
+  EXPECT_THAT(
     geometry::get_segment_intersection(segment2, also_doesnt_intersect),
-    std::nullopt);*/
+    testing::Eq(std::nullopt));
 }
 
 /*TEST(Segment, get_segment_points) {

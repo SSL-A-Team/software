@@ -7,21 +7,27 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(ateam_common REQUIRED)
+find_package(ateam_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/circle.cpp
   src/rectangle.cpp
   src/segment.cpp
-  src/utilities.cpp
 )
-
+target_include_directories(${PROJECT_NAME} PRIVATE src)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
-ament_target_dependencies(${PROJECT_NAME} Eigen3)
+ament_target_dependencies(${PROJECT_NAME}
+  rclcpp
+  rclcpp_components
+  Eigen3
+  ateam_common
+  ateam_msgs
+)
 
 target_link_libraries(${PROJECT_NAME}
   ${CMAKE_DL_LIBS}

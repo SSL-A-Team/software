@@ -18,24 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__UTILITIES_HPP_
-#define ATEAM_GEOMETRY__UTILITIES_HPP_
-
 #include <Eigen/Dense>
-#include <math.h>
 
-namespace ateam_geometry
-{
-/* We define the 2D cross product here between two vectors w and v
-as w_x * v_y - w_y * w_x
-This is used for determining whether two line segments intersect
+#include <gtest/gtest.h>
+#include "gmock/gmock.h"
 
-The implementation used is based off of this StackOverflow post
-https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect*/
-double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v)
-{
-  return (w.x() * v.y()) - (w.y() * v.x());
+#include "ateam_geometry/utilities.hpp"
+
+namespace geometry = ateam_geometry;
+
+TEST(CrossProduct, cross_product_2d) {
+  auto v1 = Eigen::Vector2d(0, 0);
+  auto v2 = Eigen::Vector2d(1, 1);
+  auto v3 = Eigen::Vector2d(-2, 2);
+  auto v4 = Eigen::Vector2d(-1, -1);
+
+  EXPECT_THAT(geometry::cross_product_2d(v1, v2), testing::DoubleEq(0));
+  EXPECT_THAT(geometry::cross_product_2d(v2, v3), testing::DoubleEq(4));
+  EXPECT_THAT(geometry::cross_product_2d(v3, v2), testing::DoubleEq(-4));
+  EXPECT_THAT(geometry::cross_product_2d(v2, v2), testing::DoubleEq(0));
+  EXPECT_THAT(geometry::cross_product_2d(v2, v4), testing::DoubleEq(0));
 }
-}  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__UTILITIES_HPP_
