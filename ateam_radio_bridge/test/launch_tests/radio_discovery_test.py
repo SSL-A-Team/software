@@ -26,7 +26,10 @@ def generate_test_description():
                 launch_ros.actions.Node(
                     package="ateam_radio_bridge",
                     executable="radio_bridge_node",
-                    parameters=[{"discovery_address": discovery_address}],
+                    parameters=[
+                        {"discovery_address": discovery_address},
+                        {"default_team_color": "yellow"}
+                        ],
                 ),
                 # Had to add this delay when upgraded to Humble. Without this,
                 # the test fails b/c the bridge never seems to receive the

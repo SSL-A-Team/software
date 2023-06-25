@@ -18,32 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TYPES__FIELD_HPP_
-#define TYPES__FIELD_HPP_
+#include "ateam_common/status.hpp"
 
-#include <Eigen/Dense>
-#include <array>
-
-struct FieldSidedInfo
+std::ostream & ateam::operator<<(std::ostream & os, const ErrorType & error)
 {
-  std::array<Eigen::Vector2d, 4> goalie_corners;
-  std::array<Eigen::Vector2d, 2> goal_posts;
-};
-struct Field
+  os << error.cause << "\n\n" << error.stack_trace.str();
+  return os;
+}
+
+ateam::Status ateam::Ok()
 {
-  // we will definetly change the format of this at some point this is preliminary
-  // since we dont really have a geometry library yet
-  // all of this should be in our coordinate system
-  // There is a mirroring ros message of this type
-  float field_length;
-  float field_width;
-  float goal_width;
-  float goal_depth;
-  float boundary_width;
-  std::array<Eigen::Vector2d, 4> field_corners;
-  FieldSidedInfo ours;
-  FieldSidedInfo theirs;
-};
-
-
-#endif  // TYPES__FIELD_HPP_
+  return BOOST_OUTCOME_V2_NAMESPACE::success();
+}
+ateam::Status ateam::Failure(std::string && s)
+{
+  return ateam::ErrorType(std::move(s));
+}

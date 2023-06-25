@@ -22,11 +22,18 @@
 #define TYPES__ROBOT_MEASUREMENT_HPP_
 
 #include <Eigen/Dense>
+#include <angles/angles.h>
 
 struct RobotMeasurement
 {
   Eigen::Vector2d position;
   double theta;
+
+  void invert()
+  {
+    position *= -1.0;
+    theta = angles::normalize_angle_positive(theta + M_PI);
+  }
 };
 
 #endif  // TYPES__ROBOT_MEASUREMENT_HPP_
