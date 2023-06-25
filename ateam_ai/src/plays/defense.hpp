@@ -19,17 +19,22 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__DEFEND_HPP_
-#define PLAYS__DEFEND_HPP_
+#ifndef PLAYS__DEFENSE_HPP_
+#define PLAYS__DEFENSE_HPP_
 
 #include "types/world.hpp"
 #include "types/behavior_goal.hpp"
 
 #include <Eigen/Dense>
-
+const FieldSidedInfo & our_side_info
 DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const FieldSidedInfo & our_side_info){
     DirectedGraph<BehaviorGoal> defense_graph;
     // Go to the middle of the goalie area
+    BehaviorGoal goalie = get_goalie_behavior_goal(our_side_info);
+    defense_graph.add_node(goalie);
+};
+
+BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info){
     Eigen::Vector2d _goalie_point = Eigen::Vector2d(
         // Here I'm assuming these are opposite corners of the goal
         // Does this need to be negative to match our conventions?
@@ -43,7 +48,5 @@ DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const Fi
         BehaviorGoal::Priority::Required,
         MoveParam(_goalie_point)
     };
-
-    defense_graph.add_node(goalie);
-};
-#endif // PLAYS__DEFEND_HPP
+}
+#endif // PLAYS__DEFENSE_HPP
