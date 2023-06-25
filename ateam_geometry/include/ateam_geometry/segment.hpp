@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,39 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#ifndef ATEAM_GEOMETRY__SEGMENT_HPP_
+#define ATEAM_GEOMETRY__SEGMENT_HPP_
 
+#include <Eigen/Dense>
+
+#include <vector>
 #include <optional>
-#include <array>
 
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include "behavior/behavior_realization.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-#include "types/trajectory.hpp"
-#include "util/directed_graph.hpp"
-
-
-/**
- * Given a set of behaviors
- *  - Replan trajectories as their start time approaches
- *  - Manage the trajectories
- */
-class BehaviorExecutor
+namespace ateam_geometry
+{
+class LineSegment
 {
 public:
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
+  LineSegment(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
+  LineSegment(const Eigen::Vector2d & start, const double & length, const double & angle);
 
-  std::array<std::optional<Trajectory>, 16> execute_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors,
-    const World & world,
-    BehaviorExecutorState & self_state);
+  double get_length();
+  Eigen::Vector2d get_midpoint();
+  std::vector<Eigen::Vector2d> get_equally_spaced_points(const int & num_points);
 
-private:
-  BehaviorRealization & behavior_realization;
+  Eigen::Vector2d p1;
+  Eigen::Vector2d p2;
 };
 
-#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+bool is_point_on_segment(
+  const Eigen::Vector2d & point, LineSegment & segment,
+  double tolerance = 1e-6);
+
+/*Given two 2d line segments, return a < std::optional<Eigen::Vector2d>
+corresponding to whether or not they intersect and if applicable,
+the point of intersection.*/
+std::optional<Eigen::Vector2d> get_segment_intersection(
+  const LineSegment & ls1,
+  const LineSegment & ls2,
+  double tolerance = 1e-6);
+}  // namespace ateam_geometry
+
+#endif   // ATEAM_GEOMETRY__SEGMENT_HPP_
