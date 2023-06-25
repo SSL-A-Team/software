@@ -29,13 +29,11 @@
 DirectedGraph<BehaviorGoal> generate_halt(const World & world) {
     DirectedGraph<BehaviorGoal> halt_graph;
     for (std::size_t id = 0; id < world.our_robots.size(); id++) {
-        // Get the current position of each robot
-        const Eigen::Vector2d robot_position_ = world.our_robots.at(id).value().pos;
-        // Tell it to go to that position
+        // Generate a required halt for every robot on our team
         BehaviorGoal halt {
-            BehaviorGoal::Type::MoveToPoint,
+            BehaviorGoal::Type::Halt,
             BehaviorGoal::Priority::Required,
-            MoveParam(Eigen::Vector2d{robot_position_.x(), robot_position_.y()})
+            HaltParam()
         };
         halt_graph.add_node(halt);
     }
