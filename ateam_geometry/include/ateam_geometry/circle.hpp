@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,39 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#ifndef ATEAM_GEOMETRY__CIRCLE_HPP_
+#define ATEAM_GEOMETRY__CIRCLE_HPP_
 
-#include <optional>
-#include <array>
+#include <Eigen/Dense>
+#include <vector>
 
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include "behavior/behavior_realization.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-#include "types/trajectory.hpp"
-#include "util/directed_graph.hpp"
-
-
-/**
- * Given a set of behaviors
- *  - Replan trajectories as their start time approaches
- *  - Manage the trajectories
- */
-class BehaviorExecutor
+namespace ateam_geometry
+{
+class Circle
 {
 public:
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
+  Circle(const Eigen::Vector2d & center, const double & radius);
 
-  std::array<std::optional<Trajectory>, 16> execute_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors,
-    const World & world,
-    BehaviorExecutorState & self_state);
+  std::vector<Eigen::Vector2d> get_equally_spaced_points(
+    const int & num_points,
+    const double & offset);
 
-private:
-  BehaviorRealization & behavior_realization;
+  Eigen::Vector2d center;
+  double radius;
 };
 
-#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+bool is_point_in_circle(const Eigen::Vector2d & point, const Circle & circle);
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__CIRCLE_HPP_

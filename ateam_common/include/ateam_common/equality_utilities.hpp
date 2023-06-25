@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,39 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#ifndef ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
+#define ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
 
-#include <optional>
-#include <array>
+#include <Eigen/Dense>
+#include <cmath>
+#include <iostream>
 
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include "behavior/behavior_realization.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-#include "types/trajectory.hpp"
-#include "util/directed_graph.hpp"
-
-
-/**
- * Given a set of behaviors
- *  - Replan trajectories as their start time approaches
- *  - Manage the trajectories
- */
-class BehaviorExecutor
+namespace ateam_common
 {
-public:
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
 
-  std::array<std::optional<Trajectory>, 16> execute_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors,
-    const World & world,
-    BehaviorExecutorState & self_state);
+template<typename DerivedA, typename DerivedB>
+bool allCloseDense(
+  const Eigen::DenseBase<DerivedA> & a,
+  const Eigen::DenseBase<DerivedB> & b,
+  const typename DerivedA::RealScalar & rtol
+  = Eigen::NumTraits<typename DerivedA::RealScalar>::dummy_precision(),
+  const typename DerivedA::RealScalar & atol
+  = Eigen::NumTraits<typename DerivedA::RealScalar>::epsilon())
+{
+  return ((a.derived() - b.derived()).array().abs() <=
+         (atol + rtol * b.derived().array().abs())).all();
+}
 
-private:
-  BehaviorRealization & behavior_realization;
-};
+template<typename FloatType>
+inline bool floatsClose(const FloatType & x, const FloatType & y)
+{
+  const FloatType epsilon = static_cast<FloatType>(1e-6);
+  return std::abs(x - y) <= epsilon * std::abs(x);
+}
+}  // namespace ateam_common
 
-#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#endif  // ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
