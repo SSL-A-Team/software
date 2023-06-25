@@ -25,22 +25,24 @@
 #include <Eigen/Dense>
 #include <cmath>
 
-namespace ateam_common {
+namespace ateam_common
+{
 
 template<typename DerivedA, typename DerivedB>
-bool allCloseDense(const Eigen::DenseBase<DerivedA>& a,
-              const Eigen::DenseBase<DerivedB>& b,
-              const typename DerivedA::RealScalar& rtol
-                  = Eigen::NumTraits<typename DerivedA::RealScalar>::dummy_precision(),
-              const typename DerivedA::RealScalar& atol
-                  = Eigen::NumTraits<typename DerivedA::RealScalar>::epsilon())
+bool allCloseDense(
+  const Eigen::DenseBase<DerivedA> & a,
+  const Eigen::DenseBase<DerivedB> & b,
+  const typename DerivedA::RealScalar & rtol
+  = Eigen::NumTraits<typename DerivedA::RealScalar>::dummy_precision(),
+  const typename DerivedA::RealScalar & atol
+  = Eigen::NumTraits<typename DerivedA::RealScalar>::epsilon())
 {
-  return ((a.derived() - b.derived()).array().abs()
-          <= (atol + rtol * b.derived().array().abs())).all();
+  return ((a.derived() - b.derived()).array().abs() <=
+         (atol + rtol * b.derived().array().abs())).all();
 }
 
 template<typename FloatType>
-inline bool floatsClose(const FloatType& x, const FloatType& y)
+inline bool floatsClose(const FloatType & x, const FloatType & y)
 {
   const FloatType epsilon = static_cast<FloatType>(1e-6);
   return std::abs(x - y) <= epsilon * std::abs(x);
