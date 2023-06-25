@@ -86,22 +86,24 @@ bool is_point_on_segment(const Eigen::Vector2d & point, LineSegment & segment, d
   /*
       https://computergraphics.stackexchange.com/questions/2105/test-if-a-point-is-on-a-line-segment
       https://lucidar.me/en/mathematics/check-if-a-point-belongs-on-a-line-segment/
-      */
-  Eigen::Vector2d start = segment.p1;
-  Eigen::Vector2d direction = (segment.p2 - start).normalized();
-  double projection = direction.dot(point - start);
+  */
+  double crossProduct = (point.y() - segment.p1.y()) * (segment.p2.x() - segment.p1.x()) -
+    (point.x() - segment.p1.x()) * (segment.p2.y() - segment.p1.y());
 
-  Eigen::Vector2d closest_point_on_line = start + (projection * direction);
-
-  if ((point - closest_point_on_line).norm() <= tolerance) {
-    // Check if the closest point lies within the line segment
-    double dot1 = (segment.p1 - closest_point_on_line).dot(segment.p2 - closest_point_on_line);
-    double dot2 = (segment.p2 - closest_point_on_line).dot(segment.p1 - closest_point_on_line);
-    if (dot1 >= 0 && dot2 >= 0) {
-      return true;
-    }
+  if (std::abs(crossProduct) > tolerance) {
+    return false;
   }
-  return false;
+
+  double dotProduct = (point.x() - segment.p1.x()) * (segment.p2.x() - segment.p1.x()) +
+    (point.y() - segment.p1.y()) * (segment.p2.y() - segment.p1.y());
+  double segmentDotProduct = pow(segment.p2.x() - segment.p1.x(), 2) + pow(
+    segment.p2.y() - segment.p1.y(), 2);
+
+  if (dotProduct < -tolerance || dotProduct > segmentDotProduct + tolerance) {
+    return false;
+  }
+
+  return true;
 }
 
 std::optional<Eigen::Vector2d> get_segment_intersection(

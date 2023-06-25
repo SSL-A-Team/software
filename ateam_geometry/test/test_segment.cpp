@@ -28,7 +28,7 @@ namespace geometry = ateam_geometry;
 namespace common = ateam_common;
 using ::testing::SizeIs;
 
-/*TEST(Segment, points_on_segment) {
+TEST(Segment, points_on_segment) {
   geometry::LineSegment test_segment = geometry::LineSegment(
     Eigen::Vector2d(
       0,
@@ -49,7 +49,7 @@ using ::testing::SizeIs;
 
   auto not_on_line = Eigen::Vector2d(1, 2);
   EXPECT_FALSE(geometry::is_point_on_segment(not_on_line, test_segment));
-}*/
+}
 
 TEST(Segment, intersection) {
   // Initialize using 2 endpoints
