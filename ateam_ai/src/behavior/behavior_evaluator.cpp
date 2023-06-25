@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,12 +25,6 @@
 #include <cmath>
 
 #include <ateam_common/parameters.hpp>
-#include <ateam_common/game_state_listener.hpp>
-#include <ateam_common/team_color_listener.hpp>
-
-#include "dag_generation/halt.hpp"
-#include "dag_generation/defend.hpp"
-#include "dag_generation/shoot.hpp"
 
 CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
 
@@ -39,31 +33,135 @@ BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
 
 DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & world)
 {
-  // Get important world info
-  ateam_common::TeamColorListener::TeamColor our_team_color_ = world.referee_info.our_team_color;
-  ateam_common::GameCommand current_command_ = world.referee_info.running_command;
+  //
+  // Do preprocessing on world state to get important metrics like possession
+  //
 
-  // Check if we need to halt
-  if (current_command_ == ateam_common::GameCommand::Halt) {
-        return generate_halt(world);
+  //
+  // Setup different behavior options
+  //
+
+  // DirectedGraph<Behavior> three_one_touch_shot;
+  // Behavior initial_pass_start{
+  //   Behavior::Type::MovingKick,
+  //   Behavior::Priority::Required,
+  //   KickParam({0, 0})};
+  // Behavior first_receiver{
+  //   Behavior::Type::OneTouchReceiveKick,
+  //   Behavior::Priority::Required,
+  //   ReceiveParam({0, 0}, {10, 10})};
+  // Behavior second_receiver{
+  //   Behavior::Type::OneTouchReceiveKick,
+  //   Behavior::Priority::Required,
+  //   ReceiveParam({10, 10}, {-10, -10})};
+  // Behavior final_receiver_shot{
+  //   Behavior::Type::OneTouchShot,
+  //   Behavior::Priority::Required,
+  //   ReceiveShotParam({-10, -10})};
+
+  // std::size_t parent = three_one_touch_shot.add_node(initial_pass_start);
+  // parent = three_one_touch_shot.add_node(first_receiver, parent);
+  // parent = three_one_touch_shot.add_node(second_receiver, parent);
+  // parent = three_one_touch_shot.add_node(final_receiver_shot, parent);
+
+
+  // DirectedGraph<BehaviorGoal> direct_shot;
+  // BehaviorGoal shot{
+  //   Behavior::Type::Shot,
+  //   Behavior::Priority::Required,
+  //   ShotParam()};
+
+  // direct_shot.add_node(shot);
+
+  // Generate 16 move behaviors towards the ball, we'll figure out which
+  // ones we can fill later
+  // DirectedGraph<BehaviorGoal> simple_move;
+  // static double j = 0;
+  // j += kRotationSpeed;
+  // for (int i = 0; i < 16; i++) {
+  //   double theta = i / 11.0 * 3.14 * 2 + j;
+  //   BehaviorGoal move{
+  //     BehaviorGoal::Type::MoveToPoint,
+  //     BehaviorGoal::Priority::Required,
+  //     MoveParam(
+  //       (sin(3 * theta) + 1.5) * Eigen::Vector2d{cos(theta), sin(
+  //           theta)} - Eigen::Vector2d{2, 0})};
+  // }
+
+  //
+  // Qual Video Behaviors
+  //
+  DirectedGraph<BehaviorGoal> qual_goalie_and_shot;
+  double ball_y = 0;
+  if (world.get_unique_ball().has_value()) {
+    ball_y = world.get_unique_ball().value().pos.y();
+  }
+  BehaviorGoal goalie{
+    BehaviorGoal::Type::MoveToPoint,
+    BehaviorGoal::Priority::Required,
+    MoveParam(Eigen::Vector2d{-5, ball_y})};
+  qual_goalie_and_shot.add_node(goalie);
+
+  BehaviorGoal kicker{
+    BehaviorGoal::Type::MovingKick,
+    BehaviorGoal::Priority::Required,
+    MoveParam(Eigen::Vector2d{0, 1})};
+  qual_goalie_and_shot.add_node(kicker);
+
+  for (int i = 2; i < 16; i++) {
+    BehaviorGoal move{
+      BehaviorGoal::Type::MoveToPoint,
+      BehaviorGoal::Priority::Required,
+      MoveParam(Eigen::Vector2d{i / -2.0, 4})};
+    qual_goalie_and_shot.add_node(move);
   }
 
-  // Check if we need to stop
+  //
+  // Add background behaviors
+  //
 
-  // Check for kickoff - indicates setup, normal start means to actually execute the play
-  // If our kickoff, setup for basic kickoff play (shoot)
-  // If their kickoff, setup for basic defensive play
+  // std::vector<std::reference_wrapper<DirectedGraph<Behavior>>> possible_behaviors{
+  //   three_one_touch_shot, direct_shot};
+  // for (auto & behavior : possible_behaviors) {
+  //   Behavior goalie{
+  //     Behavior::Type::MoveToPoint,
+  //     Behavior::Priority::Medium,
+  //     MoveParam({0, 0})};  // Field::OurGoal.center();
+  //   Behavior forward{
+  //     Behavior::Type::MoveToPoint,
+  //     Behavior::Priority::Low,
+  //     MoveParam({10, 0})};  // Field::TheirGoal.center();
+  //   Behavior left_defender{
+  //     Behavior::Type::MoveToPoint,
+  //     Behavior::Priority::Medium,
+  //     MoveParam({5, 5})};
+  //   Behavior right_defender{
+  //     Behavior::Type::MoveToPoint,
+  //     Behavior::Priority::Medium,
+  //     MoveParam({5, -5})};
 
-  // Check for free kick - same as kickoff, means we should setup not actually kick
-  // Call defense or offense with extra parameters
+  //   behavior.get().add_node(goalie);
+  //   behavior.get().add_node(forward);
+  //   behavior.get().add_node(left_defender);
+  //   behavior.get().add_node(right_defender);
+  // }
 
-  // Check if we are in a penalty
+  //
+  // See how that combination of behaviors would be planned and executed
+  //
+  // DirectedGraph<BehaviorFeedback> three_one_touch_shot_feedback =
+  //   behavior_realization.realize_behaviors(three_one_touch_shot, world);
+  // DirectedGraph<BehaviorFeedback> direct_shot_feedback =
+  //   behavior_realization.realize_behaviors(direct_shot, world);
 
-  // If we get a normal start, check what the previous play was 
-  // If it was either kickoff or free kick
+  //
+  // Choose main behavior
+  //
 
+  // choose direct shot because score chance is better or
+  // maybe the total behavior completetion time is short
+  // or maybe the other one can't be completed due to number of robots
+  DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
 
-
-  // If we can't identify what is going on, default to halt
-  return generate_halt(world);
+  return behavior_out;
 }

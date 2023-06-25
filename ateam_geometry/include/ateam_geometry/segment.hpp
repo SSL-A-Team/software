@@ -18,30 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__LINE_HPP
-#define ATEAM_GEOMETRY__LINE_HPP
+#ifndef ATEAM_GEOMETRY__SEGMENT_HPP_
+#define ATEAM_GEOMETRY__SEGMENT_HPP_
 
 #include <Eigen/Dense>
 
-namespace ateam_geometry {
-    class LineSegment {
-        public:
-            LineSegment(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
+#include <vector>
+#include <optional>
 
-            Eigen::Vector2d get_midpoint();
+namespace ateam_geometry
+{
+class LineSegment
+{
+public:
+  LineSegment(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
+  LineSegment(const Eigen::Vector2d & start, const double & length, const double & angle);
 
-            bool is_point_on_line(const Eigen::Vector2d & point);
+  double get_length();
+  Eigen::Vector2d get_midpoint();
+  std::vector<Eigen::Vector2d> get_equally_spaced_points(const int & num_points);
 
-            Eigen::Vector2d p1;
-            Eigen::Vector2d p2;
-            double length;
-    };
+  Eigen::Vector2d p1;
+  Eigen::Vector2d p2;
+};
 
-    LineSegment get_lineseg_of_length_from_point(const Eigen::Vector2d & start, const double & length,
-    const double & angle);
+bool is_point_on_segment(
+  const Eigen::Vector2d & point, LineSegment & segment,
+  double tolerance = 1e-6);
 
-    bool do_segments_intersect(const LineSegment & ls1, const LineSegment & ls2);
-    Eigen::Vector2d get_segment_intersection(const LineSegment & ls1, const LineSegment & ls2);
-}
+/*Given two 2d line segments, return a < std::optional<Eigen::Vector2d>
+corresponding to whether or not they intersect and if applicable,
+the point of intersection.*/
+std::optional<Eigen::Vector2d> get_segment_intersection(
+  const LineSegment & ls1,
+  const LineSegment & ls2,
+  double tolerance = 1e-6);
+}  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__LINE_HPP_
+#endif   // ATEAM_GEOMETRY__SEGMENT_HPP_

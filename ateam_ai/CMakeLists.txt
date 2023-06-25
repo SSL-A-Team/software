@@ -11,6 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(ateam_geometry REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -22,10 +23,6 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior_executor.cpp
   src/behavior/behavior_follower.cpp
   src/behavior/behavior_realization.cpp
-  src/dag_generation/defend.cpp
-  src/dag_generation/halt.cpp
-  src/dag_generation/kickoff.cpp
-  src/dag_generation/shoot.cpp
   src/trajectory_generation/trajectory_editor.cpp
   src/trajectory_generation/trajectory_generation.cpp
   src/trajectory_generation/trapezoidal_motion_profile.cpp
@@ -37,6 +34,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
   ateam_common
+  ateam_geometry
   ateam_msgs
   Eigen3
   tf2

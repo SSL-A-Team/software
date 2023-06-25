@@ -18,15 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DAG_GENERATION__KICKOFF_HPP_
-#define DAG_GENERATION__KICKOFF_HPP_
+#ifndef ATEAM_GEOMETRY__CIRCLE_HPP_
+#define ATEAM_GEOMETRY__CIRCLE_HPP_
 
-#include "util/directed_graph.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
+#include <Eigen/Dense>
+#include <vector>
 
-DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSidedInfo & our_side_info);
+namespace ateam_geometry
+{
+class Circle
+{
+public:
+  Circle(const Eigen::Vector2d & center, const double & radius);
 
-DirectedGraph<BehaviorGoal> setup_their_kickoff(const World & world);
+  std::vector<Eigen::Vector2d> get_equally_spaced_points(
+    const int & num_points,
+    const double & offset);
 
-#endif  // DAG_GENERATION__KICKOFF_HPP_
+  Eigen::Vector2d center;
+  double radius;
+};
+
+bool is_point_in_circle(const Eigen::Vector2d & point, const Circle & circle);
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__CIRCLE_HPP_

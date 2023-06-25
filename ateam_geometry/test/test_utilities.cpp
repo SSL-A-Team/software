@@ -18,14 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DAG_GENERATION__DEFEND_HPP_
-#define DAG_GENERATION__DEFEND_HPP_
+#include <Eigen/Dense>
 
-#include "util/directed_graph.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-#include "types/field.hpp"
+#include <gtest/gtest.h>
+#include "gmock/gmock.h"
 
-DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const FieldSidedInfo & our_side_info);
+#include "ateam_geometry/utilities.hpp"
 
-#endif  // DAG_GENERATION__DEFEND_HPP_
+namespace geometry = ateam_geometry;
+
+TEST(CrossProduct, cross_product_2d) {
+  auto v1 = Eigen::Vector2d(0, 0);
+  auto v2 = Eigen::Vector2d(1, 1);
+  auto v3 = Eigen::Vector2d(-2, 2);
+  auto v4 = Eigen::Vector2d(-1, -1);
+
+  EXPECT_THAT(geometry::cross_product_2d(v1, v2), testing::DoubleEq(0));
+  EXPECT_THAT(geometry::cross_product_2d(v2, v3), testing::DoubleEq(4));
+  EXPECT_THAT(geometry::cross_product_2d(v3, v2), testing::DoubleEq(-4));
+  EXPECT_THAT(geometry::cross_product_2d(v2, v2), testing::DoubleEq(0));
+  EXPECT_THAT(geometry::cross_product_2d(v2, v4), testing::DoubleEq(0));
+}

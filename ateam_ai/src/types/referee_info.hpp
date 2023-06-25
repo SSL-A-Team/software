@@ -23,7 +23,6 @@
 #define TYPES__REFEREE_INFO_HPP_
 
 #include <ateam_common/game_state_listener.hpp>
-#include <ateam_common/team_color_listener.hpp>
 
 struct RefereeInfo
 {
@@ -31,8 +30,6 @@ struct RefereeInfo
   int their_goalie_id;
   ateam_common::GameStage current_game_stage;
   ateam_common::GameCommand running_command;
-  ateam_common::TeamColorListener::TeamColor our_team_color;
-  ateam_common::TeamColorListener::TeamColor their_team_color;
 };
 
 #endif  // TYPES__REFEREE_INFO_HPP_

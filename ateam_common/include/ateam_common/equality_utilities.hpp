@@ -18,24 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "dag_generation/halt.hpp"
-#include "types/world.hpp"
-#include "types/behavior_goal.hpp"
+#ifndef ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
+#define ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
 
 #include <Eigen/Dense>
+#include <cmath>
+#include <iostream>
 
-DirectedGraph<BehaviorGoal> generate_halt(const World & world) {
-    DirectedGraph<BehaviorGoal> halt_graph;
-    for (std::size_t id = 0; id < world.our_robots.size(); id++) {
-        // Get the current position of each robot
-        const Eigen::Vector2d robot_position_ = world.our_robots.at(id).value().pos;
-        // Tell it to go to that position
-        BehaviorGoal halt {
-            BehaviorGoal::Type::MoveToPoint,
-            BehaviorGoal::Priority::Required,
-            MoveParam(Eigen::Vector2d{robot_position_.x(), robot_position_.y()})
-        };
-        halt_graph.add_node(halt);
-    }
-    return halt_graph;
+namespace ateam_common
+{
+
+template<typename DerivedA, typename DerivedB>
+bool allCloseDense(
+  const Eigen::DenseBase<DerivedA> & a,
+  const Eigen::DenseBase<DerivedB> & b,
+  const typename DerivedA::RealScalar & rtol
+  = Eigen::NumTraits<typename DerivedA::RealScalar>::dummy_precision(),
+  const typename DerivedA::RealScalar & atol
+  = Eigen::NumTraits<typename DerivedA::RealScalar>::epsilon())
+{
+  return ((a.derived() - b.derived()).array().abs() <=
+         (atol + rtol * b.derived().array().abs())).all();
 }
+
+template<typename FloatType>
+inline bool floatsClose(const FloatType & x, const FloatType & y)
+{
+  const FloatType epsilon = static_cast<FloatType>(1e-6);
+  return std::abs(x - y) <= epsilon * std::abs(x);
+}
+}  // namespace ateam_common
+
+#endif  // ATEAM_COMMON__EQUALITY_UTILITIES_HPP_

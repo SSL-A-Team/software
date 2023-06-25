@@ -17,32 +17,40 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+#define _USE_MATH_DEFINES
 
-#include "shoot.hpp"
-#include "util/directed_graph.hpp"
-#include "types/behavior_goal.hpp"
 #include <Eigen/Dense>
+#include <cmath>
+#include "ateam_geometry/circle.hpp"
+#include "ateam_geometry/segment.hpp"
 
-DirectedGraph<BehaviorGoal> generate_basic_shoot(
-    const World & world, const Field & field
-    ){
-    DirectedGraph<BehaviorGoal> basic_shoot;
+namespace ateam_geometry
+{
+Circle::Circle(const Eigen::Vector2d & c, const double & r)
+: center(c), radius(r) {}
 
-    // Get the center of the opponent's goal from the field geometry
-    Eigen::Vector2d _goal_center = Eigen::Vector2d(
-        // Our side is always negative, so kick to the positive side at the edge
-        field.field_length  / 2,
-        // The center of the goal is at the field center (0)
-        0
-    );
-    // Tell one robot to shoot
-    BehaviorGoal shoot {
-        BehaviorGoal::Type::PivotKick,
-        BehaviorGoal::Priority::Required,
-        // Kick to the center of their goal
-        KickParam(_goal_center)
-    };
-    basic_shoot.add_node(shoot);
+std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
+  const int & num_points,
+  const double & offset = 0.0)
+{
+  std::vector<Eigen::Vector2d> points;
+  // Assume we want to return more than 1 point...
+  // If this is not the case, don't do any more calculations and return
+  // an empty vector
+  if (num_points < 2) {
+    return points;
+  }
+  double spacing = (2 * M_PI) / num_points;
+  for (int i = 0; i < num_points; ++i) {
+    Eigen::Vector2d point =
+      LineSegment(center, radius, offset + (i * spacing)).p2;
+    points.push_back(point);
+  }
+  return points;
+}
 
-    return basic_shoot;
-};
+bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle)
+{
+  return (point - circle.center).norm() <= circle.radius;
+}
+}  // namespace ateam_geometry
