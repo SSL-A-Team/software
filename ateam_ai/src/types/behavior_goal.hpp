@@ -86,7 +86,10 @@ struct BehaviorGoal
 
     // Normal moves
     MoveToPoint,
-    CostFunctionPoint
+    CostFunctionPoint,
+
+    // Stoppage
+    Halt
   } type;
 
   // Priority enum must be decreasing in order of high priority to low priority
