@@ -50,7 +50,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(PathJoinSubstitution([
             get_package_share_directory('ateam_ui'),
             'launch',
-            '/ateam_ui_launch.py'])))
+            'ateam_ui_launch.py'])))
 
     return launch.LaunchDescription([
         ssl_vision_port_arg,
