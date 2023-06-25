@@ -39,11 +39,19 @@ DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
   const DirectedGraph<BehaviorGoal> & behaviors, const World & world,
   const GetPlanFromGoalFnc & GetPlanFromGoal)
 {
-  // Generate list of availabe robots
+  // Generate list of available robots
   std::set<RobotID> available_robots = get_available_robots(world);
 
   // Collect nodes by priority
   PriorityGoalListMap priority_to_assignment_group = get_priority_to_assignment_group(behaviors);
+
+  // Remove reserved robots from available (reservation comes from nodes)
+  // Could do this when we hit section below but if someone changes
+  // order of priorities that breaks down
+  for (const auto & behavior_idx: priority_to_assignment_group[BehaviorGoal::Priority::Required]) {
+    available_robots.erase(behaviors.get_node(behavior_idx).reserved_robot_id);
+  }
+  // TODO(Cavidano) Define an .at on the behavior dag
 
   std::map<BehaviorGoalNodeIdx, BehaviorPlan> assigned_goals_to_plans;
 
@@ -65,6 +73,20 @@ DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
       }
     };
 
+  // Forced singular plan per robot could just use above, But barulic and I both thought we didnt
+  // need to call through all of that
+  auto generate_reserved_plans =
+    [this, &behaviors, &world, &GetPlanFromGoal, &assigned_goals_to_plans]
+    (std::vector<BehaviorGoalNodeIdx> goals_to_assign) {
+      for (const auto & goal_idx : goals_to_assign) {
+        assigned_goals_to_plans[goal_idx] = GetPlanFromGoal(
+            behaviors.get_node(goal_idx),
+            behaviors.get_node(goal_idx).reserved_robot_id,
+          world);
+      }
+  };
+
+  // TODO(Cavidano) switch statement later
   // Assign all robots to goals accoring to the goal priority
   for (const auto & [priority, list_of_goal_idxs_at_priority] : priority_to_assignment_group) {
     // For each required node, assign independently
@@ -72,6 +94,8 @@ DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
       for (const auto & goal_idx : list_of_goal_idxs_at_priority) {
         generate_plans_and_assign({goal_idx});
       }
+    } else if (priority == BehaviorGoal::Priority::Reserved) {
+      generate_reserved_plans(list_of_goal_idxs_at_priority);
     } else {
       generate_plans_and_assign(list_of_goal_idxs_at_priority);
     }
@@ -84,6 +108,7 @@ BehaviorRealization::PriorityGoalListMap BehaviorRealization::get_priority_to_as
   const DirectedGraph<BehaviorGoal> & behaviors)
 {
   PriorityGoalListMap priority_to_assignment_group{
+    {BehaviorGoal::Priority::Reserved, {}},
     {BehaviorGoal::Priority::Required, {}},
     {BehaviorGoal::Priority::Medium, {}},
     {BehaviorGoal::Priority::Low, {}}
