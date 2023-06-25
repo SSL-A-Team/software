@@ -45,8 +45,9 @@ namespace ateam_common
  *   The name of our team as it appears in the GC.
  *
  * - default_team_color  (string)
- * - default_team_side  (string) options are positive_half, negative_half
  *   The team color assumed before the first referee message is received. Can be set to 'yellow', 'blue', or 'unknown'
+ *
+ * - default_team_side  (string) options are positive_half, negative_half
  */
 class TeamInfoListener
 {

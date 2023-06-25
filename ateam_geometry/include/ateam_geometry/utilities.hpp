@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,39 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#ifndef ATEAM_GEOMETRY__UTILITIES_HPP_
+#define ATEAM_GEOMETRY__UTILITIES_HPP_
 
-#include <optional>
-#include <array>
+#include <Eigen/Dense>
+#include <math.h>
 
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include "behavior/behavior_realization.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-#include "types/trajectory.hpp"
-#include "util/directed_graph.hpp"
-
-
-/**
- * Given a set of behaviors
- *  - Replan trajectories as their start time approaches
- *  - Manage the trajectories
- */
-class BehaviorExecutor
+namespace ateam_geometry
 {
-public:
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
+/* We define the 2D cross product here between two vectors w and v
+as w_x * v_y - w_y * w_x
+This is used for determining whether two line segments intersect
 
-  std::array<std::optional<Trajectory>, 16> execute_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors,
-    const World & world,
-    BehaviorExecutorState & self_state);
+The implementation used is based off of this StackOverflow post
+https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect*/
+double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v)
+{
+  return (w.x() * v.y()) - (w.y() * v.x());
+}
+}  // namespace ateam_geometry
 
-private:
-  BehaviorRealization & behavior_realization;
-};
-
-#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#endif  // ATEAM_GEOMETRY__UTILITIES_HPP_

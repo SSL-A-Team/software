@@ -95,5 +95,4 @@ void TeamInfoListener::RefereeMessageCallback(
     side_callback_(team_side_);
   }
 }
-
 }  // namespace ateam_common

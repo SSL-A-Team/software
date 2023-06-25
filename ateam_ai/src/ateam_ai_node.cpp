@@ -221,7 +221,6 @@ private:
     convert_point_array(field_msg->theirs.goalie_corners, field.theirs.goalie_corners.begin());
     convert_point_array(field_msg->theirs.goal_posts, field.theirs.goal_posts.begin());
 
-
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.field = field;
   }
