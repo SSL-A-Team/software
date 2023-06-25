@@ -20,7 +20,7 @@
 
 import os
 import launch
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.actions import DeclareLaunchArgument
