@@ -42,22 +42,8 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   // Data association
   // minimize assignment cost where cost is different between each
   // model's predicted location and the measurement location
-  //
-  // Form is a bipartite graph assignment problem with 1 supply per measurement,
-  // and 1 sink per track
-
-  //
-  //     a - 1
-  //   /   X   \.
-  // s - b - 2 - e
-  //   \   X   /
-  //     c - 3
-  //
-  // Where s is the source, e is the sink
-  // The left set (a,b,c) and right set (1,2,3) is fully connected
-  // All edges have 1 flow representing 1 to 1 assignment of measurements to tracks
-  // The cost between the left set and right set represent the distance between
-  // setup costs
+  // in other words the assignment matricies costs represent the
+  // distance between each existing track and each measurement
 
     Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(tracks.size(), measurements.size(), std::numeric_limits<double>::infinity());
     for (size_t i = 0; i < tracks.size(); i++) {
