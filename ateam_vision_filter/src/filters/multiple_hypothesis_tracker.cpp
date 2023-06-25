@@ -48,8 +48,8 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
     Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(tracks.size(), measurements.size(), std::numeric_limits<double>::infinity());
     for (size_t i = 0; i < tracks.size(); i++) {
         for (size_t j = 0; j < measurements.size(); j++) {
-            double dist = (measurements.at(j) - tracks.at(i).get_position_estimate()).norm();
-            costs(i, j) = dist;
+            costs(i, j) = (measurements.at(j) - tracks.at(i).get_position_estimate()).norm();
+
         }
     }
 
