@@ -18,12 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__EIGEN_UTILITIES_HPP_
-#define ATEAM_COMMON__EIGEN_UTILITIES_HPP_
+#ifndef ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
+#define ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
 
-#include <iostream>
 #include <Eigen/Dense>
 #include <cmath>
+#include <iostream>
 
 namespace ateam_common
 {
@@ -47,5 +47,6 @@ inline bool floatsClose(const FloatType & x, const FloatType & y)
   const FloatType epsilon = static_cast<FloatType>(1e-6);
   return std::abs(x - y) <= epsilon * std::abs(x);
 }
-} // namespace ateam_common
-#endif // ATEAM_COMMON__EIGEN_UTILITIES_HPP_
+}  // namespace ateam_common
+
+#endif  // ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
