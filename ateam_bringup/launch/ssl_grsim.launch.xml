@@ -1,7 +1,7 @@
 <launch>
   <arg name="headless" default="true"/>
   <arg name="ssl_sim_radio_ip" default="127.0.0.1"/>
-  <arg name="ssl_sim_radio_port" default="100301"/>
+  <arg name="ssl_sim_radio_port" default="10301"/>
 
   <executable if="$(var headless)" cmd="docker run --net host --rm robocupssl/grsim" output="screen" respawn="True"/>
   <executable unless="$(var headless)" cmd="docker run --net host -eVNC_PASSWORD=vnc -eVNC_GEOMETRY=1920x1080 --rm robocupssl/grsim vnc" output="screen" respawn="True"/>
