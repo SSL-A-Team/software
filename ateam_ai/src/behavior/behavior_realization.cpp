@@ -48,7 +48,7 @@ DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
   // Remove reserved robots from available (reservation comes from nodes)
   // Could do this when we hit section below but if someone changes
   // order of priorities that breaks down
-  for (const auto & behavior_idx: priority_to_assignment_group[BehaviorGoal::Priority::Required]) {
+  for (const auto & behavior_idx : priority_to_assignment_group[BehaviorGoal::Priority::Reserved]) {
     available_robots.erase(behaviors.get_node(behavior_idx).reserved_robot_id);
   }
   // TODO(Cavidano) Define an .at on the behavior dag
@@ -77,14 +77,14 @@ DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
   // need to call through all of that
   auto generate_reserved_plans =
     [this, &behaviors, &world, &GetPlanFromGoal, &assigned_goals_to_plans]
-    (std::vector<BehaviorGoalNodeIdx> goals_to_assign) {
+      (std::vector<BehaviorGoalNodeIdx> goals_to_assign) {
       for (const auto & goal_idx : goals_to_assign) {
         assigned_goals_to_plans[goal_idx] = GetPlanFromGoal(
-            behaviors.get_node(goal_idx),
-            behaviors.get_node(goal_idx).reserved_robot_id,
+          behaviors.get_node(goal_idx),
+          behaviors.get_node(goal_idx).reserved_robot_id,
           world);
       }
-  };
+    };
 
   // TODO(Cavidano) switch statement later
   // Assign all robots to goals accoring to the goal priority
