@@ -89,6 +89,8 @@ struct BehaviorGoal
     CostFunctionPoint
   } type;
 
+  // Priority enum must be decreasing in order of high priority to low priority
+  // Hard assumptions exist on the enum ordering of ints
   enum Priority
   {
     Required,

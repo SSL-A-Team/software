@@ -22,6 +22,8 @@
 #define BEHAVIOR__BEHAVIOR_REALIZATION_HPP_
 
 #include <map>
+#include <set>
+#include <vector>
 
 #include "types/behavior_goal.hpp"
 #include "types/behavior_plan.hpp"
@@ -37,14 +39,67 @@
 class BehaviorRealization
 {
 public:
+  /**
+   * Generate plans and assign robots to the set of goals in an "optimal" way.
+   * Each required behavior is assigned in order of when they are added to the DAG
+   * in a depth first way.
+   *
+   * Non-required nodes at each stage are assigned in a "globally optimial" way for all
+   * available robots and goals in each non-required priority level.
+   *
+   * Note that since the required goals are assigned in a highly greedy way, placing too many
+   * required goals will results in "starvation" of any non-required nodes.
+  */
   DirectedGraph<BehaviorPlan> realize_behaviors(
     const DirectedGraph<BehaviorGoal> & behaviors,
     const World & world);
 
-private:
-  std::map<std::size_t, BehaviorGoal> assign_to_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors, const World & world);
-  std::size_t next_avaliable_robot_id(const std::size_t last_assigned_id, const World & world);
+  // ---------------- internal ----------------
+  using GetPlanFromGoalFnc = std::function<BehaviorPlan(BehaviorGoal, int, const World &)>;
+  DirectedGraph<BehaviorPlan> realize_behaviors_impl(
+    const DirectedGraph<BehaviorGoal> & behaviors,
+    const World & world,
+    const GetPlanFromGoalFnc & GetPlanFromGoal);
+
+  using BehaviorGoalNodeIdx = std::size_t;
+  using RobotID = std::size_t;
+  using Priority = BehaviorGoal::Priority;
+  using PriorityGoalListMap = std::map<Priority, std::vector<BehaviorGoalNodeIdx>>;
+  using GoalToPlanMap = std::map<BehaviorGoalNodeIdx, BehaviorPlan>;
+  using CandidatePlans = std::map<RobotID, std::map<BehaviorGoalNodeIdx, BehaviorPlan>>;
+
+  /**
+   * Flattens DAG into a list of goals in each priority
+  */
+  PriorityGoalListMap get_priority_to_assignment_group(
+    const DirectedGraph<BehaviorGoal> & behaviors);
+
+  /**
+   * Gets list of robot ids on our team that are available to assign
+   * Eg: All robots we have tracking data for
+  */
+  std::set<RobotID> get_available_robots(const World & world);
+
+  /**
+   * Generate a plan for each robot to each goal
+  */
+  CandidatePlans generate_candidate_plans(
+    const std::vector<BehaviorGoalNodeIdx> & goals_nodes_idxs_to_assign,
+    const std::set<RobotID> & available_robots,
+    const DirectedGraph<BehaviorGoal> & behaviors,
+    const World & world,
+    const GetPlanFromGoalFnc & GetPlanFromGoal);
+
+  /**
+   * Assigns goals to their optimal plans in a globally optimal way
+  */
+  GoalToPlanMap assign_goals_to_plans(
+    const std::vector<BehaviorGoalNodeIdx> & goals_to_assign,
+    const std::set<RobotID> & available_robots,
+    const CandidatePlans & candidate_plans,
+    const World & world);
+
+  double cost(const BehaviorPlan & bp, const World & world);
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_REALIZATION_HPP_

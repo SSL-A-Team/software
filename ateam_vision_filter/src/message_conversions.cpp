@@ -95,9 +95,10 @@ ateam_msgs::msg::FieldInfo fromMsg(
       return line_msg.name == target_name;
     };
 
+
   // did just realize I could have done this as a std transform
   auto lines_to_points = [&](auto & name_array, auto & target_array) {
-      target_array.resize(name_array.size());
+      target_array.resize(name_array.size() * 2);
       for (size_t i = 0; i < name_array.size(); i++) {
         auto & name = name_array.at(i);
         auto itr = std::find_if(
@@ -116,6 +117,7 @@ ateam_msgs::msg::FieldInfo fromMsg(
   lines_to_points(field_bound_names, field_info.field_corners);
 
   ateam_msgs::msg::FieldSidedInfo left_side_info {};
+  left_side_info.goal_posts.resize(2);
   left_side_info.goal_posts.at(0).x = -field_info.field_length / 2.0;
   left_side_info.goal_posts.at(0).y = field_info.goal_width / 2.0;
   left_side_info.goal_posts.at(1).x = -field_info.field_length / 2.0;
@@ -127,16 +129,12 @@ ateam_msgs::msg::FieldInfo fromMsg(
 
 
   ateam_msgs::msg::FieldSidedInfo right_side_info {};
+  right_side_info.goal_posts.resize(2);
   right_side_info.goal_posts.at(0).x = field_info.field_length / 2.0;
   right_side_info.goal_posts.at(0).y = field_info.goal_width / 2.0;
   right_side_info.goal_posts.at(1).x = field_info.field_length / 2.0;
   right_side_info.goal_posts.at(1).y = -field_info.goal_width / 2.0;
 
-  std::array<std::string,
-    2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
-  lines_to_points(right_penalty_names, right_side_info.goalie_corners);
-
-  // TODO(cavidano): assign based off known team info
   // note left and right can be different according to Joe
   // Temporary stupid assignment working under the assumption we are on left side
   // This gets inverted later if side is not right
