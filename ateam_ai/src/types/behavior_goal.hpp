@@ -68,6 +68,8 @@ struct CostParam
   std::optional<std::function<Eigen::Vector2d(Eigen::Vector2d)>> gradient;
 };
 
+struct HaltParam {};
+
 struct BehaviorGoal
 {
   enum Type
@@ -102,7 +104,7 @@ struct BehaviorGoal
   } priority;
 
   using Params = std::variant<KickParam, ReceiveParam, ShotParam, ReceiveShotParam, MoveParam,
-      CostParam>;
+      CostParam, HaltParam>;
   Params params;
 
   // TODO(jneiger): Add type<->param checking for consistency
