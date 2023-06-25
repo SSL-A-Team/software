@@ -43,38 +43,39 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   // in other words the assignment matricies costs represent the
   // distance between each existing track and each measurement
 
-    Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(tracks.size(), measurements.size(), std::numeric_limits<double>::infinity());
-    for (size_t i = 0; i < tracks.size(); i++) {
-        for (size_t j = 0; j < measurements.size(); j++) {
-            costs(i, j) = (measurements.at(j) - tracks.at(i).get_position_estimate()).norm();
-
-        }
+  Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(
+    tracks.size(),
+    measurements.size(), std::numeric_limits<double>::infinity());
+  for (size_t i = 0; i < tracks.size(); i++) {
+    for (size_t j = 0; j < measurements.size(); j++) {
+      costs(i, j) = (measurements.at(j) - tracks.at(i).get_position_estimate()).norm();
     }
+  }
 
-    std::unordered_map assignment = ateam_common::assignment::optimize_assignment(costs);
-    std::vector<bool> used_measurements(measurements.size(), false);
+  std::unordered_map assignment = ateam_common::assignment::optimize_assignment(costs);
+  std::vector<bool> used_measurements(measurements.size(), false);
 
-    // iterate over assigned measurement track pairs and update the track
-    for (const auto & [track_idx, measurement_idx] : assignment) {
-        // Assigned edge
-        used_measurements.at(measurement_idx) = true;
+  // iterate over assigned measurement track pairs and update the track
+  for (const auto & [track_idx, measurement_idx] : assignment) {
+    // Assigned edge
+    used_measurements.at(measurement_idx) = true;
 
-        const auto & measurement = measurements.at(measurement_idx);
-        auto & track = tracks.at(track_idx);
+    const auto & measurement = measurements.at(measurement_idx);
+    auto & track = tracks.at(track_idx);
 
-        // Only add the measurement if they're within some range of the track
-        // since measurements aren't super consistent
-        // if ((measurement - track.get_position_estimate()).norm() < 1) {
-        track.update(measurement);
+    // Only add the measurement if they're within some range of the track
+    // since measurements aren't super consistent
+    // if ((measurement - track.get_position_estimate()).norm() < 1) {
+    track.update(measurement);
+  }
+
+  // For any leftover measurements, create a new track
+  for (size_t i = 0; i < used_measurements.size(); i++) {
+    if (used_measurements.at(i) == false) {
+      const auto & measurement = measurements.at(i);
+      tracks.emplace_back(base_track.clone(measurement));
     }
-
-    // For any leftover measurements, create a new track
-    for (size_t i = 0; i < used_measurements.size(); i++) {
-        if (used_measurements.at(i) == false) {
-            const auto & measurement = measurements.at(i);
-            tracks.emplace_back(base_track.clone(measurement));
-        }
-    }
+  }
 }
 
 void MultipleHypothesisTracker::predict()
