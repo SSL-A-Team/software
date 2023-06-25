@@ -30,8 +30,6 @@
 
 #include "ateam_common/assignment.hpp"
 
-// #include <boost/graph/successive_shortest_path_nonnegative_weights.hpp>
-
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {
   this->base_track = base_track;
