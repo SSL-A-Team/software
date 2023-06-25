@@ -18,39 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#include "ateam_common/status.hpp"
 
-#include <optional>
-#include <array>
-
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include "behavior/behavior_realization.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-#include "types/trajectory.hpp"
-#include "util/directed_graph.hpp"
-
-
-/**
- * Given a set of behaviors
- *  - Replan trajectories as their start time approaches
- *  - Manage the trajectories
- */
-class BehaviorExecutor
+std::ostream & ateam::operator<<(std::ostream & os, const ErrorType & error)
 {
-public:
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
+  os << error.cause << "\n\n" << error.stack_trace.str();
+  return os;
+}
 
-  std::array<std::optional<Trajectory>, 16> execute_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors,
-    const World & world,
-    BehaviorExecutorState & self_state);
-
-private:
-  BehaviorRealization & behavior_realization;
-};
-
-#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+ateam::Status ateam::Ok()
+{
+  return BOOST_OUTCOME_V2_NAMESPACE::success();
+}
+ateam::Status ateam::Failure(std::string && s)
+{
+  return ateam::ErrorType(std::move(s));
+}

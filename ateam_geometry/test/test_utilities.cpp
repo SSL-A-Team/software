@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,39 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#include <Eigen/Dense>
 
-#include <optional>
-#include <array>
+#include <gtest/gtest.h>
+#include "gmock/gmock.h"
 
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#include "ateam_geometry/utilities.hpp"
 
-#include "behavior/behavior_realization.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-#include "types/trajectory.hpp"
-#include "util/directed_graph.hpp"
+namespace geometry = ateam_geometry;
 
+TEST(CrossProduct, cross_product_2d) {
+  auto v1 = Eigen::Vector2d(0, 0);
+  auto v2 = Eigen::Vector2d(1, 1);
+  auto v3 = Eigen::Vector2d(-2, 2);
+  auto v4 = Eigen::Vector2d(-1, -1);
 
-/**
- * Given a set of behaviors
- *  - Replan trajectories as their start time approaches
- *  - Manage the trajectories
- */
-class BehaviorExecutor
-{
-public:
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
-
-  std::array<std::optional<Trajectory>, 16> execute_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors,
-    const World & world,
-    BehaviorExecutorState & self_state);
-
-private:
-  BehaviorRealization & behavior_realization;
-};
-
-#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+  EXPECT_THAT(geometry::cross_product_2d(v1, v2), testing::DoubleEq(0));
+  EXPECT_THAT(geometry::cross_product_2d(v2, v3), testing::DoubleEq(4));
+  EXPECT_THAT(geometry::cross_product_2d(v3, v2), testing::DoubleEq(-4));
+  EXPECT_THAT(geometry::cross_product_2d(v2, v2), testing::DoubleEq(0));
+  EXPECT_THAT(geometry::cross_product_2d(v2, v4), testing::DoubleEq(0));
+}
