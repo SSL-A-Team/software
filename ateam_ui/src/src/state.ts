@@ -130,8 +130,6 @@ export class AppState {
     constructor() {
         this.renderConfig = new RenderConfig();
         this.world = new WorldState();
-        this.history = [];
-        this.teamInfo = [];
 
         this.publishers = [];
         this.subscriptions = [];

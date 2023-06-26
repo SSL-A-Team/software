@@ -27,19 +27,15 @@ export default {
         this.update();
     },
     methods: {
-        setGoalie: function(id) {
+        setGoalie: function(id: number) {
             this.state.setGoalie(id);
         },
         update: function() {
-            // if this has performance issues we could try using reactivity on the robot statuses so it only renders when they change
             for(const robot of this.state.world.teams[this.state.world.team].robots) {
                 this.drawStatus(robot, this.$refs.canvases[robot.id].getContext("2d"));
             }
         },
         drawStatus: function(robot: Robot, ctx: CanvasRenderingContext2D) {
-            // @ts-ignore // TS doesn't know about the new canvas reset function
-            ctx.reset(); // if performance becomes an issue we can look for other ways to handle this
-
             const scale = 400; // This is seperate from the field based renderConfig.scale
             const radius = .09;
             const sr = scale*radius;
@@ -47,6 +43,7 @@ export default {
             const start = (-50/180)*Math.PI;
             const end =  (230/180)*Math.PI;
 
+            ctx.resetTransform();
             ctx.translate(50, 50); // Center the canvas
             ctx.clearRect(-50, -50, 100, 100); // Clear the drawing
 
@@ -115,7 +112,7 @@ export default {
 
 
             // Generate wheel status error indicators
-            // TODO: Figure out how much we want this to show i.e.  distinguish between general and hall errors? show over temperature warnings?
+            // TODO: Figure out how much we want this to show i.e. distinguish between general and hall errors? show over temperature warnings?
             // TODO: Make these look less terrible
 
             // Theres probably a better way to do this
@@ -139,6 +136,19 @@ export default {
                     ctx.stroke();
                 }
             }
+        }
+    },
+    computed: {
+        getRobotStatuses: function() {
+            // If performance is a problem we can reduce this to just status members that would cause a redraw
+            return this.state.world.teams[this.state.world.team].robots.map(robot => robot.status);
+        }
+    },
+    watch: {
+        getRobotStatuses: {handler() {
+            this.update();
+        },
+        deep: true
         }
     }
 }

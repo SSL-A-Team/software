@@ -48,9 +48,6 @@ export default {
         update: function() {
             // update components
             this.$refs.mainField.update();
-
-            // not sure if updating this constantly is the best way to handle this
-            //this.$refs.robotStatus.update();
         }
     },
     beforeUnmount() {

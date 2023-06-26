@@ -43,6 +43,19 @@ export default {
             // enabling event handling on field elements throws an error about not having
             // a propagation path
         }
+    },
+    computed: {
+        getFieldDimensions: function() {
+            return this.state.world.field.fieldDimensions;
+        }
+    },
+    watch: {
+        getFieldDimensions: {
+            handler() {
+                this.state.world.field.drawFieldLines(this.pixi.stage.getChildByName("fieldLines"), this.state);
+            },
+            deep: true
+        }
     }
 }
 </script>
