@@ -25,9 +25,9 @@
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
 
-DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSidedInfo & our_side_info) {
+DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world) {
     DirectedGraph<BehaviorGoal> our_kickoff;
-
+    const FieldSidedInfo & our_side_info = world.field.ours;
     // Have the kicker robot go to the edge of the center circle to prepare for kick
     BehaviorGoal kicker_setup {
         BehaviorGoal::Type::MoveToPoint,

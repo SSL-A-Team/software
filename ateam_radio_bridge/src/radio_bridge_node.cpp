@@ -8,7 +8,7 @@
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
-#include <ateam_common/team_info_listener.hpp>
+#include <ateam_common/game_controller_listener.hpp>
 
 #include "rnp_packet_helpers.hpp"
 #include "conversion.hpp"
@@ -62,7 +62,7 @@ public:
 private:
   const std::chrono::milliseconds timeout_threshold_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
-  ateam_common::TeamInfoListener info_listener_;
+  ateam_common::GameControllerListener info_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
@@ -170,9 +170,9 @@ private:
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
 
-    if (!(info_listener_.GetTeamColor() == ateam_common::TeamInfoListener::TeamColor::Blue &&
+    if (!(info_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&
-      !(info_listener_.GetTeamColor() == ateam_common::TeamInfoListener::TeamColor::Yellow &&
+      !(info_listener_.GetTeamColor() == ateam_common::TeamColor::Yellow &&
       hello_data.color == TC_YELLOW))
     {
       RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Wrong team.");
@@ -269,7 +269,7 @@ private:
     first_message_received_[robot_id] = true;
   }
 
-  void TeamColorChangeCallback(const ateam_common::TeamInfoListener::TeamColor)
+  void TeamColorChangeCallback(const ateam_common::TeamColor)
   {
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);

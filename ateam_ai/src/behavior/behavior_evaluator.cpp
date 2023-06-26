@@ -26,6 +26,11 @@
 
 #include <ateam_common/parameters.hpp>
 
+#include "plays/defense.hpp"
+#include "plays/halt.hpp"
+#include "plays/kickoff.hpp"
+#include "plays/shoot.hpp"
+
 CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
 
 BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
@@ -40,6 +45,60 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   //
   // Setup different behavior options
   //
+
+  // All common coding sense went out the window at about 9pm so.....
+  ateam_common::GameStage current_game_stage = world.referee_info.current_game_stage;
+  ateam_common::GameCommand running_command = world.referee_info.running_command;
+
+  DirectedGraph<BehaviorGoal> behavior_out {};
+  switch (running_command) {
+    case ateam_common::GameCommand::Halt:
+      generate_halt(world);
+      break;
+    case ateam_common::GameCommand::Stop:
+      generate_halt(world);
+      break;
+    case ateam_common::GameCommand::NormalStart:
+    case ateam_common::GameCommand::ForceStart:
+      generate_basic_shoot(world);
+      break;
+    case ateam_common::GameCommand::PrepareKickoffOurs:
+      setup_our_kickoff(world);
+      break;
+    case ateam_common::GameCommand::PrepareKickoffTheirs:
+      break;
+    case ateam_common::GameCommand::PreparePenaltyOurs:
+      break;
+    case ateam_common::GameCommand::PreparePenaltyTheirs:
+      break;
+    case ateam_common::GameCommand::DirectFreeOurs:
+      break;
+    case ateam_common::GameCommand::DirectFreeTheirs:
+      break;
+    case ateam_common::GameCommand::IndirectFreeOurs:
+      break;
+    case ateam_common::GameCommand::IndirectFreeTheirs:
+      break;
+    case ateam_common::GameCommand::TimeoutOurs:
+      break;
+    case ateam_common::GameCommand::TimeoutTheirs:
+      break;
+    case ateam_common::GameCommand::GoalOurs:
+      break;
+    case ateam_common::GameCommand::GoalTheirs:
+      break;
+    case ateam_common::GameCommand::BallPlacementOurs:
+      break;
+    case ateam_common::GameCommand::BallPlacementTheirs:
+      break;
+
+  }
+
+  return behavior_out;
+
+
+
+
 
   // DirectedGraph<Behavior> three_one_touch_shot;
   // Behavior initial_pass_start{
@@ -161,7 +220,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   // choose direct shot because score chance is better or
   // maybe the total behavior completetion time is short
   // or maybe the other one can't be completed due to number of robots
-  DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
+  // DirectedGraph<BehaviorGoal> behavior_out = qual_goalie_and_shot;
 
-  return behavior_out;
+  // return behavior_out;
 }

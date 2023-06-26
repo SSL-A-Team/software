@@ -165,9 +165,9 @@ BehaviorPlan GetPlanFromGoal(
         // If we're in a stop state, put a restriction on the speed
         // so we go no more than 1.5 m/s
         // See SSL rulebook, Section 5.1.1: Stop
-        if (world.referee_info.running_command == 1) {
-          max_vel.x(1.5);
-          max_vel.y(1.5);
+        if (world.referee_info.running_command == ateam_common::GameCommand::Stop) {
+          max_vel.x() = 1.5;
+          max_vel.y() = 1.5;
         }
         Eigen::Vector3d max_accel{2, 2, 0.5};
         double dt = 0.01;  // TODO(jneiger): Feed this down from above
@@ -185,6 +185,8 @@ BehaviorPlan GetPlanFromGoal(
 
     case BehaviorGoal::Type::Halt:
       {
+        Robot current_robot = world.plan_from_our_robots.at(assigned_robot).value();
+
         Eigen::Vector3d current, current_vel, target_vel;
         current.x() = current_robot.pos.x();
         current.y() = current_robot.pos.y();

@@ -29,7 +29,7 @@
 #include "util/directed_graph.hpp"
 
 /**
- * Figure out which set of behaviors to run
+ * Figure out which set of behaviors to runteam_color_
  */
 class BehaviorEvaluator
 {

@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__TEAM_INFO_LISTENER_HPP_
-#define ATEAM_COMMON__TEAM_INFO_LISTENER_HPP_
+#ifndef ATEAM_COMMON__game_controller_listener_HPP_
+#define ATEAM_COMMON__game_controller_listener_HPP_
 
 #include <string>
 
@@ -29,15 +29,71 @@
 namespace ateam_common
 {
 
+
+enum class GameStage
+{
+  PreFirstHalf = 0,
+  FirstHalf = 1,
+  Halftime = 2,
+  PreSecondHalf = 3,
+  SecondHalf = 4,
+  ExtraTimeBreak = 5,
+  ExtraTimePreFirstHalf = 6,
+  ExtraTimeFirstHalf = 7,
+  ExtraTimeHalftime = 8,
+  ExtraTimePreSecondHalf = 9,
+  ExtraTimeSecondHalf = 10,
+  PenaltyBreak = 11,
+  Penalty = 12,
+  PostGame = 13,
+  Unknown = 14
+};
+
+enum class GameCommand
+{
+  Halt = 0,
+  Stop = 1,
+  NormalStart = 2,
+  ForceStart = 3,
+  PrepareKickoffOurs = 4,
+  PrepareKickoffTheirs = 5,
+  PreparePenaltyOurs = 6,
+  PreparePenaltyTheirs = 7,
+  DirectFreeOurs = 8,
+  DirectFreeTheirs = 9,
+  IndirectFreeOurs = 10,
+  IndirectFreeTheirs = 11,
+  TimeoutOurs = 12,
+  TimeoutTheirs = 13,
+  GoalOurs = 14,
+  GoalTheirs = 15,
+  BallPlacementOurs = 16,
+  BallPlacementTheirs = 17
+};
+
+enum class TeamColor
+{
+  Unknown,
+  Yellow,
+  Blue
+};
+
+enum class TeamSide
+{
+  Unknown,
+  PositiveHalf,
+  NegativeHalf
+};
+
 /**
- * @brief Utility for subscribing to referee messages and extracting our team color
+ * @brief Utility for subscribing to referee messages and extracting our team color, field side (+, -), current game stage, command, and stage time remaining
  *
- * The SSL game controller (GC) is the authoritative source for which color is assigned to which team. This utility
- * provides a simple interface for any node to query our currently assigned team color. This class subscribes to
- * and parses the referee messages from the GC to check our team's color.
- *
- * Users can query the current team color using TeamInfoListener::GetTeamColor() or provide a callback to be called
+ * Users can query the current team color using GameControllerListener::GetTeamColor() or provide a callback to be called
  * when the team color changes.
+ *
+ * Users can query the current game stage using GameControllerListener::GetGameStage() and the current running
+ * command using GameControllerListener::GetGameCommand(). This class does not currently provide a callback to be run
+ * on change of either of these items, but could easily be added in the future.
  *
  * This class adds two parameters to the node:
  *
@@ -49,35 +105,22 @@ namespace ateam_common
  *
  * - default_team_side  (string) options are positive_half, negative_half
  */
-class TeamInfoListener
+// GameControllerListener
+class GameControllerListener
 {
 public:
-  enum class TeamColor
-  {
-    Unknown,
-    Yellow,
-    Blue
-  };
-
-  enum class TeamSide
-  {
-    Unknown,
-    PositiveHalf,
-    NegativeHalf
-  };
-
   using ColorCallback = std::function<void (TeamColor)>;
   using SideCallback = std::function<void (TeamSide)>;
 
   /**
-   * @brief Construct a new Team Color Listener object
+   * @brief Construct a new Game State Listener object
    *
    * @param node ROS node
-   * @param callback Optional callback called on color change
    */
-  explicit TeamInfoListener(
-    rclcpp::Node & node, ColorCallback color_callback = {},
-    SideCallback side_callback = {});
+  explicit GameControllerListener(rclcpp::Node & node,
+    ColorCallback color_callback = {},
+    SideCallback side_callback = {}
+    );
 
   const TeamColor & GetTeamColor() const
   {
@@ -89,13 +132,26 @@ public:
     return team_side_;
   }
 
+  const GameStage & GetGameStage() const
+  {
+    return game_stage_;
+  }
+
+  const GameCommand & GetGameCommand() const
+  {
+    return game_command_;
+  }
+
 private:
   const std::string team_name_;
   TeamColor team_color_{TeamColor::Unknown};
   TeamSide team_side_{TeamSide::Unknown};
-  // I feel like we should have just made one callback that returned this object
+  GameStage game_stage_{GameStage::Unknown};
+  GameCommand game_command_{GameCommand::Halt};
+
   ColorCallback color_callback_;
   SideCallback side_callback_;
+
   rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
 
   void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
@@ -103,4 +159,4 @@ private:
 
 }  // namespace ateam_common
 
-#endif  // ATEAM_COMMON__TEAM_INFO_LISTENER_HPP_
+#endif  // ATEAM_COMMON__game_controller_listener_HPP_

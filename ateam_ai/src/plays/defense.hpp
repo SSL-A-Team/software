@@ -26,13 +26,8 @@
 #include "types/behavior_goal.hpp"
 
 #include <Eigen/Dense>
-const FieldSidedInfo & our_side_info
-DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const FieldSidedInfo & our_side_info){
-    DirectedGraph<BehaviorGoal> defense_graph;
-    // Go to the middle of the goalie area
-    BehaviorGoal goalie = get_goalie_behavior_goal(our_side_info);
-    defense_graph.add_node(goalie);
-};
+
+// TODO(Cavidano) Namespace these
 
 BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info){
     Eigen::Vector2d _goalie_point = Eigen::Vector2d(
@@ -49,4 +44,12 @@ BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info){
         MoveParam(_goalie_point)
     };
 }
+
+DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const FieldSidedInfo & our_side_info){
+    DirectedGraph<BehaviorGoal> defense_graph;
+    // Go to the middle of the goalie area
+    BehaviorGoal goalie = get_goalie_behavior_goal(our_side_info);
+    defense_graph.add_node(goalie);
+};
+
 #endif // PLAYS__DEFENSE_HPP
