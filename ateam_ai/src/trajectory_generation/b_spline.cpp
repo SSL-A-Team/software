@@ -71,9 +71,11 @@ InternalState convert_to_spline(const Input & input) {
   Eigen::Vector2d r_e = input.data_points.at(k - 1) - d_L_1 * basis_function(L - 2, 3, tau.at(k - 1), tau_with_multiplicity);
 
   // Eq 9.11, don't use 9.12 as it's difficult to figure out 
+  // Note that row 2 (index 1) is centered on the second basis function index (1, 2, 3)
+  // which is i-1, i, i+1, not i, i+1, i+2. All tridiagonal lines should be non-zero
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(k - 1, k - 1);
-  A(0, 0) = basis_function(2, 3, tau.at(1), tau_with_multiplicity);
-  A(0, 1) = basis_function(3, 3, tau.at(1), tau_with_multiplicity);
+  A(0, 0) = basis_function(1, 3, tau.at(1), tau_with_multiplicity);
+  A(0, 1) = basis_function(2, 3, tau.at(1), tau_with_multiplicity);
   for (std::size_t i = 2; i <= k - 2; i++) {
     for (std::size_t p = 0; p < 3; p++) {
       // Get the p==2 on the diagonal
@@ -84,11 +86,11 @@ InternalState convert_to_spline(const Input & input) {
       if (col_idx < 0 || col_idx >= A.rows()) {
         continue;
       }
-      A(row_idx, col_idx) = basis_function(i + p, 3, tau.at(i), tau_with_multiplicity);
+      A(row_idx, col_idx) = basis_function(i + p - 1, 3, tau.at(i), tau_with_multiplicity);
     }
   }
-  A(k - 2, k - 3) = basis_function(L - 3, 3, tau.at(k - 1), tau_with_multiplicity);
-  A(k - 2, k - 2) = basis_function(L - 2, 3, tau.at(k - 1), tau_with_multiplicity);
+  A(k - 2, k - 3) = basis_function(L - 4, 3, tau.at(k - 1), tau_with_multiplicity);
+  A(k - 2, k - 2) = basis_function(L - 3, 3, tau.at(k - 1), tau_with_multiplicity);
   std::cout << std::endl << A << std::endl << std::endl;
 
   // See EQ 9.12, vector b of the Ax=b
@@ -136,6 +138,7 @@ InternalState convert_to_spline(const Input & input) {
   control_points.push_back(d_L_1);
   control_points.push_back(d_L);
 
+  std::cout << "Control points" << std::endl;
   for (const auto & p : control_points) {
     std::cout << p.x() << " " << p.y() << std::endl;
   }
@@ -164,7 +167,7 @@ std::vector<double> apply_multiplicity(const std::vector<double> & knot_sequence
 }
 
 std::vector<double> get_knot_sequence(const std::vector<Eigen::Vector2d> & control_points) {
-  return constant_spacing(control_points);
+  return centripetal_spacing(control_points);
 }
 
 std::vector<double> constant_spacing(const std::vector<Eigen::Vector2d> & control_points) {
@@ -282,7 +285,7 @@ Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, con
 
   // If we already have enough multiplicity, just return the control point
   if (degree == s) {
-    return control_points.at(clip_idx(control_points, k));
+    return control_points.at(clip_idx(control_points, k - s));
   }
 
   // Copy the control points that detail the curve at this point
