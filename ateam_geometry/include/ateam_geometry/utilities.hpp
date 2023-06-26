@@ -36,6 +36,26 @@ double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v)
 {
   return (w.x() * v.y()) - (w.y() * v.x());
 }
+
+/* Sort Eigen::Vector types starting with index 0 up to the max index.
+Basically if in a dimension x > y, then return true,
+else, check the next dimension (unless it doesn't exist)
+*/
+bool sort_eigen_2d_high_low(const Eigen::Vector2d &a, const Eigen::Vector2d &b)
+{
+  bool a_higher = false;
+  for (size_t i = 0; i < a.size(); ++i){
+    if (a[i] > b[i]) {
+      a_higher = true;
+      return a_higher;
+    } else if (a[i] < b[i]){
+      a_higher = false;
+      return a_higher;
+    }
+  }
+  return a_higher;
+}
+
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__UTILITIES_HPP_
