@@ -31,7 +31,7 @@ void sample_spline(const InternalState & state) {
   for (int i = 0; i <= 10; i++) {
     samples.push_back(de_boors_algorithm(i * 0.1, 3, state.control_points, state.knot_sequence_with_multiplicity));
 
-    std::cout << samples.back().x() << " " << samples.back().y() << std::endl;
+    std::cout << "(" << i * 0.1 << ") " << samples.back().x() << " " << samples.back().y() << std::endl;
   }
 }
 
@@ -72,7 +72,9 @@ InternalState convert_to_spline(const Input & input) {
 
   // Eq 9.11, don't use 9.12 as it's difficult to figure out 
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(k - 1, k - 1);
-  for (std::size_t i = 1; i <= k - 1; i++) {
+  A(0, 0) = basis_function(2, 3, tau.at(1), tau_with_multiplicity);
+  A(0, 1) = basis_function(3, 3, tau.at(1), tau_with_multiplicity);
+  for (std::size_t i = 2; i <= k - 2; i++) {
     for (std::size_t p = 0; p < 3; p++) {
       // Get the p==2 on the diagonal
       int col_idx = p + i - 2;
@@ -85,6 +87,8 @@ InternalState convert_to_spline(const Input & input) {
       A(row_idx, col_idx) = basis_function(i + p, 3, tau.at(i), tau_with_multiplicity);
     }
   }
+  A(k - 2, k - 3) = basis_function(L - 3, 3, tau.at(k - 1), tau_with_multiplicity);
+  A(k - 2, k - 2) = basis_function(L - 2, 3, tau.at(k - 1), tau_with_multiplicity);
   std::cout << std::endl << A << std::endl << std::endl;
 
   // See EQ 9.12, vector b of the Ax=b
@@ -160,7 +164,7 @@ std::vector<double> apply_multiplicity(const std::vector<double> & knot_sequence
 }
 
 std::vector<double> get_knot_sequence(const std::vector<Eigen::Vector2d> & control_points) {
-  return centripetal_spacing(control_points);
+  return constant_spacing(control_points);
 }
 
 std::vector<double> constant_spacing(const std::vector<Eigen::Vector2d> & control_points) {
@@ -221,22 +225,16 @@ double basis_function(const std::size_t i, const std::size_t p, const double u, 
 
   // For the sake of calculation, 0/0 = 0
   // See Knots with Positive Multiplicity https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-ex-1.html
-  auto coeff1 = [&knot_sequence] (double u, std::size_t i, std::size_t p) {
+  auto coeff = [&knot_sequence] (double u, std::size_t i, std::size_t p) {
     if (knot_sequence.at(i + p) == knot_sequence.at(i)) {
       return 0.0;
     }
     return (u - knot_sequence.at(i)) / (knot_sequence.at(i + p) - knot_sequence.at(i));
   };
-  auto coeff2 = [&knot_sequence] (double u, std::size_t i, std::size_t p) {
-    if (knot_sequence.at(i + p + 1) == knot_sequence.at(i + 1)) {
-      return 0.0;
-    }
-    return (knot_sequence.at(i + p + 1) - u) / (knot_sequence.at(i + p + 1) - knot_sequence.at(i + 1));
-  };
 
-
-  return coeff1(u, i, p) * basis_function(i, p - 1, u, knot_sequence) +
-   coeff2(u, i, p) * basis_function(i + 1, p - 1, u, knot_sequence);
+  // See Definition https://en.wikipedia.org/wiki/B-spline
+  return coeff(u, i, p) * basis_function(i, p - 1, u, knot_sequence) +
+   (1 - coeff(u, i + 1, p)) * basis_function(i + 1, p - 1, u, knot_sequence);
 }
 
 std::vector<Eigen::Vector2d> knot_points(const std::size_t degree, const std::vector<Eigen::Vector2d> & control_points, const std::vector<double> & knot_sequence) {
@@ -260,18 +258,21 @@ Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, con
   std::size_t k;
   std::size_t equal_count = 0;
   for (k = 0; k < knot_sequence.size() - 1; k++) {
-    if (u == knot_sequence.at(k)) {
-      equal_count++;
-    }
     if (u >= knot_sequence.at(k) && u < knot_sequence.at(k + 1)) {
       break;
     }
   }
 
-  // If we already have it repeated enough, just return
-  if (degree == equal_count) {
-    return control_points.at(k);
+  // Knots are strictly ascending so any that match will be grouped
+  for (const auto & knot : knot_sequence) {
+    if (u == knot) {
+      equal_count++;
+    }
   }
+
+  auto clip_idx = [](const auto & vector, const int & idx) {
+    return std::min(std::max(idx, 0), static_cast<int>(vector.size()) - 1);
+  };
 
   // Number of times to insert the control point in the squence
   // Want equal to degree such that the curve moves through the specific control point
@@ -279,30 +280,21 @@ Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, con
   const std::size_t h = std::max(degree - equal_count, 0ul);
   const std::size_t s = equal_count;
 
-std::cout << "Got to first step" << std::endl;
+  // If we already have enough multiplicity, just return the control point
+  if (degree == s) {
+    return control_points.at(clip_idx(control_points, k));
+  }
+
   // Copy the control points that detail the curve at this point
   std::unordered_map<int, std::unordered_map<int, Eigen::Vector2d>> affected_control_points;
-  for (int i = k - s; i >= static_cast<int>(k) - degree; i--) {
-    affected_control_points[i][0] = control_points.at(i);
+  for (int i = k - s; i >= static_cast<int>(k) - static_cast<int>(degree); i--) {
+    affected_control_points[i][0] = control_points.at(clip_idx(control_points, i));
   }
-std::cout << "Got to second step" << std::endl;
+
   // Use a corner cutting process to figure out the location on the curve
   for (std::size_t r = 1; r <= h; r++) {
     for (std::size_t i = k - degree + r; i <= k - s; i++) {
-      // for knots that are after the end, just pad
-      double back_knot;
-      if (i + degree - r + 1 >= knot_sequence.size()) {
-        back_knot = knot_sequence.back();
-      } else {
-        back_knot = knot_sequence.at(i + degree - r + 1);
-      }
-
-      double a_i_r;
-      if (back_knot - knot_sequence.at(i)) {
-        a_i_r = 0.0;
-      } else {
-        a_i_r = (u - knot_sequence.at(i)) / (back_knot - knot_sequence.at(i));
-      }
+      double a_i_r = (u - knot_sequence.at(i)) / (knot_sequence.at(i + degree - r + 1) - knot_sequence.at(i));
 
       affected_control_points[i][r] = (1 - a_i_r) * affected_control_points[i - 1][r - 1] + a_i_r * affected_control_points[i][r - 1];
     }
