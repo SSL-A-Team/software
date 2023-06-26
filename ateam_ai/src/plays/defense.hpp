@@ -22,10 +22,13 @@
 #ifndef PLAYS__DEFENSE_HPP_
 #define PLAYS__DEFENSE_HPP_
 
+#include <Eigen/Dense>
+#include <array>
+
 #include "types/world.hpp"
 #include "types/behavior_goal.hpp"
+#include "ateam_geometry/utilities.hpp"
 
-#include <Eigen/Dense>
 const FieldSidedInfo & our_side_info
 DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const FieldSidedInfo & our_side_info){
     DirectedGraph<BehaviorGoal> defense_graph;
@@ -35,6 +38,10 @@ DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const Fi
 };
 
 BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info){
+    // Sort the corners with top right at index 0 and bottom left at index 2
+    std::array<Eigen::Vector2d> defense_area = std::sort(our_side_info.goalie_corners.begin(),
+        our_side_info.goalie_corners.end(), ateam_geometry::sort_eigen_2d_high_low());
+    
     Eigen::Vector2d _goalie_point = Eigen::Vector2d(
         // Here I'm assuming these are opposite corners of the goal
         // Does this need to be negative to match our conventions?
