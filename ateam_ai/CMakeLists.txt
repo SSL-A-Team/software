@@ -15,6 +15,7 @@ find_package(ateam_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(angles REQUIRED)
+find_package(ompl REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/ateam_ai_node.cpp
@@ -22,6 +23,7 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior_executor.cpp
   src/behavior/behavior_follower.cpp
   src/behavior/behavior_realization.cpp
+  src/trajectory_generation/rrt_path_planner.cpp
   src/trajectory_generation/trajectory_editor.cpp
   src/trajectory_generation/trajectory_generation.cpp
   src/trajectory_generation/trapezoidal_motion_profile.cpp
@@ -38,6 +40,7 @@ ament_target_dependencies(${PROJECT_NAME}
   tf2
   tf2_geometry_msgs
   angles
+  OMPL
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}
@@ -58,6 +61,7 @@ if(BUILD_TESTING)
   ament_add_gtest(${PROJECT_NAME}_test
     test/behavior/behavior_realization_test.cpp
     test/trajectory_generation/ilqr_problem_test.cpp
+    test/trajectory_generation/rrt_path_planner_test.cpp
     test/trajectory_generation/trajectory_editor_test.cpp
     test/trajectory_generation/trapezoidal_motion_profile_test.cpp
     test/util/pid_test.cpp
