@@ -28,23 +28,41 @@
 
 /**
  * See https://www.cin.ufpe.br/~mdlm/files/Farin-5a_edicao.pdf as reference
+ *
+ * Data points refer to the waypoint inputs
+ * Control points refer to the points in the spline definition that pull the spline in different directions
+ * Knot points refer to how to disbribute the basis functions across the length of the curve
+ * Basis functions deal with the specific weighting of the control points to determine the location of the point on the curve at u=X
 */
 namespace BSpline
 {
 
 struct Input {
-  std::vector<Eigen::Vector2d> control_points;
+  std::vector<Eigen::Vector2d> data_points;
   Eigen::Vector2d initial_vel;
   Eigen::Vector2d end_vel;
 };
 
+struct InternalState {
+  std::vector<Eigen::Vector2d> control_points;
+  std::vector<double> knot_sequence;
+  std::vector<double> knot_sequence_with_multiplicity;
+};
+
+void sample_spline(const InternalState & state);
+
 /**
- * Repeats the first and last control point |multiplicity| times to force end conditions
+ * Convert the data points to a series of control points and knots
+*/
+InternalState convert_to_spline(const Input & input);
+
+/**
+ * Repeats the first and last knot point |multiplicity| times to force end conditions
  * on the start and end control point
  *
  * |multiplicity| = 3 with velocity constraints produce splines that start/end at the end control_points with the defined velocity
 */
-std::vector<Eigen::Vector2d> apply_multiplicity(const std::vector<Eigen::Vector2d> & control_points, std::size_t multiplicity);
+std::vector<double> apply_multiplicity(const std::vector<double> & knot_sequence, const std::size_t multiplicity);
 
 /**
  * Given a sequence of control points, find the spacing of knots.
@@ -86,6 +104,11 @@ double basis_function(const std::size_t i, const std::size_t p, const double u, 
  * Knot points are on the B spline curve that split the curve into segments
 */
 std::vector<Eigen::Vector2d> knot_points(const std::size_t degree, const std::vector<Eigen::Vector2d> & control_points, const std::vector<double> & knot_sequence);
+
+/**
+ * Samples the curve at location u in range [0, 1] corresponding the the % along the B spline
+*/
+Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, const std::vector<Eigen::Vector2d> & control_points, const std::vector<double> & knot_sequence);
 }  // namespace BSpline
 
 #endif  // TRAJECTORY_GENERATION__B_SPLINE_HPP_

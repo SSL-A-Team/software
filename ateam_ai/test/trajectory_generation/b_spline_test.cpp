@@ -26,21 +26,16 @@
 
 TEST(b_spline, apply_multiplicity_ShouldRepeat_2point)
 {
-  std::vector<Eigen::Vector2d> control_points{
-    Eigen::Vector2d{0, 0},
-    Eigen::Vector2d{1, 1}
-  };
+  std::vector<double> knot_points{0, 1};
 
-  auto ret = BSpline::apply_multiplicity(control_points, 3);
+  auto ret = BSpline::apply_multiplicity(knot_points, 3);
 
   EXPECT_EQ(ret.size(), 6);
   for (int i = 0; i < 3; i++) {
-    EXPECT_EQ(ret.at(i).x(), control_points.front().x());
-    EXPECT_EQ(ret.at(i).y(), control_points.front().y());
+    EXPECT_EQ(ret.at(i), knot_points.front());
   }
   for (int i = 3; i < 6; i++) {
-    EXPECT_EQ(ret.at(i).x(), control_points.back().x());
-    EXPECT_EQ(ret.at(i).y(), control_points.back().y());
+    EXPECT_EQ(ret.at(i), knot_points.back());
   }
 }
 
@@ -142,6 +137,16 @@ TEST(b_spline, basis_function_ShouldWack_WhenBetween23)
   EXPECT_NEAR(out, 0.5 * (3 - u) * (3 - u), 1e-3);
 }
 
+TEST(b_spline, basis_function_ShouldZero_WhenMultiple)
+{
+  // Example from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html
+  double u = 0.5;
+  std::vector<double> knot_sequence{0, 0, 0, 1};
+  auto out = BSpline::basis_function(0, 0, u, knot_sequence);
+
+  EXPECT_NEAR(out, 0.0, 1e-3);
+}
+
 TEST(b_spline, knot_points_ShouldCircle_WhenOverlaping)
 {
   // Example from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-curve-closed.html
@@ -173,4 +178,64 @@ TEST(b_spline, knot_points_ShouldCircle_WhenOverlaping)
     const auto point = out.at(i);
     EXPECT_NEAR(point.norm(), 1, 1e-3);
   }
+}
+
+TEST(b_spline, de_boors_algorithm_ShouldExmaple_WhenNontrivial)
+{
+  // Example from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/de-Boor.html
+  std::size_t p = 3;
+  std::size_t n = 6;
+  std::size_t m = 10;
+  Eigen::Vector2d P_0_0{0, 0};
+  Eigen::Vector2d P_1_0{1, 0};
+  Eigen::Vector2d P_2_0{2, 0};
+  Eigen::Vector2d P_3_0{3, 0};
+  Eigen::Vector2d P_4_0{4, 0};
+  Eigen::Vector2d P_5_0{5, 0};
+  Eigen::Vector2d P_6_0{6, 0};
+  std::vector<Eigen::Vector2d> control_points{
+    P_0_0,
+    P_1_0,
+    P_2_0,
+    P_3_0,
+    P_4_0,
+    P_5_0,
+    P_6_0
+  };
+  std::vector<double> knot_sequence{0, 0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1, 1};
+
+  auto out = BSpline::de_boors_algorithm(0.4, p, control_points, knot_sequence);
+
+
+  Eigen::Vector2d P_4_1 = 0.8 * P_3_0 + 0.2 * P_4_0;
+  Eigen::Vector2d P_3_1 = 0.47 * P_2_0 + 0.53 * P_3_0;
+  Eigen::Vector2d P_2_1 = 0.2 * P_1_0 + 0.8 * P_2_0;
+  
+  Eigen::Vector2d P_4_2 = 0.7 * P_3_1 + 0.3 * P_4_1;
+  Eigen::Vector2d P_3_2 = 0.2 * P_2_1 + 0.8 * P_3_1;
+
+  Eigen::Vector2d P_4_3 = 0.4 * P_3_2 + 0.6 * P_4_2;
+
+  EXPECT_NEAR(out.x(), P_4_3.x(), 1e-2);
+  EXPECT_NEAR(out.y(), P_4_3.y(), 1e-2);
+}
+
+TEST(b_spline, convert_to_spline)
+{
+  BSpline::Input i;
+  i.data_points = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
+  i.initial_vel = {0, 0};
+  i.end_vel = {0, 0};
+
+  auto out = BSpline::convert_to_spline(i);
+}
+
+TEST(b_spline, sample_spline)
+{
+  BSpline::Input i;
+  i.data_points = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
+  i.initial_vel = {0, 0};
+  i.end_vel = {0, 0};
+
+  BSpline::sample_spline(BSpline::convert_to_spline(i));
 }
