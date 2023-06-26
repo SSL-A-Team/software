@@ -40,12 +40,11 @@ export default {
             const start = (-50/180)*Math.PI;
             const end =  (230/180)*Math.PI;
 
-            ctx.translate(50, 50);
-            ctx.fillStyle = "green";
-            ctx.fillRect(-50, -50, 100, 100);
-            ctx.fillStyle = "DarkBlue";
+            ctx.translate(50, 50); // Center the canvas
+            ctx.clearRect(-50, -50, 100, 100); // Clear the drawing
 
             // Draw robot shell
+            ctx.fillStyle = "DarkBlue";
             ctx.beginPath();
             ctx.arc(0, 0, sr, start, end);
             ctx.closePath();
@@ -111,10 +110,10 @@ export default {
                 endY: [-.03, -.03, .07, .07]
             }
 
+            // TODO: Figure out what order the motor numbers use
             for (var i = 0; i < 4; i++) {
                 let general = robot.status["motor_" + i + "general_error"];
                 let hall = robot.status["motor_" + i + "hall_error"];
-
                 if (general || hall) {
                     ctx.beginPath();
                     ctx.strokeStyle = "red";
