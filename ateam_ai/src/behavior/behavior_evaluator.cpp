@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   //
   // Setup different behavior options
   //
+
 
   // DirectedGraph<Behavior> three_one_touch_shot;
   // Behavior initial_pass_start{

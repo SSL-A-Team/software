@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -17,40 +17,40 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+#define _USE_MATH_DEFINES
 
-#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#include <Eigen/Dense>
+#include <cmath>
+#include "ateam_geometry/circle.hpp"
+#include "ateam_geometry/segment.hpp"
 
-#include <optional>
-#include <array>
-
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include "behavior/behavior_realization.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-#include "types/trajectory.hpp"
-#include "util/directed_graph.hpp"
-
-
-/**
- * Given a set of behaviors
- *  - Replan trajectories as their start time approaches
- *  - Manage the trajectories
- */
-class BehaviorExecutor
+namespace ateam_geometry
 {
-public:
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
+Circle::Circle(const Eigen::Vector2d & c, const double & r)
+: center(c), radius(r) {}
 
-  std::array<std::optional<Trajectory>, 16> execute_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors,
-    const World & world,
-    BehaviorExecutorState & self_state);
+std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
+  const int & num_points,
+  const double & offset = 0.0)
+{
+  std::vector<Eigen::Vector2d> points;
+  // Assume we want to return more than 1 point...
+  // If this is not the case, don't do any more calculations and return
+  // an empty vector
+  if (num_points < 2) {
+    return points;
+  }
+  double spacing = (2 * M_PI) / num_points;
+  for (int i = 0; i < num_points; ++i) {
+    Eigen::Vector2d point =
+      LineSegment(center, radius, offset + (i * spacing)).p2;
+    points.push_back(point);
+  }
+  return points;
+}
 
-private:
-  BehaviorRealization & behavior_realization;
-};
-
-#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle)
+{
+  return (point - circle.center).norm() <= circle.radius;
+}
+}  // namespace ateam_geometry
