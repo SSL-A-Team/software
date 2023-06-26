@@ -7,7 +7,7 @@ import { Ball } from "@/ball"
 import { Field } from "@/field"
 
 export class RenderConfig {
-    angle: number = 0;
+    angle: number = 0; // Rotation applied to the rendered field
     scale: number = 140; // Pixels per meter (in the rendering canvas)   
 }
 
@@ -18,7 +18,7 @@ export class WorldState {
     field: Field;
 
     constructor() {
-        this.team = TeamColor.Yellow;
+        this.team = TeamColor.Blue;
         this.teams = [];
         this.teams[TeamColor.Blue] = new Team("A-Team", TeamColor.Blue, -1);
         this.teams[TeamColor.Yellow] = new Team("Opponent", TeamColor.Yellow, 1);

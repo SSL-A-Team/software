@@ -56,8 +56,8 @@ export class Team {
                 orientation: {
                     x: 0,
                     y: 0,
-                    z: -this.defending * Math.sqrt(2)/2,
-                    w: Math.sqrt(2)/2
+                    z: 0,
+                    w: 1
                 }
             })
         

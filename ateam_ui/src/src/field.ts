@@ -62,20 +62,21 @@ export class Field {
         // Team Goal Boxes
         for (const color in state.world.teams) {
             const team = state.world.teams[color];
-            const goalX = team.defending * scale * this.fieldDimensions.length/2
+            const direction = (color == state.world.team ? -1 : 1); // always draw our goal on the left
+            const goalX = direction * scale * this.fieldDimensions.length/2
 
             // Goal Box
             fieldLines.lineStyle(4, 0xFFFFFF);
             fieldLines.moveTo(goalX, -scale * this.fieldDimensions.goalWidth);
-            fieldLines.lineTo(goalX - team.defending * scale * this.fieldDimensions.goalWidth, -scale * this.fieldDimensions.goalWidth);
-            fieldLines.lineTo(goalX - team.defending * scale * this.fieldDimensions.goalWidth, scale * this.fieldDimensions.goalWidth);
+            fieldLines.lineTo(goalX - direction * scale * this.fieldDimensions.goalWidth, -scale * this.fieldDimensions.goalWidth);
+            fieldLines.lineTo(goalX - direction * scale * this.fieldDimensions.goalWidth, scale * this.fieldDimensions.goalWidth);
             fieldLines.lineTo(goalX, scale * this.fieldDimensions.goalWidth);
 
             // Goal
             fieldLines.lineStyle(4, color);
             fieldLines.moveTo(goalX, -scale * this.fieldDimensions.goalWidth/2);
-            fieldLines.lineTo(goalX + team.defending * scale * this.fieldDimensions.goalDepth, -scale * this.fieldDimensions.goalWidth/2);
-            fieldLines.lineTo(goalX + team.defending * scale * this.fieldDimensions.goalDepth, scale * this.fieldDimensions.goalWidth/2);
+            fieldLines.lineTo(goalX + direction * scale * this.fieldDimensions.goalDepth, -scale * this.fieldDimensions.goalWidth/2);
+            fieldLines.lineTo(goalX + direction * scale * this.fieldDimensions.goalDepth, scale * this.fieldDimensions.goalWidth/2);
             fieldLines.lineTo(goalX, scale * this.fieldDimensions.goalWidth/2);
         }
     }

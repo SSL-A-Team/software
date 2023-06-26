@@ -111,6 +111,8 @@ export class Overlay {
                     fill: this.fill_color
                 });
                 text.anchor.set(0.5, 0.5);
+                text.rotation = -renderConfig.angle; // offset the rotation of the canvas so the text always appears right side up
+
                 graphic.addChild(text);
                 break;
             // MESH
