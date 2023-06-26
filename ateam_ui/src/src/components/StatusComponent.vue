@@ -96,14 +96,23 @@ export default {
             let id_pattern = color_patterns.get(robot.id)
 
             for (var i = 0; i < 4; i++) {
+                ctx.fillStyle = id_pattern[i] == "P" ? 'DeepPink' : 'LawnGreen';
                 ctx.beginPath();
                 // radius increased by .005 for visibility
                 ctx.arc(pos.x[i]*scale, pos.y[i]*scale, .025*scale, 0, 2*Math.PI);
                 ctx.closePath();
-
-                ctx.fillStyle = id_pattern[i] == "P" ? 'DeepPink' : 'LawnGreen';
                 ctx.fill();
             }
+
+            // Generate Ball Sense indicator
+            if (robot.status.breakbeam_ball_detected) {
+                ctx.fillStyle = "orange";
+                ctx.beginPath();
+                ctx.arc(0, -.09*scale, .009*2.5*scale, 0, 2*Math.PI);
+                ctx.closePath();
+                ctx.fill();
+            }
+
 
             // Generate wheel status error indicators
             // TODO: Figure out how much we want this to show i.e.  distinguish between general and hall errors? show over temperature warnings?
