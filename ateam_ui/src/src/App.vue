@@ -6,7 +6,7 @@
         <v-main>
             <v-container class="d-flex flex-row" ref="mainComponents">
                 <RefButtonsComponent/>
-                <StatusComponent/>
+                <StatusComponent ref="robotStatus"/>
                 <FieldComponent ref="mainField"/>
             </v-container>
         </v-main>
@@ -44,17 +44,13 @@ export default {
         }
     },
     methods: {
-        // Stores History and renders field at 100fps
+        // Renders field at 100fps
         update: function() {
-            // This should store a bit over 8 minutes of history, we can bump it higher
-            // if the memory usage isn't too excessive (I think this should be ~1.1GB)
-            if (this.state.history.length < 50000) {
-                // if this doesn't properly deep copy we may need Lodash
-                this.state.history.push(structuredClone(toRaw(this.state.world)));
-            }
-
             // update components
             this.$refs.mainField.update();
+
+            // not sure if updating this constantly is the best way to handle this
+            //this.$refs.robotStatus.update();
         }
     },
     beforeUnmount() {

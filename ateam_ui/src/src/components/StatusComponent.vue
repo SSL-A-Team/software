@@ -1,7 +1,11 @@
 <template>
     <v-container class="d-flex flex-column">
+        <v-row ref="goalie" align="center">
+            <p>Goalie:</p>
+            <v-select label="ID" :items="Array.from({length: 16}, (value, index) => index)" density="compact" variant="solo" @update:modelValue="setGoalie"/>
+        </v-row>
         <div ref="placeholder">
-            Add Goalie, STATUS, manual control here
+            Add STATUS, manual control here
         </div>
         <v-container class="d-flex flex-column">
             <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots">
@@ -23,6 +27,9 @@ export default {
         this.update();
     },
     methods: {
+        setGoalie: function(id) {
+            this.state.setGoalie(id);
+        },
         update: function() {
             // if this has performance issues we could try using reactivity on the robot statuses so it only renders when they change
             for(const robot of this.state.world.teams[this.state.world.team].robots) {

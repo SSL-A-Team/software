@@ -31,15 +31,27 @@ export class WorldState {
 export class AppState {
     renderConfig: RenderConfig;
     world: WorldState;
-    history: WorldState[];
-
-    teamInfo: TeamInfo[];
 
     // I'm not sure if we will need ongoing access to these
     ros: ROSLIB.Ros;
-    topics: ROSLIB.Topic[]
+    publishers: ROSLIB.Topic[]
+    subscriptions: ROSLIB.Topic[]
+    services: ROSLIB.Service[]
+
+    referee: Referee
 
     sim: boolean = true;
+
+    setGoalie(goalie_id) {
+        const request = new ROSLIB.ServiceRequest({
+            desired_keeper: goalie_id
+        });
+
+        this.services["setGoalie"].callService(request,
+            function(result) {
+                // is there anything we need to do with this?
+            });
+    }
 
     // TODO: figure out how to type ROSLIB Messages, the Message type doesn't seem to work properly
     getBallCallback() {
@@ -120,7 +132,11 @@ export class AppState {
         this.world = new WorldState();
         this.history = [];
         this.teamInfo = [];
-        this.topics = [];
+
+        this.publishers = [];
+        this.subscriptions = [];
+        this.services = [];
+
         this.referee = new Referee();
 
         // Configure ROS
@@ -153,7 +169,7 @@ export class AppState {
         });
 
         ballTopic.subscribe(this.getBallCallback());
-        this.topics["ball"] = ballTopic;
+        this.subscriptions["ball"] = ballTopic;
         //TODO: add publisher for moving sim ball
 
         for (var i = 0; i < 16; i++) {
@@ -165,7 +181,7 @@ export class AppState {
                 });
 
                 robotTopic.subscribe(this.getRobotCallback(team, i));
-                this.topics['/' + team + '_team/robot' + i] = robotTopic;
+                this.subscriptions['/' + team + '_team/robot' + i] = robotTopic;
 
 
                 //TODO: add publisher for moving sim robots
@@ -178,7 +194,7 @@ export class AppState {
             });
 
             robotStatusTopic.subscribe(this.getRobotStatusCallback(i));
-            this.topics['/robot_feedback/robot' + i] = robotStatusTopic;
+            this.subscriptions['/robot_feedback/robot' + i] = robotStatusTopic;
         }
 
         // Set up overlay subscriber
@@ -189,9 +205,8 @@ export class AppState {
         });
 
         overlayTopic.subscribe(this.getOverlayCallback());
-        this.topics["overlay"] = overlayTopic;
+        this.subscriptions["overlay"] = overlayTopic;
 
-        /* // Need to merge master to get this
         // Set up fieldDimension subscriber
         let fieldDimensionTopic = new ROSLIB.Topic({
             ros: this.ros,
@@ -200,8 +215,7 @@ export class AppState {
         });
 
         fieldDimensionTopic.subscribe(this.getFieldDimensionCallback());
-        this.topics["fieldDimension"] = fieldDimensionTopic;
-        */
+        this.subscriptions["fieldDimension"] = fieldDimensionTopic;
 
         // Set up referee subscriber
         let refereeTopic = new ROSLIB.Topic({
@@ -211,6 +225,14 @@ export class AppState {
         });
 
         refereeTopic.subscribe(this.getRefereeCallback());
-        this.topics["referee"] = refereeTopic;
+        this.subscriptions["referee"] = refereeTopic;
+
+        // Set Goalie Service
+        let goalieService = new ROSLIB.Service({
+            ros: this.ros,
+            name: 'team_client_node/set_desired_keeper',
+            serviceType: 'ateam_msgs/srv/SetDesiredKeeper'
+        })
+        this.services["setGoalie"] = goalieService;
     }
 }
