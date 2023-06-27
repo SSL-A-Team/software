@@ -37,9 +37,9 @@ RrtPathPlanner::RrtPathPlanner()
   simple_setup_.setPlanner(planner_);
 }
 
-Trajectory RrtPathPlanner::generatePath(
+RrtPathPlanner::Path RrtPathPlanner::generatePath(
   const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles,
-  const Eigen::Vector3d & start_pos, const Eigen::Vector3d & goal_pos)
+  const Position & start_pos, const Position & goal_pos)
 {
   using ScopedState = ompl::base::ScopedState<ompl::base::SE2StateSpace>;
 
@@ -73,11 +73,9 @@ Trajectory RrtPathPlanner::generatePath(
 
   ScopedState start(state_space_);
   start->setXY(start_pos.x(), start_pos.y());
-  start->setYaw(start_pos.z());
 
   ScopedState goal(state_space_);
   goal->setXY(goal_pos.x(), goal_pos.y());
-  goal->setYaw(goal_pos.z());
 
   simple_setup_.setStartAndGoalStates(start, goal);
 
@@ -103,7 +101,7 @@ Trajectory RrtPathPlanner::generatePath(
 
   simple_setup_.simplifySolution();
 
-  return convertOmplPathToTrajectory(simple_setup_.getSolutionPath());
+  return convertOmplPathToEigen(simple_setup_.getSolutionPath());
 }
 
 bool RrtPathPlanner::isStateValid(
@@ -122,24 +120,20 @@ bool RrtPathPlanner::isStateValid(
     });
 }
 
-Trajectory RrtPathPlanner::convertOmplPathToTrajectory(ompl::geometric::PathGeometric & path)
+RrtPathPlanner::Path RrtPathPlanner::convertOmplPathToEigen(ompl::geometric::PathGeometric & path)
 {
   using State = ompl::base::SE2StateSpace::StateType;
 
-  Trajectory trajectory;
+  Path eigen_path;
   const auto & states = path.getStates();
-  trajectory.samples.reserve(states.size());
+  eigen_path.reserve(states.size());
   std::transform(
-    states.begin(), states.end(), std::back_inserter(trajectory.samples), [](
+    states.begin(), states.end(), std::back_inserter(eigen_path), [](
       ompl::base::State * s) {
       auto state = s->as<State>();
-      Sample3d sample;
-      sample.pose.x() = state->getX();
-      sample.pose.y() = state->getY();
-      sample.pose.z() = state->getYaw();
-      return sample;
+      return Position(state->getX(), state->getY());
     });
-  return trajectory;
+  return eigen_path;
 }
 
 }  // namespace ateam_ai::trajectory_generation

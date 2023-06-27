@@ -29,7 +29,6 @@
 #include <vector>
 
 #include <ateam_geometry/types.hpp>
-#include "types/trajectory.hpp"
 #include "types/world.hpp"
 
 namespace ateam_ai::trajectory_generation
@@ -38,11 +37,14 @@ namespace ateam_ai::trajectory_generation
 class RrtPathPlanner
 {
 public:
+  using Position = Eigen::Vector2d;
+  using Path = std::vector<Position>;
+
   RrtPathPlanner();
 
-  Trajectory generatePath(
+  Path generatePath(
     const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles,
-    const Eigen::Vector3d & start_pos, const Eigen::Vector3d & goal_pos);
+    const Position & start_pos, const Position & goal_pos);
 
 private:
   std::shared_ptr<ompl::base::SE2StateSpace> state_space_;
@@ -53,7 +55,7 @@ private:
     const ompl::base::State * state,
     const std::vector<ateam_geometry::AnyShape> & obstacles);
 
-  Trajectory convertOmplPathToTrajectory(ompl::geometric::PathGeometric & path);
+  Path convertOmplPathToEigen(ompl::geometric::PathGeometric & path);
 };
 
 }  // namespace ateam_ai::trajectory_generation

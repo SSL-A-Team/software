@@ -26,7 +26,7 @@
 
 using ateam_ai::trajectory_generation::RrtPathPlanner;
 
-bool vectorsAreNear(const Eigen::Vector3d & a, const Eigen::Vector3d & b)
+bool vectorsAreNear(const Eigen::Vector2d & a, const Eigen::Vector2d & b)
 {
   return ateam_common::allCloseDense(a, b);
 }
@@ -34,21 +34,21 @@ bool vectorsAreNear(const Eigen::Vector3d & a, const Eigen::Vector3d & b)
 TEST(RrtPathPlannerTests, basicTest) {
   RrtPathPlanner planner;
 
-  Eigen::Vector3d start_pos(0, 0, 0);
-  Eigen::Vector3d goal_pos(1, 0, 0);
+  Eigen::Vector2d start_pos(0, 0);
+  Eigen::Vector2d goal_pos(1, 0);
 
-  auto path = planner.generatePath({}, {}, {}, goal_pos);
+  auto path = planner.generatePath({}, {}, start_pos, goal_pos);
 
-  ASSERT_EQ(path.samples.size(), 2u);
-  EXPECT_PRED2(vectorsAreNear, path.samples.front().pose, start_pos);
-  EXPECT_PRED2(vectorsAreNear, path.samples.back().pose, goal_pos);
+  ASSERT_EQ(path.size(), 2u);
+  EXPECT_PRED2(vectorsAreNear, path.front(), start_pos);
+  EXPECT_PRED2(vectorsAreNear, path.back(), goal_pos);
 }
 
 TEST(RrtPathPlannerTests, avoidOneObstacle) {
   RrtPathPlanner planner;
 
-  Eigen::Vector3d start_pos(0, 0, 0);
-  Eigen::Vector3d goal_pos(2, 0, 0);
+  Eigen::Vector2d start_pos(0, 0);
+  Eigen::Vector2d goal_pos(2, 0);
 
   std::vector<ateam_geometry::AnyShape> obstacles = {
     ateam_geometry::makeCircle(ateam_geometry::Point(1, 0), 0.09)
@@ -56,15 +56,15 @@ TEST(RrtPathPlannerTests, avoidOneObstacle) {
 
   auto path = planner.generatePath({}, obstacles, start_pos, goal_pos);
 
-  ASSERT_FALSE(path.samples.empty());
-  EXPECT_PRED2(vectorsAreNear, path.samples.front().pose, start_pos);
-  EXPECT_PRED2(vectorsAreNear, path.samples.back().pose, goal_pos);
+  ASSERT_FALSE(path.empty());
+  EXPECT_PRED2(vectorsAreNear, path.front(), start_pos);
+  EXPECT_PRED2(vectorsAreNear, path.back(), goal_pos);
 
   // Expect that no trajectory sample is colliding with the obstacle
   // Using a simple distance check since we know the robot and obstacle are circles
   EXPECT_TRUE(
-    std::none_of(
-      path.samples.begin(), path.samples.end(), [](const auto & sample) {
-        return (sample.pose.head(2) - Eigen::Vector2d(1, 0)).norm() < 0.18;
+    std::ranges::none_of(
+      path, [](const auto & pos) {
+        return (pos - Eigen::Vector2d(1, 0)).norm() < 0.18;
       }));
 }
