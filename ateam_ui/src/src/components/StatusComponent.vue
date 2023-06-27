@@ -8,7 +8,7 @@
         <v-container class="d-flex flex-column">
             <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots">
                     {{robot.id}}
-                    <canvas ref="canvases" height=100 width=100 style="width:70px; height:70px;"/>
+                    <canvas ref="canvases" height=100 width=100 style="width:90px; height:90px;"/>
             </v-card>
         </v-container>
     </v-container>
@@ -31,7 +31,7 @@ export default {
             }
         },
         drawStatus: function(robot: Robot, ctx: CanvasRenderingContext2D) {
-            const scale = 400; // This is seperate from the field based renderConfig.scale
+            const scale = 280; // This is seperate from the field based renderConfig.scale
             const radius = .09;
             const sr = scale*radius;
 
@@ -107,28 +107,43 @@ export default {
 
 
             // Generate wheel status error indicators
-            // TODO: Figure out how much we want this to show i.e. distinguish between general and hall errors? show over temperature warnings?
             // TODO: Make these look less terrible
 
             // Theres probably a better way to do this
             const wheels = {
-                startX: [-.075, .075, -.035, .035],
-                startY: [-.095, -.095, .12, .12],
-                endX: [-.12, .12, -.1, .1],
-                endY: [-.03, -.03, .07, .07]
+                startX: [-.075, .075, -.035, .035, -.05],
+                startY: [-.095, -.095, .12, .12, -.09],
+                endX: [-.12, .12, -.1, .1, .05],
+                endY: [-.03, -.03, .07, .07, -.09],
+                textX: [-.12, .12, -.12, .12, 0],
+                textY: [-.12, -.12, .14, .14, -.13]
             }
 
             // TODO: Figure out what order the motor numbers use
-            for (var i = 0; i < 4; i++) {
+            // TODO: update this to match dribbler naming convention once it is added
+            for (var i = 0; i < 5; i++) {
                 let general = robot.status["motor_" + i + "general_error"];
                 let hall = robot.status["motor_" + i + "hall_error"];
-                if (general || hall) {
+                let encoder = robot.status["motor_" + i + "encoder_error"];
+
+                if (general || hall || encoder) {
                     ctx.beginPath();
                     ctx.strokeStyle = "red";
                     ctx.lineWidth = .02 * scale;
                     ctx.moveTo(scale*wheels.startX[i], scale*wheels.startY[i]);
                     ctx.lineTo(scale*wheels.endX[i], scale*wheels.endY[i]);
                     ctx.stroke();
+
+                    let errString = "";
+                    if (general)  errString = errString + "G";
+                    if (hall)  errString = errString + "H";
+                    if (encoder)  errString = errString + "E";
+
+                    ctx.fillStyle = "red";
+                    ctx.font = "13px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(errString, wheels.textX[i]*scale, wheels.textY[i]*scale);
                 }
             }
         }
