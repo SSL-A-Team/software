@@ -25,9 +25,6 @@ export default {
         this.update();
     },
     methods: {
-        setGoalie: function(id: number) {
-            this.state.setGoalie(id);
-        },
         update: function() {
             for(const robot of this.state.world.teams[this.state.world.team].robots) {
                 this.drawStatus(robot, this.$refs.canvases[robot.id].getContext("2d"));
