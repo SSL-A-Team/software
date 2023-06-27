@@ -7,6 +7,13 @@ import ROSLIB from "roslib"
 // with a place for data about robot status, active plays, etc so that we can use a single UI to control
 // two instances of our software playing against each other for testing
 
+export enum ErrorLevel {
+    None,
+    Warning,
+    Error,
+    Critical
+}
+
 export class RobotStatus {
     connected: boolean
     message: string
@@ -69,6 +76,43 @@ export class Robot {
     setRotation(degrees: number) {
         this.pose.orientation.z = Math.sin(degrees/2 * Math.PI/180);
         this.pose.orientation.w = Math.cos(degrees/2 * Math.PI/180);
+    }
+
+    errorLevel(): ErrorLevel {
+        // Critical
+
+        // Battery Level TODO: find what level to use
+        if (this.status.battery_level <= 19.2) {
+            return ErrorLevel.Critical;
+        }
+
+        // Kicker Voltage TODO: find max voltage
+        if (this.status.kicker_charge_level >= 220) {
+            return ErrorLevel.Critical;
+        }
+
+        // Error
+
+        // Motor General/Hall
+        for (var i = 0; i < 4; i++) {
+            if (this.status["motor_" + i + "general_error"]) {
+                return ErrorLevel.Error;
+            }
+
+            if (this.status["motor_" + i + "hall_error"]) {
+                return ErrorLevel.Error;
+            }
+        }
+
+        // Warning
+
+        // Robot tipped over, someone should probably go pick it up
+        if (this.status.tipped_error) {
+            return ErrorLevel.Warning;
+        }
+
+        // None
+        return ErrorLevel.None;
     }
 
     update(container: PIXI.Container, renderConfig: RenderConfig) {

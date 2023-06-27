@@ -6,7 +6,7 @@
             Add STATUS, manual control here
         </div>
         <v-container class="d-flex flex-column">
-            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots">
+            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots" ref="robotCard" style="outline-offset:-1px">
                     {{robot.id}}
                     <canvas ref="canvases" height=100 width=100 style="width:90px; height:90px;"/>
             </v-card>
@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import { ref, inject } from "vue";
-import { Robot } from "@/robot";
+import { Robot, ErrorLevel } from "@/robot";
 
 export default {
     inject: ['state'],
@@ -28,6 +28,28 @@ export default {
         update: function() {
             for(const robot of this.state.world.teams[this.state.world.team].robots) {
                 this.drawStatus(robot, this.$refs.canvases[robot.id].getContext("2d"));
+
+                const element = this.$refs.robotCard[robot.id].$el;
+                const errorLevel = robot.errorLevel();
+
+                element.getAnimations().forEach((animation) => {animation.cancel()});
+                switch (errorLevel) {
+                    case ErrorLevel.None:
+                        element.style =  "";
+                        break;
+                    case ErrorLevel.Warning:
+                        element.style = "outline: solid 5px yellow; outline-offset:-1px";
+                        break;
+                    case ErrorLevel.Error:
+                        element.style =  "outline: solid 5px red; outline-offset:-1px";
+                        break;
+                    case ErrorLevel.Critical:
+                        element.animate([
+                            {background: "red", outline: "solid 5px red"}],
+                            {easing: "steps(2, jump-none)", duration: 1000, iterations: Infinity}
+                        );
+                        break;
+                }
             }
         },
         drawStatus: function(robot: Robot, ctx: CanvasRenderingContext2D) {
