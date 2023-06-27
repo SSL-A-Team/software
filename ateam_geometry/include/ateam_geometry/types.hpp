@@ -18,24 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__UTILITIES_HPP_
-#define ATEAM_GEOMETRY__UTILITIES_HPP_
+#ifndef ATEAM_GEOMETRY__TYPES_HPP_
+#define ATEAM_GEOMETRY__TYPES_HPP_
 
-#include <Eigen/Dense>
-#include <math.h>
+#include <CGAL/Simple_cartesian.h>
+#include <variant>
 
 namespace ateam_geometry
 {
-/* We define the 2D cross product here between two vectors w and v
-as w_x * v_y - w_y * w_x
-This is used for determining whether two line segments intersect
-
-The implementation used is based off of this StackOverflow post
-https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect*/
-double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v)
-{
-  return (w.x() * v.y()) - (w.y() * v.x());
-}
+using Kernel = CGAL::Simple_cartesian<double>;
+using Point = Kernel::Point_2;
+using Segment = Kernel::Segment_2;
+using Rectangle = Kernel::Iso_rectangle_2;
+using Circle = Kernel::Circle_2;
+using AnyShape = std::variant<Point, Segment, Rectangle, Circle>;
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__UTILITIES_HPP_
+#endif  // ATEAM_GEOMETRY__TYPES_HPP_
