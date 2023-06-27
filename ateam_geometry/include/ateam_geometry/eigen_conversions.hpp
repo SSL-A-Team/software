@@ -18,24 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
+#define ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
+
 #include <Eigen/Dense>
+#include "types.hpp"
 
-#include <gtest/gtest.h>
-#include "gmock/gmock.h"
+namespace ateam_geometry
+{
 
-#include "ateam_geometry/utilities.hpp"
+Eigen::Vector2d PointToEigen(const Point & p);
 
-namespace geometry = ateam_geometry;
+Point EigenToPoint(const Eigen::Vector2d & p);
 
-TEST(CrossProduct, cross_product_2d) {
-  auto v1 = Eigen::Vector2d(0, 0);
-  auto v2 = Eigen::Vector2d(1, 1);
-  auto v3 = Eigen::Vector2d(-2, 2);
-  auto v4 = Eigen::Vector2d(-1, -1);
+}  // namespace ateam_geometry
 
-  EXPECT_THAT(geometry::cross_product_2d(v1, v2), testing::DoubleEq(0));
-  EXPECT_THAT(geometry::cross_product_2d(v2, v3), testing::DoubleEq(4));
-  EXPECT_THAT(geometry::cross_product_2d(v3, v2), testing::DoubleEq(-4));
-  EXPECT_THAT(geometry::cross_product_2d(v2, v2), testing::DoubleEq(0));
-  EXPECT_THAT(geometry::cross_product_2d(v2, v4), testing::DoubleEq(0));
-}
+#endif  // ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_

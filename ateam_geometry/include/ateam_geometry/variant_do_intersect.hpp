@@ -17,40 +17,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-#define _USE_MATH_DEFINES
 
-#include <Eigen/Dense>
-#include <cmath>
-#include "ateam_geometry/circle.hpp"
-#include "ateam_geometry/segment.hpp"
+#ifndef ATEAM_GEOMETRY__VARIANT_DO_INTERSECT_HPP_
+#define ATEAM_GEOMETRY__VARIANT_DO_INTERSECT_HPP_
+
+#include <variant>
+#include "ateam_geometry/types.hpp"
 
 namespace ateam_geometry
 {
-Circle::Circle(const Eigen::Vector2d & c, const double & r)
-: center(c), radius(r) {}
 
-std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
-  const int & num_points,
-  const double & offset = 0.0)
+template<typename ObjA>
+bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
 {
-  std::vector<Eigen::Vector2d> points;
-  // Assume we want to return more than 1 point...
-  // If this is not the case, don't do any more calculations and return
-  // an empty vector
-  if (num_points < 2) {
-    return points;
-  }
-  double spacing = (2 * M_PI) / num_points;
-  for (int i = 0; i < num_points; ++i) {
-    Eigen::Vector2d point =
-      LineSegment(center, radius, offset + (i * spacing)).p2;
-    points.push_back(point);
-  }
-  return points;
+  return std::visit(
+    [&object_a](const auto & b) {
+      return CGAL::do_intersect(object_a, b);
+    }, object_b);
 }
 
-bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle)
+bool variantDoIntersect(const AnyShape & object_a, const AnyShape & object_b)
 {
-  return (point - circle.center).norm() <= circle.radius;
+  return std::visit(
+    [&object_b](const auto & a) {
+      return variantDoIntersect(a, object_b);
+    }, object_a);
 }
+
 }  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__VARIANT_DO_INTERSECT_HPP_

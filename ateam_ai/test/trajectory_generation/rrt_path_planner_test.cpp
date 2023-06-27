@@ -21,27 +21,50 @@
 #include "trajectory_generation/rrt_path_planner.hpp"
 
 #include <gtest/gtest.h>
+#include <ateam_common/equality_utilities.hpp>
+#include <ateam_geometry/ateam_geometry.hpp>
 
 using ateam_ai::trajectory_generation::RrtPathPlanner;
+
+bool vectorsAreNear(const Eigen::Vector3d & a, const Eigen::Vector3d & b)
+{
+  return ateam_common::allCloseDense(a, b);
+}
 
 TEST(RrtPathPlannerTests, basicTest) {
   RrtPathPlanner planner;
 
-  World world;
-  Eigen::Vector3d start_pos;
-  Eigen::Vector3d start_vel;
-  Eigen::Vector3d goal_pos;
-  goal_pos.x() = 1.0;
-  Eigen::Vector3d goal_vel;
-  double time_step_size = 0.01;
+  Eigen::Vector3d start_pos(0, 0, 0);
+  Eigen::Vector3d goal_pos(1, 0, 0);
 
-  auto trajectory = planner.generatePath(world, start_pos, start_vel, goal_pos, goal_vel, time_step_size);
+  auto path = planner.generatePath({}, {}, {}, goal_pos);
 
-  for (const auto & sample : trajectory.samples) {
-    std::cout << sample.pose.x() << ", " << sample.pose.y() << '\n';
-  }
+  ASSERT_EQ(path.samples.size(), 2u);
+  EXPECT_PRED2(vectorsAreNear, path.samples.front().pose, start_pos);
+  EXPECT_PRED2(vectorsAreNear, path.samples.back().pose, goal_pos);
+}
 
-  EXPECT_FALSE(trajectory.samples.empty());
+TEST(RrtPathPlannerTests, avoidOneObstacle) {
+  RrtPathPlanner planner;
 
-  FAIL();
+  Eigen::Vector3d start_pos(0, 0, 0);
+  Eigen::Vector3d goal_pos(2, 0, 0);
+
+  std::vector<ateam_geometry::AnyShape> obstacles = {
+    ateam_geometry::makeCircle(ateam_geometry::Point(1, 0), 0.09)
+  };
+
+  auto path = planner.generatePath({}, obstacles, start_pos, goal_pos);
+
+  ASSERT_FALSE(path.samples.empty());
+  EXPECT_PRED2(vectorsAreNear, path.samples.front().pose, start_pos);
+  EXPECT_PRED2(vectorsAreNear, path.samples.back().pose, goal_pos);
+
+  // Expect that no trajectory sample is colliding with the obstacle
+  // Using a simple distance check since we know the robot and obstacle are circles
+  EXPECT_TRUE(
+    std::none_of(
+      path.samples.begin(), path.samples.end(), [](const auto & sample) {
+        return (sample.pose.head(2) - Eigen::Vector2d(1, 0)).norm() < 0.18;
+      }));
 }
