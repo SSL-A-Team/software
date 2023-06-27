@@ -18,24 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <Eigen/Dense>
+#ifndef ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
+#define ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
 
-#include <gtest/gtest.h>
-#include "gmock/gmock.h"
+#include "types.hpp"
 
-#include "ateam_geometry/utilities.hpp"
+namespace ateam_geometry
+{
 
-namespace geometry = ateam_geometry;
-
-TEST(CrossProduct, cross_product_2d) {
-  auto v1 = Eigen::Vector2d(0, 0);
-  auto v2 = Eigen::Vector2d(1, 1);
-  auto v3 = Eigen::Vector2d(-2, 2);
-  auto v4 = Eigen::Vector2d(-1, -1);
-
-  EXPECT_THAT(geometry::cross_product_2d(v1, v2), testing::DoubleEq(0));
-  EXPECT_THAT(geometry::cross_product_2d(v2, v3), testing::DoubleEq(4));
-  EXPECT_THAT(geometry::cross_product_2d(v3, v2), testing::DoubleEq(-4));
-  EXPECT_THAT(geometry::cross_product_2d(v2, v2), testing::DoubleEq(0));
-  EXPECT_THAT(geometry::cross_product_2d(v2, v4), testing::DoubleEq(0));
+/**
+ * @brief Factory utility to work around CGAL wanting the squared radius in the circle constructor.
+ *
+ * @param center Center point of the circle
+ * @param radius Radius of the circle
+ * @return Circle
+ */
+inline Circle makeCircle(Point center, double radius)
+{
+  return ateam_geometry::Circle(center, radius * radius);
 }
+
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_

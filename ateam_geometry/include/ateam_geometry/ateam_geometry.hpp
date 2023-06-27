@@ -18,33 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__RECTANGLE_HPP_
-#define ATEAM_GEOMETRY__RECTANGLE_HPP_
+#ifndef ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+#define ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
 
-#include <Eigen/Dense>
-#include <array>
+// This is a convenience header for including all ateam_geometry utilities
 
-namespace ateam_geometry
-{
-class Rectangle
-{
-public:
-  Rectangle(const Eigen::Vector2d & v1, const Eigen::Vector2d & v2);
+#include "eigen_conversions.hpp"
+#include "make_circle.hpp"
+#include "types.hpp"
+#include "variant_do_intersect.hpp"
 
-  Eigen::Vector2d get_center();
-  double get_area();
-  std::array<Eigen::Vector2d, 4> get_corners();
-
-private:
-  double width;
-  double height;
-  double area;
-  Eigen::Vector2d center;
-  std::array<Eigen::Vector2d, 4> corners;
-};
-
-bool is_point_in_rectangle(Eigen::Vector2d & point, const Rectangle & rect);
-
-}  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__RECTANGLE_HPP_
+#endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
