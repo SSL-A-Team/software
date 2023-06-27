@@ -17,40 +17,38 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-#define _USE_MATH_DEFINES
+
+#ifndef ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
+#define ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
 
 #include <Eigen/Dense>
-#include <cmath>
-#include "ateam_geometry/circle.hpp"
-#include "ateam_geometry/segment.hpp"
+#include "types.hpp"
 
 namespace ateam_geometry
 {
-Circle::Circle(const Eigen::Vector2d & c, const double & r)
-: center(c), radius(r) {}
 
-std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
-  const int & num_points,
-  const double & offset = 0.0)
+/**
+ * @brief Convert geometry point to Eigen Vector2d
+ *
+ * @param p geometry point object
+ * @return Eigen::Vector2d
+ */
+inline Eigen::Vector2d PointToEigen(const Point & p)
 {
-  std::vector<Eigen::Vector2d> points;
-  // Assume we want to return more than 1 point...
-  // If this is not the case, don't do any more calculations and return
-  // an empty vector
-  if (num_points < 2) {
-    return points;
-  }
-  double spacing = (2 * M_PI) / num_points;
-  for (int i = 0; i < num_points; ++i) {
-    Eigen::Vector2d point =
-      LineSegment(center, radius, offset + (i * spacing)).p2;
-    points.push_back(point);
-  }
-  return points;
+  return {p.x(), p.y()};
 }
 
-bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle)
+/**
+ * @brief Convert Eigen Vector2d to geometry point
+ *
+ * @param p Eigen Vector2d object
+ * @return Point
+ */
+inline Point EigenToPoint(const Eigen::Vector2d & p)
 {
-  return (point - circle.center).norm() <= circle.radius;
+  return Point(p.x(), p.y());
 }
+
 }  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_

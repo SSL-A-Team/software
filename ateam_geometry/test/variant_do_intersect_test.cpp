@@ -18,28 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__CIRCLE_HPP_
-#define ATEAM_GEOMETRY__CIRCLE_HPP_
+#include <gtest/gtest.h>
 
-#include <Eigen/Dense>
-#include <vector>
+#include "ateam_geometry/types.hpp"
+#include "ateam_geometry/variant_do_intersect.hpp"
 
-namespace ateam_geometry
+TEST(VariantDoIntersect, CircleToAnyIntersection)
 {
-class Circle
-{
-public:
-  Circle(const Eigen::Vector2d & center, const double & radius);
+  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::AnyShape b = ateam_geometry::Circle(ateam_geometry::Point(1, 0), 1);
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
 
-  std::vector<Eigen::Vector2d> get_equally_spaced_points(
-    const int & num_points,
-    const double & offset);
-
-  Eigen::Vector2d center;
-  double radius;
-};
-
-bool is_point_in_circle(const Eigen::Vector2d & point, const Circle & circle);
-}  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__CIRCLE_HPP_
+  a = ateam_geometry::Circle(ateam_geometry::Point(-2, 0), 1);
+  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+}
