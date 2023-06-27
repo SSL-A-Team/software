@@ -31,7 +31,10 @@
 #include "plays/kickoff.hpp"
 #include "plays/shoot.hpp"
 
-CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
+#include "util/kickoff_detector.hpp"
+
+
+CREATE_PARAM(double, "behavior_evaluator", kRotationSpeed, 0.005);
 
 BehaviorEvaluator::BehaviorEvaluator(BehaviorRealization & behavior_realization)
 : behavior_realization(behavior_realization) {}
