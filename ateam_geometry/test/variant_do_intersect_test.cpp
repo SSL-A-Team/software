@@ -18,24 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <Eigen/Dense>
-
 #include <gtest/gtest.h>
-#include "gmock/gmock.h"
 
-#include "ateam_geometry/utilities.hpp"
+#include "ateam_geometry/types.hpp"
+#include "ateam_geometry/variant_do_intersect.hpp"
 
-namespace geometry = ateam_geometry;
+TEST(VariantDoIntersect, CircleToAnyIntersection)
+{
+  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::AnyShape b = ateam_geometry::Circle(ateam_geometry::Point(1, 0), 1);
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
 
-TEST(CrossProduct, cross_product_2d) {
-  auto v1 = Eigen::Vector2d(0, 0);
-  auto v2 = Eigen::Vector2d(1, 1);
-  auto v3 = Eigen::Vector2d(-2, 2);
-  auto v4 = Eigen::Vector2d(-1, -1);
-
-  EXPECT_THAT(geometry::cross_product_2d(v1, v2), testing::DoubleEq(0));
-  EXPECT_THAT(geometry::cross_product_2d(v2, v3), testing::DoubleEq(4));
-  EXPECT_THAT(geometry::cross_product_2d(v3, v2), testing::DoubleEq(-4));
-  EXPECT_THAT(geometry::cross_product_2d(v2, v2), testing::DoubleEq(0));
-  EXPECT_THAT(geometry::cross_product_2d(v2, v4), testing::DoubleEq(0));
+  a = ateam_geometry::Circle(ateam_geometry::Point(-2, 0), 1);
+  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
 }

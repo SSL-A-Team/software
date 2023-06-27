@@ -18,44 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__UTILITIES_HPP_
-#define ATEAM_GEOMETRY__UTILITIES_HPP_
+#ifndef ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
+#define ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
 
 #include <Eigen/Dense>
-#include <math.h>
+#include "types.hpp"
 
 namespace ateam_geometry
 {
-/* We define the 2D cross product here between two vectors w and v
-as w_x * v_y - w_y * w_x
-This is used for determining whether two line segments intersect
 
-The implementation used is based off of this StackOverflow post
-https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect*/
-double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v)
+/**
+ * @brief Convert geometry point to Eigen Vector2d
+ *
+ * @param p geometry point object
+ * @return Eigen::Vector2d
+ */
+inline Eigen::Vector2d PointToEigen(const Point & p)
 {
-  return (w.x() * v.y()) - (w.y() * v.x());
+  return {p.x(), p.y()};
 }
 
-/* Sort Eigen::Vector types starting with index 0 up to the max index.
-Basically if in a dimension x > y, then return true,
-else, check the next dimension (unless it doesn't exist)
-*/
-bool sort_eigen_2d_high_low(const Eigen::Vector2d &a, const Eigen::Vector2d &b)
+/**
+ * @brief Convert Eigen Vector2d to geometry point
+ *
+ * @param p Eigen Vector2d object
+ * @return Point
+ */
+inline Point EigenToPoint(const Eigen::Vector2d & p)
 {
-  bool a_higher = false;
-  for (size_t i = 0; i < a.size(); ++i){
-    if (a[i] > b[i]) {
-      a_higher = true;
-      return a_higher;
-    } else if (a[i] < b[i]){
-      a_higher = false;
-      return a_higher;
-    }
-  }
-  return a_higher;
+  return Point(p.x(), p.y());
 }
 
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__UTILITIES_HPP_
+#endif  // ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_

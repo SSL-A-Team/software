@@ -18,28 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__CIRCLE_HPP_
-#define ATEAM_GEOMETRY__CIRCLE_HPP_
+#ifndef ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+#define ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
 
-#include <Eigen/Dense>
-#include <vector>
+// This is a convenience header for including all ateam_geometry utilities
 
-namespace ateam_geometry
-{
-class Circle
-{
-public:
-  Circle(const Eigen::Vector2d & center, const double & radius);
+#include "eigen_conversions.hpp"
+#include "make_circle.hpp"
+#include "types.hpp"
+#include "variant_do_intersect.hpp"
 
-  std::vector<Eigen::Vector2d> get_equally_spaced_points(
-    const int & num_points,
-    const double & offset);
-
-  Eigen::Vector2d center;
-  double radius;
-};
-
-bool is_point_in_circle(const Eigen::Vector2d & point, const Circle & circle);
-}  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__CIRCLE_HPP_
+#endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_

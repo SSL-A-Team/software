@@ -17,40 +17,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-#define _USE_MATH_DEFINES
 
-#include <Eigen/Dense>
-#include <cmath>
-#include "ateam_geometry/circle.hpp"
-#include "ateam_geometry/segment.hpp"
+#ifndef ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
+#define ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
+
+#include "types.hpp"
 
 namespace ateam_geometry
 {
-Circle::Circle(const Eigen::Vector2d & c, const double & r)
-: center(c), radius(r) {}
 
-std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
-  const int & num_points,
-  const double & offset = 0.0)
+/**
+ * @brief Factory utility to work around CGAL wanting the squared radius in the circle constructor.
+ *
+ * @param center Center point of the circle
+ * @param radius Radius of the circle
+ * @return Circle
+ */
+inline Circle makeCircle(Point center, double radius)
 {
-  std::vector<Eigen::Vector2d> points;
-  // Assume we want to return more than 1 point...
-  // If this is not the case, don't do any more calculations and return
-  // an empty vector
-  if (num_points < 2) {
-    return points;
-  }
-  double spacing = (2 * M_PI) / num_points;
-  for (int i = 0; i < num_points; ++i) {
-    Eigen::Vector2d point =
-      LineSegment(center, radius, offset + (i * spacing)).p2;
-    points.push_back(point);
-  }
-  return points;
+  return ateam_geometry::Circle(center, radius * radius);
 }
 
-bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle)
-{
-  return (point - circle.center).norm() <= circle.radius;
-}
 }  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
