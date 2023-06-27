@@ -76,6 +76,7 @@ export class Robot {
         container.position.x = this.pose.position.x * scale;
         container.position.y = this.pose.position.y * scale;
         container.getChildAt(0).angle = this.rotation() - 90;
+        container.visible = this.visible;
     }
 
     draw(container: PIXI.Container, renderConfig: RenderConfig) {
