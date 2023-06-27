@@ -27,9 +27,27 @@
 namespace ateam_geometry
 {
 
-Eigen::Vector2d PointToEigen(const Point & p);
+/**
+ * @brief Convert geometry point to Eigen Vector2d
+ *
+ * @param p geometry point object
+ * @return Eigen::Vector2d
+ */
+inline Eigen::Vector2d PointToEigen(const Point & p)
+{
+  return {p.x(), p.y()};
+}
 
-Point EigenToPoint(const Eigen::Vector2d & p);
+/**
+ * @brief Convert Eigen Vector2d to geometry point
+ *
+ * @param p Eigen Vector2d object
+ * @return Point
+ */
+inline Point EigenToPoint(const Eigen::Vector2d & p)
+{
+  return Point(p.x(), p.y());
+}
 
 }  // namespace ateam_geometry
 

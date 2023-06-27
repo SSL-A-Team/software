@@ -57,8 +57,7 @@ public:
         } else {
           RCLCPP_WARN(get_logger(), "Failed to parse vision protobuf packet");
         }
-      })
-  {
+      }) {
     SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
     vision_publisher_ = create_publisher<ssl_league_msgs::msg::VisionWrapper>(
       std::string(Topics::kVisionMessages),

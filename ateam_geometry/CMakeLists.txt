@@ -13,16 +13,13 @@ set(CGAL_DATA_DIR ".") # Silence CGAL warning since we don't use its data direct
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
 find_package(CGAL REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED
-  src/eigen_conversions.cpp
-)
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
+add_library(${PROJECT_NAME} INTERFACE)
+target_include_directories(${PROJECT_NAME} INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
-ament_target_dependencies(${PROJECT_NAME}
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+ament_target_dependencies(${PROJECT_NAME} INTERFACE
   Eigen3
   CGAL
 )

@@ -1,4 +1,5 @@
 <launch>
   <arg name="config_directory" default="$(find-pkg-share ateam_bringup)/gc_config" />
-  <executable cmd="docker run --net host -v $(var config_directory):/config --rm robocupssl/ssl-game-controller" output="screen" />
+  <arg name="data_directory" default="$(find-pkg-share ateam_bringup)/data" />
+  <executable cmd="docker run --net host -v $(var config_directory):/config --rm robocupssl/ssl-game-controller" output="screen" respawn="True"/>
 </launch>

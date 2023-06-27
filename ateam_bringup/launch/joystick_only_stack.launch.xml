@@ -1,4 +1,4 @@
 <launch>
   <include file="$(find-pkg-share ateam_joystick_control)/launch/joystick_controller.launch.xml"/>
-  <node name="radio_bridge" pkg="ateam_radio_bridge" exec="radio_bridge_node" />
+  <node name="radio_bridge" pkg="ateam_radio_bridge" exec="radio_bridge_node" respawn="True"/>
 </launch>

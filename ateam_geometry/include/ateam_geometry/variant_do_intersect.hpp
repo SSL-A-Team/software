@@ -27,6 +27,19 @@
 namespace ateam_geometry
 {
 
+/**
+ * @brief Check if two geometry objects intersect.
+ *
+ * Intersection semantics are the same as @c CGAL::do_intersect
+ *
+ * @note When not using AnyShape, use @c CGAL::do_intersect
+ *
+ * @tparam ObjA Type of the non-variant geometry object
+ * @param object_a A geometry object
+ * @param object_b A variant holding a geometry object
+ * @return true The two objects intersect
+ * @return false The two objects do not intersect
+ */
 template<typename ObjA>
 bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
 {
@@ -36,6 +49,18 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
     }, object_b);
 }
 
+/**
+ * @brief Check if two AnyShape variants intersect.
+ *
+ * Intersection semantics are the same as @c CGAL::do_intersect
+ *
+ * @note When not using AnyShape, use @c CGAL::do_intersect
+ *
+ * @param object_a A variant holding a geometry object
+ * @param object_b A variant holding a geometry object
+ * @return true The two geometry objects intersect
+ * @return false The two geometry objects do not intersect
+ */
 bool variantDoIntersect(const AnyShape & object_a, const AnyShape & object_b)
 {
   return std::visit(
