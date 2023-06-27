@@ -43,9 +43,9 @@ enum gameCommand {
 export class Referee {
     stage: gameStage = gameStage.STAGE_NORMAL_FIRST_HALF_PRE;
     stage_time_left: number;
-    command: gameCommand;
-    command_counter: number;
-    command_timestamp: number; // May need to write a handler for this
+    command: gameCommand = gameCommand.COMMAND_HALT;
+    command_counter: number = 0;
+    command_timestamp: number = 0; // May need to write a handler for this
     
     yellow: TeamInfo;
     blue: TeamInfo;
@@ -57,4 +57,12 @@ export class Referee {
     current_action_time_remaining: number;
 
     // TODO: Add game_events[]
+
+    getGoalie(team: TeamColor): string {
+        if (this[team] && this[team].goalkeeper != null && this[team].goalkeeper != undefined) {
+            return this[team].goalkeeper;
+        }
+
+        return "X"
+    }
 }

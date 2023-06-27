@@ -16,6 +16,7 @@ export class WorldState {
     teams: Team[];
     ball: Ball;
     field: Field;
+    referee: Referee
 
     constructor() {
         this.team = TeamColor.Blue;
@@ -25,6 +26,8 @@ export class WorldState {
 
         this.ball = new Ball();
         this.field = new Field();
+
+        this.referee = new Referee();
     }
 }
 
@@ -38,8 +41,6 @@ export class AppState {
     subscriptions: ROSLIB.Topic[]
     services: ROSLIB.Service[]
 
-    referee: Referee
-
     sim: boolean = true;
 
     setGoalie(goalie_id) {
@@ -51,6 +52,18 @@ export class AppState {
             function(result) {
                 // is there anything we need to do with this?
             });
+    }
+
+    getGoalie(): string {
+        if (this.world.referee && this.world.referee[this.world.team]) {
+            if (this.world.referee[this.world.team] == null) {
+                return "X";
+            }
+
+            return this.world.referee[this.world.team].goalkeeper;
+        }
+
+        return "X";
     }
 
     // TODO: figure out how to type ROSLIB Messages, the Message type doesn't seem to work properly
@@ -121,8 +134,8 @@ export class AppState {
 	    const state = this; // fix dumb javascript things
 	    return function(msg:any) {
             // TODO: Check how well this works, the referee class doesn't exactly match Referee.msg type
-            for (const member of Object.getOwnPropertyNames(state.referee)) {
-                state.referee[member] = msg[member];
+            for (const member of Object.getOwnPropertyNames(state.world.referee)) {
+                state.world.referee[member] = msg[member];
             }
         }
     }
@@ -134,8 +147,6 @@ export class AppState {
         this.publishers = [];
         this.subscriptions = [];
         this.services = [];
-
-        this.referee = new Referee();
 
         // Configure ROS
         this.ros = new ROSLIB.Ros({

@@ -1,9 +1,7 @@
 <template>
     <v-container class="d-flex flex-column">
-        <v-row ref="goalie" align="center">
-            <p>Goalie:</p>
-            <v-select label="ID" :items="Array.from({length: 16}, (value, index) => index)" density="compact" variant="solo" @update:modelValue="setGoalie"/>
-        </v-row>
+        <p>Goalie ID: {{this.state.getGoalie()}}</p>
+            <v-select label="set ID" :items="Array.from({length: 16}, (value, index) => index)" density="compact" variant="solo" @update:modelValue="setGoalie"/>
         <div ref="placeholder">
             Add STATUS, manual control here
         </div>
