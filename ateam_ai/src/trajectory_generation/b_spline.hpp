@@ -41,6 +41,9 @@ struct Input {
   std::vector<Eigen::Vector2d> data_points;
   Eigen::Vector2d initial_vel;
   Eigen::Vector2d end_vel;
+
+  double max_accel;
+  double max_vel;
 };
 
 struct InternalState {
@@ -49,7 +52,25 @@ struct InternalState {
   std::vector<double> knot_sequence_with_multiplicity;
 };
 
-void sample_spline(const InternalState & state);
+struct Output {
+  struct Sample2d {
+    Eigen::Vector2d p;
+    double v;
+    double a;
+  };
+  std::vector<Sample2d> samples;
+};
+
+/**
+ * Build and sample the spline |num_samples| number of times
+*/
+Output build_and_sample_spline(const Input & input, const std::size_t num_samples);
+
+/**
+ * Given the internal control and knot sequences.
+ * Produce a series of equally sampled points along the spline
+*/
+std::vector<Eigen::Vector2d> sample_spline(const InternalState & state, const std::size_t num_samples);
 
 /**
  * Convert the data points to a series of control points and knots

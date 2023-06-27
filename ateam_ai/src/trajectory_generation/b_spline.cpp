@@ -20,19 +20,144 @@
 
 #include "trajectory_generation/b_spline.hpp"
 
-// #include <algorithm>
 #include <iostream>
+#include <deque>
 
 namespace BSpline {
 
-void sample_spline(const InternalState & state) {
+Output build_and_sample_spline(const Input & input, const std::size_t num_samples) {
+  std::vector<Eigen::Vector2d> sample_poses = sample_spline(convert_to_spline(input), num_samples);
+  double length = 0.0;
+  for (int i = 1; i < sample_poses.size(); i++) {
+    length += (sample_poses.at(i) - sample_poses.at(i - 1)).norm();
+  }
+
+  std::deque<double> sample_curvatures;
+  for (int i = 2; i < sample_poses.size(); i++) {
+    Eigen::Vector2d diff2 = (sample_poses.at(i) - sample_poses.at(i - 1));
+    Eigen::Vector2d diff1 = (sample_poses.at(i - 1) - sample_poses.at(i - 2));
+    Eigen::Vector2d avg_diff = (diff1 + diff2) / 2;
+    Eigen::Vector2d diffdiff = diff2 - diff1;
+    double curvature = std::abs((avg_diff.x() * diffdiff.y() - avg_diff.y() * diffdiff.x()) / std::pow(avg_diff.squaredNorm(), 1.5));
+    sample_curvatures.push_back(curvature);
+  }
+  // Because we need the second derivative, we "lose" 2 samples
+  // Add duplicates at the front and back to keep everything the same length
+  sample_curvatures.push_front(sample_curvatures.front());
+  sample_curvatures.push_back(sample_curvatures.back());
+
+
+  std::cout << "Forward pass" << std::endl;
+  // Start forward pass
+  std::vector<double> speed{input.initial_vel.norm()};
+  std::vector<double> accel{input.max_accel};
+  for (int i = 1; i < sample_poses.size(); i++) {
+    double d = (sample_poses.at(i) - sample_poses.at(i - 1)).norm();
+    // given d = v * t + 1/2 * a * t^2, solve for t
+    // Gives 2 options, time will always be positive
+    double a = accel.at(i - 1);
+    double v = speed.at(i - 1);
+    double t1 = -1 * (sqrt(2 * a * d + v*v) + v) / a;
+    double t2 = (sqrt(2 * a * d + v*v) - v) / a;
+    // Quick hack for a == 0
+    if (std::abs(a) < 1e-5) {
+      t1 = d / v;
+      t2 = d / v;
+    }
+    double t = std::max(t1, t2);
+    std::cout << "\t\t" << t1 << " " << t2 << std::endl;
+
+    // Target vel is just the choice from last step
+    double target_vel = v + a * t;
+    // Only accel up to limit
+    double normal_acceleration_from_curvature = sample_curvatures.at(i) * target_vel * target_vel;
+    double target_accel = std::max(input.max_accel - normal_acceleration_from_curvature, 0.0);
+
+    // If we are too fast, calculate the max speed at this point and hard set the target vel to that
+    // and set target accel to 0
+    if (sample_curvatures.at(i) * target_vel * target_vel > input.max_accel) {
+      target_vel = sqrt(input.max_accel / sample_curvatures.at(i));
+      target_accel = (target_vel - target_vel) / t;
+    }
+
+    // Limit vel if too fast
+    if (target_vel >= input.max_vel) {
+      target_accel = 0;  // Not actually correct but it's easier
+      target_vel = input.max_vel;
+    }
+
+    std::cout << "\t" << target_vel << " " << target_accel << std::endl;
+    speed.push_back(target_vel);
+    accel.push_back(target_accel);
+  }
+
+  // Hard lock the last frame to the end
+  // Max result in discontinuous samples
+  speed.back() = input.end_vel.norm();
+  accel.back() = -input.max_accel;
+
+  std::cout << "Backward pass" << std::endl;
+  // start backward pass
+  for (int i = sample_poses.size() - 1; i >= 1; i--) {
+    double d = (sample_poses.at(i) - sample_poses.at(i - 1)).norm();
+    // given d = v * t + 1/2 * a * t^2, solve for t
+    // Gives 2 options, time will always be positive
+    double a = std::abs(accel.at(i));
+    double v = std::abs(speed.at(i));
+
+    double t1 = -1 * (sqrt(2 * a * d + v*v) + v) / a;
+    double t2 = (sqrt(2 * a * d + v*v) - v) / a;
+    if (std::abs(a) < 1e-5) {
+      t1 = d / v;
+      t2 = d / v;
+    }
+    double t = std::max(t1, t2);
+    std::cout << "\t\t" << t1 << " " << t2 << std::endl;
+
+    double normal_acceleration_from_curvature = sample_curvatures.at(i) * v * v;
+    double target_accel = -std::max(input.max_accel - normal_acceleration_from_curvature, 0.0);
+    double target_vel = v - target_accel * t;
+
+    // If we are too fast, calculate the max speed at this point and hard set the target vel to that
+    // and set target accel to 0
+    if (sample_curvatures.at(i) * target_vel * target_vel > input.max_accel) {
+      target_vel = sqrt(input.max_accel / sample_curvatures.at(i));
+      target_accel = -(target_vel - target_vel) / t;
+    }
+
+    // Limit vel
+    if (target_vel >= input.max_vel) {
+      target_accel = 0;
+      target_vel = input.max_vel;
+    }
+
+    std::cout << "\t" << target_vel << " " << target_accel << std::endl;
+    if (target_vel < speed.at(i - 1)) {
+      speed.at(i - 1) = target_vel;
+      accel.at(i - 1) = target_accel;
+    }
+  }
+
+  Output out;
+  for (int i = 0; i < sample_poses.size(); i++) {
+    out.samples.push_back(Output::Sample2d{.p = sample_poses.at(i), .v = speed.at(i), .a = accel.at(i)});
+  }
+
+  return out;
+}
+
+std::vector<Eigen::Vector2d> sample_spline(const InternalState & state, const std::size_t num_samples) {
+  //todo end samples may be bad
+  // deboors is too close to zero
   std::cout << "Samples" << std::endl;
   std::vector<Eigen::Vector2d> samples;
-  for (int i = 0; i <= 10; i++) {
-    samples.push_back(de_boors_algorithm(i * 0.1, 3, state.control_points, state.knot_sequence_with_multiplicity));
+  for (int i = 0; i <= num_samples; i++) {
+    samples.push_back(de_boors_algorithm(i * 1.0 / num_samples, 3, state.control_points, state.knot_sequence_with_multiplicity));
 
-    std::cout << "(" << i * 0.1 << ") " << samples.back().x() << " " << samples.back().y() << std::endl;
+    std::cout << "(" << i * 1.0 / num_samples << ") " << samples.back().x() << " " << samples.back().y() << std::endl;
   }
+
+  return samples;
 }
 
 InternalState convert_to_spline(const Input & input) {
@@ -255,55 +380,43 @@ std::vector<Eigen::Vector2d> knot_points(const std::size_t degree, const std::ve
 }
 
 Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, const std::vector<Eigen::Vector2d> & control_points, const std::vector<double> & knot_sequence) {
-  // Using variables from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/de-Boor.html
+  // Taking the example implementation with the extra programming optimization
+  // from https://en.wikipedia.org/wiki/De_Boor%27s_algorithm#Example_implementation
+
+  // This feels wrong deduping the knots, I think it's needed though?
+  std::vector<double> un_dup_knots;
+  for (const auto & knot : knot_sequence) {
+    if (un_dup_knots.empty() || un_dup_knots.back() != knot) {
+      un_dup_knots.push_back(knot);
+    }
+  }
+
+  // Need to pad each side with |degree| knots, so multiplicity |degree| + 1
+  std::vector<double> t = apply_multiplicity(un_dup_knots, degree + 1);
 
   // Find the range [u_k, u_k+1) at which u fits within the squence
   std::size_t k;
-  std::size_t equal_count = 0;
-  for (k = 0; k < knot_sequence.size() - 1; k++) {
-    if (u >= knot_sequence.at(k) && u < knot_sequence.at(k + 1)) {
+  for (k = 0; k < t.size() - 1; k++) {
+    // If u == 1, return the range [prev_knot, 1) instead of [1,)
+    if (u >= t.at(k) && u < t.at(k + 1) || t.at(k + 1) == 1.0) {
       break;
     }
   }
 
-  // Knots are strictly ascending so any that match will be grouped
-  for (const auto & knot : knot_sequence) {
-    if (u == knot) {
-      equal_count++;
+  // Section below is direct implementation of the algorithms
+  std::vector<Eigen::Vector2d> d;
+  for (int j = 0; j < degree + 1; j++) {
+    d.push_back(control_points.at(j + k - degree));
+  }
+
+  for (int r = 1; r < degree + 1; r++) {
+    for (int j = degree; j > r - 1; j--) {
+      double alpha = (u - t.at(j + k - degree)) / (t.at(j + 1 + k - r) - t.at(j + k - degree));
+      d.at(j) = (1.0 - alpha) * d.at(j - 1) + alpha * d.at(j);
     }
   }
 
-  auto clip_idx = [](const auto & vector, const int & idx) {
-    return std::min(std::max(idx, 0), static_cast<int>(vector.size()) - 1);
-  };
-
-  // Number of times to insert the control point in the squence
-  // Want equal to degree such that the curve moves through the specific control point
-  // The total number can include a number of points already within control point list
-  const std::size_t h = std::max(degree - equal_count, 0ul);
-  const std::size_t s = equal_count;
-
-  // If we already have enough multiplicity, just return the control point
-  if (degree == s) {
-    return control_points.at(clip_idx(control_points, k - s));
-  }
-
-  // Copy the control points that detail the curve at this point
-  std::unordered_map<int, std::unordered_map<int, Eigen::Vector2d>> affected_control_points;
-  for (int i = k - s; i >= static_cast<int>(k) - static_cast<int>(degree); i--) {
-    affected_control_points[i][0] = control_points.at(clip_idx(control_points, i));
-  }
-
-  // Use a corner cutting process to figure out the location on the curve
-  for (std::size_t r = 1; r <= h; r++) {
-    for (std::size_t i = k - degree + r; i <= k - s; i++) {
-      double a_i_r = (u - knot_sequence.at(i)) / (knot_sequence.at(i + degree - r + 1) - knot_sequence.at(i));
-
-      affected_control_points[i][r] = (1 - a_i_r) * affected_control_points[i - 1][r - 1] + a_i_r * affected_control_points[i][r - 1];
-    }
-  }
-
-  return affected_control_points[k - s][degree - s];
+  return d.at(degree);
 }
 
 }  // BSpline

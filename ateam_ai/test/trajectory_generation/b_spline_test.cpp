@@ -230,12 +230,35 @@ TEST(b_spline, convert_to_spline)
   auto out = BSpline::convert_to_spline(i);
 }
 
-TEST(b_spline, sample_spline)
+TEST(b_spline, sample_spline_ShouldReturnIncrease_When6Points)
 {
   BSpline::Input i;
   i.data_points = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
   i.initial_vel = {0, 0};
   i.end_vel = {0, 0};
 
-  BSpline::sample_spline(BSpline::convert_to_spline(i));
+  auto out = BSpline::sample_spline(BSpline::convert_to_spline(i), 20);
+
+  for (int i = 1; i < out.size(); i++) {
+    Eigen::Vector2d diff = out.at(i) - out.at(i - 1);
+    EXPECT_EQ(diff.x(), diff.y());
+    EXPECT_GT(diff.x(), 0);
+    EXPECT_GT(diff.y(), 0);
+  }
+}
+
+TEST(b_spline, build_and_sample_spline)
+{
+  BSpline::Input i;
+  i.data_points = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
+  i.initial_vel = {1, 1};
+  i.end_vel = {0, 0};
+  i.max_accel = 1;
+  i.max_vel = 2;
+
+  auto out = BSpline::build_and_sample_spline(i, 30);
+
+  for (int i = 0; i < out.samples.size(); i++) {
+    std::cout << out.samples.at(i).p.x() << " " << out.samples.at(i).p.y() << " " << out.samples.at(i).v << " " << out.samples.at(i).a << std::endl;
+  }
 }
