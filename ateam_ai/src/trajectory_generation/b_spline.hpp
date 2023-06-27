@@ -44,6 +44,7 @@ struct Input {
 
   double max_accel;
   double max_vel;
+  double dt;
 };
 
 struct InternalState {
