@@ -94,7 +94,7 @@ export class Robot {
         // Error
 
         // Motor General/Hall
-        for (var i = 0; i < 4; i++) {
+        for (var i = 0; i < 5; i++) {
             if (this.status["motor_" + i + "_general_error"]) {
                 return ErrorLevel.Error;
             }
