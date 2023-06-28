@@ -32,4 +32,4 @@ constexpr double kRobotHeight = 0.15;
 const Eigen::Vector3d kMaxRobotVel = Eigen::Vector3d(2, 2, 0.5);
 const Eigen::Vector3d kMaxRobotAccel = Eigen::Vector3d(2, 2, 0.5);
 
-#endif // ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
+#endif  // ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
