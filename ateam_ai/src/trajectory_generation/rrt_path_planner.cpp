@@ -33,15 +33,19 @@ RrtPathPlanner::RrtPathPlanner()
   simple_setup_(state_space_),
   planner_(std::make_shared<ompl::geometric::RRTConnect>(simple_setup_.getSpaceInformation()))
 {
-  ompl::msg::setLogLevel(ompl::msg::LOG_ERROR);
+  // ompl::msg::setLogLevel(ompl::msg::LOG_ERROR);
   simple_setup_.setPlanner(planner_);
 }
 
 RrtPathPlanner::Path RrtPathPlanner::generatePath(
   const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles,
-  const Position & start_pos, const Position & goal_pos)
+  const Position & start_pos, const Position & goal_pos, const RrtOptions & options)
 {
   using ScopedState = ompl::base::ScopedState<ompl::base::SE2StateSpace>;
+
+  simple_setup_.clear();
+
+  planner_->as<ompl::geometric::RRTConnect>()->setRange(options.step_size);
 
   std::vector<ateam_geometry::AnyShape> obstacles_and_robots(obstacles);
   auto obstacle_from_robot = [](const std::optional<Robot> & robot) {
@@ -80,21 +84,22 @@ RrtPathPlanner::Path RrtPathPlanner::generatePath(
   simple_setup_.setStartAndGoalStates(start, goal);
 
   ompl::base::RealVectorBounds bounds(2);
-  bounds.setLow(-10);
-  bounds.setHigh(10);
+  bounds.setLow(0, (-0.5 * world.field.field_length) - world.field.boundary_width);
+  bounds.setHigh(0, (0.5 * world.field.field_length) + world.field.boundary_width);
+  bounds.setLow(1, (-0.5 * world.field.field_width) - world.field.boundary_width);
+  bounds.setHigh(1, (0.5 * world.field.field_width) + world.field.boundary_width);
   state_space_->setBounds(bounds);
-
-  // TODO(barulicm) set state space bounds based on field boundaries?
-
 
   simple_setup_.setStateValidityChecker(
     [this, &obstacles_and_robots](const ompl::base::State * s) {
       return isStateValid(s, obstacles_and_robots);
     });
 
-  auto planner_status = simple_setup_.solve(1.0 /* time limit in s */);
+  auto planner_status = simple_setup_.solve(options.time_limit);
 
-  if (!planner_status) {
+  std::cerr << "Planner status: " << planner_status.asString() << '\n';
+
+  if (planner_status != ompl::base::PlannerStatus::EXACT_SOLUTION) {
     // no solution found
     return {};
   }

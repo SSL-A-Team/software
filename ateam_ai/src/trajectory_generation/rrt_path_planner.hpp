@@ -34,6 +34,19 @@
 namespace ateam_ai::trajectory_generation
 {
 
+struct RrtOptions
+{
+  /**
+   * @brief Max planning time before planner will give up.
+   */
+  double time_limit = 2e-3;    // seconds
+
+  /**
+   * @brief Length of segments in the RRT tree
+   */
+  double step_size = 0.1;    // meters
+};
+
 class RrtPathPlanner
 {
 public:
@@ -44,7 +57,8 @@ public:
 
   Path generatePath(
     const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles,
-    const Position & start_pos, const Position & goal_pos);
+    const Position & start_pos, const Position & goal_pos,
+    const RrtOptions & options = RrtOptions());
 
 private:
   std::shared_ptr<ompl::base::SE2StateSpace> state_space_;

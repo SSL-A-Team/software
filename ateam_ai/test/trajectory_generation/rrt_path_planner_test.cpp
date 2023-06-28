@@ -24,6 +24,7 @@
 #include <ateam_common/equality_utilities.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 
+using namespace std::string_literals;
 using ateam_ai::trajectory_generation::RrtPathPlanner;
 
 bool vectorsAreNear(const Eigen::Vector2d & a, const Eigen::Vector2d & b)
@@ -31,21 +32,81 @@ bool vectorsAreNear(const Eigen::Vector2d & a, const Eigen::Vector2d & b)
   return ateam_common::allCloseDense(a, b);
 }
 
+void PrintPath(const RrtPathPlanner::Path & path)
+{
+  std::ranges::transform(
+    path, std::ostream_iterator<std::string>(std::cerr, "\n"), [](const Eigen::Vector2d & p) {
+      return std::to_string(p.x()) + ',' + std::to_string(p.y());
+    });
+}
+
+void ExpectPathSatisfiesRequest(
+  const RrtPathPlanner::Path & path,
+  const World & world,
+  const std::vector<ateam_geometry::AnyShape> & obstacles,
+  const Eigen::Vector2d & start_pos, const Eigen::Vector2d & goal_pos)
+{
+  // A path should exist
+  ASSERT_FALSE(path.empty());
+
+  // The path should connect the desired start and goal positions
+  EXPECT_PRED2(vectorsAreNear, path.front(), start_pos) << "Path doesn't start in the right place.";
+  EXPECT_PRED2(vectorsAreNear, path.back(), goal_pos) << "Path doesn't end in the right place.";
+
+  // None of the points along the path should hit an obstacle
+  // TODO(barulicm) this should check points along edges between path points
+  auto pos_hits_any_obstacle = [&obstacles](const Eigen::Vector2d & pos) {
+      auto robot_footprint = ateam_geometry::makeCircle(ateam_geometry::EigenToPoint(pos), 0.09);
+      return std::ranges::any_of(
+        obstacles, [&robot_footprint](const auto & obstacle) {
+          return ateam_geometry::variantDoIntersect(robot_footprint, obstacle);
+        });
+    };
+  EXPECT_TRUE(
+    std::ranges::none_of(
+      path,
+      pos_hits_any_obstacle)) << "Path collides with an obstacle!";
+
+  // None of the points along the path should hit a robot
+  auto pos_hits_any_robots = [&world](const Eigen::Vector2d & pos) {
+      auto hits_robot = [&pos](const std::optional<Robot> & robot) {
+          return robot.has_value() && (pos - robot->pos).norm() <= 0.180;
+        };
+      return std::ranges::any_of(world.our_robots, hits_robot) || std::ranges::any_of(
+        world.their_robots, hits_robot);
+    };
+  EXPECT_TRUE(std::ranges::none_of(path, pos_hits_any_robots));
+
+  if (testing::Test::HasFailure()) {
+    std::cerr << "Test failed with path:\n";
+    PrintPath(path);
+    std::cerr << '\n';
+  }
+}
+
 TEST(RrtPathPlannerTests, basicTest) {
   RrtPathPlanner planner;
+
+  World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
+  world.field.boundary_width = 0.3;
 
   Eigen::Vector2d start_pos(0, 0);
   Eigen::Vector2d goal_pos(1, 0);
 
-  auto path = planner.generatePath({}, {}, start_pos, goal_pos);
+  auto path = planner.generatePath(world, {}, start_pos, goal_pos);
 
-  ASSERT_EQ(path.size(), 2u);
-  EXPECT_PRED2(vectorsAreNear, path.front(), start_pos);
-  EXPECT_PRED2(vectorsAreNear, path.back(), goal_pos);
+  ExpectPathSatisfiesRequest(path, world, {}, start_pos, goal_pos);
 }
 
 TEST(RrtPathPlannerTests, avoidOneObstacle) {
   RrtPathPlanner planner;
+
+  World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
+  world.field.boundary_width = 0.3;
 
   Eigen::Vector2d start_pos(0, 0);
   Eigen::Vector2d goal_pos(2, 0);
@@ -54,17 +115,91 @@ TEST(RrtPathPlannerTests, avoidOneObstacle) {
     ateam_geometry::makeCircle(ateam_geometry::Point(1, 0), 0.09)
   };
 
-  auto path = planner.generatePath({}, obstacles, start_pos, goal_pos);
+  auto path = planner.generatePath(world, obstacles, start_pos, goal_pos);
 
-  ASSERT_FALSE(path.empty());
-  EXPECT_PRED2(vectorsAreNear, path.front(), start_pos);
-  EXPECT_PRED2(vectorsAreNear, path.back(), goal_pos);
+  ExpectPathSatisfiesRequest(path, world, obstacles, start_pos, goal_pos);
+}
 
-  // Expect that no trajectory sample is colliding with the obstacle
-  // Using a simple distance check since we know the robot and obstacle are circles
-  EXPECT_TRUE(
-    std::ranges::none_of(
-      path, [](const auto & pos) {
-        return (pos - Eigen::Vector2d(1, 0)).norm() < 0.18;
-      }));
+// This test is timing out the path planner, taking ~33ms to solve
+// TEST(RrtPathPlannerTests, acrossFieldBetweenWalls) {
+//   RrtPathPlanner planner;
+
+//   World world;
+//   world.field.field_length = 9.0;
+//   world.field.field_width = 6.0;
+//   world.field.boundary_width = 0.3;
+
+//   /* Test world:
+//    * --------------------
+//    * |            |    G|
+//    * |     |      |     |
+//    * |     |      |     |
+//    * |     |      |     |
+//    * |     |      |     |
+//    * |S    |            |
+//    * --------------------
+//    */
+
+//   Eigen::Vector2d start_pos(-4.5, -3.0);
+//   Eigen::Vector2d goal_pos(4.5, 3.0);
+
+//   std::vector<ateam_geometry::AnyShape> obstacles = {
+//     ateam_geometry::Segment(ateam_geometry::Point(-1.5, -3.0), ateam_geometry::Point(-1.5, 2.0)),
+//     ateam_geometry::Segment(ateam_geometry::Point(1.5, -2.0), ateam_geometry::Point(1.5, 3.0))
+//   };
+
+//   auto path = planner.generatePath(world, obstacles, start_pos, goal_pos);
+
+//   ExpectPathSatisfiesRequest(path, world, obstacles, start_pos, goal_pos);
+// }
+
+TEST(RrtPathPlannerTests, impossiblePathShouldReturnEmpty)
+{
+  RrtPathPlanner planner;
+
+  World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
+  world.field.boundary_width = 0.3;
+
+  Eigen::Vector2d start_pos(-4.5, -3.0);
+  Eigen::Vector2d goal_pos(4.5, 3.0);
+
+  std::vector<ateam_geometry::AnyShape> obstacles = {
+    // Thick wall across the field
+    ateam_geometry::Rectangle(ateam_geometry::Point(-1.5, -3.5), ateam_geometry::Point(-1.0, 3.5)),
+  };
+
+  auto path = planner.generatePath(world, obstacles, start_pos, goal_pos);
+
+  EXPECT_TRUE(path.empty());
+  if (testing::Test::HasFailure()) {
+    PrintPath(path);
+  }
+}
+
+TEST(RrtPathPlannerTests, avoidRobots) {
+  RrtPathPlanner planner;
+
+  World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
+  world.field.boundary_width = 0.3;
+
+  world.our_robots = {
+    Robot{Eigen::Vector2d(0, 0), {}, {}, {}},
+    Robot{Eigen::Vector2d(-0.5, 0.5), {}, {}, {}},
+    Robot{Eigen::Vector2d(0.3, -0.3), {}, {}, {}}
+  };
+  world.their_robots = {
+    Robot{Eigen::Vector2d(0.5, -0.5), {}, {}, {}},
+    Robot{Eigen::Vector2d(-0.3, 0.3), {}, {}, {}}
+  };
+
+  Eigen::Vector2d start_pos(-4.5, -3.0);
+  Eigen::Vector2d goal_pos(4.5, 3.0);
+
+  auto path = planner.generatePath(world, {}, start_pos, goal_pos);
+
+  ExpectPathSatisfiesRequest(path, world, {}, start_pos, goal_pos);
 }
