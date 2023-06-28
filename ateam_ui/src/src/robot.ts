@@ -95,11 +95,11 @@ export class Robot {
 
         // Motor General/Hall
         for (var i = 0; i < 4; i++) {
-            if (this.status["motor_" + i + "general_error"]) {
+            if (this.status["motor_" + i + "_general_error"]) {
                 return ErrorLevel.Error;
             }
 
-            if (this.status["motor_" + i + "hall_error"]) {
+            if (this.status["motor_" + i + "_hall_error"]) {
                 return ErrorLevel.Error;
             }
         }
