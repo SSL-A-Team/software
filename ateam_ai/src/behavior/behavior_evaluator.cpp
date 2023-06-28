@@ -31,8 +31,6 @@
 #include "plays/kickoff.hpp"
 #include "plays/shoot.hpp"
 
-#include "util/kickoff_detector.hpp"
-
 
 CREATE_PARAM(double, "behavior_evaluator", kRotationSpeed, 0.005);
 
@@ -53,6 +51,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   ateam_common::GameStage current_game_stage = world.referee_info.current_game_stage;
   ateam_common::GameCommand running_command = world.referee_info.running_command;
 
+  kickoff_detector.update(world);
   DirectedGraph<BehaviorGoal> behavior_out {};
   switch (running_command) {
     case ateam_common::GameCommand::Halt:
@@ -62,6 +61,14 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
       generate_halt(world);
       break;
     case ateam_common::GameCommand::NormalStart:
+        if (kickoff_detector.output_state == KickoffState::KickoffTheirs) {
+            // we have to wait for them to kick, movement lock still in effect
+        } else if (kickoff_detector.output_state == KickoffState::KickoffOurs) {
+            // we can kick now only with the kicker, movement lock still in effect
+        } else {
+            // free play
+            generate_basic_shoot(world);
+        }
     case ateam_common::GameCommand::ForceStart:
       generate_basic_shoot(world);
       break;
@@ -69,6 +76,7 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
       setup_our_kickoff(world);
       break;
     case ateam_common::GameCommand::PrepareKickoffTheirs:
+
       break;
     case ateam_common::GameCommand::PreparePenaltyOurs:
       break;
