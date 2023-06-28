@@ -37,6 +37,7 @@ DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const Fi
     defense_graph.add_node(goalie);
 };
 
+// TODO(Christian) : Fix this
 BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info){
     // Sort the corners with top right at index 0 and bottom left at index 2
     std::array<Eigen::Vector2d> defense_area = std::sort(our_side_info.goalie_corners.begin(),
@@ -50,10 +51,21 @@ BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info){
     );
 
     // Have the goalie defend the goal
-    BehaviorGoal goalie {
+    return BehaviorGoal goalie {
         BehaviorGoal::Type::MoveToPoint,
         BehaviorGoal::Priority::Required,
         MoveParam(_goalie_point)
     };
 }
+// TODO(Christian) : Finish this
+std::vector<BehaviorGoal> get_defense_behavior_goals(const World & world, const Field & field, const int & num_defenders){
+    std::vector<BehaviorGoal> defenders;
+
+    // Get line between the ball and the goal
+    // Generate points on this line
+    // Make sure they're not out of bounds
+    // Have robots go to these points
+    return defenders;
+}
+
 #endif // PLAYS__DEFENSE_HPP

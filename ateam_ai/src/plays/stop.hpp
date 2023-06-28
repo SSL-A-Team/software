@@ -35,8 +35,27 @@
 #include "ateam_geometry/ateam_geometry.hpp"
 
 #include "defense.hpp"
+#include "play_helpers.hpp"
 
 typedef Creator_uniform_2<double,Point>  Pt_creator;
+
+DirectedGraph<BehaviorGoal> generate_stop(const World & world, const Field & field, const FieldSidedInfo & our_side_info){
+    DirectedGraph<BehaviorGoal> stop;
+
+    auto goalie = get_goalie_behavior_goal(our_side_info);
+    stop.add_node(goalie);
+
+    auto attacker_behaviors = generate_points_around_ball(world, field, 3);
+    for (BehaviorGoal behavior : attacker_behaviors) {
+        stop.add_node(behavior);
+    }
+
+    auto defense_behaviors = get_defense_behavior_goals(world, field, 2);
+    for (BehaviorGoal behavior : defense_behaviors) {
+        stop.add_node(behavior);
+    }
+    return stop;
+}
 
 std::vector<BehaviorGoal> generate_points_around_ball(const World & world, const Field & field, const int num_points){
     std::vector<BehaviorGoal> points_around_ball;
@@ -49,27 +68,26 @@ std::vector<BehaviorGoal> generate_points_around_ball(const World & world, const
     // We must be at least 0.5 m from the ball
     ateam_geometry::Point ball = ateam_geometry::EigenToPoint(ball_location);
     ateam_geometry::Circle circular_boundary = ateam_geometry::makeCircle(ball, 0.5);
-    // Generate 25 random points on the circle
+    // Generate n + 20 random points on the circle
     Random_points_on_circle_2<Point,Pt_creator> circlePointGenerator;
-    circlePointGenerator circlePoints(25);
-    std::vector<Point> candidate_points;
+    circlePointGenerator circlePoints(num_points + 20);
+    std::vector<ateam_geometry::Point> candidate_points;
     // Remove any that will cause us to be out of bounds
-    // Sort the boundaries by x and y, get the highest + lowest values
-    double minX;
-    double maxX;
-    double minY;
-    double maxY;
-    for (Point candidate : circlePointGenerator) {
-        if (candidate.x() >  maxX || candidate.x() < minX){
-            continue;  
+    for (ateam_geometry::Point candidate : circlePointGenerator) {
+        if (is_point_in_bounds(candidate)){
+            candidate_points.push_back(candidate);
         }
-        if (candidate.y() > maxY || candidate.y() < minY) {
-            continue;
-        }
-        candidate_points.push_back(candidate);
     }
-    // Pick the closest x robots
-    // Tell other robots to get on our side of the field and block the goal
+    // Just get enough points around the ball for the required number of robots
+    for (int i = 0; i < num_points; ++i) {
+        BehaviorGoal go_to_point {
+            BehaviorGoal::Type::MoveToPoint,
+            BehaviorGoal::Priority::Required,
+            MoveParam(ateam_geometry::PointToEigen(candidate_points[i]));
+        }
+        points_around_ball.push_back(go_to_point);
+    }
+    return points_around_ball;
 }
 
 #endif // PLAYS__STOP_HPP
