@@ -38,11 +38,8 @@
 
 typedef Creator_uniform_2<double,Point>  Pt_creator;
 
-DirectedGraph<BehaviorGoal> generate_stop(const World & world, const Field & field, const FieldSidedInfo & our_side_info){
-    DirectedGraph<BehaviorGoal> stop_dag;
-    // Get a goalie, as usual
-    auto goalie_node = get_goalie_behavior_goal(our_side_info);
-    stop_dag.add_node(goalie_node);
+std::vector<BehaviorGoal> generate_points_around_ball(const World & world, const Field & field, const int num_points){
+    std::vector<BehaviorGoal> points_around_ball;
     // Where is the ball?
     std::optional<Eigen::Vector2d> ball_location = world.get_unique_ball();
     while (!ball_location.has_value()){
@@ -55,8 +52,23 @@ DirectedGraph<BehaviorGoal> generate_stop(const World & world, const Field & fie
     // Generate 25 random points on the circle
     Random_points_on_circle_2<Point,Pt_creator> circlePointGenerator;
     circlePointGenerator circlePoints(25);
+    std::vector<Point> candidate_points;
     // Remove any that will cause us to be out of bounds
-    // Pick the closest 3
+    // Sort the boundaries by x and y, get the highest + lowest values
+    double minX;
+    double maxX;
+    double minY;
+    double maxY;
+    for (Point candidate : circlePointGenerator) {
+        if (candidate.x() >  maxX || candidate.x() < minX){
+            continue;  
+        }
+        if (candidate.y() > maxY || candidate.y() < minY) {
+            continue;
+        }
+        candidate_points.push_back(candidate);
+    }
+    // Pick the closest x robots
     // Tell other robots to get on our side of the field and block the goal
 }
 
