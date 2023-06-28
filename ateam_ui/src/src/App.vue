@@ -4,10 +4,18 @@
             <v-app-bar-title> ATeam UI </v-app-bar-title>
         </v-app-bar>
         <v-main>
-            <v-container class="d-flex flex-row" ref="mainComponents">
-                <RefButtonsComponent/>
-                <StatusComponent ref="robotStatus"/>
-                <FieldComponent ref="mainField"/>
+            <v-container fluid class="d-inline-flex">
+            <v-row class="flex-nowrap">
+                <vcol>
+                    <RefButtonsComponent/>
+                </vcol>
+                <vcol>
+                    <StatusComponent ref="robotStatus"/>
+                </vcol>
+                <vcol class="flex-grow-1 flex-shrink-1" style="height: auto">
+                    <FieldComponent ref="mainField"/>
+                </vcol>
+            </v-row>
             </v-container>
         </v-main>
     </v-app>
