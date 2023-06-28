@@ -144,9 +144,9 @@ export default {
             // TODO: Figure out what order the motor numbers use
             // TODO: update this to match dribbler naming convention once it is added
             for (var i = 0; i < 5; i++) {
-                let general = robot.status["motor_" + i + "general_error"];
-                let hall = robot.status["motor_" + i + "hall_error"];
-                let encoder = robot.status["motor_" + i + "encoder_error"];
+                let general = robot.status["motor_" + i + "_general_error"];
+                let hall = robot.status["motor_" + i + "_hall_error"];
+                let encoder = robot.status["motor_" + i + "_encoder_error"];
 
                 if (general || hall || encoder) {
                     ctx.beginPath();
