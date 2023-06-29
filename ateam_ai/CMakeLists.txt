@@ -22,6 +22,7 @@ add_library(${PROJECT_NAME} SHARED
   src/behavior/behavior_executor.cpp
   src/behavior/behavior_follower.cpp
   src/behavior/behavior_realization.cpp
+  src/trajectory_generation/b_spline_wrapper.cpp
   src/trajectory_generation/b_spline.cpp
   src/trajectory_generation/trajectory_editor.cpp
   src/trajectory_generation/trajectory_generation.cpp
@@ -59,6 +60,7 @@ if(BUILD_TESTING)
   ament_add_gtest(${PROJECT_NAME}_test
     test/behavior/behavior_realization_test.cpp
     test/trajectory_generation/b_spline_test.cpp
+    test/trajectory_generation/b_spline_wrapper_test.cpp
     test/trajectory_generation/ilqr_problem_test.cpp
     test/trajectory_generation/trajectory_editor_test.cpp
     test/trajectory_generation/trapezoidal_motion_profile_test.cpp

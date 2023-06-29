@@ -18,27 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TRAJECTORY_GENERATION__B_SPLINE_WRAPPER_HPP_
-#define TRAJECTORY_GENERATION__B_SPLINE_WRAPPER_HPP_
+#include "trajectory_generation/b_spline_wrapper.hpp"
 
-#include <Eigen/Dense>
+#include <gtest/gtest.h>
 
-#include <vector>
+TEST(b_spline_wrapper, basic_test)
+{
+  // todo: size 2/3 broken
+  std::vector<Eigen::Vector2d> waypoints{
+    Eigen::Vector2d{0, 0},
+    Eigen::Vector2d{5, 0},
+    Eigen::Vector2d{6, 0},
+    Eigen::Vector2d{15, 0},
+  };
+  auto out = BSplineWrapper::Generate(waypoints, 0, 1, Eigen::Vector3d{0,0,0}, Eigen::Vector3d{0,0,0}, Eigen::Vector3d{2,2,2}, Eigen::Vector3d{3,3,3}, 0.1, 1);
 
-#include "types/trajectory.hpp"
-
-namespace BSplineWrapper {
-
-Trajectory Generate(
-  const std::vector<Eigen::Vector2d> waypoints,
-  const double start_heading,
-  const double end_heading,
-  const Eigen::Vector3d & start_vel,
-  const Eigen::Vector3d & end_vel,
-  const Eigen::Vector3d & max_vel_limits,
-  const Eigen::Vector3d & max_accel_limits,
-  const double dt, const double current_time);
-
-}  // namespace BSplineWrapper
-
-#endif  // TRAJECTORY_GENERATION__B_SPLINE_WRAPPER_HPP_
+  std::cout << "output" << std::endl;
+  for (int i = 0; i < out.samples.size(); i++) {
+    std::cout << out.samples.at(i).pose.x() << " " << out.samples.at(i).pose.y() << " " << out.samples.at(i).pose.z() << std::endl;
+  }
+}

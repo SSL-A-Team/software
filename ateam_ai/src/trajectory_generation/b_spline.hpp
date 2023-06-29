@@ -44,7 +44,6 @@ struct Input {
 
   double max_accel;
   double max_vel;
-  double dt;
 };
 
 struct InternalState {
@@ -59,6 +58,7 @@ struct Output {
     double v;
     double a;
   };
+  // Samples are a function of position
   std::vector<Sample2d> samples;
 };
 

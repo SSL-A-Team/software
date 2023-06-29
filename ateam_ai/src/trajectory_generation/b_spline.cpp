@@ -20,7 +20,7 @@
 
 #include "trajectory_generation/b_spline.hpp"
 
-#include <iostream>
+#include <ateam_common/status.hpp>
 #include <deque>
 
 namespace BSpline {
@@ -46,8 +46,6 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
   sample_curvatures.push_front(sample_curvatures.front());
   sample_curvatures.push_back(sample_curvatures.back());
 
-
-  std::cout << "Forward pass" << std::endl;
   // Start forward pass
   std::vector<double> speed{input.initial_vel.norm()};
   std::vector<double> accel{input.max_accel};
@@ -65,7 +63,6 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
       t2 = d / v;
     }
     double t = std::max(t1, t2);
-    std::cout << "\t\t" << t1 << " " << t2 << std::endl;
 
     // Target vel is just the choice from last step
     double target_vel = v + a * t;
@@ -86,7 +83,6 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
       target_vel = input.max_vel;
     }
 
-    std::cout << "\t" << target_vel << " " << target_accel << std::endl;
     speed.push_back(target_vel);
     accel.push_back(target_accel);
   }
@@ -96,7 +92,6 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
   speed.back() = input.end_vel.norm();
   accel.back() = -input.max_accel;
 
-  std::cout << "Backward pass" << std::endl;
   // start backward pass
   for (int i = sample_poses.size() - 1; i >= 1; i--) {
     double d = (sample_poses.at(i) - sample_poses.at(i - 1)).norm();
@@ -112,7 +107,6 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
       t2 = d / v;
     }
     double t = std::max(t1, t2);
-    std::cout << "\t\t" << t1 << " " << t2 << std::endl;
 
     double normal_acceleration_from_curvature = sample_curvatures.at(i) * v * v;
     double target_accel = -std::max(input.max_accel - normal_acceleration_from_curvature, 0.0);
@@ -131,7 +125,6 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
       target_vel = input.max_vel;
     }
 
-    std::cout << "\t" << target_vel << " " << target_accel << std::endl;
     if (target_vel < speed.at(i - 1)) {
       speed.at(i - 1) = target_vel;
       accel.at(i - 1) = target_accel;
@@ -147,21 +140,16 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
 }
 
 std::vector<Eigen::Vector2d> sample_spline(const InternalState & state, const std::size_t num_samples) {
-  //todo end samples may be bad
-  // deboors is too close to zero
-  std::cout << "Samples" << std::endl;
   std::vector<Eigen::Vector2d> samples;
   for (int i = 0; i <= num_samples; i++) {
     samples.push_back(de_boors_algorithm(i * 1.0 / num_samples, 3, state.control_points, state.knot_sequence_with_multiplicity));
-
-    std::cout << "(" << i * 1.0 / num_samples << ") " << samples.back().x() << " " << samples.back().y() << std::endl;
   }
 
   return samples;
 }
 
 InternalState convert_to_spline(const Input & input) {
-  // See secction 9.4 page 154 (pdf page 173)
+  // See section 9.4 page 154 (pdf page 173)
   // p_i represents the data points
   // d_i represents the control points
   // tau_i represents the knot points
@@ -180,7 +168,6 @@ InternalState convert_to_spline(const Input & input) {
   // 0 ... K is k+1 data points
   std::size_t k = input.data_points.size() - 1;
   std::size_t L = k + 2;
-  std::cout << "k = " << k << "\tL = " << L << "\ttau = " << tau.size() << "\ttauwm = " << tau_with_multiplicity.size() << std::endl;
 
   // Front and back data point must match exactly
   Eigen::Vector2d d_0 = input.data_points.at(0);
@@ -216,7 +203,6 @@ InternalState convert_to_spline(const Input & input) {
   }
   A(k - 2, k - 3) = basis_function(L - 4, 3, tau.at(k - 1), tau_with_multiplicity);
   A(k - 2, k - 2) = basis_function(L - 3, 3, tau.at(k - 1), tau_with_multiplicity);
-  std::cout << std::endl << A << std::endl << std::endl;
 
   // See EQ 9.12, vector b of the Ax=b
   Eigen::VectorXd b = Eigen::VectorXd::Zero(k - 1);
@@ -232,8 +218,6 @@ InternalState convert_to_spline(const Input & input) {
       b(i) = input.data_points.at(i + 1).x(); // 2 .. K-2
     }
   }
-
-  std::cout << std::endl << b << std::endl << std::endl;
 
   // Output is the x coordinates of the control points 2..L-2
   // TODO(jneiger): replace with a true "tridiagonal" solver like the following
@@ -262,12 +246,6 @@ InternalState convert_to_spline(const Input & input) {
   }
   control_points.push_back(d_L_1);
   control_points.push_back(d_L);
-
-  std::cout << "Control points" << std::endl;
-  for (const auto & p : control_points) {
-    std::cout << p.x() << " " << p.y() << std::endl;
-  }
-
 
   InternalState out;
   out.control_points = control_points;
@@ -406,11 +384,27 @@ Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, con
   // Section below is direct implementation of the algorithms
   std::vector<Eigen::Vector2d> d;
   for (int j = 0; j < degree + 1; j++) {
+    // Control point list size, degree, and knot point list size are a function of each other
+    // Note: that there is size buffering as well on the knot points which make this all confusing
+    ATEAM_CHECK(j + k - degree >= 0, "Degree and control points sizes dont match");
+    ATEAM_CHECK(j + k - degree < control_points.size(), "Degree and control points sizes dont match");
+
     d.push_back(control_points.at(j + k - degree));
   }
 
   for (int r = 1; r < degree + 1; r++) {
     for (int j = degree; j > r - 1; j--) {
+      // See above
+      // Mostly done to crash with error message instead of .at access failures
+      ATEAM_CHECK(j + k - degree >= 0, "Degree and control points sizes dont match");
+      ATEAM_CHECK(j + k - degree < t.size(), "Degree and control points sizes dont match");
+      ATEAM_CHECK(j + 1 + k - r >= 0, "Degree and control points sizes dont match");
+      ATEAM_CHECK(j + 1 + k - r < t.size(), "Degree and control points sizes dont match");
+      ATEAM_CHECK(j >= 0, "Degree and control points sizes dont match");
+      ATEAM_CHECK(j < d.size(), "Degree and control points sizes dont match");
+      ATEAM_CHECK(j - 1 >= 0, "Degree and control points sizes dont match");
+      ATEAM_CHECK(j - 1 < d.size(), "Degree and control points sizes dont match");
+
       double alpha = (u - t.at(j + k - degree)) / (t.at(j + 1 + k - r) - t.at(j + k - degree));
       d.at(j) = (1.0 - alpha) * d.at(j - 1) + alpha * d.at(j);
     }
