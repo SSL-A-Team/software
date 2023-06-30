@@ -301,6 +301,8 @@ std::vector<double> apply_multiplicity(
   const std::vector<double> & knot_sequence,
   const std::size_t multiplicity)
 {
+  // TODO(jneiger): Swap over to std::fill_n and deques
+  // https://github.com/SSL-A-Team/software/pull/148#discussion_r1241278472
   std::vector<double> out;
   for (std::size_t i = 0; i < multiplicity; i++) {
     out.push_back(knot_sequence.front());
@@ -322,6 +324,8 @@ std::vector<double> get_knot_sequence(const std::vector<Eigen::Vector2d> & contr
 
 std::vector<double> constant_spacing(const std::vector<Eigen::Vector2d> & control_points)
 {
+  // TODO(jneiger): Swap over to std::ranges::transform
+  // https://github.com/SSL-A-Team/software/pull/148#discussion_r1241279158
   std::vector<double> out;
   double spacing = 1.0 / (control_points.size() - 1);
   for (int i = 0; i < control_points.size(); i++) {
