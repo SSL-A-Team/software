@@ -215,11 +215,11 @@ private:
           });
       };
 
-    convert_point_array(field_msg->field_corners, field.field_corners.begin());
-    convert_point_array(field_msg->ours.goalie_corners, field.ours.goalie_corners.begin());
-    convert_point_array(field_msg->ours.goal_posts, field.ours.goal_posts.begin());
-    convert_point_array(field_msg->theirs.goalie_corners, field.theirs.goalie_corners.begin());
-    convert_point_array(field_msg->theirs.goal_posts, field.theirs.goal_posts.begin());
+    convert_point_array(field_msg->field_corners.points, field.field_corners.begin());
+    convert_point_array(field_msg->ours.goalie_box_corners.points, field.ours.goalie_box.begin());
+    convert_point_array(field_msg->ours.goal_corners.points, field.ours.goal.begin());
+    convert_point_array(field_msg->theirs.goalie_box_corners.points, field.theirs.goalie_box.begin());
+    convert_point_array(field_msg->theirs.goal_corners.points, field.theirs.goal.begin());
 
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.field = field;

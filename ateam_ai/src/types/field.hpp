@@ -26,8 +26,8 @@
 
 struct FieldSidedInfo
 {
-  std::array<Eigen::Vector2d, 4> goalie_corners;
-  std::array<Eigen::Vector2d, 2> goal_posts;
+  std::array<Eigen::Vector2d, 4> goalie_box;
+  std::array<Eigen::Vector2d, 4> goal;
 };
 struct Field
 {
