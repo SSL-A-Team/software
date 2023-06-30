@@ -22,6 +22,7 @@
 #define ATEAM_GEOMETRY__TYPES_HPP_
 
 #include <CGAL/Simple_cartesian.h>
+#include <CGAL/point_generators_2.h>
 #include <variant>
 
 namespace ateam_geometry
@@ -32,6 +33,7 @@ using Segment = Kernel::Segment_2;
 using Rectangle = Kernel::Iso_rectangle_2;
 using Circle = Kernel::Circle_2;
 using AnyShape = std::variant<Point, Segment, Rectangle, Circle>;
+using PointCreator = Creator_uniform_2<double,Point>;
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__TYPES_HPP_
