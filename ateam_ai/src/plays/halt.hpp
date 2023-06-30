@@ -21,22 +21,23 @@
 #ifndef PLAYS__HALT_HPP_
 #define PLAYS__HALT_HPP_
 
+#include <Eigen/Dense>
+
 #include "types/world.hpp"
 #include "types/behavior_goal.hpp"
 
-#include <Eigen/Dense>
-
-DirectedGraph<BehaviorGoal> generate_halt(const World & world) {
-    DirectedGraph<BehaviorGoal> halt_graph;
-    for (std::size_t id = 0; id < world.our_robots.size(); id++) {
-        // Generate a required halt for every robot on our team
-        BehaviorGoal halt {
-            BehaviorGoal::Type::Halt,
-            BehaviorGoal::Priority::Required,
-            HaltParam()
-        };
-        halt_graph.add_node(halt);
-    }
-    return halt_graph;
+DirectedGraph<BehaviorGoal> generate_halt(const World & world)
+{
+  DirectedGraph<BehaviorGoal> halt_graph;
+  for (std::size_t id = 0; id < world.our_robots.size(); id++) {
+    // Generate a required halt for every robot on our team
+    BehaviorGoal halt {
+      BehaviorGoal::Type::Halt,
+      BehaviorGoal::Priority::Required,
+      HaltParam()
+    };
+    halt_graph.add_node(halt);
+  }
+  return halt_graph;
 }
-#endif // PLAYS__HALT_HPP
+#endif  // PLAYS__HALT_HPP_

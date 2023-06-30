@@ -25,36 +25,39 @@
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
 
-DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world, const FieldSidedInfo & our_side_info) {
-    DirectedGraph<BehaviorGoal> our_kickoff;
+DirectedGraph<BehaviorGoal> setup_our_kickoff(
+  const World & world,
+  const FieldSidedInfo & our_side_info)
+{
+  DirectedGraph<BehaviorGoal> our_kickoff;
 
-    // Have the kicker robot go to the edge of the center circle to prepare for kick
-    BehaviorGoal kicker_setup {
-        BehaviorGoal::Type::MoveToPoint,
-        BehaviorGoal::Priority::Required,
-        // We must be outside the center circle on OUR side
-        // Its diameter is 1m
-        MoveParam(Eigen::Vector2d{-0.505, 0})
-    };
+  // Have the kicker robot go to the edge of the center circle to prepare for kick
+  BehaviorGoal kicker_setup {
+    BehaviorGoal::Type::MoveToPoint,
+    BehaviorGoal::Priority::Required,
+    // We must be outside the center circle on OUR side
+    // Its diameter is 1m
+    MoveParam(Eigen::Vector2d{-0.505, 0})
+  };
 
-    our_kickoff.add_node(kicker_setup);
+  our_kickoff.add_node(kicker_setup);
 
-    // Go to the middle of the goalie area
-    Eigen::Vector2d _goalie_point = Eigen::Vector2d(
-        // Here I'm assuming these are opposite corners of the goal
-        // Does this need to be negative to match our conventions?
-        (our_side_info.goalie_corners.at(0).x() + our_side_info.goalie_corners.at(2).x()) / 2,
-        (our_side_info.goalie_corners.at(0).y() + our_side_info.goalie_corners.at(2).y()) / 2
-    );
+  // Go to the middle of the goalie area
+  Eigen::Vector2d _goalie_point = Eigen::Vector2d(
+    // Here I'm assuming these are opposite corners of the goal
+    // Does this need to be negative to match our conventions?
+    (our_side_info.goalie_corners.at(0).x() + our_side_info.goalie_corners.at(2).x()) / 2,
+    (our_side_info.goalie_corners.at(0).y() + our_side_info.goalie_corners.at(2).y()) / 2
+  );
 
-    // Have the goalie defend the goal
-    BehaviorGoal goalie {
-        BehaviorGoal::Type::MoveToPoint,
-        BehaviorGoal::Priority::Required,
-        MoveParam(_goalie_point)
-    };
+  // Have the goalie defend the goal
+  BehaviorGoal goalie {
+    BehaviorGoal::Type::MoveToPoint,
+    BehaviorGoal::Priority::Required,
+    MoveParam(_goalie_point)
+  };
 
-    our_kickoff.add_node(goalie);
-    // TODO: Generate optional defenders for the rest of the robots that might exist
-};
-#endif // PLAYS__KICKOFF_HPP
+  our_kickoff.add_node(goalie);
+  // TODO(Christian): Generate optional defenders for the rest of the robots that might exist
+}
+#endif  // PLAYS__KICKOFF_HPP_

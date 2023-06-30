@@ -24,14 +24,15 @@
 #include "ateam_geometry/ateam_geometry.hpp"
 #include "types/field.hpp"
 
-bool is_point_in_bounds(ateam_geometry::Point & point, Field & field){
-    if (point.x() >  field.field_width / 2 || point.x() < -field.field_width / 2){
-        return false;
-    }
-    if (point.y() > field.field_length / 2 || point.y() < -field.field_length / 2) {
-        return false;
-    }
-    return true;
+bool is_point_in_bounds(ateam_geometry::Point & point, Field & field)
+{
+  if (point.x() > field.field_width / 2 || point.x() < -field.field_width / 2) {
+    return false;
+  }
+  if (point.y() > field.field_length / 2 || point.y() < -field.field_length / 2) {
+    return false;
+  }
+  return true;
 }
 
-#endif // PLAYS__PLAY_HELPERS_HPP_
+#endif  // PLAYS__PLAY_HELPERS_HPP_
