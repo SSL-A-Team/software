@@ -33,7 +33,7 @@ using Segment = Kernel::Segment_2;
 using Rectangle = Kernel::Iso_rectangle_2;
 using Circle = Kernel::Circle_2;
 using AnyShape = std::variant<Point, Segment, Rectangle, Circle>;
-using PointCreator = Creator_uniform_2<double,Point>;
+using PointCreator = CGAL::Creator_uniform_2<double, Point>;
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__TYPES_HPP_

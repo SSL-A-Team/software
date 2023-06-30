@@ -28,26 +28,27 @@
 
 
 DirectedGraph<BehaviorGoal> generate_basic_shoot(
-    const World & world, const Field & field
-    ){
-    DirectedGraph<BehaviorGoal> basic_shoot;
+  const World & world, const Field & field
+)
+{
+  DirectedGraph<BehaviorGoal> basic_shoot;
 
-    // Get the center of the opponent's goal from the field geometry
-    Eigen::Vector2d _goal_center = Eigen::Vector2d(
-        // Our side is always negative, so kick to the positive side at the edge
-        field.field_length  / 2,
-        // The center of the goal is at the field center (0)
-        0
-    );
-    // Tell one robot to shoot
-    BehaviorGoal shoot {
-        BehaviorGoal::Type::PivotKick,
-        BehaviorGoal::Priority::Required,
-        // Kick to the center of their goal
-        KickParam(_goal_center)
-    };
-    basic_shoot.add_node(shoot);
+  // Get the center of the opponent's goal from the field geometry
+  Eigen::Vector2d _goal_center = Eigen::Vector2d(
+    // Our side is always negative, so kick to the positive side at the edge
+    field.field_length / 2,
+    // The center of the goal is at the field center (0)
+    0
+  );
+  // Tell one robot to shoot
+  BehaviorGoal shoot {
+    BehaviorGoal::Type::PivotKick,
+    BehaviorGoal::Priority::Required,
+    // Kick to the center of their goal
+    KickParam(_goal_center)
+  };
+  basic_shoot.add_node(shoot);
 
-    return basic_shoot;
-};
-#endif // PLAYS__SHOOT_HPP_
+  return basic_shoot;
+}
+#endif  // PLAYS__SHOOT_HPP_
