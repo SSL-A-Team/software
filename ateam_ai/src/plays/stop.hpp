@@ -23,6 +23,7 @@
 #define PLAYS__STOP_HPP_
 
 #include <Eigen/Dense>
+#include <cmath>
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/point_generators_2.h>
@@ -36,8 +37,6 @@
 
 #include "defense.hpp"
 #include "play_helpers.hpp"
-
-typedef Creator_uniform_2<double,Point>  Pt_creator;
 
 DirectedGraph<BehaviorGoal> generate_stop(const World & world, const Field & field, const FieldSidedInfo & our_side_info){
     DirectedGraph<BehaviorGoal> stop;
@@ -59,33 +58,40 @@ DirectedGraph<BehaviorGoal> generate_stop(const World & world, const Field & fie
 
 std::vector<BehaviorGoal> generate_points_around_ball(const World & world, const Field & field, const int num_points){
     std::vector<BehaviorGoal> points_around_ball;
+    double robotDiameter = 0.18;
     // Where is the ball?
     std::optional<Eigen::Vector2d> ball_location = world.get_unique_ball();
     while (!ball_location.has_value()){
         ball_location = world.get_unique_ball();
     }
-    // Tell 3 robots (attackers) to get close to the ball
-    // We must be at least 0.5 m from the ball
     ateam_geometry::Point ball = ateam_geometry::EigenToPoint(ball_location);
-    ateam_geometry::Circle circular_boundary = ateam_geometry::makeCircle(ball, 0.5);
-    // Generate n + 20 random points on the circle
-    Random_points_on_circle_2<Point,Pt_creator> circlePointGenerator;
-    circlePointGenerator circlePoints(num_points + 20);
-    std::vector<ateam_geometry::Point> candidate_points;
-    // Remove any that will cause us to be out of bounds
-    for (ateam_geometry::Point candidate : circlePointGenerator) {
-        if (is_point_in_bounds(candidate)){
-            candidate_points.push_back(candidate);
+    std::vector<BehaviorGoal> points_around_ball;
+    // Used to create points around a circle with radius 0.5 m
+    Random_points_on_circle_2<ateam_geometry::Point,ateam_geometry::PointCreator> circlePointGenerator;
+    circlePointGenerator circlePoints(0.55);
+    // We need 3 robots (attackers) to get close to the ball
+    while (points_around_ball.length() < 3) {
+        std::vector<ateam_geometry::Point> candidate_points;
+        candidate_points.reserve(50);
+        std::copy_n( circlePoints, 50, std::back_inserter(candidate_points));
+        // Pick the first points that are within bounds on the circle
+        // and a robot's diameter away from each other
+        ateam_geometry::Point previous_point = ateam_geometry::Point(-100,-100);
+        for (ateam_geometry::Point candidate : candidate_points) {
+            if (is_point_in_bounds(candidate)){
+                if (ateam_geometry::Segment(previous_point, candidate).squared_length > pow(robot_diameter,2))){
+                    BehaviorGoal go_to_point {
+                        BehaviorGoal::Type::MoveToPoint,
+                        BehaviorGoal::Priority::Required,
+                        MoveParam(ateam_geometry::PointToEigen(candidate))
+                    }
+                    points_around_ball.push_back(go_to_point);
+                    if (points_around_ball.length() > 2){
+                        break;
+                    }
+                }
+            }
         }
-    }
-    // Just get enough points around the ball for the required number of robots
-    for (int i = 0; i < num_points; ++i) {
-        BehaviorGoal go_to_point {
-            BehaviorGoal::Type::MoveToPoint,
-            BehaviorGoal::Priority::Required,
-            MoveParam(ateam_geometry::PointToEigen(candidate_points[i]));
-        }
-        points_around_ball.push_back(go_to_point);
     }
     return points_around_ball;
 }

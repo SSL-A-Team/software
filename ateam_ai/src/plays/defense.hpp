@@ -57,13 +57,43 @@ BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info){
         MoveParam(_goalie_point)
     };
 }
-// TODO(Christian) : Finish this
+
 std::vector<BehaviorGoal> get_defense_behavior_goals(const World & world, const Field & field, const int & num_defenders){
     std::vector<BehaviorGoal> defenders;
-
+    std::optional<Eigen::Vector2d> ball_location = world.get_unique_ball();
     // Get line between the ball and the goal
-    // Generate points on this line
-    // Make sure they're not out of bounds
+    while (!ball_location.has_value()){
+        ball_location = world.get_unique_ball();
+    }
+    ateam_geometry::Point ball = ateam_geometry::EigenToPoint(ball_location);
+    ateam_geometry::Point middle_of_our_goal = (-4.5, 0);
+    ateam_geometry::Segement block_line = ateam_geometry::Segment(ball, middle_of_our_goal);
+    // Object to generate candidate points on this line to block
+    std::vector<ateam_geometry::Point> candidate_points;
+    Random_points_on_segment_2<ateam_geometry::Point,ateam_geometry::PointCreator> linePointCreator;
+    linePointCreator line_to_goal(ball, middle_of_our_goal);
+    // Get two defenders
+    while (defenders.length() < 2) {
+        candidate_points.reserve(50);
+        std::copy_n( line_to_goal, 50, std::back_inserter(candidate_points));
+        // Remove any that will cause us to be out of bounds
+        ateam_geometry::Point previous_point = ateam_geometry::Point(-100,-100);
+        for (ateam_geometry::Point candidate : candidate_points) {
+                    if (is_point_in_bounds(candidate)){
+                        if (ateam_geometry::Segment(previous_point, candidate).squared_length() > pow(robot_diameter,2))){
+                            BehaviorGoal go_to_point {
+                                BehaviorGoal::Type::MoveToPoint,
+                                BehaviorGoal::Priority::Required,
+                                MoveParam(ateam_geometry::PointToEigen(candidate))
+                            }
+                            points_around_ball.push_back(go_to_point);
+                            if (points_around_ball.length() > 1){
+                                break;
+                            }
+                        }
+                    }
+        }
+    }
     // Have robots go to these points
     return defenders;
 }
