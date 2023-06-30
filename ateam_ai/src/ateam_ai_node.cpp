@@ -205,6 +205,9 @@ private:
       .boundary_width = field_msg->boundary_width
     };
 
+    // Multiple def error
+    // field.center_circle = ateam_geometry::makeCircle({field_msg->center_circle.x, field_msg->center_circle.y}, field_msg->center_circle_radius);
+
     // I could have just defined conversion operators for all of this but
     // Im pretty sure joe wanted ros separate from cpp
     auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {

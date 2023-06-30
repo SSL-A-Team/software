@@ -91,7 +91,7 @@ ateam_msgs::msg::FieldInfo fromMsg(
   field_info.boundary_width = ros_msg.boundary_width;
 
   auto check_field_line_name =
-    [](ssl_league_msgs::msg::VisionFieldLineSegment line_msg, std::string target_name) -> bool {
+    [](auto line_msg, std::string target_name) -> bool {
       return line_msg.name == target_name;
     };
 
@@ -154,6 +154,13 @@ ateam_msgs::msg::FieldInfo fromMsg(
     2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
   lines_to_points(right_penalty_names, right_side_info.goalie_box_corners.points);
 
+   auto itr = std::find_if(
+          ros_msg.field_arcs.begin(), ros_msg.field_arcs.end(),
+          std::bind(check_field_line_name, std::placeholders::_1, "CenterCircle"));
+  if (itr != ros_msg.field_arcs.end()) {
+    field_info.center_circle = itr->center;
+    field_info.center_circle_radius = itr->radius;
+  }
 
   // note left and right can be different according to Joe
   // Temporary stupid assignment working under the assumption we are on left side
