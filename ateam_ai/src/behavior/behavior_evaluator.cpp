@@ -61,9 +61,9 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
       generate_halt(world);
       break;
     case ateam_common::GameCommand::NormalStart:
-        if (kickoff_detector.output_state == KickoffState::KickoffTheirs) {
+        if (kickoff_detector.output_state == KickoffDetector::KickoffState::KickoffTheirs) {
             // we have to wait for them to kick, movement lock still in effect
-        } else if (kickoff_detector.output_state == KickoffState::KickoffOurs) {
+        } else if (kickoff_detector.output_state == KickoffDetector::KickoffState::KickoffOurs) {
             // we can kick now only with the kicker, movement lock still in effect
         } else {
             // free play

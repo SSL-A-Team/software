@@ -22,6 +22,7 @@
 #define ATEAM_COMMON__game_controller_listener_HPP_
 
 #include <string>
+#include <optional>
 
 #include <rclcpp/rclcpp.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
@@ -142,12 +143,24 @@ public:
     return game_command_;
   }
 
+  const std::optional<uint32_t> & GetOurGoalieID() const
+  {
+    return our_goalie_id_;
+  }
+
+  const std::optional<uint32_t> & GetTheirGoalieID() const
+  {
+    return our_goalie_id_;
+  }
+
 private:
   const std::string team_name_;
   TeamColor team_color_{TeamColor::Unknown};
   TeamSide team_side_{TeamSide::Unknown};
   GameStage game_stage_{GameStage::Unknown};
   GameCommand game_command_{GameCommand::Halt};
+  std::optional<uint32_t> our_goalie_id_ {};
+  std::optional<uint32_t> their_goalie_id_ {};
 
   ColorCallback color_callback_;
   SideCallback side_callback_;

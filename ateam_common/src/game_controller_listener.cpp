@@ -100,8 +100,7 @@ void GameControllerListener::RefereeMessageCallback(
 
   uint8_t command = msg->command;
   // if we know the color and the team
-  if (command > static_cast<std::underlying_type_t<GameCommand>>(GameCommand::ForceStart) &&
-    team_color_ != TeamColor::Unknown) {
+  if ( team_color_ != TeamColor::Unknown && command > static_cast<std::underlying_type_t<GameCommand>>(GameCommand::ForceStart)) {
     // Note depends on odd even of commands index which is a little awkward but nice here
     // They havent changed the api for years but be warned
     // Yellow is even, blue is odd
@@ -112,6 +111,14 @@ void GameControllerListener::RefereeMessageCallback(
   }
 
   game_command_ = static_cast<GameCommand>(command);
+
+  if (team_color_ != TeamColor::Unknown) {
+    our_goalie_id_ = team_color_ == TeamColor::Blue ? msg->blue.goalkeeper : msg->yellow.goalkeeper;
+    their_goalie_id_ = team_color_ == TeamColor::Blue ? msg->yellow.goalkeeper : msg->blue.goalkeeper;
+  } else {
+    our_goalie_id_ = std::nullopt;
+    their_goalie_id_ = std::nullopt;
+  }
 }
 
 }  // namespace ateam_common

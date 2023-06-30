@@ -5,7 +5,9 @@
 #include <optional>
 
 #include "types/world.hpp"
-#include "util/directed_graph.hpp"
+
+#include <ateam_common/game_controller_listener.hpp>
+
 
 
 using namespace std::chrono_literals;
@@ -35,7 +37,7 @@ public:
     ateam_common::GameCommand prev_command {ateam_common::GameCommand::Stop};
     // KickoffState output_state {KickoffState::Ignore};
     // bool inkickoff_wait{};
-    ateam_common::GameCommand output_state {ateam_common::GameCommand::Stop};
+    KickoffState output_state {ateam_common::GameCommand::Stop};
     std::optional<Eigen::Vector2d> maybe_kickoff_position {}; // optional in case ball cant be seen
 
     static constexpr double DIST_THRESHOLD {0.05};
@@ -63,9 +65,9 @@ public:
                 // Though I could do this just on previous and only time for one state so this kinda devolved
                 // Really the distinction of the kickoff ours vs theirs after a normal start is all this needs to provide
                 case ateam_common::GameCommand::NormalStart:
-                    if (prev_command == GameCommand::PrepareKickoffOurs) {
+                    if (prev_command == ateam_common::GameCommand::PrepareKickoffOurs) {
                         output_state = KickoffState::KickoffOurs;
-                    } else if (prev_command == GameCommand::PrepareKickoffTheirs) {
+                    } else if (prev_command == ateam_common::GameCommand::PrepareKickoffTheirs) {
                         output_state = KickoffState::KickoffTheirs;
                     } else {
                         output_state = KickoffState::Play;
@@ -94,7 +96,7 @@ public:
             output_state = KickoffState::Play;
         }
 
-        if (output_state == KickoffState::KickoffOurs || output_state == KickoffState::KickoffTheirs)
+        if (output_state == KickoffState::KickoffOurs || output_state == KickoffState::KickoffTheirs) {
             auto maybe_ball = world.get_unique_ball();
             if (maybe_ball.has_value()){
                 if (maybe_kickoff_position.has_value()) {
@@ -112,6 +114,6 @@ public:
         }
 
     }
-}
+};
 
 #endif  // UTIL__KICKOFF_DETECTOR_HPP_
