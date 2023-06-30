@@ -84,7 +84,9 @@ Trajectory Generate(
     double average_v = (b_output.samples.at(i + 1).v - b_output.samples.at(i).v) / 2;
 
     // This check is probably overly restrictive
-//    ATEAM_CHECK(average_v == 0, "Average velocity must be non-zero across a segment");
+    // Really just want to include acceleration in the t calc
+    // with some upper limit so we don't break on bad bspline segment accels at 0 vel samples
+    // ATEAM_CHECK(average_v == 0, "Average velocity must be non-zero across a segment");
     double end_of_segment_t = prev_segment_t + std::min(segment_dist / std::abs(average_v), 1.0);
 
     // target_t is in this segment
@@ -107,7 +109,7 @@ Trajectory Generate(
       };
 
       trajectories.at(0).samples.push_back(x_sample);
-      trajectories.at(0).samples.push_back(y_sample);
+      trajectories.at(1).samples.push_back(y_sample);
       target_t += dt;
     }
 
