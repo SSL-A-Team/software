@@ -20,33 +20,42 @@
 
 #include "trajectory_generation/b_spline.hpp"
 
-#include <ateam_common/status.hpp>
+#include <algorithm>
 #include <deque>
 
-namespace BSpline {
+#include <ateam_common/status.hpp>
 
-Output build_and_sample_spline(const Input & input, const std::size_t num_samples) {
+namespace BSpline
+{
+
+Output build_and_sample_spline(const Input & input, const std::size_t num_samples)
+{
   std::vector<Eigen::Vector2d> sample_poses = sample_spline(convert_to_spline(input), num_samples);
   double length = 0.0;
   for (int i = 1; i < sample_poses.size(); i++) {
     length += (sample_poses.at(i) - sample_poses.at(i - 1)).norm();
   }
 
+  // TODO(jneiger): Calculate curvature from the derivatives of the spline basis functions
   std::deque<double> sample_curvatures;
   for (int i = 2; i < sample_poses.size(); i++) {
     Eigen::Vector2d diff2 = (sample_poses.at(i) - sample_poses.at(i - 1));
     Eigen::Vector2d diff1 = (sample_poses.at(i - 1) - sample_poses.at(i - 2));
     Eigen::Vector2d avg_diff = (diff1 + diff2) / 2;
     Eigen::Vector2d diffdiff = diff2 - diff1;
-    double curvature = std::abs((avg_diff.x() * diffdiff.y() - avg_diff.y() * diffdiff.x()) / std::pow(avg_diff.squaredNorm(), 1.5));
+    double curvature = std::abs(
+      (avg_diff.x() * diffdiff.y() - avg_diff.y() * diffdiff.x()) /
+      std::pow(avg_diff.squaredNorm(), 1.5));
     sample_curvatures.push_back(curvature);
   }
   // Because we need the second derivative, we "lose" 2 samples
   // Add duplicates at the front and back to keep everything the same length
+  // TODO(jneiger): Remove this hack after the curvature from spline basis functions
   sample_curvatures.push_front(sample_curvatures.front());
   sample_curvatures.push_back(sample_curvatures.back());
 
   // Start forward pass
+  // TODO(jneiger): Revist and make sure the math here is actually correct
   std::vector<double> speed{input.initial_vel.norm()};
   std::vector<double> accel{input.max_accel};
   for (int i = 1; i < sample_poses.size(); i++) {
@@ -55,13 +64,14 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
     // Gives 2 options, time will always be positive
     double a = accel.at(i - 1);
     double v = speed.at(i - 1);
-    double t1 = -1 * (sqrt(2 * a * d + v*v) + v) / a;
-    double t2 = (sqrt(2 * a * d + v*v) - v) / a;
+    double t1 = -1 * (sqrt(2 * a * d + v * v) + v) / a;
+    double t2 = (sqrt(2 * a * d + v * v) - v) / a;
     // Quick hack for a == 0
     if (std::abs(a) < 1e-5) {
       t1 = d / v;
       t2 = d / v;
     }
+    // TODO(jneiger): Redo the t estimations in a better way
     double t = std::max(t1, t2);
 
     // Target vel is just the choice from last step
@@ -79,6 +89,7 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
 
     // Limit vel if too fast
     if (target_vel >= input.max_vel) {
+      // TODO(jneiger): Put the real accel values at this location
       target_accel = 0;  // Not actually correct but it's easier
       target_vel = input.max_vel;
     }
@@ -93,15 +104,16 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
   accel.back() = -input.max_accel;
 
   // start backward pass
+  // TODO(jneiger): Deduplicate code with the above
+  // TODO(jneiger): Re-look at the math here, I think some indexes are messed up
   for (int i = sample_poses.size() - 1; i >= 1; i--) {
     double d = (sample_poses.at(i) - sample_poses.at(i - 1)).norm();
     // given d = v * t + 1/2 * a * t^2, solve for t
     // Gives 2 options, time will always be positive
     double a = std::abs(accel.at(i));
     double v = std::abs(speed.at(i));
-
-    double t1 = -1 * (sqrt(2 * a * d + v*v) + v) / a;
-    double t2 = (sqrt(2 * a * d + v*v) - v) / a;
+    double t1 = -1 * (sqrt(2 * a * d + v * v) + v) / a;
+    double t2 = (sqrt(2 * a * d + v * v) - v) / a;
     if (std::abs(a) < 1e-5) {
       t1 = d / v;
       t2 = d / v;
@@ -131,24 +143,36 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
     }
   }
 
+  // TODO(jneiger): Look into revisiting how the output is formatted
+  // so it's not this weird f(s) formulation instead of the expected f(t)
+  // (where s is position along the 1d path, and t is time)
   Output out;
   for (int i = 0; i < sample_poses.size(); i++) {
-    out.samples.push_back(Output::Sample2d{.p = sample_poses.at(i), .v = speed.at(i), .a = accel.at(i)});
+    out.samples.push_back(
+      Output::Sample2d{.p = sample_poses.at(i), .v = speed.at(i),
+        .a = accel.at(i)});
   }
 
   return out;
 }
 
-std::vector<Eigen::Vector2d> sample_spline(const InternalState & state, const std::size_t num_samples) {
+std::vector<Eigen::Vector2d> sample_spline(
+  const InternalState & state,
+  const std::size_t num_samples)
+{
   std::vector<Eigen::Vector2d> samples;
   for (int i = 0; i <= num_samples; i++) {
-    samples.push_back(de_boors_algorithm(i * 1.0 / num_samples, 3, state.control_points, state.knot_sequence_with_multiplicity));
+    samples.push_back(
+      de_boors_algorithm(
+        i * 1.0 / num_samples, 3, state.control_points,
+        state.knot_sequence_with_multiplicity));
   }
 
   return samples;
 }
 
-InternalState convert_to_spline(const Input & input) {
+InternalState convert_to_spline(const Input & input)
+{
   // See section 9.4 page 154 (pdf page 173)
   // p_i represents the data points
   // d_i represents the control points
@@ -179,10 +203,14 @@ InternalState convert_to_spline(const Input & input) {
 
   // Knowing the first and second (and last and second to last) data points result a little more
   // specific equations in the least squares
-  Eigen::Vector2d r_s = input.data_points.at(1) - d_1 * basis_function(1, 3, tau.at(1), tau_with_multiplicity);
-  Eigen::Vector2d r_e = input.data_points.at(k - 1) - d_L_1 * basis_function(L - 2, 3, tau.at(k - 1), tau_with_multiplicity);
+  Eigen::Vector2d r_s = input.data_points.at(1) - d_1 * basis_function(
+    1, 3, tau.at(
+      1), tau_with_multiplicity);
+  Eigen::Vector2d r_e = input.data_points.at(k - 1) - d_L_1 * basis_function(
+    L - 2, 3, tau.at(
+      k - 1), tau_with_multiplicity);
 
-  // Eq 9.11, don't use 9.12 as it's difficult to figure out 
+  // Eq 9.11, don't use 9.12 as it's difficult to figure out
   // Note that row 2 (index 1) is centered on the second basis function index (1, 2, 3)
   // which is i-1, i, i+1, not i, i+1, i+2. All tridiagonal lines should be non-zero
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(k - 1, k - 1);
@@ -193,7 +221,7 @@ InternalState convert_to_spline(const Input & input) {
       // Get the p==2 on the diagonal
       int col_idx = p + i - 2;
       int row_idx = i - 1;
-      
+
       // First and law row start and end outside bounds
       if (col_idx < 0 || col_idx >= A.rows()) {
         continue;
@@ -215,7 +243,7 @@ InternalState convert_to_spline(const Input & input) {
       b(i) = r_e.x();
     } else {
       // i = (1 ... K - 2)
-      b(i) = input.data_points.at(i + 1).x(); // 2 .. K-2
+      b(i) = input.data_points.at(i + 1).x();  // 2 .. K-2
     }
   }
 
@@ -233,11 +261,11 @@ InternalState convert_to_spline(const Input & input) {
       b(i) = r_e.y();
     } else {
       // i = (1 ... K - 2)
-      b(i) = input.data_points.at(i + 1).y(); // 2 .. K-2
+      b(i) = input.data_points.at(i + 1).y();  // 2 .. K-2
     }
   }
   Eigen::VectorXd y = A.colPivHouseholderQr().solve(b);
-  
+
   std::vector<Eigen::Vector2d> control_points;
   control_points.push_back(d_0);
   control_points.push_back(d_1);
@@ -254,7 +282,10 @@ InternalState convert_to_spline(const Input & input) {
   return out;
 }
 
-std::vector<double> apply_multiplicity(const std::vector<double> & knot_sequence, const std::size_t multiplicity) {
+std::vector<double> apply_multiplicity(
+  const std::vector<double> & knot_sequence,
+  const std::size_t multiplicity)
+{
   std::vector<double> out;
   for (std::size_t i = 0; i < multiplicity; i++) {
     out.push_back(knot_sequence.front());
@@ -269,11 +300,13 @@ std::vector<double> apply_multiplicity(const std::vector<double> & knot_sequence
   return out;
 }
 
-std::vector<double> get_knot_sequence(const std::vector<Eigen::Vector2d> & control_points) {
+std::vector<double> get_knot_sequence(const std::vector<Eigen::Vector2d> & control_points)
+{
   return centripetal_spacing(control_points);
 }
 
-std::vector<double> constant_spacing(const std::vector<Eigen::Vector2d> & control_points) {
+std::vector<double> constant_spacing(const std::vector<Eigen::Vector2d> & control_points)
+{
   std::vector<double> out;
   double spacing = 1.0 / (control_points.size() - 1);
   for (int i = 0; i < control_points.size(); i++) {
@@ -283,7 +316,9 @@ std::vector<double> constant_spacing(const std::vector<Eigen::Vector2d> & contro
   return out;
 }
 
-std::vector<double> chord_length_parametrization_spacing(const std::vector<Eigen::Vector2d> & control_points) {
+std::vector<double> chord_length_parametrization_spacing(
+  const std::vector<Eigen::Vector2d> & control_points)
+{
   double total_length = 0;
   for (int i = 1; i < control_points.size(); i++) {
     total_length += (control_points.at(i) - control_points.at(i - 1)).norm();
@@ -294,7 +329,9 @@ std::vector<double> chord_length_parametrization_spacing(const std::vector<Eigen
   // First point is always 0
   out.push_back(0);
   for (int i = 1; i < control_points.size(); i++) {
-    out.push_back(out.back() + (control_points.at(i) - control_points.at(i - 1)).norm() / total_length);
+    out.push_back(
+      out.back() + (control_points.at(i) - control_points.at(
+        i - 1)).norm() / total_length);
   }
   // Last point should always be 1
 
@@ -302,7 +339,8 @@ std::vector<double> chord_length_parametrization_spacing(const std::vector<Eigen
 }
 
 
-std::vector<double> centripetal_spacing(const std::vector<Eigen::Vector2d> & control_points) {
+std::vector<double> centripetal_spacing(const std::vector<Eigen::Vector2d> & control_points)
+{
   double total_length = 0;
   for (int i = 1; i < control_points.size(); i++) {
     total_length += std::sqrt((control_points.at(i) - control_points.at(i - 1)).norm());
@@ -313,14 +351,20 @@ std::vector<double> centripetal_spacing(const std::vector<Eigen::Vector2d> & con
   // First point is always 0
   out.push_back(0);
   for (int i = 1; i < control_points.size(); i++) {
-    out.push_back(out.back() + std::sqrt((control_points.at(i) - control_points.at(i - 1)).norm()) / total_length);
+    out.push_back(
+      out.back() + std::sqrt(
+        (control_points.at(i) - control_points.at(
+          i - 1)).norm()) / total_length);
   }
   // Last point should always be 1
 
   return out;
 }
 
-double basis_function(const std::size_t i, const std::size_t p, const double u, const std::vector<double> & knot_sequence) {
+double basis_function(
+  const std::size_t i, const std::size_t p, const double u,
+  const std::vector<double> & knot_sequence)
+{
   if (p == 0) {
     if (knot_sequence.at(i) <= u && u < knot_sequence.at(i + 1)) {
       return 1;
@@ -331,19 +375,23 @@ double basis_function(const std::size_t i, const std::size_t p, const double u, 
 
   // For the sake of calculation, 0/0 = 0
   // See Knots with Positive Multiplicity https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-ex-1.html
-  auto coeff = [&knot_sequence] (double u, std::size_t i, std::size_t p) {
-    if (knot_sequence.at(i + p) == knot_sequence.at(i)) {
-      return 0.0;
-    }
-    return (u - knot_sequence.at(i)) / (knot_sequence.at(i + p) - knot_sequence.at(i));
-  };
+  auto coeff = [&knot_sequence](double u, std::size_t i, std::size_t p) {
+      if (knot_sequence.at(i + p) == knot_sequence.at(i)) {
+        return 0.0;
+      }
+      return (u - knot_sequence.at(i)) / (knot_sequence.at(i + p) - knot_sequence.at(i));
+    };
 
   // See Definition https://en.wikipedia.org/wiki/B-spline
   return coeff(u, i, p) * basis_function(i, p - 1, u, knot_sequence) +
-   (1 - coeff(u, i + 1, p)) * basis_function(i + 1, p - 1, u, knot_sequence);
+         (1 - coeff(u, i + 1, p)) * basis_function(i + 1, p - 1, u, knot_sequence);
 }
 
-std::vector<Eigen::Vector2d> knot_points(const std::size_t degree, const std::vector<Eigen::Vector2d> & control_points, const std::vector<double> & knot_sequence) {
+std::vector<Eigen::Vector2d> knot_points(
+  const std::size_t degree,
+  const std::vector<Eigen::Vector2d> & control_points,
+  const std::vector<double> & knot_sequence)
+{
   std::vector<Eigen::Vector2d> out;
   for (const auto & u : knot_sequence) {
     Eigen::Vector2d knot_point{0, 0};
@@ -357,7 +405,12 @@ std::vector<Eigen::Vector2d> knot_points(const std::size_t degree, const std::ve
   return out;
 }
 
-Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, const std::vector<Eigen::Vector2d> & control_points, const std::vector<double> & knot_sequence) {
+Eigen::Vector2d de_boors_algorithm(
+  const double u,
+  const std::size_t degree,
+  const std::vector<Eigen::Vector2d> & control_points,
+  const std::vector<double> & knot_sequence)
+{
   // Taking the example implementation with the extra programming optimization
   // from https://en.wikipedia.org/wiki/De_Boor%27s_algorithm#Example_implementation
 
@@ -376,7 +429,7 @@ Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, con
   std::size_t k;
   for (k = 0; k < t.size() - 1; k++) {
     // If u == 1, return the range [prev_knot, 1) instead of [1,)
-    if (u >= t.at(k) && u < t.at(k + 1) || t.at(k + 1) == 1.0) {
+    if ((u >= t.at(k) && u < t.at(k + 1)) || t.at(k + 1) == 1.0) {
       break;
     }
   }
@@ -387,7 +440,9 @@ Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, con
     // Control point list size, degree, and knot point list size are a function of each other
     // Note: that there is size buffering as well on the knot points which make this all confusing
     ATEAM_CHECK(j + k - degree >= 0, "Degree and control points sizes dont match");
-    ATEAM_CHECK(j + k - degree < control_points.size(), "Degree and control points sizes dont match");
+    ATEAM_CHECK(
+      j + k - degree < control_points.size(),
+      "Degree and control points sizes dont match");
 
     d.push_back(control_points.at(j + k - degree));
   }
@@ -413,4 +468,4 @@ Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, con
   return d.at(degree);
 }
 
-}  // BSpline
+}  // namespace BSpline

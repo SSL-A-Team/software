@@ -18,15 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "trajectory_generation/b_spline.hpp"
+#include "trajectory_generation/b_spline_wrapper.hpp"
 
 #include <angles/angles.h>
+
+#include <algorithm>
+
 #include <ateam_common/status.hpp>
 
 #include "trajectory_generation/b_spline.hpp"
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
 
-namespace BSplineWrapper {
+namespace BSplineWrapper
+{
 
 Trajectory Generate(
   const std::vector<Eigen::Vector2d> waypoints,
@@ -44,11 +48,12 @@ Trajectory Generate(
   // Generate the base "trajectories"
   //
 
+  // TODO(jneiger): Split x/y limits to be independent
   BSpline::Input b_input;
   b_input.data_points = waypoints;
   b_input.initial_vel = Eigen::Vector2d{start_vel.x(), start_vel.y()};
   b_input.end_vel = Eigen::Vector2d{end_vel.x(), end_vel.y()};
-  b_input.max_accel = max_accel_limits.x(); // Assume X/Y limits are the same
+  b_input.max_accel = max_accel_limits.x();  // Assume X/Y limits are the same
   b_input.max_vel = max_vel_limits.x();
 
   // Need enough samples that the conversion from curve to a series of line segments
@@ -58,17 +63,19 @@ Trajectory Generate(
   BSpline::Output b_output = BSpline::build_and_sample_spline(b_input, kNumSamples);
 
   // Plan heading trajectory (output is function of time)
-  double modified_end_heading = start_heading + angles::shortest_angular_distance(start_heading, end_heading);
-  
+  double modified_end_heading = start_heading + angles::shortest_angular_distance(
+    start_heading,
+    end_heading);
+
   std::array<TrapezoidalMotionProfile::Trajectory1d, 3> trajectories;
   trajectories.at(2) =
     TrapezoidalMotionProfile::Generate1d(
-      start_heading,
-      start_vel.z(),
-      modified_end_heading,
-      end_vel.z(),
-      max_vel_limits.z(),
-      max_accel_limits.z(), dt);
+    start_heading,
+    start_vel.z(),
+    modified_end_heading,
+    end_vel.z(),
+    max_vel_limits.z(),
+    max_accel_limits.z(), dt);
 
   //
   // Sample b spline output to be on the same time series as the heading
@@ -93,7 +100,8 @@ Trajectory Generate(
     if (target_t >= prev_segment_t && target_t < end_of_segment_t) {
       // Interpolate the actual position / velocity / accel
       double coeff = (target_t - prev_segment_t) / (end_of_segment_t - prev_segment_t);
-      double vel_mag = b_output.samples.at(i).v + (target_t - prev_segment_t) * b_output.samples.at(i).a;
+      double vel_mag = b_output.samples.at(i).v + (target_t - prev_segment_t) * b_output.samples.at(
+        i).a;
 
       TrapezoidalMotionProfile::Sample1d x_sample{
         .time = target_t,
@@ -123,6 +131,7 @@ Trajectory Generate(
   //
   Trajectory output;
 
+  // TODO(jneiger): Scale the trajectories instead of copying the last
   std::size_t t_idx = 0;
   double t = current_time;
   bool is_more_left = true;
@@ -154,4 +163,4 @@ Trajectory Generate(
 
   return output;
 }
-}
+}  // namespace BSplineWrapper

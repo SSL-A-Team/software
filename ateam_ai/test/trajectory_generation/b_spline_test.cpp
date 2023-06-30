@@ -184,8 +184,6 @@ TEST(b_spline, de_boors_algorithm_ShouldExmaple_WhenNontrivial)
 {
   // Example from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/de-Boor.html
   std::size_t p = 3;
-  std::size_t n = 6;
-  std::size_t m = 10;
   Eigen::Vector2d P_0_0{0, 0};
   Eigen::Vector2d P_1_0{1, 0};
   Eigen::Vector2d P_2_0{2, 0};
@@ -210,7 +208,7 @@ TEST(b_spline, de_boors_algorithm_ShouldExmaple_WhenNontrivial)
   Eigen::Vector2d P_4_1 = 0.8 * P_3_0 + 0.2 * P_4_0;
   Eigen::Vector2d P_3_1 = 0.47 * P_2_0 + 0.53 * P_3_0;
   Eigen::Vector2d P_2_1 = 0.2 * P_1_0 + 0.8 * P_2_0;
-  
+
   Eigen::Vector2d P_4_2 = 0.7 * P_3_1 + 0.3 * P_4_1;
   Eigen::Vector2d P_3_2 = 0.2 * P_2_1 + 0.8 * P_3_1;
 
@@ -259,6 +257,7 @@ TEST(b_spline, build_and_sample_spline)
   auto out = BSpline::build_and_sample_spline(i, 30);
 
   for (int i = 0; i < out.samples.size(); i++) {
-    std::cout << out.samples.at(i).p.x() << " " << out.samples.at(i).p.y() << " " << out.samples.at(i).v << " " << out.samples.at(i).a << std::endl;
+    std::cout << out.samples.at(i).p.x() << " " << out.samples.at(i).p.y() << " " << out.samples.at(
+      i).v << " " << out.samples.at(i).a << std::endl;
   }
 }

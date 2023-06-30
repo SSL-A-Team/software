@@ -27,7 +27,8 @@
 
 #include "types/trajectory.hpp"
 
-namespace BSplineWrapper {
+namespace BSplineWrapper
+{
 
 Trajectory Generate(
   const std::vector<Eigen::Vector2d> waypoints,

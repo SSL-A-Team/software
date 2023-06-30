@@ -37,7 +37,8 @@
 namespace BSpline
 {
 
-struct Input {
+struct Input
+{
   std::vector<Eigen::Vector2d> data_points;
   Eigen::Vector2d initial_vel;
   Eigen::Vector2d end_vel;
@@ -46,14 +47,17 @@ struct Input {
   double max_vel;
 };
 
-struct InternalState {
+struct InternalState
+{
   std::vector<Eigen::Vector2d> control_points;
   std::vector<double> knot_sequence;
   std::vector<double> knot_sequence_with_multiplicity;
 };
 
-struct Output {
-  struct Sample2d {
+struct Output
+{
+  struct Sample2d
+  {
     Eigen::Vector2d p;
     double v;
     double a;
@@ -71,7 +75,9 @@ Output build_and_sample_spline(const Input & input, const std::size_t num_sample
  * Given the internal control and knot sequences.
  * Produce a series of equally sampled points along the spline
 */
-std::vector<Eigen::Vector2d> sample_spline(const InternalState & state, const std::size_t num_samples);
+std::vector<Eigen::Vector2d> sample_spline(
+  const InternalState & state,
+  const std::size_t num_samples);
 
 /**
  * Convert the data points to a series of control points and knots
@@ -84,12 +90,14 @@ InternalState convert_to_spline(const Input & input);
  *
  * |multiplicity| = 3 with velocity constraints produce splines that start/end at the end control_points with the defined velocity
 */
-std::vector<double> apply_multiplicity(const std::vector<double> & knot_sequence, const std::size_t multiplicity);
+std::vector<double> apply_multiplicity(
+  const std::vector<double> & knot_sequence,
+  const std::size_t multiplicity);
 
 /**
  * Given a sequence of control points, find the spacing of knots.
  * This is pre multiplicity.
- * 
+ *
  * Spacing is on a scale of 0 ... 1 inclusive
 */
 std::vector<double> get_knot_sequence(const std::vector<Eigen::Vector2d> & control_points);
@@ -104,7 +112,8 @@ std::vector<double> constant_spacing(const std::vector<Eigen::Vector2d> & contro
  *
  * Eq 9.16, page 163
 */
-std::vector<double> chord_length_parametrization_spacing(const std::vector<Eigen::Vector2d> & control_points);
+std::vector<double> chord_length_parametrization_spacing(
+  const std::vector<Eigen::Vector2d> & control_points);
 
 /**
  * Applies a sqrt of the distance proportional spacing of knots
@@ -118,19 +127,27 @@ std::vector<double> centripetal_spacing(const std::vector<Eigen::Vector2d> & con
  *
  * The basis function is a box car step functions
 */
-double basis_function(const std::size_t i, const std::size_t p, const double u, const std::vector<double> & knot_sequence);
+double basis_function(
+  const std::size_t i, const std::size_t p, const double u,
+  const std::vector<double> & knot_sequence);
 
 /**
  * Calculates the knot points
  *
  * Knot points are on the B spline curve that split the curve into segments
 */
-std::vector<Eigen::Vector2d> knot_points(const std::size_t degree, const std::vector<Eigen::Vector2d> & control_points, const std::vector<double> & knot_sequence);
+std::vector<Eigen::Vector2d> knot_points(
+  const std::size_t degree,
+  const std::vector<Eigen::Vector2d> & control_points,
+  const std::vector<double> & knot_sequence);
 
 /**
  * Samples the curve at location u in range [0, 1] corresponding the the % along the B spline
 */
-Eigen::Vector2d de_boors_algorithm(const double u, const std::size_t degree, const std::vector<Eigen::Vector2d> & control_points, const std::vector<double> & knot_sequence);
+Eigen::Vector2d de_boors_algorithm(
+  const double u, const std::size_t degree,
+  const std::vector<Eigen::Vector2d> & control_points,
+  const std::vector<double> & knot_sequence);
 }  // namespace BSpline
 
 #endif  // TRAJECTORY_GENERATION__B_SPLINE_HPP_
