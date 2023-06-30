@@ -24,7 +24,6 @@
 
 TEST(b_spline_wrapper, basic_test)
 {
-  // todo: size 2/3 broken
   std::vector<Eigen::Vector2d> waypoints{
     Eigen::Vector2d{0, 0},
     Eigen::Vector2d{5, 3},

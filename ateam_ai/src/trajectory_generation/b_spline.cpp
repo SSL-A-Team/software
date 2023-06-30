@@ -210,67 +210,82 @@ InternalState convert_to_spline(const Input & input)
     L - 2, 3, tau.at(
       k - 1), tau_with_multiplicity);
 
-  // Eq 9.11, don't use 9.12 as it's difficult to figure out
-  // Note that row 2 (index 1) is centered on the second basis function index (1, 2, 3)
-  // which is i-1, i, i+1, not i, i+1, i+2. All tridiagonal lines should be non-zero
-  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(k - 1, k - 1);
-  A(0, 0) = basis_function(1, 3, tau.at(1), tau_with_multiplicity);
-  A(0, 1) = basis_function(2, 3, tau.at(1), tau_with_multiplicity);
-  for (std::size_t i = 2; i <= k - 2; i++) {
-    for (std::size_t p = 0; p < 3; p++) {
-      // Get the p==2 on the diagonal
-      int col_idx = p + i - 2;
-      int row_idx = i - 1;
 
-      // First and law row start and end outside bounds
-      if (col_idx < 0 || col_idx >= A.rows()) {
-        continue;
+  // TODO(jneiger): Do the 2/3 data point case in a less weird way
+  bool skip_middle_points = false;
+  Eigen::VectorXd x;
+  Eigen::VectorXd y;
+  if (input.data_points.size() == 2) {
+    // If we only have 2 points, we already calculated them
+    skip_middle_points = true;
+  } else if (input.data_points.size() == 3) {
+    // If we only have 3 points, the middle point is the control point (???)
+    x = Eigen::Vector<double, 1>{input.data_points.at(1).x()};
+    y = Eigen::Vector<double, 1>{input.data_points.at(1).y()};
+  } else {
+    // Eq 9.11, don't use 9.12 as it's difficult to figure out
+    // Note that row 2 (index 1) is centered on the second basis function index (1, 2, 3)
+    // which is i-1, i, i+1, not i, i+1, i+2. All tridiagonal lines should be non-zero
+    Eigen::MatrixXd A = Eigen::MatrixXd::Zero(k - 1, k - 1);
+    A(0, 0) = basis_function(1, 3, tau.at(1), tau_with_multiplicity);
+    A(0, 1) = basis_function(2, 3, tau.at(1), tau_with_multiplicity);
+    for (std::size_t i = 2; i <= k - 2; i++) {
+      for (std::size_t p = 0; p < 3; p++) {
+        // Get the p==2 on the diagonal
+        int col_idx = p + i - 2;
+        int row_idx = i - 1;
+
+        // First and law row start and end outside bounds
+        if (col_idx < 0 || col_idx >= A.rows()) {
+          continue;
+        }
+        A(row_idx, col_idx) = basis_function(i + p - 1, 3, tau.at(i), tau_with_multiplicity);
       }
-      A(row_idx, col_idx) = basis_function(i + p - 1, 3, tau.at(i), tau_with_multiplicity);
     }
-  }
-  A(k - 2, k - 3) = basis_function(L - 4, 3, tau.at(k - 1), tau_with_multiplicity);
-  A(k - 2, k - 2) = basis_function(L - 3, 3, tau.at(k - 1), tau_with_multiplicity);
+    A(k - 2, k - 3) = basis_function(L - 4, 3, tau.at(k - 1), tau_with_multiplicity);
+    A(k - 2, k - 2) = basis_function(L - 3, 3, tau.at(k - 1), tau_with_multiplicity);
 
-  // See EQ 9.12, vector b of the Ax=b
-  Eigen::VectorXd b = Eigen::VectorXd::Zero(k - 1);
-  for (int i = 0; i < b.rows(); i++) {
-    if (i == 0) {
-      // i = 0
-      b(i) = r_s.x();
-    } else if (i == b.rows() - 1) {
-      // i = K - 1
-      b(i) = r_e.x();
-    } else {
-      // i = (1 ... K - 2)
-      b(i) = input.data_points.at(i + 1).x();  // 2 .. K-2
+    // See EQ 9.12, vector b of the Ax=b
+    Eigen::VectorXd b = Eigen::VectorXd::Zero(k - 1);
+    for (int i = 0; i < b.rows(); i++) {
+      if (i == 0) {
+        // i = 0
+        b(i) = r_s.x();
+      } else if (i == b.rows() - 1) {
+        // i = K - 1
+        b(i) = r_e.x();
+      } else {
+        // i = (1 ... K - 2)
+        b(i) = input.data_points.at(i + 1).x();  // 2 .. K-2
+      }
     }
-  }
 
-  // Output is the x coordinates of the control points 2..L-2
-  // TODO(jneiger): replace with a true "tridiagonal" solver like the following
-  // https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
-  Eigen::VectorXd x = A.colPivHouseholderQr().solve(b);
+    // Output is the x coordinates of the control points 2..L-2
+    // TODO(jneiger): replace with a true "tridiagonal" solver like the following
+    // https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
+    x = A.colPivHouseholderQr().solve(b);
 
-  for (int i = 0; i < b.rows(); i++) {
-    if (i == 0) {
-      // i = 0
-      b(i) = r_s.y();
-    } else if (i == b.rows() - 1) {
-      // i = K - 1
-      b(i) = r_e.y();
-    } else {
-      // i = (1 ... K - 2)
-      b(i) = input.data_points.at(i + 1).y();  // 2 .. K-2
+    for (int i = 0; i < b.rows(); i++) {
+      if (i == 0) {
+        // i = 0
+        b(i) = r_s.y();
+      } else if (i == b.rows() - 1) {
+        // i = K - 1
+        b(i) = r_e.y();
+      } else {
+        // i = (1 ... K - 2)
+        b(i) = input.data_points.at(i + 1).y();  // 2 .. K-2
+      }
     }
+    y = A.colPivHouseholderQr().solve(b);
   }
-  Eigen::VectorXd y = A.colPivHouseholderQr().solve(b);
-
   std::vector<Eigen::Vector2d> control_points;
   control_points.push_back(d_0);
   control_points.push_back(d_1);
-  for (int i = 0; i < x.rows(); i++) {
-    control_points.push_back(Eigen::Vector2d{x(i), y(i)});
+  if (!skip_middle_points) {
+    for (int i = 0; i < x.rows(); i++) {
+      control_points.push_back(Eigen::Vector2d{x(i), y(i)});
+    }
   }
   control_points.push_back(d_L_1);
   control_points.push_back(d_L);
