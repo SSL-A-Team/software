@@ -69,11 +69,10 @@ std::vector<BehaviorGoal> generate_points_around_ball(
   double robotDiameter = 0.18;
   // Where is the ball?
   std::optional<Eigen::Vector2d> ball_location = world.get_unique_ball();
-  while (!ball_location.has_value()) {
-    ball_location = world.get_unique_ball();
+  if (!ball_location.has_value()) {
+    return points_around_ball;
   }
   ateam_geometry::Point ball = ateam_geometry::EigenToPoint(ball_location);
-  std::vector<BehaviorGoal> points_around_ball;
   // Used to create points around a circle with radius 0.5 m
   Random_points_on_circle_2<ateam_geometry::Point,
     ateam_geometry::PointCreator> circlePointGenerator;
@@ -101,6 +100,7 @@ std::vector<BehaviorGoal> generate_points_around_ball(
           if (points_around_ball.length() > 2) {
             break;
           }
+          previous_point = candidate;
         }
       }
     }

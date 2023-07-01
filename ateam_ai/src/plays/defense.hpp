@@ -29,7 +29,6 @@
 
 #include "types/world.hpp"
 #include "types/behavior_goal.hpp"
-#include "ateam_geometry/utilities.hpp"
 #include "ateam_geometry/ateam_geometry.hpp"
 
 const FieldSidedInfo & our_side_info
@@ -50,7 +49,7 @@ DirectedGraph<BehaviorGoal> generate_basic_defense(
   return defense_graph;
 }
 
-BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info)
+BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info, const World & world)
 {
   // Line that is 0.5 m from the defense area in all directions
   ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
@@ -61,8 +60,10 @@ BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info)
 
   // Get the ball location
   std::optional<Eigen::Vector2d> ball_location = world.get_unique_ball();
-  while (!ball_location.has_value()) {
-    ball_location = world.get_unique_ball();
+  if (!ball_location.has_value()) {
+    // Since we will always want a goalie somewhere, we just choose
+    // a point for it to intercept rather than returning empty behaviors
+    ball_location = ateam_geometry::Point(0, 0);
   }
 
   // Get the point on the goalie line that is closest to the ball
@@ -71,8 +72,9 @@ BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info)
   // Have the goalie defend the goal by going to that point
   return BehaviorGoal goalie {
     BehaviorGoal::Type::MoveToPoint,
-    BehaviorGoal::Priority::Required,
-    MoveParam(_goalie_point)
+    BehaviorGoal::Priority::Reserved,
+    MoveParam(_goalie_point),
+    reserved_robot_id = world.referee_info.our_goalie_id
   };
 }
 
@@ -83,8 +85,8 @@ std::vector<BehaviorGoal> get_defense_behavior_goals(
   std::vector<BehaviorGoal> defenders;
   std::optional<Eigen::Vector2d> ball_location = world.get_unique_ball();
   // Get line between the ball and the goal
-  while (!ball_location.has_value()) {
-    ball_location = world.get_unique_ball();
+  if (!ball_location.has_value()) {
+    return defenders;
   }
   ateam_geometry::Point ball = ateam_geometry::EigenToPoint(ball_location);
   ateam_geometry::Point middle_of_our_goal = (-4.5, 0);
@@ -110,8 +112,8 @@ std::vector<BehaviorGoal> get_defense_behavior_goals(
             BehaviorGoal::Priority::Required,
             MoveParam(ateam_geometry::PointToEigen(candidate))
           }
-          points_around_ball.push_back(go_to_point);
-          if (points_around_ball.length() > num_defenders - 1) {
+          defenders.push_back(go_to_point);
+          if (defenders.length() > num_defenders - 1) {
             break;
           }
         }
