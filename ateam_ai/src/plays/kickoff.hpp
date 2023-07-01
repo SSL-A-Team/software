@@ -53,8 +53,9 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(
   // Have the goalie defend the goal
   BehaviorGoal goalie {
     BehaviorGoal::Type::MoveToPoint,
-    BehaviorGoal::Priority::Required,
-    MoveParam(_goalie_point)
+    BehaviorGoal::Priority::Reserved,
+    MoveParam(_goalie_point),
+    reserved_robot_id =
   };
 
   our_kickoff.add_node(goalie);
