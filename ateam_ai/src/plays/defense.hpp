@@ -44,7 +44,7 @@ DirectedGraph<BehaviorGoal> generate_basic_defense(
   defense_graph.add_node(goalie);
 
   std::vector<BehaviorGoal> defenders = get_defense_behavior_goals(world, field, 2);
-  for (BehaviorGoal defender : defenders){
+  for (BehaviorGoal defender : defenders) {
     defense_graph.add_node(defender);
   }
   return defense_graph;
@@ -53,7 +53,11 @@ DirectedGraph<BehaviorGoal> generate_basic_defense(
 BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info)
 {
   // Line that is 0.5 m from the defense area in all directions
-  ateam_geometry::Segment goalie_line = ateam_geometry::Segment(ateam_geometry::Point(-4, 0.5), ateam_geometry::Point(-4, -0.5));
+  ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
+    ateam_geometry::Point(
+      -4,
+      0.5), ateam_geometry::Point(
+      -4, -0.5));
 
   // Get the ball location
   std::optional<Eigen::Vector2d> ball_location = world.get_unique_ball();
