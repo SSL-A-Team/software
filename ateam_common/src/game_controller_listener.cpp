@@ -99,20 +99,25 @@ void GameControllerListener::RefereeMessageCallback(
 
   game_stage_ = static_cast<GameStage>(msg->stage);
 
+  // Yellow commands are even, blue are odd
+  // we_blue  odd(blue command)
+  // 0        0                   ours    leave it
+  // 0        1                   theirs  leave it
+  // 1        0                   theirs  add by 1 to be theirs
+  // 1        1                   ours    sub by 1 to be ours
+
+
+  // ignore if we dont know our team color yet
+  // only force start and above have this mapping
   uint8_t command = msg->command;
-  // if we know the color and the team
   if (team_color_ != TeamColor::Unknown &&
     command > static_cast<std::underlying_type_t<GameCommand>>(GameCommand::ForceStart))
   {
-    // Note depends on odd even of commands index which is a little awkward but nice here
-    // They havent changed the api for years but be warned
-    // Yellow is even, blue is odd
     if (team_color_ == TeamColor::Blue) {
       bool command_is_blue = command % 2 == 1;
       command += (command_is_blue ? -1 : 1);
     }
   }
-
   game_command_ = static_cast<GameCommand>(command);
 
   if (team_color_ != TeamColor::Unknown) {

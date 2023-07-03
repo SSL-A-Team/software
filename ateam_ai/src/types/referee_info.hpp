@@ -29,7 +29,10 @@ struct RefereeInfo
   int our_goalie_id;
   int their_goalie_id;
   ateam_common::GameStage current_game_stage;
+  // should make this an object and provide a set game command at some point
+  // so it will implicitly set prev
   ateam_common::GameCommand running_command;
+  ateam_common::GameCommand prev_command;
 };
 
 #endif  // TYPES__REFEREE_INFO_HPP_

@@ -27,7 +27,7 @@
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
-#include "util/kickoff_detector.hpp"
+#include "util/in_play_eval.hpp"
 
 /**
  * Figure out which set of behaviors to runteam_color_
@@ -41,7 +41,7 @@ public:
 
 private:
   BehaviorRealization & behavior_realization;
-  KickoffDetector kickoff_detector;
+  InPlayEval in_play_eval;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_EVALUATOR_HPP_

@@ -58,4 +58,4 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(const World & world)
   our_kickoff.add_node(goalie);
   // TODO: Generate optional defenders for the rest of the robots that might exist
 }
-#endif // PLAYS__KICKOFF_HPP
+#endif  // PLAYS__KICKOFF_HPP

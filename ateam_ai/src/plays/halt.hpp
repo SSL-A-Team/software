@@ -21,10 +21,10 @@
 #ifndef PLAYS__HALT_HPP_
 #define PLAYS__HALT_HPP_
 
+#include <Eigen/Dense>
+
 #include "types/world.hpp"
 #include "types/behavior_goal.hpp"
-
-#include <Eigen/Dense>
 
 DirectedGraph<BehaviorGoal> generate_halt(const World & world)
 {

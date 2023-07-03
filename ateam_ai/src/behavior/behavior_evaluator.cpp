@@ -48,32 +48,58 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
   //
 
   // All common coding sense went out the window at about 9pm so.....
-  ateam_common::GameStage current_game_stage = world.referee_info.current_game_stage;
+  // ateam_common::GameStage current_game_stage = world.referee_info.current_game_stage;
   ateam_common::GameCommand running_command = world.referee_info.running_command;
+  ateam_common::GameCommand prev_command = world.referee_info.prev_command;
 
-  kickoff_detector.update(world);
+  in_play_eval.update(world);
   DirectedGraph<BehaviorGoal> behavior_out {};
+
   switch (running_command) {
     case ateam_common::GameCommand::Halt:
-      generate_halt(world);
+      behavior_out = generate_halt(world);
       break;
     case ateam_common::GameCommand::Stop:
-      generate_halt(world);
+      behavior_out = generate_halt(world);
       break;
     case ateam_common::GameCommand::NormalStart:
-      if (kickoff_detector.output_state == KickoffDetector::KickoffState::KickoffTheirs) {
-        // we have to wait for them to kick, movement lock still in effect
-      } else if (kickoff_detector.output_state == KickoffDetector::KickoffState::KickoffOurs) {
-        // we can kick now only with the kicker, movement lock still in effect
-      } else {
+      if (in_play_eval.in_play) {
         // free play
-        generate_basic_shoot(world);
+        behavior_out = generate_basic_shoot(world);
+      } else {
+        switch (prev_command) {
+          case ateam_common::GameCommand::PrepareKickoffOurs:
+            // we can kick now only with the kicker, movement lock still in effect
+            break;
+          case ateam_common::GameCommand::PrepareKickoffTheirs:
+            // we have to wait for them to kick, movement lock still in effect
+            break;
+          case ateam_common::GameCommand::DirectFreeOurs:
+            // we can kick now only with the kicker, movement lock still in effect
+            /* code */
+            break;
+          case ateam_common::GameCommand::DirectFreeTheirs:
+            // we have to wait for them to kick, movement lock still in effect
+            /* code */
+            break;
+          case ateam_common::GameCommand::PreparePenaltyOurs:
+            // we can kick now only with the kicker, no double touch applies here AND WE CAN ONLY MOVE TORWARDS THE GOAL
+            /* code */
+            break;
+          case ateam_common::GameCommand::PreparePenaltyTheirs:
+            // we have to wait for them to kick, movement lock still in effect
+            /* code */
+            break;
+
+          default:
+            break;
+        }
       }
     case ateam_common::GameCommand::ForceStart:
-      generate_basic_shoot(world);
+      behavior_out = generate_basic_shoot(world);
       break;
     case ateam_common::GameCommand::PrepareKickoffOurs:
-      setup_our_kickoff(world);
+      behavior_out = setup_our_kickoff(world);
       break;
     case ateam_common::GameCommand::PrepareKickoffTheirs:
 

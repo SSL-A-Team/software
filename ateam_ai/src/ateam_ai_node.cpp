@@ -245,7 +245,11 @@ private:
     }
 
     // Get current game state for world
-    world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
+    auto command = game_controller_listener_.GetGameCommand();
+    if (command != world_.referee_info.running_command) {
+      world_.referee_info.running_command = world_.referee_info.prev_command;
+      world_.referee_info.running_command = command;
+    }
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
     world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value_or(0); // current work has just made me into a self doubt pit I cant do anything right
     world_.referee_info.their_goalie_id = game_controller_listener_.GetTheirGoalieID().value_or(0);
