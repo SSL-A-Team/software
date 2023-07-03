@@ -40,6 +40,38 @@ void PrintPath(const RrtPathPlanner::Path & path)
     });
 }
 
+void ExpectPathDoesNotCollide(
+  const RrtPathPlanner::Path & path, const World & world,
+  const std::vector<ateam_geometry::AnyShape> & obstacles)
+{
+  auto robot_footprint = ateam_geometry::makeCircle(ateam_geometry::EigenToPoint(pos), 0.09);
+  auto pos_hits_any_obstacle = [&obstacles, &robot_footprint](const Eigen::Vector2d & pos) {
+      return std::ranges::any_of(
+        obstacles, [&robot_footprint](const auto & obstacle) {
+          return ateam_geometry::variantDoIntersect(robot_footprint, obstacle);
+        });
+    };
+  auto pos_hits_any_robot = [&world, &robot_footprint](const Eigen::Vector2d & pos) {
+      auto hits_our_robots = std::ranges::any_of(
+        world.our_robots, [&pos](const auto & robot) {
+          return robot.has_value() && (pos - robot->pos).norm() <= 0.180;
+        });
+      auto hits_their_robots = std::ranges::any_of(
+        world.their_robots, [&pos](const auto & robot) {
+          return robot.has_value() && (pos - robot->pos).norm() <= 0.180;
+        });
+      return hits_our_robots || hits_their_robots;
+    };
+  if(path.size() < 2) {
+    return;  // empty paths cannot collide
+  }
+  for(auto i = 1u; i < path.size(); ++i) {
+    ateam_geometry::Segment path_segment(ateam_geometry::EigenToPoint(path[i-1]), ateam_geometry::EigenToPoint(path[i]));
+    // if(std::ranges::any_of(obstacles, [&path_segment]))
+    // TODO(barulicm) check full robot width along path
+  }
+}
+
 void ExpectPathSatisfiesRequest(
   const RrtPathPlanner::Path & path,
   const World & world,
