@@ -42,6 +42,7 @@ export class AppState {
     services: ROSLIB.Service[]
 
     sim: boolean = true;
+    comp: boolean = true; // TODO: find a better way to set this value
 
     setGoalie(goalie_id) {
         const request = new ROSLIB.ServiceRequest({
@@ -61,7 +62,7 @@ export class AppState {
                 return "X";
             }
 
-            return id;
+            return String(id);
         }
 
         return "X";

@@ -6,7 +6,7 @@
         <v-main>
             <v-container fluid class="d-inline-flex">
             <v-row class="flex-nowrap">
-                <v-col class="flex-grow-0 flex-shrink-0">
+                <v-col v-if="!this.state.comp" class="flex-grow-0 flex-shrink-0">
                     <RefButtonsComponent/>
                 </v-col>
                 <v-col class="flex-grow-0 flex-shrink-0">

@@ -61,12 +61,4 @@ export class Referee {
     }
 
     // TODO: Add game_events[]
-
-    getGoalie(team: TeamColor): string {
-        if (this[team] && this[team].goalkeeper != null && this[team].goalkeeper != undefined) {
-            return this[team].goalkeeper;
-        }
-
-        return "X"
-    }
 }
