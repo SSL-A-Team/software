@@ -25,6 +25,7 @@
 #include <cmath>
 
 #include <ateam_common/parameters.hpp>
+#include "plays/defense.hpp"
 
 CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
 

@@ -30,7 +30,7 @@
 #include "types/field.hpp"
 #include "types/world.hpp"
 
-bool is_point_in_bounds(ateam_geometry::Point & point, Field & field)
+bool is_point_in_bounds(const ateam_geometry::Point & point, const Field & field)
 {
   if (point.x() > field.field_width / 2 || point.x() < -field.field_width / 2) {
     return false;
@@ -45,10 +45,10 @@ bool is_point_in_defense_area(ateam_geometry::Point & point, Field & field){};
 
 bool is_point_in_robot(ateam_geometry::Point & candidate_point, World & world){
   auto check_point = [&candidate_point](const std::optional<Robot> robot){
-    return robot.has_value() && (position - robot->pos).norm() <= kRobotDiameter;
-  }
+    return robot.has_value() && (ateam_geometry::PointToEigen(candidate_point) - robot->pos).norm() <= kRobotDiameter;
+  };
   
-  return std::ranges::any_of(world.our_robots, check_point) || std::ranges::any_of(world.their_robots, check_point);
+  return (std::ranges::any_of(world.our_robots, check_point) || std::ranges::any_of(world.their_robots, check_point));
 };
 
 #endif  // PLAYS__PLAY_HELPERS_HPP_
