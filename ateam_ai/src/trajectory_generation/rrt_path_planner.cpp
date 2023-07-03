@@ -24,6 +24,7 @@
 #include <ompl/util/Console.h>
 #include <ranges>
 #include <algorithm>
+#include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 
 namespace ateam_ai::trajectory_generation
@@ -50,30 +51,30 @@ RrtPathPlanner::Path RrtPathPlanner::generatePath(
   std::vector<ateam_geometry::AnyShape> obstacles_and_robots(obstacles);
   auto obstacle_from_robot = [](const std::optional<Robot> & robot) {
       return ateam_geometry::AnyShape(
-        ateam_geometry::makeCircle(ateam_geometry::EigenToPoint(robot.value().pos), 0.09));
+        ateam_geometry::makeCircle(ateam_geometry::EigenToPoint(robot.value().pos), kRobotRadius));
     };
 
-  // auto not_current_robot = [&start_pos](const std::optional<Robot> & robot) {
-  //     // Assume any robot close enough to the start pos is the robot trying to navigate
-  //     return (robot.value().pos.head(2) - start_pos).norm() > 0.090;  // threshold is robot radius
-  //   };
+  auto not_current_robot = [&start_pos](const std::optional<Robot> & robot) {
+      // Assume any robot close enough to the start pos is the robot trying to navigate
+      return (robot.value().pos.head(2) - start_pos).norm() > kRobotRadius;
+    };
 
-  // auto our_robot_obstacles = world.our_robots |
-  //   std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
-  //   std::views::filter(not_current_robot) |
-  //   std::views::transform(obstacle_from_robot);
-  // obstacles_and_robots.insert(
-  //   obstacles_and_robots.end(),
-  //   our_robot_obstacles.begin(),
-  //   our_robot_obstacles.end());
+  auto our_robot_obstacles = world.our_robots |
+    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
+    std::views::filter(not_current_robot) |
+    std::views::transform(obstacle_from_robot);
+  obstacles_and_robots.insert(
+    obstacles_and_robots.end(),
+    our_robot_obstacles.begin(),
+    our_robot_obstacles.end());
 
-  // auto their_robot_obstacles = world.their_robots |
-  //   std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
-  //   std::views::transform(obstacle_from_robot);
-  // obstacles_and_robots.insert(
-  //   obstacles_and_robots.end(),
-  //   their_robot_obstacles.begin(),
-  //   their_robot_obstacles.end());
+  auto their_robot_obstacles = world.their_robots |
+    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
+    std::views::transform(obstacle_from_robot);
+  obstacles_and_robots.insert(
+    obstacles_and_robots.end(),
+    their_robot_obstacles.begin(),
+    their_robot_obstacles.end());
 
   ScopedState start(state_space_);
   start->setXY(start_pos.x(), start_pos.y());
@@ -95,7 +96,7 @@ RrtPathPlanner::Path RrtPathPlanner::generatePath(
       return isStateValid(s, obstacles_and_robots);
     });
 
-  auto planner_status = simple_setup_.solve(options.time_limit);
+  auto planner_status = simple_setup_.solve(options.search_time_limit);
 
   std::cerr << "Planner status: " << planner_status.asString() << '\n';
 
@@ -104,7 +105,7 @@ RrtPathPlanner::Path RrtPathPlanner::generatePath(
     return {};
   }
 
-  simple_setup_.simplifySolution();
+  simple_setup_.simplifySolution(options.simplification_time_limit);
 
   return convertOmplPathToEigen(simple_setup_.getSolutionPath());
 }
@@ -116,7 +117,7 @@ bool RrtPathPlanner::isStateValid(
   const auto * se2_state = state->as<ompl::base::SE2StateSpace::StateType>();
   auto robot_footprint = ateam_geometry::makeCircle(
     ateam_geometry::Point(se2_state->getX(), se2_state->getY()),
-    0.09
+    kRobotRadius
   );
 
   return std::ranges::none_of(

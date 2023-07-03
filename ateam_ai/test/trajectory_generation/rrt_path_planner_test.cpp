@@ -22,10 +22,12 @@
 
 #include <gtest/gtest.h>
 #include <ateam_common/equality_utilities.hpp>
+#include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 
 using namespace std::string_literals;
 using ateam_ai::trajectory_generation::RrtPathPlanner;
+using ateam_ai::trajectory_generation::RrtOptions;
 
 bool vectorsAreNear(const Eigen::Vector2d & a, const Eigen::Vector2d & b)
 {
@@ -40,35 +42,62 @@ void PrintPath(const RrtPathPlanner::Path & path)
     });
 }
 
+void ExpectPositionDoesNotCollide(
+  const RrtPathPlanner::Position & position, const World & world,
+  const std::vector<ateam_geometry::AnyShape> & obstacles)
+{
+  const auto robot_footprint = ateam_geometry::makeCircle(
+    ateam_geometry::EigenToPoint(
+      position), kRobotRadius);
+
+  if (std::ranges::any_of(
+      obstacles, [&robot_footprint](const auto & obstacle) {
+        return ateam_geometry::variantDoIntersect(robot_footprint, obstacle);
+      }))
+  {
+    FAIL() << "Position (" << position.x() << ", " << position.y() <<
+      ") collides with an obstacle.";
+  }
+
+  auto pos_hits_robot = [&position](const std::optional<Robot> & robot) {
+      return robot.has_value() && (position - robot->pos).norm() <= kRobotDiameter;
+    };
+
+  EXPECT_TRUE(
+    std::ranges::none_of(
+      world.our_robots,
+      pos_hits_robot)) << "Position (" << position.x() << ", " << position.y() <<
+    ") collides with one of our robots.";
+
+  EXPECT_TRUE(
+    std::ranges::none_of(
+      world.their_robots,
+      pos_hits_robot)) << "Position (" << position.x() << ", " << position.y() <<
+    ") collides with one of their robots.";
+}
+
+
 void ExpectPathDoesNotCollide(
   const RrtPathPlanner::Path & path, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles)
 {
-  auto robot_footprint = ateam_geometry::makeCircle(ateam_geometry::EigenToPoint(pos), 0.09);
-  auto pos_hits_any_obstacle = [&obstacles, &robot_footprint](const Eigen::Vector2d & pos) {
-      return std::ranges::any_of(
-        obstacles, [&robot_footprint](const auto & obstacle) {
-          return ateam_geometry::variantDoIntersect(robot_footprint, obstacle);
-        });
-    };
-  auto pos_hits_any_robot = [&world, &robot_footprint](const Eigen::Vector2d & pos) {
-      auto hits_our_robots = std::ranges::any_of(
-        world.our_robots, [&pos](const auto & robot) {
-          return robot.has_value() && (pos - robot->pos).norm() <= 0.180;
-        });
-      auto hits_their_robots = std::ranges::any_of(
-        world.their_robots, [&pos](const auto & robot) {
-          return robot.has_value() && (pos - robot->pos).norm() <= 0.180;
-        });
-      return hits_our_robots || hits_their_robots;
-    };
-  if(path.size() < 2) {
+  const auto kCollisionDetectStepSize = 0.1;
+
+  if (path.size() < 2) {
     return;  // empty paths cannot collide
   }
-  for(auto i = 1u; i < path.size(); ++i) {
-    ateam_geometry::Segment path_segment(ateam_geometry::EigenToPoint(path[i-1]), ateam_geometry::EigenToPoint(path[i]));
-    // if(std::ranges::any_of(obstacles, [&path_segment]))
-    // TODO(barulicm) check full robot width along path
+  for (auto i = 1u; i < path.size(); ++i) {
+    const Eigen::Vector2d segment_start = path[i - 1];
+    const Eigen::Vector2d segment_end = path[i];
+    const Eigen::Vector2d step_vector = (segment_end - segment_start).normalized() *
+      kCollisionDetectStepSize;
+    const int step_count = (segment_end - segment_start).norm() / kCollisionDetectStepSize;
+    for (auto step = 0; step < step_count; ++step) {
+      const Eigen::Vector2d position = segment_start + (step * step_vector);
+      ExpectPositionDoesNotCollide(position, world, obstacles);
+    }
+    // check final position in case the segment length did not evenly divide into steps
+    ExpectPositionDoesNotCollide(path.back(), world, obstacles);
   }
 }
 
@@ -85,29 +114,7 @@ void ExpectPathSatisfiesRequest(
   EXPECT_PRED2(vectorsAreNear, path.front(), start_pos) << "Path doesn't start in the right place.";
   EXPECT_PRED2(vectorsAreNear, path.back(), goal_pos) << "Path doesn't end in the right place.";
 
-  // None of the points along the path should hit an obstacle
-  // TODO(barulicm) this should check points along edges between path points
-  auto pos_hits_any_obstacle = [&obstacles](const Eigen::Vector2d & pos) {
-      auto robot_footprint = ateam_geometry::makeCircle(ateam_geometry::EigenToPoint(pos), 0.09);
-      return std::ranges::any_of(
-        obstacles, [&robot_footprint](const auto & obstacle) {
-          return ateam_geometry::variantDoIntersect(robot_footprint, obstacle);
-        });
-    };
-  EXPECT_TRUE(
-    std::ranges::none_of(
-      path,
-      pos_hits_any_obstacle)) << "Path collides with an obstacle!";
-
-  // None of the points along the path should hit a robot
-  auto pos_hits_any_robots = [&world](const Eigen::Vector2d & pos) {
-      auto hits_robot = [&pos](const std::optional<Robot> & robot) {
-          return robot.has_value() && (pos - robot->pos).norm() <= 0.180;
-        };
-      return std::ranges::any_of(world.our_robots, hits_robot) || std::ranges::any_of(
-        world.their_robots, hits_robot);
-    };
-  EXPECT_TRUE(std::ranges::none_of(path, pos_hits_any_robots));
+  ExpectPathDoesNotCollide(path, world, obstacles);
 
   if (testing::Test::HasFailure()) {
     std::cerr << "Test failed with path:\n";
@@ -152,38 +159,43 @@ TEST(RrtPathPlannerTests, avoidOneObstacle) {
   ExpectPathSatisfiesRequest(path, world, obstacles, start_pos, goal_pos);
 }
 
-// This test is timing out the path planner, taking ~33ms to solve
-// TEST(RrtPathPlannerTests, acrossFieldBetweenWalls) {
-//   RrtPathPlanner planner;
+TEST(RrtPathPlannerTests, acrossFieldBetweenWalls) {
+  RrtPathPlanner planner;
 
-//   World world;
-//   world.field.field_length = 9.0;
-//   world.field.field_width = 6.0;
-//   world.field.boundary_width = 0.3;
+  World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
+  world.field.boundary_width = 0.3;
 
-//   /* Test world:
-//    * --------------------
-//    * |            |    G|
-//    * |     |      |     |
-//    * |     |      |     |
-//    * |     |      |     |
-//    * |     |      |     |
-//    * |S    |            |
-//    * --------------------
-//    */
+  /* Test world:
+   * --------------------
+   * |            |    G|
+   * |     |      |     |
+   * |     |      |     |
+   * |     |      |     |
+   * |     |      |     |
+   * |S    |            |
+   * --------------------
+   */
 
-//   Eigen::Vector2d start_pos(-4.5, -3.0);
-//   Eigen::Vector2d goal_pos(4.5, 3.0);
+  Eigen::Vector2d start_pos(-4.5, -3.0);
+  Eigen::Vector2d goal_pos(4.5, 3.0);
 
-//   std::vector<ateam_geometry::AnyShape> obstacles = {
-//     ateam_geometry::Segment(ateam_geometry::Point(-1.5, -3.0), ateam_geometry::Point(-1.5, 2.0)),
-//     ateam_geometry::Segment(ateam_geometry::Point(1.5, -2.0), ateam_geometry::Point(1.5, 3.0))
-//   };
+  std::vector<ateam_geometry::AnyShape> obstacles = {
+    ateam_geometry::Segment(ateam_geometry::Point(-1.5, -3.0), ateam_geometry::Point(-1.5, 2.0)),
+    ateam_geometry::Segment(ateam_geometry::Point(1.5, -2.0), ateam_geometry::Point(1.5, 3.0))
+  };
 
-//   auto path = planner.generatePath(world, obstacles, start_pos, goal_pos);
+  RrtOptions options;
+  /* This is longer than we normally want the planner to run. I'm keeping this test in because
+   * if something makes this take longer, it likely hurts the overal performance of our planner.
+   */
+  options.search_time_limit = 0.05;
+  options.simplification_time_limit = 0.03;
+  auto path = planner.generatePath(world, obstacles, start_pos, goal_pos, options);
 
-//   ExpectPathSatisfiesRequest(path, world, obstacles, start_pos, goal_pos);
-// }
+  ExpectPathSatisfiesRequest(path, world, obstacles, start_pos, goal_pos);
+}
 
 TEST(RrtPathPlannerTests, impossiblePathShouldReturnEmpty)
 {

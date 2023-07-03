@@ -37,14 +37,20 @@ namespace ateam_ai::trajectory_generation
 struct RrtOptions
 {
   /**
-   * @brief Max planning time before planner will give up.
+   * @brief Max time before planner will give up searching for a path
    */
-  double time_limit = 2e-3;    // seconds
+  double search_time_limit = 2e-3;  // seconds
+
+  /**
+   * @brief Max time the planner will spend trying to simplify the path
+   *
+   */
+  double simplification_time_limit = 1e-3;  // seconds
 
   /**
    * @brief Length of segments in the RRT tree
    */
-  double step_size = 0.1;    // meters
+  double step_size = 0.1;  // meters
 };
 
 class RrtPathPlanner
