@@ -34,16 +34,16 @@
 #include "plays/play_helpers.hpp"
 
 inline ateam_geometry::Point NearestPoint(
-    const ateam_geometry::Segment & s, const ateam_geometry::Point & p) 
+  const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
 {
-      ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-      if (s.has_on(orthogonal_projection)) {
-        return orthogonal_projection;
-      }
-      return CGAL::squared_distance(orthogonal_projection, s.source()) <
-        CGAL::squared_distance(orthogonal_projection, s.target()) ?
-        s.source() : s.target();
-};
+  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
+  if (s.has_on(orthogonal_projection)) {
+    return orthogonal_projection;
+  }
+  return CGAL::squared_distance(orthogonal_projection, s.source()) <
+         CGAL::squared_distance(orthogonal_projection, s.target()) ?
+         s.source() : s.target();
+}
 
 std::vector<BehaviorGoal> get_defense_behavior_goals(
   const World & world,
@@ -59,7 +59,8 @@ std::vector<BehaviorGoal> get_defense_behavior_goals(
   ateam_geometry::Point middle_of_our_goal {-4.5, 0};
   // Object to generate candidate points on this line to block
   std::vector<ateam_geometry::Point> candidate_points;
-  typedef CGAL::Random_points_on_segment_2<ateam_geometry::Point, ateam_geometry::PointCreator> linePointCreator;
+  typedef CGAL::Random_points_on_segment_2<ateam_geometry::Point,
+      ateam_geometry::PointCreator> linePointCreator;
   linePointCreator line_to_goal(ball_location, middle_of_our_goal);
   // Get two defenders
   while (static_cast<int>(defenders.size()) < num_defenders) {
@@ -104,8 +105,8 @@ BehaviorGoal get_goalie_behavior_goal(const World & world)
   // Since we will always want a goalie somewhere, we just choose
   // a point for it to intercept rather than returning empty behaviors
   ateam_geometry::Point ball_location;
-  if (!ball.has_value()){
-    ball_location = ateam_geometry::Point(0,0);
+  if (!ball.has_value()) {
+    ball_location = ateam_geometry::Point(0, 0);
   } else {
     ball_location = ateam_geometry::EigenToPoint(ball.value().pos);
   }
@@ -113,7 +114,7 @@ BehaviorGoal get_goalie_behavior_goal(const World & world)
   ateam_geometry::Point _goalie_point = NearestPoint(goalie_line, ball_location);
 
   // Have the goalie defend the goal by going to that point
-  BehaviorGoal goalie (
+  BehaviorGoal goalie(
     BehaviorGoal::Type::MoveToPoint,
     BehaviorGoal::Priority::Reserved,
     MoveParam(ateam_geometry::PointToEigen(_goalie_point)),
