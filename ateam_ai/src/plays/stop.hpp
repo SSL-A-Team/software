@@ -53,7 +53,7 @@ std::vector<BehaviorGoal> generate_points_around_ball(
   ateam_geometry::Point ball_location = ateam_geometry::EigenToPoint(ball.value().pos);
   // Used to create points around a circle with radius 0.5 m
   typedef CGAL::Random_points_on_circle_2<ateam_geometry::Point,
-    ateam_geometry::PointCreator> circlePointGenerator;
+      ateam_geometry::PointCreator> circlePointGenerator;
   circlePointGenerator circlePoints(0.55);
   // We need 3 robots (attackers) to get close to the ball
   while (static_cast<int>(points_around_ball.size()) < 3) {
