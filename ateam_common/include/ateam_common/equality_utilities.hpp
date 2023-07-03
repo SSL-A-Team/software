@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,47 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-#define FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-
-// Matches measurements to filters
-// Creates tracks as needed
-// Removes tracks as needed
-// Returns best track
+#ifndef ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
+#define ATEAM_COMMON__EQUALITY_UTILITIES_HPP_
 
 #include <Eigen/Dense>
+#include <cmath>
+#include <iostream>
 
-#include <map>
-#include <utility>
-#include <vector>
-
-#include <ateam_msgs/msg/vision_mht_state.hpp>
-
-#include "filters/interacting_multiple_model_filter.hpp"
-
-class MultipleHypothesisTracker
+namespace ateam_common
 {
-public:
-  using StateWithScore = std::pair<Eigen::VectorXd, double>;
 
-  void set_base_track(const InteractingMultipleModelFilter & base_track);
+template<typename DerivedA, typename DerivedB>
+bool allCloseDense(
+  const Eigen::DenseBase<DerivedA> & a,
+  const Eigen::DenseBase<DerivedB> & b,
+  const typename DerivedA::RealScalar & rtol
+  = Eigen::NumTraits<typename DerivedA::RealScalar>::dummy_precision(),
+  const typename DerivedA::RealScalar & atol
+  = Eigen::NumTraits<typename DerivedA::RealScalar>::epsilon())
+{
+  return ((a.derived() - b.derived()).array().abs() <=
+         (atol + rtol * b.derived().array().abs())).all();
+}
 
-  void update(const std::vector<Eigen::VectorXd> & measurements);
-  void predict();
+template<typename FloatType>
+inline bool floatsClose(const FloatType & x, const FloatType & y)
+{
+  const FloatType epsilon = static_cast<FloatType>(1e-6);
+  return std::abs(x - y) <= epsilon * std::abs(x);
+}
+}  // namespace ateam_common
 
-  std::optional<StateWithScore> get_state_estimate() const;
-
-  /**
-   * @return ROS2 msg containing the current internal state
-   */
-  ateam_msgs::msg::VisionMHTState get_vision_mht_state() const;
-
-private:
-  void life_cycle_management();
-
-  InteractingMultipleModelFilter base_track;
-
-  std::vector<InteractingMultipleModelFilter> tracks;
-};
-
-#endif  // FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
+#endif  // ATEAM_COMMON__EQUALITY_UTILITIES_HPP_

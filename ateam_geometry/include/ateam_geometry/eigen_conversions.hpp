@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,47 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-#define FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-
-// Matches measurements to filters
-// Creates tracks as needed
-// Removes tracks as needed
-// Returns best track
+#ifndef ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
+#define ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
 
 #include <Eigen/Dense>
+#include "types.hpp"
 
-#include <map>
-#include <utility>
-#include <vector>
-
-#include <ateam_msgs/msg/vision_mht_state.hpp>
-
-#include "filters/interacting_multiple_model_filter.hpp"
-
-class MultipleHypothesisTracker
+namespace ateam_geometry
 {
-public:
-  using StateWithScore = std::pair<Eigen::VectorXd, double>;
 
-  void set_base_track(const InteractingMultipleModelFilter & base_track);
+/**
+ * @brief Convert geometry point to Eigen Vector2d
+ *
+ * @param p geometry point object
+ * @return Eigen::Vector2d
+ */
+inline Eigen::Vector2d PointToEigen(const Point & p)
+{
+  return {p.x(), p.y()};
+}
 
-  void update(const std::vector<Eigen::VectorXd> & measurements);
-  void predict();
+/**
+ * @brief Convert Eigen Vector2d to geometry point
+ *
+ * @param p Eigen Vector2d object
+ * @return Point
+ */
+inline Point EigenToPoint(const Eigen::Vector2d & p)
+{
+  return Point(p.x(), p.y());
+}
 
-  std::optional<StateWithScore> get_state_estimate() const;
+}  // namespace ateam_geometry
 
-  /**
-   * @return ROS2 msg containing the current internal state
-   */
-  ateam_msgs::msg::VisionMHTState get_vision_mht_state() const;
-
-private:
-  void life_cycle_management();
-
-  InteractingMultipleModelFilter base_track;
-
-  std::vector<InteractingMultipleModelFilter> tracks;
-};
-
-#endif  // FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
+#endif  // ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
