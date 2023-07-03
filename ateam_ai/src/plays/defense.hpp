@@ -39,7 +39,7 @@ DirectedGraph<BehaviorGoal> generate_basic_defense(
 {
   DirectedGraph<BehaviorGoal> defense_graph;
   // Go to the middle of the goalie area
-  BehaviorGoal goalie = get_goalie_behavior_goal(our_side_info);
+  BehaviorGoal goalie = get_goalie_behavior_goal(world, our_side_info);
   defense_graph.add_node(goalie);
 
   std::vector<BehaviorGoal> defenders = get_defense_behavior_goals(world, field, 2);
@@ -49,7 +49,7 @@ DirectedGraph<BehaviorGoal> generate_basic_defense(
   return defense_graph;
 }
 
-BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info, const World & world)
+BehaviorGoal get_goalie_behavior_goal(const World & world, const FieldSidedInfo & our_side_info)
 {
   // Line that is 0.5 m from the defense area in all directions
   ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
@@ -82,6 +82,8 @@ std::vector<BehaviorGoal> get_defense_behavior_goals(
   const World & world, const Field & field,
   const int & num_defenders)
 {
+  // TODO(Christian): Replace the below with the kRobotDiameter constant
+  double robot_diameter = 0.18;
   std::vector<BehaviorGoal> defenders;
   std::optional<Eigen::Vector2d> ball_location = world.get_unique_ball();
   // Get line between the ball and the goal
