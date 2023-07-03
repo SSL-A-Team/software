@@ -6,7 +6,7 @@
             Add STATUS, manual control here
         </div>
         <v-container class="d-flex flex-column">
-            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots" ref="robotCard" style="outline-offset:-1px">
+            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots" ref="robotCard" style="outline-offset:-1px" @click.stop="this.state.setJoystickRobot(robot.id)">
                     {{robot.id}}
                     <canvas ref="canvases" height=100 width=100 style="width:90px; height:90px;"/>
             </v-card>
@@ -33,15 +33,21 @@ export default {
                 const errorLevel = robot.errorLevel();
 
                 element.getAnimations().forEach((animation) => {animation.cancel()});
+                let style = "";
+                if (robot.id == this.state.controlled_robot) {
+                    console.log("controlling ", robot.id);
+                    style += "background: green;";
+                }
+
                 switch (errorLevel) {
                     case ErrorLevel.None:
-                        element.style =  "";
                         break;
                     case ErrorLevel.Warning:
-                        element.style = "outline: solid 5px yellow; outline-offset:-1px";
+                        console.log("warning: ", robot.id);
+                        style += " outline: solid 5px yellow; outline-offset:-1px";
                         break;
                     case ErrorLevel.Error:
-                        element.style =  "outline: solid 5px red; outline-offset:-1px";
+                        style +=  " outline: solid 5px red; outline-offset:-1px";
                         break;
                     case ErrorLevel.Critical:
                         element.animate([
@@ -50,6 +56,7 @@ export default {
                         );
                         break;
                 }
+                element.style = style;
             }
         },
         drawStatus: function(robot: Robot, ctx: CanvasRenderingContext2D) {
@@ -174,10 +181,19 @@ export default {
         getRobotStatuses: function() {
             // If performance is a problem we can reduce this to just status members that would cause a redraw
             return this.state.world.teams[this.state.world.team].robots.map(robot => robot.status);
+        },
+        getControlledRobot: function() {
+            return this.state.controlled_robot;
         }
     },
     watch: {
         getRobotStatuses: {
+            handler() {
+                this.update();
+            },
+            deep: true
+        },
+        getControlledRobot: {
             handler() {
                 this.update();
             },
