@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,39 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
-#define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#ifndef ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+#define ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
 
-#include <optional>
-#include <array>
+// This is a convenience header for including all ateam_geometry utilities
 
-#include <rclcpp/rclcpp.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#include "eigen_conversions.hpp"
+#include "make_circle.hpp"
+#include "types.hpp"
+#include "variant_do_intersect.hpp"
 
-#include "behavior/behavior_realization.hpp"
-#include "types/behavior_goal.hpp"
-#include "types/world.hpp"
-#include "types/trajectory.hpp"
-#include "util/directed_graph.hpp"
-
-
-/**
- * Given a set of behaviors
- *  - Replan trajectories as their start time approaches
- *  - Manage the trajectories
- */
-class BehaviorExecutor
-{
-public:
-  explicit BehaviorExecutor(BehaviorRealization & behavior_realization);
-
-  std::array<std::optional<Trajectory>, 16> execute_behaviors(
-    const DirectedGraph<BehaviorGoal> & behaviors,
-    const World & world,
-    BehaviorExecutorState & self_state);
-
-private:
-  BehaviorRealization & behavior_realization;
-};
-
-#endif  // BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
+#endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_

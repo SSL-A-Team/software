@@ -32,7 +32,7 @@ TeamInfoListener::TeamInfoListener(
   side_callback_(side_callback)
 {
   const auto default_team_color =
-    node.declare_parameter<std::string>("default_team_color", "yellow");
+    node.declare_parameter<std::string>("default_team_color", "blue");
   if (default_team_color == "yellow") {
     team_color_ = TeamColor::Yellow;
   } else if (default_team_color == "blue") {
@@ -95,5 +95,4 @@ void TeamInfoListener::RefereeMessageCallback(
     side_callback_(team_side_);
   }
 }
-
 }  // namespace ateam_common

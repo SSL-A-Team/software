@@ -24,12 +24,12 @@
 #include <iostream>
 #include <string>
 
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/team_info_listener.hpp>
+
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 
 #include "world.hpp"
 #include "message_conversions.hpp"
@@ -103,8 +103,6 @@ public:
       world_.update_camera(camera_id, camera_measurement);
     }
 
-    // const std::lock_guard<std::mutex> lock(field_mutex_);
-    // field_msg_ = field_msg;
     if (field_msg.valid) {
       field_publisher_->publish(field_msg);
     }
@@ -148,15 +146,14 @@ private:
   rclcpp::Publisher<ateam_msgs::msg::VisionWorldState>::SharedPtr vision_state_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::FieldInfo>::SharedPtr field_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
-
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
   ateam_common::TeamInfoListener info_listener_;
 
   std::mutex world_mutex_;
   World world_;
 
-//   std::mutex field_mutex_;
-//   ateam_msgs::msg::FieldInfo field_msg_;
+  // std::mutex field_mutex_;
+  // ateam_msgs::msg::FieldInfo field_msg_;
 };
 }  // namespace ateam_vision_filter
 
