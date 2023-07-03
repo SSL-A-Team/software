@@ -90,11 +90,12 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
             // we have to wait for them to kick, movement lock still in effect
             /* code */
             break;
-
           default:
             break;
         }
+
       }
+      break;
     case ateam_common::GameCommand::ForceStart:
       behavior_out = generate_basic_shoot(world);
       break;
