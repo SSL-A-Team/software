@@ -19,7 +19,15 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/Sample3d.msg
   msg/TeamClientConnectionStatus.msg
   msg/Trajectory.msg
+  msg/VisionCameraState.msg
+  msg/VisionIMMState.msg
+  msg/VisionMHTState.msg
+  msg/VisionModelState.msg
+  msg/VisionWorldState.msg
   msg/World.msg
+
+  msg/FieldInfo.msg
+  msg/FieldSidedInfo.msg
 
   srv/ReconnectTeamClient.srv
   srv/SetDesiredKeeper.srv

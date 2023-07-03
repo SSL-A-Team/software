@@ -22,10 +22,14 @@
 #ifndef TYPES__REFEREE_INFO_HPP_
 #define TYPES__REFEREE_INFO_HPP_
 
+#include <ateam_common/game_state_listener.hpp>
+
 struct RefereeInfo
 {
   int our_goalie_id;
   int their_goalie_id;
+  ateam_common::GameStage current_game_stage;
+  ateam_common::GameCommand running_command;
 };
 
 #endif  // TYPES__REFEREE_INFO_HPP_

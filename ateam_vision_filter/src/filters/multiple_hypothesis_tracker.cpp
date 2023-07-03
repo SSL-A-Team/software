@@ -186,6 +186,16 @@ get_state_estimate() const
   return std::make_pair(best_track->get_state_estimate(), best_track->get_validity_score());
 }
 
+ateam_msgs::msg::VisionMHTState MultipleHypothesisTracker::get_vision_mht_state() const
+{
+  ateam_msgs::msg::VisionMHTState mht_state;
+  for (const auto & track : tracks) {
+    mht_state.tracks.push_back(track.get_vision_imm_state());
+  }
+
+  return mht_state;
+}
+
 void MultipleHypothesisTracker::add_edge_to_graph(
   graph_t & graph,
   edge_capacity_list_t & edge_capacity_list,

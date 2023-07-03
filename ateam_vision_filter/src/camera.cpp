@@ -24,6 +24,8 @@
 #include <utility>
 #include <vector>
 
+#include <ateam_msgs/msg/vision_mht_state.hpp>
+
 #include "filters/kalman_filter.hpp"
 #include "filters/interacting_multiple_model_filter.hpp"
 #include "types/models.hpp"
@@ -96,6 +98,25 @@ std::array<std::optional<Camera::RobotWithScore>,
 std::array<std::optional<Camera::RobotWithScore>, 16> Camera::get_blue_robot_estimates_with_score()
 {
   return get_robot_estimates_with_score(blue_team);
+}
+
+ateam_msgs::msg::VisionCameraState Camera::get_vision_camera_state() const
+{
+  ateam_msgs::msg::VisionCameraState camera_state;
+
+  // Prefill up to team size
+  for (std::size_t i = 0; i < yellow_team.size(); i++) {
+    camera_state.yellow_robots.push_back(ateam_msgs::msg::VisionMHTState());
+    camera_state.blue_robots.push_back(ateam_msgs::msg::VisionMHTState());
+  }
+
+  for (std::size_t i = 0; i < yellow_team.size(); i++) {
+    camera_state.yellow_robots.at(i) = yellow_team.at(i).get_vision_mht_state();
+    camera_state.blue_robots.at(i) = blue_team.at(i).get_vision_mht_state();
+  }
+  camera_state.ball = ball.get_vision_mht_state();
+
+  return camera_state;
 }
 
 void Camera::setup_ball_interacting_multiple_model_filter(

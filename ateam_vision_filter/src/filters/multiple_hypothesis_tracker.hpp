@@ -32,6 +32,8 @@
 #include <utility>
 #include <vector>
 
+#include <ateam_msgs/msg/vision_mht_state.hpp>
+
 #include <boost/graph/adjacency_list.hpp>
 
 #include "filters/interacting_multiple_model_filter.hpp"
@@ -47,6 +49,11 @@ public:
   void predict();
 
   std::optional<StateWithScore> get_state_estimate() const;
+
+  /**
+   * @return ROS2 msg containing the current internal state
+   */
+  ateam_msgs::msg::VisionMHTState get_vision_mht_state() const;
 
 private:
   using adjacency_list_traits = boost::adjacency_list_traits<boost::vecS, boost::vecS,
