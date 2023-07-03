@@ -50,9 +50,9 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(
 
   // Add the goalie
   our_kickoff.add_node(get_goalie_behavior_goal(world, our_side_info));
-  
+
   // Make sure the other three robots are on our side
-  // For now, setting these to hard coded locations 
+  // For now, setting these to hard coded locations
   // unless we want to determine
   // a good way to generate better ones...
   BehaviorGoal right_striker {
@@ -68,7 +68,7 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(
     MoveParam(Eigen::Vector2d{-0.3, 1.5})
   };
   our_kickoff.add_node(left_striker);
-  
+
   BehaviorGoal back_defense {
     BehaviorGoal::Type::MoveToPoint,
     BehaviorGoal::Priority::Required,
