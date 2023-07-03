@@ -23,6 +23,7 @@
 
 #include <Eigen/Dense>
 
+#include "util/directed_graph.hpp"
 #include "types/world.hpp"
 #include "types/behavior_goal.hpp"
 
@@ -40,4 +41,4 @@ DirectedGraph<BehaviorGoal> generate_halt(const World & world)
   }
   return halt_graph;
 }
-#endif // PLAYS__HALT_HPP
+#endif  // PLAYS__HALT_HPP_

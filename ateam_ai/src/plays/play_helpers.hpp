@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,47 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-#define FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
+#ifndef PLAYS__PLAY_HELPERS_HPP_
+#define PLAYS__PLAY_HELPERS_HPP_
 
-// Matches measurements to filters
-// Creates tracks as needed
-// Removes tracks as needed
-// Returns best track
+#include "ateam_geometry/ateam_geometry.hpp"
+#include "types/field.hpp"
 
-#include <Eigen/Dense>
-
-#include <map>
-#include <utility>
-#include <vector>
-
-#include <ateam_msgs/msg/vision_mht_state.hpp>
-
-#include "filters/interacting_multiple_model_filter.hpp"
-
-class MultipleHypothesisTracker
+bool is_point_in_bounds(ateam_geometry::Point & point, Field & field)
 {
-public:
-  using StateWithScore = std::pair<Eigen::VectorXd, double>;
+  if (point.x() > field.field_width / 2 || point.x() < -field.field_width / 2) {
+    return false;
+  }
+  if (point.y() > field.field_length / 2 || point.y() < -field.field_length / 2) {
+    return false;
+  }
+  return true;
+}
 
-  void set_base_track(const InteractingMultipleModelFilter & base_track);
-
-  void update(const std::vector<Eigen::VectorXd> & measurements);
-  void predict();
-
-  std::optional<StateWithScore> get_state_estimate() const;
-
-  /**
-   * @return ROS2 msg containing the current internal state
-   */
-  ateam_msgs::msg::VisionMHTState get_vision_mht_state() const;
-
-private:
-  void life_cycle_management();
-
-  InteractingMultipleModelFilter base_track;
-
-  std::vector<InteractingMultipleModelFilter> tracks;
-};
-
-#endif  // FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
+#endif  // PLAYS__PLAY_HELPERS_HPP_

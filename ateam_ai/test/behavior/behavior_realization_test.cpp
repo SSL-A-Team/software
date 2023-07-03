@@ -54,7 +54,7 @@ TEST(BehaviorRealization, get_priority_to_assignment_group_ReturnEmpty_WhenNoBeh
   BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(
     behaviors);
 
-  ASSERT_EQ(ret.size(), 3);
+  ASSERT_EQ(ret.size(), 4);
   EXPECT_TRUE(ret.at(BehaviorGoal::Priority::Required).empty());
   EXPECT_TRUE(ret.at(BehaviorGoal::Priority::Medium).empty());
   EXPECT_TRUE(ret.at(BehaviorGoal::Priority::Low).empty());
@@ -72,7 +72,7 @@ TEST(BehaviorRealization, get_priority_to_assignment_group_ReturnRequired_WhenOn
   BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(
     behaviors);
 
-  ASSERT_EQ(ret.size(), 3);
+  ASSERT_EQ(ret.size(), 4);
   ASSERT_EQ(ret.at(BehaviorGoal::Priority::Required).size(), 2);
   EXPECT_EQ(ret.at(BehaviorGoal::Priority::Required).at(0), beh1);
   EXPECT_EQ(ret.at(BehaviorGoal::Priority::Required).at(1), beh2);
@@ -92,7 +92,7 @@ TEST(BehaviorRealization, get_priority_to_assignment_group_ReturnRequired_WhenOn
   BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(
     behaviors);
 
-  ASSERT_EQ(ret.size(), 3);
+  ASSERT_EQ(ret.size(), 4);
   ASSERT_EQ(ret.at(BehaviorGoal::Priority::Required).size(), 2);
   EXPECT_EQ(ret.at(BehaviorGoal::Priority::Required).at(0), beh1);
   EXPECT_EQ(ret.at(BehaviorGoal::Priority::Required).at(1), beh2);
@@ -120,7 +120,7 @@ TEST(BehaviorRealization, get_priority_to_assignment_group_ReturnAll_WhenAll)
   BehaviorRealization::PriorityGoalListMap ret = realization.get_priority_to_assignment_group(
     behaviors);
 
-  ASSERT_EQ(ret.size(), 3);
+  ASSERT_EQ(ret.size(), 4);
   ASSERT_EQ(ret.at(BehaviorGoal::Priority::Required).size(), 2);
   EXPECT_EQ(ret.at(BehaviorGoal::Priority::Required).at(0), beh1);
   EXPECT_EQ(ret.at(BehaviorGoal::Priority::Required).at(1), beh2);

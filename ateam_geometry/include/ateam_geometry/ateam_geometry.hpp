@@ -18,24 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__UTILITIES_HPP_
-#define ATEAM_GEOMETRY__UTILITIES_HPP_
+#ifndef ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+#define ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
 
-#include <Eigen/Dense>
-#include <math.h>
+// This is a convenience header for including all ateam_geometry utilities
 
-namespace ateam_geometry
-{
-/* We define the 2D cross product here between two vectors w and v
-as w_x * v_y - w_y * w_x
-This is used for determining whether two line segments intersect
+#include "eigen_conversions.hpp"
+#include "make_circle.hpp"
+#include "types.hpp"
+#include "variant_do_intersect.hpp"
 
-The implementation used is based off of this StackOverflow post
-https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect*/
-double cross_product_2d(const Eigen::Vector2d & w, const Eigen::Vector2d & v)
-{
-  return (w.x() * v.y()) - (w.y() * v.x());
-}
-}  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__UTILITIES_HPP_
+#endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_

@@ -18,41 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__SEGMENT_HPP_
-#define ATEAM_GEOMETRY__SEGMENT_HPP_
+#include <gtest/gtest.h>
 
-#include <Eigen/Dense>
+#include "ateam_geometry/types.hpp"
+#include "ateam_geometry/variant_do_intersect.hpp"
 
-#include <vector>
-#include <optional>
-
-namespace ateam_geometry
+TEST(VariantDoIntersect, CircleToAnyIntersection)
 {
-class LineSegment
-{
-public:
-  LineSegment(const Eigen::Vector2d & p1, const Eigen::Vector2d & p2);
-  LineSegment(const Eigen::Vector2d & start, const double & length, const double & angle);
+  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::AnyShape b = ateam_geometry::Circle(ateam_geometry::Point(1, 0), 1);
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
 
-  double get_length();
-  Eigen::Vector2d get_midpoint();
-  std::vector<Eigen::Vector2d> get_equally_spaced_points(const int & num_points);
-
-  Eigen::Vector2d p1;
-  Eigen::Vector2d p2;
-};
-
-bool is_point_on_segment(
-  const Eigen::Vector2d & point, LineSegment & segment,
-  double tolerance = 1e-6);
-
-/*Given two 2d line segments, return a < std::optional<Eigen::Vector2d>
-corresponding to whether or not they intersect and if applicable,
-the point of intersection.*/
-std::optional<Eigen::Vector2d> get_segment_intersection(
-  const LineSegment & ls1,
-  const LineSegment & ls2,
-  double tolerance = 1e-6);
-}  // namespace ateam_geometry
-
-#endif   // ATEAM_GEOMETRY__SEGMENT_HPP_
+  a = ateam_geometry::Circle(ateam_geometry::Point(-2, 0), 1);
+  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+}

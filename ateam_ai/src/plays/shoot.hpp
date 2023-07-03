@@ -50,4 +50,4 @@ DirectedGraph<BehaviorGoal> generate_basic_shoot(
 
   return basic_shoot;
 }
-#endif // PLAYS__SHOOT_HPP_
+#endif  // PLAYS__SHOOT_HPP_

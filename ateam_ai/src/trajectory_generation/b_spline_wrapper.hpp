@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2021 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,33 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__RECTANGLE_HPP_
-#define ATEAM_GEOMETRY__RECTANGLE_HPP_
+#ifndef TRAJECTORY_GENERATION__B_SPLINE_WRAPPER_HPP_
+#define TRAJECTORY_GENERATION__B_SPLINE_WRAPPER_HPP_
 
 #include <Eigen/Dense>
-#include <array>
 
-namespace ateam_geometry
+#include <vector>
+
+#include "types/trajectory.hpp"
+
+namespace BSplineWrapper
 {
-class Rectangle
-{
-public:
-  Rectangle(const Eigen::Vector2d & v1, const Eigen::Vector2d & v2);
 
-  Eigen::Vector2d get_center();
-  double get_area();
-  std::array<Eigen::Vector2d, 4> get_corners();
+Trajectory Generate(
+  const std::vector<Eigen::Vector2d> waypoints,
+  const double start_heading,
+  const double end_heading,
+  const Eigen::Vector3d & start_vel,
+  const Eigen::Vector3d & end_vel,
+  const Eigen::Vector3d & max_vel_limits,
+  const Eigen::Vector3d & max_accel_limits,
+  const double dt, const double current_time);
 
-private:
-  double width;
-  double height;
-  double area;
-  Eigen::Vector2d center;
-  std::array<Eigen::Vector2d, 4> corners;
-};
+}  // namespace BSplineWrapper
 
-bool is_point_in_rectangle(Eigen::Vector2d & point, const Rectangle & rect);
-
-}  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__RECTANGLE_HPP_
+#endif  // TRAJECTORY_GENERATION__B_SPLINE_WRAPPER_HPP_

@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2021 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -17,40 +17,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-#define _USE_MATH_DEFINES
 
-#include <Eigen/Dense>
-#include <cmath>
-#include "ateam_geometry/circle.hpp"
-#include "ateam_geometry/segment.hpp"
+#include "trajectory_generation/b_spline_wrapper.hpp"
 
-namespace ateam_geometry
+#include <gtest/gtest.h>
+
+TEST(b_spline_wrapper, basic_test)
 {
-Circle::Circle(const Eigen::Vector2d & c, const double & r)
-: center(c), radius(r) {}
+  std::vector<Eigen::Vector2d> waypoints{
+    Eigen::Vector2d{0, 0},
+    Eigen::Vector2d{5, 3},
+    Eigen::Vector2d{6, 2},
+    Eigen::Vector2d{15, 3},
+  };
+  auto out = BSplineWrapper::Generate(
+    waypoints, 0, 1, Eigen::Vector3d{0, 0, 0}, Eigen::Vector3d{0,
+      0, 0}, Eigen::Vector3d{2, 2, 2}, Eigen::Vector3d{3, 3, 3},
+    0.1, 1);
 
-std::vector<Eigen::Vector2d> Circle::get_equally_spaced_points(
-  const int & num_points,
-  const double & offset = 0.0)
-{
-  std::vector<Eigen::Vector2d> points;
-  // Assume we want to return more than 1 point...
-  // If this is not the case, don't do any more calculations and return
-  // an empty vector
-  if (num_points < 2) {
-    return points;
+  std::cout << "output" << std::endl;
+  for (int i = 0; i < out.samples.size(); i++) {
+    std::cout << out.samples.at(i).time << "\t" << out.samples.at(i).pose.x() << " " <<
+      out.samples.at(i).pose.y() << " " << out.samples.at(i).pose.z() << "\t" <<
+      out.samples.at(i).vel.x() << " " << out.samples.at(i).vel.y() << " " <<
+      out.samples.at(i).vel.z() << std::endl;
   }
-  double spacing = (2 * M_PI) / num_points;
-  for (int i = 0; i < num_points; ++i) {
-    Eigen::Vector2d point =
-      LineSegment(center, radius, offset + (i * spacing)).p2;
-    points.push_back(point);
-  }
-  return points;
 }
-
-bool is_point_in_circle(const Eigen::Vector2d & point, Circle & circle)
-{
-  return (point - circle.center).norm() <= circle.radius;
-}
-}  // namespace ateam_geometry

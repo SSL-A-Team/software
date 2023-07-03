@@ -133,7 +133,6 @@ DirectedGraph<BehaviorGoal> BehaviorEvaluator::get_best_behaviors(const World & 
 
   return behavior_out;
 
-
   // DirectedGraph<Behavior> three_one_touch_shot;
   // Behavior initial_pass_start{
   //   Behavior::Type::MovingKick,
