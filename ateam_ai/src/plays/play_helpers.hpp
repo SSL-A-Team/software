@@ -30,7 +30,7 @@
 #include "types/field.hpp"
 #include "types/world.hpp"
 
-bool is_point_in_bounds(const ateam_geometry::Point & point, const Field & field)
+bool is_point_in_bounds(ateam_geometry::Point & point, const Field & field)
 {
   if (point.x() > field.field_width / 2 || point.x() < -field.field_width / 2) {
     return false;
