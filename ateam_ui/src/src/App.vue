@@ -6,15 +6,15 @@
         <v-main>
             <v-container fluid class="d-inline-flex">
             <v-row class="flex-nowrap">
-                <vcol>
+                <v-col class="flex-grow-0 flex-shrink-0">
                     <RefButtonsComponent/>
-                </vcol>
-                <vcol>
+                </v-col>
+                <v-col class="flex-grow-0 flex-shrink-0">
                     <StatusComponent ref="robotStatus"/>
-                </vcol>
-                <vcol class="flex-grow-1 flex-shrink-1" style="height: auto">
+                </v-col>
+                <v-col class="flex-grow-1 flex-shrink-1" style="height: auto">
                     <FieldComponent ref="mainField"/>
-                </vcol>
+                </v-col>
             </v-row>
             </v-container>
         </v-main>
@@ -63,6 +63,11 @@ export default {
     },
     created() {
         this.intervalId = setInterval(this.update, 10);
+    },
+    mounted() {
+        // This has to be called after Vue has started monitoring the properties so that the callbacks
+        // get registered to track for updates
+        this.state.mount();
     },
     components: {
         FieldComponent,

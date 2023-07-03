@@ -56,11 +56,12 @@ export class AppState {
 
     getGoalie(): string {
         if (this.world.referee && this.world.referee[this.world.team]) {
-            if (this.world.referee[this.world.team] == null) {
+            const id = this.world.referee[this.world.team].goalkeeper
+            if (id == null || isNaN(id)) {
                 return "X";
             }
 
-            return this.world.referee[this.world.team].goalkeeper;
+            return id;
         }
 
         return "X";
@@ -89,7 +90,7 @@ export class AppState {
 	const state = this; // fix dumb javascript things
         return function(msg: any) {
             let robot = state.world.teams[state.world.team].robots[id];
-            for (const member of Object.getOwnPropertyNames(robot.status)) {
+            for (const member of Object.getOwnPropertyNames(msg)) {
                 robot.status[member] = msg[member];
             }
         };
@@ -168,6 +169,9 @@ export class AppState {
             //Neutralino.app.exit();
         });
 
+    }
+
+    mount() {
         // TODO: add a way to handle ROS namespaces
 
         // Set up ball subscribers and publishers
@@ -212,7 +216,6 @@ export class AppState {
             name: '/overlay',
             messageType: 'ateam_msgs/msg/Overlay'
         });
-
         overlayTopic.subscribe(this.getOverlayCallback());
         this.subscriptions["overlay"] = overlayTopic;
 

@@ -26,6 +26,9 @@ export class TeamInfo {
     max_allowed_bots: number
     bot_substitution_intent: boolean
     ball_placement_failures_reached: boolean
+
+    constructor() {
+    }
 }
 
 export class Team {
@@ -56,8 +59,8 @@ export class Team {
                 orientation: {
                     x: 0,
                     y: 0,
-                    z: 0,
-                    w: 1
+                    z: this.defending > 0 ? 1 : 0,
+                    w: this.defending > 0 ? 0 : 1
                 }
             })
         

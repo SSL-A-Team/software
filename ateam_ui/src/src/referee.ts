@@ -55,6 +55,10 @@ export class Referee {
     next_command: gameCommand;
 
     current_action_time_remaining: number;
+    
+    constructor() {
+        this.blue = new TeamInfo();
+    }
 
     // TODO: Add game_events[]
 

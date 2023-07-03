@@ -177,10 +177,11 @@ export default {
         }
     },
     watch: {
-        getRobotStatuses: {handler() {
-            this.update();
-        },
-        deep: true
+        getRobotStatuses: {
+            handler() {
+                this.update();
+            },
+            deep: true
         }
     }
 }
