@@ -18,47 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-#define FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
+#include "trajectory_generation/b_spline_wrapper.hpp"
 
-// Matches measurements to filters
-// Creates tracks as needed
-// Removes tracks as needed
-// Returns best track
+#include <gtest/gtest.h>
 
-#include <Eigen/Dense>
-
-#include <map>
-#include <utility>
-#include <vector>
-
-#include <ateam_msgs/msg/vision_mht_state.hpp>
-
-#include "filters/interacting_multiple_model_filter.hpp"
-
-class MultipleHypothesisTracker
+TEST(b_spline_wrapper, basic_test)
 {
-public:
-  using StateWithScore = std::pair<Eigen::VectorXd, double>;
+  std::vector<Eigen::Vector2d> waypoints{
+    Eigen::Vector2d{0, 0},
+    Eigen::Vector2d{5, 3},
+    Eigen::Vector2d{6, 2},
+    Eigen::Vector2d{15, 3},
+  };
+  auto out = BSplineWrapper::Generate(
+    waypoints, 0, 1, Eigen::Vector3d{0, 0, 0}, Eigen::Vector3d{0,
+      0, 0}, Eigen::Vector3d{2, 2, 2}, Eigen::Vector3d{3, 3, 3},
+    0.1, 1);
 
-  void set_base_track(const InteractingMultipleModelFilter & base_track);
-
-  void update(const std::vector<Eigen::VectorXd> & measurements);
-  void predict();
-
-  std::optional<StateWithScore> get_state_estimate() const;
-
-  /**
-   * @return ROS2 msg containing the current internal state
-   */
-  ateam_msgs::msg::VisionMHTState get_vision_mht_state() const;
-
-private:
-  void life_cycle_management();
-
-  InteractingMultipleModelFilter base_track;
-
-  std::vector<InteractingMultipleModelFilter> tracks;
-};
-
-#endif  // FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
+  std::cout << "output" << std::endl;
+  for (int i = 0; i < out.samples.size(); i++) {
+    std::cout << out.samples.at(i).time << "\t" << out.samples.at(i).pose.x() << " " <<
+      out.samples.at(i).pose.y() << " " << out.samples.at(i).pose.z() << "\t" <<
+      out.samples.at(i).vel.x() << " " << out.samples.at(i).vel.y() << " " <<
+      out.samples.at(i).vel.z() << std::endl;
+  }
+}

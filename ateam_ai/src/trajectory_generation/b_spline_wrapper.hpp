@@ -18,47 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-#define FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-
-// Matches measurements to filters
-// Creates tracks as needed
-// Removes tracks as needed
-// Returns best track
+#ifndef TRAJECTORY_GENERATION__B_SPLINE_WRAPPER_HPP_
+#define TRAJECTORY_GENERATION__B_SPLINE_WRAPPER_HPP_
 
 #include <Eigen/Dense>
 
-#include <map>
-#include <utility>
 #include <vector>
 
-#include <ateam_msgs/msg/vision_mht_state.hpp>
+#include "types/trajectory.hpp"
 
-#include "filters/interacting_multiple_model_filter.hpp"
-
-class MultipleHypothesisTracker
+namespace BSplineWrapper
 {
-public:
-  using StateWithScore = std::pair<Eigen::VectorXd, double>;
 
-  void set_base_track(const InteractingMultipleModelFilter & base_track);
+Trajectory Generate(
+  const std::vector<Eigen::Vector2d> waypoints,
+  const double start_heading,
+  const double end_heading,
+  const Eigen::Vector3d & start_vel,
+  const Eigen::Vector3d & end_vel,
+  const Eigen::Vector3d & max_vel_limits,
+  const Eigen::Vector3d & max_accel_limits,
+  const double dt, const double current_time);
 
-  void update(const std::vector<Eigen::VectorXd> & measurements);
-  void predict();
+}  // namespace BSplineWrapper
 
-  std::optional<StateWithScore> get_state_estimate() const;
-
-  /**
-   * @return ROS2 msg containing the current internal state
-   */
-  ateam_msgs::msg::VisionMHTState get_vision_mht_state() const;
-
-private:
-  void life_cycle_management();
-
-  InteractingMultipleModelFilter base_track;
-
-  std::vector<InteractingMultipleModelFilter> tracks;
-};
-
-#endif  // FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
+#endif  // TRAJECTORY_GENERATION__B_SPLINE_WRAPPER_HPP_

@@ -18,47 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-#define FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
-
-// Matches measurements to filters
-// Creates tracks as needed
-// Removes tracks as needed
-// Returns best track
+#ifndef ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
+#define ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
 
 #include <Eigen/Dense>
 
-#include <map>
-#include <utility>
-#include <vector>
+// All of the below are in meters
+// Matches the size of the robots from the SSL rulebook
+constexpr double kRobotDiameter = 0.18;
+constexpr double kRobotRadius = kRobotDiameter / 2;
+constexpr double kRobotHeight = 0.15;
 
-#include <ateam_msgs/msg/vision_mht_state.hpp>
+// Physical limitations - used in trajectory generation
+// Units are m/s and rad/s for velocity
+// m/s^2 and rad/s^2 for acceleration
+// This should match what the limits are set to in the firmware.
+const Eigen::Vector3d kMaxRobotVel = Eigen::Vector3d(3, 3, 18);
+const Eigen::Vector3d kMaxRobotAccel = Eigen::Vector3d(3, 3, 36);
 
-#include "filters/interacting_multiple_model_filter.hpp"
-
-class MultipleHypothesisTracker
-{
-public:
-  using StateWithScore = std::pair<Eigen::VectorXd, double>;
-
-  void set_base_track(const InteractingMultipleModelFilter & base_track);
-
-  void update(const std::vector<Eigen::VectorXd> & measurements);
-  void predict();
-
-  std::optional<StateWithScore> get_state_estimate() const;
-
-  /**
-   * @return ROS2 msg containing the current internal state
-   */
-  ateam_msgs::msg::VisionMHTState get_vision_mht_state() const;
-
-private:
-  void life_cycle_management();
-
-  InteractingMultipleModelFilter base_track;
-
-  std::vector<InteractingMultipleModelFilter> tracks;
-};
-
-#endif  // FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_
+#endif  // ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
