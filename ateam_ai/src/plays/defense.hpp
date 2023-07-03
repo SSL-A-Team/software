@@ -35,7 +35,6 @@
 const FieldSidedInfo & our_side_info
 DirectedGraph<BehaviorGoal> generate_basic_defense(
   const World & world,
-  const Feild & field,
   const FieldSidedInfo & our_side_info)
 {
   DirectedGraph<BehaviorGoal> defense_graph;
@@ -43,7 +42,7 @@ DirectedGraph<BehaviorGoal> generate_basic_defense(
   BehaviorGoal goalie = get_goalie_behavior_goal(world, our_side_info);
   defense_graph.add_node(goalie);
 
-  std::vector<BehaviorGoal> defenders = get_defense_behavior_goals(world, field, 2);
+  std::vector<BehaviorGoal> defenders = get_defense_behavior_goals(world, 2);
   for (BehaviorGoal defender : defenders) {
     defense_graph.add_node(defender);
   }
@@ -80,7 +79,7 @@ BehaviorGoal get_goalie_behavior_goal(const World & world, const FieldSidedInfo 
 }
 
 std::vector<BehaviorGoal> get_defense_behavior_goals(
-  const World & world, const Field & field,
+  const World & world,
   const int & num_defenders)
 {
   // TODO(Christian): Replace the below with the kRobotDiameter constant

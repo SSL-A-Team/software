@@ -25,10 +25,11 @@
 
 #include "util/directed_graph.hpp"
 #include "types/behavior_goal.hpp"
+#include "types/world.hpp"
 
 
 DirectedGraph<BehaviorGoal> generate_basic_shoot(
-  const World & world, const Field & field
+  const World & world
 )
 {
   DirectedGraph<BehaviorGoal> basic_shoot;
@@ -36,7 +37,7 @@ DirectedGraph<BehaviorGoal> generate_basic_shoot(
   // Get the center of the opponent's goal from the field geometry
   Eigen::Vector2d _goal_center = Eigen::Vector2d(
     // Our side is always negative, so kick to the positive side at the edge
-    field.field_length / 2,
+    world.field.field_length / 2,
     // The center of the goal is at the field center (0)
     0
   );
