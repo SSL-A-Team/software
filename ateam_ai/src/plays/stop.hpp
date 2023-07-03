@@ -32,7 +32,6 @@
 
 #include "util/directed_graph.hpp"
 #include "types/behavior_goal.hpp"
-#include "types/field.hpp"
 #include "types/world.hpp"
 
 #include "ateam_geometry/ateam_geometry.hpp"
@@ -42,20 +41,19 @@
 #include "play_helpers.hpp"
 
 DirectedGraph<BehaviorGoal> generate_stop(
-  const World & world, const Field & field,
-  const FieldSidedInfo & our_side_info)
+  const World & world)
 {
   DirectedGraph<BehaviorGoal> stop;
 
-  auto goalie = get_goalie_behavior_goal(our_side_info);
+  auto goalie = get_goalie_behavior_goal();
   stop.add_node(goalie);
 
-  auto attacker_behaviors = generate_points_around_ball(world, field, 3);
+  auto attacker_behaviors = generate_points_around_ball(world, 3);
   for (BehaviorGoal behavior : attacker_behaviors) {
     stop.add_node(behavior);
   }
 
-  auto defense_behaviors = get_defense_behavior_goals(world, field, 2);
+  auto defense_behaviors = get_defense_behavior_goals(world, 2);
   for (BehaviorGoal behavior : defense_behaviors) {
     stop.add_node(behavior);
   }
@@ -63,7 +61,7 @@ DirectedGraph<BehaviorGoal> generate_stop(
 }
 
 std::vector<BehaviorGoal> generate_points_around_ball(
-  const World & world, const Field & field,
+  const World & world,
   const int num_points)
 {
   std::vector<BehaviorGoal> points_around_ball;

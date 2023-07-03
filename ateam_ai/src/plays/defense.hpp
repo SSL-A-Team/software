@@ -32,26 +32,18 @@
 #include "types/behavior_goal.hpp"
 #include "ateam_geometry/ateam_geometry.hpp"
 
-
-const FieldSidedInfo & our_side_info
-DirectedGraph<BehaviorGoal> generate_basic_defense(
-  const World & world,
-  const Feild & field,
-  const FieldSidedInfo & our_side_info)
-{
-  DirectedGraph<BehaviorGoal> defense_graph;
   // Go to the middle of the goalie area
-  BehaviorGoal goalie = get_goalie_behavior_goal(world, our_side_info);
+  BehaviorGoal goalie = get_goalie_behavior_goal(world);
   defense_graph.add_node(goalie);
 
-  std::vector<BehaviorGoal> defenders = get_defense_behavior_goals(world, field, 2);
+  std::vector<BehaviorGoal> defenders = get_defense_behavior_goals(world, 2);
   for (BehaviorGoal defender : defenders) {
     defense_graph.add_node(defender);
   }
   return defense_graph;
 }
 
-BehaviorGoal get_goalie_behavior_goal(const World & world, const FieldSidedInfo & our_side_info)
+BehaviorGoal get_goalie_behavior_goal(const World & world)
 {
   // Line that is 0.5 m from the defense area in all directions
   ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
@@ -81,7 +73,7 @@ BehaviorGoal get_goalie_behavior_goal(const World & world, const FieldSidedInfo 
 }
 
 std::vector<BehaviorGoal> get_defense_behavior_goals(
-  const World & world, const Field & field,
+  const World & world,
   const int & num_defenders)
 {
   // TODO(Christian): Replace the below with the kRobotDiameter constant
@@ -93,14 +85,14 @@ std::vector<BehaviorGoal> get_defense_behavior_goals(
     return defenders;
   }
   ateam_geometry::Point ball = ateam_geometry::EigenToPoint(ball_location);
-  ateam_geometry::Point middle_of_our_goal = (-4.5, 0);
-  ateam_geometry::Segement block_line = ateam_geometry::Segment(ball, middle_of_our_goal);
+  ateam_geometry::Point middle_of_our_goal = {-4.5, 0};
+  ateam_geometry::Segment block_line = ateam_geometry::Segment(ball, middle_of_our_goal);
   // Object to generate candidate points on this line to block
   std::vector<ateam_geometry::Point> candidate_points;
   Random_points_on_segment_2<ateam_geometry::Point, ateam_geometry::PointCreator> linePointCreator;
   linePointCreator line_to_goal(ball, middle_of_our_goal);
   // Get two defenders
-  while (defenders.length() < num_defenders) {
+  while (defenders.size() < num_defenders) {
     candidate_points.reserve(50);
     std::copy_n(line_to_goal, 50, std::back_inserter(candidate_points));
     // Remove any that will cause us to be out of bounds
@@ -115,9 +107,9 @@ std::vector<BehaviorGoal> get_defense_behavior_goals(
             BehaviorGoal::Type::MoveToPoint,
             BehaviorGoal::Priority::Required,
             MoveParam(ateam_geometry::PointToEigen(candidate))
-          }
+          };
           defenders.push_back(go_to_point);
-          if (defenders.length() > num_defenders - 1) {
+          if (defenders.size() > num_defenders - 1) {
             break;
           }
         }
