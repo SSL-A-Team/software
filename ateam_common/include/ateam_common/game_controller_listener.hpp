@@ -118,10 +118,11 @@ public:
    *
    * @param node ROS node
    */
-  explicit GameControllerListener(rclcpp::Node & node,
+  explicit GameControllerListener(
+    rclcpp::Node & node,
     ColorCallback color_callback = {},
     SideCallback side_callback = {}
-    );
+  );
 
   const TeamColor & GetTeamColor() const
   {

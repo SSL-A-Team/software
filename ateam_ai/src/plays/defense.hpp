@@ -29,27 +29,31 @@
 
 // TODO(Cavidano) Namespace these
 
-BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info){
-    Eigen::Vector2d _goalie_point = Eigen::Vector2d(
-        // Here I'm assuming these are opposite corners of the goal
-        // Does this need to be negative to match our conventions?
-        (our_side_info.goalie_corners.at(0).x() + our_side_info.goalie_corners.at(2).x()) / 2,
-        (our_side_info.goalie_corners.at(0).y() + our_side_info.goalie_corners.at(2).y()) / 2
-    );
+BehaviorGoal get_goalie_behavior_goal(const FieldSidedInfo & our_side_info)
+{
+  Eigen::Vector2d _goalie_point = Eigen::Vector2d(
+    // Here I'm assuming these are opposite corners of the goal
+    // Does this need to be negative to match our conventions?
+    (our_side_info.goalie_corners.at(0).x() + our_side_info.goalie_corners.at(2).x()) / 2,
+    (our_side_info.goalie_corners.at(0).y() + our_side_info.goalie_corners.at(2).y()) / 2
+  );
 
-    // Have the goalie defend the goal
-    BehaviorGoal goalie {
-        BehaviorGoal::Type::MoveToPoint,
-        BehaviorGoal::Priority::Required,
-        MoveParam(_goalie_point)
-    };
+  // Have the goalie defend the goal
+  BehaviorGoal goalie {
+    BehaviorGoal::Type::MoveToPoint,
+    BehaviorGoal::Priority::Required,
+    MoveParam(_goalie_point)
+  };
 }
 
-DirectedGraph<BehaviorGoal> generate_basic_defense(const World & world, const FieldSidedInfo & our_side_info){
-    DirectedGraph<BehaviorGoal> defense_graph;
-    // Go to the middle of the goalie area
-    BehaviorGoal goalie = get_goalie_behavior_goal(our_side_info);
-    defense_graph.add_node(goalie);
-};
+DirectedGraph<BehaviorGoal> generate_basic_defense(
+  const World & world,
+  const FieldSidedInfo & our_side_info)
+{
+  DirectedGraph<BehaviorGoal> defense_graph;
+  // Go to the middle of the goalie area
+  BehaviorGoal goalie = get_goalie_behavior_goal(our_side_info);
+  defense_graph.add_node(goalie);
+}
 
 #endif // PLAYS__DEFENSE_HPP
