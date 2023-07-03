@@ -3,9 +3,7 @@ import { RenderConfig } from "@/state"
 import * as PIXI from "pixi.js"
 import ROSLIB from "roslib"
 
-// Types used for team data, our team and the opponent team intentionally both use the same class
-// with a place for data about robot status, active plays, etc so that we can use a single UI to control
-// two instances of our software playing against each other for testing
+// Types used for robot data including the feedback status
 
 export enum ErrorLevel {
     None,
