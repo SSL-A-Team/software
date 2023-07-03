@@ -36,6 +36,7 @@
 #include "types/world.hpp"
 
 #include "ateam_geometry/ateam_geometry.hpp"
+#include "ateam_common/robot_constants.hpp"
 
 #include "defense.hpp"
 #include "play_helpers.hpp"
@@ -66,7 +67,6 @@ std::vector<BehaviorGoal> generate_points_around_ball(
   const int num_points)
 {
   std::vector<BehaviorGoal> points_around_ball;
-  double robotDiameter = 0.18;
   // Where is the ball?
   std::optional<Eigen::Vector2d> ball_location = world.get_unique_ball();
   if (!ball_location.has_value()) {
@@ -89,7 +89,7 @@ std::vector<BehaviorGoal> generate_points_around_ball(
       if (is_point_in_bounds(candidate)) {
         if (ateam_geometry::Segment(
             previous_point,
-            candidate).squared_length > pow(robot_diameter, 2))
+            candidate).squared_length > pow(kRobotDiameter, 2))
         {
           BehaviorGoal go_to_point {
             BehaviorGoal::Type::MoveToPoint,

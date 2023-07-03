@@ -27,6 +27,7 @@
 #include <vector>
 #include <optional>
 
+#include "util/directed_graph.hpp"
 #include "types/world.hpp"
 #include "types/behavior_goal.hpp"
 #include "ateam_geometry/ateam_geometry.hpp"
