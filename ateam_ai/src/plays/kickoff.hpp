@@ -29,9 +29,7 @@
 #include "plays/defense.hpp"
 
 DirectedGraph<BehaviorGoal> setup_our_kickoff(
-  const World & world,
-  const Field & field,
-  const FieldSidedInfo & our_side_info)
+  const World & world)
 {
   DirectedGraph<BehaviorGoal> our_kickoff;
   // TODO(Christian): Replace the below with shared diameter constant
@@ -49,7 +47,7 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(
   our_kickoff.add_node(kicker_setup);
 
   // Add the goalie
-  our_kickoff.add_node(get_goalie_behavior_goal(world, our_side_info));
+  our_kickoff.add_node(get_goalie_behavior_goal(world));
 
   // Make sure the other three robots are on our side
   // For now, setting these to hard coded locations

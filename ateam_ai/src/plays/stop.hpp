@@ -41,12 +41,11 @@
 #include "play_helpers.hpp"
 
 DirectedGraph<BehaviorGoal> generate_stop(
-  const World & world,
-  const FieldSidedInfo & our_side_info)
+  const World & world)
 {
   DirectedGraph<BehaviorGoal> stop;
 
-  auto goalie = get_goalie_behavior_goal(our_side_info);
+  auto goalie = get_goalie_behavior_goal();
   stop.add_node(goalie);
 
   auto attacker_behaviors = generate_points_around_ball(world, 3);
