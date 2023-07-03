@@ -23,6 +23,7 @@
 
 #include <Eigen/Dense>
 
+#include "util/directed_graph.hpp"
 #include "types/world.hpp"
 #include "types/behavior_goal.hpp"
 
