@@ -24,12 +24,16 @@
 #include <Eigen/Dense>
 
 // All of the below are in meters
+// Matches the size of the robots from the SSL rulebook
 constexpr double kRobotDiameter = 0.18;
 constexpr double kRobotRadius = kRobotDiameter / 2;
 constexpr double kRobotHeight = 0.15;
 
 // Physical limitations - used in trajectory generation
-const Eigen::Vector3d kMaxRobotVel = Eigen::Vector3d(2, 2, 0.5);
-const Eigen::Vector3d kMaxRobotAccel = Eigen::Vector3d(2, 2, 0.5);
+// Units are m/s and rad/s for velocity
+// m/s^2 and rad/s^2 for acceleration
+// This should match what the limits are set to in the firmware.
+const Eigen::Vector3d kMaxRobotVel = Eigen::Vector3d(3, 3, 18);
+const Eigen::Vector3d kMaxRobotAccel = Eigen::Vector3d(3, 3, 36);
 
 #endif  // ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
