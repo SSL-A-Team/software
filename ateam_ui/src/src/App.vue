@@ -4,87 +4,75 @@
             <v-app-bar-title> ATeam UI </v-app-bar-title>
         </v-app-bar>
         <v-main>
-            <v-container class="d-flex flex-row" ref="Main Components">
-                <RefButtonsComponent/>
-                <StatusComponent/>
-                <FieldComponent/>
+            <v-container fluid class="d-inline-flex">
+            <v-row class="flex-nowrap">
+                <v-col v-if="!this.state.comp" class="flex-grow-0 flex-shrink-0">
+                    <RefButtonsComponent/>
+                </v-col>
+                <v-col class="flex-grow-0 flex-shrink-0">
+                    <StatusComponent ref="robotStatus"/>
+                </v-col>
+                <v-col class="flex-grow-1 flex-shrink-1" style="height: auto">
+                    <FieldComponent ref="mainField"/>
+                </v-col>
+            </v-row>
             </v-container>
         </v-main>
     </v-app>
 </template>
 
 
-<script lang="js">
+<script lang="ts">
+
 import FieldComponent from './components/FieldComponent.vue'
 import StatusComponent from './components/StatusComponent.vue'
 import RefButtonsComponent from './components/RefButtonsComponent.vue'
 import { provide } from 'vue'
+import { defineComponent, toRaw } from 'vue'
+
+import { AppState } from '@/state'
+
 
 export default {
     data() {
         return {
-            state: {
-                sim: true,
-                team: "yellow",
-                ball: {
-                    pose: {
-                        position: {}
-                    },
-                    twist: {},
-                    accel: {}
-                },
-                teams: {
-                    blue: {
-                        name: "",
-                        color: "blue",
-                        defending: +1,
-                        robots: []
-                    },
-                    yellow: {
-                        name: "",
-                        color:  "yellow",
-                        defending: -1,
-                        robots: [],
-                    }
-                },
-                underlays: [],
-                overlays: [],
-                // Using Div A dimensions
-                fieldDimensions: {
-                    length: 12,
-                    width: 9,
-                    border: .7,
-                    lineWidth: .01,
-                    goalWidth: 1.8,
-                    goalDepth: .18,
-                    goalHeight: .16,
-                    penaltyShort: 1.8,
-                    penaltyLong: 3.6,
-                    centerRadius: .5,
-                    centerDiameter: 1,
-                    goalFlat: .5,
-                    floorLength: 13.4,
-                    floorWidth: 10.4
-                }
-            },
+            intervalId: null,
+            state: new AppState(),
             renderConfig: {
                 angle: 0,
-                scale: 300, // Pixels per meter (in the rendering canvas)
-                factor: .25 // Field Scaling Factor (applied to the canvas when it's added to the UI)
+                scale: 75, // Pixels per meter (in the rendering canvas)
+                factor: 1 // Field Scaling Factor (applied to the canvas when it's added to the UI)
             }
         }
     },
-    provide() {
+    provide() { 
         return {
             state: this.state,
             renderConfig: this.renderConfig
         }
     },
+    methods: {
+        // Renders field at 100fps
+        update: function() {
+            // update components
+            this.$refs.mainField.update();
+        }
+    },
+    beforeUnmount() {
+        clearInterval(this.intervalId);
+    },
+    created() {
+        this.intervalId = setInterval(this.update, 10);
+    },
+    mounted() {
+        // This has to be called after Vue has started monitoring the properties so that the callbacks
+        // get registered to track for updates
+        this.state.mount();
+    },
     components: {
-    FieldComponent,
-    StatusComponent,
-    RefButtonsComponent
+        FieldComponent,
+        StatusComponent,
+        RefButtonsComponent
+    }
 }
-}
-
 </script>
