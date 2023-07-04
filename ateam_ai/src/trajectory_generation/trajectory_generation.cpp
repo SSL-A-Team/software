@@ -185,7 +185,7 @@ BehaviorPlan GetPlanFromGoal(
         current_vel.y() = current_robot.vel.y();
         current_vel.z() = current_robot.omega;
         plan.trajectory = {{{world.current_time + world.immutable_duration,
-          current, {0,0,0}, {0,0,0}}}};
+          current, {0, 0, 0}, {0, 0, 0}}}};
       }
       break;
 
