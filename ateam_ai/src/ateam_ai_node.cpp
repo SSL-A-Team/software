@@ -225,13 +225,8 @@ private:
     world_.field = field;
   }
 
-  int timer_callbacks_remaining = 100;
   void timer_callback()
   {
-    // timer_callbacks_remaining--;
-    // if(!timer_callbacks_remaining) {
-    //   rclcpp::shutdown();
-    // }
     std::lock_guard<std::mutex> lock(world_mutex_);
 
     //

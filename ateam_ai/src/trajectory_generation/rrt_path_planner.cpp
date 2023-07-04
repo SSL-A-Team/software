@@ -20,7 +20,7 @@
 
 #include "rrt_path_planner.hpp"
 
-#include <ompl/geometric/planners/rrt/RRTConnect.h>
+#include <ompl/geometric/planners/rrt/RRT.h>
 #include <ompl/util/Console.h>
 #include <ranges>
 #include <algorithm>
@@ -32,7 +32,7 @@ namespace ateam_ai::trajectory_generation
 RrtPathPlanner::RrtPathPlanner()
 : state_space_(std::make_shared<ompl::base::SE2StateSpace>()),
   simple_setup_(state_space_),
-  planner_(std::make_shared<ompl::geometric::RRTConnect>(simple_setup_.getSpaceInformation()))
+  planner_(std::make_shared<ompl::geometric::RRT>(simple_setup_.getSpaceInformation()))
 {
   ompl::msg::setLogLevel(ompl::msg::LOG_ERROR);
   simple_setup_.setPlanner(planner_);
@@ -48,7 +48,7 @@ RrtPathPlanner::Path RrtPathPlanner::generatePath(
 
   simple_setup_.clear();
 
-  planner_->as<ompl::geometric::RRTConnect>()->setRange(options.step_size);
+  planner_->as<ompl::geometric::RRT>()->setRange(options.step_size);
 
   std::vector<ateam_geometry::AnyShape> obstacles_and_robots(obstacles);
   auto obstacle_from_robot = [](const std::optional<Robot> & robot) {
