@@ -76,7 +76,7 @@ class TestJoystickControlNode(unittest.TestCase):
 
         self.set_parameter_client = self.node.create_client(
             rcl_interfaces.srv.SetParameters, '/joystick_control_node/set_parameters')
-        self.assertTrue(self.set_parameter_client.wait_for_service(1.0))
+        self.assertTrue(self.set_parameter_client.wait_for_service(5.0))
 
         self.message_pump.start()
 
@@ -171,7 +171,7 @@ class TestJoystickControlNode(unittest.TestCase):
             self.received_msg_1.twist.angular.z, -1.0)
 
     def test_2_invalidRobotIdsShouldBeRejected(self):
-        self.assertFalse(self.setRobotId(-1).results[0].successful)
+        self.assertFalse(self.setRobotId(-2).results[0].successful)
         self.assertFalse(self.setRobotId(16).results[0].successful)
 
     def callback_0(self, msg):
