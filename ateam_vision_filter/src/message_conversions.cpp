@@ -82,6 +82,8 @@ ateam_msgs::msg::FieldInfo fromMsg(
   if (ros_msg.field_length < 1.0 || ros_msg.field_width < 1.0) {
     field_info.valid = false;
     return field_info;
+  } else {
+    field_info.valid = true;
   }
 
   field_info.field_length = ros_msg.field_length;
