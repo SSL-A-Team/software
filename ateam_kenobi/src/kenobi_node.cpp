@@ -17,6 +17,7 @@
 #include <tf2/utils.h>
 #include "types/world.hpp"
 #include "types/message_conversions.hpp"
+#include "play_selector.hpp"
 
 namespace ateam_kenobi
 {
@@ -74,6 +75,7 @@ public:
 
 private:
   World world_;
+  PlaySelector play_selector_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> blue_robots_subscriptions_;
@@ -173,11 +175,16 @@ private:
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(const World & world)
   {
-    // TODO we might refactor this into its own file depending on how big this gets
-    //
-    // DO THE PLAYS STUFF HERE
-    //
-    return {};
+    auto play = play_selector_.getPlay(world);
+    return std::visit([this,&world](auto & play)->std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> {
+      using PlayType = std::decay_t<decltype(play)>;
+      if constexpr(std::is_same_v<PlayType, std::monostate>) {
+        RCLCPP_ERROR(get_logger(), "No play selected!");
+        return {};
+      } else {
+        return play.get().runFrame(world);
+      }
+    }, play);
   }
 
   void send_all_motion_commands(

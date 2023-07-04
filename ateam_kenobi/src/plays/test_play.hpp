@@ -28,25 +28,16 @@
 
 #include "types/world.hpp"
 
-/*
-Can run our basic defense. 
-When we run a frame, sends robot motion commands to our robots.
-*/
+namespace ateam_kenobi::plays
+{
 class TestPlay {
   public:
-    using RobotMotionCommand = std::optional<ateam_msgs::msg::RobotMotionCommand>;
+    explicit TestPlay() = default;
 
-    explicit TestPlay();
-
-    std::array<RobotMotionCommand, 16> reset(World & world);
+    void reset();
     
-    std::array<RobotMotionCommand, 16> runFrame(World & world);
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world);
   private:
-    std::array<std::optional<std::vector<ateam_geometry::Point>>, 16> maybe_robot_trajectories;
-    int current_frame;
-    /*- Assignment object
-    - Motion Controller
-    - Path planner
-  */
 };
+}  // namespace ateam_kenobi::plays
 #endif // PLAYS__TEST_PLAY_HPP_
