@@ -7,5 +7,5 @@
     <param name="ssl_vision_port" value="$(var ssl_vision_port)"/>
   </node>
   <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True"/>
-  <node name="ateam_ai" pkg="ateam_ai" exec="ateam_ai_node" respawn="True"/>
+  <node name="kenobi_node" pkg="ateam_kenobi" exec="ateam_kenobi_node" respawn="True"/>
 </launch>

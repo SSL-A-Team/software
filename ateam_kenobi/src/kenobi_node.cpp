@@ -26,7 +26,7 @@ using namespace std::literals::chrono_literals;
 class KenobiNode : public rclcpp::Node
 {
 public:
-  KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+  explicit KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("kenobi_node", options),
     info_listener_(*this),
     game_state_listener_(*this)
@@ -197,4 +197,6 @@ private:
 
 };
 
-}  // ateam_kenobi
+}  // namespace ateam_kenobi
+
+RCLCPP_COMPONENTS_REGISTER_NODE(ateam_kenobi::KenobiNode)
