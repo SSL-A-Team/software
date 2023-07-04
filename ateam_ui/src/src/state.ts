@@ -78,8 +78,7 @@ export class AppState {
         } else {
             this.controlled_robot = id;
         }
-
-        this.params["joystick_param"].set(id);
+        this.params["joystick_param"].set(this.controlled_robot);
     }
 
     // TODO: figure out how to type ROSLIB Messages, the Message type doesn't seem to work properly
