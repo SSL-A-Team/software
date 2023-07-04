@@ -180,7 +180,20 @@ BehaviorPlan GetPlanFromGoal(
       }
       break;
 
-    case BehaviorGoal::Type::CostFunctionPoint:
+    case BehaviorGoal::Type::Halt:
+      {
+        Robot current_robot = world.plan_from_our_robots.at(assigned_robot).value();
+
+        Eigen::Vector3d current, current_vel, target, target_vel;
+        current.x() = current_robot.pos.x();
+        current.y() = current_robot.pos.y();
+        current.z() = current_robot.theta;
+        current_vel.x() = current_robot.vel.x();
+        current_vel.y() = current_robot.vel.y();
+        current_vel.z() = current_robot.omega;
+        plan.trajectory = {{{world.current_time + world.immutable_duration,
+          current, {0, 0, 0}, {0, 0, 0}}}};
+      }
       break;
 
     case BehaviorGoal::Type::Halt:
