@@ -39,7 +39,7 @@
 class MotionController
 {
 public:
-  // Load a new trajectory into the motion controller resetting its progress along the old one and the PID controllers
+  // Load a new trajectory into the motion controller resetting its progress along the old one
   void set_trajectory(const std::vector<ateam_geometry::Point>& trajectory);
 
   // Generate a robot motion command to follow a trajectory
@@ -47,6 +47,9 @@ public:
 
   // Return a motion command to sit still
   ateam_msgs::msg::RobotMotionCommand empty_command();
+
+  // Reset the PID controllers and remove previous time to recalculate dt
+  void reset();
 
 // Target velocity along the trajectory
 double vel = 2;

@@ -48,15 +48,9 @@ CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 void MotionController::set_trajectory(const std::vector<ateam_geometry::Point>&  trajectory) {
   this->trajectory = trajectory;
   this->prev_point = 0;
-  this->prev_time = NAN;
-
-  // TODO: handle pid gains better
-  this->x_controller.initPid(1.0, 0, 0, 0, 0);
-  this->y_controller.initPid(1.0, 0, 0, 0, 0);
-  this->t_controller.initPid(1.0, 0, 0, 0, 0);
 
   this->progress = 0;
-  // TODO: get total distance traveled along the trajectory
+  // TODO: get total distance along the trajectory
   this->total_dist = 0;
 }
 
@@ -117,4 +111,17 @@ ateam_msgs::msg::RobotMotionCommand MotionController::empty_command()
 {
   ateam_msgs::msg::RobotMotionCommand motion_command;
   return motion_command;
+}
+
+void MotionController::reset()
+{
+  // TODO: handle pid gains better
+  this->x_controller.initPid(1.0, 0, 0, 0, 0);
+  this->y_controller.initPid(1.0, 0, 0, 0, 0);
+  this->t_controller.initPid(1.0, 0, 0, 0, 0);
+
+  this->progress = 0;
+  this->total_dist = 0;
+
+  this->prev_time = NAN;
 }
