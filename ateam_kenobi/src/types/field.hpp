@@ -21,15 +21,15 @@
 #ifndef TYPES__FIELD_HPP_
 #define TYPES__FIELD_HPP_
 
-#include <Eigen/Dense>
 #include <array>
+#include <ateam_geometry/types.hpp>
 
 namespace ateam_kenobi
 {
 struct FieldSidedInfo
 {
-  std::array<Eigen::Vector2d, 4> goalie_corners;
-  std::array<Eigen::Vector2d, 2> goal_posts;
+  std::array<ateam_geometry::Point, 4> goalie_corners;
+  std::array<ateam_geometry::Point, 2> goal_posts;
 };
 struct Field
 {
@@ -42,7 +42,7 @@ struct Field
   float goal_width;
   float goal_depth;
   float boundary_width;
-  std::array<Eigen::Vector2d, 4> field_corners;
+  std::array<ateam_geometry::Point, 4> field_corners;
   FieldSidedInfo ours;
   FieldSidedInfo theirs;
 };

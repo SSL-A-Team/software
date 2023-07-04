@@ -22,16 +22,16 @@
 #ifndef TYPES__ROBOT_HPP_
 #define TYPES__ROBOT_HPP_
 
-#include <Eigen/Dense>
+#include <ateam_geometry/types.hpp>
 
 namespace ateam_kenobi
 {
 struct Robot
 {
   int id;
-  Eigen::Vector2d pos;
+  ateam_geometry::Point pos;
   double theta;
-  Eigen::Vector2d vel;
+  ateam_geometry::Vector vel;
   double omega;
 };
 }  // namespace ateam_kenobi

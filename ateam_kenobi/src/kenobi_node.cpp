@@ -12,6 +12,7 @@
 #include <ateam_common/game_state_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
+#include <ateam_geometry/types.hpp>
 #include <tf2/convert.h>
 #include <tf2/utils.h>
 #include "types/world.hpp"
@@ -117,23 +118,19 @@ private:
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg)
   {
     robot_states.at(id) = Robot();
-    robot_states.at(id).value().pos.x() = robot_state_msg->pose.position.x;
-    robot_states.at(id).value().pos.y() = robot_state_msg->pose.position.y;
+    robot_states.at(id).value().pos = ateam_geometry::Point(robot_state_msg->pose.position.x, robot_state_msg->pose.position.y);
     tf2::Quaternion tf2_quat;
     tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
     robot_states.at(id).value().theta = tf2::getYaw(tf2_quat);
-    robot_states.at(id).value().vel.x() = robot_state_msg->twist.linear.x;
-    robot_states.at(id).value().vel.y() = robot_state_msg->twist.linear.y;
+    robot_states.at(id).value().vel = ateam_geometry::Vector(robot_state_msg->twist.linear.x, robot_state_msg->twist.linear.y);
     robot_states.at(id).value().omega = robot_state_msg->twist.angular.z;
     robot_states.at(id).value().id = id;
   }
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
   {
-    world_.ball.pos.x() = ball_state_msg->pose.position.x;
-    world_.ball.pos.y() = ball_state_msg->pose.position.y;
-    world_.ball.vel.x() = ball_state_msg->twist.linear.x;
-    world_.ball.vel.y() = ball_state_msg->twist.linear.y;
+    world_.ball.pos = ateam_geometry::Point(ball_state_msg->pose.position.x, ball_state_msg->pose.position.y);
+    world_.ball.vel = ateam_geometry::Vector(ball_state_msg->twist.linear.x, ball_state_msg->twist.linear.y);
   }
 
   void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
@@ -148,8 +145,8 @@ private:
     auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
         std::transform(
           starting_array.begin(), starting_array.end(), final_array_iter,
-          [&](auto & val)->Eigen::Vector2d {
-            return {val.x, val.y};
+          [&](auto & val) {
+            return ateam_geometry::Point(val.x, val.y);
           });
       };
 

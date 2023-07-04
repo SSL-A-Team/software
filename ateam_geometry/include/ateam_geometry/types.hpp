@@ -36,6 +36,7 @@ using Circle = Kernel::Circle_2;
 using AnyShape = std::variant<Point, Segment, Rectangle, Circle>;
 using PointCreator = CGAL::Creator_uniform_2<double, Point>;
 using Polygon = CGAL::Polygon_2<Point>;
+using Vector = Kernel::Vector_2;
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__TYPES_HPP_

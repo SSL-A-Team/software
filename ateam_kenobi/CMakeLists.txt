@@ -12,6 +12,7 @@ find_package(ateam_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(ateam_geometry REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/kenobi_node.cpp
@@ -29,6 +30,7 @@ ament_target_dependencies(
   "ateam_common"
   "tf2"
   "tf2_geometry_msgs"
+  "ateam_geometry"
 )
 rclcpp_components_register_node(
   kenobi_node_component

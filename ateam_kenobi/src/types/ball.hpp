@@ -22,14 +22,14 @@
 #ifndef TYPES__BALL_HPP_
 #define TYPES__BALL_HPP_
 
-#include <Eigen/Dense>
+#include <ateam_geometry/types.hpp>
 
 namespace ateam_kenobi
 {
 struct Ball
 {
-  Eigen::Vector2d pos;
-  Eigen::Vector2d vel;
+  ateam_geometry::Point pos;
+  ateam_geometry::Vector vel;
 };
 }  // namespace ateam_kenobi
 
