@@ -30,7 +30,7 @@ export default {
                 this.drawStatus(robot, this.$refs.canvases[robot.id].getContext("2d"));
 
                 const element = this.$refs.robotCard[robot.id].$el;
-                const errorLevel = robot.errorLevel();
+                const errorLevel = robot.errorLevel(this.state.sim);
 
                 element.getAnimations().forEach((animation) => {animation.cancel()});
                 let style = "";
