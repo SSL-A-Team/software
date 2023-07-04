@@ -45,41 +45,42 @@ DirectedGraph<BehaviorGoal> prepare_our_penalty_kick(const World & world)
   typedef CGAL::Random_points_on_segment_2<ateam_geometry::Point,
       ateam_geometry::PointCreator> linePointCreator;
   linePointCreator line_behind_ball(
-    ateam_geometry::Point(ball_location.x() - 1.3, ball_location.y() + 5), 
+    ateam_geometry::Point(ball_location.x() - 1.3, ball_location.y() + 5),
     ateam_geometry::Point(ball_location.x() - 1.3, ball_location.y() + 5)
   );
   std::vector<ateam_geometry::Point> candidate_points;
   std::vector<BehaviorGoal> points_away_from_ball;
   // We can change this later to only generate the points we need
   // rather than doing them in groups of 50, that's a little silly
-  while (static_cast<int>(points_away_from_ball.size()) < 5){
+  while (static_cast<int>(points_away_from_ball.size()) < 5) {
     candidate_points.reserve(50);
     std::copy_n(line_behind_ball, 50, std::back_inserter(candidate_points));
     ateam_geometry::Point previous_point = ateam_geometry::Point(-100, -100);
     for (ateam_geometry::Point candidate : candidate_points) {
       if (ateam_geometry::Segment(
-            previous_point,
-            candidate).squared_length() > pow(kRobotDiameter, 2))
-        {
-          BehaviorGoal go_to_point {
-            BehaviorGoal::Type::MoveToPoint,
-            BehaviorGoal::Priority::Required,
-            MoveParam(ateam_geometry::PointToEigen(candidate))
-          };
-          points_away_from_ball.push_back(go_to_point);
-          if (static_cast<int>(points_away_from_ball.size()) > 4) {
-            break;
-          }
+          previous_point,
+          candidate).squared_length() > pow(kRobotDiameter, 2))
+      {
+        BehaviorGoal go_to_point {
+          BehaviorGoal::Type::MoveToPoint,
+          BehaviorGoal::Priority::Required,
+          MoveParam(ateam_geometry::PointToEigen(candidate))
+        };
+        points_away_from_ball.push_back(go_to_point);
+        if (static_cast<int>(points_away_from_ball.size()) > 4) {
+          break;
+        }
+      }
     }
+    for (BehaviorGoal goal : points_away_from_ball) {
+      our_penalty_kick.add_node(goal);
+    }
+    return our_penalty_kick;
   }
-  for (BehaviorGoal goal : points_away_from_ball){
-    our_penalty_kick.add_node(goal);
-  }
-  return our_penalty_kick;
-}
 }
 
-DirectedGraph<BehaviorGoal> do_our_penalty_kick(const World & world){
+DirectedGraph<BehaviorGoal> do_our_penalty_kick(const World & world)
+{
   // Kick the ball
   DirectedGraph<BehaviorGoal> our_penalty_kick = generate_basic_shoot(world);
   // Have everyone else halt
@@ -94,7 +95,8 @@ DirectedGraph<BehaviorGoal> do_our_penalty_kick(const World & world){
   return our_penalty_kick;
 }
 
-DirectedGraph<BehaviorGoal> prepare_their_penalty_kick(const World & world){
+DirectedGraph<BehaviorGoal> prepare_their_penalty_kick(const World & world)
+{
   DirectedGraph<BehaviorGoal> their_penalty_kick;
   std::optional<Ball> ball = world.get_unique_ball();
   if (!ball.has_value()) {
@@ -103,52 +105,54 @@ DirectedGraph<BehaviorGoal> prepare_their_penalty_kick(const World & world){
   ateam_geometry::Point ball_location = ateam_geometry::EigenToPoint(ball.value().pos);
   // Goalie goes to goal line, in the best possible position to block the ball
   ateam_geometry::Segment goal_line = ateam_geometry::Segment(
-    ateam_geometry::Point(-world.field.field_width/2,500),
-    ateam_geometry::Point(-world.field.field_width/2,-500)
+    ateam_geometry::Point(-world.field.field_width / 2, 500),
+    ateam_geometry::Point(-world.field.field_width / 2, -500)
   );
-  ateam_geometry::Point goalie_point = ateam_geometry::NearestPointOnSegment(goal_line, ball_location);
+  ateam_geometry::Point goalie_point = ateam_geometry::NearestPointOnSegment(
+    goal_line,
+    ball_location);
   their_penalty_kick.add_node(
     BehaviorGoal(
-    BehaviorGoal::Type::MoveToPoint,
-    BehaviorGoal::Priority::Reserved,
-    MoveParam(ateam_geometry::PointToEigen(goalie_point)),
-    world.referee_info.our_goalie_id
+      BehaviorGoal::Type::MoveToPoint,
+      BehaviorGoal::Priority::Reserved,
+      MoveParam(ateam_geometry::PointToEigen(goalie_point)),
+      world.referee_info.our_goalie_id
   ));
   // Others go 1m behind the ball in the direction towards their goal (positive direction)
   typedef CGAL::Random_points_on_segment_2<ateam_geometry::Point,
       ateam_geometry::PointCreator> linePointCreator;
   linePointCreator line_behind_ball(
-    ateam_geometry::Point(ball_location.x() + 1.3, ball_location.y() + 5), 
+    ateam_geometry::Point(ball_location.x() + 1.3, ball_location.y() + 5),
     ateam_geometry::Point(ball_location.x() + 1.3, ball_location.y() + 5)
   );
   std::vector<ateam_geometry::Point> candidate_points;
   std::vector<BehaviorGoal> points_away_from_ball;
   // We can change this later to only generate the points we need
   // rather than doing them in groups of 50, that's a little silly
-  while (static_cast<int>(points_away_from_ball.size()) < 5){
+  while (static_cast<int>(points_away_from_ball.size()) < 5) {
     candidate_points.reserve(50);
     std::copy_n(line_behind_ball, 50, std::back_inserter(candidate_points));
     ateam_geometry::Point previous_point = ateam_geometry::Point(-100, -100);
     for (ateam_geometry::Point candidate : candidate_points) {
       if (ateam_geometry::Segment(
-            previous_point,
-            candidate).squared_length() > pow(kRobotDiameter, 2))
-        {
-          BehaviorGoal go_to_point {
-            BehaviorGoal::Type::MoveToPoint,
-            BehaviorGoal::Priority::Required,
-            MoveParam(ateam_geometry::PointToEigen(candidate))
-          };
-          points_away_from_ball.push_back(go_to_point);
-          if (static_cast<int>(points_away_from_ball.size()) > 4) {
-            break;
-          }
+          previous_point,
+          candidate).squared_length() > pow(kRobotDiameter, 2))
+      {
+        BehaviorGoal go_to_point {
+          BehaviorGoal::Type::MoveToPoint,
+          BehaviorGoal::Priority::Required,
+          MoveParam(ateam_geometry::PointToEigen(candidate))
+        };
+        points_away_from_ball.push_back(go_to_point);
+        if (static_cast<int>(points_away_from_ball.size()) > 4) {
+          break;
+        }
+      }
     }
-  }
-  for (BehaviorGoal goal : points_away_from_ball){
-    their_penalty_kick.add_node(goal);
-  }
-  return their_penalty_kick;
+    for (BehaviorGoal goal : points_away_from_ball) {
+      their_penalty_kick.add_node(goal);
+    }
+    return their_penalty_kick;
   }
 }
 
@@ -163,16 +167,18 @@ DirectedGraph<BehaviorGoal> do_their_penalty_kick(const World & world)
   ateam_geometry::Point ball_location = ateam_geometry::EigenToPoint(ball.value().pos);
   // Goalie goes to goal line, in the best possible position to block the ball
   ateam_geometry::Segment goal_line = ateam_geometry::Segment(
-      ateam_geometry::Point(-world.field.field_width/2,500),
-      ateam_geometry::Point(-world.field.field_width/2,-500)
+    ateam_geometry::Point(-world.field.field_width / 2, 500),
+    ateam_geometry::Point(-world.field.field_width / 2, -500)
   );
-  ateam_geometry::Point goalie_point = ateam_geometry::NearestPointOnSegment(goal_line, ball_location);
+  ateam_geometry::Point goalie_point = ateam_geometry::NearestPointOnSegment(
+    goal_line,
+    ball_location);
   their_penalty_kick.add_node(
     BehaviorGoal(
-    BehaviorGoal::Type::MoveToPoint,
-    BehaviorGoal::Priority::Reserved,
-    MoveParam(ateam_geometry::PointToEigen(goalie_point)),
-    world.referee_info.our_goalie_id
+      BehaviorGoal::Type::MoveToPoint,
+      BehaviorGoal::Priority::Reserved,
+      MoveParam(ateam_geometry::PointToEigen(goalie_point)),
+      world.referee_info.our_goalie_id
   ));
   // Continue to have other robots stay behind the ball
   for (int i = 0; i < 5; i++) {
