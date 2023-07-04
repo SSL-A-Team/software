@@ -100,7 +100,9 @@ BehaviorGoal get_goalie_behavior_goal(const World & world)
     ball_location = ateam_geometry::EigenToPoint(ball.value().pos);
   }
   // Get the point on the goalie line that is closest to the ball
-  ateam_geometry::Point _goalie_point = ateam_geometry::NearestPointOnSegment(goalie_line, ball_location);
+  ateam_geometry::Point _goalie_point = ateam_geometry::NearestPointOnSegment(
+    goalie_line,
+    ball_location);
 
   // Have the goalie defend the goal by going to that point
   BehaviorGoal goalie(

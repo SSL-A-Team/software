@@ -25,17 +25,17 @@
 
 namespace ateam_geometry
 {
-  ateam_geometry::Point NearestPointOnSegment(
-    const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
-  {
-    ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-    if (s.has_on(orthogonal_projection)) {
-      return orthogonal_projection;
-    }
-    return CGAL::squared_distance(orthogonal_projection, s.source()) <
-          CGAL::squared_distance(orthogonal_projection, s.target()) ?
-          s.source() : s.target();
+ateam_geometry::Point NearestPointOnSegment(
+  const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
+{
+  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
+  if (s.has_on(orthogonal_projection)) {
+    return orthogonal_projection;
   }
-} // namespace ateam_geometry
+  return CGAL::squared_distance(orthogonal_projection, s.source()) <
+         CGAL::squared_distance(orthogonal_projection, s.target()) ?
+         s.source() : s.target();
+}
+}  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
