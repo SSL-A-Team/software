@@ -91,7 +91,8 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscription_;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
 
-  void SendStop() {
+  void SendStop()
+  {
     if (control_publisher_) {
       ateam_msgs::msg::RobotMotionCommand command_message;
       control_publisher_->publish(command_message);
@@ -102,7 +103,7 @@ private:
   {
     if (robot_id == -1) {
       control_publisher_.reset();
-    } else{
+    } else {
       std::string topic = command_topic_template_;
       const auto placeholder_pos = topic.find("{}");
       if (placeholder_pos != std::string::npos) {
@@ -117,7 +118,7 @@ private:
   {
 
     if (!control_publisher_) {
-        return;
+      return;
     }
 
     ateam_msgs::msg::RobotMotionCommand command_message;

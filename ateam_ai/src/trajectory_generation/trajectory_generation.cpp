@@ -196,35 +196,6 @@ BehaviorPlan GetPlanFromGoal(
       }
       break;
 
-    case BehaviorGoal::Type::Halt:
-      {
-        Robot current_robot = world.plan_from_our_robots.at(assigned_robot).value();
-
-        Eigen::Vector3d current, current_vel, target_vel;
-        current.x() = current_robot.pos.x();
-        current.y() = current_robot.pos.y();
-        current.z() = 0;  // current_robot.theta;
-        current_vel.x() = current_robot.vel.x();
-        current_vel.y() = current_robot.vel.y();
-        current_vel.z() = 0;  // current_robot.omega;
-
-        target_vel.x() = 0;
-        target_vel.y() = 0;
-        target_vel.z() = 0;
-
-        double dt = 0.01;  // TODO(jneiger): Feed this down from above
-        Eigen::Vector3d max_vel{2, 2, 0.5};  // TODO(jneiger): Set as params
-        Eigen::Vector3d max_accel{2, 2, 0.5};
-
-        // Move to our current point in order to halt
-        Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
-          current, current_vel, current,
-          target_vel, max_vel, max_accel,
-          dt, world.current_time + world.immutable_duration);
-
-        plan.trajectory = trajectory;
-      }
-
     default:
       break;
   }
