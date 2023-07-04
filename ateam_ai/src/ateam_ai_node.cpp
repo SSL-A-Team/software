@@ -225,8 +225,13 @@ private:
     world_.field = field;
   }
 
+  int timer_callbacks_remaining = 100;
   void timer_callback()
   {
+    // timer_callbacks_remaining--;
+    // if(!timer_callbacks_remaining) {
+    //   rclcpp::shutdown();
+    // }
     std::lock_guard<std::mutex> lock(world_mutex_);
 
     //
@@ -237,13 +242,14 @@ private:
       // Estimate of how long it will take for the round trip of
       // Command -> Radio -> Robot -> Motion -> Vision change
       const auto & maybe_trajectory = previous_frame_trajectories.at(robot_id);
-      if (maybe_trajectory.has_value() && !maybe_trajectory.value().samples.empty()) {
-        world_.plan_from_our_robots.at(robot_id) = trajectory_editor::state_at_immutable_duration(
-          maybe_trajectory.value(),
-          world_.immutable_duration, world_.current_time);
-      } else {
+      // if (maybe_trajectory.has_value() && !maybe_trajectory.value().samples.empty()) {
+      //   std::cerr << "Using previous trajectory for robot " << robot_id << "\n";
+      //   world_.plan_from_our_robots.at(robot_id) = trajectory_editor::state_at_immutable_duration(
+      //     maybe_trajectory.value(),
+      //     world_.immutable_duration, world_.current_time);
+      // } else {
         world_.plan_from_our_robots.at(robot_id) = world_.our_robots.at(robot_id);
-      }
+      // }
     }
 
     // Get current game state for world

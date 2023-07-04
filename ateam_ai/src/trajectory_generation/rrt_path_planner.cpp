@@ -34,7 +34,7 @@ RrtPathPlanner::RrtPathPlanner()
   simple_setup_(state_space_),
   planner_(std::make_shared<ompl::geometric::RRTConnect>(simple_setup_.getSpaceInformation()))
 {
-  // ompl::msg::setLogLevel(ompl::msg::LOG_ERROR);
+  ompl::msg::setLogLevel(ompl::msg::LOG_ERROR);
   simple_setup_.setPlanner(planner_);
 }
 
@@ -42,6 +42,8 @@ RrtPathPlanner::Path RrtPathPlanner::generatePath(
   const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles,
   const Position & start_pos, const Position & goal_pos, const RrtOptions & options)
 {
+  // return {};
+
   using ScopedState = ompl::base::ScopedState<ompl::base::SE2StateSpace>;
 
   simple_setup_.clear();
@@ -103,8 +105,6 @@ RrtPathPlanner::Path RrtPathPlanner::generatePath(
     });
 
   auto planner_status = simple_setup_.solve(options.search_time_limit);
-
-  std::cerr << "Planner status: " << planner_status.asString() << '\n';
 
   if (planner_status != ompl::base::PlannerStatus::EXACT_SOLUTION) {
     // no solution found
