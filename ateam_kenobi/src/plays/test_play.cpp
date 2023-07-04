@@ -54,9 +54,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
         const auto & robot = maybe_assigned_robot.value();
         const auto & destination = test_positions.at(pos_ind);
         const auto path = path_planner_.getPath(robot.pos, destination);
-        // TODO set path on controller
-        // TODO get velocity command from controller
-        maybe_motion_commands.at(robot_id) = {}; // TODO use the command from the controller
+        motion_controller_.set_trajectory(path);
+        const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(world.current_time.time_since_epoch()).count();
+        maybe_motion_commands.at(robot_id) = motion_controller_.get_command(robot, current_time);
     }
     
     return maybe_motion_commands;

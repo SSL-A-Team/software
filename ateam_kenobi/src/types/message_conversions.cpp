@@ -50,6 +50,8 @@ ateam_msgs::msg::FieldInfo toMsg(const Field & obj) {
   convert_point_array(obj.ours.goal_posts, field_msg.ours.goalie_corners.begin());
   convert_point_array(obj.theirs.goalie_corners, field_msg.theirs.goal_posts.begin());
   convert_point_array(obj.theirs.goal_posts, field_msg.theirs.goalie_corners.begin());
+
+  return field_msg;
 }
 
 ateam_msgs::msg::RefereeInfo toMsg(const RefereeInfo & obj) {
@@ -59,6 +61,7 @@ ateam_msgs::msg::RefereeInfo toMsg(const RefereeInfo & obj) {
   ref_msg.game_stage = static_cast<uint8_t>(obj.current_game_stage);
   ref_msg.game_command = static_cast<uint8_t>(obj.running_command);
   ref_msg.prev_command = static_cast<uint8_t>(obj.prev_command);
+  return ref_msg;
 }
 
 ateam_msgs::msg::BallState toMsg(const Ball & obj)
