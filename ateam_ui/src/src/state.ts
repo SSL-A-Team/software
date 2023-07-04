@@ -40,7 +40,7 @@ export class AppState {
     publishers: ROSLIB.Topic[]
     subscriptions: ROSLIB.Topic[]
     services: ROSLIB.Service[]
-    param: ROSLIB.Param[]
+    params: ROSLIB.Param[]
 
     sim: boolean = true;
     comp: boolean = true; // TODO: find a better way to set this value
@@ -165,7 +165,6 @@ export class AppState {
         this.params = [];
 
         this.controlled_robot = null;
-        this.dribbler_speed = 0;
 
         // Configure ROS
         this.ros = new ROSLIB.Ros({

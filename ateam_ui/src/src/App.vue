@@ -13,7 +13,8 @@
                     <StatusComponent ref="robotStatus"/>
                 </v-col>
                 <v-col class="flex-grow-1 flex-shrink-1" style="height: auto">
-                    <FieldComponent ref="mainField"/>
+                    <GameStatusComponent ref="refStatus"/>
+                    <FieldComponent ref="mainField" class="ma-2 pa-2"/>
                 </v-col>
             </v-row>
             </v-container>
@@ -27,6 +28,7 @@
 import FieldComponent from './components/FieldComponent.vue'
 import StatusComponent from './components/StatusComponent.vue'
 import RefButtonsComponent from './components/RefButtonsComponent.vue'
+import GameStatusComponent from './components/GameStatusComponent.vue'
 import { provide } from 'vue'
 import { defineComponent, toRaw } from 'vue'
 
@@ -72,7 +74,8 @@ export default {
     components: {
         FieldComponent,
         StatusComponent,
-        RefButtonsComponent
+        RefButtonsComponent,
+        GameStatusComponent
     }
 }
 </script>
