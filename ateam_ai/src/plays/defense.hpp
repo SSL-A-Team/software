@@ -31,19 +31,8 @@
 #include "types/world.hpp"
 #include "types/behavior_goal.hpp"
 #include "ateam_geometry/ateam_geometry.hpp"
+#include "ateam_geometry/nearest_points.hpp"
 #include "plays/play_helpers.hpp"
-
-inline ateam_geometry::Point NearestPoint(
-  const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
-{
-  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-  if (s.has_on(orthogonal_projection)) {
-    return orthogonal_projection;
-  }
-  return CGAL::squared_distance(orthogonal_projection, s.source()) <
-         CGAL::squared_distance(orthogonal_projection, s.target()) ?
-         s.source() : s.target();
-}
 
 std::vector<BehaviorGoal> get_defense_behavior_goals(
   const World & world,
@@ -111,7 +100,9 @@ BehaviorGoal get_goalie_behavior_goal(const World & world)
     ball_location = ateam_geometry::EigenToPoint(ball.value().pos);
   }
   // Get the point on the goalie line that is closest to the ball
-  ateam_geometry::Point _goalie_point = NearestPoint(goalie_line, ball_location);
+  ateam_geometry::Point _goalie_point = ateam_geometry::NearestPointOnSegment(
+    goalie_line,
+    ball_location);
 
   // Have the goalie defend the goal by going to that point
   BehaviorGoal goalie(

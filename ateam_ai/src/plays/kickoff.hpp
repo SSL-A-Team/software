@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "util/directed_graph.hpp"
+#include "ateam_common/robot_constants.hpp"
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
 #include "plays/defense.hpp"
@@ -32,8 +33,6 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(
   const World & world)
 {
   DirectedGraph<BehaviorGoal> our_kickoff;
-  // TODO(Christian): Replace the below with shared diameter constant
-  double robot_diameter = 0.18;
 
   // Have the kicker robot go to the edge of the center circle to prepare for kick
   BehaviorGoal kicker_setup {
@@ -41,7 +40,7 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(
     BehaviorGoal::Priority::Required,
     // We must be outside the center circle on OUR side
     // Its diameter is 1m
-    MoveParam(Eigen::Vector2d{-0.55 + robot_diameter, 0})
+    MoveParam(Eigen::Vector2d{-0.55 + kRobotDiameter, 0})
   };
 
   our_kickoff.add_node(kicker_setup);
@@ -55,21 +54,21 @@ DirectedGraph<BehaviorGoal> setup_our_kickoff(
   // a good way to generate better ones...
   BehaviorGoal right_striker {
     BehaviorGoal::Type::MoveToPoint,
-    BehaviorGoal::Priority::Required,
+    BehaviorGoal::Priority::Medium,
     MoveParam(Eigen::Vector2d{-0.3, -1.5})
   };
   our_kickoff.add_node(right_striker);
 
   BehaviorGoal left_striker {
     BehaviorGoal::Type::MoveToPoint,
-    BehaviorGoal::Priority::Required,
+    BehaviorGoal::Priority::Medium,
     MoveParam(Eigen::Vector2d{-0.3, 1.5})
   };
   our_kickoff.add_node(left_striker);
 
   BehaviorGoal back_defense {
     BehaviorGoal::Type::MoveToPoint,
-    BehaviorGoal::Priority::Required,
+    BehaviorGoal::Priority::Medium,
     MoveParam(Eigen::Vector2d{-2, 0})
   };
   our_kickoff.add_node(back_defense);

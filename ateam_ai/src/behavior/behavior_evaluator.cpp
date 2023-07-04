@@ -30,6 +30,7 @@
 #include "plays/kickoff.hpp"
 #include "plays/shoot.hpp"
 #include "plays/stop.hpp"
+#include "plays/penalty_kick.hpp"
 
 #include "plays/defense.hpp"
 #include "plays/halt.hpp"
