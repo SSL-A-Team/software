@@ -165,7 +165,7 @@ BehaviorPlan TrajectoryGenerator::GetPlanFromGoal(
 
         const auto path = rrt_path_planner.generatePath(world, {}, current.head(2), target.head(2));
 
-        Trajectory trajectory = ateam_ai::trajectory_generation::TrajectoryFromPath(path, world.current_time, target_vel.head(2), 2.0);
+        Trajectory trajectory = ateam_ai::trajectory_generation::TrajectoryFromPath(path, world.current_time, target_vel, 2.0);
 
         plan.trajectory = trajectory;
       }

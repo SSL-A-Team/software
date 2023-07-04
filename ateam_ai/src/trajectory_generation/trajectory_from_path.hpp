@@ -21,22 +21,22 @@ Trajectory TrajectoryFromPath(const std::vector<Eigen::Vector2d> & path, const d
     Sample3d sample;
 
     sample.pose.head(2) = path[path_ind];
-    sample.pose(3) = 0.0;
+    sample.pose(2) = 0.0;
 
     const Eigen::Vector2d segment_vector = path[path_ind + 1] - path[path_ind];
 
-    sample.vel.head(2) = segment_vector.normalized() * 0.2;
-    sample.vel(3) = 0.0;
+    sample.vel.head(2) = segment_vector.normalized() * max_vel;
+    sample.vel(2) = 0.0;
 
     sample.time = sample_time;
-    sample_time += segment_vector.norm() / 0.2;
+    sample_time += segment_vector.norm() / max_vel;
 
     trajectory.samples.push_back(sample);
   }
 
   Sample3d last_sample;
   last_sample.pose.head(2) = path.back();
-  last_sample.pose(3) = 0.0;
+  last_sample.pose(2) = 0.0;
   last_sample.vel = end_vel;
   last_sample.time = sample_time;
   trajectory.samples.push_back(last_sample);
