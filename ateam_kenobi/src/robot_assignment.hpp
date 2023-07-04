@@ -1,6 +1,6 @@
 
-#ifndef TYPES__ROBOT_ASSIGNMENT_HPP_
-#define TYPES__ROBOT_ASSIGNMENT_HPP_
+#ifndef ATEAM_KENOBI__ROBOT_ASSIGNMENT_HPP_
+#define ATEAM_KENOBI__ROBOT_ASSIGNMENT_HPP_
 
 #include <cmath>
 
@@ -12,12 +12,10 @@
 #include <iostream>
 #include <limits>
 
-#include "ateam_kenobi/types/robot.hpp"
+#include "types/robot.hpp"
 #include "ateam_common/assignment.hpp"
 
-namespace ateam_common
-{
-namespace robot_assignment
+namespace ateam_kenobi::robot_assignment
 {
 
 std::unordered_map<size_t, size_t> assign(const std::vector<Robot> & available_robots, const std::vector<ateam_geometry::Point> & goal_positions)
@@ -42,3 +40,7 @@ std::unordered_map<size_t, size_t> assign(const std::vector<Robot> & available_r
   // Map of original robot indexes (1-16) and what of the n goals each is assigned to
   return original_indexes_map;
 }
+
+}  // namespace ateam_kenobi::robot_assignment
+
+#endif  // ATEAM_KENOBI__ROBOT_ASSIGNMENT_HPP_
