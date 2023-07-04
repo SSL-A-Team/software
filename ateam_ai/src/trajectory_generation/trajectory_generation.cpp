@@ -195,7 +195,7 @@ BehaviorPlan GetPlanFromGoal(
           current, {0, 0, 0}, {0, 0, 0}}}};
       }
       break;
-    
+
     default:
       break;
   }
