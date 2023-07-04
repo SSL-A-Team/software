@@ -45,6 +45,10 @@ CREATE_PARAM(double, "motion/pid/y_max", y_max, 2);
 CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 */
 
+MotionController::MotionController() {
+  this->reset();
+}
+
 void MotionController::set_trajectory(const std::vector<ateam_geometry::Point>&  trajectory) {
   this->trajectory = trajectory;
   this->prev_point = 0;
