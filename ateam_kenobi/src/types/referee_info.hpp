@@ -32,6 +32,7 @@ struct RefereeInfo
   int their_goalie_id;
   ateam_common::GameStage current_game_stage;
   ateam_common::GameCommand running_command;
+  ateam_common::GameCommand prev_command;
 };
 }  // namespace ateam_kenobi
 

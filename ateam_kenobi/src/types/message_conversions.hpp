@@ -27,8 +27,13 @@
 #include <ateam_msgs/msg/trajectory.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
+#include <ateam_msgs/msg/field_info.hpp>
+#include <ateam_msgs/msg/field_sided_info.hpp>
+#include <ateam_msgs/msg/referee_info.hpp>
 
 #include "types/world.hpp"
+#include "types/field.hpp"
+#include "types/referee_info.hpp"
 
 namespace ateam_kenobi::message_conversions
 {
