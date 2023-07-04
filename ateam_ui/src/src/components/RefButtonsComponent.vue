@@ -35,7 +35,7 @@
 export default {
     data: function() {
         return {
-            gcAddress: "ws://localhost:8081",
+            gcAddress: "ws://" + location.hostname + ":8081",
             connection: null,
             connectionState: WebSocket.CLOSED
         }
