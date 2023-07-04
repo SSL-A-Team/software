@@ -21,6 +21,8 @@
 #ifndef PLAYS__PLAY_HELPERS_HPP_
 #define PLAYS__PLAY_HELPERS_HPP_
 
+#include <stdlib.h>
+
 #include <algorithm>
 #include <optional>
 
@@ -41,7 +43,10 @@ bool is_point_in_bounds(ateam_geometry::Point & point, const Field & field)
   return true;
 }
 
-bool is_point_in_defense_area(ateam_geometry::Point & point, Field & field) {}
+/* Are we in the OPPONENT'S defense area? */
+bool is_point_in_defense_area(ateam_geometry::Point & point) {
+  return (point.x() >= 3500 && (point.y() <= 1000 && point.y() >= -1000));
+}
 
 bool is_point_in_robot(ateam_geometry::Point & candidate_point, World & world)
 {
