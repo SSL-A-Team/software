@@ -45,11 +45,11 @@ ateam_msgs::msg::FieldInfo toMsg(const Field & obj) {
       });
   };
 
-  convert_point_array(obj.field_corners, field_msg.field_corners.begin());
-  convert_point_array(obj.ours.goalie_corners, field_msg.ours.goal_posts.begin());
-  convert_point_array(obj.ours.goal_posts, field_msg.ours.goalie_corners.begin());
-  convert_point_array(obj.theirs.goalie_corners, field_msg.theirs.goal_posts.begin());
-  convert_point_array(obj.theirs.goal_posts, field_msg.theirs.goalie_corners.begin());
+  convert_point_array(obj.field_corners, std::back_inserter(field_msg.field_corners));
+  convert_point_array(obj.ours.goalie_corners, std::back_inserter(field_msg.ours.goal_posts));
+  convert_point_array(obj.ours.goal_posts, std::back_inserter(field_msg.ours.goalie_corners));
+  convert_point_array(obj.theirs.goalie_corners, std::back_inserter(field_msg.theirs.goal_posts));
+  convert_point_array(obj.theirs.goal_posts, std::back_inserter(field_msg.theirs.goalie_corners));
 
   return field_msg;
 }

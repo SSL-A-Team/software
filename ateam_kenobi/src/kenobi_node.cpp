@@ -15,6 +15,7 @@
 #include <ateam_geometry/types.hpp>
 #include <tf2/convert.h>
 #include <tf2/utils.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "types/world.hpp"
 #include "types/message_conversions.hpp"
 #include "play_selector.hpp"
@@ -71,6 +72,8 @@ public:
       std::bind(&KenobiNode::field_callback, this, std::placeholders::_1));
 
     timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
+
+    RCLCPP_INFO(get_logger(), "Kenobi node ready.");
   }
 
 private:
@@ -163,6 +166,7 @@ private:
 
   void timer_callback()
   {
+    RCLCPP_INFO(get_logger(), "Timer callback!");
     world_.current_time = std::chrono::steady_clock::now();
 
     world_.referee_info.running_command = game_state_listener_.GetGameCommand();
@@ -194,6 +198,7 @@ private:
     for (std::size_t id = 0; id < robot_commands_publishers_.size(); id++) {
       const auto & maybe_motion_command = robot_motion_commands.at(id);
       if (maybe_motion_command.has_value()) {
+        RCLCPP_INFO(get_logger(), "Sending motion command for robot %ld", id);
         robot_commands_publishers_.at(id)->publish(maybe_motion_command.value());
       }
     }

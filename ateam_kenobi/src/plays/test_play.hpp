@@ -42,6 +42,7 @@ class TestPlay {
   private:
     path_planning::PathPlanner path_planner_;
     MotionController motion_controller_;
+    int prev_assigned_id_ = -1;
 };
 }  // namespace ateam_kenobi::plays
 #endif // PLAYS__TEST_PLAY_HPP_
