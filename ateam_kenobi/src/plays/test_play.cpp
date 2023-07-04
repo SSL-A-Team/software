@@ -21,6 +21,7 @@
 #include "test_play.hpp"
 #include "ateam_geometry/types.hpp"
 #include "types/world.hpp"
+#include "robot_assignment.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -31,26 +32,33 @@ void TestPlay::reset(){
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(World & world){
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
 
-    // std::vector<ateam_geometry::Point> test_position;
-    // test_position.push_back(ateam_geometry::Point(0,0));
+    std::vector<Robot> available_robots;
+    for(const auto & maybe_robot : world.our_robots) {
+        if(maybe_robot) {
+            available_robots.push_back(maybe_robot.value());
+        }
+    }
 
-    // Tell robot 0 to go to goal 0
-    // std::map<size_t, size_t> robots_to_points = {{0, 0}}
+    std::vector<ateam_geometry::Point> test_positions;
+    test_positions.push_back(ateam_geometry::Point(0,0));
 
-    // // get a trajectory
-    // for (auto robot_to_point : robots_to_points){
-    //     auto end_point = test_vector[robot_to_point.second];
-    //     // generate trajectory here
-    //     std::vector<ateam_geometry::Point> test_trajectory;
-    //     // maybe_robot_trajectories_[robot_to_point.first] = test_trajectory;
-    // }
-    // // return the first motion command for each robot
-    // for (size_t i = 0; i < maybe_robot_trajectories_.size(); ++i){
-    //     if (!trajectory.has_value()){
-    //         continue;
-    //     }
-    //     maybe_motion_commands[i] = RobotMotionCommand();
-    // }
+    const auto & robot_assignments = robot_assignment::assign(available_robots, test_positions);
+
+    for(const auto [robot_id, pos_ind] : robot_assignments) {
+        const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
+        if(!maybe_assigned_robot) { 
+            // TODO Log this
+            // Assigned non-available robot
+            continue;
+        }
+        const auto & robot = maybe_assigned_robot.value();
+        const auto & destination = test_positions.at(pos_ind);
+        // TODO get path
+        // TODO set path on controller
+        // TODO get velocity command from controller
+        maybe_motion_commands.at(robot_id) = {}; // TODO use the command from the controller
+    }
+    
     return maybe_motion_commands;
 };
 }  // namespace ateam_kenobi::plays
