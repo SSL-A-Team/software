@@ -165,11 +165,7 @@ BehaviorPlan GetPlanFromGoal(
         // If we're in a stop state, put a restriction on the speed
         // so we go no more than 1.5 m/s
         // See SSL rulebook, Section 5.1.1: Stop
-<<<<<<< HEAD
         if (world.referee_info.running_command == ateam_common::GameCommand::Stop) {
-=======
-        if (world.referee_info.running_command == ateam_common::GameCommand::Halt) {
->>>>>>> dev/cclark/high_level_behavior
           max_vel.x() = 1.5;
           max_vel.y() = 1.5;
         }
