@@ -28,8 +28,8 @@ namespace ateam_kenobi::plays
 void TestPlay::reset(){
 
 };
-    
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(World & world){
+
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::runFrame(const World & world){
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
 
     std::vector<Robot> available_robots;
@@ -53,7 +53,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(Worl
         }
         const auto & robot = maybe_assigned_robot.value();
         const auto & destination = test_positions.at(pos_ind);
-        // TODO get path
+        const auto path = path_planner_.getPath(robot.pos, destination);
         // TODO set path on controller
         // TODO get velocity command from controller
         maybe_motion_commands.at(robot_id) = {}; // TODO use the command from the controller

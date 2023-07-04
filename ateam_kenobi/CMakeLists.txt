@@ -17,6 +17,7 @@ find_package(ateam_geometry REQUIRED)
 add_library(kenobi_node_component SHARED
   src/kenobi_node.cpp
   src/play_selector.cpp
+  src/path_planning/path_planner.cpp
   src/plays/test_play.cpp
   src/types/message_conversions.cpp
 )

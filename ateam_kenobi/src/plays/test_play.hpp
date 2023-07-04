@@ -27,6 +27,7 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
 #include "types/world.hpp"
+#include "path_planning/path_planner.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -38,6 +39,7 @@ class TestPlay {
     
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world);
   private:
+    path_planning::PathPlanner path_planner_;
 };
 }  // namespace ateam_kenobi::plays
 #endif // PLAYS__TEST_PLAY_HPP_
