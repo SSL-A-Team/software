@@ -82,7 +82,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
   for(index = this->prev_point; index < trajectory.size(); index++) {
     double dist = sqrt(CGAL::squared_distance(robot.pos, trajectory[index]));
 
-    if (dist > this->vel / dt) {
+    if (dist > this->vel * dt) {
       break;
     }
   }
