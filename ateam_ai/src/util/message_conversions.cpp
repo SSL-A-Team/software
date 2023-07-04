@@ -94,7 +94,7 @@ ateam_msgs::msg::RobotState toMsg(const Robot & obj)
   return robot_state_msg;
 }
 
-ateam_msgs::msg::World toMsg(const World & obj)
+ateam_msgs::msg::World toMsg(const ::World & obj)
 {
   ateam_msgs::msg::World world_msg;
 
@@ -103,8 +103,8 @@ ateam_msgs::msg::World toMsg(const World & obj)
     (obj.current_time - std::floor(
       obj.current_time)) * 1e9);
 
-  // world_msg.field = toMsg(obj.field)
-  // world_msg.referee_info = toMsg(obj.referee_info)
+  world_msg.field = toMsg(obj.field)
+  world_msg.referee_info = toMsg(obj.referee_info)
 
   world_msg.behavior_executor_state = toMsg(obj.behavior_executor_state);
 

@@ -59,7 +59,7 @@ def generate_launch_description():
 
     ui_path = os.path.join(get_package_share_directory('ateam_ui'), 'launch')
     ui_launch = launch.actions.IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([ui_path, '/ateam_ui_launch.py']))
+        PythonLaunchDescriptionSource([ui_path, '/ateam_ui_debug_launch.py']))
 
     return launch.LaunchDescription([
         ssl_vision_port_arg,
