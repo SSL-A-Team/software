@@ -24,15 +24,21 @@
 #include "types/behavior_goal.hpp"
 #include "types/behavior_plan.hpp"
 #include "types/world.hpp"
+#include "rrt_path_planner.hpp"
 
 /**
  * Given a behavior and assigned robot, build a motion plan needed to fully execute it
  */
 namespace trajectory_generation
 {
-BehaviorPlan GetPlanFromGoal(
-  BehaviorGoal behavior, int assigned_robot,
-  const World & world);
-}
+class TrajectoryGenerator {
+  public:
+  BehaviorPlan GetPlanFromGoal(BehaviorGoal behavior, int assigned_robot, const World & world);
+
+  private:
+    ateam_ai::trajectory_generation::RrtPathPlanner rrt_path_planner;
+};
+
+}  // namespace trajectory_generation
 
 #endif  // TRAJECTORY_GENERATION__TRAJECTORY_GENERATION_HPP_

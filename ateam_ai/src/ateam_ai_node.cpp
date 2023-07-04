@@ -237,7 +237,7 @@ private:
       // Estimate of how long it will take for the round trip of
       // Command -> Radio -> Robot -> Motion -> Vision change
       const auto & maybe_trajectory = previous_frame_trajectories.at(robot_id);
-      if (maybe_trajectory.has_value()) {
+      if (maybe_trajectory.has_value() && !maybe_trajectory.value().samples.empty()) {
         world_.plan_from_our_robots.at(robot_id) = trajectory_editor::state_at_immutable_duration(
           maybe_trajectory.value(),
           world_.immutable_duration, world_.current_time);

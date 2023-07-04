@@ -28,10 +28,11 @@
 
 #include "trajectory_generation/trajectory_editor.hpp"
 #include "trajectory_generation/trapezoidal_motion_profile.hpp"
+#include "trajectory_generation/trajectory_from_path.hpp"
 
 namespace trajectory_generation
 {
-BehaviorPlan GetPlanFromGoal(
+BehaviorPlan TrajectoryGenerator::GetPlanFromGoal(
   BehaviorGoal behavior, int assigned_robot, const World & world)
 {
   BehaviorPlan plan;
@@ -161,13 +162,10 @@ BehaviorPlan GetPlanFromGoal(
         target_vel.x() = 0;
         target_vel.y() = 0;
         target_vel.z() = 0;
-        Eigen::Vector3d max_vel{2, 2, 0.5};  // TODO(jneiger): Set as params
-        Eigen::Vector3d max_accel{2, 2, 0.5};
-        double dt = 0.01;  // TODO(jneiger): Feed this down from above
-        Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
-          current, current_vel, target,
-          target_vel, max_vel, max_accel,
-          dt, world.current_time + world.immutable_duration);
+
+        const auto path = rrt_path_planner.generatePath(world, {}, current.head(2), target.head(2));
+
+        Trajectory trajectory = ateam_ai::trajectory_generation::TrajectoryFromPath(path, world.current_time, target_vel.head(2), 2.0);
 
         plan.trajectory = trajectory;
       }

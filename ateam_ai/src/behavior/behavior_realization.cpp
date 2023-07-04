@@ -22,9 +22,9 @@
 #include <vector>
 #include <utility>
 #include <deque>
+#include <functional>
 
 #include "behavior/behavior_realization.hpp"
-#include "trajectory_generation/trajectory_generation.hpp"
 
 #include <ateam_common/assignment.hpp>
 #include <ateam_common/status.hpp>
@@ -32,7 +32,7 @@
 DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors(
   const DirectedGraph<BehaviorGoal> & behaviors, const World & world)
 {
-  return realize_behaviors_impl(behaviors, world, trajectory_generation::GetPlanFromGoal);
+  return realize_behaviors_impl(behaviors, world,  std::bind_front(&trajectory_generation::TrajectoryGenerator::GetPlanFromGoal, trajectory_generator));
 }
 
 DirectedGraph<BehaviorPlan> BehaviorRealization::realize_behaviors_impl(
@@ -221,5 +221,9 @@ BehaviorRealization::GoalToPlanMap BehaviorRealization::assign_goals_to_plans(
 
 double BehaviorRealization::cost(const BehaviorPlan & bp, const World & world)
 {
+  if(bp.trajectory.samples.empty()) {
+    // return std::numeric_limits<double>::infinity();
+    return 1000.0;
+  }
   return bp.trajectory.samples.back().time - world.current_time;
 }

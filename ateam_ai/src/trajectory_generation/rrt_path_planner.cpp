@@ -89,6 +89,12 @@ RrtPathPlanner::Path RrtPathPlanner::generatePath(
   bounds.setHigh(0, (0.5 * world.field.field_length) + world.field.boundary_width);
   bounds.setLow(1, (-0.5 * world.field.field_width) - world.field.boundary_width);
   bounds.setHigh(1, (0.5 * world.field.field_width) + world.field.boundary_width);
+  auto bounds_sizes = bounds.getDifference();
+  // arbitrary threshold to make sure field info is valid
+  if(bounds_sizes[0] < 0.1 || bounds_sizes[1] < 0.1) {
+    // No path exists because field size is not valid
+    return {};
+  }
   state_space_->setBounds(bounds);
 
   simple_setup_.setStateValidityChecker(

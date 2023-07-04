@@ -29,6 +29,7 @@
 #include "types/behavior_plan.hpp"
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
+#include "trajectory_generation/trajectory_generation.hpp"
 
 /**
  * Given a set of behaviors
@@ -100,6 +101,9 @@ public:
     const World & world);
 
   double cost(const BehaviorPlan & bp, const World & world);
+
+  private:
+  trajectory_generation::TrajectoryGenerator trajectory_generator;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_REALIZATION_HPP_
