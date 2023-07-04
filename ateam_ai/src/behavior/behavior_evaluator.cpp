@@ -30,6 +30,7 @@
 #include "plays/kickoff.hpp"
 #include "plays/shoot.hpp"
 #include "plays/stop.hpp"
+#include "plays/penalty_kick.hpp"
 
 CREATE_PARAM(double, "behavior_evaluator/", kRotationSpeed, 0.005);
 
