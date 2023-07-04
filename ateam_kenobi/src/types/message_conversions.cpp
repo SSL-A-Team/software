@@ -57,8 +57,8 @@ ateam_msgs::msg::World toMsg(const World & obj)
 
   world_msg.current_time =
     rclcpp::Time(
-    std::chrono::duration_cast <
-    std::chrono::duration<double>(obj.current_time.time_since_epoch).count());
+    std::chrono::duration_cast<std::chrono::duration<double>>(
+      obj.current_time.time_since_epoch()).count());
 
   // world_msg.field = toMsg(obj.field)
   // world_msg.referee_info = toMsg(obj.referee_info)
