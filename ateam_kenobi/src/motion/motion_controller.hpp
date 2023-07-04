@@ -39,6 +39,8 @@
 class MotionController
 {
 public:
+  MotionController();
+
   // Load a new trajectory into the motion controller resetting its progress along the old one
   void set_trajectory(const std::vector<ateam_geometry::Point>& trajectory);
 
