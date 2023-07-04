@@ -15,6 +15,9 @@ public:
 
 private:
   plays::TestPlay test_play_;
+  std::size_t prev_play_type_index_ = -1;
+
+  void resetPlayIfNeeded(plays::AnyPlay & play);
 
 };
 
