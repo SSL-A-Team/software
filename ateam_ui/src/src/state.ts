@@ -40,9 +40,12 @@ export class AppState {
     publishers: ROSLIB.Topic[]
     subscriptions: ROSLIB.Topic[]
     services: ROSLIB.Service[]
+    params: ROSLIB.Param[]
 
     sim: boolean = true;
     comp: boolean = true; // TODO: find a better way to set this value
+
+    controlled_robot: number = null;
 
     setGoalie(goalie_id) {
         const request = new ROSLIB.ServiceRequest({
@@ -66,6 +69,16 @@ export class AppState {
         }
 
         return "X";
+    }
+
+    setJoystickRobot(id: number) {
+        // Toggle the selected robot off if it is the same
+        if (this.controlled_robot == id) {
+            this.controlled_robot = -1;
+        } else {
+            this.controlled_robot = id;
+        }
+        this.params["joystick_param"].set(this.controlled_robot);
     }
 
     // TODO: figure out how to type ROSLIB Messages, the Message type doesn't seem to work properly
@@ -149,6 +162,9 @@ export class AppState {
         this.publishers = [];
         this.subscriptions = [];
         this.services = [];
+        this.params = [];
+
+        this.controlled_robot = null;
 
         // Configure ROS
         this.ros = new ROSLIB.Ros({
@@ -240,12 +256,19 @@ export class AppState {
         refereeTopic.subscribe(this.getRefereeCallback());
         this.subscriptions["referee"] = refereeTopic;
 
-        // Set Goalie Service
+        // Set up Goalie Service
         let goalieService = new ROSLIB.Service({
             ros: this.ros,
             name: 'team_client_node/set_desired_keeper',
             serviceType: 'ateam_msgs/srv/SetDesiredKeeper'
         })
         this.services["setGoalie"] = goalieService;
+
+        // Set up joystick robot param service
+        const joystickParam = new ROSLIB.Param({
+            ros: this.ros,
+            name: "/joystick_control_node:robot_id"
+        });
+        this.params["joystick_param"] = joystickParam;
     }
 }

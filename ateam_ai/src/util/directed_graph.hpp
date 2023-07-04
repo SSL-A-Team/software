@@ -46,6 +46,15 @@ public:
 
     return node_idx;
   }
+  // I know the copy at the bottom is for this but I wanted a simple version
+  DirectedGraph<Node> copy_from(DirectedGraph<Node> other)
+  {
+    std::vector<std::size_t> indexes = other.get_root_nodes();
+    for (auto& index : indexes) {
+      add_node(other.get_node(index));
+    }
+    return *this;
+  }
 
   std::size_t add_node(Node node, std::size_t parent_idx)
   {

@@ -1,0 +1,5 @@
+uint8 our_goalie_id
+uint8 their_goalie_id
+uint8 current_game_stage
+uint8 running_command
+uint8 prev_command

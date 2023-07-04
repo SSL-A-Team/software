@@ -1,7 +1,7 @@
 builtin_interfaces/Time current_time
 
-# Field field
-# RefereeInfo referee_info
+FieldInfo field
+RefereeInfo referee_info
 
 BallState[] balls
 RobotState[] our_robots

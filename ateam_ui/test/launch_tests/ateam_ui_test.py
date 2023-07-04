@@ -94,8 +94,7 @@ class TestUI(unittest.TestCase):
         # Rosbridge node discovered
         self.assertIn("rosbridge", nodes)
 
-        subscriptions = self.node.get_subscriber_names_and_types_by_node(
-            "rosbridge", "/ui")
+        subscriptions = self.node.get_subscriber_names_and_types_by_node("rosbridge", "/ui")
 
         # Rosbridge node initialized
         self.assertIsNotNone(subscriptions)

@@ -18,15 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_common/team_info_listener.hpp"
 #include <string>
+
+#include "ateam_common/game_controller_listener.hpp"
 
 namespace ateam_common
 {
-
-TeamInfoListener::TeamInfoListener(
-  rclcpp::Node & node, ColorCallback color_callback,
-  SideCallback side_callback)
+GameControllerListener::GameControllerListener(
+  rclcpp::Node & node,
+  ColorCallback color_callback,
+  SideCallback side_callback
+)
 : team_name_(node.declare_parameter<std::string>("gc_team_name", "A-Team")),
   color_callback_(color_callback),
   side_callback_(side_callback)
@@ -64,10 +66,10 @@ TeamInfoListener::TeamInfoListener(
   qos.transient_local();
   ref_subscription_ = node.create_subscription<ssl_league_msgs::msg::Referee>(
     "/gc_multicast_bridge_node/referee_messages", qos,
-    std::bind(&TeamInfoListener::RefereeMessageCallback, this, std::placeholders::_1));
+    std::bind(&GameControllerListener::RefereeMessageCallback, this, std::placeholders::_1));
 }
 
-void TeamInfoListener::RefereeMessageCallback(
+void GameControllerListener::RefereeMessageCallback(
   const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
 {
   const auto prev_color = team_color_;
@@ -94,5 +96,38 @@ void TeamInfoListener::RefereeMessageCallback(
   if (team_side_ != prev_side && side_callback_) {
     side_callback_(team_side_);
   }
+
+  game_stage_ = static_cast<GameStage>(msg->stage);
+
+  // Yellow commands are even, blue are odd
+  // we_blue  odd(blue command)
+  // 0        0                   ours    leave it
+  // 0        1                   theirs  leave it
+  // 1        0                   theirs  add by 1 to be theirs
+  // 1        1                   ours    sub by 1 to be ours
+
+
+  // ignore if we dont know our team color yet
+  // only force start and above have this mapping
+  uint8_t command = msg->command;
+  if (team_color_ != TeamColor::Unknown &&
+    command > static_cast<std::underlying_type_t<GameCommand>>(GameCommand::ForceStart))
+  {
+    if (team_color_ == TeamColor::Blue) {
+      bool command_is_blue = command % 2 == 1;
+      command += (command_is_blue ? -1 : 1);
+    }
+  }
+  game_command_ = static_cast<GameCommand>(command);
+
+  if (team_color_ != TeamColor::Unknown) {
+    our_goalie_id_ = team_color_ == TeamColor::Blue ? msg->blue.goalkeeper : msg->yellow.goalkeeper;
+    their_goalie_id_ = team_color_ ==
+      TeamColor::Blue ? msg->yellow.goalkeeper : msg->blue.goalkeeper;
+  } else {
+    our_goalie_id_ = std::nullopt;
+    their_goalie_id_ = std::nullopt;
+  }
 }
+
 }  // namespace ateam_common

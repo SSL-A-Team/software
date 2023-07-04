@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,28 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <string>
+#ifndef PLAYS__HALT_HPP_
+#define PLAYS__HALT_HPP_
 
-#include "ateam_common/game_state_listener.hpp"
+#include <Eigen/Dense>
 
-namespace ateam_common
+#include "util/directed_graph.hpp"
+#include "types/world.hpp"
+#include "types/behavior_goal.hpp"
+
+DirectedGraph<BehaviorGoal> generate_halt(const World & world)
 {
-
-GameStateListener::GameStateListener(rclcpp::Node & node)
-{
-  rclcpp::QoS qos(1);
-  qos.reliable();
-  qos.transient_local();
-  ref_subscription_ = node.create_subscription<ssl_league_msgs::msg::Referee>(
-    "/gc_multicast_bridge_node/referee_messages", qos,
-    std::bind(&GameStateListener::RefereeMessageCallback, this, std::placeholders::_1));
+  DirectedGraph<BehaviorGoal> halt_graph;
+  for (std::size_t id = 0; id < world.our_robots.size(); id++) {
+    // Generate a required halt for every robot on our team
+    BehaviorGoal halt {
+      BehaviorGoal::Type::Halt,
+      BehaviorGoal::Priority::Required,
+      HaltParam()
+    };
+    halt_graph.add_node(halt);
+  }
+  return halt_graph;
 }
-
-void GameStateListener::RefereeMessageCallback(
-  const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
-{
-  game_command_ = static_cast<GameCommand>(msg->command);
-  game_stage_ = static_cast<GameStage>(msg->stage);
-}
-
-}  // namespace ateam_common
+#endif  // PLAYS__HALT_HPP_

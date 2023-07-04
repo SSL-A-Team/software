@@ -32,8 +32,7 @@
 #include <ateam_common/parameters.hpp>
 #include <ateam_common/overlay.hpp>
 #include <ateam_common/topic_names.hpp>
-#include <ateam_common/team_info_listener.hpp>
-#include <ateam_common/game_state_listener.hpp>
+#include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
@@ -64,8 +63,8 @@ class ATeamAINode : public rclcpp::Node
 {
 public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("ateam_ai_node", options), info_listener_(*this), \
-    game_state_listener_(*this), evaluator_(realization_), executor_(realization_)
+  : rclcpp::Node("ateam_ai_node", options), game_controller_listener_(*this),
+    evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
     ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
@@ -136,8 +135,7 @@ private:
 
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
-  ateam_common::TeamInfoListener info_listener_;
-  ateam_common::GameStateListener game_state_listener_;
+  ateam_common::GameControllerListener game_controller_listener_;
 
   BehaviorRealization realization_;
   BehaviorEvaluator evaluator_;
@@ -151,8 +149,8 @@ private:
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
   {
-    const auto are_we_blue = info_listener_.GetTeamColor() ==
-      ateam_common::TeamInfoListener::TeamColor::Blue;
+    const auto are_we_blue = game_controller_listener_.GetTeamColor() ==
+      ateam_common::TeamColor::Blue;
     auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
@@ -161,8 +159,8 @@ private:
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
   {
-    const auto are_we_yellow = info_listener_.GetTeamColor() ==
-      ateam_common::TeamInfoListener::TeamColor::Yellow;
+    const auto are_we_yellow = game_controller_listener_.GetTeamColor() ==
+      ateam_common::TeamColor::Yellow;
     auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
@@ -216,10 +214,10 @@ private:
       };
 
     convert_point_array(field_msg->field_corners, field.field_corners.begin());
-    convert_point_array(field_msg->ours.goalie_corners, field.ours.goalie_corners.begin());
-    convert_point_array(field_msg->ours.goal_posts, field.ours.goal_posts.begin());
-    convert_point_array(field_msg->theirs.goalie_corners, field.theirs.goalie_corners.begin());
-    convert_point_array(field_msg->theirs.goal_posts, field.theirs.goal_posts.begin());
+    convert_point_array(field_msg->ours.goal_posts, field.ours.goalie_corners.begin());
+    convert_point_array(field_msg->ours.goalie_corners, field.ours.goal_posts.begin());
+    convert_point_array(field_msg->theirs.goal_posts, field.theirs.goalie_corners.begin());
+    convert_point_array(field_msg->theirs.goalie_corners, field.theirs.goal_posts.begin());
 
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.field = field;
@@ -247,8 +245,14 @@ private:
     }
 
     // Get current game state for world
-    world_.referee_info.running_command = game_state_listener_.GetGameCommand();
-    world_.referee_info.current_game_stage = game_state_listener_.GetGameStage();
+    auto command = game_controller_listener_.GetGameCommand();
+    if (command != world_.referee_info.running_command) {
+      world_.referee_info.running_command = world_.referee_info.prev_command;
+      world_.referee_info.running_command = command;
+    }
+    world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
+    world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value_or(0); // current work has just made me into a self doubt pit I cant do anything right
+    world_.referee_info.their_goalie_id = game_controller_listener_.GetTheirGoalieID().value_or(0);
     // Save off the world to the rosbag
     world_publisher_->publish(ateam_ai::message_conversions::toMsg(world_));
 

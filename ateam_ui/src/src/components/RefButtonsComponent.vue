@@ -52,7 +52,7 @@ export default {
                 change: {
                     origin: "UI",
                     revertible: true,
-                    new_command_change: {
+                    newCommand: {
                         command: {
                             type: command_type,
                             forTeam: team

@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,21 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__SHOOT_HPP_
+#define PLAYS__SHOOT_HPP_
 
-#ifndef TYPES__REFEREE_INFO_HPP_
-#define TYPES__REFEREE_INFO_HPP_
+#include <Eigen/Dense>
 
-#include <ateam_common/game_controller_listener.hpp>
+#include "util/directed_graph.hpp"
+#include "types/behavior_goal.hpp"
+#include "types/world.hpp"
 
-struct RefereeInfo
+
+DirectedGraph<BehaviorGoal> generate_basic_shoot(const World & world)
 {
-  int our_goalie_id;
-  int their_goalie_id;
-  ateam_common::GameStage current_game_stage;
-  // should make this an object and provide a set game command at some point
-  // so it will implicitly set prev
-  ateam_common::GameCommand running_command;
-  ateam_common::GameCommand prev_command;
-};
+  DirectedGraph<BehaviorGoal> basic_shoot;
 
-#endif  // TYPES__REFEREE_INFO_HPP_
+  // Get the center of the opponent's goal from the field geometry
+  Eigen::Vector2d _goal_center = Eigen::Vector2d(
+    // Our side is always negative, so kick to the positive side at the edge
+    world.field.field_length / 2,
+    // The center of the goal is at the field center (0)
+    0
+  );
+  // Tell one robot to shoot
+  BehaviorGoal shoot {
+    BehaviorGoal::Type::PivotKick,
+    BehaviorGoal::Priority::Required,
+    // Kick to the center of their goal
+    KickParam(_goal_center)
+  };
+  basic_shoot.add_node(shoot);
+
+  return basic_shoot;
+}
+#endif  // PLAYS__SHOOT_HPP_

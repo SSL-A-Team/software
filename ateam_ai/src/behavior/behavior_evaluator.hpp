@@ -27,19 +27,22 @@
 #include "types/behavior_goal.hpp"
 #include "types/world.hpp"
 #include "util/directed_graph.hpp"
+#include "util/in_play_eval.hpp"
 
 /**
- * Figure out which set of behaviors to run
+ * Figure out which set of behaviors to runteam_color_
  */
 class BehaviorEvaluator
 {
 public:
   explicit BehaviorEvaluator(BehaviorRealization & behavior_realization);
 
+  DirectedGraph<BehaviorGoal> open_play(const World & world);
   DirectedGraph<BehaviorGoal> get_best_behaviors(const World & world);
 
 private:
   BehaviorRealization & behavior_realization;
+  InPlayEval in_play_eval;
 };
 
 #endif  // BEHAVIOR__BEHAVIOR_EVALUATOR_HPP_
