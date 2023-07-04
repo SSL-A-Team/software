@@ -37,6 +37,7 @@ class BehaviorEvaluator
 public:
   explicit BehaviorEvaluator(BehaviorRealization & behavior_realization);
 
+  DirectedGraph<BehaviorGoal> open_play(const World & world);
   DirectedGraph<BehaviorGoal> get_best_behaviors(const World & world);
 
 private:

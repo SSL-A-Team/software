@@ -94,6 +94,41 @@ ateam_msgs::msg::RobotState toMsg(const Robot & obj)
   return robot_state_msg;
 }
 
+ateam_msgs::msg::FieldInfo toMsg(const ::Field & obj) {
+  ateam_msgs::msg::FieldInfo field_msg;
+  field_msg.field_length = obj.field_length;
+  field_msg.field_width = obj.field_width;
+  field_msg.goal_width = obj.goal_width;
+  field_msg.goal_depth = obj.goal_depth;
+  field_msg.boundary_width = obj.boundary_width;
+
+  auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
+    std::transform(
+      starting_array.begin(), starting_array.end(), final_array_iter,
+      [&](auto & val)->geometry_msgs::msg::Point {
+        geometry_msgs::msg::Point point;
+        point.x = val.x();
+        point.y = val.y();
+        return point;
+      });
+  };
+
+  convert_point_array(obj.field_corners, field_msg.field_corners.begin());
+  convert_point_array(obj.ours.goalie_corners, field_msg.ours.goal_posts.begin());
+  convert_point_array(obj.ours.goal_posts, field_msg.ours.goalie_corners.begin());
+  convert_point_array(obj.theirs.goalie_corners, field_msg.theirs.goal_posts.begin());
+  convert_point_array(obj.theirs.goal_posts, field_msg.theirs.goalie_corners.begin());
+}
+
+ateam_msgs::msg::RefereeInfo toMsg(const ::RefereeInfo & obj) {
+  ateam_msgs::msg::RefereeInfo ref_msg;
+  ref_msg.our_goalie_id = obj.our_goalie_id;
+  ref_msg.their_goalie_id = obj.their_goalie_id;
+  ref_msg.current_game_stage = static_cast<uint8_t>(obj.current_game_stage);
+  ref_msg.running_command = static_cast<uint8_t>(obj.running_command);
+  ref_msg.prev_command = static_cast<uint8_t>(obj.prev_command);
+}
+
 ateam_msgs::msg::World toMsg(const ::World & obj)
 {
   ateam_msgs::msg::World world_msg;
@@ -103,8 +138,8 @@ ateam_msgs::msg::World toMsg(const ::World & obj)
     (obj.current_time - std::floor(
       obj.current_time)) * 1e9);
 
-  world_msg.field = toMsg(obj.field)
-  world_msg.referee_info = toMsg(obj.referee_info)
+  world_msg.field = toMsg(obj.field);
+  world_msg.referee_info = toMsg(obj.referee_info);
 
   world_msg.behavior_executor_state = toMsg(obj.behavior_executor_state);
 
