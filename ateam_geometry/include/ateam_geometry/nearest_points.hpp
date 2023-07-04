@@ -18,24 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__TYPES_HPP_
-#define ATEAM_GEOMETRY__TYPES_HPP_
+#ifndef ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
+#define ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
 
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/point_generators_2.h>
-#include <CGAL/Polygon_2.h>
-#include <variant>
+#include "ateam_geometry/types.hpp"
 
 namespace ateam_geometry
 {
-using Kernel = CGAL::Simple_cartesian<double>;
-using Point = Kernel::Point_2;
-using Segment = Kernel::Segment_2;
-using Rectangle = Kernel::Iso_rectangle_2;
-using Circle = Kernel::Circle_2;
-using AnyShape = std::variant<Point, Segment, Rectangle, Circle>;
-using PointCreator = CGAL::Creator_uniform_2<double, Point>;
-using Polygon = CGAL::Polygon_2<Point>;
+ateam_geometry::Point NearestPointOnSegment(
+  const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
+{
+  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
+  if (s.has_on(orthogonal_projection)) {
+    return orthogonal_projection;
+  }
+  return CGAL::squared_distance(orthogonal_projection, s.source()) <
+         CGAL::squared_distance(orthogonal_projection, s.target()) ?
+         s.source() : s.target();
+}
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__TYPES_HPP_
+#endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_

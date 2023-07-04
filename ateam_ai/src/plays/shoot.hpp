@@ -18,24 +18,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__TYPES_HPP_
-#define ATEAM_GEOMETRY__TYPES_HPP_
+#ifndef PLAYS__SHOOT_HPP_
+#define PLAYS__SHOOT_HPP_
 
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/point_generators_2.h>
-#include <CGAL/Polygon_2.h>
-#include <variant>
+#include <Eigen/Dense>
 
-namespace ateam_geometry
+#include "util/directed_graph.hpp"
+#include "types/behavior_goal.hpp"
+#include "types/world.hpp"
+
+
+DirectedGraph<BehaviorGoal> generate_basic_shoot(
+  const World & world
+)
 {
-using Kernel = CGAL::Simple_cartesian<double>;
-using Point = Kernel::Point_2;
-using Segment = Kernel::Segment_2;
-using Rectangle = Kernel::Iso_rectangle_2;
-using Circle = Kernel::Circle_2;
-using AnyShape = std::variant<Point, Segment, Rectangle, Circle>;
-using PointCreator = CGAL::Creator_uniform_2<double, Point>;
-using Polygon = CGAL::Polygon_2<Point>;
-}  // namespace ateam_geometry
+  DirectedGraph<BehaviorGoal> basic_shoot;
 
-#endif  // ATEAM_GEOMETRY__TYPES_HPP_
+  // Get the center of the opponent's goal from the field geometry
+  Eigen::Vector2d _goal_center = Eigen::Vector2d(
+    // Our side is always negative, so kick to the positive side at the edge
+    world.field.field_length / 2,
+    // The center of the goal is at the field center (0)
+    0
+  );
+  // Tell one robot to shoot
+  BehaviorGoal shoot {
+    BehaviorGoal::Type::PivotKick,
+    BehaviorGoal::Priority::Required,
+    // Kick to the center of their goal
+    KickParam(_goal_center)
+  };
+  basic_shoot.add_node(shoot);
+
+  return basic_shoot;
+}
+#endif  // PLAYS__SHOOT_HPP_

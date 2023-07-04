@@ -18,24 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__TYPES_HPP_
-#define ATEAM_GEOMETRY__TYPES_HPP_
+#ifndef PLAYS__HALT_HPP_
+#define PLAYS__HALT_HPP_
 
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/point_generators_2.h>
-#include <CGAL/Polygon_2.h>
-#include <variant>
+#include <Eigen/Dense>
 
-namespace ateam_geometry
+#include "util/directed_graph.hpp"
+#include "types/world.hpp"
+#include "types/behavior_goal.hpp"
+
+DirectedGraph<BehaviorGoal> generate_halt(const World & world)
 {
-using Kernel = CGAL::Simple_cartesian<double>;
-using Point = Kernel::Point_2;
-using Segment = Kernel::Segment_2;
-using Rectangle = Kernel::Iso_rectangle_2;
-using Circle = Kernel::Circle_2;
-using AnyShape = std::variant<Point, Segment, Rectangle, Circle>;
-using PointCreator = CGAL::Creator_uniform_2<double, Point>;
-using Polygon = CGAL::Polygon_2<Point>;
-}  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__TYPES_HPP_
+  DirectedGraph<BehaviorGoal> halt_graph;
+  for (std::size_t id = 0; id < world.our_robots.size(); id++) {
+    // Generate a required halt for every robot on our team
+    BehaviorGoal halt {
+      BehaviorGoal::Type::Halt,
+      BehaviorGoal::Priority::Required,
+      HaltParam()
+    };
+    halt_graph.add_node(halt);
+  }
+  return halt_graph;
+}
+#endif  // PLAYS__HALT_HPP_
