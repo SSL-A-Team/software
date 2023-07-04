@@ -13,12 +13,14 @@ find_package(ateam_common REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ateam_geometry REQUIRED)
+find_package(control_toolbox REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/kenobi_node.cpp
   src/play_selector.cpp
   src/plays/test_play.cpp
   src/types/message_conversions.cpp
+  src/motion/motion_controller.cpp
 )
 target_include_directories(kenobi_node_component PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
@@ -33,6 +35,7 @@ ament_target_dependencies(
   "tf2"
   "tf2_geometry_msgs"
   "ateam_geometry"
+  "control_toolbox"
 )
 rclcpp_components_register_node(
   kenobi_node_component
