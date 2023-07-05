@@ -19,6 +19,7 @@
 #include "types/message_conversions.hpp"
 #include "play_selector.hpp"
 #include "visualization/overlay_publisher.hpp"
+#include "in_play_eval.hpp"
 
 namespace ateam_kenobi
 {
@@ -76,6 +77,7 @@ private:
   World world_;
   visualization::OverlayPublisher overlay_publisher_;
   PlaySelector play_selector_;
+  InPlayEval in_play_eval_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> blue_robots_subscriptions_;
@@ -165,6 +167,7 @@ private:
 
     world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
+    world_.in_play = in_play_eval_.update(world_);
 
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 

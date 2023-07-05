@@ -44,6 +44,8 @@ struct World
   Ball ball;
   std::array<std::optional<Robot>, 16> our_robots;
   std::array<std::optional<Robot>, 16> their_robots;
+
+  bool in_play;
 };
 }  // namespace ateam_kenobi
 

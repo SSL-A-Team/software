@@ -25,6 +25,7 @@
 
 namespace ateam_geometry
 {
+
 ateam_geometry::Point NearestPointOnSegment(
   const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
 {
@@ -36,6 +37,17 @@ ateam_geometry::Point NearestPointOnSegment(
          CGAL::squared_distance(orthogonal_projection, s.target()) ?
          s.source() : s.target();
 }
+
+
+// Thinking on it basically what I am about to do is GJK. Either the shapes intersect
+ateam_geometry::Point NearestPoints(AnyShape shape1 , AnyShape shape2)
+{
+
+}
+
+
+
+
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_

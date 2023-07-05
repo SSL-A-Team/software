@@ -4,7 +4,6 @@
 #include "plays/all_plays.hpp"
 #include "types/world.hpp"
 #include "visualization/overlay_publisher.hpp"
-#include "in_play_eval.hpp"
 
 namespace ateam_kenobi
 {
@@ -19,9 +18,8 @@ public:
 private:
   plays::TestPlay test_play_;
   plays::HaltPlay halt_play_;
-  void * prev_play_address_ = 0;
+  void * prev_play_address_ = nullptr;
   std::size_t prev_play_type_index_ = -1;
-  InPlayEval in_play_eval_;
 
   void resetPlayIfNeeded(plays::BasePlay * play);
 

@@ -34,7 +34,7 @@ public:
   static constexpr double DIST_THRESHOLD {0.05};
 
   // only 3 things enter us into play according to the appendix B state machine
-  void update(ateam_kenobi::World world)
+  bool update(ateam_kenobi::World world)
   {
     // edge triggered
     // we just need an edge on commands to know not to do in_play = false in the same normal_play
@@ -90,6 +90,7 @@ public:
       // why this is seperate
       maybe_kickoff_position = std::nullopt;
     }
+    return in_play;
   }
 };
 
