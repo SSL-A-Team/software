@@ -29,31 +29,43 @@
 namespace ateam_vision_filter::message_conversions
 {
 
-ateam_msgs::msg::BallState toMsg(const Ball & obj)
+ateam_msgs::msg::BallState toMsg(const std::optional<Ball>& maybe_ball)
 {
+
   ateam_msgs::msg::BallState ball_state_msg;
-  ball_state_msg.pose.position.x = obj.position.x();
-  ball_state_msg.pose.position.y = obj.position.y();
-  ball_state_msg.twist.linear.x = obj.velocity.x();
-  ball_state_msg.twist.linear.y = obj.velocity.y();
-  ball_state_msg.accel.linear.x = obj.acceleration.x();
-  ball_state_msg.accel.linear.y = obj.acceleration.y();
+  ball_state_msg.visible = maybe_ball.has_value();
+  if (maybe_ball.has_value()) {
+    auto obj = maybe_ball.value();
+
+    ball_state_msg.pose.position.x = obj.position.x();
+    ball_state_msg.pose.position.y = obj.position.y();
+    ball_state_msg.twist.linear.x = obj.velocity.x();
+    ball_state_msg.twist.linear.y = obj.velocity.y();
+    ball_state_msg.accel.linear.x = obj.acceleration.x();
+    ball_state_msg.accel.linear.y = obj.acceleration.y();
+  }
 
   return ball_state_msg;
 }
 
-ateam_msgs::msg::RobotState toMsg(const Robot & obj)
+ateam_msgs::msg::RobotState toMsg(const std::optional<Robot>& maybe_robot)
 {
   ateam_msgs::msg::RobotState robot_state_msg;
-  robot_state_msg.pose.position.x = obj.position.x();
-  robot_state_msg.pose.position.y = obj.position.y();
-  robot_state_msg.twist.linear.x = obj.velocity.x();
-  robot_state_msg.twist.linear.y = obj.velocity.y();
-  robot_state_msg.accel.linear.x = obj.acceleration.x();
-  robot_state_msg.accel.linear.y = obj.acceleration.y();
-  robot_state_msg.pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
-  robot_state_msg.twist.angular.z = obj.omega;
-  robot_state_msg.accel.angular.z = obj.alpha;
+  robot_state_msg.visible = maybe_robot.has_value();
+
+  if (maybe_robot.has_value()) {
+    auto obj = maybe_robot.value();
+
+    robot_state_msg.pose.position.x = obj.position.x();
+    robot_state_msg.pose.position.y = obj.position.y();
+    robot_state_msg.twist.linear.x = obj.velocity.x();
+    robot_state_msg.twist.linear.y = obj.velocity.y();
+    robot_state_msg.accel.linear.x = obj.acceleration.x();
+    robot_state_msg.accel.linear.y = obj.acceleration.y();
+    robot_state_msg.pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
+    robot_state_msg.twist.angular.z = obj.omega;
+    robot_state_msg.accel.angular.z = obj.alpha;
+  }
 
   return robot_state_msg;
 }

@@ -89,6 +89,7 @@ export class AppState {
         const state = this; // fix dumb javascript things
         return function(msg: any) {
             state.world.ball.pose = msg.pose;
+            state.world.ball.visible = msg.visible;
         }
     }
 
@@ -99,6 +100,7 @@ export class AppState {
             robot.pose = msg.pose;
             robot.twist = msg.twist;
             robot.accel = msg.accel;
+            robot.visible = msg.visible;
         };
 
     }

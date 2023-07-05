@@ -116,24 +116,18 @@ public:
     world_.predict();
 
     std::optional<Ball> maybe_ball = world_.get_ball_estimate();
-    if (maybe_ball.has_value()) {
-      ball_publisher_->publish(message_conversions::toMsg(maybe_ball.value()));
-    }
+    ball_publisher_->publish(message_conversions::toMsg(maybe_ball));
 
     std::array<std::optional<Robot>, 16> blue_team_robots = world_.get_blue_robots_estimate();
     for (std::size_t id = 0; id < 16; id++) {
       const auto & maybe_robot = blue_team_robots.at(id);
-      if (maybe_robot.has_value()) {
-        blue_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot.value()));
-      }
+      blue_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot));
     }
 
     std::array<std::optional<Robot>, 16> yellow_team_robots = world_.get_yellow_robots_estimate();
     for (std::size_t id = 0; id < 16; id++) {
       const auto & maybe_robot = yellow_team_robots.at(id);
-      if (maybe_robot.has_value()) {
-        yellow_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot.value()));
-      }
+      yellow_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot));
     }
   }
 
