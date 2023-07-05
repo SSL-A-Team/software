@@ -18,27 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "halt_play.hpp"
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#ifndef SKILLS__GOALIE_HPP_
+#define SKILLS__GOALIE_HPP_
 
-namespace ateam_kenobi::plays
-{
-HaltPlay::HaltPlay(visualization::OverlayPublisher & overlay_publisher)
-: BasePlay(overlay_publisher)
-{
-}
+#include "ateam_geometry/types.hpp"
+#include "ateam_geometry/nearest_points.hpp"
+#include "types/world.hpp"
 
-void HaltPlay::reset()
+namespace ateam_kenobi::skills
 {
-}
+ateam_geometry::Point get_goalie_defense_point(const World & world){
+    ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
+        ateam_geometry::Point(-4, 0.5),
+        ateam_geometry::Point(-4, -0.5)
+    );
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> HaltPlay::runFrame(
-  const World & world)
-{
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> halt_motion_commands;
-    for (size_t i; i < 16; ++i){
-        halt_motion_commands[i] = ateam_msgs::msg::RobotMotionCommand{};
-    }
-    return halt_motion_commands;
+    ateam_geometry::Point ball_location = world.ball.pos;
+
+    return ateam_geometry::NearestPointOnSegment(goalie_line, ball_location);
 }
-}  // namespace ateam_kenobi::plays
+}
+#endif // SKILLS__GOALIE_HPP_
+

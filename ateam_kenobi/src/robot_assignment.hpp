@@ -20,7 +20,7 @@
 namespace ateam_kenobi::robot_assignment
 {
 
-std::unordered_map<size_t, size_t> assign(const std::vector<Robot> & available_robots, const std::vector<ateam_geometry::Point> & goal_positions)
+inline std::unordered_map<size_t, size_t> assign(const std::vector<Robot> & available_robots, const std::vector<ateam_geometry::Point> & goal_positions)
 {
   Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(
     available_robots.size(),

@@ -26,6 +26,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
+#include <ateam_common/topic_names.hpp>
 
 namespace ateam_common
 {

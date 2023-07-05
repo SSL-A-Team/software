@@ -18,27 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "halt_play.hpp"
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#ifndef PLAYS__OUR_KICKOFF_PLAY_HPP_
+#define PLAYS__OUR_KICKOFF_PLAY_HPP_
+
+#include <vector>
+
+#include "base_play.hpp"
+#include "path_planning/path_planner.hpp"
+#include "motion/motion_controller.hpp"
+#include "ateam_geometry/types.hpp"
+#include "types/robot.hpp"
 
 namespace ateam_kenobi::plays
 {
-HaltPlay::HaltPlay(visualization::OverlayPublisher & overlay_publisher)
-: BasePlay(overlay_publisher)
-{
-}
+class OurKickoffPlay : public BasePlay {
+  public:
+    explicit OurKickoffPlay(visualization::OverlayPublisher & overlay_publisher);
 
-void HaltPlay::reset()
-{
-}
-
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> HaltPlay::runFrame(
-  const World & world)
-{
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> halt_motion_commands;
-    for (size_t i; i < 16; ++i){
-        halt_motion_commands[i] = ateam_msgs::msg::RobotMotionCommand{};
-    }
-    return halt_motion_commands;
-}
+    void reset() override;
+    
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
+  private:
+    std::vector<ateam_geometry::Point> positions_to_assign_;
+    std::vector<Robot> available_robots_;
+  
+    path_planning::PathPlanner path_planner_;
+    MotionController motion_controller_;
+    int prev_assigned_id_ = -1;
+};
 }  // namespace ateam_kenobi::plays
+
+#endif // PLAYS__OUR_KICKOFF_PLAY_HPP_
