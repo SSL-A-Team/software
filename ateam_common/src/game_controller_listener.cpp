@@ -88,7 +88,7 @@ void GameControllerListener::RefereeMessageCallback(
   if (team_color_ == TeamColor::Unknown) {
     team_side_ = TeamSide::Unknown;
   } else {
-    bool are_positive_half = !(msg->blue_team_on_positive_half ^ team_color_ == TeamColor::Blue);
+    bool are_positive_half = !(msg->blue_team_on_positive_half ^ (team_color_ == TeamColor::Blue));
     team_side_ = are_positive_half ? TeamSide::PositiveHalf : TeamSide::NegativeHalf;
     // Our field convention is we should always been on the negative half.
     // So if this is positive for our team we should invert coords
