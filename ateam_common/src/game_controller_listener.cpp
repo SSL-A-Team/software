@@ -65,7 +65,7 @@ GameControllerListener::GameControllerListener(
   qos.reliable();
   qos.transient_local();
   ref_subscription_ = node.create_subscription<ssl_league_msgs::msg::Referee>(
-    "referee_messages", qos,
+    "/gc_multicast_bridge_node/referee_messages", qos,
     std::bind(&GameControllerListener::RefereeMessageCallback, this, std::placeholders::_1));
 }
 
