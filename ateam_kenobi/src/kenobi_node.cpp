@@ -8,8 +8,7 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/overlay.hpp>
 #include <ateam_msgs/msg/world.hpp>
-#include <ateam_common/team_info_listener.hpp>
-#include <ateam_common/game_state_listener.hpp>
+#include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_geometry/types.hpp>
@@ -34,8 +33,7 @@ public:
   : rclcpp::Node("kenobi_node", options),
     overlay_publisher_("Kenobi", *this),
     play_selector_(overlay_publisher_),
-    info_listener_(*this),
-    game_state_listener_(*this)
+    game_controller_listener_(*this)
   {
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
       blue_robots_subscriptions_,
@@ -88,8 +86,7 @@ private:
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
 
-  ateam_common::TeamInfoListener info_listener_;
-  ateam_common::GameStateListener game_state_listener_;
+  ateam_common::GameControllerListener game_controller_listener_;
 
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
@@ -99,8 +96,8 @@ private:
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
   {
-    const auto are_we_blue = info_listener_.GetTeamColor() ==
-      ateam_common::TeamInfoListener::TeamColor::Blue;
+    const auto are_we_blue = game_controller_listener_.GetTeamColor() ==
+      ateam_common::TeamColor::Blue;
     auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
@@ -109,8 +106,8 @@ private:
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
   {
-    const auto are_we_yellow = info_listener_.GetTeamColor() ==
-      ateam_common::TeamInfoListener::TeamColor::Yellow;
+    const auto are_we_yellow = game_controller_listener_.GetTeamColor() ==
+      ateam_common::TeamColor::Yellow;
     auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
@@ -166,8 +163,8 @@ private:
   {
     world_.current_time = std::chrono::steady_clock::now();
 
-    world_.referee_info.running_command = game_state_listener_.GetGameCommand();
-    world_.referee_info.current_game_stage = game_state_listener_.GetGameStage();
+    world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
+    world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
 
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 

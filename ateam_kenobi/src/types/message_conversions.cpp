@@ -54,13 +54,15 @@ ateam_msgs::msg::FieldInfo toMsg(const Field & obj) {
   return field_msg;
 }
 
-ateam_msgs::msg::RefereeInfo toMsg(const RefereeInfo & obj) {
+ateam_msgs::msg::RefereeInfo toMsg(const RefereeInfo & obj)
+{
   ateam_msgs::msg::RefereeInfo ref_msg;
   ref_msg.our_goalie_id = obj.our_goalie_id;
   ref_msg.their_goalie_id = obj.their_goalie_id;
   ref_msg.game_stage = static_cast<uint8_t>(obj.current_game_stage);
   ref_msg.game_command = static_cast<uint8_t>(obj.running_command);
   ref_msg.prev_command = static_cast<uint8_t>(obj.prev_command);
+
   return ref_msg;
 }
 
