@@ -57,8 +57,8 @@ export class Overlay {
     draw(graphic: PIXI.Graphics, renderConfig: RenderConfig) {
         const scale = renderConfig.scale;
 
-        graphic.position.x = this.position.x;
-        graphic.position.y = this.position.y;
+        graphic.position.x = scale * this.position.x;
+        graphic.position.y = scale * this.position.y;
         
         switch(this.type) {
             // POINT
