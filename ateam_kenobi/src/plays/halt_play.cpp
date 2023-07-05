@@ -24,15 +24,15 @@
 namespace ateam_kenobi::plays
 {
 HaltPlay::HaltPlay(visualization::OverlayPublisher & overlay_publisher)
-: HaltPlay(overlay_publisher)
+: BasePlay(overlay_publisher)
 {
 }
 
-void TestPlay::reset()
+void HaltPlay::reset()
 {
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::runFrame(
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> HaltPlay::runFrame(
   const World & world)
 {
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> halt_motion_commands;

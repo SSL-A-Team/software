@@ -21,6 +21,7 @@ add_library(kenobi_node_component SHARED
   src/play_selector.cpp
   src/path_planning/path_planner.cpp
   src/plays/test_play.cpp
+  src/plays/halt_play.cpp
   src/types/message_conversions.cpp
   src/motion/motion_controller.cpp
   src/visualization/overlay_publisher.cpp
