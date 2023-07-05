@@ -119,6 +119,10 @@ private:
     std::size_t id,
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg)
   {
+    if(!robot_state_msg->visible) {
+      robot_states.at(id).reset();
+      return;
+    }
     robot_states.at(id) = Robot();
     robot_states.at(id).value().pos = ateam_geometry::Point(robot_state_msg->pose.position.x, robot_state_msg->pose.position.y);
     tf2::Quaternion tf2_quat;
