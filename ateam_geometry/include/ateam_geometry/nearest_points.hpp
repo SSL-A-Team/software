@@ -26,7 +26,7 @@
 namespace ateam_geometry
 {
 
-ateam_geometry::Point NearestPointOnSegment(
+inline ateam_geometry::Point NearestPointOnSegment(
   const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
 {
   ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
@@ -40,10 +40,10 @@ ateam_geometry::Point NearestPointOnSegment(
 
 
 // Thinking on it basically what I am about to do is GJK. Either the shapes intersect
-ateam_geometry::Point NearestPoints(AnyShape shape1 , AnyShape shape2)
+/*ateam_geometry::Point NearestPoints(AnyShape shape1 , AnyShape shape2)
 {
 
-}
+}*/
 
 
 
