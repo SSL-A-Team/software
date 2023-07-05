@@ -65,7 +65,7 @@ GameControllerListener::GameControllerListener(
   qos.reliable();
   qos.transient_local();
   ref_subscription_ = node.create_subscription<ssl_league_msgs::msg::Referee>(
-    ateam_common::Topics::kRefereeMessages, qos,
+    std::string(Topics::kRefereeMessages), qos,
     std::bind(&GameControllerListener::RefereeMessageCallback, this, std::placeholders::_1));
 }
 
