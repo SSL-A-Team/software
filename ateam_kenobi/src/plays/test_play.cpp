@@ -48,7 +48,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
   }
 
   std::vector<ateam_geometry::Point> test_positions;
-  test_positions.push_back(ateam_geometry::Point(0, 0));
+  test_positions.push_back(ateam_geometry::Point(world.ball.pos.x() + 0.2, world.ball.pos.y()));
 
   const auto & robot_assignments = robot_assignment::assign(available_robots, test_positions);
 
