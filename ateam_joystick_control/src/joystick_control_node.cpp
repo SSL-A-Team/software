@@ -103,12 +103,19 @@ private:
   {
     ateam_msgs::msg::RobotMotionCommand command_message;
 
-    command_message.twist.linear.x = get_parameter("mapping.linear.x.scale").as_double() *
-      joy_message->axes[get_parameter("mapping.linear.x.axis").as_int()];
-    command_message.twist.linear.y = get_parameter("mapping.linear.y.scale").as_double() *
-      joy_message->axes[get_parameter("mapping.linear.y.axis").as_int()];
-    command_message.twist.angular.z = get_parameter("mapping.angular.z.scale").as_double() *
-      joy_message->axes[get_parameter("mapping.angular.z.axis").as_int()];
+    // sketchy dpad control for motion testing
+    int speed = 1; // meters per second
+    command_message.twist.linear.x = speed * joy_message->axes[7];
+    command_message.twist.linear.y = speed * joy_message->axes[6];
+
+    if (!joy_message->axes[7] && !joy_message->axes[6]) {
+      command_message.twist.linear.x = get_parameter("mapping.linear.x.scale").as_double() *
+        joy_message->axes[get_parameter("mapping.linear.x.axis").as_int()];
+      command_message.twist.linear.y = get_parameter("mapping.linear.y.scale").as_double() *
+        joy_message->axes[get_parameter("mapping.linear.y.axis").as_int()];
+      command_message.twist.angular.z = get_parameter("mapping.angular.z.scale").as_double() *
+        joy_message->axes[get_parameter("mapping.angular.z.axis").as_int()];
+    }
 
     const auto kick_button = get_parameter("mapping.kick").as_int();
     command_message.kick = joy_message->buttons[kick_button] && !prev_joy_msg_.buttons[kick_button];
@@ -116,6 +123,7 @@ private:
     const auto dribbler_inc_button = get_parameter("mapping.dribbler.increment").as_int();
     const auto dribbler_dec_button = get_parameter("mapping.dribbler.decrement").as_int();
 
+    
     if (joy_message->buttons[dribbler_inc_button] && !prev_joy_msg_.buttons[dribbler_inc_button]) {
       dribbler_speed_ += get_parameter("dribbler_speed_step").as_double();
     }

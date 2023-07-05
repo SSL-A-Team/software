@@ -6,7 +6,7 @@
     "configure": "yarn install; (test -d ./bin || neu update)",
     "dev": "vite --host",
     "devrun": "(yarn configure || true) && vite build && neu run",
-    "build": "(yarn configure || true) && (vite build && neu build --release) && (test -x ./bin/neutralino-linux_x64 || ((echo Fixing Permission Issue); (chmod +x ./dist/Ateam_UI/* && echo Success)))"
+    "build": "true"
   },
   "author": "Matthew Woodward <mwoodward@gatech.edu>",
   "license": "MIT",

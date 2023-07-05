@@ -4,10 +4,10 @@
       linear:
         x:
           axis: 1
-          scale: 2.0
+          scale: 3.0
         y:
           axis: 0
-          scale: 2.0
+          scale: 3.0
       angular:
         z:
           axis: 3
