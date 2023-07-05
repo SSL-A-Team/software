@@ -24,6 +24,7 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.actions import DeclareLaunchArgument
+from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 
@@ -46,6 +47,16 @@ def generate_launch_description():
         launch_arguments={
             'ssl_vision_port': ssl_vision_port_value}.items())
 
+    radio_bridge_name = 'radio_bridge'
+    radio_bridge = Node(
+      package='ateam_radio_bridge',
+      executable='radio_bridge_node',
+      name=radio_bridge_name,
+      remappings=list(zip(['/' + radio_bridge_name + '/robot_motion_commands/robot' + str(i) for i in range(16)], ['/robot_motion_commands/robot' + str(i) for i in range(16)]))
+              +  list(zip(['/' + radio_bridge_name + '/robot_feedback/robot' + str(i) for i in range(16)], ['/robot_feedback/robot' + str(i) for i in range(16)]))
+      # remappings=[('/' + radio_bridge_name + '/robot_motion_commands', '/robot_motion_commands'), ('/' + radio_bridge_name + '/robot_feedback', '/robot_feedback')]
+    )
+
     ui_launch = launch.actions.IncludeLaunchDescription(
         PythonLaunchDescriptionSource(PathJoinSubstitution([
             get_package_share_directory('ateam_ui'),
@@ -56,5 +67,6 @@ def generate_launch_description():
         ssl_vision_port_arg,
         autonomy_launch,
         game_controller_bridge_launch,
-        ui_launch,
+        radio_bridge,
+        ui_launch
     ])
