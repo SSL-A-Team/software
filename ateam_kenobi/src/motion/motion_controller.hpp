@@ -47,9 +47,6 @@ public:
   // Generate a robot motion command to follow a trajectory
   ateam_msgs::msg::RobotMotionCommand get_command(ateam_kenobi::Robot robot, double current_time);
 
-  // Return a motion command to sit still
-  ateam_msgs::msg::RobotMotionCommand empty_command();
-
   // Reset the PID controllers and remove previous time to recalculate dt
   void reset();
 

@@ -62,8 +62,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
 {
   ateam_msgs::msg::RobotMotionCommand motion_command;
 
-  // Skip the first frame if we can't calculate dt yet
-  if (std::isnan(this->prev_time)) {
+  // Skip the first frame if we can't calculate dt or there isn't a trajectory
+  if (std::isnan(this->prev_time) || this->trajectory.size() <= 0) {
     this->prev_time = current_time;
     return motion_command;
   }
@@ -108,12 +108,6 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
   this->prev_point = index;
   this->prev_time = current_time;
 
-  return motion_command;
-}
-
-ateam_msgs::msg::RobotMotionCommand MotionController::empty_command()
-{
-  ateam_msgs::msg::RobotMotionCommand motion_command;
   return motion_command;
 }
 
