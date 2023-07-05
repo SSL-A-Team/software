@@ -40,39 +40,38 @@ ateam_msgs::msg::RobotMotionCommand send_kick_command()
   return kick_command;
 }
 
-ateam_msgs::msg::RobotMotionCommand line_kick_command(const World & world, Robot current_robot, ateam_geometry::Point target)
+std::vector<Position> line_kick_command(const World & world, Robot current_robot, ateam_geometry::Point target)
 {
-
-  Eigen::Vector3d current, current_vel, target, target_vel;
+  ateam_geometry::Point current, current_vel, target, target_vel;
+  double current_theta, current_vel_theta, target_theta, target_vel_theta;
   current.x() = current_robot.pos.x();
   current.y() = current_robot.pos.y();
-  current.z() = current_robot.theta;
+  current_theta = current_robot.theta;
   current_vel.x() = current_robot.vel.x();
   current_vel.y() = current_robot.vel.y();
-  current_vel.z() = current_robot.omega;
+  current_vel_theta = current_robot.omega;
 
   const auto & ball = world.ball;
   if (ball.vel.norm() > 0.05) {
     target.x() = current_robot.pos.x();
     target.y() = current_robot.pos.y();
-    target.z() = current_robot.theta;
+    target_theta = current_robot.theta;
     target_vel.x() = 0;
     target_vel.y() = 0;
-    target_vel.z() = 0;
+    target_vel_theta = 0;
   } else {
     // robot to ball check to not collide
     ateam_geometry::Point ball_pos = ball.pos;
     ateam_geometry::Point current_robot_pos = current_robot.pos;
-    ateam_geometry::Point target_goal = ateam_geometry::Point{-6, 0};
     ateam_geometry::Point target_setup_pos = ball_pos + 0.4 * normalize(ball_pos - target_goal);
 
-    ateam_geometry::Point robot_to_goal = target_goal - current_robot_pos;
+    ateam_geometry::Vector robot_to_goal = target_goal - current_robot_pos;
     double robot_to_goal_angle = ateam_common::geometry::VectorToAngle(robot_to_goal);
     double angle_diff = angles::shortest_angular_distance(
       current_robot.theta, robot_to_goal_angle);
 
-    ateam_geometry::Point robot_to_ball = ball_pos - current_robot_pos;
-    ateam_geometry::Point ball_to_goal = target_goal - ball_pos;
+    ateam_geometry:: robot_to_ball = ball_pos - current_robot_pos;
+    ateam_geometry:: ball_to_goal = target_goal - ball_pos;
 
     // Aligned means
     //  * Ball is directly between the robot and goal
@@ -82,7 +81,7 @@ ateam_msgs::msg::RobotMotionCommand line_kick_command(const World & world, Robot
       robot_to_goal, robot_to_ball,
       0.01);
     is_aligned &= std::abs(angle_diff) < 0.05;
-    is_aligned &= current_robot.vel.norm() < 0.5;
+    is_aligned &= norm(current_robot.vel) < 0.5;
 
     if (!is_aligned) {
       double cosine = CGAL::scalar_product((target_setup_pos - current_robot_pos),
@@ -96,40 +95,33 @@ ateam_msgs::msg::RobotMotionCommand line_kick_command(const World & world, Robot
       if (dist < 0.1) {
         target.x() = target_setup_pos.x();
         target.y() = target_setup_pos.y() - 1;
-        target.z() = atan2(ball_to_goal.y(), ball_to_goal.x());
+        target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
         target_vel.x() = 0;
         target_vel.y() = 0;
-        target_vel.z() = 0;
+        target_vel_theta = 0;
       } else {
         target.x() = target_setup_pos.x();
         target.y() = target_setup_pos.y();
-        target.z() = atan2(ball_to_goal.y(), ball_to_goal.x());
+        target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
         target_vel.x() = 0;
         target_vel.y() = 0;
-        target_vel.z() = 0;
+        target_vel_theta = 0;
       }
     } else {
       // Kick
       target.x() = ball_pos.x();
       target.y() = ball_pos.y();
-      target.z() = atan2(ball_to_goal.y(), ball_to_goal.x());
+      target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
       target_vel.x() = 0;
       target_vel.y() = 0;
-      target_vel.z() = 0;
+      target_vel_theta = 0;
     }
   }
 
-  Eigen::Vector3d max_vel{3, 3, 1};  // TODO(jneiger): Set as params
-  Eigen::Vector3d max_accel{1, 1, 1};
-  double dt = 0.01;  // TODO(jneiger): Feed this down from above
-  Trajectory trajectory = TrapezoidalMotionProfile::Generate3d(
-    current, current_vel, target,
-    target_vel, max_vel, max_accel,
-    dt, world.current_time + world.immutable_duration);
-
-  plan.trajectory = trajectory;
+  const auto kick_path = path_planner_.getPath(current_robot.pos,
+    target, world, {});
+  return kick_path;
 }
-
 } // namespace ateam_kenobi::skills
 
 #endif // SKILLS__KICK_HPP_
