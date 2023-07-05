@@ -45,7 +45,7 @@ public:
     std::string multicast_ip_address,
     uint16_t multicast_port,
     ReceiveCallback receive_callback,
-    boost::asio::ip::address_v4 interface = boost::asio::ip::address_v4::any());
+    std::string interface_address = "");
 
   ~MulticastReceiver();
 

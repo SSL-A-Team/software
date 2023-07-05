@@ -38,7 +38,7 @@ MulticastReceiver::MulticastReceiver(
   std::string multicast_address_string,
   uint16_t multicast_port,
   ReceiveCallback receive_callback,
-  boost::asio::ip::address_v4 interface)
+  std::string interface_address)
 : receive_callback_(receive_callback),
   multicast_socket_(io_service_)
 {
@@ -47,10 +47,11 @@ MulticastReceiver::MulticastReceiver(
   multicast_socket_.open(multicast_endpoint.protocol());
   multicast_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
   multicast_socket_.bind(multicast_endpoint);
-  multicast_socket_.set_option(
-    boost::asio::ip::multicast::join_group(
-      multicast_address,
-      interface));
+  if(interface_address.empty()) {
+    multicast_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address));
+  } else {
+  multicast_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address, boost::asio::ip::make_address_v4(interface_address)));
+  }
   // JoinMulticastGroupOnAllV4Interfaces(multicast_address);
   multicast_socket_.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,

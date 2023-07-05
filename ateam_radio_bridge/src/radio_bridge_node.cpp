@@ -30,7 +30,7 @@ public:
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-      boost::asio::ip::make_address_v4(declare_parameter<std::string>("net_interface_address","172.16.1.10")))
+      declare_parameter<std::string>("net_interface_address","172.16.1.10"))
   {
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
