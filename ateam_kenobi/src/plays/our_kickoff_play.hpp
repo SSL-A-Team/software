@@ -18,25 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SKILLS__GOALIE_HPP_
-#define SKILLS__GOALIE_HPP_
+#ifndef PLAYS__OUR_KICKOFF_PLAY_HPP_
+#define PLAYS__OUR_KICKOFF_PLAY_HPP_
 
+#include <vector>
+
+#include "base_play.hpp"
+#include "path_planning/path_planner.hpp"
+#include "motion/motion_controller.hpp"
 #include "ateam_geometry/types.hpp"
-#include "ateam_geometry/nearest_points.hpp"
-#include "types/world.hpp"
+#include "types/robot.hpp"
 
-namespace ateam_kenobi::skills
+namespace ateam_kenobi::plays
 {
-ateam_geometry::Point get_goalie_defense_point(const World & world){
-    ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
-        ateam_geometry::Point(-4, 0.5),
-        ateam_geometry::Point(-4, -0.5)
-    );
+class OurKickoffPlay : public BasePlay {
+  public:
+    explicit OurKickoffPlay(visualization::OverlayPublisher & overlay_publisher);
 
-    ateam_geometry::Point ball_location = world.ball.pos;
+    void reset() override;
+    
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
+  private:
+    std::vector<ateam_geometry::Point> positions_to_assign_;
+    std::vector<Robot> available_robots_;
+  
+    path_planning::PathPlanner path_planner_;
+    MotionController motion_controller_;
+    int prev_assigned_id_ = -1;
+};
+}  // namespace ateam_kenobi::plays
 
-    return ateam_geometry::NearestPointOnSegment(goalie_line, ball_location);
-}
-}
-#endif // SKILLS__GOALIE_HPP_
-
+#endif // PLAYS__OUR_KICKOFF_PLAY_HPP_
