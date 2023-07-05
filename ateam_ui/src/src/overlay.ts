@@ -80,9 +80,9 @@ export class Overlay {
             case 1:
                 if (this.points.length >= 2) {
                     graphic.lineStyle(this.stroke_width, this.stroke_color);
-                    graphic.moveTo(scale*this.points[0].x, scale*this.points[0].y);
+                    graphic.moveTo(scale*this.points[0].x, -scale*this.points[0].y);
                     for (var i = 1; i < this.points.length; i++) {
-                        graphic.lineTo(scale*this.points[i].x, scale*this.points[i].y);
+                        graphic.lineTo(scale*this.points[i].x, -scale*this.points[i].y);
                     }
                 }
                 break;
@@ -90,7 +90,7 @@ export class Overlay {
             case 2:
                 graphic.beginFill(this.fill_color);
                 graphic.lineStyle(this.stroke_width, this.stroke_color);
-                graphic.drawRect(-scale*this.scale.x/2, -scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
+                graphic.drawRect(-scale*this.scale.x/2, scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
                 graphic.endFill();
                 break;
             // ELLIPSE
@@ -103,11 +103,11 @@ export class Overlay {
             // POLYGON
             case 4:
                 if (this.points.length >= 2){
-                    graphic.moveTo(scale*this.points.at(-1).x, scale*this.points.at(-1).y);
+                    graphic.moveTo(scale*this.points.at(-1).x, -scale*this.points.at(-1).y);
                     graphic.beginFill(this.fill_color);
                     graphic.lineStyle(this.stroke_width, this.stroke_color);
                     for (const point of this.points) {
-                        graphic.lineTo(scale*point.x, scale*point.y);
+                        graphic.lineTo(scale*point.x, -scale*point.y);
                     }
                     graphic.endFill();
                 }
