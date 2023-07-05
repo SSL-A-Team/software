@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,50 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__ANGLE_HPP_
-#define ATEAM_COMMON__ANGLE_HPP_
+#ifndef ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
+#define ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
 
 #include <Eigen/Dense>
+#include "ateam_geometry/types.hpp"
 
-#include <angles/angles.h>
-#include <ateam_geometry/types.hpp>
 
-#include <cmath>
-
-namespace ateam_common
-{
-namespace geometry
+namespace ateam_geometry
 {
 
-inline double VectorToAngle(const Eigen::Vector2d & vector)
+template<typename T>
+inline auto normalize(T const& V)
 {
-  return atan2(vector.y(), vector.x());
+  auto const slen = V.squared_length();
+  auto const d = CGAL::approximate_sqrt(slen);
+  return V / d;
 }
 
-inline bool IsVectorAligned(
-  const Eigen::Vector2d & a, const Eigen::Vector2d & b,
-  double max_angle_diff = 0.1)
+
+template<typename T, typename U>
+inline double norm(T const& V, U const& C)
 {
-  double a_angle = VectorToAngle(a);
-  double b_angle = VectorToAngle(b);
-  return std::abs(angles::shortest_angular_distance(a_angle, b_angle)) < max_angle_diff;
+  return sqrt(CGAL::squared_distance(V, C))
 }
 
-inline double VectorToAngle(const ateam_geometry::Point & vector)
-{
-  return atan2(vector.y(), vector.x());
 }
-
-inline bool IsVectorAligned(
-  const ateam_geometry::Point & a, const ateam_geometry::Point & b,
-  double max_angle_diff = 0.1)
-{
-  double a_angle = VectorToAngle(a);
-  double b_angle = VectorToAngle(b);
-  return std::abs(angles::shortest_angular_distance(a_angle, b_angle)) < max_angle_diff;
-}
-
-}  // namespace geometry
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__ANGLE_HPP_
