@@ -27,7 +27,7 @@
 
 namespace ateam_kenobi::skills
 {
-ateam_geometry::Point get_goalie_defense_point(const World & world){
+inline ateam_geometry::Point get_goalie_defense_point(const World & world){
     ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
         ateam_geometry::Point(-4, 0.5),
         ateam_geometry::Point(-4, -0.5)

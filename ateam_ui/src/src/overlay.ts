@@ -22,13 +22,20 @@ export class Overlay {
     text: string | null
     depth: number
 
-    pixelsPerMeter: number = 140;
+    lifetime_end: number;
     
     constructor(id: string, msg: any) {
         this.id = id;
     	for (const member of Object.getOwnPropertyNames(msg)) {
             this[member] = msg[member];
         }
+
+        console.log(this.lifetime)
+        // lifetime is falsey if it will live forever
+        if (this.lifetime) {
+            this.lifetime_end = Date.now() + this.lifetime;
+        }
+        console.log(this.lifetime_end)
     }
 
     update(overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig) {
@@ -44,9 +51,10 @@ export class Overlay {
             // There might be a way to improve performance if we can confirm that
             // we are just translating the overlay without changing its internal points
             graphic.clear();
-            this.draw(graphic, renderConfig);
+            if (!this.lifetime_end || Date.now() < this.lifetime_end) {
+                this.draw(graphic, renderConfig);
+            }
         } else {
-            console.log("creating graphic");
             graphic = new PIXI.Graphics();
             graphic.name = this.id;
             this.draw(graphic, renderConfig);

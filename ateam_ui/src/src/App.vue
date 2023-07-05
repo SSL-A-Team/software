@@ -16,6 +16,9 @@
                     <GameStatusComponent ref="refStatus"/>
                     <FieldComponent ref="mainField" class="ma-2 pa-2"/>
                 </v-col>
+                <v-col class="flex-grow-0 flex-shrink-0">
+                    <AIComponent ref="AIStatus"/>
+                </v-col>
             </v-row>
             </v-container>
         </v-main>
@@ -29,6 +32,7 @@ import FieldComponent from './components/FieldComponent.vue'
 import StatusComponent from './components/StatusComponent.vue'
 import RefButtonsComponent from './components/RefButtonsComponent.vue'
 import GameStatusComponent from './components/GameStatusComponent.vue'
+import AIComponent from './components/AIComponent.vue'
 import { provide } from 'vue'
 import { defineComponent, toRaw } from 'vue'
 
@@ -75,7 +79,8 @@ export default {
         FieldComponent,
         StatusComponent,
         RefButtonsComponent,
-        GameStatusComponent
+        GameStatusComponent,
+        AIComponent
     }
 }
 </script>

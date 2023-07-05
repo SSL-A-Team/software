@@ -21,6 +21,7 @@
 #include "test_play.hpp"
 #include "ateam_geometry/types.hpp"
 #include "types/world.hpp"
+#include "skills/goalie.hpp"
 #include "robot_assignment.hpp"
 
 namespace ateam_kenobi::plays
@@ -48,7 +49,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
   }
 
   std::vector<ateam_geometry::Point> test_positions;
-  test_positions.push_back(ateam_geometry::Point(world.ball.pos.x() + 0.2, world.ball.pos.y()));
+  test_positions.push_back(ateam_kenobi::skills::get_goalie_defense_point(world));
 
   const auto & robot_assignments = robot_assignment::assign(available_robots, test_positions);
 

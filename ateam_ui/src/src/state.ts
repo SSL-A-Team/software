@@ -5,6 +5,7 @@ import { Overlay } from "@/overlay"
 import { Referee } from "@/referee"
 import { Ball } from "@/ball"
 import { Field } from "@/field"
+import { AIState } from "@/AI"
 
 export class RenderConfig {
     angle: number = 0; // Rotation applied to the rendered field
@@ -16,7 +17,8 @@ export class WorldState {
     teams: Team[];
     ball: Ball;
     field: Field;
-    referee: Referee
+    referee: Referee;
+    ai: AIState;
 
     constructor() {
         this.team = TeamColor.Blue;
@@ -28,6 +30,7 @@ export class WorldState {
         this.field = new Field();
 
         this.referee = new Referee();
+        this.ai = new AIState();
     }
 }
 
