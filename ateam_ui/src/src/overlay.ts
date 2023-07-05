@@ -30,12 +30,10 @@ export class Overlay {
             this[member] = msg[member];
         }
 
-        console.log(this.lifetime)
         // lifetime is falsey if it will live forever
         if (this.lifetime) {
             this.lifetime_end = Date.now() + this.lifetime;
         }
-        console.log(this.lifetime_end)
     }
 
     update(overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig) {
