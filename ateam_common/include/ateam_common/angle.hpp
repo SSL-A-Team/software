@@ -47,13 +47,17 @@ inline bool IsVectorAligned(
   return std::abs(angles::shortest_angular_distance(a_angle, b_angle)) < max_angle_diff;
 }
 
-inline double VectorToAngle(const ateam_geometry::Point & vector)
+// as a concept points and vectors are interchangle for having 2 coeffs so this would work here
+template<typename T>
+inline double VectorToAngle(const T & vector)
 {
   return atan2(vector.y(), vector.x());
 }
 
+
+template<typename T, typename U>
 inline bool IsVectorAligned(
-  const ateam_geometry::Point & a, const ateam_geometry::Point & b,
+  const T & a, const U & b,
   double max_angle_diff = 0.1)
 {
   double a_angle = VectorToAngle(a);

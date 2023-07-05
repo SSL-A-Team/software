@@ -17,7 +17,7 @@ add_library(${PROJECT_NAME} SHARED
   src/radio_bridge_node.cpp
   src/rnp_packet_helpers.cpp
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 target_include_directories(${PROJECT_NAME} PUBLIC software-communication/ateam-common-packets/include)
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 ament_target_dependencies(${PROJECT_NAME}

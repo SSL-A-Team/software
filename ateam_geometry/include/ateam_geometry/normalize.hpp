@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
-#define ATEAM_GEOMETRY__EIGEN_CONVERSIONS_HPP_
+#ifndef ATEAM_GEOMETRY__NORMAL_
+#define ATEAM_GEOMETRY__NORMAL_
 
 #include <Eigen/Dense>
 #include "ateam_geometry/types.hpp"
@@ -40,7 +40,16 @@ inline auto normalize(T const& V)
 template<typename T, typename U>
 inline double norm(T const& V, U const& C)
 {
-  return sqrt(CGAL::squared_distance(V, C))
+  return CGAL::approximate_sqrt(CGAL::squared_distance(V, C));
+}
+
+template<typename T>
+inline double norm(T const& V)
+{
+  return CGAL::approximate_sqrt(V.squared_length());
 }
 
 }
+
+
+#endif  // ATEAM_GEOMETRY__NORMAL_

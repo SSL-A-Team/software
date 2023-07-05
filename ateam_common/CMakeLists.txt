@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(ateam_common)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -g)
+  add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -25,15 +25,14 @@ add_library(${PROJECT_NAME} SHARED
   src/status.cpp
   src/game_controller_listener.cpp
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
-  Eigen3
+  ateam_geometry
   ateam_msgs
   angles
   ssl_league_msgs
-  ateam_geometry
 )
 target_link_libraries(${PROJECT_NAME}
   Boost::boost
@@ -50,7 +49,7 @@ target_include_directories(${PROJECT_NAME}
 set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(Boost Protobuf angles)
+ament_export_dependencies(Boost Protobuf angles ateam_geometry)
 
 install(
   DIRECTORY include/
