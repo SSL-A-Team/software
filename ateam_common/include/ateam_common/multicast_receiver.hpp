@@ -44,7 +44,8 @@ public:
   MulticastReceiver(
     std::string multicast_ip_address,
     uint16_t multicast_port,
-    ReceiveCallback receive_callback);
+    ReceiveCallback receive_callback,
+    boost::asio::ip::address_v4 interface = boost::asio::ip::address_v4::any());
 
   ~MulticastReceiver();
 
@@ -64,6 +65,8 @@ private:
   void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
 
   void HandleUDPSendTo(const boost::system::error_code & error, size_t bytes_sent);
+
+  void JoinMulticastGroupOnAllV4Interfaces(const boost::asio::ip::address & multicast_address);
 };
 
 }  // namespace ateam_common

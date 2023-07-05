@@ -48,14 +48,16 @@ def generate_launch_description():
     game_controller_launch = launch.actions.IncludeLaunchDescription(
         FrontendLaunchDescriptionSource([ateam_bringup_path, '/ssl_game_controller.launch.xml']))
     game_controller_bridge_launch = launch.actions.IncludeLaunchDescription(
-        FrontendLaunchDescriptionSource([ateam_bringup_path, '/game_controller_nodes.launch.xml']))
-    autonomy_launch = launch.actions.IncludeLaunchDescription(
-        FrontendLaunchDescriptionSource(
-            [
-                ateam_bringup_path,
-                '/autonomy.launch.xml']),
+        FrontendLaunchDescriptionSource([ateam_bringup_path, '/game_controller_nodes.launch.xml']),
         launch_arguments={
-            'ssl_vision_port': ssl_vision_port_value}.items())
+            'net_interface_address': '127.0.0.1'
+        })
+    autonomy_launch = launch.actions.IncludeLaunchDescription(
+        FrontendLaunchDescriptionSource([ateam_bringup_path, '/autonomy.launch.xml']),
+            launch_arguments={
+                'ssl_vision_port': ssl_vision_port_value,
+                'ssl_vision_interface_address': '127.0.0.1'
+                }.items())
 
     ui_path = os.path.join(get_package_share_directory('ateam_ui'), 'launch')
     ui_launch = launch.actions.IncludeLaunchDescription(

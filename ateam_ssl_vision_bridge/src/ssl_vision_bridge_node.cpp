@@ -20,6 +20,7 @@
 
 #include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
 
+#include <functional>
 #include <string>
 
 #include <rclcpp/rclcpp.hpp>
@@ -41,23 +42,11 @@ public:
   explicit SSLVisionBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ssl_vision_bridge", options),
     multicast_receiver_(
-      (declare_parameter("ssl_vision_ip", "224.5.23.2"),
-      get_parameter("ssl_vision_ip").as_string()),
-      (declare_parameter("ssl_vision_port", 10020),
-      get_parameter("ssl_vision_port").as_int()),
-      [this](const std::string &, const uint16_t, auto * buffer, size_t bytes_received) {
-        SSL_WrapperPacket vision_proto;
-
-        // Note: "- 1" is needed due to some weird bug where if the entire buffer
-        // is used to do the conversion to protobuf, it would silently fail.
-        // But, if all but the last byte is used, it succeeds and at worst some
-        // data is lost
-        if (!vision_proto.ParseFromArray(buffer, bytes_received - 1)) {
-          vision_publisher_->publish(message_conversions::fromProto(vision_proto));
-        } else {
-          RCLCPP_WARN(get_logger(), "Failed to parse vision protobuf packet");
-        }
-      }) {
+      declare_parameter<std::string>("ssl_vision_ip", "224.5.23.2"),
+      declare_parameter<int>("ssl_vision_port", 10020),
+      std::bind_front(&SSLVisionBridgeNode::multicastCallback, this),
+      boost::asio::ip::make_address_v4(declare_parameter<std::string>("net_interface_address","10.191.12.1")))
+  {
     SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
     vision_publisher_ = create_publisher<ssl_league_msgs::msg::VisionWrapper>(
       std::string(Topics::kVisionMessages),
@@ -67,6 +56,23 @@ public:
 private:
   rclcpp::Publisher<ssl_league_msgs::msg::VisionWrapper>::SharedPtr vision_publisher_;
   ateam_common::MulticastReceiver multicast_receiver_;
+
+  void multicastCallback(
+    const std::string &, const uint16_t, uint8_t * buffer,
+    size_t bytes_received)
+  {
+    SSL_WrapperPacket vision_proto;
+
+    // Note: "- 1" is needed due to some weird bug where if the entire buffer
+    // is used to do the conversion to protobuf, it would silently fail.
+    // But, if all but the last byte is used, it succeeds and at worst some
+    // data is lost
+    if (!vision_proto.ParseFromArray(buffer, bytes_received - 1)) {
+      vision_publisher_->publish(message_conversions::fromProto(vision_proto));
+    } else {
+      RCLCPP_WARN(get_logger(), "Failed to parse vision protobuf packet");
+    }
+  }
 };
 
 }  // namespace ateam_ssl_vision_bridge
