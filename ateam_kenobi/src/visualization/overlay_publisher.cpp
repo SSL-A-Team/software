@@ -4,9 +4,9 @@
 namespace ateam_kenobi::visualization
 {
 
-OverlayPublisher::OverlayPublisher(const std::string & ns, rclcpp::Node * node)
+OverlayPublisher::OverlayPublisher(const std::string & ns, rclcpp::Node & node)
 : ns(ns),
-  publisher_(node->create_publisher<ateam_msgs::msg::Overlay>(
+  publisher_(node.create_publisher<ateam_msgs::msg::Overlay>(
       "/overlay",
       rclcpp::SystemDefaultsQoS()))
 {
@@ -82,17 +82,19 @@ void OverlayPublisher::drawPolygon(
   msg.fill_color = fill_color;
   msg.lifetime = lifetime;
   msg.depth = 1;
-  std::transform(polygon.vertices_begin(), polygon.vertices_end(), std::back_inserter(msg.points), [](const auto & vertex){
-    geometry_msgs::msg::Point point_msg;
-    point_msg.x = vertex.x();
-    point_msg.y = vertex.y();
-    return point_msg;
-  });
+  std::transform(
+    polygon.vertices_begin(), polygon.vertices_end(), std::back_inserter(msg.points),
+    [](const auto & vertex) {
+      geometry_msgs::msg::Point point_msg;
+      point_msg.x = vertex.x();
+      point_msg.y = vertex.y();
+      return point_msg;
+    });
   publisher_->publish(msg);
 }
 
 void OverlayPublisher::drawText(
-  const std::string & name, const std::string & text,
+  const std::string & name, const std::string & text, const ateam_geometry::Point & position,
   const std::string & color, const uint8_t font_size,
   const uint32_t lifetime)
 {
@@ -102,8 +104,8 @@ void OverlayPublisher::drawText(
   msg.visible = true;
   msg.type = ateam_msgs::msg::Overlay::TEXT;
   msg.command = ateam_msgs::msg::Overlay::REPLACE;
-  msg.position.x = 0.0;
-  msg.position.y = 0.0;
+  msg.position.x = position.x();
+  msg.position.y = position.y();
   msg.stroke_color = color;
   msg.stroke_width = font_size;
   msg.lifetime = lifetime;

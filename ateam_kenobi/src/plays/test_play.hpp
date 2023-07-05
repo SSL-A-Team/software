@@ -21,25 +21,21 @@
 #ifndef PLAYS__TEST_PLAY_HPP_
 #define PLAYS__TEST_PLAY_HPP_
 
-#include <array>
-#include <optional>
-
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-#include "types/world.hpp"
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
+#include "base_play.hpp"
 
 namespace ateam_kenobi::plays
 {
-class TestPlay {
+class TestPlay : public BasePlay {
   public:
-    explicit TestPlay() = default;
+    explicit TestPlay(visualization::OverlayPublisher & overlay_publisher);
 
-    void reset();
+    void reset() override;
     
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world);
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
   private:
+
     path_planning::PathPlanner path_planner_;
     MotionController motion_controller_;
     int prev_assigned_id_ = -1;

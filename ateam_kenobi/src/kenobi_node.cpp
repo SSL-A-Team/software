@@ -19,6 +19,7 @@
 #include "types/world.hpp"
 #include "types/message_conversions.hpp"
 #include "play_selector.hpp"
+#include "visualization/overlay_publisher.hpp"
 
 namespace ateam_kenobi
 {
@@ -31,6 +32,8 @@ class KenobiNode : public rclcpp::Node
 public:
   explicit KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("kenobi_node", options),
+    overlay_publisher_("Kenobi", *this),
+    play_selector_(overlay_publisher_),
     info_listener_(*this),
     game_state_listener_(*this)
   {
@@ -61,11 +64,6 @@ public:
       "~/world",
       rclcpp::SystemDefaultsQoS());
 
-    overlay_publisher_ = create_publisher<ateam_msgs::msg::Overlay>(
-      "/overlay",
-      rclcpp::SystemDefaultsQoS());
-    // TODO overlay manager of some kind
-
     field_subscription_ = create_subscription<ateam_msgs::msg::FieldInfo>(
       std::string(Topics::kField),
       10,
@@ -78,6 +76,7 @@ public:
 
 private:
   World world_;
+  visualization::OverlayPublisher overlay_publisher_;
   PlaySelector play_selector_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
@@ -92,7 +91,6 @@ private:
   ateam_common::TeamInfoListener info_listener_;
   ateam_common::GameStateListener game_state_listener_;
 
-  rclcpp::Publisher<ateam_msgs::msg::Overlay>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
   rclcpp::TimerBase::SharedPtr timer_;
@@ -178,16 +176,12 @@ private:
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(const World & world)
   {
-    auto play = play_selector_.getPlay(world);
-    return std::visit([this,&world](auto & play)->std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> {
-      using PlayType = std::decay_t<decltype(play)>;
-      if constexpr(std::is_same_v<PlayType, std::monostate>) {
-        RCLCPP_ERROR(get_logger(), "No play selected!");
-        return {};
-      } else {
-        return play.get().runFrame(world);
-      }
-    }, play);
+    plays::BasePlay * play = play_selector_.getPlay(world);
+    if(play == nullptr) {
+      RCLCPP_ERROR(get_logger(), "No play selected!");
+      return {};
+    }
+    return play->runFrame(world);
   }
 
   void send_all_motion_commands(

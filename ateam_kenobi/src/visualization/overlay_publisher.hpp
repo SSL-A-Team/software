@@ -11,7 +11,7 @@ namespace ateam_kenobi::visualization
 class OverlayPublisher
 {
 public:
-  explicit OverlayPublisher(const std::string & ns, rclcpp::Node * node);
+  explicit OverlayPublisher(const std::string & ns, rclcpp::Node & node);
 
   void drawLine(
     const std::string & name, const std::vector<ateam_geometry::Point> & points,
@@ -31,7 +31,7 @@ public:
     const uint32_t lifetime = 100);
 
   void drawText(
-    const std::string & name, const std::string & text,
+    const std::string & name, const std::string & text, const ateam_geometry::Point & position,
     const std::string & color = "white", const uint8_t font_size = 12,
     const uint32_t lifetime = 100);
 

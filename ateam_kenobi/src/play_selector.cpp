@@ -3,33 +3,34 @@
 namespace ateam_kenobi
 {
 
-plays::AnyPlay PlaySelector::getPlay(const World & world)
+PlaySelector::PlaySelector(visualization::OverlayPublisher & overlay_publisher)
+  : test_play_(overlay_publisher)
 {
-  plays::AnyPlay selected_play;
+
+}
+
+plays::BasePlay * PlaySelector::getPlay(const World & world)
+{
+  plays::BasePlay * selected_play;
 
   //
   // Play selection logic goes here
   //
-  selected_play = test_play_;
+  selected_play = &test_play_;
 
   resetPlayIfNeeded(selected_play);
 
   return selected_play;
 }
 
-void PlaySelector::resetPlayIfNeeded(plays::AnyPlay & play)
+void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)
 {
-  if (play.index() != prev_play_type_index_) {
-    std::visit(
-      [](auto & p) {
-        using PlayType = std::decay_t<decltype(p)>;
-        if constexpr (std::is_same_v<PlayType, std::monostate>) {
-          return;
-        } else {
-           p.get().reset();
-        }
-      }, play);
-    prev_play_type_index_ = play.index();
+  void * play_address = static_cast<void*>(play);
+  if(play_address != prev_play_address_) {
+    if(play != nullptr) {
+      play->reset();
+    }
+    prev_play_address_ = play_address;
   }
 }
 
