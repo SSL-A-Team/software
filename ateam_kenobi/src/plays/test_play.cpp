@@ -70,7 +70,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
       return {};
     }
     motion_controller_.set_trajectory(path);
-    prev_assigned_id_ = robot.id;
     const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
       world.current_time.time_since_epoch()).count();
     maybe_motion_commands.at(robot_id) = motion_controller_.get_command(robot, current_time);

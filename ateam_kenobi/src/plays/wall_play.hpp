@@ -18,25 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SKILLS__GOALIE_HPP_
-#define SKILLS__GOALIE_HPP_
+#ifndef PLAYS__WALL_PLAY_HPP_
+#define PLAYS__WALL_PLAY_HPP_
 
+#include <vector>
+#include <optional>
+#include <array>
+
+#include "path_planning/path_planner.hpp"
+#include "motion/motion_controller.hpp"
 #include "ateam_geometry/types.hpp"
-#include "ateam_geometry/nearest_points.hpp"
-#include "types/world.hpp"
+#include "types/robot.hpp"
+#include "base_play.hpp"
 
-namespace ateam_kenobi::skills
-{
-inline ateam_geometry::Point get_goalie_defense_point(const World & world){
-    ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
-        ateam_geometry::Point(-4, 0.5),
-        ateam_geometry::Point(-4, -0.5)
-    );
+namespace ateam_kenobi::plays{
+    inline std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(ateam_geometry::Segment & segment, int num_points);
 
-    ateam_geometry::Point ball_location = world.ball.pos;
+    class WallPlay : public BasePlay {
+        public:
+            explicit WallPlay(visualization::OverlayPublisher & overlay_publisher);
+            void reset() override;
+            std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
+        private:
+            path_planning::PathPlanner path_planner_;
+            MotionController motion_controller_;
+            std::vector<std::vector<ateam_geometry::Point>> saved_paths_;
+            std::vector<Robot> available_robots_;
+    };       
+} // namespace ateam_kenobi::plays
 
-    return ateam_geometry::NearestPointOnSegment(goalie_line, ball_location);
-}
-} // namespace ateam_kenobi::skills
-#endif // SKILLS__GOALIE_HPP_
-
+#endif // PLAYS__WALL_PLAY_HPP_

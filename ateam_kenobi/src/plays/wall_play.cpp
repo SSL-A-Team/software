@@ -1,0 +1,134 @@
+// Copyright 2023 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+#include <CGAL/point_generators_2.h>
+
+#include "wall_play.hpp"
+#include "robot_assignment.hpp"
+#include "types/robot.hpp"
+#include "skills/goalie.hpp"
+
+namespace ateam_kenobi::plays
+{
+    std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(ateam_geometry::Segment & segment, int num_points){
+        std::vector<ateam_geometry::Point> points_on_segment;
+
+        if (num_points == 1){
+            points_on_segment.push_back(segment.vertex(0));
+        }
+
+        auto source = segment.vertex(0);
+        auto target = segment.vertex(1);
+
+        ateam_geometry::Point spacing = ateam_geometry::Point(
+            source.x() + target.x() / (num_points - 1),
+            source.y() + target.y() / (num_points - 1)
+        );
+
+        for (int i = 0; i < num_points; ++i){
+            auto segment_point = ateam_geometry::Point(
+                source.x() + (spacing.x() * i),
+                source.y() + (spacing.y() * i)
+            );
+            points_on_segment.push_back(segment_point);
+        }
+        return points_on_segment;
+    }
+
+
+WallPlay::WallPlay(visualization::OverlayPublisher & overlay_publisher)
+: BasePlay(overlay_publisher)
+{
+}
+
+void WallPlay::reset(){
+    saved_paths_.clear();
+    available_robots_.clear();
+};
+
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::runFrame(
+  const World & world)
+{
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+    std::vector<Robot> current_available_robots;
+    // Get a goalie
+    int our_goalie_id = world.referee_info.our_goalie_id;
+
+    // Get the number of available robots
+    for (const auto & maybe_robot : world.our_robots) {
+        if (maybe_robot && maybe_robot.value().id != world.referee_info.our_goalie_id) {
+            current_available_robots.push_back(maybe_robot.value());
+        }   
+    }
+    // Only give new trajectories if the number of robots has changed
+    if (current_available_robots.size() != available_robots_.size() 
+            || saved_paths_.empty()){
+        available_robots_ = current_available_robots;
+        int num_robots = static_cast<int>(available_robots_.size());
+        // Used to create a line in front of the goal
+        ateam_geometry::Segment wall_line = ateam_geometry::Segment(
+            ateam_geometry::Point(-3, 1 * num_robots),
+            ateam_geometry::Point(-3, -1 * num_robots)
+        );
+        std::vector<ateam_geometry::Point> positions_to_assign = 
+            get_equally_spaced_points_on_segment(wall_line, num_robots);
+        // Generate new trajectories for all robots
+        const auto & robot_assignments = robot_assignment::assign(available_robots_, positions_to_assign);
+        for (const auto [robot_id, pos_ind] : robot_assignments) {
+            const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
+            if (!maybe_assigned_robot) {
+            // TODO Log this
+            // Assigned non-available robot
+            continue;
+            }
+            const auto & robot = maybe_assigned_robot.value();
+            const auto & destination = positions_to_assign.at(pos_ind);
+            const auto path = path_planner_.getPath(robot.pos, destination, world, {});
+            if (path.empty()) {
+            overlay_publisher_.drawCircle(
+                "highlight_test_robot",
+                ateam_geometry::makeCircle(robot.pos, 0.2), "red", "transparent");
+            return {};}
+            saved_paths_[robot_id] = path;
+            }
+        }
+    // Always get a new point and trajectory for the goalie so we can
+    // be good at defense
+    Robot our_goalie = world.our_robots.at(our_goalie_id).value();
+    auto goalie_point = ateam_kenobi::skills::get_goalie_defense_point(world);
+    const auto goalie_path = path_planner_.getPath(
+        our_goalie.pos, goalie_point, world, {});
+    motion_controller_.set_trajectory(goalie_path);
+    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+      world.current_time.time_since_epoch()).count();
+    maybe_motion_commands.at(our_goalie_id) = motion_controller_.get_command(our_goalie, current_time);
+
+    // Execute trajectories, new or existing :)
+    for (Robot robot : available_robots_){
+        motion_controller_.set_trajectory(saved_paths_[robot.id]);
+        const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+            world.current_time.time_since_epoch()).count();
+        maybe_motion_commands.at(robot.id) = motion_controller_.get_command(robot, current_time);
+    }
+    return maybe_motion_commands;
+};
+
+
+} // namespace ateam_kenobi::plays
