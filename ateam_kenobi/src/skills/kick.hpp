@@ -30,4 +30,4 @@ ateam_msgs::msg::RobotMotionCommand send_kick_command(){
 }
 
 
-#endif SKILLS__KICK_HPP_
+#endif // SKILLS__KICK_HPP_
