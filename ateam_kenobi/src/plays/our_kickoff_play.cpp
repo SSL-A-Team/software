@@ -22,6 +22,7 @@
 #include "our_kickoff_play.hpp"
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
+#include "skills/kick.hpp"
 #include "robot_assignment.hpp"
 
 namespace ateam_kenobi::plays
@@ -35,7 +36,7 @@ void OurKickoffPlay::reset()
 {
   motion_controller_.reset();
   positions_to_assign_.clear();
-  
+
   // Get a kicker
   ateam_geometry::Point kicker_point = ateam_geometry::Point(-0.55, 0);
   positions_to_assign_.push_back(kicker_point);
@@ -51,28 +52,50 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
 
+  // Get a goalie - set, not assigned
+  int our_goalie_id = world.referee_info.our_goalie_id;
+  ateam_geometry::Point goalie_point = ateam_kenobi::skills::get_goalie_defense_point(world);
+
+  const auto goalie_path = path_planner_.getPath(
+    world.our_robots.at(our_goalie_id).value().pos,
+    goalie_point, world, {});
+  motion_controller_.set_trajectory(goalie_path);
+
+  const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+    world.current_time.time_since_epoch()).count();
+  const auto goalie_robot = world.our_robots.at(our_goalie_id);
+  maybe_motion_commands.at(our_goalie_id) = motion_controller_.get_command(
+    goalie_robot.value(), current_time);
+
   for (const auto & maybe_robot : world.our_robots) {
     if (maybe_robot && maybe_robot.value().id != world.referee_info.our_goalie_id) {
       available_robots_.push_back(maybe_robot.value());
     }
   }
 
-  // Get a goalie - set, not assigned
-  int our_goalie_id = world.referee_info.our_goalie_id;
-  ateam_geometry::Point goalie_point = ateam_kenobi::skills::get_goalie_defense_point(world);
+  // get closest robot to ball and its distance to the ball
+  double min_dist_to_ball = 2000;
+  int kicker_id;
+  for (auto robot : available_robots_) {
+    double cur_dist_to_ball = CGAL::squared_distance(world.ball.pos, robot.pos);
+    if (cur_dist_to_ball < min_dist_to_ball) {
+      min_dist_to_ball = cur_dist_to_ball;
+      kicker_id = robot.id;
+    }
+  }
+  if (min_dist_to_ball < 0.5) {
+    if (min_dist_to_ball > 0.1) {
+      positions_to_assign_.at(0) = ateam_geometry::Point(
+        world.ball.pos.x() + 0.05, world.ball.pos.y());
+    } else {
+      // kick the ball and return
+      maybe_motion_commands.at(kicker_id) = ateam_kenobi::skills::send_kick_command();
+      return maybe_motion_commands;
+    }
+  }
 
-  const auto goalie_path = path_planner_.getPath(
-    world.our_robots.at(our_goalie_id).value().pos, 
-    goalie_point, world, {});
-  motion_controller_.set_trajectory(goalie_path);
-
-  const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-      world.current_time.time_since_epoch()).count();
-  const auto goalie_robot = world.our_robots.at(our_goalie_id);
-  maybe_motion_commands.at(our_goalie_id) = motion_controller_.get_command(
-    goalie_robot.value(), current_time);
-
-  const auto & robot_assignments = robot_assignment::assign(available_robots_, positions_to_assign_);
+  const auto & robot_assignments =
+    robot_assignment::assign(available_robots_, positions_to_assign_);
 
   for (const auto [robot_id, pos_ind] : robot_assignments) {
     const auto & maybe_assigned_robot = world.our_robots.at(robot_id);

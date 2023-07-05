@@ -23,11 +23,17 @@
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
-ateam_msgs::msg::RobotMotionCommand send_kick_command(){
-    return ateam_msgs::msg::RobotMotionCommand{
-        {},true,5,0
-    };
+namespace ateam_kenobi::skills
+{
+ateam_msgs::msg::RobotMotionCommand send_kick_command()
+{
+  auto kick_command = ateam_msgs::msg::RobotMotionCommand{};
+  kick_command.kick = true;
+  // Set kick speed to 5 m/s. Current max is 5.5 m/s (will
+  // be clamped if above).
+  kick_command.kick_speed = 5;
+  return kick_command;
 }
-
+} // namespace ateam_kenobi::skills
 
 #endif // SKILLS__KICK_HPP_

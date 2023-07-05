@@ -31,20 +31,23 @@
 
 namespace ateam_kenobi::plays
 {
-class OurKickoffPlay : public BasePlay {
-  public:
-    explicit OurKickoffPlay(visualization::OverlayPublisher & overlay_publisher);
+class OurKickoffPlay : public BasePlay
+{
+public:
+  explicit OurKickoffPlay(visualization::OverlayPublisher & overlay_publisher);
 
-    void reset() override;
-    
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
-  private:
-    std::vector<ateam_geometry::Point> positions_to_assign_;
-    std::vector<Robot> available_robots_;
-  
-    path_planning::PathPlanner path_planner_;
-    MotionController motion_controller_;
-    int prev_assigned_id_ = -1;
+  void reset() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  std::vector<ateam_geometry::Point> positions_to_assign_;
+  std::vector<Robot> available_robots_;
+
+  path_planning::PathPlanner path_planner_;
+  MotionController motion_controller_;
+  int prev_assigned_id_ = -1;
 };
 }  // namespace ateam_kenobi::plays
 
