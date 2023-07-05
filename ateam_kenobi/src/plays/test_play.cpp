@@ -62,6 +62,12 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
     const auto & robot = maybe_assigned_robot.value();
     const auto & destination = test_positions.at(pos_ind);
     const auto path = path_planner_.getPath(robot.pos, destination, world, {});
+    if (path.empty()) {
+      overlay_publisher_.drawCircle(
+        "highlight_test_robot",
+        ateam_geometry::makeCircle(robot.pos, 0.2), "red", "transparent");
+      return {};
+    }
     motion_controller_.set_trajectory(path);
     prev_assigned_id_ = robot.id;
     const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
@@ -69,7 +75,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
     maybe_motion_commands.at(robot_id) = motion_controller_.get_command(robot, current_time);
 
     overlay_publisher_.drawLine("test_path", path, "purple");
-    overlay_publisher_.drawCircle("highlight_test_robot", ateam_geometry::makeCircle(robot.pos, 0.2), "purple", "transparent");
+    overlay_publisher_.drawCircle(
+      "highlight_test_robot", ateam_geometry::makeCircle(
+        robot.pos,
+        0.2), "purple",
+      "transparent");
   }
 
   return maybe_motion_commands;
