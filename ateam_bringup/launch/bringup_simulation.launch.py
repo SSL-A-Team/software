@@ -41,7 +41,7 @@ def generate_launch_description():
     )
     grsim_launch = launch.actions.IncludeLaunchDescription(
         FrontendLaunchDescriptionSource([ateam_bringup_path, "/ssl_grsim.launch.xml"]),
-        launch_arguments={"headless": headless_value}.items()
+        launch_arguments={"headless": headless_value}.items(),
     )
     game_controller_launch = launch.actions.IncludeLaunchDescription(
         FrontendLaunchDescriptionSource(
@@ -52,14 +52,17 @@ def generate_launch_description():
         FrontendLaunchDescriptionSource(
             [ateam_bringup_path, "/game_controller_nodes.launch.xml"]
         ),
-        launch_arguments={"net_interface_address": ""}.items()
+        launch_arguments={
+            "net_interface_address": "",
+            "gc_ip_address": "127.0.0.1",
+        }.items(),
     )
     autonomy_launch = launch.actions.IncludeLaunchDescription(
         FrontendLaunchDescriptionSource([ateam_bringup_path, "/autonomy.launch.xml"]),
         launch_arguments={
             "ssl_vision_port": ssl_vision_port_value,
             "ssl_vision_interface_address": "",
-        }.items()
+        }.items(),
     )
 
     ui_path = os.path.join(get_package_share_directory("ateam_ui"), "launch")
