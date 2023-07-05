@@ -66,7 +66,7 @@ export class Overlay {
         const scale = renderConfig.scale;
 
         graphic.position.x = scale * this.position.x;
-        graphic.position.y = scale * this.position.y;
+        graphic.position.y = -scale * this.position.y;
         
         switch(this.type) {
             // POINT

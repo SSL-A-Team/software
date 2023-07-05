@@ -116,7 +116,7 @@ export class Robot {
     update(container: PIXI.Container, renderConfig: RenderConfig) {
         const scale = renderConfig.scale;
         container.position.x = this.pose.position.x * scale;
-        container.position.y = this.pose.position.y * scale;
+        container.position.y = -this.pose.position.y * scale;
         container.getChildAt(0).angle = this.rotation() - 90;
         container.visible = this.visible;
     }
@@ -151,7 +151,7 @@ export class Robot {
         text.angle = -renderConfig.angle; // offset the rotation of the canvas so the text always appears right side up
 
         robot.position.x = this.pose.position.x * scale;
-        robot.position.y = this.pose.position.y * scale;
+        robot.position.y = -this.pose.position.y * scale;
         graphic.angle = this.rotation() - 90;
 
         robot.addChild(graphic);

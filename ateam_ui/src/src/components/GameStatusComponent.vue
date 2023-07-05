@@ -33,7 +33,6 @@ export default {
             return this.state.world.referee;
         },
         stageProperty: function() {
-            console.log(this.state.world.referee.getStageProperty());
             return this.state.world.referee.getStageProperty();
         },
         commandProperty: function() {
