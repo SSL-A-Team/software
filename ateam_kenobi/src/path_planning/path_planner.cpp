@@ -38,7 +38,7 @@ PathPlanner::Path PathPlanner::getPath(
     const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(
       std::chrono::steady_clock::now() - start_time).count();
     if (elapsed_time > options.search_time_limit) {
-      return {};
+      return path;
     }
     bool had_to_split = false;
     for (auto ind = 0u; ind < (path.size() - 1); ++ind) {
