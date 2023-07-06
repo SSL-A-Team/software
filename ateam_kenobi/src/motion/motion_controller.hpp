@@ -58,10 +58,11 @@ double x_max = 2;
 double y_max = 2;
 double t_max = 10;
 
+std::optional<ateam_geometry::Point> face_towards;
+
 private:
   double prev_time;
   std::vector<ateam_geometry::Point> trajectory;
-  std::optional<ateam_geometry::Point> face_towards;
 
   int prev_point; // last point used in the trajectory
   double progress;
