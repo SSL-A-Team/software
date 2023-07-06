@@ -53,7 +53,7 @@ def generate_launch_description():
             [ateam_bringup_path, "/game_controller_nodes.launch.xml"]
         ),
         launch_arguments={
-            "net_interface_address": "",
+            "net_interface_address": "127.0.0.1",
             "gc_ip_address": "127.0.0.1",
         }.items(),
     )
@@ -61,7 +61,7 @@ def generate_launch_description():
         FrontendLaunchDescriptionSource([ateam_bringup_path, "/autonomy.launch.xml"]),
         launch_arguments={
             "ssl_vision_port": ssl_vision_port_value,
-            "ssl_vision_interface_address": "",
+            "ssl_vision_interface_address": "127.0.0.1",
         }.items(),
     )
 
