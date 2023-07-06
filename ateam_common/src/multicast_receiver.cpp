@@ -20,16 +20,12 @@
 
 #include "ateam_common/multicast_receiver.hpp"
 
-
-#include <ifaddrs.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
 #include <algorithm>
 #include <iostream>
 #include <string>
 
 #include <boost/bind/bind.hpp>
+#include "ateam_common/get_ip_addresses.hpp"
 
 namespace ateam_common
 {
@@ -37,28 +33,12 @@ namespace ateam_common
 MulticastReceiver::MulticastReceiver(
   std::string multicast_address_string,
   uint16_t multicast_port,
-  ReceiveCallback receive_callback,
-  std::string interface_address)
-: receive_callback_(receive_callback),
-  multicast_socket_(io_service_)
+  ReceiveCallback receive_callback)
+: receive_callback_(receive_callback)
 {
   const auto multicast_address = boost::asio::ip::make_address(multicast_address_string).to_v4();
   const boost::asio::ip::udp::endpoint multicast_endpoint(multicast_address, multicast_port);
-  multicast_socket_.open(multicast_endpoint.protocol());
-  multicast_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
-  multicast_socket_.bind(multicast_endpoint);
-  if(interface_address.empty()) {
-    multicast_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address));
-  } else {
-  multicast_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address, boost::asio::ip::make_address_v4(interface_address)));
-  }
-  // JoinMulticastGroupOnAllV4Interfaces(multicast_address);
-  multicast_socket_.async_receive_from(
-    boost::asio::buffer(buffer_), sender_endpoint_,
-    boost::bind(
-      &MulticastReceiver::HandleMulticastReceiveFrom, this,
-      boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
-
+  SetupAllSockets(multicast_endpoint, multicast_address);
   io_service_thread_ = std::thread(
     [this]() {
       io_service_.run();
@@ -90,7 +70,8 @@ void MulticastReceiver::SendTo(
 
   boost::asio::ip::udp::endpoint endpoint(boost::asio::ip::address::from_string(address), port);
 
-  multicast_socket_.async_send_to(
+  // TODO which socket is actually best to use?
+  sockets_.at(0).async_send_to(
     boost::asio::buffer(send_buffer_, length),
     endpoint,
     boost::bind(
@@ -99,9 +80,11 @@ void MulticastReceiver::SendTo(
 }
 
 void MulticastReceiver::HandleMulticastReceiveFrom(
+  boost::asio::ip::udp::socket & socket,
   const boost::system::error_code & error,
   size_t bytes_received)
 {
+  std::cerr << "HandleMulticastReceiveFrom()\n";
   if (error) {
     std::cerr << "Receive from error: " << error.message() << std::endl;
     return;
@@ -111,11 +94,11 @@ void MulticastReceiver::HandleMulticastReceiveFrom(
     sender_endpoint_.address().to_string(), sender_endpoint_.port(),
     buffer_.data(), bytes_received);
 
-  multicast_socket_.async_receive_from(
+  socket.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,
     boost::bind(
       &MulticastReceiver::HandleMulticastReceiveFrom, this,
-      boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+      boost::ref(socket), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 
@@ -126,40 +109,35 @@ void MulticastReceiver::HandleUDPSendTo(const boost::system::error_code & error,
   }
 }
 
-std::vector<std::string> GetIpV4Addresses()
+void MulticastReceiver::SetupAllSockets(
+  const boost::asio::ip::udp::endpoint & multicast_endpoint,
+  const boost::asio::ip::address & multicast_address)
 {
-    std::vector<std::string> addresses;
-    ifaddrs * iface_info=nullptr;
-    getifaddrs(&iface_info);
-    auto iface_info_current = iface_info;
-    while(iface_info_current != nullptr)
-    {
-        if(!iface_info_current->ifa_addr) {
-            continue;
-        }
-
-        if(iface_info_current->ifa_addr->sa_family == AF_INET) {
-            // IPv4 address
-            void* net_address = &(reinterpret_cast<sockaddr_in*>(iface_info_current->ifa_addr)->sin_addr);
-            char buffer[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, net_address, buffer, INET_ADDRSTRLEN);
-            addresses.emplace_back(buffer);
-        }
-
-        iface_info_current = iface_info_current->ifa_next;
-    }
-    if(iface_info != nullptr) {
-        freeifaddrs(iface_info);
-    }
-    return addresses;
-}
-
-void MulticastReceiver::JoinMulticastGroupOnAllV4Interfaces(const boost::asio::ip::address & multicast_address)
-{
-  const auto addresses = GetIpV4Addresses();
-  for(const auto & address : addresses) {
-    multicast_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address.to_v4(), boost::asio::ip::make_address_v4(address)));
-    std::cerr << address << '\n';
+  const auto ip_addresses = ateam_common::GetIpV4Addresses();
+  for (const auto & address : ip_addresses) {
+    SetupSocket(address, multicast_endpoint, multicast_address);
   }
 }
+
+void MulticastReceiver::SetupSocket(
+  const std::string & interface_address,
+  const boost::asio::ip::udp::endpoint & multicast_endpoint,
+  const boost::asio::ip::address & multicast_address)
+{
+  std::cerr << "Listening for multicast packets on interface: " << interface_address << '\n';
+  sockets_.emplace_back(io_service_);
+  
+  sockets_.back().open(multicast_endpoint.protocol());
+  sockets_.back().set_option(boost::asio::ip::udp::socket::reuse_address(true));
+  boost::asio::ip::udp::endpoint anyaddr_endpoint(multicast_endpoint.protocol(), multicast_endpoint.port());
+  sockets_.back().bind(anyaddr_endpoint);
+  boost::asio::ip::multicast::join_group(multicast_address.to_v4(), boost::asio::ip::make_address_v4(interface_address));
+
+  sockets_.back().async_receive_from(
+    boost::asio::buffer(buffer_), sender_endpoint_,
+    boost::bind(
+      &MulticastReceiver::HandleMulticastReceiveFrom, this,
+      boost::ref(sockets_.back()), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+}
+
 } // namespace ateam_common

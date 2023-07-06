@@ -9,5 +9,9 @@
     <param name="net_interface_address" value="$(var ssl_vision_interface_address)"/>
   </node>
   <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True"/>
+<<<<<<< Updated upstream
   <node name="kenobi_node" pkg="ateam_kenobi" exec="ateam_kenobi_node" respawn="True"/>
+=======
+  <node name="kenobi_node" pkg="ateam_kenobi" exec="ateam_kenobi_node"/>
+>>>>>>> Stashed changes
 </launch>

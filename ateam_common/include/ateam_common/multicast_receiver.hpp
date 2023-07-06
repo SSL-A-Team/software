@@ -44,8 +44,7 @@ public:
   MulticastReceiver(
     std::string multicast_ip_address,
     uint16_t multicast_port,
-    ReceiveCallback receive_callback,
-    std::string interface_address = "");
+    ReceiveCallback receive_callback);
 
   ~MulticastReceiver();
 
@@ -56,17 +55,26 @@ public:
 private:
   ReceiveCallback receive_callback_;
   boost::asio::io_service io_service_;
-  boost::asio::ip::udp::socket multicast_socket_;
+  std::vector<boost::asio::ip::udp::socket> sockets_;
   boost::asio::ip::udp::endpoint sender_endpoint_;
   std::array<uint8_t, 4096> send_buffer_;
   std::array<uint8_t, 4096> buffer_;
   std::thread io_service_thread_;
 
-  void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
+  void HandleMulticastReceiveFrom(
+    boost::asio::ip::udp::socket & socket,
+    const boost::system::error_code & error, size_t bytes_received);
 
   void HandleUDPSendTo(const boost::system::error_code & error, size_t bytes_sent);
 
-  void JoinMulticastGroupOnAllV4Interfaces(const boost::asio::ip::address & multicast_address);
+  void SetupAllSockets(
+    const boost::asio::ip::udp::endpoint & multicast_endpoint,
+    const boost::asio::ip::address & multicast_address);
+
+  void SetupSocket(
+    const std::string & interface_address,
+    const boost::asio::ip::udp::endpoint & multicast_endpoint,
+    const boost::asio::ip::address & multicast_address);
 };
 
 }  // namespace ateam_common
