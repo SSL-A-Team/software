@@ -83,6 +83,10 @@ public:
 
   void feedback_callback(const uint8_t * buffer, size_t bytes_received)
   {
+    if(bytes_received <= 0) {
+      // ignore empty feedback packets
+      return;
+    }
     RobotControlResponse feedback_proto;
     if (!feedback_proto.ParseFromArray(buffer, bytes_received - 1)) {
       for (const auto & single_feedback : feedback_proto.feedback()) {
