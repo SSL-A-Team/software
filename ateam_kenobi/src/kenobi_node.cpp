@@ -20,6 +20,7 @@
 #include "play_selector.hpp"
 #include "visualization/overlay_publisher.hpp"
 #include "in_play_eval.hpp"
+#include "motion/world_to_body_vel.hpp"
 
 namespace ateam_kenobi
 {
@@ -186,7 +187,11 @@ private:
 
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 
-    send_all_motion_commands(runPlayFrame(world_));
+    auto motion_commands = runPlayFrame(world_);
+
+    motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);
+
+    send_all_motion_commands(motion_commands);
   }
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(const World & world)
