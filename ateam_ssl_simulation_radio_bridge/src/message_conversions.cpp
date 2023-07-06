@@ -27,6 +27,7 @@ ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg)
 {
   ateam_msgs::msg::RobotFeedback robot_feedback;
 
+  robot_feedback.radio_connected = true;
   robot_feedback.breakbeam_ball_detected = proto_msg.dribbler_ball_contact();
 
   return robot_feedback;
