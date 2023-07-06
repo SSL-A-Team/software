@@ -25,6 +25,8 @@
 
 #include "eigen_conversions.hpp"
 #include "make_circle.hpp"
+#include "nearest_points.hpp"
+#include "normalize.hpp"
 #include "types.hpp"
 #include "variant_do_intersect.hpp"
 
