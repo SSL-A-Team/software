@@ -51,13 +51,15 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
   //std::vector<ateam_geometry::Point> test_positions;
   auto goalie_position = ateam_kenobi::skills::get_goalie_defense_point(world);
   int goalie_id = world.referee_info.our_goalie_id;
-  Robot goalie = world.our_robots.at(goalie_id).value();
-  const auto goalie_path = path_planner_.getPath(
-        goalie.pos, goalie_position, world, {});
-  motion_controller_.set_trajectory(goalie_path);
-  const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-      world.current_time.time_since_epoch()).count();
-  maybe_motion_commands.at(goalie_id) = motion_controller_.get_command(goalie, current_time);
+  if (world.our_robots.at(goalie_id).has_value()){
+    Robot goalie = world.our_robots.at(goalie_id).value();
+    const auto goalie_path = path_planner_.getPath(
+          goalie.pos, goalie_position, world, {});
+    motion_controller_.set_trajectory(goalie_path);
+    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+        world.current_time.time_since_epoch()).count();
+    maybe_motion_commands.at(goalie_id) = motion_controller_.get_command(goalie, current_time);
+  }
   //const auto & robot_assignments = robot_assignment::assign(available_robots, test_positions)
 
   /*for (const auto [robot_id, pos_ind] : robot_assignments) {
