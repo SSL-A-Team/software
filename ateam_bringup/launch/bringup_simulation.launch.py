@@ -62,6 +62,7 @@ def generate_launch_description():
         launch_arguments={
             "ssl_vision_port": ssl_vision_port_value,
             "ssl_vision_interface_address": "127.0.0.1",
+            "use_world_velocities": "true"
         }.items(),
     )
 

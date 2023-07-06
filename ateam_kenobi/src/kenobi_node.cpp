@@ -38,6 +38,8 @@ public:
     play_selector_(overlay_publisher_, play_info_publisher_),
     game_controller_listener_(*this)
   {
+    declare_parameter<bool>("use_world_velocities", false);
+
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
       blue_robots_subscriptions_,
       Topics::kBlueTeamRobotPrefix,
@@ -123,24 +125,32 @@ private:
     std::size_t id,
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg)
   {
-    if(!robot_state_msg->visible) {
+    if (!robot_state_msg->visible) {
       robot_states.at(id).reset();
       return;
     }
     robot_states.at(id) = Robot();
-    robot_states.at(id).value().pos = ateam_geometry::Point(robot_state_msg->pose.position.x, robot_state_msg->pose.position.y);
+    robot_states.at(id).value().pos = ateam_geometry::Point(
+      robot_state_msg->pose.position.x,
+      robot_state_msg->pose.position.y);
     tf2::Quaternion tf2_quat;
     tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
     robot_states.at(id).value().theta = tf2::getYaw(tf2_quat);
-    robot_states.at(id).value().vel = ateam_geometry::Vector(robot_state_msg->twist.linear.x, robot_state_msg->twist.linear.y);
+    robot_states.at(id).value().vel = ateam_geometry::Vector(
+      robot_state_msg->twist.linear.x,
+      robot_state_msg->twist.linear.y);
     robot_states.at(id).value().omega = robot_state_msg->twist.angular.z;
     robot_states.at(id).value().id = id;
   }
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
   {
-    world_.ball.pos = ateam_geometry::Point(ball_state_msg->pose.position.x, ball_state_msg->pose.position.y);
-    world_.ball.vel = ateam_geometry::Vector(ball_state_msg->twist.linear.x, ball_state_msg->twist.linear.y);
+    world_.ball.pos = ateam_geometry::Point(
+      ball_state_msg->pose.position.x,
+      ball_state_msg->pose.position.y);
+    world_.ball.vel = ateam_geometry::Vector(
+      ball_state_msg->twist.linear.x,
+      ball_state_msg->twist.linear.y);
   }
 
   void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
@@ -174,34 +184,39 @@ private:
     world_.current_time = std::chrono::steady_clock::now();
     world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
-    if (game_controller_listener_.GetOurGoalieID().has_value()){
+    if (game_controller_listener_.GetOurGoalieID().has_value()) {
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
     }
     world_.in_play = in_play_eval_.update(world_);
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
-      auto& clk = *this->get_clock();
-      RCLCPP_WARN_THROTTLE(this->get_logger(), clk, 3000,
-                          "DETECTED TEAM COLOR WAS UNKNOWN");
+      auto & clk = *this->get_clock();
+      RCLCPP_WARN_THROTTLE(
+        this->get_logger(), clk, 3000,
+        "DETECTED TEAM COLOR WAS UNKNOWN");
     }
     if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::Unknown) {
-      auto& clk = *this->get_clock();
-      RCLCPP_WARN_THROTTLE(this->get_logger(), clk, 3000,
-                          "DETECTED TEAM SIDE WAS UNKNOWN");
+      auto & clk = *this->get_clock();
+      RCLCPP_WARN_THROTTLE(
+        this->get_logger(), clk, 3000,
+        "DETECTED TEAM SIDE WAS UNKNOWN");
     }
 
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 
     auto motion_commands = runPlayFrame(world_);
 
-    motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);
+    if (!get_parameter("use_world_velocities").as_bool()) {
+      motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);
+    }
 
     send_all_motion_commands(motion_commands);
   }
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(const World & world)
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(
+    const World & world)
   {
     plays::BasePlay * play = play_selector_.getPlay(world);
-    if(play == nullptr) {
+    if (play == nullptr) {
       RCLCPP_ERROR(get_logger(), "No play selected!");
       return {};
     }
