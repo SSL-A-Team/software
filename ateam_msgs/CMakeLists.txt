@@ -30,6 +30,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/FieldInfo.msg
   msg/FieldSidedInfo.msg
 
+  msg/PlayInfo.msg
+
   srv/ReconnectTeamClient.srv
   srv/SetDesiredKeeper.srv
   srv/SetTeamAdvantageChoice.srv

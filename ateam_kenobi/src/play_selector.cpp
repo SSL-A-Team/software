@@ -3,10 +3,9 @@
 namespace ateam_kenobi
 {
 
-PlaySelector::PlaySelector(visualization::OverlayPublisher & overlay_publisher)
+PlaySelector::PlaySelector(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
   : test_play_(overlay_publisher), halt_play_(overlay_publisher), stop_play_(overlay_publisher), wall_play_(overlay_publisher)
 {
-
 }
 
 plays::BasePlay * PlaySelector::getPlay(const World & world)
@@ -24,7 +23,6 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
   } else {
     selected_play = &wall_play_;
   }
-
 
   // ateam_common::GameCommand running_command = world.referee_info.running_command;
   // ateam_common::GameCommand prev_command = world.referee_info.prev_command;

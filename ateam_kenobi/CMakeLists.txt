@@ -28,6 +28,7 @@ add_library(kenobi_node_component SHARED
   src/types/message_conversions.cpp
   src/motion/motion_controller.cpp
   src/visualization/overlay_publisher.cpp
+  src/visualization/play_info_publisher.cpp
 )
 target_include_directories(kenobi_node_component PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>

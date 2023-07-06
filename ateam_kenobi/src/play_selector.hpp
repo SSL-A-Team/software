@@ -4,6 +4,7 @@
 #include "plays/all_plays.hpp"
 #include "types/world.hpp"
 #include "visualization/overlay_publisher.hpp"
+#include "visualization/play_info_publisher.hpp"
 
 namespace ateam_kenobi
 {
@@ -11,7 +12,8 @@ namespace ateam_kenobi
 class PlaySelector
 {
 public:
-  explicit PlaySelector(visualization::OverlayPublisher & overlay_publisher);
+  explicit PlaySelector(visualization::OverlayPublisher & overlay_publisher, 
+    visualization::PlayInfoPublisher & play_info_publisher);
 
   plays::BasePlay * getPlay(const World & world);
 
