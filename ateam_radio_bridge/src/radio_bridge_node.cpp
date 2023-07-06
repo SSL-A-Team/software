@@ -96,11 +96,17 @@ private:
     connection.reset();
   }
 
+  /**
+   * Close any connections whose last heartbeat time is too old.
+   * Send 'not connected' messages for appropriate robots.
+   */
   void ConnectionCheckCallback()
   {
-    // Close any connections whose last heartbeat time is too old
     for (auto i = 0ul; i < connections_.size(); ++i) {
       if (!connections_[i]) {
+        ateam_msgs::msg::RobotFeedback feedback_message;
+        feedback_message.radio_connected = false;
+        feedback_publishers_[i]->publish(feedback_message);
         continue;
       }
       const auto & last_heartbeat_time = last_heartbeat_timestamp_[i];
@@ -255,7 +261,9 @@ private:
             return;
           }
           if (std::holds_alternative<BasicTelemetry>(data_var)) {
-            feedback_publishers_[robot_id]->publish(Convert(std::get<BasicTelemetry>(data_var)));
+            auto msg = Convert(std::get<BasicTelemetry>(data_var));
+            msg.radio_connected = true;
+            feedback_publishers_[robot_id]->publish(msg);
           }
           break;
         }
