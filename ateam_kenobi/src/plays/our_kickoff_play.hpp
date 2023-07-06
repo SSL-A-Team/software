@@ -42,11 +42,14 @@ public:
     16> runFrame(const World & world) override;
 
 private:
-  std::vector<ateam_geometry::Point> positions_to_assign_;
+  path_planning::PathPlanner path_planner_;
+  std::array<MotionController, 16> motion_controllers_;
+  std::array<std::optional<std::vector<ateam_geometry::Point>>, 16> saved_paths_;
   std::vector<Robot> available_robots_;
 
-  path_planning::PathPlanner path_planner_;
-  MotionController motion_controller_;
+  std::vector<ateam_geometry::Point> positions_to_assign_;
+
+
   int prev_assigned_id_ = -1;
 };
 }  // namespace ateam_kenobi::plays

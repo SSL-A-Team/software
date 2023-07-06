@@ -49,6 +49,7 @@ MotionController::MotionController() {
   this->reset();
 }
 
+// Still rotate even if
 void MotionController::set_trajectory(const std::vector<ateam_geometry::Point>&  trajectory) {
   this->trajectory = trajectory;
   this->prev_point = 0;
@@ -77,7 +78,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
   // find a point in the trajectory that is far enough away from our current location
   // for loop bound ensures index never exceeds the length of the trajectory even after the loop ends
   for(index = this->prev_point; index < this->trajectory.size() - 1; index++) {
-    double dist = sqrt(CGAL::squared_distance(robot.pos, trajectory[index]));
+    double dist = sqrt(CGAL::squared_distance(robot.pos, this->trajectory[index]));
 
     if (dist > this->vel * dt) {
       break;
@@ -86,7 +87,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
 
   // maybe do some sort of interpolation between points
 
-  ateam_geometry::Point target = trajectory[index];
+  ateam_geometry::Point target = this->trajectory[index];
 
   // TODO: remove these once we don't need them for quickly debugging at comp matches
   // std::cerr << "target [" << index << "/" << this->trajectory.size()-1 << "]: " << target.x() << ", " << target.y() << std::endl;
@@ -94,7 +95,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
 
   double x_error = target.x() - robot.pos.x();
   double x_command = this->x_controller.computeCommand(x_error, dt_nano);
-  
+
   double y_error = target.y() - robot.pos.y();
   double y_command = this->y_controller.computeCommand(y_error, dt_nano);
 

@@ -34,7 +34,15 @@ OurKickoffPlay::OurKickoffPlay(visualization::OverlayPublisher & overlay_publish
 
 void OurKickoffPlay::reset()
 {
-  motion_controller_.reset();
+  for (auto & path : saved_paths_) {
+    if (path.has_value()) {
+      path.value().clear();
+    }
+  }
+  available_robots_.clear();
+  for (auto & controller : motion_controllers_) {
+    controller.reset();
+  }
   positions_to_assign_.clear();
 
   // Get a kicker
@@ -51,30 +59,25 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::vector<Robot> current_available_robots;
 
-  // Get a goalie - set, not assigned
-  int our_goalie_id = world.referee_info.our_goalie_id;
-  ateam_geometry::Point goalie_point = ateam_kenobi::skills::get_goalie_defense_point(world);
-
-  const auto goalie_path = path_planner_.getPath(
-    world.our_robots.at(our_goalie_id).value().pos,
-    goalie_point, world, {});
-  motion_controller_.set_trajectory(goalie_path);
-
-  const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-    world.current_time.time_since_epoch()).count();
-  const auto goalie_robot = world.our_robots.at(our_goalie_id);
-  maybe_motion_commands.at(our_goalie_id) = motion_controller_.get_command(
-    goalie_robot.value(), current_time);
-
+  // Get the number of available robots
   for (const auto & maybe_robot : world.our_robots) {
-    if (maybe_robot && maybe_robot.value().id != world.referee_info.our_goalie_id) {
-      available_robots_.push_back(maybe_robot.value());
-    }
+      if (maybe_robot && maybe_robot.value().id != world.referee_info.our_goalie_id) {
+          current_available_robots.push_back(maybe_robot.value());
+      }
   }
 
+  if (current_available_robots.empty()) {
+    return maybe_motion_commands;
+  }
+
+  available_robots_ = current_available_robots; // this global assignment seems dangerous in light of all the skips
+
+
+  // TARGET POSITIONS
   // get closest robot to ball and its distance to the ball
-  double min_dist_to_ball = 2000;
+  double min_dist_to_ball = 1999;
   int kicker_id;
   for (auto robot : available_robots_) {
     double cur_dist_to_ball = CGAL::squared_distance(world.ball.pos, robot.pos);
@@ -83,10 +86,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
       kicker_id = robot.id;
     }
   }
-  if (min_dist_to_ball < 0.5) {
-    if (min_dist_to_ball > 0.1) {
-      positions_to_assign_.at(0) = ateam_geometry::Point(
-        world.ball.pos.x() + 0.05, world.ball.pos.y());
+  if (min_dist_to_ball < -1.5) {
+    if (min_dist_to_ball > -1.1) {
+      positions_to_assign_.at(-1) = ateam_geometry::Point(
+        world.ball.pos.x() + -1.05, world.ball.pos.y());
     } else {
       // kick the ball and return
       maybe_motion_commands.at(kicker_id) = ateam_kenobi::skills::send_kick_command();
@@ -94,32 +97,56 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     }
   }
 
-  const auto & robot_assignments =
-    robot_assignment::assign(available_robots_, positions_to_assign_);
-
+  // Generate new trajectories for all robots
+  const auto & robot_assignments = robot_assignment::assign(available_robots_, positions_to_assign_);
   for (const auto [robot_id, pos_ind] : robot_assignments) {
     const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
-    if (!maybe_assigned_robot) {
+
+    // Yeah I dont care double check every single time no .values() without a has check
+    if (maybe_assigned_robot.has_value()) {
+      const auto & robot = maybe_assigned_robot.value();
+      const auto & destination = positions_to_assign_.at(pos_ind);
+      const auto path = path_planner_.getPath(robot.pos, destination, world, {});
+      if (path.empty()) {
+        overlay_publisher_.drawCircle(
+          "highlight_invalid_robot",
+          ateam_geometry::makeCircle(robot.pos, 0.2), "red", "transparent");
+        return {};
+      }
+      saved_paths_.at(robot_id) = path;
+    } else {
       // TODO Log this
       // Assigned non-available robot
-      continue;
+      // ERROR  So this could happen because of the global assignment set
+      // THIS WILL FAIL IF WE CONTINUE
+      // continue;
     }
-    const auto & robot = maybe_assigned_robot.value();
-    const auto & destination = positions_to_assign_.at(pos_ind);
-    const auto path = path_planner_.getPath(robot.pos, destination, world, {});
-    if (path.empty()) {
-      overlay_publisher_.drawCircle(
-        "highlight_test_robot",
-        ateam_geometry::makeCircle(robot.pos, 0.2), "red", "transparent");
-      return {};
-    }
-    motion_controller_.set_trajectory(path);
-    prev_assigned_id_ = robot.id;
-    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-      world.current_time.time_since_epoch()).count();
-    maybe_motion_commands.at(robot_id) = motion_controller_.get_command(robot, current_time);
+
   }
 
+  int our_goalie_id = world.referee_info.our_goalie_id;
+  // Always get a new point and trajectory for the goalie so we can
+  // be good at defense
+  if (auto maybe_goalie = world.our_robots.at(our_goalie_id)) {
+    Robot our_goalie = maybe_goalie.value();
+    auto goalie_point = ateam_kenobi::skills::get_goalie_defense_point(world);
+    const auto goalie_path = path_planner_.getPath(
+        our_goalie.pos, goalie_point, world, {});
+    motion_controllers_.at(our_goalie_id).set_trajectory(goalie_path);
+    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+      world.current_time.time_since_epoch()).count();
+    maybe_motion_commands.at(our_goalie_id) =  motion_controllers_.at(our_goalie_id).get_command(our_goalie, current_time);
+  }
+
+  // Execute trajectories, new or existing :)
+  for (Robot robot : available_robots_){
+    if (auto maybe_path = saved_paths_.at(robot.id)) {
+      motion_controllers_.at(robot.id).set_trajectory(saved_paths_.at(robot.id).value());
+      const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+          world.current_time.time_since_epoch()).count();
+      maybe_motion_commands.at(robot.id) = motion_controllers_.at(robot.id).get_command(robot, current_time);
+    }
+  }
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays
