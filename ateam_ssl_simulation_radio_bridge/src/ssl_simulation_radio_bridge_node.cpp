@@ -31,6 +31,7 @@
 #include <ateam_common/bi_directional_udp.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/topic_names.hpp>
+#include <ateam_common/game_controller_listener.hpp>
 #include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
@@ -44,15 +45,15 @@ class SSLSimulationRadioBridgeNode : public rclcpp::Node
 public:
   explicit SSLSimulationRadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_ssl_simulation_radio_bridge", options),
-    udp_((declare_parameter("ssl_sim_radio_ip", "127.0.0.1"),
-      get_parameter("ssl_sim_radio_ip").as_string()),
-      (declare_parameter("ssl_sim_radio_port", 10301),
-      get_parameter("ssl_sim_radio_port").as_int()),
-      std::bind(&SSLSimulationRadioBridgeNode::feedback_callback,
-      this,
-      std::placeholders::_1,
-      std::placeholders::_2))
+    gc_listener_(*this,
+      std::bind_front(&SSLSimulationRadioBridgeNode::team_color_change_callback, this))
   {
+    declare_parameter("ssl_sim_radio_ip", "127.0.0.1");
+    declare_parameter("ssl_sim_blue_port", 10301);
+    declare_parameter("ssl_sim_yellow_port", 10302);
+
+    team_color_change_callback(ateam_common::TeamColor::Blue);
+
     ateam_common::indexed_topic_helpers::create_indexed_subscribers
     <ateam_msgs::msg::RobotMotionCommand>(
       command_subscriptions_,
@@ -68,22 +69,47 @@ public:
       this);
   }
 
+  void team_color_change_callback(const ateam_common::TeamColor color)
+  {
+    int port = 0;
+    switch (color) {
+      case ateam_common::TeamColor::Blue:
+        port = get_parameter("ssl_sim_blue_port").as_int();
+        break;
+      case ateam_common::TeamColor::Yellow:
+        port = get_parameter("ssl_sim_yellow_port").as_int();
+        break;
+      case ateam_common::TeamColor::Unknown:
+        RCLCPP_WARN(get_logger(), "Unknown team color. Robot radio connection disabled.");
+        udp_.reset();
+        return;
+    }
+    RCLCPP_INFO(get_logger(), "Changing radio port to %d", port);
+    udp_ = std::make_unique<ateam_common::BiDirectionalUDP>(
+      get_parameter(
+        "ssl_sim_radio_ip").as_string(), port,
+      std::bind_front(&SSLSimulationRadioBridgeNode::feedback_callback, this));
+  }
+
   void message_callback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg,
     int robot_id)
   {
+    if(!udp_) {
+      return;
+    }
     RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);
 
     std::vector<uint8_t> buffer;
     buffer.resize(robots_control.ByteSizeLong());
     if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
-      udp_.send(static_cast<uint8_t *>(buffer.data()), buffer.size());
+      udp_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
     }
   }
 
   void feedback_callback(const uint8_t * buffer, size_t bytes_received)
   {
-    if(bytes_received <= 0) {
+    if (bytes_received <= 0) {
       // ignore empty feedback packets
       return;
     }
@@ -99,7 +125,8 @@ public:
   }
 
 private:
-  ateam_common::BiDirectionalUDP udp_;
+  ateam_common::GameControllerListener gc_listener_;
+  std::unique_ptr<ateam_common::BiDirectionalUDP> udp_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
