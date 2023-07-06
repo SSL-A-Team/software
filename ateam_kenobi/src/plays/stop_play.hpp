@@ -18,27 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "halt_play.hpp"
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#ifndef PLAYS__STOP_HPP_
+#define PLAYS__STOP_HPP_
+
+#include "path_planning/path_planner.hpp"
+#include "motion/motion_controller.hpp"
+#include "base_play.hpp"
 
 namespace ateam_kenobi::plays
 {
-HaltPlay::HaltPlay(visualization::OverlayPublisher & overlay_publisher)
-: BasePlay(overlay_publisher)
-{
-}
+class StopPlay : public BasePlay {
+  public:
+    explicit StopPlay(visualization::OverlayPublisher & overlay_publisher);
 
-void HaltPlay::reset()
-{
-}
+    void reset() override;
+    
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
+  private:
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> HaltPlay::runFrame(
-  const World & world)
-{
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> halt_motion_commands;
-    for (size_t i = 0; i < 16; ++i){
-        halt_motion_commands[i] = ateam_msgs::msg::RobotMotionCommand{};
-    }
-    return halt_motion_commands;
-}
+    path_planning::PathPlanner path_planner_;
+    std::array<MotionController, 16> motion_controllers_;
+    int prev_assigned_id_ = -1;
+};
 }  // namespace ateam_kenobi::plays
+
+#endif // PLAYS__STOP_HPP_
+

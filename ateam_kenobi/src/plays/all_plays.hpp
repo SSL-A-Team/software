@@ -4,6 +4,7 @@
 #include "base_play.hpp"
 #include "test_play.hpp"
 #include "halt_play.hpp"
+#include "stop_play.hpp"
 #include "wall_play.hpp"
 #include "our_kickoff_play.hpp"
 

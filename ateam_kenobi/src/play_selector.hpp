@@ -18,6 +18,7 @@ public:
 private:
   plays::TestPlay test_play_;
   plays::HaltPlay halt_play_;
+  plays::StopPlay stop_play_;
   void * prev_play_address_ = nullptr;
   std::size_t prev_play_type_index_ = -1;
 

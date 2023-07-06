@@ -4,7 +4,7 @@ namespace ateam_kenobi
 {
 
 PlaySelector::PlaySelector(visualization::OverlayPublisher & overlay_publisher)
-  : test_play_(overlay_publisher), halt_play_(overlay_publisher)
+  : test_play_(overlay_publisher), halt_play_(overlay_publisher), stop_play_(overlay_publisher)
 {
 
 }
@@ -17,9 +17,12 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
   //
   // Play selection logic goes here
   //
-  if (current_game_command == ateam_common::GameCommand::Halt || 
-      current_game_command == ateam_common::GameCommand::Stop){
+  if (current_game_command == ateam_common::GameCommand::Halt) {
     selected_play = &halt_play_;
+  
+  } else if (current_game_command == ateam_common::GameCommand::Stop) {
+    selected_play = &stop_play_;
+  
   } else {
     selected_play = &test_play_;
   }
