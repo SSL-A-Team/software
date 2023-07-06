@@ -42,7 +42,7 @@ import { AppState } from '@/state'
 export default {
     data() {
         return {
-            intervalId: null,
+            intervalIds:  [],
             state: new AppState(),
             renderConfig: {
                 angle: 0,
@@ -59,16 +59,22 @@ export default {
     },
     methods: {
         // Renders field at 100fps
-        update: function() {
-            // update components
+        updateField: function() {
             this.$refs.mainField.update();
+
+        },
+        updateStatus: function() {
+            this.$refs.robotStatus.update();
         }
     },
     beforeUnmount() {
-        clearInterval(this.intervalId);
+        for (const interval of this.intervalIds) {
+            clearInterval(interval);
+        }
     },
     created() {
-        this.intervalId = setInterval(this.update, 10);
+        this.intervalIds.push(setInterval(this.updateField, 10));
+        this.intervalIds.push(setInterval(this.updateStatus, 100));
     },
     mounted() {
         // This has to be called after Vue has started monitoring the properties so that the callbacks

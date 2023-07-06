@@ -1,5 +1,5 @@
 <template>
-    <v-card variant="outlined">
+    <v-card variant="outlined" style="white-space: nowrap">
         <div style="margin: 5px">
             <AIRecursiveComponent v-for="member of Object.getOwnPropertyNames(getAIDescription)"
                 :key="member"

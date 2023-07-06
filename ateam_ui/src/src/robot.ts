@@ -13,7 +13,7 @@ export enum ErrorLevel {
 }
 
 export class RobotStatus {
-    connected: boolean
+    radio_connected: boolean = false;
     message: string
 
     sequence_number: number
@@ -67,6 +67,10 @@ export class Robot {
         this.status = new RobotStatus();
     }
 
+    isValid(): boolean {
+        return this.visible || this.status.radio_connected;
+    }
+
     rotation(): number {
         return (2.0*Math.acos(this.pose.orientation.z) * 180.0)/Math.PI;
     }
@@ -103,6 +107,11 @@ export class Robot {
         }
 
         // Warning
+
+        // Lost radio
+        if (!this.status.radio_connected) {
+            return ErrorLevel.Warning;
+        }
 
         // Robot tipped over, someone should probably go pick it up
         if (this.status.tipped_error) {

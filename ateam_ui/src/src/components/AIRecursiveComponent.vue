@@ -10,6 +10,7 @@
                     :name= "member"
                     :node= "this.node[member]"
                     :spacing= "this.spacing + 5"
+                    style="whitespace: nowrap"
             />
         </div>
 </template>
