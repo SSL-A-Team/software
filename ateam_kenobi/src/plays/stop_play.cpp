@@ -59,13 +59,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
 
         std::cerr << "robot " << i << "path size: " << path.size() << std::endl;
 
-        const auto & motion_controller = this->motion_controllers_[i];
+        auto & motion_controller = this->motion_controllers_[i];
         motion_controller.set_trajectory(path);
         motion_controller.face_towards = world.ball.pos; // face the ball
 
         const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
           world.current_time.time_since_epoch()).count();
-        
+
         const auto & motion_command = motion_controller.get_command(robot, current_time);
         std::cerr << "motion command has value: " << motion_command.twist.angular.z << std::endl;
         stop_motion_commands[i] = motion_command;
