@@ -104,6 +104,7 @@ private:
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
 
+  // TODO(CAVIDANO) REMOVE THE THEIR ROBOTS HERE THIS SHOULD NOT ASSIGN ANYTHING IN THE NOT CASE AS IT ALSO CATCHES UNKOWN TEAM
   void yellow_robot_state_callback(
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
@@ -172,6 +173,16 @@ private:
     world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
     world_.in_play = in_play_eval_.update(world_);
+    if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
+      auto& clk = *this->get_clock();
+      RCLCPP_WARN_THROTTLE(this->get_logger(), clk, 3000,
+                          "DETECTED TEAM COLOR WAS UNKNOWN");
+    }
+    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::Unknown) {
+      auto& clk = *this->get_clock();
+      RCLCPP_WARN_THROTTLE(this->get_logger(), clk, 3000,
+                          "DETECTED TEAM SIDE WAS UNKNOWN");
+    }
 
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 
