@@ -127,10 +127,12 @@ private:
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
       control_msg.kick_vel = 0.0f;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
-      if (motion_commands_[id].kick) {
-        control_msg.kick_request = KR_KICK_NOW;
-      } else {
+      if (motion_commands_[id].kick == 0) {
         control_msg.kick_request = KR_ARM;
+      } else if (motion_commands_[id].kick == 1){
+        control_msg.kick_request = KR_KICK_TOUCH;
+      } else {
+        control_msg.kick_request = KR_KICK_NOW;
       }
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
