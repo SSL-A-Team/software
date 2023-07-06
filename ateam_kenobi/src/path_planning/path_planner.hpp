@@ -1,31 +1,18 @@
 #ifndef PATH_PLANNING__PATH_PLANNER_HPP_
 #define PATH_PLANNING__PATH_PLANNER_HPP_
 
-#include <ompl/base/spaces/SE2StateSpace.h>
-#include <ompl/geometric/SimpleSetup.h>
 #include <ateam_geometry/types.hpp>
 #include "types/world.hpp"
 
 namespace ateam_kenobi::path_planning
 {
 
-struct RrtOptions
+struct PlannerOptions
 {
   /**
    * @brief Max time before planner will give up searching for a path
    */
   double search_time_limit = 2e-3;  // seconds
-
-  /**
-   * @brief Max time the planner will spend trying to simplify the path
-   *
-   */
-  double simplification_time_limit = 1e-3;  // seconds
-
-  /**
-   * @brief Length of segments in the RRT tree
-   */
-  double step_size = 0.1;  // meters
 
   /**
    * @brief If true, the planner treats the ball as an obstacle.
@@ -37,6 +24,8 @@ struct RrtOptions
    *
    */
   double footprint_inflation = 0.05;
+
+  double collision_check_resolution = 0.05;
 };
 
 class PathPlanner
@@ -50,19 +39,33 @@ public:
   Path getPath(
     const Position & start, const Position & goal, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
-    const RrtOptions & options = RrtOptions());
+    const PlannerOptions & options = PlannerOptions());
 
 private:
-  std::shared_ptr<ompl::base::SE2StateSpace> state_space_;
-  ompl::geometric::SimpleSetup simple_setup_;
-  ompl::base::PlannerPtr planner_;
-
   bool isStateValid(
-    const ompl::base::State * state,
+    const ateam_geometry::Point & state,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
-    const RrtOptions & options);
+    const PlannerOptions & options);
 
-  Path convertOmplPathToGeometryPoints(ompl::geometric::PathGeometric & path);
+  std::optional<ateam_geometry::Point> getCollisionPoint(
+    const ateam_geometry::Point & p1, const ateam_geometry::Point & p2,
+    const std::vector<ateam_geometry::AnyShape> & obstacles,
+    const PlannerOptions & options);
+
+  struct SplitResult
+  {
+    bool split_needed;
+    bool split_succeeded;
+  };
+
+  SplitResult splitSegmentIfNecessary(
+    Path & path, const std::size_t ind1, const std::size_t ind2,
+    const std::vector<ateam_geometry::AnyShape> & obstacles,
+    const PlannerOptions & options);
+
+  void addRobotsToObstacles(
+    const World & world, const ateam_geometry::Point & start_pos,
+    std::vector<ateam_geometry::AnyShape> & obstacles);
 
 };
 

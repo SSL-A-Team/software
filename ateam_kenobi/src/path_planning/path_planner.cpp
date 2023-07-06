@@ -1,6 +1,4 @@
 #include "path_planner.hpp"
-#include <ompl/geometric/planners/rrt/RRT.h>
-#include <ompl/util/Console.h>
 #include <ranges>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
@@ -9,104 +7,67 @@ namespace ateam_kenobi::path_planning
 {
 
 PathPlanner::PathPlanner()
-: state_space_(std::make_shared<ompl::base::SE2StateSpace>()),
-  simple_setup_(state_space_),
-  planner_(std::make_shared<ompl::geometric::RRT>(simple_setup_.getSpaceInformation()))
 {
-  // TODO connect to ros logging
-  ompl::msg::setLogLevel(ompl::msg::LOG_ERROR);
-  simple_setup_.setPlanner(planner_);
 }
 
 PathPlanner::Path PathPlanner::getPath(
   const Position & start, const Position & goal, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
-  const RrtOptions & options)
+  const PlannerOptions & options)
 {
-  using ScopedState = ompl::base::ScopedState<ompl::base::SE2StateSpace>;
+  const auto start_time = std::chrono::steady_clock::now();
 
-  simple_setup_.clear();
+  std::vector<ateam_geometry::AnyShape> augmented_obstacles = obstacles;
 
-  planner_->as<ompl::geometric::RRT>()->setRange(options.step_size);
+  addRobotsToObstacles(world, start, augmented_obstacles);
 
-  std::vector<ateam_geometry::AnyShape> obstacles_and_robots(obstacles);
-  auto obstacle_from_robot = [](const std::optional<Robot> & robot) {
-      return ateam_geometry::AnyShape(
-        ateam_geometry::makeCircle(robot.value().pos, kRobotRadius));
-    };
-
-  auto not_current_robot = [&start](const std::optional<Robot> & robot) {
-      // Assume any robot close enough to the start pos is the robot trying to navigate
-      return (robot.value().pos - start).squared_length() > std::pow(kRobotRadius,2);
-    };
-
-  auto our_robot_obstacles = world.our_robots |
-    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
-    std::views::filter(not_current_robot) |
-    std::views::transform(obstacle_from_robot);
-  obstacles_and_robots.insert(
-    obstacles_and_robots.end(),
-    our_robot_obstacles.begin(),
-    our_robot_obstacles.end());
-
-  auto their_robot_obstacles = world.their_robots |
-    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
-    std::views::transform(obstacle_from_robot);
-  obstacles_and_robots.insert(
-    obstacles_and_robots.end(),
-    their_robot_obstacles.begin(),
-    their_robot_obstacles.end());
-
-  if(options.avoid_ball) {
-    obstacles_and_robots.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267/2));
+  if (options.avoid_ball) {
+    augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
   }
 
-  ScopedState start_state(state_space_);
-  start_state->setXY(start.x(), start.y());
-
-  ScopedState goal_state(state_space_);
-  goal_state->setXY(goal.x(), goal.y());
-
-  simple_setup_.setStartAndGoalStates(start_state, goal_state);
-
-  ompl::base::RealVectorBounds bounds(2);
-  bounds.setLow(0, (-0.5 * world.field.field_length) - world.field.boundary_width);
-  bounds.setHigh(0, (0.5 * world.field.field_length) + world.field.boundary_width);
-  bounds.setLow(1, (-0.5 * world.field.field_width) - world.field.boundary_width);
-  bounds.setHigh(1, (0.5 * world.field.field_width) + world.field.boundary_width);
-  auto bounds_sizes = bounds.getDifference();
-  // arbitrary threshold to make sure field info is valid
-  if(bounds_sizes[0] < 0.1 || bounds_sizes[1] < 0.1) {
-    // No path exists because field size is not valid
+  if (!isStateValid(start, augmented_obstacles, options)) {
     return {};
   }
-  state_space_->setBounds(bounds);
-
-  simple_setup_.setStateValidityChecker(
-    [this, &obstacles_and_robots, &options](const ompl::base::State * s) {
-      return isStateValid(s, obstacles_and_robots, options);
-    });
-
-  auto planner_status = simple_setup_.solve(options.search_time_limit);
-
-  if (planner_status != ompl::base::PlannerStatus::EXACT_SOLUTION) {
-    // no solution found
+  if (!isStateValid(goal, augmented_obstacles, options)) {
     return {};
   }
 
-  simple_setup_.simplifySolution(options.simplification_time_limit);
+  Path path = {start, goal};
 
-  return convertOmplPathToGeometryPoints(simple_setup_.getSolutionPath());
+  while (true) {
+    const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+      std::chrono::steady_clock::now() - start_time).count();
+    if (elapsed_time > options.search_time_limit) {
+      return {};
+    }
+    bool had_to_split = false;
+    for (auto ind = 0u; ind < (path.size() - 1); ++ind) {
+      auto split_result = splitSegmentIfNecessary(path, ind, ind + 1, augmented_obstacles, options);
+      if (split_result.split_needed) {
+        had_to_split = true;
+        if (!split_result.split_succeeded) {
+          // unable to find path around obstacle
+          return {};
+        }
+        break;
+      }
+    }
+    if (!had_to_split) {
+      // no split -> path is collision free
+      break;
+    }
+  }
+
+  return path;
 }
 
 bool PathPlanner::isStateValid(
-  const ompl::base::State * state,
+  const ateam_geometry::Point & state,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
-  const RrtOptions & options)
+  const PlannerOptions & options)
 {
-  const auto * se2_state = state->as<ompl::base::SE2StateSpace::StateType>();
   auto robot_footprint = ateam_geometry::makeCircle(
-    ateam_geometry::Point(se2_state->getX(), se2_state->getY()),
+    state,
     kRobotRadius + options.footprint_inflation
   );
 
@@ -116,17 +77,95 @@ bool PathPlanner::isStateValid(
     });
 }
 
-PathPlanner::Path PathPlanner::convertOmplPathToGeometryPoints(ompl::geometric::PathGeometric & path)
+std::optional<ateam_geometry::Point> PathPlanner::getCollisionPoint(
+  const ateam_geometry::Point & p1, const ateam_geometry::Point & p2,
+  const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options)
 {
-  using State = ompl::base::SE2StateSpace::StateType;
-  Path geometry_path;
-  const auto & states = path.getStates();
-  geometry_path.reserve(states.size());
-  std::transform(states.begin(), states.end(), std::back_inserter(geometry_path), [](ompl::base::State * s) {
-    auto state = s->as<State>();
-    return Position(state->getX(), state->getY());
-  });
-  return geometry_path;
+  const auto direction_vector = p2 - p1;
+  const auto segment_length = std::sqrt(direction_vector.squared_length());
+  const auto step_vector = direction_vector * (options.collision_check_resolution / segment_length);
+  const int step_count = segment_length / options.collision_check_resolution;
+  for (auto step = 0; step < step_count; ++step) {
+    const auto state = p1 + (step * step_vector);
+    if (!isStateValid(state, obstacles, options)) {
+      return state;
+    }
+  }
+  if (!isStateValid(p2, obstacles, options)) {
+    return p2;
+  }
+  return std::nullopt;
+}
+
+PathPlanner::SplitResult PathPlanner::splitSegmentIfNecessary(
+  Path & path, const std::size_t ind1,
+  const std::size_t ind2,
+  const std::vector<ateam_geometry::AnyShape> & obstacles,
+  const PlannerOptions & options)
+{
+  const auto maybe_collision_point = getCollisionPoint(
+    path.at(ind1), path.at(
+      ind2), obstacles, options);
+  if (!maybe_collision_point) {
+    return {
+      .split_needed = false,
+      .split_succeeded = true
+    };
+  }
+  const auto collision_point = maybe_collision_point.value();
+  const auto p1 = path[ind1];
+  const auto p2 = path[ind2];
+  auto change_vector = (ateam_geometry::normalize(p2 - p1) * kRobotRadius).perpendicular(
+    CGAL::CLOCKWISE);
+  auto new_point = collision_point;
+  for (auto i = 1; i < 100; ++i) {
+    new_point = new_point + (change_vector * i);
+    i *= -1;
+    if (isStateValid(new_point, obstacles, options)) {
+      path.insert(path.begin() + ind2, new_point);
+      return {
+        .split_needed = true,
+        .split_succeeded = true
+      };
+    }
+  }
+  return {
+    .split_needed = true,
+    .split_succeeded = false
+  };
+}
+
+void PathPlanner::addRobotsToObstacles(
+  const World & world,
+  const ateam_geometry::Point & start_pos,
+  std::vector<ateam_geometry::AnyShape> & obstacles)
+{
+  auto obstacle_from_robot = [](const std::optional<Robot> & robot) {
+      return ateam_geometry::AnyShape(
+        ateam_geometry::makeCircle(robot.value().pos, kRobotRadius));
+    };
+
+  auto not_current_robot = [&start_pos](const std::optional<Robot> & robot) {
+      // Assume any robot close enough to the start pos is the robot trying to navigate
+      return (robot.value().pos - start_pos).squared_length() > std::pow(kRobotRadius, 2);
+    };
+
+  auto our_robot_obstacles = world.our_robots |
+    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
+    std::views::filter(not_current_robot) |
+    std::views::transform(obstacle_from_robot);
+  obstacles.insert(
+    obstacles.end(),
+    our_robot_obstacles.begin(),
+    our_robot_obstacles.end());
+
+  auto their_robot_obstacles = world.their_robots |
+    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
+    std::views::transform(obstacle_from_robot);
+  obstacles.insert(
+    obstacles.end(),
+    their_robot_obstacles.begin(),
+    their_robot_obstacles.end());
 }
 
 } // namespace ateam_kenobi::path_planning
