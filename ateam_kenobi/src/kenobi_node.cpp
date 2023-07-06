@@ -170,9 +170,9 @@ private:
   void timer_callback()
   {
     world_.current_time = std::chrono::steady_clock::now();
-
     world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
+    world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieId();
     world_.in_play = in_play_eval_.update(world_);
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
       auto& clk = *this->get_clock();
