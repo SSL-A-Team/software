@@ -45,6 +45,7 @@ GameControllerListener::GameControllerListener(
       node.get_logger(),
       "EXPLICIT UNKNOWN GIVEN FOR TEAM COLOR.");
   } else {
+    team_color_ = TeamColor::Unknown;
     RCLCPP_WARN(
       node.get_logger(),
       "Unrecognized value for param 'default_team_color'. Ignoring and defaulting to Unknown.");
