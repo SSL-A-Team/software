@@ -44,11 +44,13 @@ public:
 private:
   bool isStateValid(
     const ateam_geometry::Point & state,
+    const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
 
   std::optional<ateam_geometry::Point> getCollisionPoint(
     const ateam_geometry::Point & p1, const ateam_geometry::Point & p2,
+    const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
 
@@ -60,6 +62,7 @@ private:
 
   SplitResult splitSegmentIfNecessary(
     Path & path, const std::size_t ind1, const std::size_t ind2,
+    const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
 

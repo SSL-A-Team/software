@@ -25,10 +25,10 @@ PathPlanner::Path PathPlanner::getPath(
     augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
   }
 
-  if (!isStateValid(start, augmented_obstacles, options)) {
+  if (!isStateValid(start, world, augmented_obstacles, options)) {
     return {};
   }
-  if (!isStateValid(goal, augmented_obstacles, options)) {
+  if (!isStateValid(goal, world, augmented_obstacles, options)) {
     return {};
   }
 
@@ -42,7 +42,7 @@ PathPlanner::Path PathPlanner::getPath(
     }
     bool had_to_split = false;
     for (auto ind = 0u; ind < (path.size() - 1); ++ind) {
-      auto split_result = splitSegmentIfNecessary(path, ind, ind + 1, augmented_obstacles, options);
+      auto split_result = splitSegmentIfNecessary(path, ind, ind + 1, world, augmented_obstacles, options);
       if (split_result.split_needed) {
         had_to_split = true;
         if (!split_result.split_succeeded) {
@@ -63,9 +63,19 @@ PathPlanner::Path PathPlanner::getPath(
 
 bool PathPlanner::isStateValid(
   const ateam_geometry::Point & state,
+  const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
+  const auto x_bound = (world.field.field_length/2.0) + world.field.boundary_width - kRobotRadius;
+  const auto y_bound = (world.field.field_width/2.0) + world.field.boundary_width - kRobotRadius;
+  const ateam_geometry::Rectangle pathable_region(
+    ateam_geometry::Point(-x_bound,-y_bound), 
+    ateam_geometry::Point(x_bound,y_bound));
+  if(!CGAL::do_intersect(state, pathable_region)) {
+    return false;
+  }
+
   auto robot_footprint = ateam_geometry::makeCircle(
     state,
     kRobotRadius + options.footprint_inflation
@@ -78,7 +88,7 @@ bool PathPlanner::isStateValid(
 }
 
 std::optional<ateam_geometry::Point> PathPlanner::getCollisionPoint(
-  const ateam_geometry::Point & p1, const ateam_geometry::Point & p2,
+  const ateam_geometry::Point & p1, const ateam_geometry::Point & p2, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options)
 {
   const auto direction_vector = p2 - p1;
@@ -87,11 +97,11 @@ std::optional<ateam_geometry::Point> PathPlanner::getCollisionPoint(
   const int step_count = segment_length / options.collision_check_resolution;
   for (auto step = 0; step < step_count; ++step) {
     const auto state = p1 + (step * step_vector);
-    if (!isStateValid(state, obstacles, options)) {
+    if (!isStateValid(state, world, obstacles, options)) {
       return state;
     }
   }
-  if (!isStateValid(p2, obstacles, options)) {
+  if (!isStateValid(p2, world, obstacles, options)) {
     return p2;
   }
   return std::nullopt;
@@ -99,13 +109,13 @@ std::optional<ateam_geometry::Point> PathPlanner::getCollisionPoint(
 
 PathPlanner::SplitResult PathPlanner::splitSegmentIfNecessary(
   Path & path, const std::size_t ind1,
-  const std::size_t ind2,
+  const std::size_t ind2, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
   const auto maybe_collision_point = getCollisionPoint(
     path.at(ind1), path.at(
-      ind2), obstacles, options);
+      ind2), world, obstacles, options);
   if (!maybe_collision_point) {
     return {
       .split_needed = false,
@@ -121,7 +131,7 @@ PathPlanner::SplitResult PathPlanner::splitSegmentIfNecessary(
   for (auto i = 1; i < 100; ++i) {
     new_point = new_point + (change_vector * i);
     i *= -1;
-    if (isStateValid(new_point, obstacles, options)) {
+    if (isStateValid(new_point, world, obstacles, options)) {
       path.insert(path.begin() + ind2, new_point);
       return {
         .split_needed = true,
