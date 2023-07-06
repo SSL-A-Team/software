@@ -38,16 +38,21 @@ namespace ateam_kenobi::plays
         auto target = segment.vertex(1);
 
         ateam_geometry::Point spacing = ateam_geometry::Point(
-            source.x() + target.x() / (num_points - 1),
-            source.y() + target.y() / (num_points - 1)
+            // source.x() + target.x() / (num_points - 1),
+            0,
+            CGAL::approximate_sqrt((source - target).squared_length()) / (num_points - 1)
         );
 
         for (int i = 0; i < num_points; ++i){
             auto segment_point = ateam_geometry::Point(
-                source.x() + (spacing.x() * i),
-                source.y() + (spacing.y() * i)
+                // source.x() + (spacing.x() * i),
+                target.x(),
+                target.y() + (spacing.y() * i)
+                // both of these were source in the last nothing else changed
             );
+
             points_on_segment.push_back(segment_point);
+            // WHAT THE ACTUAL FUCK
         }
         return points_on_segment;
     }
@@ -92,8 +97,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     // TARGET POSITIONS
     // Used to create a line in front of the goal
     ateam_geometry::Segment wall_line = ateam_geometry::Segment(
-        ateam_geometry::Point(-3, 1 * available_robots_.size()),
-        ateam_geometry::Point(-3, -1 * available_robots_.size())
+        ateam_geometry::Point(-3, 0.2 * available_robots_.size() / 2.0),
+        ateam_geometry::Point(-3, -0.2 * available_robots_.size() / 2.0)
     );
 
     std::vector<ateam_geometry::Point> positions_to_assign =
