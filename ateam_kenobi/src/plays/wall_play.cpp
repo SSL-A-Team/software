@@ -59,8 +59,12 @@ WallPlay::WallPlay(visualization::OverlayPublisher & overlay_publisher)
 }
 
 void WallPlay::reset(){
-    saved_paths_.clear();
-    available_robots_.clear();
+    for (auto & path : saved_paths_) {
+      if (path.has_value()) {
+        path.value().clear();
+      }
+      available_robots_.clear();
+    }
 };
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::runFrame(
@@ -75,57 +79,75 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     for (const auto & maybe_robot : world.our_robots) {
         if (maybe_robot && maybe_robot.value().id != world.referee_info.our_goalie_id) {
             current_available_robots.push_back(maybe_robot.value());
-        }   
+        }
     }
+
+    if (current_available_robots.empty()) {
+      return maybe_motion_commands;
+    }
+
     // Only give new trajectories if the number of robots has changed
-    if (current_available_robots.size() != available_robots_.size() 
-            || saved_paths_.empty()){
-        available_robots_ = current_available_robots;
+    if (current_available_robots.size() != available_robots_.size() // ERROR may not be the same set of robots we are seeing at the same time
+            || std::all_of(saved_paths_.begin(), saved_paths_.end(), [&](std::optional<std::vector<ateam_geometry::Point>>& maybe_path)->bool {return !maybe_path.has_value();})) {
+        available_robots_ = current_available_robots; // this global assignment seems dangerous in light of all the skips
         int num_robots = static_cast<int>(available_robots_.size());
         // Used to create a line in front of the goal
         ateam_geometry::Segment wall_line = ateam_geometry::Segment(
             ateam_geometry::Point(-3, 1 * num_robots),
             ateam_geometry::Point(-3, -1 * num_robots)
         );
-        std::vector<ateam_geometry::Point> positions_to_assign = 
+        std::vector<ateam_geometry::Point> positions_to_assign =
             get_equally_spaced_points_on_segment(wall_line, num_robots);
         // Generate new trajectories for all robots
         const auto & robot_assignments = robot_assignment::assign(available_robots_, positions_to_assign);
         for (const auto [robot_id, pos_ind] : robot_assignments) {
             const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
             if (!maybe_assigned_robot) {
-            // TODO Log this
-            // Assigned non-available robot
-            continue;
+              // TODO Log this
+              // Assigned non-available robot
+              // ERROR  So this could happen because of the global assignment set
+              // THIS WILL FAIL IF WE CONTINUE
+              break;
+              // continue;
             }
-            const auto & robot = maybe_assigned_robot.value();
-            const auto & destination = positions_to_assign.at(pos_ind);
-            const auto path = path_planner_.getPath(robot.pos, destination, world, {});
-            if (path.empty()) {
-            overlay_publisher_.drawCircle(
-                "highlight_test_robot",
-                ateam_geometry::makeCircle(robot.pos, 0.2), "red", "transparent");
-            return {};}
-            saved_paths_[robot_id] = path;
+
+            // Yeah I dont care double check every single time no .values() without a has check
+            if (maybe_assigned_robot.has_value()) {
+              const auto & robot = maybe_assigned_robot.value();
+              const auto & destination = positions_to_assign.at(pos_ind);
+              const auto path = path_planner_.getPath(robot.pos, destination, world, {});
+              if (path.empty()) {
+                overlay_publisher_.drawCircle(
+                  "highlight_test_robot",
+                  ateam_geometry::makeCircle(robot.pos, 0.2), "red", "transparent");
+                return {};
+              }
+              saved_paths_.at(robot_id) = path;
             }
+
         }
+    }
     // Always get a new point and trajectory for the goalie so we can
     // be good at defense
-    Robot our_goalie = world.our_robots.at(our_goalie_id).value();
-    auto goalie_point = ateam_kenobi::skills::get_goalie_defense_point(world);
-    const auto goalie_path = path_planner_.getPath(
-        our_goalie.pos, goalie_point, world, {});
-    motion_controller_.set_trajectory(goalie_path);
-    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-      world.current_time.time_since_epoch()).count();
-    maybe_motion_commands.at(our_goalie_id) = motion_controller_.get_command(our_goalie, current_time);
+    if (auto maybe_goalie = world.our_robots.at(our_goalie_id)) {
+      Robot our_goalie = maybe_goalie.value();
+      auto goalie_point = ateam_kenobi::skills::get_goalie_defense_point(world);
+      const auto goalie_path = path_planner_.getPath(
+          our_goalie.pos, goalie_point, world, {});
+      motion_controllers_.at(our_goalie_id).set_trajectory(goalie_path);
+      const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+        world.current_time.time_since_epoch()).count();
+      maybe_motion_commands.at(our_goalie_id) =  motion_controllers_.at(our_goalie_id).get_command(our_goalie, current_time);
+    }
 
     // Execute trajectories, new or existing :)
     for (Robot robot : available_robots_){
-        motion_controller_.set_trajectory(saved_paths_[robot.id]);
-        const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-            world.current_time.time_since_epoch()).count();
-        maybe_motion_commands.at(robot.id) = motion_controller_.get_command(robot, current_time);
+        if (auto maybe_path = saved_paths_.at(robot.id)) {
+          motion_controllers_.at(robot.id).set_trajectory(saved_paths_.at(robot.id).value());
+          const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+              world.current_time.time_since_epoch()).count();
+          maybe_motion_commands.at(robot.id) = motion_controllers_.at(robot.id).get_command(robot, current_time);
+        }
     }
     return maybe_motion_commands;
 };

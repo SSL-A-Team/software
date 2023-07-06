@@ -41,6 +41,9 @@ GameControllerListener::GameControllerListener(
     team_color_ = TeamColor::Blue;
   } else if (default_team_color == "unknown") {
     team_color_ = TeamColor::Unknown;
+    RCLCPP_WARN(
+      node.get_logger(),
+      "EXPLICIT UNKNOWN GIVEN FOR TEAM COLOR.");
   } else {
     RCLCPP_WARN(
       node.get_logger(),

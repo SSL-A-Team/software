@@ -41,10 +41,10 @@ namespace ateam_kenobi::plays{
             std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
         private:
             path_planning::PathPlanner path_planner_;
-            MotionController motion_controller_;
-            std::vector<std::vector<ateam_geometry::Point>> saved_paths_;
+            std::array<MotionController, 16> motion_controllers_;
+            std::array<std::optional<std::vector<ateam_geometry::Point>>, 16> saved_paths_;
             std::vector<Robot> available_robots_;
-    };       
+    };
 } // namespace ateam_kenobi::plays
 
 #endif // PLAYS__WALL_PLAY_HPP_
