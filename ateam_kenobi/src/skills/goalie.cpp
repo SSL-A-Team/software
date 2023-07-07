@@ -4,7 +4,8 @@ namespace ateam_kenobi::skills
 {
 
 Goalie::Goalie(visualization::OverlayPublisher & overlay_publisher)
-: overlay_publisher_(overlay_publisher)
+: overlay_publisher_(overlay_publisher),
+  easy_move_to_(overlay_publisher)
 {
   reset();
 }
