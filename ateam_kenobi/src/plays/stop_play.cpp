@@ -21,6 +21,7 @@
 #include "stop_play.hpp"
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
+
 namespace ateam_kenobi::plays
 {
 StopPlay::StopPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
@@ -30,8 +31,8 @@ StopPlay::StopPlay(visualization::OverlayPublisher & overlay_publisher, visualiz
 
 void StopPlay::reset()
 {
-  for (int i = 0; i < 16; i++) {
-    motion_controllers_[i].reset();
+  for(auto & move_to : easy_move_tos_) {
+    move_to.reset();
   }
 }
 
@@ -39,40 +40,39 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> stop_motion_commands;
-  for (size_t i = 0; i < 16; ++i){
+  for (size_t robot_id = 0; robot_id < 16; ++robot_id){
     // only going to do 8 robots for now to avoid crowding on one side of the ball
-    if (i < 8) {
-      // avoid the ball by 0.7m just to be safe
-      double radius = 0.7;
-      const auto & maybe_robot = world.our_robots[i];
-      if (maybe_robot.has_value()) {
-        double x = (radius * cos(2*i*M_PI/8.0)) + world.ball.pos.x();
-        double y = (radius * sin(2*i*M_PI/8.0)) + world.ball.pos.y();
-        const auto & destination = ateam_geometry::Point(x, y);
+    // avoid the ball by 0.7m just to be safe
+    double radius = 0.7;
+    const auto & maybe_robot = world.our_robots[robot_id];
 
-        overlay_publisher_.drawCircle(
-          "stop"+ std::to_string(i),
-          ateam_geometry::makeCircle(destination, 0.15), "blue", "transparent");
-
+    if (maybe_robot.has_value()) {
+      // move the robot if its in the danger zone halt if its not
+      if (ateam_geometry::norm(maybe_robot.value().pos, world.ball.pos) < radius) {
         const auto & robot = maybe_robot.value();
-        const auto path = path_planner_.getPath(robot.pos, destination, world, {});
+        ateam_geometry::Vector offset_vector = radius * ateam_geometry::normalize(robot.pos - world.ball.pos);
 
-        this->play_info_publisher_.message["Stop Play"]["robots"][i]["pos"] = {robot.pos.x(), robot.pos.y()};
+        const auto & destination = ateam_geometry::Point(robot.pos.x() + offset_vector.x(), robot.pos.y() + offset_vector.y());
 
-        auto & motion_controller = this->motion_controllers_[i];
-        motion_controller.set_trajectory(path);
-        //motion_controller.face_towards = world.ball.pos; // face the ball
+        auto & easy_move_to = easy_move_tos_.at(robot_id);
+        easy_move_to.setTargetPosition(destination);
+        easy_move_to.setFacingTowards(world.ball.pos);
+        stop_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
+        
+        overlay_publisher_.drawCircle(
+        "stop"+ std::to_string(robot_id),
+        ateam_geometry::makeCircle(destination, 0.15), "blue", "transparent");
 
-        const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-          world.current_time.time_since_epoch()).count();
+         this->play_info_publisher_.message["Stop Play"]["robots"][robot_id]["pos"] = {robot.pos.x(), robot.pos.y()};
 
-        const auto & motion_command = motion_controller.get_command(robot, current_time);
-        // std::cerr << "motion command has value: " << motion_command.twist.angular.z << std::endl;
-        stop_motion_commands[i] = motion_command;
-        continue;
-        }
+      } else {
+        // literally halt if this one robot is not in the danger zone
+        stop_motion_commands[robot_id] = ateam_msgs::msg::RobotMotionCommand{};
       }
-      stop_motion_commands[i] = ateam_msgs::msg::RobotMotionCommand{};
+      continue;
+
+    }
+    stop_motion_commands[robot_id] = std::nullopt; // already done but just to be explicit
   }
     // Draw Keepout Circle
     overlay_publisher_.drawCircle(

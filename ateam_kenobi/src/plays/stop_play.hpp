@@ -25,6 +25,9 @@
 #include "motion/motion_controller.hpp"
 #include "base_play.hpp"
 
+#include <ateam_geometry/normalize.hpp>
+#include "play_helpers/easy_move_to.hpp"
+
 namespace ateam_kenobi::plays
 {
 class StopPlay : public BasePlay {
@@ -36,8 +39,7 @@ class StopPlay : public BasePlay {
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
   private:
 
-    path_planning::PathPlanner path_planner_;
-    std::array<MotionController, 16> motion_controllers_;
+    std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
     int prev_assigned_id_ = -1;
 };
 }  // namespace ateam_kenobi::plays
