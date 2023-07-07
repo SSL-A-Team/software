@@ -21,6 +21,8 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
   //
   switch (current_game_command) {
     case ateam_common::GameCommand::Halt:
+    case ateam_common::GameCommand::TimeoutOurs:
+    case ateam_common::GameCommand::TimeoutTheirs:
       selected_play = &halt_play_;
       break;
     case ateam_common::GameCommand::Stop:

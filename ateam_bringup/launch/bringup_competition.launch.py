@@ -52,6 +52,9 @@ def generate_launch_description():
       package='ateam_radio_bridge',
       executable='radio_bridge_node',
       name=radio_bridge_name,
+      parameters=[{
+          "net_interface_address": "172.16.1.10"
+      }],
       remappings=list(zip(['/' + radio_bridge_name + '/robot_motion_commands/robot' + str(i) for i in range(16)], ['/robot_motion_commands/robot' + str(i) for i in range(16)]))
               +  list(zip(['/' + radio_bridge_name + '/robot_feedback/robot' + str(i) for i in range(16)], ['/robot_feedback/robot' + str(i) for i in range(16)]))
       # remappings=[('/' + radio_bridge_name + '/robot_motion_commands', '/robot_motion_commands'), ('/' + radio_bridge_name + '/robot_feedback', '/robot_feedback')]

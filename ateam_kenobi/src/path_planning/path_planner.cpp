@@ -128,9 +128,10 @@ PathPlanner::SplitResult PathPlanner::splitSegmentIfNecessary(
   auto change_vector = (ateam_geometry::normalize(p2 - p1) * kRobotRadius).perpendicular(
     CGAL::CLOCKWISE);
   auto new_point = collision_point;
+  auto direction = 1;
   for (auto i = 1; i < 100; ++i) {
-    new_point = new_point + (change_vector * i);
-    i *= -1;
+    new_point = new_point + (change_vector * i * direction);
+    direction *= -1;
     if (isStateValid(new_point, world, obstacles, options)) {
       path.insert(path.begin() + ind2, new_point);
       return {
