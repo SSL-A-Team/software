@@ -78,6 +78,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
         } 
       }
     }
+  } else {
+    kicker_id = prev_assigned_id_;
   }
   Robot kicker_bot;
   // Otherwise use our chosen kicker
@@ -99,10 +101,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     } else {
         // kick the ball and return
         auto their_goal = ateam_geometry::Point(-world.field.field_length / 2 + 0.2, 0);
-        if (ready_to_kickoff_){
+        ready_to_kickoff_ = true;
+        if (ready_to_kickoff_ && world.referee_info.running_command == ateam_common::GameCommand::NormalStart){
           maybe_motion_commands.at(kicker_id) = ateam_kenobi::skills::line_kick_command(world, kicker_bot,
             their_goal, easy_move_tos_.at(kicker_id));
-          attempted_to_kick_.at(kicker_id) = true;
+          if (min_dist_to_ball < 0.0005){
+            attempted_to_kick_.at(kicker_id) = true;
+          }
         }
         if (world.our_robots.at(world.referee_info.our_goalie_id).has_value()){
         this->play_info_publisher_.message["Our Kickoff Play"]["robots"][kicker_id]["pos"] = {kicker_bot.pos.x(), kicker_bot.pos.y()};
@@ -134,7 +139,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   goalie_skill_.runFrame(world, maybe_motion_commands);
   if (world.our_robots.at(world.referee_info.our_goalie_id).has_value()){
       const Robot & goalie_robot = world.our_robots.at(world.referee_info.our_goalie_id).value();
-      this->play_info_publisher_.message["Wall Play"]["robots"][world.referee_info.our_goalie_id]["pos"] = {goalie_robot.pos.x(), goalie_robot.pos.y()};
+      this->play_info_publisher_.message["Our Kickoff Play"]["robots"][world.referee_info.our_goalie_id]["pos"] = {goalie_robot.pos.x(), goalie_robot.pos.y()};
   }
 
   // Set our kicker to the robot we've chosen
