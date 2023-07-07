@@ -98,7 +98,7 @@ public:
     if(!udp_) {
       return;
     }
-    RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id, ball_in_breakbeam_[robot_id]);
+    RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);
 
     std::vector<uint8_t> buffer;
     buffer.resize(robots_control.ByteSizeLong());
@@ -117,7 +117,6 @@ public:
     if (!feedback_proto.ParseFromArray(buffer, bytes_received - 1)) {
       for (const auto & single_feedback : feedback_proto.feedback()) {
         int robot_id = single_feedback.id();
-        ball_in_breakbeam_[robot_id] = single_feedback.dribbler_ball_contact();
         feedback_publishers_.at(robot_id)->publish(message_conversions::fromProto(single_feedback));
       }
     } else {
@@ -131,7 +130,6 @@ private:
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
-  std::array<bool, 16> ball_in_breakbeam_;
 };
 
 }  // namespace ateam_ssl_simulation_radio_bridge
