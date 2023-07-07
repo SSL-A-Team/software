@@ -111,7 +111,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
       overlay_publisher_.drawCircle("destination_" + std::to_string(robot_id), viz_circle, "blue", "transparent");
 
       easy_move_to.setTargetPosition(target_position);
-      easy_move_to.setAngleMode(MotionOptions::AngleMode::face_travel, world.ball.pos);
+      easy_move_to.face_absolute(0); // face away from our goal
+
       maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
 
     }

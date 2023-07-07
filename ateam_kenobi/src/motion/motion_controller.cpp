@@ -50,13 +50,29 @@ MotionController::MotionController() {
   this->reset();
 }
 
-void MotionController::set_angle_mode(MotionOptions::AngleMode angle_mode, std::optional<ateam_geometry::Point> point) {
-  this->motion_options.angle_mode = angle_mode;
-
-  if (angle_mode == MotionOptions::AngleMode::face_point) {
+// if the point isn't valid then fail over to face_travel
+void MotionController::face_point(std::optional<ateam_geometry::Point> point) {
+  if (point.has_value()) {
     this->face_towards = point;
+    this->angle_mode = AngleMode::face_point;
+  } else {
+    this->angle_mode = AngleMode::face_travel;
   }
 }
+
+void MotionController::face_travel() {
+  this->angle_mode = AngleMode::face_travel;
+}
+
+void MotionController::face_absolute(double angle){
+  this->face_angle = angle;
+  this->angle_mode = AngleMode::face_absolute;
+}
+
+void MotionController::no_face() {
+  this->angle_mode = AngleMode::no_face;
+}
+
 
 void MotionController::set_trajectory(const std::vector<ateam_geometry::Point>&  trajectory) {
   this->trajectory = trajectory;
@@ -67,7 +83,7 @@ void MotionController::set_trajectory(const std::vector<ateam_geometry::Point>& 
   this->total_dist = 0;
 }
 
-ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::Robot robot, double current_time)
+ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::Robot robot, double current_time, const MotionOptions & options)
 {
   ateam_msgs::msg::RobotMotionCommand motion_command;
 
@@ -97,47 +113,54 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
 
   ateam_geometry::Point target = this->trajectory[index];
 
-  // TODO: remove these once we don't need them for quickly debugging at comp matches
-  // std::cerr << "target [" << index << "/" << this->trajectory.size()-1 << "]: " << target.x() << ", " << target.y() << std::endl;
-  // double target_angle = 0; // TODO: get a target theta
+  double dist = sqrt(CGAL::squared_distance(robot.pos, target));
+  bool trajectory_complete = (dist <= options.completion_threshold);
 
-  // Calculate translational movement commands
   double x_error = target.x() - robot.pos.x();
-  double x_command = this->x_controller.computeCommand(x_error, dt_nano);
-
   double y_error = target.y() - robot.pos.y();
-  double y_command = this->y_controller.computeCommand(y_error, dt_nano);
 
+  if (!trajectory_complete) {
+    // Calculate translational movement commands
+    double x_command = this->x_controller.computeCommand(x_error, dt_nano);
+    double y_command = this->y_controller.computeCommand(y_error, dt_nano);
 
-  auto vel_vector = ateam_geometry::Vector(x_command, y_command);
+    auto vel_vector = ateam_geometry::Vector(x_command, y_command);
 
-  // clamp to max velocity
-  if (ateam_geometry::norm(vel_vector) > this->v_max) {
-    vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
+    // clamp to max velocity
+    if (ateam_geometry::norm(vel_vector) > this->v_max) {
+      vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
+    }
 
+    motion_command.twist.linear.x = vel_vector.x();
+    motion_command.twist.linear.y = vel_vector.y();
   }
-
-  motion_command.twist.linear.x = vel_vector.x();
-  motion_command.twist.linear.y = vel_vector.y();
-
 
   // calculate angle movement commands
   double target_angle;
-  if (this->motion_options.angle_mode == MotionOptions::AngleMode::face_point && this->face_towards.has_value()) {
-    target_angle = atan2(this->face_towards.value().y() - robot.pos.y(), this->face_towards.value().x() - robot.pos.x());
-  } else {
-    // face in direction of travel
-    target_angle = atan2(y_error, x_error);
+
+  switch(this->angle_mode) {
+    case AngleMode::no_face:
+      break;
+    case AngleMode::face_absolute:
+      target_angle = this->face_angle;
+      break;
+    case AngleMode::face_point:
+      if (this->face_towards.has_value()) {
+        target_angle = atan2(this->face_towards.value().y() - robot.pos.y(), this->face_towards.value().x() - robot.pos.x());
+        break;
+      }
+      [[fallthrough]];
+      // otherwise default to face travel
+    case AngleMode::face_travel:
+      target_angle = atan2(y_error, x_error);
+      break;
   }
 
-  double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
-  double t_command = this->t_controller.computeCommand(t_error, dt_nano);
-
-  if (this->motion_options.angle_mode != MotionOptions::AngleMode::no_face) {
+  if (this->angle_mode != AngleMode::no_face) {
+    double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
+    double t_command = this->t_controller.computeCommand(t_error, dt_nano);
     motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
   }
-
-  // std::cerr << "current: (" << robot.pos.x() << ", " << robot.pos.y() <<") -> " << motion_command.twist.linear.x << ", " << motion_command.twist.linear.y << ", " << motion_command.twist.angular.z << std::endl;
 
   this->prev_point = index;
   this->prev_time = current_time;
@@ -157,5 +180,7 @@ void MotionController::reset()
 
   this->prev_time = NAN;
 
+  this->angle_mode = AngleMode::face_travel;
   this->face_towards.reset();
+  this->face_angle = 0;
 }

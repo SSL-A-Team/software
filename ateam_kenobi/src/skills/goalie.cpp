@@ -74,7 +74,7 @@ void Goalie::runFrame(
 
   // Move
   easy_move_to_.setTargetPosition(defense_point);
-  easy_move_to_.setAngleMode(MotionOptions::AngleMode::face_point, world.ball.pos);
+  easy_move_to_.face_point(world.ball.pos);
 
   motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
 
