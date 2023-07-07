@@ -110,13 +110,16 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
   double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
   double t_command = this->t_controller.computeCommand(t_error, dt_nano);
 
-  t_command = 0;
-
   auto vel_vector = ateam_geometry::Vector(x_command, y_command);
-  auto clamped_vel = this->v_max * ateam_geometry::normalize(vel_vector);
 
-  motion_command.twist.linear.x = clamped_vel.x();
-  motion_command.twist.linear.y = clamped_vel.y();
+  // clamp to max velocity
+  if (ateam_geometry::norm(vel_vector) > this->v_max) {
+    vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
+
+  }
+
+  motion_command.twist.linear.x = vel_vector.x();
+  motion_command.twist.linear.y = vel_vector.y();
   motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
 
   // std::cerr << "current: (" << robot.pos.x() << ", " << robot.pos.y() <<") -> " << motion_command.twist.linear.x << ", " << motion_command.twist.linear.y << ", " << motion_command.twist.angular.z << std::endl;

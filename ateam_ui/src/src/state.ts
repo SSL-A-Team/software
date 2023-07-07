@@ -46,7 +46,7 @@ export class AppState {
     params: ROSLIB.Param[]
 
     sim: boolean = true;
-    comp: boolean = true; // TODO: find a better way to set this value
+    comp: boolean = false; // TODO: find a better way to set this value
 
     controlled_robot: number = null;
 
