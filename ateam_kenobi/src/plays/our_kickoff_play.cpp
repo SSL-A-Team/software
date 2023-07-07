@@ -36,15 +36,6 @@ OurKickoffPlay::OurKickoffPlay(visualization::OverlayPublisher & overlay_publish
 
 void OurKickoffPlay::reset()
 {
-  for (auto & path : saved_paths_) {
-    if (path.has_value()) {
-      path.value().clear();
-    }
-  }
-  available_robots_.clear();
-  for (auto & controller : motion_controllers_) {
-    controller.reset();
-  }
   positions_to_assign_.clear();
 
   // Get a kicker
@@ -57,7 +48,13 @@ void OurKickoffPlay::reset()
   positions_to_assign_.push_back(ateam_geometry::Point(-2, -2));
 
   goalie_skill_.reset();
+  attempted_to_kick_.fill(false);
+  ready_to_kickoff_ = false;
 }
+
+void OurKickoffPlay::set_kickoff_ready(){
+  ready_to_kickoff_ = true;
+};
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPlay::runFrame(
   const World & world)
@@ -66,69 +63,82 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   std::vector<Robot> current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
-  available_robots_ = current_available_robots; // this global assignment seems dangerous in light of all the skips
-
-
   // TARGET POSITIONS
   // get closest robot to ball and its distance to the ball
-  double min_dist_to_ball = 1999;
   int kicker_id;
-  for (auto robot : available_robots_) {
-    double cur_dist_to_ball = CGAL::squared_distance(world.ball.pos, robot.pos);
-    if (cur_dist_to_ball < min_dist_to_ball) {
-      min_dist_to_ball = cur_dist_to_ball;
-      kicker_id = robot.id;
+  double min_dist_to_ball = 1999;
+  // If we haven't chosen a kicker yet, pick the closest robot to the ball
+  if (prev_assigned_id_ == -1){
+    for (auto robot : current_available_robots) {
+      double cur_dist_to_ball = CGAL::squared_distance(world.ball.pos, robot.pos);
+      if (cur_dist_to_ball < min_dist_to_ball) {
+        if (!attempted_to_kick_.at(robot.id)){
+          min_dist_to_ball = cur_dist_to_ball;
+          kicker_id = robot.id;
+        } 
+      }
     }
   }
+  Robot kicker_bot;
+  // Otherwise use our chosen kicker
+  if (world.our_robots.at(kicker_id).has_value()){
+    kicker_bot = world.our_robots.at(kicker_id).value();
+  }
+  else {
+    // If we can't find the kicker for some reason, exit
+    // and choose a different robot next time
+    prev_assigned_id_ = -1;
+    return maybe_motion_commands;
+  }
+  min_dist_to_ball = CGAL::squared_distance(world.ball.pos, kicker_bot.pos);
+  // Get a kicker position
   if (min_dist_to_ball < -1.5) {
     if (min_dist_to_ball > -1.1) {
-      positions_to_assign_.at(-1) = ateam_geometry::Point(
-        world.ball.pos.x() + -1.05, world.ball.pos.y());
+      positions_to_assign_.at(kicker_id) = ateam_geometry::Point(
+        world.ball.pos.x() + -0.55, world.ball.pos.y());
     } else {
-      // kick the ball and return
-      maybe_motion_commands.at(kicker_id) = ateam_kenobi::skills::send_kick_command();
-      return maybe_motion_commands;
+        // kick the ball and return
+        auto their_goal = ateam_geometry::Point(-world.field.field_length / 2 + 0.2, 0);
+        if (ready_to_kickoff_){
+          maybe_motion_commands.at(kicker_id) = ateam_kenobi::skills::line_kick_command(world, kicker_bot,
+            their_goal, easy_move_tos_.at(kicker_id));
+          attempted_to_kick_.at(kicker_id) = true;
+        }
+        if (world.our_robots.at(world.referee_info.our_goalie_id).has_value()){
+        this->play_info_publisher_.message["Our Kickoff Play"]["robots"][kicker_id]["pos"] = {kicker_bot.pos.x(), kicker_bot.pos.y()};
+  }
     }
   }
+  // Assign remaining positions
+  play_helpers::removeRobotWithId(current_available_robots, kicker_id);
+  const auto & robot_assignments = robot_assignment::assign(current_available_robots, positions_to_assign_);
+    for (const auto [robot_id, pos_ind] : robot_assignments) {
+      const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
 
-  // Generate new trajectories for all robots
-  const auto & robot_assignments = robot_assignment::assign(available_robots_, positions_to_assign_);
-  for (const auto [robot_id, pos_ind] : robot_assignments) {
-    const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
-
-    // Yeah I dont care double check every single time no .values() without a has check
-    if (maybe_assigned_robot.has_value()) {
-      const auto & robot = maybe_assigned_robot.value();
-      const auto & destination = positions_to_assign_.at(pos_ind);
-      const auto path = path_planner_.getPath(robot.pos, destination, world, {});
-      if (path.empty()) {
-        overlay_publisher_.drawCircle(
-          "highlight_invalid_robot",
-          ateam_geometry::makeCircle(robot.pos, 0.2), "red", "transparent");
-        return {};
+      if(!maybe_assigned_robot) {
+        // TODO log this?
+        continue;
       }
-      saved_paths_.at(robot_id) = path;
-    } else {
-      // TODO Log this
-      // Assigned non-available robot
-      // ERROR  So this could happen because of the global assignment set
-      // THIS WILL FAIL IF WE CONTINUE
-      // continue;
+
+      const Robot & robot = maybe_assigned_robot.value();
+      this->play_info_publisher_.message["Our Kickoff Play"]["robots"][robot_id]["pos"] = {robot.pos.x(), robot.pos.y()};
+
+      auto & easy_move_to = easy_move_tos_.at(robot_id);
+
+      easy_move_to.setTargetPosition(positions_to_assign_.at(pos_ind));
+      easy_move_to.setFacingTowards(world.ball.pos);
+      maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
+
     }
-
-  }
-
-  // Execute trajectories, new or existing :)
-  for (Robot robot : available_robots_){
-    if (auto maybe_path = saved_paths_.at(robot.id)) {
-      motion_controllers_.at(robot.id).set_trajectory(saved_paths_.at(robot.id).value());
-      const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-          world.current_time.time_since_epoch()).count();
-      maybe_motion_commands.at(robot.id) = motion_controllers_.at(robot.id).get_command(robot, current_time);
-    }
-  }
-
+  // Have the goalie do stuff
   goalie_skill_.runFrame(world, maybe_motion_commands);
+  if (world.our_robots.at(world.referee_info.our_goalie_id).has_value()){
+      const Robot & goalie_robot = world.our_robots.at(world.referee_info.our_goalie_id).value();
+      this->play_info_publisher_.message["Wall Play"]["robots"][world.referee_info.our_goalie_id]["pos"] = {goalie_robot.pos.x(), goalie_robot.pos.y()};
+  }
+
+  // Set our kicker to the robot we've chosen
+  prev_assigned_id_ = kicker_id;
 
   return maybe_motion_commands;
 }

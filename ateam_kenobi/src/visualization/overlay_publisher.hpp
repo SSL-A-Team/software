@@ -36,6 +36,11 @@ public:
     const std::string & color = "white", const uint8_t font_size = 12,
     const uint32_t lifetime = kDefaultLifetime);
 
+  void drawRectangle(
+    const std::string & name, const ateam_geometry::Rectangle & rectangle,
+    const std::string & stroke_color = "white", const std::string & fill_color = "#FFFFFF7F",
+    const uint8_t stroke_width = 5, const uint32_t lifetime = kDefaultLifetime);
+
   /**
    * @brief Publishes and clears the current buffer of overlays.
    * @note Plays should NOT call this function. It will be called for you at the end of the frame.

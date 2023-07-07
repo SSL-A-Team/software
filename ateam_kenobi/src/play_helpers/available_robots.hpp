@@ -14,6 +14,9 @@ void removeGoalie(std::vector<Robot> & robots, const World & world);
 
 void removeGoalie(std::array<std::optional<Robot>,16> & robots, const World & world);
 
+void removeRobotWithId(std::vector<Robot> & robots, int id);
+
+void removeRobotWithId(std::array<std::optional<Robot>,16> & robots, int id);
 }
 
 #endif  // PLAY_HELPERS__AVAILABLE_ROBOTS_HPP_

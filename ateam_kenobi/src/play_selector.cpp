@@ -1,10 +1,12 @@
 #include "play_selector.hpp"
+#include "ateam_common/game_controller_listener.hpp"
 
 namespace ateam_kenobi
 {
 
 PlaySelector::PlaySelector(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
-  : test_play_(overlay_publisher, play_info_publisher), halt_play_(overlay_publisher, play_info_publisher), stop_play_(overlay_publisher, play_info_publisher), wall_play_(overlay_publisher, play_info_publisher)
+  : test_play_(overlay_publisher, play_info_publisher), halt_play_(overlay_publisher, play_info_publisher), stop_play_(overlay_publisher, play_info_publisher),
+  wall_play_(overlay_publisher, play_info_publisher), our_kickoff_play_(overlay_publisher, play_info_publisher)
 {
 }
 
@@ -16,12 +18,26 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
   //
   // Play selection logic goes here
   //
-  if (current_game_command == ateam_common::GameCommand::Halt) {
-    selected_play = &halt_play_;
-  } else if (current_game_command == ateam_common::GameCommand::Stop) {
-    selected_play = &stop_play_;
-  } else {
-    selected_play = &wall_play_;
+
+  switch (current_game_command) {
+    case ateam_common::GameCommand::Halt:
+      selected_play = &halt_play_;
+      break;
+    case ateam_common::GameCommand::Stop:
+      selected_play = &stop_play_;
+      break;
+    case ateam_common::GameCommand::PrepareKickoffOurs:
+      selected_play = &our_kickoff_play_;
+      break;
+    case ateam_common::GameCommand::NormalStart:
+      selected_play = &wall_play_;
+      break;
+      // Check if previous command was kickoff
+      // kickoff_play.set_kickoff_ready()
+      // selected_play = &kickoff_play_;
+    default:
+      selected_play = &wall_play_;
+      break;
   }
 
   // ateam_common::GameCommand running_command = world.referee_info.running_command;
@@ -114,6 +130,10 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
   // }
 
   resetPlayIfNeeded(selected_play);
+
+  if (current_game_command != previous_game_command_){
+    previous_game_command_ =  current_game_command;
+  }
 
   return selected_play;
 }
