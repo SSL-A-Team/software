@@ -31,8 +31,8 @@ void Goalie::runFrame(
   }
 
   ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
-    ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, 0.5),
-    ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, -0.5)
+    ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, world.field.goal_width/2.0),
+    ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, -world.field.goal_width/2.0)
   );
   overlay_publisher_.drawLine("goalie_line", {goalie_line.point(0), goalie_line.point(1)}, "blue");
 
