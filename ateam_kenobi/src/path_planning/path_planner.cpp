@@ -189,10 +189,15 @@ void PathPlanner::addDefaultObstacles(
   const World & world,
   std::vector<ateam_geometry::AnyShape> & obstacles)
 {
-  // goalie box
+  // our goalie box
   obstacles.push_back(ateam_geometry::Rectangle(
     ateam_geometry::Point(-world.field.field_length / 2, world.field.goal_width),
     ateam_geometry::Point(-1 * (world.field.field_length / 2) + world.field.goal_width, -world.field.goal_width)
+  ));
+  // their goalie box
+  obstacles.push_back(ateam_geometry::Rectangle(
+    ateam_geometry::Point((world.field.field_length / 2), world.field.goal_width),
+    ateam_geometry::Point((world.field.field_length / 2) + world.field.goal_width, -world.field.goal_width)
   ));
 }
 
