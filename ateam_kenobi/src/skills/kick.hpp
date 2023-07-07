@@ -30,16 +30,16 @@
 
 #include <angles/angles.h>
 
+#include "play_helpers/easy_move_to.hpp"
 
 #include "path_planning/path_planner.hpp"
-#include "motion/motion_controller.hpp"
 
 namespace ateam_kenobi::skills
 {
-ateam_msgs::msg::RobotMotionCommand send_kick_command()
+inline ateam_msgs::msg::RobotMotionCommand send_kick_command()
 {
   auto kick_command = ateam_msgs::msg::RobotMotionCommand{};
-  kick_command.kick = true;
+  kick_command.kick = 1;
   // Set kick speed to 5 m/s. Current max is 5.5 m/s (will
   // be clamped if above).
   kick_command.kick_speed = 5;
@@ -47,29 +47,28 @@ ateam_msgs::msg::RobotMotionCommand send_kick_command()
 
 }
 
-std::vector<ateam_geometry::Point> line_kick_command(const World & world, Robot current_robot, ateam_geometry::Point target_goal)
+inline ateam_msgs::msg::RobotMotionCommand line_kick_command(const World & world, Robot current_robot, ateam_geometry::Point target_goal,
+play_helpers::EasyMoveTo & easy_move_to)
 {
-  // This is bad make these a persistent state or quit
-  path_planning::PathPlanner path_planner_;
-  MotionController motion_controller_;
-
-  double current_theta, current_vel_theta, target_theta, target_vel_theta;
+  // double current_theta, current_vel_theta;
   ateam_geometry::Point current (current_robot.pos.x(), current_robot.pos.y());
-  current_theta = current_robot.theta;
+  // current_theta = current_robot.theta;
   ateam_geometry::Point current_vel (current_robot.vel.x(), current_robot.vel.y());
-  current_vel_theta = current_robot.omega;
+  // current_vel_theta = current_robot.omega;
+  ateam_geometry::Point current_robot_pos = current_robot.pos;
+  ateam_geometry::Point target;
 
-  ateam_geometry::Point target, target_vel;
   const auto & ball = world.ball;
-  if (ateam_geometry::norm(ball.vel) > 0.05) {
-    target = ateam_geometry::Point(current_robot.pos.x(), current_robot.pos.y());
-    target_theta = current_robot.theta;
-    target_vel = ateam_geometry::Point(0,0);
-    target_vel_theta = 0;
+  ateam_geometry::Point ball_pos = ball.pos;
+  
+  if (ateam_geometry::norm(ball.vel) > 0.2) {
+    // Wait for the ball to slow down before moving to kick...
+    // just stay still
+    easy_move_to.setTargetPosition(current_robot_pos);
+    easy_move_to.setFacingTowards(target_goal);
+    return easy_move_to.runFrame(current_robot, world);
   } else {
     // robot to ball check to not collide
-    ateam_geometry::Point ball_pos = ball.pos;
-    ateam_geometry::Point current_robot_pos = current_robot.pos;
     ateam_geometry::Point target_setup_pos = ball_pos + 0.4 * ateam_geometry::normalize(ball_pos - target_goal);
 
     ateam_geometry::Vector robot_to_goal = target_goal - current_robot_pos;
@@ -78,7 +77,7 @@ std::vector<ateam_geometry::Point> line_kick_command(const World & world, Robot 
       current_robot.theta, robot_to_goal_angle);
 
     ateam_geometry::Vector robot_to_ball = ball_pos - current_robot_pos;
-    ateam_geometry::Vector ball_to_goal = target_goal - ball_pos;
+    //ateam_geometry::Vector ball_to_goal = target_goal - ball_pos;
 
     // Aligned means
     //  * Ball is directly between the robot and goal
@@ -91,39 +90,43 @@ std::vector<ateam_geometry::Point> line_kick_command(const World & world, Robot 
     is_aligned &= ateam_geometry::norm(current_robot.vel) < 0.5;
 
     if (!is_aligned) {
+      // If we aren't in a position to kick, let's figure out where to go
       double cosine = CGAL::scalar_product((target_setup_pos - current_robot_pos),
         (ball_pos - current_robot_pos)) /
         (ateam_geometry::norm(target_setup_pos, current_robot_pos) *
         ateam_geometry::norm(target_setup_pos, current_robot_pos));
       cosine = std::max(std::min(cosine, 1.0), 0.0);
+      // We want to be in line with the goal and the ball
+      // as well as give ourselves some space to kick
       ateam_geometry::Vector ball_projected_on_move_line = cosine *
         (target_setup_pos - current_robot_pos) + ateam_geometry::Vector(current_robot_pos.x(), current_robot_pos.y());
       double dist = ateam_geometry::norm(ateam_geometry::Point(ball_projected_on_move_line.x(),
         ball_projected_on_move_line.y()), ball_pos);
       if (dist < 0.1) {
-        target = ateam_geometry::Point(target_setup_pos.x(), target_setup_pos.y() - 1);
-        target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
-        target_vel = ateam_geometry::Point(0,0);
-        target_vel_theta = 0;
+        // If we are very close to the ball, give us some space
+        target = ateam_geometry::Point(target_setup_pos.x(), target_setup_pos.y() - 0.5);
       } else {
+        // Otherwise, just go there
         target = ateam_geometry::Point(target_setup_pos.x(), target_setup_pos.y());
-        target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
-        target_vel = ateam_geometry::Point(0,0);
-        target_vel_theta = 0;
       }
-
+      easy_move_to.setTargetPosition(target);
+      easy_move_to.setFacingTowards(target);
+      return easy_move_to.runFrame(current_robot, world);
     } else {
-      // Kick
-      target = ateam_geometry::Point(ball_pos.x(), ball_pos.y());
-      target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
-      target_vel = ateam_geometry::Point(0,0);
-      target_vel_theta = 0;
+      // Old code in case it's needed...
+      //target = ateam_geometry::Point(ball_pos.x(), ball_pos.y());
+      //target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
+      // Go towards the target goal with the breakbeam on
+      easy_move_to.setTargetPosition(target_goal);
+      easy_move_to.setFacingTowards(ball_pos);
+      auto planner_options = path_planning::PlannerOptions{.avoid_ball = false};
+      easy_move_to.setPlannerOptions(planner_options);
+      auto motion_command = easy_move_to.runFrame(current_robot, world);
+      // Set kick on breakbeam
+      motion_command.kick = 1;
+      return motion_command;
     }
   }
-
-  const auto kick_path = path_planner_.getPath(current_robot.pos,
-    target, world, {});
-  return kick_path;
 }
 } // namespace ateam_kenobi::skills
 
