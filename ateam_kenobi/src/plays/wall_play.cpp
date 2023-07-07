@@ -107,7 +107,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
 
       easy_move_to.setTargetPosition(positions_to_assign.at(pos_ind));
       easy_move_to.setAngleMode(MotionOptions::AngleMode::face_point, world.ball.pos);
-      easy_move_to.setMaxVelocity(20);
       maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
 
     }
