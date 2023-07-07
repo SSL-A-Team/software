@@ -48,11 +48,23 @@ void Goalie::runFrame(
 
   ateam_geometry::Ray shot_ray(world.ball.pos, target_point - world.ball.pos);
 
-  // restrict consideration of goalie to just the goalbox
-  ateam_geometry::Rectangle goalbox(world.field.ours.goalie_corners.at(0), world.field.ours.goalie_corners.at(2));
+  // restrict consideration of goalie to just the goalie_box
+
+  ateam_geometry::Point corner0 = {-world.field.field_length / 2, world.field.goal_width / 2};
+  ateam_geometry::Point corner1 = {-1 * (world.field.field_length / 2) + world.field.goal_depth, -world.field.goal_width / 2};
+  ateam_geometry::Rectangle goalie_box(corner0, corner1);
+
+  // ateam_geometry::Rectangle goalie_box(world.field.ours.goalie_corners.at(0), world.field.ours.goalie_corners.at(2));
+
+  // overlay_publisher_.drawRectangle("goalie_box", goalie_box, "orange");
+  overlay_publisher_.drawCircle("corner1",
+  ateam_geometry::makeCircle(world.field.ours.goalie_corners.at(0), 0.2), "blue", "transparent");
+  overlay_publisher_.drawCircle("corner2",
+  ateam_geometry::makeCircle(world.field.ours.goalie_corners.at(2), 0.2), "blue", "transparent");
+
 
   boost::optional<boost::variant<ateam_geometry::Point, ateam_geometry::Segment>> maybe_restricted_defense_segment = 
-    CGAL::intersection(shot_ray, goalbox);
+    CGAL::intersection(shot_ray, goalie_box);
 
   if (!maybe_restricted_defense_segment.has_value()) {
     // TODO(CAVIDANO) LOG SOMETHING MESSED IF THE DEFENDER HAS NO POINT ON THE GOAL JUST STAY WHERE YOU ARE
@@ -73,8 +85,12 @@ void Goalie::runFrame(
   overlay_publisher_.drawCircle(
       "defense point",
       ateam_geometry::makeCircle(defense_point, 0.2), "blue", "transparent");
-  play_info_publisher_.message["Goalie"]["defense_point"] = {defense_point.x(), defense_point.y()};
 
+  // play_info_publisher_.message["Goalie"]["defense_point"] = {defense_point.x(), defense_point.y()};
+
+  // play_info_publisher_.message["Goalie"]["goal_box"]["0"] = {world.field.ours.goalie_corners.at(0).x(), world.field.ours.goalie_corners.at(0).y()};
+  // play_info_publisher_.message["Goalie"]["goal_box"]["2"] = {world.field.ours.goalie_corners.at(2).x(), world.field.ours.goalie_corners.at(2).y()};
+  
   // ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
   //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, world.field.goal_width/2.0),
   //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, -world.field.goal_width/2.0)

@@ -39,6 +39,8 @@ struct Field
   // There is a mirroring ros message of this type
   float field_length;
   float field_width;
+  // NOTE GOAL DEPTH AND WIDTH ARE THE SIZE OF THE GOALIE BOX NOT OF THE GOAL ITSELF
+  // TODO(CAVIDANO) all values in here are currently inaccurate
   float goal_width;
   float goal_depth;
   float boundary_width;
