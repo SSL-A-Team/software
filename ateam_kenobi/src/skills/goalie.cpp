@@ -50,17 +50,13 @@ void Goalie::runFrame(
 
   // restrict consideration of goalie to just the goalie_box
 
-  ateam_geometry::Point corner0 = {-world.field.field_length / 2, world.field.goal_width / 2};
-  ateam_geometry::Point corner1 = {-1 * (world.field.field_length / 2) + world.field.goal_depth, -world.field.goal_width / 2};
+  ateam_geometry::Point corner0 = {-world.field.field_length / 2, world.field.goal_width};
+  ateam_geometry::Point corner1 = {-1 * (world.field.field_length / 2) + world.field.goal_width, -world.field.goal_width};
   ateam_geometry::Rectangle goalie_box(corner0, corner1);
 
   // ateam_geometry::Rectangle goalie_box(world.field.ours.goalie_corners.at(0), world.field.ours.goalie_corners.at(2));
 
-  // overlay_publisher_.drawRectangle("goalie_box", goalie_box, "orange");
-  overlay_publisher_.drawCircle("corner1",
-  ateam_geometry::makeCircle(world.field.ours.goalie_corners.at(0), 0.2), "blue", "transparent");
-  overlay_publisher_.drawCircle("corner2",
-  ateam_geometry::makeCircle(world.field.ours.goalie_corners.at(2), 0.2), "blue", "transparent");
+  overlay_publisher_.drawRectangle("goalie_box", goalie_box, "orange");
 
 
   boost::optional<boost::variant<ateam_geometry::Point, ateam_geometry::Segment>> maybe_restricted_defense_segment = 
@@ -83,9 +79,9 @@ void Goalie::runFrame(
 
   // STATUS
   // overlay_publisher_.drawLine("shot_ray", {world.ball.pos, target_point}, "red");
-  overlay_publisher_.drawCircle(
-      "defense point",
-      ateam_geometry::makeCircle(defense_point, 0.2), "blue", "transparent");
+  // overlay_publisher_.drawCircle(
+  //     "defense point",
+  //     ateam_geometry::makeCircle(defense_point, 0.2), "blue", "transparent");
 
   // play_info_publisher_.message["Goalie"]["defense_point"] = {defense_point.x(), defense_point.y()};
 

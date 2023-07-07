@@ -47,6 +47,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
   auto current_available_robots = play_helpers::getAvailableRobots(world);
+  play_helpers::removeGoalie(current_available_robots, world);
 
   const auto & robot = current_available_robots[0];
   int robot_id = robot.id;
@@ -56,9 +57,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
   easy_move_to.setAngleMode(MotionOptions::AngleMode::face_point, world.ball.pos);
   maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
 
-
-
-  //goalie_skill_.runFrame(world, maybe_motion_commands);
+  goalie_skill_.runFrame(world, maybe_motion_commands);
   
   return maybe_motion_commands;
 }

@@ -62,7 +62,7 @@ private:
         
         ateam_geometry::Point operator()(ateam_geometry::Segment arg) const
         {
-            overlay_publisher.drawLine("restricted_defense_segment", {arg.source(), arg.target()}, "purple");
+            overlay_publisher.drawLine("restricted_defense_segment", {arg.source(), arg.target()}, "orange");
             return ateam_geometry::NearestPointOnSegment(arg, robot.pos);
         }
         ateam_geometry::Point operator()(ateam_geometry::Point arg) const
