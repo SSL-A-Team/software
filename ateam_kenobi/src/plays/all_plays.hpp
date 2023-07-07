@@ -7,5 +7,6 @@
 #include "stop_play.hpp"
 #include "wall_play.hpp"
 #include "our_kickoff_play.hpp"
+#include "test_kick_play.hpp"
 
 #endif // PLAYS__ALL_PLAYS_HPP_
