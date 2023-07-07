@@ -58,10 +58,18 @@ void EasyMoveTo::setAngleMode(MotionOptions::AngleMode angle_mode, std::optional
 }
 
 void EasyMoveTo::setMaxVelocity(double velocity) {
+  if (velocity > 3.0) {
+    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX VELOCITY\n";
+    return;
+  }
   motion_controller_.v_max = velocity;
 }
 
 void EasyMoveTo::setMaxAngularVelocity(double velocity) {
+  if (velocity > 6.5) {
+    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX ANGULAR VELOCITY\n";
+    return;
+  }
   motion_controller_.t_max = velocity;
 }
 
