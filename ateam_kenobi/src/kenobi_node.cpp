@@ -220,7 +220,9 @@ private:
       RCLCPP_ERROR(get_logger(), "No play selected!");
       return {};
     }
-    return play->runFrame(world);
+    const auto motion_commands = play->runFrame(world);
+    overlay_publisher_.publishOverlays();
+    return motion_commands;
   }
 
   void send_all_motion_commands(

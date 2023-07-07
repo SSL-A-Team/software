@@ -6,8 +6,8 @@ namespace ateam_kenobi::visualization
 
 OverlayPublisher::OverlayPublisher(const std::string & ns, rclcpp::Node & node)
 : ns(ns),
-  publisher_(node.create_publisher<ateam_msgs::msg::Overlay>(
-      "/overlay",
+  publisher_(node.create_publisher<ateam_msgs::msg::OverlayArray>(
+      "/overlays",
       rclcpp::SystemDefaultsQoS()))
 {
 }
@@ -37,7 +37,7 @@ void OverlayPublisher::drawLine(
       point_msg.y = point.y();
       return point_msg;
     });
-  publisher_->publish(msg);
+  overlays_.overlays.push_back(msg);
 }
 
 void OverlayPublisher::drawCircle(
@@ -60,7 +60,7 @@ void OverlayPublisher::drawCircle(
   msg.fill_color = fill_color;
   msg.lifetime = lifetime;
   msg.depth = 1;
-  publisher_->publish(msg);
+  overlays_.overlays.push_back(msg);
 }
 
 void OverlayPublisher::drawPolygon(
@@ -90,7 +90,7 @@ void OverlayPublisher::drawPolygon(
       point_msg.y = vertex.y();
       return point_msg;
     });
-  publisher_->publish(msg);
+  overlays_.overlays.push_back(msg);
 }
 
 void OverlayPublisher::drawText(
@@ -111,7 +111,12 @@ void OverlayPublisher::drawText(
   msg.lifetime = lifetime;
   msg.depth = 1;
   msg.text = text;
-  publisher_->publish(msg);
+  overlays_.overlays.push_back(msg);
+}
+
+void OverlayPublisher::publishOverlays() {
+  if (!overlays_.overlays.empty()) { publisher_->publish(overlays_); }
+  overlays_.overlays.clear();
 }
 
 } // namespace ateam_kenobi::visualization
