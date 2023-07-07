@@ -36,6 +36,7 @@ class TestPlay : public BasePlay {
     
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
   private:
+    std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
     skills::Goalie goalie_skill_;
 };
 }  // namespace ateam_kenobi::plays

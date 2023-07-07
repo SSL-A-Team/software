@@ -65,7 +65,7 @@ play_helpers::EasyMoveTo & easy_move_to)
     // Wait for the ball to slow down before moving to kick...
     // just stay still
     easy_move_to.setTargetPosition(current_robot_pos);
-    easy_move_to.setFacingTowards(target_goal);
+    easy_move_to.setAngleMode(MotionOptions::AngleMode::face_point, target_goal);
     return easy_move_to.runFrame(current_robot, world);
   } else {
     // robot to ball check to not collide
@@ -110,7 +110,7 @@ play_helpers::EasyMoveTo & easy_move_to)
         target = ateam_geometry::Point(target_setup_pos.x(), target_setup_pos.y());
       }
       easy_move_to.setTargetPosition(target);
-      easy_move_to.setFacingTowards(target);
+      easy_move_to.setAngleMode(MotionOptions::AngleMode::face_point, target);
       return easy_move_to.runFrame(current_robot, world);
     } else {
       // Old code in case it's needed...
@@ -118,7 +118,7 @@ play_helpers::EasyMoveTo & easy_move_to)
       //target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
       // Go towards the target goal with the breakbeam on
       easy_move_to.setTargetPosition(target_goal);
-      easy_move_to.setFacingTowards(ball_pos);
+      easy_move_to.setAngleMode(MotionOptions::AngleMode::face_point, target);
       auto planner_options = path_planning::PlannerOptions{.avoid_ball = false};
       easy_move_to.setPlannerOptions(planner_options);
       auto motion_command = easy_move_to.runFrame(current_robot, world);

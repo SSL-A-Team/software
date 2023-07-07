@@ -1,3 +1,4 @@
+#include <iostream>
 #include "play_selector.hpp"
 #include "ateam_common/game_controller_listener.hpp"
 
@@ -18,25 +19,36 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
   //
   // Play selection logic goes here
   //
-
   switch (current_game_command) {
     case ateam_common::GameCommand::Halt:
       selected_play = &halt_play_;
       break;
     case ateam_common::GameCommand::Stop:
-      selected_play = &stop_play_;
+      if (previous_game_command_ == ateam_common::GameCommand::PrepareKickoffOurs){
+          selected_play = &our_kickoff_play_;
+        } else {
+        selected_play = &stop_play_;
+      }
       break;
-    case ateam_common::GameCommand::PrepareKickoffOurs:
+    /*case ateam_common::GameCommand::PrepareKickoffOurs:
       selected_play = &our_kickoff_play_;
       break;
     case ateam_common::GameCommand::NormalStart:
-      selected_play = &wall_play_;
+      if (previous_game_command_ == ateam_common::GameCommand::PrepareKickoffOurs){
+        selected_play = &our_kickoff_play_;
+      } else {
+        selected_play = &wall_play_;
+      }
       break;
       // Check if previous command was kickoff
       // kickoff_play.set_kickoff_ready()
-      // selected_play = &kickoff_play_;
+      // selected_play = &kickoff_play_;*/
     default:
-      selected_play = &wall_play_;
+      if (world.in_play){
+        selected_play = &wall_play_;
+      } else{
+        selected_play = &our_kickoff_play_;
+      }
       break;
   }
 

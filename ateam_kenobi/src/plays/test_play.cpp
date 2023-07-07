@@ -23,6 +23,7 @@
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
 #include "robot_assignment.hpp"
+#include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -30,10 +31,14 @@ TestPlay::TestPlay(visualization::OverlayPublisher & overlay_publisher, visualiz
 : BasePlay(overlay_publisher, play_info_publisher),
   goalie_skill_(overlay_publisher, play_info_publisher)
 {
+  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher);
 }
 
 void TestPlay::reset()
 {
+  for(auto & move_to : easy_move_tos_) {
+    move_to.reset();
+  }
   goalie_skill_.reset();
 }
 
@@ -41,8 +46,19 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  auto current_available_robots = play_helpers::getAvailableRobots(world);
 
-  goalie_skill_.runFrame(world, maybe_motion_commands);
+  const auto & robot = current_available_robots[0];
+  int robot_id = robot.id;
+  auto & easy_move_to = easy_move_tos_.at(robot_id);
+
+  easy_move_to.setTargetPosition(world.ball.pos + ateam_geometry::Vector(-.2, 0));
+  easy_move_to.setAngleMode(MotionOptions::AngleMode::face_point, world.ball.pos);
+  maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
+
+
+
+  //goalie_skill_.runFrame(world, maybe_motion_commands);
   
   return maybe_motion_commands;
 }
