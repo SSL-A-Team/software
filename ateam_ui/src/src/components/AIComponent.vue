@@ -1,5 +1,5 @@
 <template>
-    <v-card variant="outlined" style="white-space: nowrap">
+    <v-card variant="outlined" style="white-space: nowrap; overflow: visible">
         <div style="margin: 5px">
             <AIRecursiveComponent v-for="member of Object.getOwnPropertyNames(getAIDescription)"
                 :key="member"
@@ -30,6 +30,7 @@ export default {
     watch: {
         getAIState: {
             handler() {
+                this.$el.textContent = '';
             },
             deep: true
         },

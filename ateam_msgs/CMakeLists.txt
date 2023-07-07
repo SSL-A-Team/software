@@ -13,6 +13,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/BehaviorExecutorState.msg
   msg/Mesh1d.msg
   msg/Overlay.msg
+  msg/OverlayArray.msg
   msg/RefereeInfo.msg
   msg/RobotFeedback.msg
   msg/RobotMotionCommand.msg

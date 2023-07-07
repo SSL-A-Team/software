@@ -24,6 +24,7 @@
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
 #include "base_play.hpp"
+#include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -35,10 +36,7 @@ class TestPlay : public BasePlay {
     
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
   private:
-
-    path_planning::PathPlanner path_planner_;
-    MotionController motion_controller_;
-    int prev_assigned_id_ = -1;
+    skills::Goalie goalie_skill_;
 };
 }  // namespace ateam_kenobi::plays
 #endif // PLAYS__TEST_PLAY_HPP_

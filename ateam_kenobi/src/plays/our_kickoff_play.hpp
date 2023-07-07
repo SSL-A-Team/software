@@ -28,6 +28,7 @@
 #include "motion/motion_controller.hpp"
 #include "ateam_geometry/types.hpp"
 #include "types/robot.hpp"
+#include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -46,6 +47,7 @@ private:
   std::array<MotionController, 16> motion_controllers_;
   std::array<std::optional<std::vector<ateam_geometry::Point>>, 16> saved_paths_;
   std::vector<Robot> available_robots_;
+  skills::Goalie goalie_skill_;
 
   std::vector<ateam_geometry::Point> positions_to_assign_;
 

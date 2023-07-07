@@ -24,11 +24,13 @@
 #include "skills/goalie.hpp"
 #include "skills/kick.hpp"
 #include "robot_assignment.hpp"
+#include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {
 OurKickoffPlay::OurKickoffPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher)
+: BasePlay(overlay_publisher, play_info_publisher),
+  goalie_skill_(overlay_publisher)
 {
 }
 
@@ -53,24 +55,16 @@ void OurKickoffPlay::reset()
   positions_to_assign_.push_back(ateam_geometry::Point(-0.3, 1.5));
   positions_to_assign_.push_back(ateam_geometry::Point(-2, 2));
   positions_to_assign_.push_back(ateam_geometry::Point(-2, -2));
+
+  goalie_skill_.reset();
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPlay::runFrame(
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
-  std::vector<Robot> current_available_robots;
-
-  // Get the number of available robots
-  for (const auto & maybe_robot : world.our_robots) {
-      if (maybe_robot && maybe_robot.value().id != world.referee_info.our_goalie_id) {
-          current_available_robots.push_back(maybe_robot.value());
-      }
-  }
-
-  if (current_available_robots.empty()) {
-    return maybe_motion_commands;
-  }
+  std::vector<Robot> current_available_robots = play_helpers::getAvailableRobots(world);
+  play_helpers::removeGoalie(current_available_robots, world);
 
   available_robots_ = current_available_robots; // this global assignment seems dangerous in light of all the skips
 
@@ -124,20 +118,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 
   }
 
-  int our_goalie_id = world.referee_info.our_goalie_id;
-  // Always get a new point and trajectory for the goalie so we can
-  // be good at defense
-  if (auto maybe_goalie = world.our_robots.at(our_goalie_id)) {
-    Robot our_goalie = maybe_goalie.value();
-    auto goalie_point = ateam_kenobi::skills::get_goalie_defense_point(world);
-    const auto goalie_path = path_planner_.getPath(
-        our_goalie.pos, goalie_point, world, {});
-    motion_controllers_.at(our_goalie_id).set_trajectory(goalie_path);
-    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-      world.current_time.time_since_epoch()).count();
-    maybe_motion_commands.at(our_goalie_id) =  motion_controllers_.at(our_goalie_id).get_command(our_goalie, current_time);
-  }
-
   // Execute trajectories, new or existing :)
   for (Robot robot : available_robots_){
     if (auto maybe_path = saved_paths_.at(robot.id)) {
@@ -147,6 +127,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
       maybe_motion_commands.at(robot.id) = motion_controllers_.at(robot.id).get_command(robot, current_time);
     }
   }
+
+  goalie_skill_.runFrame(world, maybe_motion_commands);
+
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays
