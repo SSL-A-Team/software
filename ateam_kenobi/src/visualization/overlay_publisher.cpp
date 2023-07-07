@@ -1,5 +1,6 @@
 #include "overlay_publisher.hpp"
 #include <algorithm>
+#include <numeric>
 
 namespace ateam_kenobi::visualization
 {
@@ -111,6 +112,26 @@ void OverlayPublisher::drawText(
   msg.lifetime = lifetime;
   msg.depth = 1;
   msg.text = text;
+  overlays_.overlays.push_back(msg);
+}
+
+void OverlayPublisher::drawRectangle(const std::string &name, const ateam_geometry::Rectangle &rectangle, const std::string &stroke_color, const std::string &fill_color, const uint8_t stroke_width, const uint32_t lifetime)
+{
+  ateam_msgs::msg::Overlay msg;
+  msg.ns = ns;
+  msg.name = name;
+  msg.visible = true;
+  msg.type = ateam_msgs::msg::Overlay::RECTANGLE;
+  msg.command = ateam_msgs::msg::Overlay::REPLACE;
+  msg.position.x = std::midpoint(rectangle.xmin(), rectangle.xmax());
+  msg.position.y = std::midpoint(rectangle.ymin(), rectangle.ymax());
+  msg.scale.x = rectangle.xmax() - rectangle.xmin();
+  msg.scale.y = rectangle.ymax() - rectangle.ymin();
+  msg.stroke_color = stroke_color;
+  msg.stroke_width = stroke_width;
+  msg.fill_color = fill_color;
+  msg.depth = 1;
+  msg.lifetime = lifetime;
   overlays_.overlays.push_back(msg);
 }
 
