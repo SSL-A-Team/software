@@ -29,7 +29,7 @@ add_library(kenobi_node_component SHARED
   src/motion/motion_controller.cpp
   src/visualization/overlay_publisher.cpp
   src/visualization/play_info_publisher.cpp
-  src/play_helprs/easy_move_to.cpp
+  src/play_helpers/easy_move_to.cpp
 )
 target_include_directories(kenobi_node_component PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>

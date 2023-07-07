@@ -30,6 +30,7 @@
 #include "ateam_geometry/types.hpp"
 #include "types/robot.hpp"
 #include "base_play.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays{
     inline std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(ateam_geometry::Segment & segment, int num_points);
@@ -40,10 +41,7 @@ namespace ateam_kenobi::plays{
             void reset() override;
             std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
         private:
-            path_planning::PathPlanner path_planner_;
-            std::array<MotionController, 16> motion_controllers_;
-            std::array<std::optional<std::vector<ateam_geometry::Point>>, 16> saved_paths_;
-            std::vector<Robot> available_robots_;
+            std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
     };
 } // namespace ateam_kenobi::plays
 

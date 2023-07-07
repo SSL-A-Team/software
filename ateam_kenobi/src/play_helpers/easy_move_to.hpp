@@ -15,7 +15,19 @@ namespace ateam_kenobi::play_helpers
 class EasyMoveTo
 {
 public:
+  static void CreateArray(std::array<EasyMoveTo, 16> & dst, visualization::OverlayPublisher & overlay_publisher);
+
+  /**
+   * @brief DO NOT USE THIS CONSTRUCTOR IN PLAY CODE
+   * This is meant for internal use only.
+   */
+  EasyMoveTo() {};
+
   EasyMoveTo(visualization::OverlayPublisher & overlay_publisher);
+
+  EasyMoveTo& operator=(EasyMoveTo&& other);
+
+  void reset();
   
   void setTargetPosition(ateam_geometry::Point target_position);
 
@@ -30,13 +42,14 @@ public:
   }
 
 private:
+
   static std::size_t instance_index_;  // used for naming visualizations
-  const std::string instance_name_;
+  std::string instance_name_;
   ateam_geometry::Point target_position_;
   path_planning::PlannerOptions planner_options_;
   path_planning::PathPlanner path_planner_;
   MotionController motion_controller_;
-  visualization::OverlayPublisher & overlay_publisher_;
+  visualization::OverlayPublisher * overlay_publisher_;
 
   path_planning::PathPlanner::Path planPath(const Robot & robot, const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles);
 

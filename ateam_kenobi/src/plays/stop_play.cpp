@@ -57,7 +57,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
         const auto & robot = maybe_robot.value();
         const auto path = path_planner_.getPath(robot.pos, destination, world, {});
 
-        std::cerr << "robot " << i << "path size: " << path.size() << std::endl;
+        // std::cerr << "robot " << i << "path size: " << path.size() << std::endl;
 
         auto & motion_controller = this->motion_controllers_[i];
         motion_controller.set_trajectory(path);
@@ -67,7 +67,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
           world.current_time.time_since_epoch()).count();
 
         const auto & motion_command = motion_controller.get_command(robot, current_time);
-        std::cerr << "motion command has value: " << motion_command.twist.angular.z << std::endl;
+        // std::cerr << "motion command has value: " << motion_command.twist.angular.z << std::endl;
         stop_motion_commands[i] = motion_command;
         continue;
         }

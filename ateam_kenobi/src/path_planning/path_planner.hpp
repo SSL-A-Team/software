@@ -17,7 +17,7 @@ struct PlannerOptions
   /**
    * @brief If true, the planner treats the ball as an obstacle.
    */
-  bool avoid_ball = false;
+  bool avoid_ball = true;
 
   /**
    * @brief The size by which the radius of the robot will be augmented during collision checking
