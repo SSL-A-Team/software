@@ -16,14 +16,22 @@ std::vector<Robot> getAvailableRobots(const World &world)
 
 void removeGoalie(std::vector<Robot> &robots, const World & world)
 {
-  robots.erase(std::remove_if(robots.begin(), robots.end(), [&world](const Robot & robot){
-    return robot.id == world.referee_info.our_goalie_id;
-  }), robots.end());
+  return removeRobotWithId(robots, world.referee_info.our_goalie_id);
 }
 
 void removeGoalie(std::array<std::optional<Robot>,16> &robots, const World & world)
 {
-  robots.at(world.referee_info.our_goalie_id).reset();
+  return removeRobotWithId(robots, world.referee_info.our_goalie_id);
 }
 
+void removeRobotWithId(std::vector<Robot> &robots, int id){
+  robots.erase(std::remove_if(robots.begin(), robots.end(), [&id](const Robot & robot){
+    return robot.id == id;
+  }), robots.end());
+}
+
+void removeRobotWithId(std::array<std::optional<Robot>,16> &robots, int id)
+{
+  robots.at(id).reset();
+}
 }  // namespace ateam_kenobi::play_helpers
