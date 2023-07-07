@@ -88,7 +88,7 @@ export class Overlay {
             case 2:
                 graphic.beginFill(this.fill_color);
                 graphic.lineStyle(this.stroke_width, this.stroke_color);
-                graphic.drawRect(-scale*this.scale.x/2, scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
+                graphic.drawRect(-scale*this.scale.x/2, -scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
                 graphic.endFill();
                 break;
             // ELLIPSE
