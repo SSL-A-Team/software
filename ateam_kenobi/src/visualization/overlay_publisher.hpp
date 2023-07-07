@@ -2,7 +2,7 @@
 #define VISUALIZATION__OVERLAY_PUBLISHER_HPP_
 
 #include <rclcpp/node.hpp>
-#include <ateam_msgs/msg/overlay.hpp>
+#include <ateam_msgs/msg/overlay_array.hpp>
 #include <ateam_msgs/msg/play_info.hpp>
 #include <ateam_geometry/types.hpp>
 
