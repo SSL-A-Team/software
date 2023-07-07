@@ -26,6 +26,8 @@ struct PlannerOptions
   double footprint_inflation = 0.05;
 
   double collision_check_resolution = 0.05;
+
+  bool use_default_obstacles = true;
 };
 
 class PathPlanner
@@ -69,6 +71,8 @@ private:
   void addRobotsToObstacles(
     const World & world, const ateam_geometry::Point & start_pos,
     std::vector<ateam_geometry::AnyShape> & obstacles);
+
+  void addDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles);
 
 };
 

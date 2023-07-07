@@ -21,6 +21,10 @@ PathPlanner::Path PathPlanner::getPath(
 
   addRobotsToObstacles(world, start, augmented_obstacles);
 
+  if(options.use_default_obstacles) {
+    addDefaultObstacles(world, augmented_obstacles);
+  }
+
   if (options.avoid_ball) {
     augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
   }
@@ -42,7 +46,9 @@ PathPlanner::Path PathPlanner::getPath(
     }
     bool had_to_split = false;
     for (auto ind = 0u; ind < (path.size() - 1); ++ind) {
-      auto split_result = splitSegmentIfNecessary(path, ind, ind + 1, world, augmented_obstacles, options);
+      auto split_result = splitSegmentIfNecessary(
+        path, ind, ind + 1, world, augmented_obstacles,
+        options);
       if (split_result.split_needed) {
         had_to_split = true;
         if (!split_result.split_succeeded) {
@@ -67,12 +73,12 @@ bool PathPlanner::isStateValid(
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
-  const auto x_bound = (world.field.field_length/2.0) + world.field.boundary_width - kRobotRadius;
-  const auto y_bound = (world.field.field_width/2.0) + world.field.boundary_width - kRobotRadius;
+  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - kRobotRadius;
+  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - kRobotRadius;
   const ateam_geometry::Rectangle pathable_region(
-    ateam_geometry::Point(-x_bound,-y_bound), 
-    ateam_geometry::Point(x_bound,y_bound));
-  if(!CGAL::do_intersect(state, pathable_region)) {
+    ateam_geometry::Point(-x_bound, -y_bound),
+    ateam_geometry::Point(x_bound, y_bound));
+  if (!CGAL::do_intersect(state, pathable_region)) {
     return false;
   }
 
@@ -177,6 +183,17 @@ void PathPlanner::addRobotsToObstacles(
     obstacles.end(),
     their_robot_obstacles.begin(),
     their_robot_obstacles.end());
+}
+
+void PathPlanner::addDefaultObstacles(
+  const World & world,
+  std::vector<ateam_geometry::AnyShape> & obstacles)
+{
+  // goalie box
+  obstacles.push_back(ateam_geometry::Rectangle(
+    ateam_geometry::Point(-world.field.field_length / 2, world.field.goal_width),
+    ateam_geometry::Point(-1 * (world.field.field_length / 2) + world.field.goal_width, -world.field.goal_width)
+  ));
 }
 
 } // namespace ateam_kenobi::path_planning

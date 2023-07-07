@@ -16,6 +16,7 @@ void Goalie::reset()
   easy_move_to_.reset();
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
+  planner_options.use_default_obstacles = false;
   easy_move_to_.setPlannerOptions(planner_options);
 }
 
