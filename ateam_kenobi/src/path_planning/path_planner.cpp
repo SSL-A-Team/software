@@ -29,9 +29,9 @@ PathPlanner::Path PathPlanner::getPath(
     augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
   }
 
-  if (!isStateValid(start, world, augmented_obstacles, options)) {
-    return {};
-  }
+  // if (!isStateValid(start, world, augmented_obstacles, options)) {
+  //   return {};
+  // }
   if (!isStateValid(goal, world, augmented_obstacles, options)) {
     return {};
   }
