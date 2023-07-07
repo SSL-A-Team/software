@@ -138,6 +138,7 @@ private:
       control_msg.kick_vel = 0.0f;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick);
+      control_msg.kick_vel = motion_commands_[id].kick_speed;
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),

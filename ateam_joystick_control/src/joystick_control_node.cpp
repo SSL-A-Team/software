@@ -131,7 +131,10 @@ private:
       joy_message->axes[get_parameter("mapping.angular.z.axis").as_int()];
 
     const auto kick_button = get_parameter("mapping.kick").as_int();
-    command_message.kick = joy_message->buttons[kick_button] && !prev_joy_msg_.buttons[kick_button];
+    if(joy_message->buttons[kick_button]) {
+      command_message.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
+      command_message.kick_speed = 5.0;
+    }
 
     const auto dribbler_inc_button = get_parameter("mapping.dribbler.increment").as_int();
     const auto dribbler_dec_button = get_parameter("mapping.dribbler.decrement").as_int();

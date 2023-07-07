@@ -145,6 +145,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   // Set our kicker to the robot we've chosen
   prev_assigned_id_ = kicker_id;
 
+  play_info_publisher_.send_play_message("our_kickoff_play");
+
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays
