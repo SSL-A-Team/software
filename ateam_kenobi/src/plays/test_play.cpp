@@ -49,16 +49,19 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
   auto current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
-  const auto & robot = current_available_robots[0];
-  int robot_id = robot.id;
-  auto & easy_move_to = easy_move_tos_.at(robot_id);
+  if (current_available_robots.size() > 0) {
+    const auto & robot = current_available_robots[0];
+    int robot_id = robot.id;
+    auto & easy_move_to = easy_move_tos_.at(robot_id);
 
-  easy_move_to.setTargetPosition(world.ball.pos + ateam_geometry::Vector(-.2, 0));
-  easy_move_to.setAngleMode(MotionOptions::AngleMode::face_point, world.ball.pos);
-  maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
+    easy_move_to.setTargetPosition(world.ball.pos + ateam_geometry::Vector(-.2, 0));
+    easy_move_to.face_point(world.ball.pos);
+    maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
+  }
 
   goalie_skill_.runFrame(world, maybe_motion_commands);
   
+  play_info_publisher_.send_play_message("Test Play");
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays
