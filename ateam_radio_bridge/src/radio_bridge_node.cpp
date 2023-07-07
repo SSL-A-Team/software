@@ -25,6 +25,7 @@ public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
     timeout_threshold_(declare_parameter("timeout_ms", 250)),
+    command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
     game_controller_listener_(*this),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
@@ -62,7 +63,9 @@ public:
 
 private:
   const std::chrono::milliseconds timeout_threshold_;
+  const std::chrono::milliseconds command_timeout_threshold_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
+  std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
@@ -70,7 +73,6 @@ private:
   ateam_common::MulticastReceiver discovery_receiver_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
   std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
-  std::array<bool, 16> first_message_received_;
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
 
@@ -79,6 +81,7 @@ private:
     int robot_id)
   {
     motion_commands_[robot_id] = *command_msg;
+    motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
   void CloseConnection(const std::size_t & connection_index)
@@ -124,7 +127,7 @@ private:
       if (connections_[id] == nullptr) {
         continue;
       }
-      if (!first_message_received_[id]) {
+      if((std::chrono::steady_clock::now() - motion_command_timestamps_[id]) > command_timeout_threshold_) {
         continue;
       }
       BasicControl control_msg;
@@ -215,7 +218,7 @@ private:
       get_logger(), "Creating connection for robot %d (%s:%d)", robot_id,
       sender_address.c_str(), sender_port);
 
-    first_message_received_[robot_id] = false;
+    motion_command_timestamps_[robot_id] = {};
     last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
     connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
       sender_address, sender_port,
@@ -277,7 +280,7 @@ private:
         return;
     }
 
-    first_message_received_[robot_id] = true;
+    motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
   void TeamColorChangeCallback(const ateam_common::TeamColor)
