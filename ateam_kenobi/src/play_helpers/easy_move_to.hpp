@@ -35,6 +35,10 @@ public:
 
   void setFacingTowards(std::optional<ateam_geometry::Point> target);
 
+  void setMaxVelocity(double velocity);
+
+  void setMaxAngularVelocity(double velocity);
+
   ateam_msgs::msg::RobotMotionCommand runFrame(const Robot & robot, const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles = {});
 
   ateam_geometry::Point getTargetPosition() const {

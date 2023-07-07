@@ -43,7 +43,7 @@ public:
     void runFrame(const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
 
 private:
-    visualization::OverlayPublisher overlay_publisher_;
+    visualization::OverlayPublisher & overlay_publisher_;
     play_helpers::EasyMoveTo easy_move_to_;
 
     struct IntersectVisitor : public boost::static_visitor<ateam_geometry::Point>

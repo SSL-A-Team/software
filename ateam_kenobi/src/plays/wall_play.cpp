@@ -84,8 +84,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     }
 
     ateam_geometry::Segment wall_line = ateam_geometry::Segment(
-        ateam_geometry::Point(-3, 0.2 * current_available_robots.size() / 2.0),
-        ateam_geometry::Point(-3, -0.2 * current_available_robots.size() / 2.0)
+        ateam_geometry::Point(-3, 0.25 * current_available_robots.size() / 2.0),
+        ateam_geometry::Point(-3, -0.25 * current_available_robots.size() / 2.0)
     );
 
     std::vector<ateam_geometry::Point> positions_to_assign =

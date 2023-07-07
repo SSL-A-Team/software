@@ -24,7 +24,11 @@ export default {
     },
     computed: {
         getAIDescription: function() {
-            return JSON.parse(this.state.world.ai.description);
+            const object = JSON.parse(this.state.world.ai.description);
+            if (object) {
+                return object;
+            }
+            return {};
         }
     },
     watch: {

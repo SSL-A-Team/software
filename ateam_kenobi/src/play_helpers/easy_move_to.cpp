@@ -57,6 +57,14 @@ void EasyMoveTo::setFacingTowards(std::optional<ateam_geometry::Point> target)
   motion_controller_.face_towards = target;
 }
 
+void EasyMoveTo::setMaxVelocity(double velocity) {
+  motion_controller_.v_max = velocity;
+}
+
+void EasyMoveTo::setMaxAngularVelocity(double velocity) {
+  motion_controller_.t_max = velocity;
+}
+
 ateam_msgs::msg::RobotMotionCommand EasyMoveTo::runFrame(
   const Robot & robot, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles)

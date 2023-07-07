@@ -31,7 +31,6 @@ void Goalie::runFrame(
     return;
   }
 
-
   ateam_geometry::Segment goal_line {
     world.field.ours.goal_posts.at(0),
     world.field.ours.goal_posts.at(1)
@@ -64,14 +63,22 @@ void Goalie::runFrame(
   // Pick point
   ateam_geometry::Point defense_point = boost::apply_visitor(IntersectVisitor(maybe_robot.value()), restricted_defense_segment);
 
-  easy_move_to_.setTargetPosition(defense_point);
 
+  // Move
+  easy_move_to_.setTargetPosition(defense_point);
   easy_move_to_.setFacingTowards(world.ball.pos);
   motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
 
+  // STATUS
+  overlay_publisher_.drawLine("shot_ray", {world.ball.pos, target_point}, "red");
+  overlay_publisher_.drawCircle(
+      "defense point",
+      ateam_geometry::makeCircle(defense_point, 0.2), "blue", "transparent");
+
+
   // ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
-  //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, 0.5),
-  //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, -0.5)
+  //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, world.field.goal_width/2.0),
+  //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, -world.field.goal_width/2.0)
   // );
   // overlay_publisher_.drawLine("goalie_line", {goalie_line.point(0), goalie_line.point(1)}, "blue");
 
