@@ -100,17 +100,24 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
         continue;
       }
 
-      const auto & robot = maybe_assigned_robot.value();
+      const Robot & robot = maybe_assigned_robot.value();
+      this->play_info_publisher_.message["Wall Play"]["robots"][robot_id]["pos"] = {robot.pos.x(), robot.pos.y()};
 
       auto & easy_move_to = easy_move_tos_.at(robot_id);
 
       easy_move_to.setTargetPosition(positions_to_assign.at(pos_ind));
       easy_move_to.setFacingTowards(world.ball.pos);
       maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
+
     }
 
     goalie_skill_.runFrame(world, maybe_motion_commands);
+    if (world.our_robots.at(world.referee_info.our_goalie_id).has_value()){
+      const Robot & goalie_robot = world.our_robots.at(world.referee_info.our_goalie_id).value();
+      this->play_info_publisher_.message["Wall Play"]["robots"][world.referee_info.our_goalie_id]["pos"] = {goalie_robot.pos.x(), goalie_robot.pos.y()};
+    }
 
+    play_info_publisher_.send_play_message("Wall Play");
     return maybe_motion_commands;
 };
 
