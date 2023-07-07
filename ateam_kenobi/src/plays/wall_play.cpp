@@ -20,6 +20,7 @@
 
 #include <CGAL/point_generators_2.h>
 
+#include <ateam_common/robot_constants.hpp>
 #include "wall_play.hpp"
 #include "robot_assignment.hpp"
 #include "types/robot.hpp"
@@ -101,22 +102,22 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
       }
 
       const Robot & robot = maybe_assigned_robot.value();
-      this->play_info_publisher_.message["Wall Play"]["robots"][robot_id]["pos"] = {robot.pos.x(), robot.pos.y()};
 
       auto & easy_move_to = easy_move_tos_.at(robot_id);
 
-      easy_move_to.setTargetPosition(positions_to_assign.at(pos_ind));
+      const auto & target_position = positions_to_assign.at(pos_ind);
+
+      auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
+      overlay_publisher_.drawCircle("destination_" + std::to_string(robot_id), viz_circle, "blue", "transparent");
+
+      easy_move_to.setTargetPosition(target_position);
       easy_move_to.setAngleMode(MotionOptions::AngleMode::face_point, world.ball.pos);
       maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
 
     }
 
     goalie_skill_.runFrame(world, maybe_motion_commands);
-    if (world.our_robots.at(world.referee_info.our_goalie_id).has_value()){
-      const Robot & goalie_robot = world.our_robots.at(world.referee_info.our_goalie_id).value();
-      this->play_info_publisher_.message["Wall Play"]["robots"][world.referee_info.our_goalie_id]["pos"] = {goalie_robot.pos.x(), goalie_robot.pos.y()};
-    }
-
+    
     play_info_publisher_.send_play_message("Wall Play");
     return maybe_motion_commands;
 };
