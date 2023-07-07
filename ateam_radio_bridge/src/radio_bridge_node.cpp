@@ -128,7 +128,8 @@ private:
         continue;
       }
       if((std::chrono::steady_clock::now() - motion_command_timestamps_[id]) > command_timeout_threshold_) {
-        continue;
+        motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
+        motion_commands_[id].kick = ateam_msgs::msg::RobotMotionCommand::KICK_DISABLE;
       }
       BasicControl control_msg;
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
@@ -136,13 +137,7 @@ private:
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
       control_msg.kick_vel = 0.0f;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
-      if (motion_commands_[id].kick == 0) {
-        control_msg.kick_request = KR_ARM;
-      } else if (motion_commands_[id].kick == 1){
-        control_msg.kick_request = KR_KICK_TOUCH;
-      } else {
-        control_msg.kick_request = KR_KICK_NOW;
-      }
+      control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick);
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),
