@@ -120,6 +120,7 @@ export class AppState {
 	    const state = this; // fix dumb javascript things
 	    return function(msg:any) {
             let id = msg.ns+"/"+msg.name;
+
             switch(msg.command) {
                 // REPLACE
                 case 0:
@@ -157,6 +158,14 @@ export class AppState {
             for (const member of Object.getOwnPropertyNames(state.world.referee)) {
                 state.world.referee[member] = msg[member];
             }
+        }
+    }
+
+    getPlayInfoCallback() {
+	    const state = this; // fix dumb javascript things
+	    return function(msg:any) {
+                state.world.ai.name = msg.name;
+                state.world.ai.description = msg.description;
         }
     }
 
@@ -260,6 +269,16 @@ export class AppState {
 
         refereeTopic.subscribe(this.getRefereeCallback());
         this.subscriptions["referee"] = refereeTopic;
+
+        // Set up play info subscriber
+        let playInfoTopic = new ROSLIB.Topic({
+            ros: this.ros,
+            name: '/play_info',
+            messageType: 'ateam_msgs/msg/PlayInfo'
+        });
+
+        playInfoTopic.subscribe(this.getPlayInfoCallback());
+        this.subscriptions["playInfo"] = playInfoTopic;
 
         // Set up Goalie Service
         let goalieService = new ROSLIB.Service({

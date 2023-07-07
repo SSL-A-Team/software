@@ -4,7 +4,7 @@
             <v-app-bar-title> ATeam UI </v-app-bar-title>
         </v-app-bar>
         <v-main>
-            <v-container fluid class="d-inline-flex">
+            <v-container fluid class="d-inline-flex justify-space-between">
             <v-row class="flex-nowrap">
                 <v-col v-if="!this.state.comp" class="flex-grow-0 flex-shrink-0">
                     <RefButtonsComponent/>
@@ -16,7 +16,7 @@
                     <GameStatusComponent ref="refStatus"/>
                     <FieldComponent ref="mainField" class="ma-2 pa-2"/>
                 </v-col>
-                <v-col class="flex-grow-0 flex-shrink-0">
+                <v-col class="flex-grow-0 flex-shrink-0" style="max-width:15vw">
                     <AIComponent ref="AIStatus"/>
                 </v-col>
             </v-row>
