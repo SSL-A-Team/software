@@ -4,7 +4,7 @@ namespace ateam_kenobi
 {
 
 PlaySelector::PlaySelector(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
-  : test_play_(overlay_publisher), halt_play_(overlay_publisher), stop_play_(overlay_publisher), wall_play_(overlay_publisher)
+  : test_play_(overlay_publisher, play_info_publisher), halt_play_(overlay_publisher, play_info_publisher), stop_play_(overlay_publisher, play_info_publisher), wall_play_(overlay_publisher, play_info_publisher)
 {
 }
 

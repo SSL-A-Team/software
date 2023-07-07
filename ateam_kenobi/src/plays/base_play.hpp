@@ -5,6 +5,7 @@
 #include <optional>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "visualization/overlay_publisher.hpp"
+#include "visualization/play_info_publisher.hpp"
 #include "types/world.hpp"
 
 namespace ateam_kenobi::plays
@@ -13,8 +14,8 @@ namespace ateam_kenobi::plays
 class BasePlay
 {
 public:
-  explicit BasePlay(visualization::OverlayPublisher & overlay_publisher)
-  : overlay_publisher_(overlay_publisher) {}
+  explicit BasePlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+  : overlay_publisher_(overlay_publisher), play_info_publisher_(play_info_publisher) {}
 
   virtual ~BasePlay() = default;
 
@@ -24,6 +25,7 @@ public:
 
 protected:
   visualization::OverlayPublisher & overlay_publisher_;
+  visualization::PlayInfoPublisher & play_info_publisher_;
 
 };
 

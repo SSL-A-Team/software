@@ -80,7 +80,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
   for(index = this->prev_point; index < this->trajectory.size() - 1; index++) {
     double dist = sqrt(CGAL::squared_distance(robot.pos, this->trajectory[index]));
 
-    if (dist > this->vel * dt) {
+    if (dist > this->v_max * dt) {
       break;
     }
   }
@@ -110,9 +110,13 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
   double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
   double t_command = this->t_controller.computeCommand(t_error, dt_nano);
 
-  // This clamping might be able to cause some weird issues with changing the angle of our velocity vector
-  motion_command.twist.linear.x = std::clamp(x_command, -this->x_max, this->x_max);
-  motion_command.twist.linear.y = std::clamp(y_command, -this->y_max, this->y_max);
+  t_command = 0;
+
+  auto vel_vector = ateam_geometry::Vector(x_command, y_command);
+  auto clamped_vel = this->v_max * ateam_geometry::normalize(vel_vector);
+
+  motion_command.twist.linear.x = clamped_vel.x();
+  motion_command.twist.linear.y = clamped_vel.y();
   motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
 
   // std::cerr << "current: (" << robot.pos.x() << ", " << robot.pos.y() <<") -> " << motion_command.twist.linear.x << ", " << motion_command.twist.linear.y << ", " << motion_command.twist.angular.z << std::endl;

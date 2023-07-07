@@ -23,8 +23,8 @@
 
 namespace ateam_kenobi::plays
 {
-StopPlay::StopPlay(visualization::OverlayPublisher & overlay_publisher)
-: BasePlay(overlay_publisher)
+StopPlay::StopPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+: BasePlay(overlay_publisher, play_info_publisher)
 {
 }
 
@@ -57,11 +57,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
         const auto & robot = maybe_robot.value();
         const auto path = path_planner_.getPath(robot.pos, destination, world, {});
 
-        std::cerr << "robot " << i << "path size: " << path.size() << std::endl;
+        this->play_info_publisher_.message["Stop Play"]["robots"][i]["pos"] = {robot.pos.x(), robot.pos.y()};
 
         auto & motion_controller = this->motion_controllers_[i];
         motion_controller.set_trajectory(path);
-        motion_controller.face_towards = world.ball.pos; // face the ball
+        //motion_controller.face_towards = world.ball.pos; // face the ball
 
         const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
           world.current_time.time_since_epoch()).count();
@@ -79,6 +79,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
       "keepout_circle",
       ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
 
+
+    play_info_publisher_.send_play_message("Stop Play");
     return stop_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

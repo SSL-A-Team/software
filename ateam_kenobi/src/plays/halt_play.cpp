@@ -23,8 +23,8 @@
 
 namespace ateam_kenobi::plays
 {
-HaltPlay::HaltPlay(visualization::OverlayPublisher & overlay_publisher)
-: BasePlay(overlay_publisher)
+HaltPlay::HaltPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+: BasePlay(overlay_publisher, play_info_publisher)
 {
 }
 

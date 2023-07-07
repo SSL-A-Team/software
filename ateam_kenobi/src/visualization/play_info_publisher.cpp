@@ -9,11 +9,12 @@ PlayInfoPublisher::PlayInfoPublisher(rclcpp::Node & node) : publisher_(node.crea
 }
 
 void PlayInfoPublisher::send_play_message(
-    const std::string & play_name,
-    const std::string & info){
+    const std::string & play_name
+    ){
         ateam_msgs::msg::PlayInfo msg;
         msg.name = play_name;
-        msg.description = info;
+        msg.description = this->message.dump();
         publisher_->publish(msg);
+        this->message.clear();
     }
 } // namespace ateam_kenobi::visualization

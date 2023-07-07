@@ -50,13 +50,9 @@ public:
   // Reset the PID controllers and remove previous time to recalculate dt
   void reset();
 
-// Target velocity along the trajectory
-double vel = 2;
-
 // Velocity limits
-double x_max = 2;
-double y_max = 2;
-double t_max = 10;
+double v_max = 2;
+double t_max = 2;
 
 std::optional<ateam_geometry::Point> face_towards;
 

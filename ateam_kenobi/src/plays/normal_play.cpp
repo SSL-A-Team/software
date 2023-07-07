@@ -18,27 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "test_play.hpp"
+#include "normal_play.hpp"
 #include "ateam_geometry/types.hpp"
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
+#include "skills/defender.hpp"
 #include "robot_assignment.hpp"
 
 namespace ateam_kenobi::plays
 {
-TestPlay::TestPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+NormalPlay::NormalPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
 : BasePlay(overlay_publisher, play_info_publisher)
 {
 }
 
-void TestPlay::reset()
+void NormalPlay::reset()
 {
-  motion_controller_.reset();
+  for (int i = 0; i < 16; i++) {
+    motion_controllers_[i].reset();
+  }
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::runFrame(
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> NormalPlay::runFrame(
   const World & world)
 {
+  std::cerr << "running normal play" << std::endl;
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
 
   std::vector<Robot> available_robots;
@@ -48,21 +52,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
     }
   }
 
-  //std::vector<ateam_geometry::Point> test_positions;
-  auto goalie_position = ateam_kenobi::skills::get_goalie_defense_point(world);
-  int goalie_id = world.referee_info.our_goalie_id;
-  if (world.our_robots.at(goalie_id).has_value()){
-    Robot goalie = world.our_robots.at(goalie_id).value();
-    const auto goalie_path = path_planner_.getPath(
-          goalie.pos, goalie_position, world, {});
-    motion_controller_.set_trajectory(goalie_path);
-    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-        world.current_time.time_since_epoch()).count();
-    maybe_motion_commands.at(goalie_id) = motion_controller_.get_command(goalie, current_time);
-  }
-  //const auto & robot_assignments = robot_assignment::assign(available_robots, test_positions)
+  std::vector<ateam_geometry::Point> test_positions;
+  test_positions = ateam_kenobi::skills::get_defender_defense_points(2, world);
+  test_positions.push_back(ateam_kenobi::skills::get_goalie_defense_point(world));
 
-  /*for (const auto [robot_id, pos_ind] : robot_assignments) {
+  const auto & robot_assignments = robot_assignment::assign(available_robots, test_positions);
+
+  for (const auto [robot_id, pos_ind] : robot_assignments) {
     const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
     if (!maybe_assigned_robot) {
       // TODO Log this
@@ -74,23 +70,24 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
     const auto path = path_planner_.getPath(robot.pos, destination, world, {});
     if (path.empty()) {
       overlay_publisher_.drawCircle(
-        "highlight_test_robot",
+        "robot" + std::to_string(robot_id),
         ateam_geometry::makeCircle(robot.pos, 0.2), "red", "transparent");
-      return {};
+      continue;
     }
-    motion_controller_.set_trajectory(path);
-    motion_controller_.face_towards = world.ball.pos; // face the ball
+
+    auto& motion_controller = this->motion_controllers_[robot_id];
+    motion_controller.set_trajectory(path);
+    motion_controller.face_towards = world.ball.pos; // face the ball
     const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
       world.current_time.time_since_epoch()).count();
-    maybe_motion_commands.at(robot_id) = motion_controller_.get_command(robot, current_time);
+    maybe_motion_commands.at(robot_id) = motion_controller.get_command(robot, current_time);
 
-    overlay_publisher_.drawLine("test_path", path, "purple");
+    overlay_publisher_.drawLine("test_path" + std::to_string(robot_id), path, "purple");
     overlay_publisher_.drawCircle(
-      "highlight_test_robot", ateam_geometry::makeCircle(
-        robot.pos,
-        0.2), "purple",
-      "transparent");
-  }*/
+      "robot" + std::to_string(robot_id),
+      ateam_geometry::makeCircle(robot.pos, 0.2), "purple", "transparent");
+  }
+
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__HALT_HPP_
-#define PLAYS__HALT_HPP_
+#ifndef PLAYS__NORMAL_PLAY_HPP_
+#define PLAYS__NORMAL_PLAY_HPP_
 
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
@@ -27,9 +27,9 @@
 
 namespace ateam_kenobi::plays
 {
-class HaltPlay : public BasePlay {
+class NormalPlay : public BasePlay {
   public:
-    explicit HaltPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher);
+    explicit NormalPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher);
 
     void reset() override;
     
@@ -37,10 +37,8 @@ class HaltPlay : public BasePlay {
   private:
 
     path_planning::PathPlanner path_planner_;
-    MotionController motion_controller_;
+    std::array<MotionController, 16> motion_controllers_;
     int prev_assigned_id_ = -1;
 };
 }  // namespace ateam_kenobi::plays
-
-#endif // PLAYS__HALT_HPP_
-
+#endif // PLAYS__NORMAL_PLAY_HPP_
