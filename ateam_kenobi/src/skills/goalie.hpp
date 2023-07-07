@@ -24,9 +24,12 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/nearest_points.hpp>
+#include <ateam_geometry/normalize.hpp>
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
 #include "visualization/overlay_publisher.hpp"
+#include <boost/optional.hpp> 
+#include <boost/variant.hpp> 
 
 namespace ateam_kenobi::skills
 {
@@ -42,7 +45,26 @@ public:
 private:
     visualization::OverlayPublisher overlay_publisher_;
     play_helpers::EasyMoveTo easy_move_to_;
+
+    struct IntersectVisitor : public boost::static_visitor<ateam_geometry::Point>
+    {
+        IntersectVisitor(Robot robot) : robot(robot){}
+
+        Robot robot;
+        // I did something dum with typing this should be a const ref
+        ateam_geometry::Point operator()(ateam_geometry::Segment arg) const
+        {
+            return ateam_geometry::NearestPointOnSegment(arg, robot.pos);
+        }
+        ateam_geometry::Point operator()(ateam_geometry::Point arg) const
+        {
+            return arg;
+        }
+    };
+
 };
+
+
 
 } // namespace ateam_kenobi::skills
 

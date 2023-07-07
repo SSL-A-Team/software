@@ -35,10 +35,11 @@ namespace ateam_geometry
 using Kernel = CGAL::Simple_cartesian<double>;
 using Point = Kernel::Point_2;
 using Segment = Kernel::Segment_2;
+using Ray = Kernel::Ray_2;
 using Rectangle = Kernel::Iso_rectangle_2;
 using Circle = Kernel::Circle_2;
 
-using AnyShape = std::variant<Point, Segment, Rectangle, Circle>;
+using AnyShape = std::variant<Point, Segment, Ray, Rectangle, Circle>;
 
 using PointCreator = CGAL::Creator_uniform_2<double, Point>;
 using Polygon = CGAL::Polygon_2<Kernel>;

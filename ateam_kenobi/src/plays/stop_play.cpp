@@ -79,6 +79,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
       "keepout_circle",
       ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
 
+    // overlay_publisher_.drawSegment(
+    //   "keepout_circle",
+    //   ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
+
 
     play_info_publisher_.send_play_message("Stop Play");
     return stop_motion_commands;
