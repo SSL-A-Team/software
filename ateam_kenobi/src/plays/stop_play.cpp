@@ -59,13 +59,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
         auto & easy_move_to = easy_move_tos_.at(robot_id);
         easy_move_to.setTargetPosition(destination);
         stop_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
-        
-        overlay_publisher_.drawCircle(
-        "stop"+ std::to_string(robot_id),
-        ateam_geometry::makeCircle(destination, 0.15), "blue", "transparent");
-
-        this->play_info_publisher_.message["Stop Play"]["robots"][robot_id]["pos"] = {robot.pos.x(), robot.pos.y()};
-
       } else {
         // literally halt if this one robot is not in the danger zone
         stop_motion_commands[robot_id] = ateam_msgs::msg::RobotMotionCommand{};
