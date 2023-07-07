@@ -32,7 +32,7 @@ namespace ateam_ssl_simulation_radio_bridge::message_conversions
 
 ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg);
 
-RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id);
+RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id, const bool ball_in_breakbeam);
 
 }  // namespace ateam_ssl_simulation_radio_bridge::message_conversions
 

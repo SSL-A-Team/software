@@ -33,15 +33,28 @@ ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg)
   return robot_feedback;
 }
 
-RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id)
+RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id, const bool ball_in_breakbeam)
 {
   RobotControl robots_control;
   RobotCommand * proto_robot_command = robots_control.add_robot_commands();
 
   proto_robot_command->set_id(robot_id);
   proto_robot_command->set_dribbler_speed(2000);
-  if (ros_msg.kick) {
-    proto_robot_command->set_kick_speed(ros_msg.kick_speed);
+
+  switch(ros_msg.kick) {
+    case ateam_msgs::msg::RobotMotionCommand::KICK_ARM:
+    case ateam_msgs::msg::RobotMotionCommand::KICK_DISABLE:
+      // Do nothing because the simulator doesn't "charge" kickers
+      break;
+    case ateam_msgs::msg::RobotMotionCommand::KICK_NOW:
+      proto_robot_command->set_kick_speed(ros_msg.kick_speed);
+      break;
+    case ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH:
+    case ateam_msgs::msg::RobotMotionCommand::KICK_ON_CAPTURE:
+      if(ball_in_breakbeam) {
+        proto_robot_command->set_kick_speed(ros_msg.kick_speed);
+      }
+      break;
   }
 
   RobotMoveCommand * robot_move_command = proto_robot_command->mutable_move_command();
