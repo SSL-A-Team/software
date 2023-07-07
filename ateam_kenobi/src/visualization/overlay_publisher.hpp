@@ -2,7 +2,7 @@
 #define VISUALIZATION__OVERLAY_PUBLISHER_HPP_
 
 #include <rclcpp/node.hpp>
-#include <ateam_msgs/msg/overlay.hpp>
+#include <ateam_msgs/msg/overlay_array.hpp>
 #include <ateam_geometry/types.hpp>
 
 namespace ateam_kenobi::visualization
@@ -35,9 +35,16 @@ public:
     const std::string & color = "white", const uint8_t font_size = 12,
     const uint32_t lifetime = 100);
 
+  /**
+   * @brief Publishes and clears the current buffer of overlays.
+   * @note Plays should NOT call this function. It will be called for you at the end of the frame.
+   */
+  void publishOverlays();
+
 private:
   const std::string ns;
-  rclcpp::Publisher<ateam_msgs::msg::Overlay>::SharedPtr publisher_;
+  ateam_msgs::msg::OverlayArray overlays_;
+  rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr publisher_;
 };
 
 }  // namespace ateam_kenobi::visualization
