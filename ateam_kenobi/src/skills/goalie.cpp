@@ -1,11 +1,11 @@
 #include "goalie.hpp"
-// because CGAL returns boost optionals...
 
 namespace ateam_kenobi::skills
 {
 
-Goalie::Goalie(visualization::OverlayPublisher & overlay_publisher)
-: overlay_publisher_(overlay_publisher),
+Goalie::Goalie(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+: overlay_publisher_(overlay_publisher), 
+  play_info_publisher_(play_info_publisher), 
   easy_move_to_(overlay_publisher)
 {
   reset();
@@ -59,10 +59,9 @@ void Goalie::runFrame(
     return;
   }
   const auto & restricted_defense_segment = maybe_restricted_defense_segment.value();
-
+  
   // Pick point
-  ateam_geometry::Point defense_point = boost::apply_visitor(IntersectVisitor(maybe_robot.value()), restricted_defense_segment);
-
+  ateam_geometry::Point defense_point = boost::apply_visitor(IntersectVisitor(maybe_robot.value(), overlay_publisher_), restricted_defense_segment);
 
   // Move
   easy_move_to_.setTargetPosition(defense_point);
@@ -70,11 +69,11 @@ void Goalie::runFrame(
   motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
 
   // STATUS
-  overlay_publisher_.drawLine("shot_ray", {world.ball.pos, target_point}, "red");
+  // overlay_publisher_.drawLine("shot_ray", {world.ball.pos, target_point}, "red");
   overlay_publisher_.drawCircle(
       "defense point",
       ateam_geometry::makeCircle(defense_point, 0.2), "blue", "transparent");
-
+  play_info_publisher_.message["Goalie"]["defense_point"] = {defense_point.x(), defense_point.y()};
 
   // ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
   //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, world.field.goal_width/2.0),

@@ -63,7 +63,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
         "stop"+ std::to_string(robot_id),
         ateam_geometry::makeCircle(destination, 0.15), "blue", "transparent");
 
-         this->play_info_publisher_.message["Stop Play"]["robots"][robot_id]["pos"] = {robot.pos.x(), robot.pos.y()};
+        this->play_info_publisher_.message["Stop Play"]["robots"][robot_id]["pos"] = {robot.pos.x(), robot.pos.y()};
 
       } else {
         // literally halt if this one robot is not in the danger zone

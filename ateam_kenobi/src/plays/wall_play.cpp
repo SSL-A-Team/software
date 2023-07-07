@@ -60,7 +60,7 @@ namespace ateam_kenobi::plays
 
 WallPlay::WallPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
 : BasePlay(overlay_publisher, play_info_publisher),
-  goalie_skill_(overlay_publisher)
+  goalie_skill_(overlay_publisher, play_info_publisher)
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher);
 }
