@@ -45,11 +45,19 @@ CREATE_PARAM(double, "motion/pid/y_max", y_max, 2);
 CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 */
 
+
 MotionController::MotionController() {
   this->reset();
 }
 
-// Still rotate even if
+void MotionController::set_angle_mode(MotionOptions::AngleMode angle_mode, std::optional<ateam_geometry::Point> point) {
+  this->motion_options.angle_mode = angle_mode;
+
+  if (angle_mode == MotionOptions::AngleMode::face_point) {
+    this->face_towards = point;
+  }
+}
+
 void MotionController::set_trajectory(const std::vector<ateam_geometry::Point>&  trajectory) {
   this->trajectory = trajectory;
   this->prev_point = 0;
@@ -93,22 +101,13 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
   // std::cerr << "target [" << index << "/" << this->trajectory.size()-1 << "]: " << target.x() << ", " << target.y() << std::endl;
   // double target_angle = 0; // TODO: get a target theta
 
+  // Calculate translational movement commands
   double x_error = target.x() - robot.pos.x();
   double x_command = this->x_controller.computeCommand(x_error, dt_nano);
 
   double y_error = target.y() - robot.pos.y();
   double y_command = this->y_controller.computeCommand(y_error, dt_nano);
 
-  double target_angle;
-  if (this->face_towards.has_value()) {
-    target_angle = atan2(this->face_towards.value().y() - robot.pos.y(), this->face_towards.value().x() - robot.pos.x());
-  } else {
-    // face in direction of travel
-    target_angle = atan2(y_error, x_error);
-  }
-
-  double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
-  double t_command = this->t_controller.computeCommand(t_error, dt_nano);
 
   auto vel_vector = ateam_geometry::Vector(x_command, y_command);
 
@@ -120,7 +119,23 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
 
   motion_command.twist.linear.x = vel_vector.x();
   motion_command.twist.linear.y = vel_vector.y();
-  motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
+
+
+  // calculate angle movement commands
+  double target_angle;
+  if (this->motion_options.angle_mode == MotionOptions::AngleMode::face_point && this->face_towards.has_value()) {
+    target_angle = atan2(this->face_towards.value().y() - robot.pos.y(), this->face_towards.value().x() - robot.pos.x());
+  } else {
+    // face in direction of travel
+    target_angle = atan2(y_error, x_error);
+  }
+
+  double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
+  double t_command = this->t_controller.computeCommand(t_error, dt_nano);
+
+  if (this->motion_options.angle_mode != MotionOptions::AngleMode::no_face) {
+    motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
+  }
 
   // std::cerr << "current: (" << robot.pos.x() << ", " << robot.pos.y() <<") -> " << motion_command.twist.linear.x << ", " << motion_command.twist.linear.y << ", " << motion_command.twist.angular.z << std::endl;
 

@@ -32,6 +32,26 @@
 #include "types/robot.hpp"
 #include "types/world.hpp"
 
+struct MotionOptions
+{
+
+  // cause the robot to: always face a point, face in the direction of travel, or stay facing the same direction
+  enum AngleMode{
+    face_point,
+    face_travel,
+    no_face
+  };
+
+  /**
+   * @brief mode that the controller will use to control the angle of the robot
+   */
+  AngleMode angle_mode  = AngleMode::face_travel;
+
+  /**
+   * @brief radius around the end point that will be considered completed
+   */
+  double completion_threshold = .02;  // seconds
+};
 
 /**
  * Generate robot motion commands to follow given trajectory, may handle extra features such as pointing at a location
@@ -43,12 +63,15 @@ public:
 
   // Load a new trajectory into the motion controller resetting its progress along the old one
   void set_trajectory(const std::vector<ateam_geometry::Point>& trajectory);
+  void set_angle_mode(MotionOptions::AngleMode angle_mode, std::optional<ateam_geometry::Point> point = std::nullopt);
 
   // Generate a robot motion command to follow a trajectory
   ateam_msgs::msg::RobotMotionCommand get_command(ateam_kenobi::Robot robot, double current_time);
 
   // Reset the PID controllers and remove previous time to recalculate dt
   void reset();
+
+MotionOptions motion_options;
 
 // Velocity limits
 double v_max = 2;

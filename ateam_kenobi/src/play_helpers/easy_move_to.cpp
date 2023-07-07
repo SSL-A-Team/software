@@ -52,9 +52,9 @@ void EasyMoveTo::setPlannerOptions(path_planning::PlannerOptions options)
   planner_options_ = options;
 }
 
-void EasyMoveTo::setFacingTowards(std::optional<ateam_geometry::Point> target)
+void EasyMoveTo::setAngleMode(MotionOptions::AngleMode angle_mode, std::optional<ateam_geometry::Point> target)
 {
-  motion_controller_.face_towards = target;
+  motion_controller_.set_angle_mode(angle_mode, target);
 }
 
 void EasyMoveTo::setMaxVelocity(double velocity) {

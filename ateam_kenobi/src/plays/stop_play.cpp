@@ -56,7 +56,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
 
         auto & easy_move_to = easy_move_tos_.at(robot_id);
         easy_move_to.setTargetPosition(destination);
-        easy_move_to.setFacingTowards(world.ball.pos);
         stop_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
         
         overlay_publisher_.drawCircle(

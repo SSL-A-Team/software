@@ -33,7 +33,7 @@ public:
 
   void setPlannerOptions(path_planning::PlannerOptions options);
 
-  void setFacingTowards(std::optional<ateam_geometry::Point> target);
+  void setAngleMode(MotionOptions::AngleMode angle_mode, std::optional<ateam_geometry::Point> target = std::nullopt);
 
   void setMaxVelocity(double velocity);
 
