@@ -27,13 +27,14 @@
 namespace ateam_kenobi::plays
 {
 TestPlay::TestPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher)
+: BasePlay(overlay_publisher, play_info_publisher),
+  goalie_skill_(overlay_publisher)
 {
 }
 
 void TestPlay::reset()
 {
-  motion_controller_.reset();
+  goalie_skill_.reset();
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::runFrame(
@@ -41,56 +42,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
 
-  std::vector<Robot> available_robots;
-  for (const auto & maybe_robot : world.our_robots) {
-    if (maybe_robot) {
-      available_robots.push_back(maybe_robot.value());
-    }
-  }
-
-  //std::vector<ateam_geometry::Point> test_positions;
-  auto goalie_position = ateam_kenobi::skills::get_goalie_defense_point(world);
-  int goalie_id = world.referee_info.our_goalie_id;
-  if (world.our_robots.at(goalie_id).has_value()){
-    Robot goalie = world.our_robots.at(goalie_id).value();
-    const auto goalie_path = path_planner_.getPath(
-          goalie.pos, goalie_position, world, {});
-    motion_controller_.set_trajectory(goalie_path);
-    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-        world.current_time.time_since_epoch()).count();
-    maybe_motion_commands.at(goalie_id) = motion_controller_.get_command(goalie, current_time);
-  }
-  //const auto & robot_assignments = robot_assignment::assign(available_robots, test_positions)
-
-  /*for (const auto [robot_id, pos_ind] : robot_assignments) {
-    const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
-    if (!maybe_assigned_robot) {
-      // TODO Log this
-      // Assigned non-available robot
-      continue;
-    }
-    const auto & robot = maybe_assigned_robot.value();
-    const auto & destination = test_positions.at(pos_ind);
-    const auto path = path_planner_.getPath(robot.pos, destination, world, {});
-    if (path.empty()) {
-      overlay_publisher_.drawCircle(
-        "highlight_test_robot",
-        ateam_geometry::makeCircle(robot.pos, 0.2), "red", "transparent");
-      return {};
-    }
-    motion_controller_.set_trajectory(path);
-    motion_controller_.face_towards = world.ball.pos; // face the ball
-    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-      world.current_time.time_since_epoch()).count();
-    maybe_motion_commands.at(robot_id) = motion_controller_.get_command(robot, current_time);
-
-    overlay_publisher_.drawLine("test_path", path, "purple");
-    overlay_publisher_.drawCircle(
-      "highlight_test_robot", ateam_geometry::makeCircle(
-        robot.pos,
-        0.2), "purple",
-      "transparent");
-  }*/
+  goalie_skill_.runFrame(world, maybe_motion_commands);
+  
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

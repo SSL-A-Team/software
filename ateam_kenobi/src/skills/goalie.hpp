@@ -21,22 +21,30 @@
 #ifndef SKILLS__GOALIE_HPP_
 #define SKILLS__GOALIE_HPP_
 
-#include "ateam_geometry/types.hpp"
-#include "ateam_geometry/nearest_points.hpp"
+#include <vector>
+#include <ateam_geometry/types.hpp>
+#include <ateam_geometry/nearest_points.hpp>
+#include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
+#include "visualization/overlay_publisher.hpp"
 
 namespace ateam_kenobi::skills
 {
-inline ateam_geometry::Point get_goalie_defense_point(const World & world){
-    ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
-        ateam_geometry::Point(-4, 0.5),
-        ateam_geometry::Point(-4, -0.5)
-    );
+class Goalie
+{
+public:
+    Goalie(visualization::OverlayPublisher & overlay_publisher);
 
-    ateam_geometry::Point ball_location = world.ball.pos;
+    void reset();
 
-    return ateam_geometry::NearestPointOnSegment(goalie_line, ball_location);
-}
+    void runFrame(const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+
+private:
+    visualization::OverlayPublisher overlay_publisher_;
+    play_helpers::EasyMoveTo easy_move_to_;
+};
+
 } // namespace ateam_kenobi::skills
+
 #endif // SKILLS__GOALIE_HPP_
 

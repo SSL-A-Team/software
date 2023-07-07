@@ -1,0 +1,29 @@
+#include "available_robots.hpp"
+
+namespace ateam_kenobi::play_helpers
+{
+
+std::vector<Robot> getAvailableRobots(const World &world)
+{
+  std::vector<Robot> available_robots;
+  for (const auto & maybe_robot : world.our_robots) {
+    if (maybe_robot) {
+      available_robots.push_back(maybe_robot.value());
+    }
+  }
+  return available_robots;
+}
+
+void removeGoalie(std::vector<Robot> &robots, const World & world)
+{
+  robots.erase(std::remove_if(robots.begin(), robots.end(), [&world](const Robot & robot){
+    return robot.id == world.referee_info.our_goalie_id;
+  }), robots.end());
+}
+
+void removeGoalie(std::array<std::optional<Robot>,16> &robots, const World & world)
+{
+  robots.at(world.referee_info.our_goalie_id).reset();
+}
+
+}  // namespace ateam_kenobi::play_helpers

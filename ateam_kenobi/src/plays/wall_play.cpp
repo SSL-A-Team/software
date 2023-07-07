@@ -24,7 +24,7 @@
 #include "robot_assignment.hpp"
 #include "types/robot.hpp"
 #include "skills/goalie.hpp"
-
+#include "play_helpers/available_robots.hpp"
 namespace ateam_kenobi::plays
 {
     std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(ateam_geometry::Segment & segment, int num_points){
@@ -59,7 +59,8 @@ namespace ateam_kenobi::plays
 
 
 WallPlay::WallPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher)
+: BasePlay(overlay_publisher, play_info_publisher),
+  goalie_skill_(overlay_publisher)
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher);
 }
@@ -68,20 +69,15 @@ void WallPlay::reset(){
   for(auto & move_to : easy_move_tos_) {
     move_to.reset();
   }
+  goalie_skill_.reset();
 };
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::runFrame(
   const World & world)
 {
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
-    std::vector<Robot> current_available_robots;
-
-    // Get the number of available robots
-    for (const auto & maybe_robot : world.our_robots) {
-      if (maybe_robot && maybe_robot.value().id != world.referee_info.our_goalie_id) {
-        current_available_robots.push_back(maybe_robot.value());
-      }
-    }
+    auto current_available_robots = play_helpers::getAvailableRobots(world);
+    play_helpers::removeGoalie(current_available_robots, world);
 
     if (current_available_robots.empty()) {
       return maybe_motion_commands;
@@ -113,21 +109,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
       maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
     }
 
-    int our_goalie_id = world.referee_info.our_goalie_id;
-    if (auto maybe_goalie = world.our_robots.at(our_goalie_id)) {
-      Robot our_goalie = maybe_goalie.value();
-      auto goalie_point = ateam_kenobi::skills::get_goalie_defense_point(world);
-      auto & goalie_move_to = easy_move_tos_.at(our_goalie_id);
-      goalie_move_to.setTargetPosition(goalie_point);
-      goalie_move_to.setFacingTowards(world.ball.pos);
-      path_planning::PlannerOptions options;
-      options.avoid_ball = false;
-      goalie_move_to.setPlannerOptions(options);
-      maybe_motion_commands.at(our_goalie_id) = goalie_move_to.runFrame(our_goalie, world);
-    }
+    goalie_skill_.runFrame(world, maybe_motion_commands);
 
     return maybe_motion_commands;
 };
-
 
 } // namespace ateam_kenobi::plays
