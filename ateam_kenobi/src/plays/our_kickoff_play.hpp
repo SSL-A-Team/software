@@ -27,6 +27,7 @@
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
 #include "ateam_geometry/types.hpp"
+#include "ateam_common/game_controller_listener.hpp"
 #include "types/robot.hpp"
 #include "skills/goalie.hpp"
 
@@ -41,18 +42,19 @@ public:
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override;
+  
+  void set_kickoff_ready();
 
 private:
-  path_planning::PathPlanner path_planner_;
-  std::array<MotionController, 16> motion_controllers_;
-  std::array<std::optional<std::vector<ateam_geometry::Point>>, 16> saved_paths_;
-  std::vector<Robot> available_robots_;
   skills::Goalie goalie_skill_;
-
   std::vector<ateam_geometry::Point> positions_to_assign_;
+  bool ready_to_kickoff_ = false;
+
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
 
   int prev_assigned_id_ = -1;
+  std::array<bool, 16> attempted_to_kick_;
 };
 }  // namespace ateam_kenobi::plays
 
