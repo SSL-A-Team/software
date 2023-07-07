@@ -115,7 +115,7 @@ void OverlayPublisher::drawText(
 }
 
 void OverlayPublisher::publishOverlays() {
-  publisher_->publish(overlays_);
+  if (!overlays_.overlays.empty()) { publisher_->publish(overlays_); }
   overlays_.overlays.clear();
 }
 

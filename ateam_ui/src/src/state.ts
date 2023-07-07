@@ -119,23 +119,24 @@ export class AppState {
     getOverlayCallback() {
 	    const state = this; // fix dumb javascript things
 	    return function(msg:any) {
-            let id = msg.ns+"/"+msg.name;
-
-            switch(msg.command) {
-                // REPLACE
-                case 0:
-                    state.world.field.overlays[id] = new Overlay(id, msg);
-                    break;
-                // EDIT
-                case 1:
-                    //TODO: Not sure if this command is necessary, will implement later if it is
-                    // Might need to handle moving overlay between z-depths
-                    state.world.field.overlays[id] = new Overlay(id, msg);
-                    break;
-                // REMOVE
-                case 2:
-                    delete state.world.field.overlays[id];
-                    break;
+            for (const overlay of msg.overlays) {
+                let id = overlay.ns+"/"+overlay.name;
+                switch(overlay.command) {
+                    // REPLACE
+                    case 0:
+                        state.world.field.overlays[id] = new Overlay(id, overlay);
+                        break;
+                    // EDIT
+                    case 1:
+                        //TODO: Not sure if this command is necessary, will implement later if it is
+                        // Might need to handle moving overlay between z-depths
+                        state.world.field.overlays[id] = new Overlay(id, overlay);
+                        break;
+                    // REMOVE
+                    case 2:
+                        delete state.world.field.overlays[id];
+                        break;
+                }
             }
         }
     }
@@ -244,8 +245,8 @@ export class AppState {
         // Set up overlay subscriber
         let overlayTopic = new ROSLIB.Topic({
             ros: this.ros,
-            name: '/overlay',
-            messageType: 'ateam_msgs/msg/Overlay'
+            name: '/overlays',
+            messageType: 'ateam_msgs/msg/OverlayArray'
         });
         overlayTopic.subscribe(this.getOverlayCallback());
         this.subscriptions["overlay"] = overlayTopic;
