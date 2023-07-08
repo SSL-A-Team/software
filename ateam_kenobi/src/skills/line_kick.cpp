@@ -22,8 +22,8 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
 
   overlay_publisher_.drawLine("LineKick_line", {pre_kick_position, target_point_}, "#FFFF007F");
 
-  const auto distance_to_opre_kick = ateam_geometry::norm(robot.pos, pre_kick_position);
-  if (distance_to_opre_kick > 0.05) {
+  const auto distance_to_pre_kick = ateam_geometry::norm(robot.pos, pre_kick_position);
+  if (distance_to_pre_kick > 0.05) {
     if (prev_state_ != State::MoveToPreKick) {
       easy_move_to_.reset();
       prev_state_ = State::MoveToPreKick;
@@ -61,7 +61,10 @@ ateam_msgs::msg::RobotMotionCommand LineKick::moveToPreKick(
   easy_move_to_.setPlannerOptions({});
   easy_move_to_.setTargetPosition(getPreKickPosition(world));
   easy_move_to_.face_travel();
-  return easy_move_to_.runFrame(robot, world);
+  std::vector<ateam_geometry::AnyShape> obstacles = {
+    ateam_geometry::makeCircle(world.ball.pos, 0.02)
+  };
+  return easy_move_to_.runFrame(robot, world, obstacles);
 }
 
 ateam_msgs::msg::RobotMotionCommand LineKick::faceBall(const World & world, const Robot & robot)

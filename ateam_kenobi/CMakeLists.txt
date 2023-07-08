@@ -25,6 +25,7 @@ add_library(kenobi_node_component SHARED
   src/plays/stop_play.cpp
   src/plays/our_kickoff_play.cpp
   src/plays/wall_play.cpp
+  src/plays/basic_122.cpp
   src/types/message_conversions.cpp
   src/motion/motion_controller.cpp
   src/visualization/overlay_publisher.cpp

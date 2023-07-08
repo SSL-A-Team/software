@@ -44,7 +44,7 @@ std::vector<ateam_msgs::msg::RobotMotionCommand> Blockers::runFrame(
 
   std::vector<ateam_msgs::msg::RobotMotionCommand> motion_commands;
 
-  for(auto robot_index = 0; robot_index < robots.size(); ++robot_index)
+  for(auto robot_index = 0ul; robot_index < robots.size(); ++robot_index)
   {
     const auto & robot = robots[robot_index];
     const auto & position = positions[robot_index];
@@ -67,6 +67,9 @@ std::vector<Robot> Blockers::getRankedBlockableRobots(const World & world)
     const auto r2_dist = ateam_geometry::norm(world.ball.pos, r2.pos);
     return r1_dist < r2_dist;
   });
+  if(visible_opponents.empty()) {
+    return visible_opponents;
+  }
   // Pop first robot, assuming it's handling the ball
   visible_opponents.erase(visible_opponents.begin());
   return visible_opponents;
@@ -74,6 +77,6 @@ std::vector<Robot> Blockers::getRankedBlockableRobots(const World & world)
 
 ateam_geometry::Point Blockers::getBlockingPosition(const World & world, const Robot & blockee)
 {
-  return blockee.pos + ((kRobotDiameter+0.05) * ateam_geometry::normalize(blockee.pos - world.ball.pos));
+  return blockee.pos + ((kRobotDiameter+0.1) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
 }
 }
