@@ -29,6 +29,13 @@ private:
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 
+  enum class State {
+    MoveToPreKick,
+    FaceBall,
+    KickBall
+  };
+  State prev_state_ = State::MoveToPreKick;
+
   ateam_geometry::Point getPreKickPosition(const World & world);
 
   ateam_msgs::msg::RobotMotionCommand moveToPreKick(const World & world, const Robot & robot);
