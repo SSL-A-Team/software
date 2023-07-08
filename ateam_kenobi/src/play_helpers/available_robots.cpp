@@ -5,8 +5,13 @@ namespace ateam_kenobi::play_helpers
 
 std::vector<Robot> getAvailableRobots(const World &world)
 {
+  return getVisibleRobots(world.our_robots);
+}
+
+std::vector<Robot> getVisibleRobots(const std::array<std::optional<Robot>, 16> &robots)
+{
   std::vector<Robot> available_robots;
-  for (const auto & maybe_robot : world.our_robots) {
+  for (const auto & maybe_robot : robots) {
     if (maybe_robot) {
       available_robots.push_back(maybe_robot.value());
     }

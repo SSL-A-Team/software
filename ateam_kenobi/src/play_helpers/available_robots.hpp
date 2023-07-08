@@ -10,6 +10,8 @@ namespace ateam_kenobi::play_helpers
 
 std::vector<Robot> getAvailableRobots(const World & world);
 
+std::vector<Robot> getVisibleRobots(const std::array<std::optional<Robot>, 16> &robots);
+
 void removeGoalie(std::vector<Robot> & robots, const World & world);
 
 void removeGoalie(std::array<std::optional<Robot>,16> & robots, const World & world);
