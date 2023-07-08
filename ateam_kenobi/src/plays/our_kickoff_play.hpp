@@ -30,6 +30,7 @@
 #include "ateam_common/game_controller_listener.hpp"
 #include "types/robot.hpp"
 #include "skills/goalie.hpp"
+#include "skills/line_kick.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -46,14 +47,14 @@ public:
   void set_kickoff_ready();
 
 private:
+  skills::LineKick line_kick_skill_;
   skills::Goalie goalie_skill_;
-  std::vector<ateam_geometry::Point> positions_to_assign_;
-  bool ready_to_kickoff_ = false;
+  std::vector<ateam_geometry::Point> defender_positions_;
 
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
-
-  int prev_assigned_id_ = -1;
+  int prev_id_ = -1;
+  const std::optional<Robot> maybe_kicker_;
   std::array<bool, 16> attempted_to_kick_;
 };
 }  // namespace ateam_kenobi::plays
