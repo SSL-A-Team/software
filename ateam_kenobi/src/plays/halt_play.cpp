@@ -39,6 +39,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> HaltPlay::run
     for (size_t i = 0; i < 16; ++i){
         halt_motion_commands[i] = ateam_msgs::msg::RobotMotionCommand{};
     }
+
+    play_info_publisher_.send_play_message("Halt Play");
     return halt_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

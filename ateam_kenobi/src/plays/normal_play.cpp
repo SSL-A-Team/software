@@ -88,6 +88,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> NormalPlay::r
       ateam_geometry::makeCircle(robot.pos, 0.2), "purple", "transparent");
   }
 
+  play_info_publisher_.send_play_message("Normal Play");
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

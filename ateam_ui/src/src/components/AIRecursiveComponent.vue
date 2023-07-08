@@ -3,7 +3,7 @@
         <div v-if="this.isLeaf" :style="{'margin-left': this.spacing + 'px'}">
             {{ this.node }}
         </div>
-        <div v-if="!this.isLeaf" :style="{'margin-left': this.spacing + 'px'}">
+        <div v-if="this.isValid && !this.isLeaf" :style="{'margin-left': this.spacing + 'px'}">
             <AIRecursiveComponent
                 v-for="member in Object.getOwnPropertyNames(this.node)"
                     :key= "member"
@@ -34,6 +34,9 @@ export default {
         }
     },
     computed: {
+        isValid: function() {
+            return !(this.node === null || this.node === undefined)
+        },
         isLeaf: function() {
             return (typeof this.node === "string" || typeof this.node=== "number" || typeof this.node === "boolean")
         },

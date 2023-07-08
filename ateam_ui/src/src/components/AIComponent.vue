@@ -1,5 +1,5 @@
 <template>
-    <v-card variant="outlined" style="white-space: nowrap; overflow: visible">
+    <v-card variant="outlined" style="white-space: nowrap; overflow: hidden">
         <div style="margin: 5px">
             <AIRecursiveComponent v-for="member of Object.getOwnPropertyNames(getAIDescription)"
                 :key="member"
@@ -24,17 +24,19 @@ export default {
     },
     computed: {
         getAIDescription: function() {
-            const object = JSON.parse(this.state.world.ai.description);
-            if (object) {
+            let object = JSON.parse(this.state.world.ai.description);
+            if (object && this.state.world.ai.description != "{}") {
                 return object;
             }
-            return {};
+
+            object = {};
+            object[this.state.world.ai.name] = "";
+            return object;
         }
     },
     watch: {
-        getAIState: {
+        getAIDescription: {
             handler() {
-                this.$el.textContent = '';
             },
             deep: true
         },

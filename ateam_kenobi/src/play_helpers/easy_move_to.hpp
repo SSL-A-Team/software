@@ -33,7 +33,10 @@ public:
 
   void setPlannerOptions(path_planning::PlannerOptions options);
 
-  void setAngleMode(MotionOptions::AngleMode angle_mode, std::optional<ateam_geometry::Point> target = std::nullopt);
+  void face_point(std::optional<ateam_geometry::Point> point);
+  void face_absolute(double angle);
+  void face_travel();
+  void no_face();
 
   void setMaxVelocity(double velocity);
 
@@ -53,6 +56,7 @@ private:
   path_planning::PlannerOptions planner_options_;
   path_planning::PathPlanner path_planner_;
   MotionController motion_controller_;
+  MotionOptions motion_options_;
   visualization::OverlayPublisher * overlay_publisher_;
 
   path_planning::PathPlanner::Path planPath(const Robot & robot, const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles);
