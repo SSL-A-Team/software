@@ -120,7 +120,7 @@ void Goalie::runFrame(
       ateam_geometry::Point setback_point = goal_midpoint + (world.field.goal_depth / scale_in_factor) * (goal_line.target() - goal_line.source()).perpendicular(CGAL::Orientation::NEGATIVE);
       ateam_geometry::Segment shot_segment (setback_point, closest_robot.pos);
       shot_ray = {closest_robot.pos, setback_point};
-      overlay_publisher_.drawLine("shot_segment", shot_segment, "orange");
+      overlay_publisher_.drawLine("shot_segment", {shot_segment.source(), shot_segment.target()}, "orange");
 
       // seperate to function for sure with a given else lambda
       boost::optional<boost::variant<ateam_geometry::Point, ateam_geometry::Segment>> maybe_target_variant = 
@@ -153,7 +153,7 @@ void Goalie::runFrame(
         ateam_geometry::Point setback_point = goal_midpoint + (world.field.goal_depth / scale_in_factor) * (goal_line.target() - goal_line.source()).perpendicular(CGAL::Orientation::NEGATIVE);
         ateam_geometry::Segment shot_segment (setback_point, opponent_robot.pos);
         shot_ray = {opponent_robot.pos, setback_point};
-        overlay_publisher_.drawLine("shot_segment", shot_segment, "orange");
+        overlay_publisher_.drawLine("shot_segment", {shot_segment.source(), shot_segment.target()}, "orange");
 
         // seperate to function for sure with a given else lambda
         boost::optional<boost::variant<ateam_geometry::Point, ateam_geometry::Segment>> maybe_target_variant = 
