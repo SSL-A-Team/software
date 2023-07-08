@@ -53,6 +53,8 @@ public:
         case ateam_common::GameCommand::BallPlacementOurs:
         case ateam_common::GameCommand::BallPlacementTheirs:
         case ateam_common::GameCommand::NormalStart:
+        case ateam_common::GameCommand::PreparePenaltyOurs:
+        case ateam_common::GameCommand::PreparePenaltyTheirs:
           // reset in_play in any of these state
           in_play = false;
           break;

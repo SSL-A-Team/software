@@ -9,5 +9,6 @@
 #include "our_kickoff_play.hpp"
 #include "test_kick_play.hpp"
 #include "basic_122.hpp"
+#include "our_penalty_play.hpp"
 
 #endif // PLAYS__ALL_PLAYS_HPP_
