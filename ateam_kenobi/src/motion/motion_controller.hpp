@@ -45,7 +45,7 @@ struct MotionOptions
   /**
    * @brief radius around the end point that will be considered completed
    */
-  double completion_threshold = .02;  // seconds
+  double completion_threshold = .02;  // meters
 };
 
 /**
