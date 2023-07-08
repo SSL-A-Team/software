@@ -20,8 +20,28 @@
 namespace ateam_kenobi::robot_assignment
 {
 
+// #define USE_HACKY_ASSIGNMENT
+
 inline std::unordered_map<size_t, size_t> assign(const std::vector<Robot> & available_robots, const std::vector<ateam_geometry::Point> & goal_positions)
 {
+#ifdef USE_HACKY_ASSIGNMENT
+  
+  /*
+   * Hacky version that just assigns robots in order
+   */
+  std::unordered_map<size_t, size_t> assignments;
+  auto num_assignments = std::min(available_robots.size(), goal_positions.size());
+  for(auto index = 0ul; index < num_assignments; ++index)
+  {
+    assignments[available_robots[index].id] = index;
+  }
+  return assignments;
+
+#else
+
+  /*
+   * Hungarian-algorithm-based assignment implementation
+   */
   Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(
     available_robots.size(),
     goal_positions.size(), std::numeric_limits<double>::max());  // NOT INFINITY
@@ -40,6 +60,8 @@ inline std::unordered_map<size_t, size_t> assign(const std::vector<Robot> & avai
   }
   // Map of original robot indexes (1-16) and what of the n goals each is assigned to
   return original_indexes_map;
+
+#endif
 }
 
 }  // namespace ateam_kenobi::robot_assignment
