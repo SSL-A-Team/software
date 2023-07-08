@@ -41,8 +41,7 @@ EasyMoveTo::EasyMoveTo(visualization::OverlayPublisher & overlay_publisher)
 : instance_name_("EasyMoveToViz" + std::to_string(instance_index_)),
   overlay_publisher_(&overlay_publisher)
 {
-  std::cerr << "EasyMoveTo instance " << instance_index_ << '
-';
+  std::cerr << "EasyMoveTo instance " << instance_index_ << '\n';
   instance_index_++;
 }
 
@@ -89,8 +88,7 @@ void EasyMoveTo::no_face() {
 
 void EasyMoveTo::setMaxVelocity(double velocity) {
   if (velocity > 3.0) {
-    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX VELOCITY
-";
+    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX VELOCITY\n";
     return;
   }
   motion_controller_.v_max = velocity;
@@ -98,8 +96,7 @@ void EasyMoveTo::setMaxVelocity(double velocity) {
 
 void EasyMoveTo::setMaxAngularVelocity(double velocity) {
   if (velocity > 6.5) {
-    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX ANGULAR VELOCITY
-";
+    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX ANGULAR VELOCITY\n";
     return;
   }
   motion_controller_.t_max = velocity;
