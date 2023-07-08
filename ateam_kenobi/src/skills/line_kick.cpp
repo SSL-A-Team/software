@@ -31,7 +31,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
     return moveToPreKick(world, robot);
   }
 
-  const auto robot_to_ball = world.ball.pos - robot.pos;
+  const auto robot_to_ball = target_point_ - robot.pos;
   const auto robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
   if (angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) > 0.02) {
     if (prev_state_ != State::FaceBall) {
@@ -71,8 +71,8 @@ ateam_msgs::msg::RobotMotionCommand LineKick::faceBall(const World & world, cons
 {
   easy_move_to_.setPlannerOptions({});
   easy_move_to_.setTargetPosition(robot.pos);
-  easy_move_to_.face_point(world.ball.pos);
-  easy_move_to_.setMaxAngularVelocity(0.5);
+  easy_move_to_.face_point(target_point_);
+  easy_move_to_.setMaxAngularVelocity(1.0);
   return easy_move_to_.runFrame(robot, world);
 }
 
@@ -80,15 +80,17 @@ ateam_msgs::msg::RobotMotionCommand LineKick::kickBall(const World & world, cons
 {
   const auto robot_to_ball = (world.ball.pos - robot.pos);
   easy_move_to_.setTargetPosition(
-    world.ball.pos +
+    robot.pos +
     (0.1 * ateam_geometry::normalize(robot_to_ball)));
-  easy_move_to_.face_point(world.ball.pos);
+  easy_move_to_.face_point(target_point_);
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   planner_options.footprint_inflation = 0.0;
   planner_options.use_default_obstacles = false;
   easy_move_to_.setPlannerOptions(planner_options);
   auto command = easy_move_to_.runFrame(robot, world);
+  command.twist.linear.x = std::cos(robot.theta) * 0.5;
+  command.twist.linear.y = std::sin(robot.theta) * 0.5;
   command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
   command.kick_speed = 5.0;
   return command;

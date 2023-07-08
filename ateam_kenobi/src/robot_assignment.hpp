@@ -20,7 +20,7 @@
 namespace ateam_kenobi::robot_assignment
 {
 
-#define USE_HACKY_ASSIGNMENT
+// #define USE_HACKY_ASSIGNMENT
 
 inline std::unordered_map<size_t, size_t> assign(const std::vector<Robot> & available_robots, const std::vector<ateam_geometry::Point> & goal_positions)
 {
