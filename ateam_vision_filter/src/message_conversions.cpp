@@ -31,7 +31,6 @@ namespace ateam_vision_filter::message_conversions
 
 ateam_msgs::msg::BallState toMsg(const std::optional<Ball> & maybe_ball)
 {
-
   ateam_msgs::msg::BallState ball_state_msg;
   ball_state_msg.visible = maybe_ball.has_value();
   if (maybe_ball.has_value()) {

@@ -18,20 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "motion/motion_controller.hpp"
+#include "motion_controller.hpp"
 
+#include <angles/angles.h>
+#include <CGAL/squared_distance_2.h>
+#include <algorithm>
+#include <cmath>
+#include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_common/parameters.hpp>
-
-#include <vector>
-#include <algorithm>
-#include <angles/angles.h>
-#include <cmath>
-
 #include "ateam_geometry/ateam_geometry.hpp"
 #include "control_toolbox/pid.hpp"
-#include "CGAL/squared_distance_2.h"
 
 /*
 // PID gains
@@ -85,7 +83,7 @@ void MotionController::set_trajectory(const std::vector<ateam_geometry::Point> &
   this->prev_point = 0;
 
   this->progress = 0;
-  // TODO: get total distance along the trajectory
+  // TODO(anon): get total distance along the trajectory
   this->total_dist = 0;
 }
 
@@ -103,13 +101,13 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
 
   double dt = current_time - this->prev_time;
-  uint64_t dt_nano = dt * 1000000; // convert to nanoseconds
+  uint64_t dt_nano = dt * 1000000;  // convert to nanoseconds
 
-  // TODO: figure out what point on the trajectory to use as the target
+  // TODO(anon): figure out what point on the trajectory to use as the target
   uint64_t index;
 
   // find a point in the trajectory that is far enough away from our current location
-  // for loop bound ensures index never exceeds the length of the trajectory even after the loop ends
+  // for loop bound ensures index never exceeds the trajectory length even after the loop ends
   for (index = this->prev_point; index < this->trajectory.size() - 1; index++) {
     double dist = sqrt(CGAL::squared_distance(robot.pos, this->trajectory[index]));
 
@@ -181,7 +179,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
 void MotionController::reset()
 {
-  // TODO: handle pid gains better
+  // TODO(anon): handle pid gains better
   this->x_controller.initPid(3.0, 0, 0, 0, 0);
   this->y_controller.initPid(3.0, 0, 0, 0, 0);
   this->t_controller.initPid(5.0, 0, 0, 0, 0);

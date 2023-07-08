@@ -22,6 +22,7 @@
 #ifndef SKILLS__BLOCKERS_HPP_
 #define SKILLS__BLOCKERS_HPP_
 
+#include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "visualization/overlay_publisher.hpp"
 #include "types/world.hpp"
@@ -33,7 +34,7 @@ namespace ateam_kenobi::skills
 class Blockers
 {
 public:
-  Blockers(visualization::OverlayPublisher & overlay_publisher);
+  explicit Blockers(visualization::OverlayPublisher & overlay_publisher);
 
   void reset();
 
@@ -50,9 +51,8 @@ private:
   std::vector<Robot> getRankedBlockableRobots(const World & world);
 
   ateam_geometry::Point getBlockingPosition(const World & world, const Robot & blockee);
-
 };
 
-}
+}  // namespace ateam_kenobi::skills
 
 #endif  // SKILLS__BLOCKERS_HPP_

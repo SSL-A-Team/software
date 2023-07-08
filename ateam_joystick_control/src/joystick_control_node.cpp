@@ -116,7 +116,6 @@ private:
 
   void JoyCallback(const sensor_msgs::msg::Joy::SharedPtr joy_message)
   {
-
     if (!control_publisher_) {
       return;
     }

@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NORMAL_
-#define ATEAM_GEOMETRY__NORMAL_
+#ifndef ATEAM_GEOMETRY__NORMALIZE_HPP_
+#define ATEAM_GEOMETRY__NORMALIZE_HPP_
 
 #include <Eigen/Dense>
 #include "ateam_geometry/types.hpp"
@@ -49,7 +49,7 @@ inline double norm(T const & V)
   return CGAL::approximate_sqrt(V.squared_length());
 }
 
-}
+}  // namespace ateam_geometry
 
 
-#endif  // ATEAM_GEOMETRY__NORMAL_
+#endif  // ATEAM_GEOMETRY__NORMALIZE_HPP_

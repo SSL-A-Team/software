@@ -21,6 +21,8 @@
 
 #include "path_planner.hpp"
 #include <ranges>
+#include <algorithm>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 
@@ -228,4 +230,4 @@ void PathPlanner::addDefaultObstacles(
   ));
 }
 
-} // namespace ateam_kenobi::path_planning
+}  // namespace ateam_kenobi::path_planning

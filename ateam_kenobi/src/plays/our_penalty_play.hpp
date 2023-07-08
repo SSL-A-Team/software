@@ -42,9 +42,8 @@ public:
 private:
   skills::LineKick line_kick_skill_;
   std::array<play_helpers::EasyMoveTo, 16> move_tos_;
-
 };
 
-}
+}  // namespace ateam_kenobi::plays
 
 #endif  // PLAYS__OUR_PENALTY_PLAY_HPP_

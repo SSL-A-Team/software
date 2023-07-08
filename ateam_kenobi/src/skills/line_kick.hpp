@@ -34,7 +34,7 @@ namespace ateam_kenobi::skills
 class LineKick
 {
 public:
-  LineKick(visualization::OverlayPublisher & overlay_publisher);
+  explicit LineKick(visualization::OverlayPublisher & overlay_publisher);
 
   void setTargetPoint(ateam_geometry::Point point)
   {
@@ -68,6 +68,6 @@ private:
   ateam_msgs::msg::RobotMotionCommand kickBall(const World & world, const Robot & robot);
 };
 
-}
+}  // namespace ateam_kenobi::skills
 
 #endif  // SKILLS__LINE_KICK_HPP_

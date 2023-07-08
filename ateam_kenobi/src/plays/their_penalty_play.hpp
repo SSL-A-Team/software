@@ -42,9 +42,8 @@ public:
 private:
   std::array<play_helpers::EasyMoveTo, 16> move_tos_;
   skills::Goalie goalie_skill_;
-
 };
 
-}
+}  // namespace ateam_kenobi::plays
 
 #endif  // PLAYS__THEIR_PENALTY_PLAY_HPP_

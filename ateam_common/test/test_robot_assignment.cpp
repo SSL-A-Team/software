@@ -26,7 +26,6 @@
 using assign = ateam_common::robot_assignment::assign;
 
 TEST(RobotAssignment, assign_simple) {
-
   // goals should be assigned in robot order as the robots are on top of each goal
   std::vector<Robot> robots1 {{
     {{1, 0, 0}, {}, {}, 0},
@@ -106,5 +105,4 @@ TEST(RobotAssignment, assign_simple) {
   //   {0, 2},
   //   {1, 3},
   // }};
-
 }

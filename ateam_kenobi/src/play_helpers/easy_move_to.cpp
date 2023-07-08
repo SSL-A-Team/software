@@ -154,4 +154,4 @@ void EasyMoveTo::drawTrajectoryOverlay(
   }
 }
 
-} // namespace ateam_kenobi::play_helpers
+}  // namespace ateam_kenobi::play_helpers

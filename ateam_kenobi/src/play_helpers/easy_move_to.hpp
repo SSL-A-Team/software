@@ -22,6 +22,8 @@
 #ifndef PLAY_HELPERS__EASY_MOVE_TO_HPP_
 #define PLAY_HELPERS__EASY_MOVE_TO_HPP_
 
+#include <vector>
+#include <string>
 #include <ateam_geometry/types.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "path_planning/path_planner.hpp"
@@ -46,7 +48,7 @@ public:
    */
   EasyMoveTo() {}
 
-  EasyMoveTo(visualization::OverlayPublisher & overlay_publisher);
+  explicit EasyMoveTo(visualization::OverlayPublisher & overlay_publisher);
 
   EasyMoveTo & operator=(EasyMoveTo && other);
 

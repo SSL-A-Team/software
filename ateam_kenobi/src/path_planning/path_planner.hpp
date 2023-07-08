@@ -22,6 +22,7 @@
 #ifndef PATH_PLANNING__PATH_PLANNER_HPP_
 #define PATH_PLANNING__PATH_PLANNER_HPP_
 
+#include <vector>
 #include <ateam_geometry/types.hpp>
 #include "types/world.hpp"
 
@@ -94,9 +95,8 @@ private:
     std::vector<ateam_geometry::AnyShape> & obstacles);
 
   void addDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles);
-
 };
 
-}  // namespace ateam_kenobi::path_planning;
+}  // namespace ateam_kenobi::path_planning
 
 #endif  // PATH_PLANNING__PATH_PLANNER_HPP_

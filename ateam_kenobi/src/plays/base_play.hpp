@@ -50,7 +50,6 @@ public:
 protected:
   visualization::OverlayPublisher & overlay_publisher_;
   visualization::PlayInfoPublisher & play_info_publisher_;
-
 };
 
 }  // namespace ateam_kenobi::plays

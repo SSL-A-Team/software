@@ -18,15 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+
 #ifndef ATEAM_COMMON__ANGLE_HPP_
 #define ATEAM_COMMON__ANGLE_HPP_
 
-#include <Eigen/Dense>
-
 #include <angles/angles.h>
+#include <Eigen/Dense>
+#include <cmath>
 #include <ateam_geometry/types.hpp>
 
-#include <cmath>
 
 namespace ateam_common
 {

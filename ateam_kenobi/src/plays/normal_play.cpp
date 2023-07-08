@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "normal_play.hpp"
+#include <vector>
 #include "ateam_geometry/types.hpp"
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
@@ -63,7 +64,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> NormalPlay::r
   for (const auto [robot_id, pos_ind] : robot_assignments) {
     const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
     if (!maybe_assigned_robot) {
-      // TODO Log this
+      // TODO(anon) Log this
       // Assigned non-available robot
       continue;
     }
@@ -79,7 +80,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> NormalPlay::r
 
     auto & motion_controller = this->motion_controllers_[robot_id];
     motion_controller.set_trajectory(path);
-    motion_controller.face_towards = world.ball.pos; // face the ball
+    motion_controller.face_towards = world.ball.pos;  // face the ball
     const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
       world.current_time.time_since_epoch()).count();
     maybe_motion_commands.at(robot_id) = motion_controller.get_command(robot, current_time);

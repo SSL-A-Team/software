@@ -169,4 +169,4 @@ void MulticastReceiver::JoinMulticastGroupOnAllV4Interfaces(
     std::cerr << address << '\n';
   }
 }
-} // namespace ateam_common
+}  // namespace ateam_common

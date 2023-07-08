@@ -68,9 +68,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
         stop_motion_commands[robot_id] = ateam_msgs::msg::RobotMotionCommand{};
       }
       continue;
-
     }
-    stop_motion_commands[robot_id] = std::nullopt; // already done but just to be explicit
+    stop_motion_commands[robot_id] = std::nullopt;  // already done but just to be explicit
   }
   // Draw Keepout Circle
   overlay_publisher_.drawCircle(

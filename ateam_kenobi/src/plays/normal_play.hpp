@@ -45,4 +45,4 @@ private:
   int prev_assigned_id_ = -1;
 };
 }  // namespace ateam_kenobi::plays
-#endif // PLAYS__NORMAL_PLAY_HPP_
+#endif  // PLAYS__NORMAL_PLAY_HPP_

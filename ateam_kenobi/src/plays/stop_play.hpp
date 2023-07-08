@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__STOP_HPP_
-#define PLAYS__STOP_HPP_
+#ifndef PLAYS__STOP_PLAY_HPP_
+#define PLAYS__STOP_PLAY_HPP_
 
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
@@ -48,4 +48,4 @@ private:
 };
 }  // namespace ateam_kenobi::plays
 
-#endif // PLAYS__STOP_HPP_
+#endif  // PLAYS__STOP_PLAY_HPP_

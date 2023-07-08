@@ -19,6 +19,8 @@
 // THE SOFTWARE.
 
 
+#include <tf2/convert.h>
+#include <tf2/utils.h>
 #include <chrono>
 #include <functional>
 #include <rclcpp/rclcpp.hpp>
@@ -33,8 +35,6 @@
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_geometry/types.hpp>
-#include <tf2/convert.h>
-#include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "types/world.hpp"
 #include "types/message_conversions.hpp"
@@ -46,7 +46,8 @@
 namespace ateam_kenobi
 {
 
-using namespace ateam_common::indexed_topic_helpers;
+using ateam_common::indexed_topic_helpers::create_indexed_publishers;
+using ateam_common::indexed_topic_helpers::create_indexed_subscribers;
 using namespace std::literals::chrono_literals;
 
 class KenobiNode : public rclcpp::Node
@@ -130,7 +131,8 @@ private:
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
 
-  // TODO(CAVIDANO) REMOVE THE THEIR ROBOTS HERE THIS SHOULD NOT ASSIGN ANYTHING IN THE NOT CASE AS IT ALSO CATCHES UNKOWN TEAM
+  // TODO(CAVIDANO): REMOVE THE THEIR ROBOTS HERE THIS SHOULD NOT ASSIGN ANYTHING IN THE NOT CASE
+  // AS IT ALSO CATCHES UNKOWN TEAM
   void yellow_robot_state_callback(
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
@@ -257,7 +259,6 @@ private:
       }
     }
   }
-
 };
 
 }  // namespace ateam_kenobi

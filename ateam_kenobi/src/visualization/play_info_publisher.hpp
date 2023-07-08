@@ -22,6 +22,7 @@
 #ifndef VISUALIZATION__PLAY_INFO_PUBLISHER_HPP_
 #define VISUALIZATION__PLAY_INFO_PUBLISHER_HPP_
 
+#include <string>
 #include <rclcpp/node.hpp>
 #include <ateam_msgs/msg/play_info.hpp>
 #include <nlohmann/json.hpp>
@@ -42,6 +43,6 @@ public:
 private:
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr publisher_;
 };
-} // namespace ateam_kenobi::visualization
+}  // namespace ateam_kenobi::visualization
 
-#endif // VISUALIZATION__PLAY_INFO_PUBLISHER_HPP_
+#endif  // VISUALIZATION__PLAY_INFO_PUBLISHER_HPP_

@@ -124,4 +124,4 @@ ateam_msgs::msg::World toMsg(const World & obj)
   return world_msg;
 }
 
-}  // namespace ateam_ai::message_conversions
+}  // namespace ateam_kenobi::message_conversions

@@ -20,6 +20,7 @@
 
 
 #include "play_info_publisher.hpp"
+#include <string>
 
 namespace ateam_kenobi::visualization
 {
@@ -40,4 +41,4 @@ void PlayInfoPublisher::send_play_message(
   publisher_->publish(msg);
   this->message.clear();
 }
-} // namespace ateam_kenobi::visualization
+}  // namespace ateam_kenobi::visualization

@@ -20,6 +20,7 @@
 
 
 #include "basic_122.hpp"
+#include <vector>
 #include "play_helpers/available_robots.hpp"
 #include "robot_assignment.hpp"
 
@@ -111,4 +112,4 @@ void Basic122::assignAndRunBlockers(
     play_helpers::removeRobotWithId(available_robots, robot_id);
   }
 }
-}
+}  // namespace ateam_kenobi::plays

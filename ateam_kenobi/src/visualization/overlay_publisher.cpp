@@ -22,6 +22,8 @@
 #include "overlay_publisher.hpp"
 #include <algorithm>
 #include <numeric>
+#include <string>
+#include <vector>
 
 namespace ateam_kenobi::visualization
 {
@@ -167,4 +169,4 @@ void OverlayPublisher::publishOverlays()
   overlays_.overlays.clear();
 }
 
-} // namespace ateam_kenobi::visualization
+}  // namespace ateam_kenobi::visualization

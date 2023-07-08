@@ -61,4 +61,4 @@ private:
 };
 }  // namespace ateam_kenobi::plays
 
-#endif // PLAYS__OUR_KICKOFF_PLAY_HPP_
+#endif  // PLAYS__OUR_KICKOFF_PLAY_HPP_

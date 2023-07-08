@@ -21,6 +21,7 @@
 
 #include "line_kick.hpp"
 #include <angles/angles.h>
+#include <vector>
 #include <ateam_geometry/normalize.hpp>
 
 namespace ateam_kenobi::skills
@@ -116,4 +117,4 @@ ateam_msgs::msg::RobotMotionCommand LineKick::kickBall(const World & world, cons
   command.kick_speed = 5.0;
   return command;
 }
-}
+}  // namespace ateam_kenobi::skills

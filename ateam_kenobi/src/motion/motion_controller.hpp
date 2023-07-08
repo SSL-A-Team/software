@@ -32,7 +32,8 @@
 #include "types/robot.hpp"
 #include "types/world.hpp"
 
-// cause the robot to: always face a point, face in the direction of travel, or stay facing the same direction
+// cause the robot to: always face a point, face in the direction of travel, or stay facing the
+// same direction
 enum class AngleMode
 {
   face_point,
@@ -59,7 +60,6 @@ public:
 
   // Load a new trajectory into the motion controller resetting its progress along the old one
   void set_trajectory(const std::vector<ateam_geometry::Point> & trajectory);
-  //void set_angle_mode(AngleMode angle_mode, std::optional<ateam_geometry::Point> point = std::nullopt);
 
   void face_point(std::optional<ateam_geometry::Point> point);
   void face_absolute(double angle);
@@ -85,17 +85,17 @@ public:
 private:
   double prev_time;
   std::vector<ateam_geometry::Point> trajectory;
-  AngleMode angle_mode = AngleMode::face_travel; // This mode should have the best performance
+  AngleMode angle_mode = AngleMode::face_travel;  // This mode should have the best performance
 
-  int prev_point; // last point used in the trajectory
+  int prev_point;  // last point used in the trajectory
   double progress;
   double total_dist;
 
   // Might not actually be doing this although it could generate a nicer acceleration profile:
   // This controller acts on our progress along the trajectory
-  // This enables it to smoothly ramp up to its velocity limit and then ramp back down at the end of the trajectory
-  // while helping us choose what point on the trajectory to actually compare our position against
-  //control_toolbox::Pid progress_controller;
+  // This enables it to smoothly ramp up to its velocity limit and then ramp back down at the end
+  // of the trajectory while helping us choose what point on the trajectory to actually compare
+  // our position against control_toolbox::Pid progress_controller;
 
   control_toolbox::Pid x_controller;
   control_toolbox::Pid y_controller;

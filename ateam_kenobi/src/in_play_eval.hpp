@@ -19,23 +19,18 @@
 // THE SOFTWARE.
 
 
-#ifndef UTIL__IN_PLAY_EVAL_HPP_
-#define UTIL__IN_PLAY_EVAL_HPP_
+#ifndef IN_PLAY_EVAL_HPP_
+#define IN_PLAY_EVAL_HPP_
 
 #include <math.h>
+#include <CGAL/squared_distance_2.h>
 #include <Eigen/Dense>
-
 #include <chrono>
 #include <optional>
-
 #include "types/world.hpp"
 #include <ateam_geometry/types.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 
-#include <CGAL/squared_distance_2.h>
-
-
-using namespace std::chrono_literals;
 
 /**
  *  Small class to be "ticked" with the world output_state and keep track of if we enter a kickoff and then when we exit (ball has moved 0.05 after normal_start is issued, 10 seconds pass, force start is issued)
@@ -52,7 +47,8 @@ public:
   bool our_penalty {};
   bool their_penalty {};
   ateam_common::GameCommand cur_state {ateam_common::GameCommand::Stop};
-  std::optional<ateam_geometry::Point> maybe_kickoff_position {};   // optional in case ball cant be seen
+  // optional in case ball cant be seen
+  std::optional<ateam_geometry::Point> maybe_kickoff_position {};
 
   static constexpr double DIST_THRESHOLD {0.05};
 
@@ -132,4 +128,4 @@ public:
   }
 };
 
-#endif  // UTIL__IN_PLAY_EVAL_HPP_
+#endif  // IN_PLAY_EVAL_HPP_

@@ -21,17 +21,14 @@
 #ifndef SKILLS__KICK_HPP_
 #define SKILLS__KICK_HPP_
 
+#include <angles/angles.h>
+#include <algorithm>
 #include <ateam_geometry/normalize.hpp>
 #include <ateam_geometry/types.hpp>
 #include <ateam_common/angle.hpp>
-
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "robot_assignment.hpp"
-
-#include <angles/angles.h>
-
 #include "play_helpers/easy_move_to.hpp"
-
 #include "path_planning/path_planner.hpp"
 
 namespace ateam_kenobi::skills
@@ -44,7 +41,6 @@ inline ateam_msgs::msg::RobotMotionCommand send_kick_command()
   // be clamped if above).
   kick_command.kick_speed = 5;
   return kick_command;
-
 }
 
 inline ateam_msgs::msg::RobotMotionCommand line_kick_command(
@@ -79,7 +75,7 @@ inline ateam_msgs::msg::RobotMotionCommand line_kick_command(
       current_robot.theta, robot_to_goal_angle);
 
     ateam_geometry::Vector robot_to_ball = ball_pos - current_robot_pos;
-    //ateam_geometry::Vector ball_to_goal = target_goal - ball_pos;
+    // ateam_geometry::Vector ball_to_goal = target_goal - ball_pos;
 
     // Aligned means
     //  * Ball is directly between the robot and goal
@@ -120,8 +116,8 @@ inline ateam_msgs::msg::RobotMotionCommand line_kick_command(
       return easy_move_to.runFrame(current_robot, world);
     } else {
       // Old code in case it's needed...
-      //target = ateam_geometry::Point(ball_pos.x(), ball_pos.y());
-      //target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
+      // target = ateam_geometry::Point(ball_pos.x(), ball_pos.y());
+      // target_theta = atan2(ball_to_goal.y(), ball_to_goal.x());
       // Go towards the target goal with the breakbeam on
       easy_move_to.setTargetPosition(target_goal);
       easy_move_to.face_point(target);
@@ -134,6 +130,6 @@ inline ateam_msgs::msg::RobotMotionCommand line_kick_command(
     }
   }
 }
-} // namespace ateam_kenobi::skills
+}  // namespace ateam_kenobi::skills
 
-#endif // SKILLS__KICK_HPP_
+#endif  // SKILLS__KICK_HPP_

@@ -28,48 +28,67 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 
+def remap_indexed_topics(pattern_from, pattern_to):
+    return list(
+        zip(
+            [pattern_from + str(i) for i in range(16)],
+            [pattern_to + str(i) for i in range(16)],
+        )
+    )
+
+
 def generate_launch_description():
-    ssl_vision_port_value = LaunchConfiguration('ssl_vision_port')
+    ssl_vision_port_value = LaunchConfiguration("ssl_vision_port")
     ssl_vision_port_arg = DeclareLaunchArgument(
-        'ssl_vision_port',
-        default_value="10006"
+        "ssl_vision_port", default_value="10006"
     )
 
     ateam_bringup_path = os.path.join(
-        get_package_share_directory('ateam_bringup'), 'launch')
+        get_package_share_directory("ateam_bringup"), "launch"
+    )
     game_controller_bridge_launch = launch.actions.IncludeLaunchDescription(
-        FrontendLaunchDescriptionSource([ateam_bringup_path, '/game_controller_nodes.launch.xml']))
-    autonomy_launch = launch.actions.IncludeLaunchDescription(
         FrontendLaunchDescriptionSource(
-            [
-                ateam_bringup_path,
-                '/autonomy.launch.xml']),
-        launch_arguments={
-            'ssl_vision_port': ssl_vision_port_value}.items())
+            [ateam_bringup_path, "/game_controller_nodes.launch.xml"]
+        )
+    )
+    autonomy_launch = launch.actions.IncludeLaunchDescription(
+        FrontendLaunchDescriptionSource([ateam_bringup_path, "/autonomy.launch.xml"]),
+        launch_arguments={"ssl_vision_port": ssl_vision_port_value}.items(),
+    )
 
-    radio_bridge_name = 'radio_bridge'
+    radio_bridge_name = "radio_bridge"
     radio_bridge = Node(
-      package='ateam_radio_bridge',
-      executable='radio_bridge_node',
-      name=radio_bridge_name,
-      parameters=[{
-          "net_interface_address": "172.16.1.10"
-      }],
-      remappings=list(zip(['/' + radio_bridge_name + '/robot_motion_commands/robot' + str(i) for i in range(16)], ['/robot_motion_commands/robot' + str(i) for i in range(16)]))
-              +  list(zip(['/' + radio_bridge_name + '/robot_feedback/robot' + str(i) for i in range(16)], ['/robot_feedback/robot' + str(i) for i in range(16)]))
-      # remappings=[('/' + radio_bridge_name + '/robot_motion_commands', '/robot_motion_commands'), ('/' + radio_bridge_name + '/robot_feedback', '/robot_feedback')]
+        package="ateam_radio_bridge",
+        executable="radio_bridge_node",
+        name=radio_bridge_name,
+        parameters=[{"net_interface_address": "172.16.1.10"}],
+        remappings=remap_indexed_topics(
+            "/" + radio_bridge_name + "/robot_motion_commands/robot",
+            "/robot_motion_commands/robot",
+        )
+        + remap_indexed_topics(
+            "/" + radio_bridge_name + "/robot_feedback/robot", "/robot_feedback/robot"
+        ),
     )
 
     ui_launch = launch.actions.IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(PathJoinSubstitution([
-            get_package_share_directory('ateam_ui'),
-            'launch',
-            'ateam_ui_launch.py'])))
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    get_package_share_directory("ateam_ui"),
+                    "launch",
+                    "ateam_ui_launch.py",
+                ]
+            )
+        )
+    )
 
-    return launch.LaunchDescription([
-        ssl_vision_port_arg,
-        autonomy_launch,
-        game_controller_bridge_launch,
-        radio_bridge,
-        ui_launch
-    ])
+    return launch.LaunchDescription(
+        [
+            ssl_vision_port_arg,
+            autonomy_launch,
+            game_controller_bridge_launch,
+            radio_bridge,
+            ui_launch,
+        ]
+    )

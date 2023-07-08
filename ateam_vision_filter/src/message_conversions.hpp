@@ -21,6 +21,7 @@
 #ifndef MESSAGE_CONVERSIONS_HPP_
 #define MESSAGE_CONVERSIONS_HPP_
 
+#include <optional>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
@@ -29,7 +30,6 @@
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <ssl_league_msgs/msg/vision_detection_frame.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
-#include <optional>
 
 #include "types/ball.hpp"
 #include "types/ball_measurement.hpp"

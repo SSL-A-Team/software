@@ -40,6 +40,6 @@ void removeGoalie(std::array<std::optional<Robot>, 16> & robots, const World & w
 void removeRobotWithId(std::vector<Robot> & robots, int id);
 
 void removeRobotWithId(std::array<std::optional<Robot>, 16> & robots, int id);
-}
+}  // namespace ateam_kenobi::play_helpers
 
 #endif  // PLAY_HELPERS__AVAILABLE_ROBOTS_HPP_

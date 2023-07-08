@@ -104,7 +104,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
 
     if (!maybe_assigned_robot) {
-      // TODO log this?
+      // TODO(barulicm): log this?
       continue;
     }
 
@@ -123,7 +123,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     easy_move_to.face_absolute(0);   // face away from our goal
 
     maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
-
   }
 
   goalie_skill_.runFrame(world, maybe_motion_commands);
@@ -132,4 +131,4 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
   return maybe_motion_commands;
 }
 
-} // namespace ateam_kenobi::plays
+}  // namespace ateam_kenobi::plays

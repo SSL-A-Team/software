@@ -45,4 +45,4 @@ private:
   skills::Goalie goalie_skill_;
 };
 }  // namespace ateam_kenobi::plays
-#endif // PLAYS__TEST_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAY_HPP_

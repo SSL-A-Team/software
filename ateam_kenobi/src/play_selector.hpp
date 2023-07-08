@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef ATEAM_KENOBI__PLAY_SELECTOR_HPP_
-#define ATEAM_KENOBI__PLAY_SELECTOR_HPP_
+#ifndef PLAY_SELECTOR_HPP_
+#define PLAY_SELECTOR_HPP_
 
 #include "plays/all_plays.hpp"
 #include "types/world.hpp"
@@ -61,9 +61,8 @@ private:
     ateam_common::GameCommand current_game_command);
 
   plays::BasePlay * pickNormalStartPlay();
-
 };
 
 }  // namespace ateam_kenobi
 
-#endif  // ATEAM_KENOBI__PLAY_SELECTOR_HPP_
+#endif  // PLAY_SELECTOR_HPP_

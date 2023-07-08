@@ -22,6 +22,7 @@
 #ifndef PLAYS__BASIC_122_HPP_
 #define PLAYS__BASIC_122_HPP_
 
+#include <vector>
 #include "base_play.hpp"
 #include "skills/line_kick.hpp"
 #include "skills/blockers.hpp"
@@ -53,9 +54,8 @@ private:
     std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motino_commands);
-
 };
 
-}
+}  // namespace ateam_kenobi::plays
 
 #endif  // PLAYS__BASIC_122_HPP_

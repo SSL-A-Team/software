@@ -173,4 +173,4 @@ private:
 
 }  // namespace ateam_common
 
-#endif  // ATEAM_COMMON__game_controller_listener_HPP_
+#endif  // ATEAM_COMMON__GAME_CONTROLLER_LISTENER_HPP_

@@ -50,6 +50,6 @@ private:
   play_helpers::EasyMoveTo easy_move_to_;
 };
 
-} // namespace ateam_kenobi::skills
+}  // namespace ateam_kenobi::skills
 
-#endif // SKILLS__GOALIE_HPP_
+#endif  // SKILLS__GOALIE_HPP_

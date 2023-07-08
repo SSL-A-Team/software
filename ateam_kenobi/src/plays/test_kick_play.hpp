@@ -59,9 +59,8 @@ public:
 
 private:
   skills::LineKick line_kick_skill_;
-
 };
 
-}
+}  // namespace ateam_kenobi::plays
 
 #endif  // PLAYS__TEST_KICK_PLAY_HPP_

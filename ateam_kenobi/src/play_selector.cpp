@@ -163,4 +163,4 @@ plays::BasePlay * PlaySelector::pickNormalStartPlay()
   return &halt_play_;
 }
 
-} // namespace ateam_kenobi
+}  // namespace ateam_kenobi

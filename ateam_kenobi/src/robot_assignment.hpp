@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef ATEAM_KENOBI__ROBOT_ASSIGNMENT_HPP_
-#define ATEAM_KENOBI__ROBOT_ASSIGNMENT_HPP_
+#ifndef ROBOT_ASSIGNMENT_HPP_
+#define ROBOT_ASSIGNMENT_HPP_
 
 #include <cmath>
 
@@ -31,6 +31,7 @@
 #include <vector>
 #include <iostream>
 #include <limits>
+#include <unordered_map>
 
 #include <ateam_geometry/types.hpp>
 
@@ -76,7 +77,7 @@ inline std::unordered_map<size_t, size_t> assign(
   std::unordered_map assignment = ateam_common::assignment::optimize_assignment(costs);
 
   std::unordered_map<size_t, size_t> original_indexes_map {};
-  for (auto & grid_assignment :assignment) {
+  for (auto & grid_assignment : assignment) {
     original_indexes_map.emplace(
       available_robots.at(
         grid_assignment.first).id, grid_assignment.second);
@@ -89,4 +90,4 @@ inline std::unordered_map<size_t, size_t> assign(
 
 }  // namespace ateam_kenobi::robot_assignment
 
-#endif  // ATEAM_KENOBI__ROBOT_ASSIGNMENT_HPP_
+#endif  // ROBOT_ASSIGNMENT_HPP_

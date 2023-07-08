@@ -20,6 +20,7 @@
 
 
 #include "blockers.hpp"
+#include <vector>
 #include "play_helpers/available_robots.hpp"
 #include <ateam_geometry/ateam_geometry.hpp>
 #include <ateam_common/robot_constants.hpp>
@@ -103,4 +104,4 @@ ateam_geometry::Point Blockers::getBlockingPosition(const World & world, const R
   return blockee.pos +
          ((kRobotDiameter + 0.1) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
 }
-}
+}  // namespace ateam_kenobi::skills

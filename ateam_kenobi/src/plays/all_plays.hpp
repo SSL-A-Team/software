@@ -33,4 +33,4 @@
 #include "our_penalty_play.hpp"
 #include "their_penalty_play.hpp"
 
-#endif // PLAYS__ALL_PLAYS_HPP_
+#endif  // PLAYS__ALL_PLAYS_HPP_

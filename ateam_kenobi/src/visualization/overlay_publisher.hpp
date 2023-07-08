@@ -22,6 +22,8 @@
 #ifndef VISUALIZATION__OVERLAY_PUBLISHER_HPP_
 #define VISUALIZATION__OVERLAY_PUBLISHER_HPP_
 
+#include <string>
+#include <vector>
 #include <rclcpp/node.hpp>
 #include <ateam_msgs/msg/overlay_array.hpp>
 #include <ateam_msgs/msg/play_info.hpp>

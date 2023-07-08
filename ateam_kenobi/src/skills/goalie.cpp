@@ -68,4 +68,4 @@ void Goalie::runFrame(
   motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
 }
 
-} // namespace ateam_kenobi::skills
+}  // namespace ateam_kenobi::skills

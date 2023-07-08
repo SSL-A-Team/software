@@ -57,7 +57,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   std::vector<Robot> current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
-  // Get list of robots that can be kickers which excludes the last robot to touch the ball in the kickoff
+  /* Get list of robots that can be kickers which excludes the last robot to touch the ball in the 
+   * kickoff
+   */
   auto valid_kickers = current_available_robots;
   if (prev_id_ != -1) {
     play_helpers::removeRobotWithId(valid_kickers, prev_id_);
@@ -75,7 +77,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 
     // Go to starting point
     if (world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffOurs) {
-      // TODO: consider if we can make this dynamic enough to reuse this for more than just kickoff
+      /* TODO(anon): consider if we can make this dynamic enough to reuse this for more than 
+       * just kickoff
+       */
       auto viz_circle = ateam_geometry::makeCircle(kicker_point, kRobotRadius);
       overlay_publisher_.drawCircle(
         "destination_" + std::to_string(
@@ -113,7 +117,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
 
     if (!maybe_assigned_robot) {
-      // TODO log this?
+      // TODO(barulicm): log this?
       continue;
     }
 
@@ -129,7 +133,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
         robot_id), viz_circle, "blue", "transparent");
 
     easy_move_to.setTargetPosition(target_position);
-    easy_move_to.face_absolute(0); // face away from our goal
+    easy_move_to.face_absolute(0);  // face away from our goal
 
     maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
   }
@@ -144,7 +148,5 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 
   play_info_publisher_.send_play_message("our_kickoff_play");
   return maybe_motion_commands;
-
-
 }
 }  // namespace ateam_kenobi::plays

@@ -50,6 +50,6 @@ private:
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   skills::Goalie goalie_skill_;
 };
-} // namespace ateam_kenobi::plays
+}  // namespace ateam_kenobi::plays
 
-#endif // PLAYS__WALL_PLAY_HPP_
+#endif  // PLAYS__WALL_PLAY_HPP_
