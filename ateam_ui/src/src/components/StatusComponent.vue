@@ -1,14 +1,10 @@
 <template>
     <v-container class="d-flex flex-column">
         <v-container class="d-flex flex-column">
-            <div v-for="robot of this.state.world.teams[this.state.world.team].robots">
-                <div v-if="robot.isValid()">
-                    <v-card variant="outlined" class="d-flex my-1 justify-space-around" ref="robotCard" style="outline-offset:-1px" @click.stop="this.state.setJoystickRobot(robot.id)">
-                            {{robot.id}}
-                            <canvas ref="canvases" height=100 width=100 style="width:90px; height:90px;"/>
-                    </v-card>
-                </div>
-            </div>
+            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots" ref="robotCard" style="outline-offset:-1px" @click.stop="this.state.setJoystickRobot(robot.id)">
+                    {{robot.id}}
+                    <canvas ref="canvases" height=100 width=100 style="width:90px; height:90px;"/>
+            </v-card>
         </v-container>
     </v-container>
 </template>
