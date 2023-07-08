@@ -47,6 +47,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyP
       options.use_default_obstacles = false;
       move_to.setPlannerOptions(options);
       motion_commands[robot_id] = move_to.runFrame(robot, world);
+
     }
   }
 
@@ -62,6 +63,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyP
     i++;
   }
 
+  play_info_publisher_.send_play_message("Their Penalty Play");
   return motion_commands;
 }
 }

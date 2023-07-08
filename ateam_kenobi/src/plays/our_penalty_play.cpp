@@ -62,6 +62,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
     i++;
   }
 
+  play_info_publisher_.send_play_message("Our Penalty Play");
   return motion_commands;
 }
 }

@@ -32,6 +32,14 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
     return finalizeSelection(&stop_play_, current_game_command);
   }
 
+  if (world.our_penalty) {
+    return finalizeSelection(&our_penalty_play_, current_game_command);
+  }
+
+  if (world.their_penalty) {
+    return finalizeSelection(&their_penalty_play_, current_game_command);
+  }
+
   if(world.in_play) {
     return finalizeSelection(&basic_122_play_, current_game_command);
   }

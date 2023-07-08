@@ -28,13 +28,15 @@ public:
 
   // Vars
   bool in_play {};
+  bool our_penalty {};
+  bool their_penalty {};
   ateam_common::GameCommand cur_state {ateam_common::GameCommand::Stop};
   std::optional<ateam_geometry::Point> maybe_kickoff_position {};   // optional in case ball cant be seen
 
   static constexpr double DIST_THRESHOLD {0.05};
 
   // only 3 things enter us into play according to the appendix B state machine
-  bool update(ateam_kenobi::World world)
+  void update(ateam_kenobi::World & world)
   {
     // edge triggered
     // we just need an edge on commands to know not to do in_play = false in the same normal_play
@@ -53,18 +55,31 @@ public:
         case ateam_common::GameCommand::BallPlacementOurs:
         case ateam_common::GameCommand::BallPlacementTheirs:
         case ateam_common::GameCommand::NormalStart:
-        case ateam_common::GameCommand::PreparePenaltyOurs:
-        case ateam_common::GameCommand::PreparePenaltyTheirs:
           // reset in_play in any of these state
-          in_play = false;
+          world.in_play = false;
+          break;
+        
+        case ateam_common::GameCommand::PreparePenaltyOurs:
+          world.in_play = false;
+          world.our_penalty = true;
+          world.their_penalty = false;
+        break;
+        case ateam_common::GameCommand::PreparePenaltyTheirs:
+          world.in_play = false;
+          world.their_penalty = true;
+          world.our_penalty = false;
           break;
 
         // force play really play acts the same as play
         case ateam_common::GameCommand::ForceStart:
-          in_play = true;
+          world.in_play = true;
+          world.their_penalty = false;
+          world.our_penalty = false;
           break;
         default:
-          in_play = true;
+          world.in_play = true;
+          world.their_penalty = false;
+          world.our_penalty = false;
       }
     }
 
@@ -79,7 +94,7 @@ public:
         if (sqrt(CGAL::squared_distance(ball_current.pos, maybe_kickoff_position.value())) >
           DIST_THRESHOLD)
         {
-          in_play = true;
+          world.in_play = true;
           // so if you read this and its any of the states in the above you are basically
           // playing under restrictions
         }
@@ -92,7 +107,7 @@ public:
       // why this is seperate
       maybe_kickoff_position = std::nullopt;
     }
-    return in_play;
+    return;
   }
 };
 

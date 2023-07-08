@@ -46,6 +46,8 @@ struct World
   std::array<std::optional<Robot>, 16> their_robots;
 
   bool in_play;
+  bool our_penalty;
+  bool their_penalty;
 };
 }  // namespace ateam_kenobi
 
