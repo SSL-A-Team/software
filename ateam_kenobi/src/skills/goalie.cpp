@@ -4,8 +4,7 @@ namespace ateam_kenobi::skills
 {
 
 Goalie::Goalie(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
-: overlay_publisher_(overlay_publisher), 
-  play_info_publisher_(play_info_publisher), 
+: overlay_publisher_(overlay_publisher), play_info_publisher_(play_info_publisher),
   easy_move_to_(overlay_publisher)
 {
   reset();
@@ -32,73 +31,15 @@ void Goalie::runFrame(
     return;
   }
 
-  ateam_geometry::Segment goal_line {
-    world.field.ours.goal_posts.at(0),
-    world.field.ours.goal_posts.at(1)
-  };
+  ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
+    ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, world.field.goal_width/2.0),
+    ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, -world.field.goal_width/2.0)
+  );
+  overlay_publisher_.drawLine("goalie_line", {goalie_line.point(0), goalie_line.point(1)}, "blue");
 
-  // also backing up as the ball comes in would be nice so we have max distance to respond
-  const double scale_in_factor = 3;
-
-  // TODO(CAVIDANO) make a general version of this for param(t) 0 <= t <= 1 by changing the division of the two
-  // half of the norm of the line in the direction of target from source + the source point gives midpoint
-  ateam_geometry::Point midpoint = goal_line.source() + ateam_geometry::normalize(goal_line.target() - goal_line.source()) * (ateam_geometry::norm(goal_line) / 2);
-  ateam_geometry::Point target_point = midpoint + (world.field.goal_depth / scale_in_factor) * (goal_line.target() - goal_line.source()).perpendicular(CGAL::Orientation::NEGATIVE);
-  // this part needs to be smarter at some point and account for states of the oppenent and vel of the ball as well as possible angles of shots
-  // Probably needs to be a voronoi point vs a fix 90 deg angle
-
-  ateam_geometry::Ray shot_ray(world.ball.pos, target_point - world.ball.pos);
-
-  // restrict consideration of goalie to just the goalie_box
-
-  ateam_geometry::Point corner0 = {-world.field.field_length / 2, world.field.goal_width};
-  ateam_geometry::Point corner1 = {-1 * (world.field.field_length / 2) + world.field.goal_width, -world.field.goal_width};
-  ateam_geometry::Rectangle goalie_box(corner0, corner1);
-
-  // ateam_geometry::Rectangle goalie_box(world.field.ours.goalie_corners.at(0), world.field.ours.goalie_corners.at(2));
-
-  overlay_publisher_.drawRectangle("goalie_box", goalie_box, "orange");
-
-
-  boost::optional<boost::variant<ateam_geometry::Point, ateam_geometry::Segment>> maybe_restricted_defense_segment = 
-    CGAL::intersection(shot_ray, goalie_box);
-
-  if (!maybe_restricted_defense_segment.has_value()) {
-    // TODO(CAVIDANO) LOG SOMETHING MESSED IF THE DEFENDER HAS NO POINT ON THE GOAL JUST STAY WHERE YOU ARE
-    return;
-  }
-  const auto & restricted_defense_segment = maybe_restricted_defense_segment.value();
-  
-  // Pick point
-  ateam_geometry::Point defense_point = boost::apply_visitor(IntersectVisitor(maybe_robot.value(), overlay_publisher_), restricted_defense_segment);
-
-  // Move
-  easy_move_to_.setTargetPosition(defense_point);
+  easy_move_to_.setTargetPosition(ateam_geometry::NearestPointOnSegment(goalie_line, world.ball.pos));
   easy_move_to_.face_point(world.ball.pos);
-
   motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
-
-  // STATUS
-  // overlay_publisher_.drawLine("shot_ray", {world.ball.pos, target_point}, "red");
-  // overlay_publisher_.drawCircle(
-  //     "defense point",
-  //     ateam_geometry::makeCircle(defense_point, 0.2), "blue", "transparent");
-
-  // play_info_publisher_.message["Goalie"]["defense_point"] = {defense_point.x(), defense_point.y()};
-
-  // play_info_publisher_.message["Goalie"]["goal_box"]["0"] = {world.field.ours.goalie_corners.at(0).x(), world.field.ours.goalie_corners.at(0).y()};
-  // play_info_publisher_.message["Goalie"]["goal_box"]["2"] = {world.field.ours.goalie_corners.at(2).x(), world.field.ours.goalie_corners.at(2).y()};
-  
-  // ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
-  //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, world.field.goal_width/2.0),
-  //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, -world.field.goal_width/2.0)
-  // );
-  // overlay_publisher_.drawLine("goalie_line", {goalie_line.point(0), goalie_line.point(1)}, "blue");
-
-  // easy_move_to_.setTargetPosition(ateam_geometry::NearestPointOnSegment(goalie_line, world.ball.pos));
-
-  // easy_move_to_.setFacingTowards(world.ball.pos);
-  // motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
 }
 
 } // namespace ateam_kenobi::skills
