@@ -79,12 +79,12 @@ public:
           // reset in_play in any of these state
           world.in_play = false;
           break;
-        
+
         case ateam_common::GameCommand::PreparePenaltyOurs:
           world.in_play = false;
           world.our_penalty = true;
           world.their_penalty = false;
-        break;
+          break;
         case ateam_common::GameCommand::PreparePenaltyTheirs:
           world.in_play = false;
           world.their_penalty = true;

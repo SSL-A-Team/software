@@ -47,20 +47,21 @@ inline ateam_msgs::msg::RobotMotionCommand send_kick_command()
 
 }
 
-inline ateam_msgs::msg::RobotMotionCommand line_kick_command(const World & world, Robot current_robot, ateam_geometry::Point target_goal,
-play_helpers::EasyMoveTo & easy_move_to)
+inline ateam_msgs::msg::RobotMotionCommand line_kick_command(
+  const World & world, Robot current_robot, ateam_geometry::Point target_goal,
+  play_helpers::EasyMoveTo & easy_move_to)
 {
   // double current_theta, current_vel_theta;
-  ateam_geometry::Point current (current_robot.pos.x(), current_robot.pos.y());
+  ateam_geometry::Point current(current_robot.pos.x(), current_robot.pos.y());
   // current_theta = current_robot.theta;
-  ateam_geometry::Point current_vel (current_robot.vel.x(), current_robot.vel.y());
+  ateam_geometry::Point current_vel(current_robot.vel.x(), current_robot.vel.y());
   // current_vel_theta = current_robot.omega;
   ateam_geometry::Point current_robot_pos = current_robot.pos;
   ateam_geometry::Point target;
 
   const auto & ball = world.ball;
   ateam_geometry::Point ball_pos = ball.pos;
-  
+
   if (ateam_geometry::norm(ball.vel) > 0.2) {
     // Wait for the ball to slow down before moving to kick...
     // just stay still
@@ -69,7 +70,8 @@ play_helpers::EasyMoveTo & easy_move_to)
     return easy_move_to.runFrame(current_robot, world);
   } else {
     // robot to ball check to not collide
-    ateam_geometry::Point target_setup_pos = ball_pos + 0.4 * ateam_geometry::normalize(ball_pos - target_goal);
+    ateam_geometry::Point target_setup_pos = ball_pos + 0.4 * ateam_geometry::normalize(
+      ball_pos - target_goal);
 
     ateam_geometry::Vector robot_to_goal = target_goal - current_robot_pos;
     double robot_to_goal_angle = ateam_common::geometry::VectorToAngle(robot_to_goal);
@@ -91,7 +93,8 @@ play_helpers::EasyMoveTo & easy_move_to)
 
     if (!is_aligned) {
       // If we aren't in a position to kick, let's figure out where to go
-      double cosine = CGAL::scalar_product((target_setup_pos - current_robot_pos),
+      double cosine = CGAL::scalar_product(
+        (target_setup_pos - current_robot_pos),
         (ball_pos - current_robot_pos)) /
         (ateam_geometry::norm(target_setup_pos, current_robot_pos) *
         ateam_geometry::norm(target_setup_pos, current_robot_pos));
@@ -99,9 +102,12 @@ play_helpers::EasyMoveTo & easy_move_to)
       // We want to be in line with the goal and the ball
       // as well as give ourselves some space to kick
       ateam_geometry::Vector ball_projected_on_move_line = cosine *
-        (target_setup_pos - current_robot_pos) + ateam_geometry::Vector(current_robot_pos.x(), current_robot_pos.y());
-      double dist = ateam_geometry::norm(ateam_geometry::Point(ball_projected_on_move_line.x(),
-        ball_projected_on_move_line.y()), ball_pos);
+        (target_setup_pos - current_robot_pos) + ateam_geometry::Vector(
+        current_robot_pos.x(), current_robot_pos.y());
+      double dist = ateam_geometry::norm(
+        ateam_geometry::Point(
+          ball_projected_on_move_line.x(),
+          ball_projected_on_move_line.y()), ball_pos);
       if (dist < 0.1) {
         // If we are very close to the ball, give us some space
         target = ateam_geometry::Point(target_setup_pos.x(), target_setup_pos.y() - 0.5);

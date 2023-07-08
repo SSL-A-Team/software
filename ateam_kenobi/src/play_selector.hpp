@@ -33,7 +33,8 @@ namespace ateam_kenobi
 class PlaySelector
 {
 public:
-  explicit PlaySelector(visualization::OverlayPublisher & overlay_publisher, 
+  explicit PlaySelector(
+    visualization::OverlayPublisher & overlay_publisher,
     visualization::PlayInfoPublisher & play_info_publisher);
 
   plays::BasePlay * getPlay(const World & world);
@@ -55,7 +56,9 @@ private:
 
   void resetPlayIfNeeded(plays::BasePlay * play);
 
-  plays::BasePlay * finalizeSelection(plays::BasePlay * play, ateam_common::GameCommand current_game_command);
+  plays::BasePlay * finalizeSelection(
+    plays::BasePlay * play,
+    ateam_common::GameCommand current_game_command);
 
   plays::BasePlay * pickNormalStartPlay();
 

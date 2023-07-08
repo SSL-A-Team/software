@@ -95,7 +95,7 @@ public:
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg,
     int robot_id)
   {
-    if(!udp_) {
+    if (!udp_) {
       return;
     }
     RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);

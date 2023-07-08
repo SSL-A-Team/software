@@ -31,18 +31,25 @@
 #include "play_helpers/easy_move_to.hpp"
 #include "skills/goalie.hpp"
 
-namespace ateam_kenobi::plays{
-    inline std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(ateam_geometry::Segment & segment, int num_points);
+namespace ateam_kenobi::plays
+{
+inline std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
+  ateam_geometry::Segment & segment, int num_points);
 
-    class WallPlay : public BasePlay {
-        public:
-            explicit WallPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher);
-            void reset() override;
-            std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
-        private:
-            std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-            skills::Goalie goalie_skill_;
-    };
+class WallPlay : public BasePlay
+{
+public:
+  explicit WallPlay(
+    visualization::OverlayPublisher & overlay_publisher,
+    visualization::PlayInfoPublisher & play_info_publisher);
+  void reset() override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  skills::Goalie goalie_skill_;
+};
 } // namespace ateam_kenobi::plays
 
 #endif // PLAYS__WALL_PLAY_HPP_

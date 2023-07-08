@@ -27,18 +27,22 @@
 
 namespace ateam_kenobi::plays
 {
-class NormalPlay : public BasePlay {
-  public:
-    explicit NormalPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher);
+class NormalPlay : public BasePlay
+{
+public:
+  explicit NormalPlay(
+    visualization::OverlayPublisher & overlay_publisher,
+    visualization::PlayInfoPublisher & play_info_publisher);
 
-    void reset() override;
-    
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
-  private:
+  void reset() override;
 
-    path_planning::PathPlanner path_planner_;
-    std::array<MotionController, 16> motion_controllers_;
-    int prev_assigned_id_ = -1;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  path_planning::PathPlanner path_planner_;
+  std::array<MotionController, 16> motion_controllers_;
+  int prev_assigned_id_ = -1;
 };
 }  // namespace ateam_kenobi::plays
 #endif // PLAYS__NORMAL_PLAY_HPP_

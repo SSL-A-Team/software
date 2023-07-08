@@ -23,7 +23,9 @@
 
 namespace ateam_kenobi::plays
 {
-HaltPlay::HaltPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+HaltPlay::HaltPlay(
+  visualization::OverlayPublisher & overlay_publisher,
+  visualization::PlayInfoPublisher & play_info_publisher)
 : BasePlay(overlay_publisher, play_info_publisher)
 {
 }
@@ -35,12 +37,12 @@ void HaltPlay::reset()
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> HaltPlay::runFrame(
   const World & world)
 {
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> halt_motion_commands;
-    for (size_t i = 0; i < 16; ++i){
-        halt_motion_commands[i] = ateam_msgs::msg::RobotMotionCommand{};
-    }
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> halt_motion_commands;
+  for (size_t i = 0; i < 16; ++i) {
+    halt_motion_commands[i] = ateam_msgs::msg::RobotMotionCommand{};
+  }
 
-    play_info_publisher_.send_play_message("Halt Play");
-    return halt_motion_commands;
+  play_info_publisher_.send_play_message("Halt Play");
+  return halt_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

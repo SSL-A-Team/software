@@ -42,7 +42,7 @@ PathPlanner::Path PathPlanner::getPath(
 
   addRobotsToObstacles(world, start, augmented_obstacles);
 
-  if(options.use_default_obstacles) {
+  if (options.use_default_obstacles) {
     addDefaultObstacles(world, augmented_obstacles);
   }
 
@@ -211,14 +211,20 @@ void PathPlanner::addDefaultObstacles(
   std::vector<ateam_geometry::AnyShape> & obstacles)
 {
   // our goalie box
-  obstacles.push_back(ateam_geometry::Rectangle(
-    ateam_geometry::Point(-world.field.field_length / 2, world.field.goal_width),
-    ateam_geometry::Point(-1 * (world.field.field_length / 2) + world.field.goal_width, -world.field.goal_width)
+  obstacles.push_back(
+    ateam_geometry::Rectangle(
+      ateam_geometry::Point(-world.field.field_length / 2, world.field.goal_width),
+      ateam_geometry::Point(
+        -1 * (world.field.field_length / 2) + world.field.goal_width,
+        -world.field.goal_width)
   ));
   // their goalie box
-  obstacles.push_back(ateam_geometry::Rectangle(
-    ateam_geometry::Point((world.field.field_length / 2), world.field.goal_width),
-    ateam_geometry::Point((world.field.field_length / 2) + world.field.goal_width, -world.field.goal_width)
+  obstacles.push_back(
+    ateam_geometry::Rectangle(
+      ateam_geometry::Point((world.field.field_length / 2), world.field.goal_width),
+      ateam_geometry::Point(
+        (world.field.field_length / 2) + world.field.goal_width,
+        -world.field.goal_width)
   ));
 }
 

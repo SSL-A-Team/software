@@ -46,12 +46,12 @@ public:
   {
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
     const auto & robots = play_helpers::getAvailableRobots(world);
-    if(robots.empty()) {
+    if (robots.empty()) {
       return {};
     }
     const auto robot = robots.front();
     // aim for center of opponent goal
-    line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length/2.0, 0.0));
+    line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
     motion_commands[robot.id] = line_kick_skill_.runFrame(world, robot);
     play_info_publisher_.send_play_message("TestKickPlay");
     return motion_commands;

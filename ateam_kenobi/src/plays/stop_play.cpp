@@ -24,7 +24,9 @@
 
 namespace ateam_kenobi::plays
 {
-StopPlay::StopPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+StopPlay::StopPlay(
+  visualization::OverlayPublisher & overlay_publisher,
+  visualization::PlayInfoPublisher & play_info_publisher)
 : BasePlay(overlay_publisher, play_info_publisher)
 {
   StopPlay::reset();
@@ -32,7 +34,7 @@ StopPlay::StopPlay(visualization::OverlayPublisher & overlay_publisher, visualiz
 
 void StopPlay::reset()
 {
-  for(auto & move_to : easy_move_tos_) {
+  for (auto & move_to : easy_move_tos_) {
     move_to.reset();
     move_to.setMaxVelocity(1.0);
   }
@@ -42,7 +44,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> stop_motion_commands;
-  for (size_t robot_id = 0; robot_id < 16; ++robot_id){
+  for (size_t robot_id = 0; robot_id < 16; ++robot_id) {
     // only going to do 8 robots for now to avoid crowding on one side of the ball
     // avoid the ball by 0.7m just to be safe
     double radius = 0.7;
@@ -52,9 +54,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
       // move the robot if its in the danger zone halt if its not
       if (ateam_geometry::norm(maybe_robot.value().pos, world.ball.pos) < radius) {
         const auto & robot = maybe_robot.value();
-        ateam_geometry::Vector offset_vector = radius * ateam_geometry::normalize(robot.pos - world.ball.pos);
+        ateam_geometry::Vector offset_vector = radius * ateam_geometry::normalize(
+          robot.pos - world.ball.pos);
 
-        const auto & destination = ateam_geometry::Point(robot.pos.x() + offset_vector.x(), robot.pos.y() + offset_vector.y());
+        const auto & destination = ateam_geometry::Point(
+          robot.pos.x() + offset_vector.x(), robot.pos.y() + offset_vector.y());
 
         auto & easy_move_to = easy_move_tos_.at(robot_id);
         easy_move_to.setTargetPosition(destination);
@@ -68,17 +72,17 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     }
     stop_motion_commands[robot_id] = std::nullopt; // already done but just to be explicit
   }
-    // Draw Keepout Circle
-    overlay_publisher_.drawCircle(
-      "keepout_circle",
-      ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
+  // Draw Keepout Circle
+  overlay_publisher_.drawCircle(
+    "keepout_circle",
+    ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
 
-    // overlay_publisher_.drawSegment(
-    //   "keepout_circle",
-    //   ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
+  // overlay_publisher_.drawSegment(
+  //   "keepout_circle",
+  //   ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
 
 
-    play_info_publisher_.send_play_message("Stop Play");
-    return stop_motion_commands;
+  play_info_publisher_.send_play_message("Stop Play");
+  return stop_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

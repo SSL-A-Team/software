@@ -29,7 +29,7 @@ namespace ateam_geometry
 {
 
 template<typename T>
-inline auto normalize(T const& V)
+inline auto normalize(T const & V)
 {
   auto const slen = V.squared_length();
   auto const d = CGAL::approximate_sqrt(slen);
@@ -38,13 +38,13 @@ inline auto normalize(T const& V)
 
 
 template<typename T, typename U>
-inline double norm(T const& V, U const& C)
+inline double norm(T const & V, U const & C)
 {
   return CGAL::approximate_sqrt(CGAL::squared_distance(V, C));
 }
 
 template<typename T>
-inline double norm(T const& V)
+inline double norm(T const & V)
 {
   return CGAL::approximate_sqrt(V.squared_length());
 }

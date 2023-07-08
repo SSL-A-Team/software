@@ -35,7 +35,7 @@ Blockers::Blockers(visualization::OverlayPublisher & overlay_publisher)
 
 void Blockers::reset()
 {
-  for(auto & move_to : easy_move_tos_) {
+  for (auto & move_to : easy_move_tos_) {
     move_to.reset();
   }
 }
@@ -44,9 +44,10 @@ std::vector<ateam_geometry::Point> Blockers::getAssignmentPoints(const World & w
 {
   const auto blockable_robots = getRankedBlockableRobots(world);
   std::vector<ateam_geometry::Point> positions;
-  std::ranges::transform(blockable_robots, std::back_inserter(positions), [this,&world](const Robot & robot) {
-    return getBlockingPosition(world, robot);
-  });
+  std::ranges::transform(
+    blockable_robots, std::back_inserter(positions), [this, &world](const Robot & robot) {
+      return getBlockingPosition(world, robot);
+    });
   return positions;
 }
 
@@ -56,17 +57,17 @@ std::vector<ateam_msgs::msg::RobotMotionCommand> Blockers::runFrame(
 {
   const auto blockable_robots = getRankedBlockableRobots(world);
   std::vector<ateam_geometry::Point> positions;
-  std::ranges::transform(blockable_robots, std::back_inserter(positions), [this,&world](const Robot & blockee) {
-    return getBlockingPosition(world, blockee);
-  });
+  std::ranges::transform(
+    blockable_robots, std::back_inserter(positions), [this, &world](const Robot & blockee) {
+      return getBlockingPosition(world, blockee);
+    });
 
   // only keep as many positions as we have robots to use
   positions.erase(positions.begin() + robots.size(), positions.end());
 
   std::vector<ateam_msgs::msg::RobotMotionCommand> motion_commands;
 
-  for(auto robot_index = 0ul; robot_index < robots.size(); ++robot_index)
-  {
+  for (auto robot_index = 0ul; robot_index < robots.size(); ++robot_index) {
     const auto & robot = robots[robot_index];
     const auto & position = positions[robot_index];
     const auto robot_id = robot.id;
@@ -83,12 +84,13 @@ std::vector<Robot> Blockers::getRankedBlockableRobots(const World & world)
 {
   auto visible_opponents = play_helpers::getVisibleRobots(world.their_robots);
   play_helpers::removeRobotWithId(visible_opponents, world.referee_info.their_goalie_id);
-  std::ranges::sort(visible_opponents, [&world](const Robot & r1, const Robot & r2){
-    const auto r1_dist = ateam_geometry::norm(world.ball.pos, r1.pos);
-    const auto r2_dist = ateam_geometry::norm(world.ball.pos, r2.pos);
-    return r1_dist < r2_dist;
-  });
-  if(visible_opponents.empty()) {
+  std::ranges::sort(
+    visible_opponents, [&world](const Robot & r1, const Robot & r2) {
+      const auto r1_dist = ateam_geometry::norm(world.ball.pos, r1.pos);
+      const auto r2_dist = ateam_geometry::norm(world.ball.pos, r2.pos);
+      return r1_dist < r2_dist;
+    });
+  if (visible_opponents.empty()) {
     return visible_opponents;
   }
   // Pop first robot, assuming it's handling the ball
@@ -98,6 +100,7 @@ std::vector<Robot> Blockers::getRankedBlockableRobots(const World & world)
 
 ateam_geometry::Point Blockers::getBlockingPosition(const World & world, const Robot & blockee)
 {
-  return blockee.pos + ((kRobotDiameter+0.1) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
+  return blockee.pos +
+         ((kRobotDiameter + 0.1) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
 }
 }

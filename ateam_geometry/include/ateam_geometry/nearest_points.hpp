@@ -46,8 +46,6 @@ inline ateam_geometry::Point NearestPointOnSegment(
 }*/
 
 
-
-
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_

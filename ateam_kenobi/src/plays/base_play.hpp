@@ -35,14 +35,17 @@ namespace ateam_kenobi::plays
 class BasePlay
 {
 public:
-  explicit BasePlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+  explicit BasePlay(
+    visualization::OverlayPublisher & overlay_publisher,
+    visualization::PlayInfoPublisher & play_info_publisher)
   : overlay_publisher_(overlay_publisher), play_info_publisher_(play_info_publisher) {}
 
   virtual ~BasePlay() = default;
 
   virtual void reset() = 0;
 
-  virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) = 0;
+  virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world) = 0;
 
 protected:
   visualization::OverlayPublisher & overlay_publisher_;

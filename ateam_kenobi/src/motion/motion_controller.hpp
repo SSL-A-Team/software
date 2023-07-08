@@ -33,7 +33,8 @@
 #include "types/world.hpp"
 
 // cause the robot to: always face a point, face in the direction of travel, or stay facing the same direction
-enum class AngleMode{
+enum class AngleMode
+{
   face_point,
   face_absolute,
   face_travel,
@@ -57,7 +58,7 @@ public:
   MotionController();
 
   // Load a new trajectory into the motion controller resetting its progress along the old one
-  void set_trajectory(const std::vector<ateam_geometry::Point>& trajectory);
+  void set_trajectory(const std::vector<ateam_geometry::Point> & trajectory);
   //void set_angle_mode(AngleMode angle_mode, std::optional<ateam_geometry::Point> point = std::nullopt);
 
   void face_point(std::optional<ateam_geometry::Point> point);
@@ -67,17 +68,19 @@ public:
 
 
   // Generate a robot motion command to follow a trajectory
-  ateam_msgs::msg::RobotMotionCommand get_command(ateam_kenobi::Robot robot, double current_time, const MotionOptions & options = MotionOptions());
+  ateam_msgs::msg::RobotMotionCommand get_command(
+    ateam_kenobi::Robot robot, double current_time,
+    const MotionOptions & options = MotionOptions());
 
   // Reset the PID controllers and remove previous time to recalculate dt
   void reset();
 
 // Velocity limits
-double v_max = 2;
-double t_max = 2;
+  double v_max = 2;
+  double t_max = 2;
 
-double face_angle = 0;
-std::optional<ateam_geometry::Point> face_towards;
+  double face_angle = 0;
+  std::optional<ateam_geometry::Point> face_towards;
 
 private:
   double prev_time;

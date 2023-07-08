@@ -29,7 +29,7 @@
 namespace ateam_vision_filter::message_conversions
 {
 
-ateam_msgs::msg::BallState toMsg(const std::optional<Ball>& maybe_ball)
+ateam_msgs::msg::BallState toMsg(const std::optional<Ball> & maybe_ball)
 {
 
   ateam_msgs::msg::BallState ball_state_msg;
@@ -48,7 +48,7 @@ ateam_msgs::msg::BallState toMsg(const std::optional<Ball>& maybe_ball)
   return ball_state_msg;
 }
 
-ateam_msgs::msg::RobotState toMsg(const std::optional<Robot>& maybe_robot)
+ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot)
 {
   ateam_msgs::msg::RobotState robot_state_msg;
   robot_state_msg.visible = maybe_robot.has_value();
@@ -62,7 +62,8 @@ ateam_msgs::msg::RobotState toMsg(const std::optional<Robot>& maybe_robot)
     robot_state_msg.twist.linear.y = obj.velocity.y();
     robot_state_msg.accel.linear.x = obj.acceleration.x();
     robot_state_msg.accel.linear.y = obj.acceleration.y();
-    robot_state_msg.pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
+    robot_state_msg.pose.orientation =
+      tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
     robot_state_msg.twist.angular.z = obj.omega;
     robot_state_msg.accel.angular.z = obj.alpha;
   }

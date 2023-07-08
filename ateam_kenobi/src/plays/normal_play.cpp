@@ -27,7 +27,9 @@
 
 namespace ateam_kenobi::plays
 {
-NormalPlay::NormalPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+NormalPlay::NormalPlay(
+  visualization::OverlayPublisher & overlay_publisher,
+  visualization::PlayInfoPublisher & play_info_publisher)
 : BasePlay(overlay_publisher, play_info_publisher)
 {
 }
@@ -75,7 +77,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> NormalPlay::r
       continue;
     }
 
-    auto& motion_controller = this->motion_controllers_[robot_id];
+    auto & motion_controller = this->motion_controllers_[robot_id];
     motion_controller.set_trajectory(path);
     motion_controller.face_towards = world.ball.pos; // face the ball
     const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(

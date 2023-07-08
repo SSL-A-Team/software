@@ -34,19 +34,22 @@ namespace ateam_kenobi::skills
 class Goalie
 {
 public:
-    Goalie(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher);
+  Goalie(
+    visualization::OverlayPublisher & overlay_publisher,
+    visualization::PlayInfoPublisher & play_info_publisher);
 
-    void reset();
+  void reset();
 
-    void runFrame(const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+  void runFrame(
+    const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & motion_commands);
 
 private:
-    visualization::OverlayPublisher & overlay_publisher_;
-    visualization::PlayInfoPublisher & play_info_publisher_;
-    play_helpers::EasyMoveTo easy_move_to_;
+  visualization::OverlayPublisher & overlay_publisher_;
+  visualization::PlayInfoPublisher & play_info_publisher_;
+  play_helpers::EasyMoveTo easy_move_to_;
 };
 
 } // namespace ateam_kenobi::skills
 
 #endif // SKILLS__GOALIE_HPP_
-

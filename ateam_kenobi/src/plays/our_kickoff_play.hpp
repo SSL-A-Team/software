@@ -37,13 +37,15 @@ namespace ateam_kenobi::plays
 class OurKickoffPlay : public BasePlay
 {
 public:
-  explicit OurKickoffPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher);
+  explicit OurKickoffPlay(
+    visualization::OverlayPublisher & overlay_publisher,
+    visualization::PlayInfoPublisher & play_info_publisher);
 
   void reset() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override;
-  
+
   void set_kickoff_ready();
 
 private:

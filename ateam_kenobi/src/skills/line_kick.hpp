@@ -36,7 +36,8 @@ class LineKick
 public:
   LineKick(visualization::OverlayPublisher & overlay_publisher);
 
-  void setTargetPoint(ateam_geometry::Point point) {
+  void setTargetPoint(ateam_geometry::Point point)
+  {
     target_point_ = point;
   }
 
@@ -50,7 +51,8 @@ private:
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 
-  enum class State {
+  enum class State
+  {
     MoveToPreKick,
     FaceBall,
     KickBall

@@ -28,7 +28,8 @@ namespace ateam_kenobi::play_helpers
 
 std::size_t EasyMoveTo::instance_index_ = 0;
 
-void EasyMoveTo::CreateArray(std::array<EasyMoveTo,16> & dst,
+void EasyMoveTo::CreateArray(
+  std::array<EasyMoveTo, 16> & dst,
   visualization::OverlayPublisher & overlay_publisher)
 {
   std::generate(
@@ -73,20 +74,25 @@ void EasyMoveTo::setPlannerOptions(path_planning::PlannerOptions options)
   planner_options_ = options;
 }
 
-void EasyMoveTo::face_point(std::optional<ateam_geometry::Point> point){
+void EasyMoveTo::face_point(std::optional<ateam_geometry::Point> point)
+{
   motion_controller_.face_point(point);
 }
-void EasyMoveTo::face_absolute(double angle) {
+void EasyMoveTo::face_absolute(double angle)
+{
   motion_controller_.face_absolute(angle);
 }
-void EasyMoveTo::face_travel() {
+void EasyMoveTo::face_travel()
+{
   motion_controller_.face_travel();
 }
-void EasyMoveTo::no_face() {
+void EasyMoveTo::no_face()
+{
   motion_controller_.no_face();
 }
 
-void EasyMoveTo::setMaxVelocity(double velocity) {
+void EasyMoveTo::setMaxVelocity(double velocity)
+{
   if (velocity > 3.0) {
     std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX VELOCITY\n";
     return;
@@ -94,7 +100,8 @@ void EasyMoveTo::setMaxVelocity(double velocity) {
   motion_controller_.v_max = velocity;
 }
 
-void EasyMoveTo::setMaxAngularVelocity(double velocity) {
+void EasyMoveTo::setMaxAngularVelocity(double velocity)
+{
   if (velocity > 6.5) {
     std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX ANGULAR VELOCITY\n";
     return;

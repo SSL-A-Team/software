@@ -26,7 +26,8 @@
 
 namespace ateam_kenobi::message_conversions
 {
-ateam_msgs::msg::FieldInfo toMsg(const Field & obj) {
+ateam_msgs::msg::FieldInfo toMsg(const Field & obj)
+{
   ateam_msgs::msg::FieldInfo field_msg;
   field_msg.field_length = obj.field_length;
   field_msg.field_width = obj.field_width;
@@ -35,15 +36,15 @@ ateam_msgs::msg::FieldInfo toMsg(const Field & obj) {
   field_msg.boundary_width = obj.boundary_width;
 
   auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
-    std::transform(
-      starting_array.begin(), starting_array.end(), final_array_iter,
-      [&](auto & val)->geometry_msgs::msg::Point {
-        geometry_msgs::msg::Point point;
-        point.x = val.x();
-        point.y = val.y();
-        return point;
-      });
-  };
+      std::transform(
+        starting_array.begin(), starting_array.end(), final_array_iter,
+        [&](auto & val)->geometry_msgs::msg::Point {
+          geometry_msgs::msg::Point point;
+          point.x = val.x();
+          point.y = val.y();
+          return point;
+        });
+    };
 
   convert_point_array(obj.field_corners, std::back_inserter(field_msg.field_corners));
   convert_point_array(obj.ours.goalie_corners, std::back_inserter(field_msg.ours.goal_posts));

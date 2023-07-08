@@ -27,7 +27,9 @@
 
 namespace ateam_kenobi::plays
 {
-TestPlay::TestPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+TestPlay::TestPlay(
+  visualization::OverlayPublisher & overlay_publisher,
+  visualization::PlayInfoPublisher & play_info_publisher)
 : BasePlay(overlay_publisher, play_info_publisher),
   goalie_skill_(overlay_publisher, play_info_publisher)
 {
@@ -36,7 +38,7 @@ TestPlay::TestPlay(visualization::OverlayPublisher & overlay_publisher, visualiz
 
 void TestPlay::reset()
 {
-  for(auto & move_to : easy_move_tos_) {
+  for (auto & move_to : easy_move_tos_) {
     move_to.reset();
   }
   goalie_skill_.reset();
@@ -60,7 +62,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
   }
 
   goalie_skill_.runFrame(world, maybe_motion_commands);
-  
+
   play_info_publisher_.send_play_message("Test Play");
   return maybe_motion_commands;
 }

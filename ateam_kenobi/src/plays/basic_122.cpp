@@ -90,20 +90,22 @@ void Basic122::assignAndRunBlockers(
   std::vector<ateam_geometry::Point> assignable_positions;
   auto blockable_robot_assignment_goals = blockers_skill_.getAssignmentPoints(world);
   std::copy_n(
-    blockable_robot_assignment_goals.begin(), std::min(2ul, blockable_robot_assignment_goals.size()),
+    blockable_robot_assignment_goals.begin(), std::min(
+      2ul,
+      blockable_robot_assignment_goals.size()),
     std::back_inserter(assignable_positions));
   auto assignment_map = robot_assignment::assign(available_robots, assignable_positions);
   std::vector<Robot> assigned_robots;
-  for(auto [robot_id, pos_ind] : assignment_map) {
+  for (auto [robot_id, pos_ind] : assignment_map) {
     auto maybe_robot = world.our_robots[robot_id];
-    if(!maybe_robot) {
+    if (!maybe_robot) {
       continue;
     }
     const auto & robot = maybe_robot.value();
     assigned_robots.push_back(robot);
   }
   auto skill_commands = blockers_skill_.runFrame(world, assigned_robots);
-  for(auto robot_ind = 0ul; robot_ind < assigned_robots.size(); ++robot_ind) {
+  for (auto robot_ind = 0ul; robot_ind < assigned_robots.size(); ++robot_ind) {
     const auto robot_id = assigned_robots[robot_ind].id;
     motion_commands[robot_id] = skill_commands[robot_ind];
     play_helpers::removeRobotWithId(available_robots, robot_id);

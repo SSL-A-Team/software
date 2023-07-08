@@ -136,7 +136,12 @@ void OverlayPublisher::drawText(
   overlays_.overlays.push_back(msg);
 }
 
-void OverlayPublisher::drawRectangle(const std::string &name, const ateam_geometry::Rectangle &rectangle, const std::string &stroke_color, const std::string &fill_color, const uint8_t stroke_width, const uint32_t lifetime)
+void OverlayPublisher::drawRectangle(
+  const std::string & name,
+  const ateam_geometry::Rectangle & rectangle,
+  const std::string & stroke_color,
+  const std::string & fill_color, const uint8_t stroke_width,
+  const uint32_t lifetime)
 {
   ateam_msgs::msg::Overlay msg;
   msg.ns = ns;
@@ -156,8 +161,9 @@ void OverlayPublisher::drawRectangle(const std::string &name, const ateam_geomet
   overlays_.overlays.push_back(msg);
 }
 
-void OverlayPublisher::publishOverlays() {
-  if (!overlays_.overlays.empty()) { publisher_->publish(overlays_); }
+void OverlayPublisher::publishOverlays()
+{
+  if (!overlays_.overlays.empty()) {publisher_->publish(overlays_);}
   overlays_.overlays.clear();
 }
 

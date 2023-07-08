@@ -41,7 +41,7 @@ RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int ro
   proto_robot_command->set_id(robot_id);
   proto_robot_command->set_dribbler_speed(9.5492968 * ros_msg.dribbler_speed);
 
-  switch(ros_msg.kick) {
+  switch (ros_msg.kick) {
     case ateam_msgs::msg::RobotMotionCommand::KICK_ARM:
     case ateam_msgs::msg::RobotMotionCommand::KICK_DISABLE:
       // Do nothing because the simulator doesn't "charge" kickers

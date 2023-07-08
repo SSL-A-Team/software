@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 
-
 #ifndef ATEAM_KENOBI__ROBOT_ASSIGNMENT_HPP_
 #define ATEAM_KENOBI__ROBOT_ASSIGNMENT_HPP_
 
@@ -43,17 +42,18 @@ namespace ateam_kenobi::robot_assignment
 
 // #define USE_HACKY_ASSIGNMENT
 
-inline std::unordered_map<size_t, size_t> assign(const std::vector<Robot> & available_robots, const std::vector<ateam_geometry::Point> & goal_positions)
+inline std::unordered_map<size_t, size_t> assign(
+  const std::vector<Robot> & available_robots,
+  const std::vector<ateam_geometry::Point> & goal_positions)
 {
 #ifdef USE_HACKY_ASSIGNMENT
-  
+
   /*
    * Hacky version that just assigns robots in order
    */
   std::unordered_map<size_t, size_t> assignments;
   auto num_assignments = std::min(available_robots.size(), goal_positions.size());
-  for(auto index = 0ul; index < num_assignments; ++index)
-  {
+  for (auto index = 0ul; index < num_assignments; ++index) {
     assignments[available_robots[index].id] = index;
   }
   return assignments;
@@ -76,8 +76,10 @@ inline std::unordered_map<size_t, size_t> assign(const std::vector<Robot> & avai
   std::unordered_map assignment = ateam_common::assignment::optimize_assignment(costs);
 
   std::unordered_map<size_t, size_t> original_indexes_map {};
-  for(auto& grid_assignment :assignment) {
-    original_indexes_map.emplace(available_robots.at(grid_assignment.first).id, grid_assignment.second);
+  for (auto & grid_assignment :assignment) {
+    original_indexes_map.emplace(
+      available_robots.at(
+        grid_assignment.first).id, grid_assignment.second);
   }
   // Map of original robot indexes (1-16) and what of the n goals each is assigned to
   return original_indexes_map;

@@ -24,7 +24,9 @@
 namespace ateam_kenobi::skills
 {
 
-Goalie::Goalie(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
+Goalie::Goalie(
+  visualization::OverlayPublisher & overlay_publisher,
+  visualization::PlayInfoPublisher & play_info_publisher)
 : overlay_publisher_(overlay_publisher), play_info_publisher_(play_info_publisher),
   easy_move_to_(overlay_publisher)
 {
@@ -47,18 +49,21 @@ void Goalie::runFrame(
 {
   const auto robot_id = world.referee_info.our_goalie_id;
   const auto & maybe_robot = world.our_robots.at(robot_id);
-  if(!maybe_robot) {
+  if (!maybe_robot) {
     // Assigned robot is not visible
     return;
   }
 
   ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
-    ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, world.field.goal_width/2.0),
-    ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, -world.field.goal_width/2.0)
+    ateam_geometry::Point(-(world.field.field_length / 2.0) + 0.25, world.field.goal_width / 2.0),
+    ateam_geometry::Point(-(world.field.field_length / 2.0) + 0.25, -world.field.goal_width / 2.0)
   );
   overlay_publisher_.drawLine("goalie_line", {goalie_line.point(0), goalie_line.point(1)}, "blue");
 
-  easy_move_to_.setTargetPosition(ateam_geometry::NearestPointOnSegment(goalie_line, world.ball.pos));
+  easy_move_to_.setTargetPosition(
+    ateam_geometry::NearestPointOnSegment(
+      goalie_line,
+      world.ball.pos));
   easy_move_to_.face_point(world.ball.pos);
   motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
 }

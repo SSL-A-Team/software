@@ -46,12 +46,14 @@ CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 */
 
 
-MotionController::MotionController() {
+MotionController::MotionController()
+{
   this->reset();
 }
 
 // if the point isn't valid then fail over to face_travel
-void MotionController::face_point(std::optional<ateam_geometry::Point> point) {
+void MotionController::face_point(std::optional<ateam_geometry::Point> point)
+{
   if (point.has_value()) {
     this->face_towards = point;
     this->angle_mode = AngleMode::face_point;
@@ -60,21 +62,25 @@ void MotionController::face_point(std::optional<ateam_geometry::Point> point) {
   }
 }
 
-void MotionController::face_travel() {
+void MotionController::face_travel()
+{
   this->angle_mode = AngleMode::face_travel;
 }
 
-void MotionController::face_absolute(double angle){
+void MotionController::face_absolute(double angle)
+{
   this->face_angle = angle;
   this->angle_mode = AngleMode::face_absolute;
 }
 
-void MotionController::no_face() {
+void MotionController::no_face()
+{
   this->angle_mode = AngleMode::no_face;
 }
 
 
-void MotionController::set_trajectory(const std::vector<ateam_geometry::Point>&  trajectory) {
+void MotionController::set_trajectory(const std::vector<ateam_geometry::Point> & trajectory)
+{
   this->trajectory = trajectory;
   this->prev_point = 0;
 
@@ -83,7 +89,10 @@ void MotionController::set_trajectory(const std::vector<ateam_geometry::Point>& 
   this->total_dist = 0;
 }
 
-ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::Robot robot, double current_time, const MotionOptions & options)
+ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
+  ateam_kenobi::Robot robot,
+  double current_time,
+  const MotionOptions & options)
 {
   ateam_msgs::msg::RobotMotionCommand motion_command;
 
@@ -101,7 +110,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
 
   // find a point in the trajectory that is far enough away from our current location
   // for loop bound ensures index never exceeds the length of the trajectory even after the loop ends
-  for(index = this->prev_point; index < this->trajectory.size() - 1; index++) {
+  for (index = this->prev_point; index < this->trajectory.size() - 1; index++) {
     double dist = sqrt(CGAL::squared_distance(robot.pos, this->trajectory[index]));
 
     if (dist > this->v_max * dt) {
@@ -138,7 +147,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
   // calculate angle movement commands
   double target_angle;
 
-  switch(this->angle_mode) {
+  switch (this->angle_mode) {
     case AngleMode::no_face:
       break;
     case AngleMode::face_absolute:
@@ -146,11 +155,13 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(ateam_kenobi::
       break;
     case AngleMode::face_point:
       if (this->face_towards.has_value()) {
-        target_angle = atan2(this->face_towards.value().y() - robot.pos.y(), this->face_towards.value().x() - robot.pos.x());
+        target_angle = atan2(
+          this->face_towards.value().y() - robot.pos.y(),
+          this->face_towards.value().x() - robot.pos.x());
         break;
       }
       [[fallthrough]];
-      // otherwise default to face travel
+    // otherwise default to face travel
     case AngleMode::face_travel:
       target_angle = atan2(y_error, x_error);
       break;

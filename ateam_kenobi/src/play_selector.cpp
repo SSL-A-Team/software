@@ -136,9 +136,9 @@ plays::BasePlay * PlaySelector::finalizeSelection(
   return play;
 }
 
-plays::BasePlay *PlaySelector::pickNormalStartPlay()
+plays::BasePlay * PlaySelector::pickNormalStartPlay()
 {
-  switch(previous_game_command_) {
+  switch (previous_game_command_) {
     case ateam_common::GameCommand::PrepareKickoffOurs:
       return &our_kickoff_play_;
     case ateam_common::GameCommand::PrepareKickoffTheirs:

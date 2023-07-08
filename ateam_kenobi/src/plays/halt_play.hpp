@@ -27,20 +27,23 @@
 
 namespace ateam_kenobi::plays
 {
-class HaltPlay : public BasePlay {
-  public:
-    explicit HaltPlay(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher);
+class HaltPlay : public BasePlay
+{
+public:
+  explicit HaltPlay(
+    visualization::OverlayPublisher & overlay_publisher,
+    visualization::PlayInfoPublisher & play_info_publisher);
 
-    void reset() override;
-    
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
-  private:
+  void reset() override;
 
-    path_planning::PathPlanner path_planner_;
-    MotionController motion_controller_;
-    int prev_assigned_id_ = -1;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  path_planning::PathPlanner path_planner_;
+  MotionController motion_controller_;
+  int prev_assigned_id_ = -1;
 };
 }  // namespace ateam_kenobi::plays
 
 #endif // PLAYS__HALT_HPP_
-

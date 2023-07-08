@@ -36,20 +36,22 @@ namespace ateam_kenobi::play_helpers
 class EasyMoveTo
 {
 public:
-  static void CreateArray(std::array<EasyMoveTo, 16> & dst, visualization::OverlayPublisher & overlay_publisher);
+  static void CreateArray(
+    std::array<EasyMoveTo, 16> & dst,
+    visualization::OverlayPublisher & overlay_publisher);
 
   /**
    * @brief DO NOT USE THIS CONSTRUCTOR IN PLAY CODE
    * This is meant for internal use only.
    */
-  EasyMoveTo() {};
+  EasyMoveTo() {}
 
   EasyMoveTo(visualization::OverlayPublisher & overlay_publisher);
 
-  EasyMoveTo& operator=(EasyMoveTo&& other);
+  EasyMoveTo & operator=(EasyMoveTo && other);
 
   void reset();
-  
+
   void setTargetPosition(ateam_geometry::Point target_position);
 
   void setPlannerOptions(path_planning::PlannerOptions options);
@@ -63,14 +65,16 @@ public:
 
   void setMaxAngularVelocity(double velocity);
 
-  ateam_msgs::msg::RobotMotionCommand runFrame(const Robot & robot, const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles = {});
+  ateam_msgs::msg::RobotMotionCommand runFrame(
+    const Robot & robot, const World & world,
+    const std::vector<ateam_geometry::AnyShape> & obstacles = {});
 
-  ateam_geometry::Point getTargetPosition() const {
+  ateam_geometry::Point getTargetPosition() const
+  {
     return target_position_;
   }
 
 private:
-
   static std::size_t instance_index_;  // used for naming visualizations
   std::string instance_name_;
   ateam_geometry::Point target_position_;
@@ -80,9 +84,12 @@ private:
   MotionOptions motion_options_;
   visualization::OverlayPublisher * overlay_publisher_;
 
-  path_planning::PathPlanner::Path planPath(const Robot & robot, const World & world, const std::vector<ateam_geometry::AnyShape> & obstacles);
+  path_planning::PathPlanner::Path planPath(
+    const Robot & robot, const World & world,
+    const std::vector<ateam_geometry::AnyShape> & obstacles);
 
-  ateam_msgs::msg::RobotMotionCommand getMotionCommand(const path_planning::PathPlanner::Path & path, const Robot & robot, const World & world);
+  ateam_msgs::msg::RobotMotionCommand getMotionCommand(
+    const path_planning::PathPlanner::Path & path, const Robot & robot, const World & world);
 
   void drawTrajectoryOverlay(const path_planning::PathPlanner::Path & path, const Robot & robot);
 };

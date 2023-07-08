@@ -28,15 +28,15 @@ namespace ateam_kenobi::plays
 OurPenaltyPlay::OurPenaltyPlay(
   visualization::OverlayPublisher & op,
   visualization::PlayInfoPublisher & pip)
-  : BasePlay(op, pip),
-    line_kick_skill_(op)
+: BasePlay(op, pip),
+  line_kick_skill_(op)
 {
   play_helpers::EasyMoveTo::CreateArray(move_tos_, op);
 }
 
 void OurPenaltyPlay::reset()
 {
-  for(auto & move_to : move_tos_) {
+  for (auto & move_to : move_tos_) {
     move_to.reset();
   }
 }
@@ -49,16 +49,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
-  if(available_robots.empty()) {
+  if (available_robots.empty()) {
     return {};
   }
 
   auto kicking_robot = available_robots.front();
   available_robots.erase(available_robots.begin());
 
-  line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length/2.0, 0.0));
+  line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
 
-  if(world.in_play) {
+  if (world.in_play) {
     // Kick ball
     line_kick_skill_.runFrame(world, kicking_robot);
   } else {
@@ -72,9 +72,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   }
 
   auto i = 0;
-  ateam_geometry::Point pattern_start(kRobotDiameter-(world.field.field_length / 2.0), kRobotDiameter-(world.field.field_width/2.0));
+  ateam_geometry::Point pattern_start(kRobotDiameter - (world.field.field_length / 2.0),
+    kRobotDiameter - (world.field.field_width / 2.0));
   ateam_geometry::Vector pattern_step(kRobotDiameter + 0.2, 0.0);
-  for(const auto & robot : available_robots) {
+  for (const auto & robot : available_robots) {
     auto & move_to = move_tos_[robot.id];
     move_to.setTargetPosition(pattern_start + (i * pattern_step));
     move_to.setMaxVelocity(1.5);

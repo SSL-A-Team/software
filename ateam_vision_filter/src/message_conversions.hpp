@@ -40,8 +40,8 @@
 namespace ateam_vision_filter::message_conversions
 {
 
-ateam_msgs::msg::BallState toMsg(const std::optional<Ball>& maybe_ball);
-ateam_msgs::msg::RobotState toMsg(const std::optional<Robot>& maybe_robot);
+ateam_msgs::msg::BallState toMsg(const std::optional<Ball> & maybe_ball);
+ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot);
 
 CameraMeasurement getCameraMeasurement(const ssl_league_msgs::msg::VisionWrapper & ros_msg);
 CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg);

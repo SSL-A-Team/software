@@ -131,7 +131,7 @@ private:
       joy_message->axes[get_parameter("mapping.angular.z.axis").as_int()];
 
     const auto kick_button = get_parameter("mapping.kick").as_int();
-    if(joy_message->buttons[kick_button]) {
+    if (joy_message->buttons[kick_button]) {
       command_message.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
       command_message.kick_speed = 5.0;
     }
