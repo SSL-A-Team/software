@@ -154,21 +154,22 @@ class TestJoystickControlNode(unittest.TestCase):
             self.pub.publish(joy_msg)
             time.sleep(0.1)
 
-        self.assertIsNone(self.received_msg_0)
-        self.assertIsNotNone(self.received_msg_1)
+        # Robot 0 should get one more all-zero message when the controller switches
+        self.assertIsNotNone(self.received_msg_0)
+        self.assertAlmostEqual(self.received_msg_0.twist.linear.x, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.linear.y, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.linear.z, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.angular.x, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.angular.y, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.angular.z, 0.0)
 
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.x, -1.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.y, -1.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.z, 0.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.angular.x, 0.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.angular.y, 0.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.angular.z, -1.0)
+        self.assertIsNotNone(self.received_msg_1)
+        self.assertAlmostEqual(self.received_msg_1.twist.linear.x, -1.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.linear.y, -1.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.linear.z, 0.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.x, 0.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.y, 0.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.z, -1.0) 
 
     def test_2_invalidRobotIdsShouldBeRejected(self):
         self.assertFalse(self.setRobotId(-2).results[0].successful)
