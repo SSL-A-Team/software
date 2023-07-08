@@ -159,6 +159,13 @@ export class AppState {
             for (const member of Object.getOwnPropertyNames(state.world.referee)) {
                 state.world.referee[member] = msg[member];
             }
+
+            // TODO: probably pull this from the ros network instead
+            if (state.world.referee.blue.name == "A-Team") {
+                state.world.team = TeamColor.Blue;
+            } else if (state.world.referee.yellow.name == "A-Team") {
+                state.world.team = TeamColor.Yellow;
+            }
         }
     }
 
