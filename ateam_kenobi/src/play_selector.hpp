@@ -26,6 +26,7 @@ private:
   plays::TestKickPlay test_kick_play_;
   plays::Basic122 basic_122_play_;
   plays::OurPenaltyPlay our_penalty_play_;
+  plays::TheirPenaltyPlay their_penalty_play_;
 
   ateam_common::GameCommand previous_game_command_ = ateam_common::GameCommand::Halt;
   void * prev_play_address_ = nullptr;

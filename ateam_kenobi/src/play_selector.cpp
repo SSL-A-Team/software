@@ -15,7 +15,8 @@ PlaySelector::PlaySelector(
   our_kickoff_play_(overlay_publisher, play_info_publisher),
   test_kick_play_(overlay_publisher, play_info_publisher),
   basic_122_play_(overlay_publisher, play_info_publisher),
-  our_penalty_play_(overlay_publisher, play_info_publisher)
+  our_penalty_play_(overlay_publisher, play_info_publisher),
+  their_penalty_play_(overlay_publisher, play_info_publisher)
 {
 }
 
@@ -63,7 +64,7 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       selected_play = &our_penalty_play_;
       break;
     case ateam_common::GameCommand::PreparePenaltyTheirs:
-      // TODO
+      selected_play = &their_penalty_play_;
       break;
     case ateam_common::GameCommand::DirectFreeOurs:
     case ateam_common::GameCommand::IndirectFreeOurs:
@@ -123,7 +124,7 @@ plays::BasePlay *PlaySelector::pickNormalStartPlay()
       return &our_penalty_play_;
       break;
     case ateam_common::GameCommand::PreparePenaltyTheirs:
-      // TODO
+      return &their_penalty_play_;
       break;
     default:
       return &basic_122_play_;
