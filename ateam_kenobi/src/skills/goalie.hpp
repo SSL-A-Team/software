@@ -21,7 +21,7 @@
 #ifndef SKILLS__GOALIE_HPP_
 #define SKILLS__GOALIE_HPP_
 
-#include <vector>
+
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/nearest_points.hpp>
 #include <ateam_geometry/normalize.hpp>
@@ -33,6 +33,9 @@
 
 #include <boost/optional.hpp> 
 #include <boost/variant.hpp> 
+#include "play_helpers/available_robots.hpp"
+#include "robot_assignment.hpp"
+
 // because CGAL returns boost optionals...
 
 namespace ateam_kenobi::skills

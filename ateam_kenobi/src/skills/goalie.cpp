@@ -1,7 +1,39 @@
 #include "goalie.hpp"
 
+#include <vector>
+#include <optional>
+
+#include <ranges>
+
 namespace ateam_kenobi::skills
 {
+
+inline Robot closest_to_ray(ateam_geometry::Ray ray, std::vector<Robot> robots) {
+  auto dist_from_ray = [&](const Robot & robot)->std::pair<Robot, double> {
+    auto p = robot.pos;
+    ateam_geometry::Point orthogonal_projection = ray.supporting_line().projection(p);
+    double dist = ray.has_on(orthogonal_projection) ? ateam_geometry::norm(orthogonal_projection - p) : std::numeric_limits<double>::infinity();
+    return {robot, dist};
+  };
+  auto min_func = [&](auto a, auto b) {return a.second < b.second;}; // Is this what mem funcs are for?
+
+  std::vector<std::pair<Robot, double>> dist_pairs;
+  std::transform(robots.begin(), robots.end(), std::back_inserter(dist_pairs), dist_from_ray);
+  return std::min_element(dist_pairs.begin(), dist_pairs.end(), min_func)->first;
+  
+  // auto closest = robots | std::views::transform(dist_from_ray) | std::views::min(min_func);
+  // return closest.first;
+}
+
+inline std::optional<Robot> closest_opponent_to_ball(const World & world) {
+  auto visible_their_robots = play_helpers::getVisibleRobots(world.their_robots);
+  const auto & robot_assignments = robot_assignment::assign(visible_their_robots, {world.ball.pos});
+  if (!robot_assignments.empty()) {
+    return world.their_robots.at(robot_assignments.begin()->first);
+  } else {
+    return std::nullopt;
+  } 
+}
 
 Goalie::Goalie(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher)
 : overlay_publisher_(overlay_publisher), 
@@ -32,73 +64,138 @@ void Goalie::runFrame(
     return;
   }
 
+  // 3 modes
+  // IDLE: sit in the center of the goal on idle (is what woodward said I like the sit in front of the vector from ball to Center goal as an idle)
+  // MARK: When an opponent is near the ball or the ball is moving at an opponent move to mark that oponents shot to the goal
+  // SHOTBLOCK: When the ball is in any general velocity if it would intersect with the goal move to block. If its not in line with the goal or defense box move to block the next
+  // closest attacks (MARK on ray)
+
+  const Robot & robot = maybe_robot.value();
+  
+  double goal_offset = 0.05;
   ateam_geometry::Segment goal_line {
-    world.field.ours.goal_posts.at(0),
-    world.field.ours.goal_posts.at(1)
+    {goal_offset + -world.field.field_length/2 , -world.field.goal_width/2},
+    {goal_offset + -world.field.field_length/2 , world.field.goal_width/2}
   };
 
-  // also backing up as the ball comes in would be nice so we have max distance to respond
-  const double scale_in_factor = 3;
+  ateam_geometry::Point goal_midpoint = goal_line.source() + ateam_geometry::normalize(goal_line.target() - goal_line.source()) * (ateam_geometry::norm(goal_line) / 2);
 
-  // TODO(CAVIDANO) make a general version of this for param(t) 0 <= t <= 1 by changing the division of the two
-  // half of the norm of the line in the direction of target from source + the source point gives midpoint
-  ateam_geometry::Point midpoint = goal_line.source() + ateam_geometry::normalize(goal_line.target() - goal_line.source()) * (ateam_geometry::norm(goal_line) / 2);
-  ateam_geometry::Point target_point = midpoint + (world.field.goal_depth / scale_in_factor) * (goal_line.target() - goal_line.source()).perpendicular(CGAL::Orientation::NEGATIVE);
-  // this part needs to be smarter at some point and account for states of the oppenent and vel of the ball as well as possible angles of shots
-  // Probably needs to be a voronoi point vs a fix 90 deg angle
+  // Idle case basically has to be overriden
+  ateam_geometry::Point target_point = goal_midpoint;
+  ateam_geometry::Ray shot_ray = {world.ball.pos, target_point - world.ball.pos};
 
-  ateam_geometry::Ray shot_ray(world.ball.pos, target_point - world.ball.pos);
+  std::string play_info_state = "IDLE";
 
-  // restrict consideration of goalie to just the goalie_box
+  // Note we just assume if the ball is coming at our goal even if friction would slow it down that its coming for us
+  // Dont want to get into the tuning and estimation for friction and such yet
 
-  ateam_geometry::Point corner0 = {-world.field.field_length / 2, world.field.goal_width};
-  ateam_geometry::Point corner1 = {-1 * (world.field.field_length / 2) + world.field.goal_width, -world.field.goal_width};
-  ateam_geometry::Rectangle goalie_box(corner0, corner1);
+  // TODO INVERT ALL THESE AND MAKE THIS AN EARLY RETURN WHERE YOU CALL INTO SET MOTION STUFF BEFORE RETURNING
+  // IT WLL MAKE THE LOGIC FAR LESS CANCEROUS LIKE IT WASNT WRITTEN AT 3 am
+  if (ateam_geometry::norm(world.ball.vel) > 0.05) {
+    shot_ray = {world.ball.pos, world.ball.vel};
 
-  // ateam_geometry::Rectangle goalie_box(world.field.ours.goalie_corners.at(0), world.field.ours.goalie_corners.at(2));
+    boost::optional<boost::variant<ateam_geometry::Point, ateam_geometry::Segment>> maybe_target_variant = 
+      CGAL::intersection(shot_ray, goal_line);
+    
+    // Ball is coming at the goal SIT ON TARGET POINT
+    if (maybe_target_variant.has_value()) {
+      // SHOTBLOCK
+      play_info_state = "SHOTBLOCK";
+      const auto & target = maybe_target_variant.value();
 
-  overlay_publisher_.drawRectangle("goalie_box", goalie_box, "orange");
+      if (target.which() == 0) {
+        target_point = boost::get<ateam_geometry::Point>(target);
+      } else {
+        target_point = ateam_geometry::NearestPointOnSegment(boost::get<ateam_geometry::Segment>(target), robot.pos);
+        // reduction for case its some how parallel with the goal line... Should be very unlikely
+      } 
 
+    } else {
+      // MARK RAY
+      play_info_state = "MARK_RAY";
+      // Need to refactor all of this this is identical to other mark other than decision on what to mark so marking is really a func
+      Robot closest_robot = closest_to_ray(shot_ray, play_helpers::getVisibleRobots(world.their_robots));
+      
+      double scale_in_factor = 1.5;
+      ateam_geometry::Point setback_point = goal_midpoint + (world.field.goal_depth / scale_in_factor) * (goal_line.target() - goal_line.source()).perpendicular(CGAL::Orientation::NEGATIVE);
+      ateam_geometry::Segment shot_segment (setback_point, closest_robot.pos);
+      shot_ray = {closest_robot.pos, setback_point};
+      overlay_publisher_.drawLine("shot_segment", shot_segment, "orange");
 
-  boost::optional<boost::variant<ateam_geometry::Point, ateam_geometry::Segment>> maybe_restricted_defense_segment = 
-    CGAL::intersection(shot_ray, goalie_box);
+      // seperate to function for sure with a given else lambda
+      boost::optional<boost::variant<ateam_geometry::Point, ateam_geometry::Segment>> maybe_target_variant = 
+      CGAL::intersection(shot_segment, goal_line);
+      if (maybe_target_variant.has_value()) {
+        const auto & target = maybe_target_variant.value();
+        if (target.which() == 0) {
+          target_point = boost::get<ateam_geometry::Point>(target);
+        } else {
+          target_point = ateam_geometry::NearestPointOnSegment(boost::get<ateam_geometry::Segment>(target), robot.pos);
+          // reduction for case its some how parallel with the goal line... Should be very unlikely
+        } 
+      }
+    }
+  } else {
+    // YEAH THIS IS JUST CANCER NOW I CANT CODE ANYMORE DESPITE DOING C++ MANY YEARS
+    // hack for nearest their robot to point
+    auto maybe_opponent = closest_opponent_to_ball(world);
+    if (maybe_opponent) {
+      Robot opponent_robot= maybe_opponent.value();
 
-  if (!maybe_restricted_defense_segment.has_value()) {
-    // TODO(CAVIDANO) LOG SOMETHING MESSED IF THE DEFENDER HAS NO POINT ON THE GOAL JUST STAY WHERE YOU ARE
-    return;
+      // std::cerr << ateam_geometry::norm(opponent_robot.pos, world.ball.pos) << std::endl;
+
+      double mark_dist = 0.5;
+      overlay_publisher_.drawCircle("mark_idle_distance", ateam_geometry::makeCircle(world.ball.pos, mark_dist), "red");
+      if (ateam_geometry::norm(opponent_robot.pos, world.ball.pos) < mark_dist) {
+        // MARK IDLE
+        play_info_state = "MARK_IDLE";
+        double scale_in_factor = 1.5;
+        ateam_geometry::Point setback_point = goal_midpoint + (world.field.goal_depth / scale_in_factor) * (goal_line.target() - goal_line.source()).perpendicular(CGAL::Orientation::NEGATIVE);
+        ateam_geometry::Segment shot_segment (setback_point, opponent_robot.pos);
+        shot_ray = {opponent_robot.pos, setback_point};
+        overlay_publisher_.drawLine("shot_segment", shot_segment, "orange");
+
+        // seperate to function for sure with a given else lambda
+        boost::optional<boost::variant<ateam_geometry::Point, ateam_geometry::Segment>> maybe_target_variant = 
+        CGAL::intersection(shot_segment, goal_line);
+        if (maybe_target_variant.has_value()) {
+          const auto & target = maybe_target_variant.value();
+          if (target.which() == 0) {
+            target_point = boost::get<ateam_geometry::Point>(target);
+          } else {
+            target_point = ateam_geometry::NearestPointOnSegment(boost::get<ateam_geometry::Segment>(target), robot.pos);
+            // reduction for case its some how parallel with the goal line... Should be very unlikely
+          }
+        }
+      }
+    }
   }
-  const auto & restricted_defense_segment = maybe_restricted_defense_segment.value();
   
-  // Pick point
-  ateam_geometry::Point defense_point = boost::apply_visitor(IntersectVisitor(maybe_robot.value(), overlay_publisher_), restricted_defense_segment);
+  this->play_info_publisher_.message["GOALIE"]["mode"] = play_info_state;
+  this->play_info_publisher_.send_play_message("goalie");
+  // STATUS
+  overlay_publisher_.drawLine("shot_ray", {world.ball.pos, target_point}, "red");
+  overlay_publisher_.drawCircle("target_point", ateam_geometry::makeCircle(target_point, 0.1), "red");
 
   // Move
-  easy_move_to_.setTargetPosition(defense_point);
+  easy_move_to_.setTargetPosition(target_point);
   easy_move_to_.face_point(world.ball.pos);
+  motion_commands.at(robot_id) = easy_move_to_.runFrame(robot, world);
 
-  motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
-
-  // STATUS
-  // overlay_publisher_.drawLine("shot_ray", {world.ball.pos, target_point}, "red");
-  // overlay_publisher_.drawCircle(
-  //     "defense point",
-  //     ateam_geometry::makeCircle(defense_point, 0.2), "blue", "transparent");
-
-  // play_info_publisher_.message["Goalie"]["defense_point"] = {defense_point.x(), defense_point.y()};
-
-  // play_info_publisher_.message["Goalie"]["goal_box"]["0"] = {world.field.ours.goalie_corners.at(0).x(), world.field.ours.goalie_corners.at(0).y()};
-  // play_info_publisher_.message["Goalie"]["goal_box"]["2"] = {world.field.ours.goalie_corners.at(2).x(), world.field.ours.goalie_corners.at(2).y()};
-  
-  // ateam_geometry::Segment goalie_line = ateam_geometry::Segment(
-  //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, world.field.goal_width/2.0),
-  //   ateam_geometry::Point(-(world.field.field_length/2.0) + 0.25, -world.field.goal_width/2.0)
-  // );
-  // overlay_publisher_.drawLine("goalie_line", {goalie_line.point(0), goalie_line.point(1)}, "blue");
-
-  // easy_move_to_.setTargetPosition(ateam_geometry::NearestPointOnSegment(goalie_line, world.ball.pos));
-
-  // easy_move_to_.setFacingTowards(world.ball.pos);
-  // motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
+  return;
 }
+
+
+// different than nearest points as once its past something cost is inf
+// TODO should have written as a transform
+// template<size_t N = 16>
+// ateam_geometry::Point closest_to_ray(ateam_geometry::Ray ray, array<ateam_geometry::Point, N> points) {
+//   double min = std::numeric_limits<double>::infinity;
+//   for(const auto & p : points) {
+//     ateam_geometry::Point orthogonal_projection = ray.supporting_line().projection(p);
+//     double dist = ray.has_on(orthogonal_projection)) ? ateam_geometry::norm(orthogonal_projection - p) : std::numeric_limits<double>::infinity
+//     std::min(dist, min);
+//   }
+// }
 
 } // namespace ateam_kenobi::skills
