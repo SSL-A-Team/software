@@ -23,6 +23,8 @@ private:
   plays::StopPlay stop_play_;
   plays::WallPlay wall_play_;
   plays::OurKickoffPlay our_kickoff_play_;
+  plays::TestKickPlay test_kick_play_;
+
   ateam_common::GameCommand previous_game_command_ = ateam_common::GameCommand::Halt;
   void * prev_play_address_ = nullptr;
   std::size_t prev_play_type_index_ = -1;
