@@ -24,16 +24,10 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/nearest_points.hpp>
-#include <ateam_geometry/normalize.hpp>
-
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
 #include "visualization/overlay_publisher.hpp"
 #include "visualization/play_info_publisher.hpp"
-
-#include <boost/optional.hpp> 
-#include <boost/variant.hpp> 
-// because CGAL returns boost optionals...
 
 namespace ateam_kenobi::skills
 {
@@ -50,27 +44,6 @@ private:
     visualization::OverlayPublisher & overlay_publisher_;
     visualization::PlayInfoPublisher & play_info_publisher_;
     play_helpers::EasyMoveTo easy_move_to_;
-
-    // This is literally a lambda done by hand
-    struct IntersectVisitor : public boost::static_visitor<ateam_geometry::Point>
-    {
-        IntersectVisitor(Robot robot, visualization::OverlayPublisher & overlay_publisher) : robot(robot), overlay_publisher(overlay_publisher){}
-
-        Robot robot;
-        // cant remember how to deal with const return from .value() which the const on why am I so useless
-        visualization::OverlayPublisher & overlay_publisher;
-        
-        ateam_geometry::Point operator()(ateam_geometry::Segment arg) const
-        {
-            overlay_publisher.drawLine("restricted_defense_segment", {arg.source(), arg.target()}, "orange");
-            return ateam_geometry::NearestPointOnSegment(arg, robot.pos);
-        }
-        ateam_geometry::Point operator()(ateam_geometry::Point arg) const
-        {
-            return arg;
-        }
-    };
-
 };
 
 } // namespace ateam_kenobi::skills
