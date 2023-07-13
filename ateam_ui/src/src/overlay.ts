@@ -1,6 +1,7 @@
 import { RenderConfig } from "@/state"
 import { Field } from "@/field"
 import * as PIXI from "pixi.js";
+import { Texture } from "pixi.js";
 
 // Overlay Types
 export class Overlay {
@@ -62,17 +63,17 @@ export class Overlay {
             // we are just translating the overlay without changing its internal points
             graphic.clear();
             if (!this.lifetime_end || Date.now() < this.lifetime_end) {
-                this.draw(graphic, renderConfig,  overlay);
+                this.draw(graphic, renderConfig);
             }
         } else {
             graphic = new PIXI.Graphics();
             graphic.name = this.id;
-            this.draw(graphic, renderConfig, overlay);
+            this.draw(graphic, renderConfig);
             container.addChild(graphic);
         }
     }
 
-    draw(graphic: PIXI.Graphics, renderConfig: RenderConfig, container: PIXI.Container) {
+    draw(graphic: PIXI.Graphics, renderConfig: RenderConfig) {
         const scale = renderConfig.scale;
 
         graphic.position.x = scale * this.position.x;
@@ -139,76 +140,64 @@ export class Overlay {
                 // ASSUMPTION MESH IS IN Y then X or row then column (row-major)
                 // Could just use flat if this was directly an array of arrays
 
-                let height = 400;
-                let width = 400;
+                // TEST BUFFER PURPLE CONFIRMED TO WORK
+                // let height = 400;
+                // let width = 400;
 
-                const bpp = 4;
-                let buff = new Uint8Array(width * height * bpp);
-                for (let i = 0; i < height; i++) {
-                  for (let j = 0; j < width; j++) {
-                    let linear_index = ((width * i) + j) * bpp;
-                    buff[linear_index] =     100;
-                    buff[linear_index + 1] = 0;
-                    buff[linear_index + 2] = 200;
-                    buff[linear_index + 3] = 100;
-                    // buff[linear_index] =     0.5;
-                    // buff[linear_index + 1] = 0.0;
-                    // buff[linear_index + 2] = 0.5;
-                    // buff[linear_index + 3] = 0.5;
-                  }
-                }
+                // const bpp = 4;
+                // let buff = new Uint8Array(width * height * bpp);
+                // for (let i = 0; i < height; i++) {
+                //   for (let j = 0; j < width; j++) {
+                //     let linear_index = ((width * i) + j) * bpp;
+                //     buff[linear_index] =     100;
+                //     buff[linear_index + 1] = 0;
+                //     buff[linear_index + 2] = 200;
+                //     buff[linear_index + 3] = 100;
+                //   }
+                // }
 
 
-                // console.log("HELLO");
                 // let height = this.mesh.length;
                 // if (height > 0){
                 //   let width = this.mesh[0].mesh1d.length;
                 //   if (width > 0) {
-                    // const bpp = 4;
-                    // // let buff = new Uint8Array(width * height * bpp);
-                    // let buff = [];
-                    // for (let i = 0; i < height; i++) {
-                    //   // should do check to make sure each ros is length width
-                    //   if (this.mesh[i].mesh1d.length != width){}
-                    //   for (let j = 0; j < width; j++) {
-                    //     let linear_index = ((width * i) + j) * bpp;
-                    //     buff[linear_index] =     1.0;
-                    //     // buff[linear_index + 1] = 1.0;
-                    //     // buff[linear_index + 2] = 1.0;
-                    //     // buff[linear_index + 3] = 1.0;
+                //     const bpp = 4;
+                //     let buff = new Uint8Array(width * height * bpp);
+                //     for (let i = 0; i < height; i++) {
+                //       // should do check to make sure each ros is length width
+                //       if (this.mesh[i].mesh1d.length != width){}
+                //       for (let j = 0; j < width; j++) {
+                //         let linear_index = ((width * i) + j) * bpp;
+                //         buff[linear_index] = this.mesh[i].mesh1d[j] * 20;
+                //         buff[linear_index + 1] = 0;
+                //         buff[linear_index + 2] = 0;
+                //         buff[linear_index + 3] = 1.0;
+                //       }
+                //     }
 
+                //     let texture = PIXI.Texture.fromBuffer(buff, width, height);
+                let texture = this.array_to_pixi_texture(this.mesh, this.mesh_alpha)
+                // console.log(texture.valid);
+                if (texture.valid) {
+                  let frag_src = `
+                    varying vec2 vTextureCoord;
+                    uniform sampler2D uSample;
 
-                    //     // buff[linear_index] = this.mesh[i].mesh1d[j] * 20;
-                    //     buff[linear_index + 1] = 0;
-                    //     buff[linear_index + 2] = 0;
-                    //     buff[linear_index + 3] = 1.0;
-                    //   }
-                    // }
+                    void main(void) {
+                      gl_FragColor = texture2D(uSample, vTextureCoord);
+                    }
+                  `
 
-                    let texture = PIXI.Texture.fromBuffer(buff, width, height);
-                    let frag_src = `
-                      varying vec2 vTextureCoord;
-                      uniform sampler2D temp;
+                  // Filled black rectangle this is mapped to
+                  graphic.beginFill('Black');
+                  graphic.lineStyle(this.stroke_width, 'Black');
+                  graphic.drawRect(-scale*this.scale.x/2, -scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
+                  graphic.endFill();
 
-                      void main(void) {
-                        gl_FragColor = texture2D(temp, vTextureCoord);
-                      }
-                    `
-
-                    // Filled black rectangle this is mapped to
-                    graphic.beginFill('Black');
-                    graphic.lineStyle(this.stroke_width, 'Black');
-                    graphic.drawRect(-scale*this.scale.x/2, -scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
-                    graphic.endFill();
-
-                    graphic.filters = [new PIXI.Filter("", frag_src, {temp: texture})];
-
-                //   }
-                // }
-                // array_to_pixi_texture(this.mesh, this.mesh_alpha)
-
-
+                  graphic.filters = [new PIXI.Filter("", frag_src, {uSample: texture})];
+                }
                 break;
+
             // CUSTOM
             case 7:
                 // TODO: This is probably a very low priority to implement
@@ -216,15 +205,32 @@ export class Overlay {
         }
     }
 
-    // array_to_pixi_texture(mesh: Mesh1d[], mesh_alpha: Mesh1d[]) {
-      // flat: number[]
-      // for (let i = 0; i < .length; i++) {
-      // for (let j = 0; i < .length; i++) {
-      //   // throw error if at any point this doesnt equal i's length
-      // }
-      // PIXI.Texture.fromBuffer()
+    array_to_pixi_texture(mesh: Mesh1d[], mesh_alpha: Mesh1d[]) {
+      const bpp = 4;
 
-      // return
-    // }
+      let height = mesh.length;
+      if (height > 0){
+        let width = mesh[0].mesh1d.length;
+        if (width > 0) {
+          let buff = new Uint8Array(width * height * bpp);
+          for (let i = 0; i < height; i++) {
+            // should do check to make sure each ros is length width
+            if (mesh[i].mesh1d.length != width){break;}
+            for (let j = 0; j < width; j++) {
+              let linear_index = ((width * i) + j) * bpp;
+              buff[linear_index] = mesh[i].mesh1d[j] * 20;
+              buff[linear_index + 1] = 0;
+              buff[linear_index + 2] = 0;
+              buff[linear_index + 3] = 1.0;
+            }
+          }
+
+          return PIXI.Texture.fromBuffer(buff, width, height);
+        }
+      }
+
+      // Regardless of what we return the user can just check if this.valid is true
+      return PIXI.Texture.fromBuffer(null, 0, 0);
+    }
 
 }
