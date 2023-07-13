@@ -38,12 +38,13 @@ export class Overlay {
         // LOADING A SHADER
         // https://github.com/pixijs/pixijs/issues/3654
         // Yes, PIXI includes glslify. You could use the loader.
-        const loader = new PIXI.Loader(); // you can also create your own if you want
-        loader.add('frag', 'assets/shaders/heatmap.frag');
-        loader.load((loader, resources) => {
-          // this.heatmap_shader = PIXI.Shader("", resources['frag'].data);
-          this.frag_src = resources['frag'].data
-        });
+
+        // const loader = new PIXI.Loader(); // you can also create your own if you want
+        // loader.add('frag', 'assets/shaders/heatmap.frag');
+        // loader.load((loader, resources) => {
+        //   // this.heatmap_shader = PIXI.Shader("", resources['frag'].data);
+        //   this.frag_src = resources['frag'].data
+        // });
 
     }
 
@@ -61,17 +62,17 @@ export class Overlay {
             // we are just translating the overlay without changing its internal points
             graphic.clear();
             if (!this.lifetime_end || Date.now() < this.lifetime_end) {
-                this.draw(graphic, renderConfig);
+                this.draw(graphic, renderConfig,  overlay);
             }
         } else {
             graphic = new PIXI.Graphics();
             graphic.name = this.id;
-            this.draw(graphic, renderConfig);
+            this.draw(graphic, renderConfig, overlay);
             container.addChild(graphic);
         }
     }
 
-    draw(graphic: PIXI.Graphics, renderConfig: RenderConfig) {
+    draw(graphic: PIXI.Graphics, renderConfig: RenderConfig, container: PIXI.Container) {
         const scale = renderConfig.scale;
 
         graphic.position.x = scale * this.position.x;
@@ -134,33 +135,76 @@ export class Overlay {
                 break;
             // MESH
             case 6:
-                // I think I can use a PIXI filter to do this more efficiently
                 // This is for 2d arrays of meshes
                 // ASSUMPTION MESH IS IN Y then X or row then column (row-major)
                 // Could just use flat if this was directly an array of arrays
 
-                let height = this.mesh.length;
-                if (height > 0){
-                  let width = this.mesh[0].mesh1d.length;
-                  if (width > 0) {
+                let height = 400;
+                let width = 400;
 
-                    const bpp = 4;
-                    let buff = new Uint8Array(width * height * bpp);
-                    for (let i = 0; i < height; i++) {
-                      // should do check to make sure each ros is length width
-                      if (this.mesh[i].mesh1d.length != width){}
-                      for (let j = 0; j < width; j++) {
-                        let linear_index = ((width * i) + j) * bpp;
-                        buff[linear_index] = this.mesh[i][j];
-                        buff[linear_index + 1] = 0;
-                        buff[linear_index + 2] = 0;
-                        buff[linear_index + 3] = 255;
-                      }
-                    }
-                    let texture = PIXI.Texture.fromBuffer(buff, width, height);
-                    // this.heatmap_shader
+                const bpp = 4;
+                let buff = new Uint8Array(width * height * bpp);
+                for (let i = 0; i < height; i++) {
+                  for (let j = 0; j < width; j++) {
+                    let linear_index = ((width * i) + j) * bpp;
+                    buff[linear_index] =     100;
+                    buff[linear_index + 1] = 0;
+                    buff[linear_index + 2] = 200;
+                    buff[linear_index + 3] = 100;
+                    // buff[linear_index] =     0.5;
+                    // buff[linear_index + 1] = 0.0;
+                    // buff[linear_index + 2] = 0.5;
+                    // buff[linear_index + 3] = 0.5;
                   }
                 }
+
+
+                // console.log("HELLO");
+                // let height = this.mesh.length;
+                // if (height > 0){
+                //   let width = this.mesh[0].mesh1d.length;
+                //   if (width > 0) {
+                    // const bpp = 4;
+                    // // let buff = new Uint8Array(width * height * bpp);
+                    // let buff = [];
+                    // for (let i = 0; i < height; i++) {
+                    //   // should do check to make sure each ros is length width
+                    //   if (this.mesh[i].mesh1d.length != width){}
+                    //   for (let j = 0; j < width; j++) {
+                    //     let linear_index = ((width * i) + j) * bpp;
+                    //     buff[linear_index] =     1.0;
+                    //     // buff[linear_index + 1] = 1.0;
+                    //     // buff[linear_index + 2] = 1.0;
+                    //     // buff[linear_index + 3] = 1.0;
+
+
+                    //     // buff[linear_index] = this.mesh[i].mesh1d[j] * 20;
+                    //     buff[linear_index + 1] = 0;
+                    //     buff[linear_index + 2] = 0;
+                    //     buff[linear_index + 3] = 1.0;
+                    //   }
+                    // }
+
+                    let texture = PIXI.Texture.fromBuffer(buff, width, height);
+                    let frag_src = `
+                      varying vec2 vTextureCoord;
+                      uniform sampler2D temp;
+
+                      void main(void) {
+                        gl_FragColor = texture2D(temp, vTextureCoord);
+                      }
+                    `
+
+                    // Filled black rectangle this is mapped to
+                    graphic.beginFill('Black');
+                    graphic.lineStyle(this.stroke_width, 'Black');
+                    graphic.drawRect(-scale*this.scale.x/2, -scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
+                    graphic.endFill();
+
+                    graphic.filters = [new PIXI.Filter("", frag_src, {temp: texture})];
+
+                //   }
+                // }
                 // array_to_pixi_texture(this.mesh, this.mesh_alpha)
 
 
@@ -181,6 +225,6 @@ export class Overlay {
       // PIXI.Texture.fromBuffer()
 
       // return
-    }
+    // }
 
 }
