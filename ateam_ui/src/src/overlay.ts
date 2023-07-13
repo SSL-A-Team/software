@@ -24,6 +24,7 @@ export class Overlay {
     depth: number
 
     lifetime_end: number;
+    heat_filter: PIXI.Filter
 
     constructor(id: string, msg: any) {
         this.id = id;
@@ -46,6 +47,17 @@ export class Overlay {
         //   // this.heatmap_shader = PIXI.Shader("", resources['frag'].data);
         //   this.frag_src = resources['frag'].data
         // });
+
+        let frag_src = `
+          varying vec2 vTextureCoord;
+          uniform sampler2D uSample;
+
+          void main(void) {
+            gl_FragColor = texture2D(uSample, vTextureCoord);
+          }
+        `
+        this.heat_filter = new PIXI.Filter("", frag_src, {uSample: this.heat_texture});
+        // this.heat_filter = new PIXI.Filter("", frag_src);
 
     }
 
@@ -139,62 +151,17 @@ export class Overlay {
                 // This is for 2d arrays of meshes
                 // ASSUMPTION MESH IS IN Y then X or row then column (row-major)
                 // Could just use flat if this was directly an array of arrays
-
-                // TEST BUFFER PURPLE CONFIRMED TO WORK
-                // let height = 400;
-                // let width = 400;
-
-                // const bpp = 4;
-                // let buff = new Uint8Array(width * height * bpp);
-                // for (let i = 0; i < height; i++) {
-                //   for (let j = 0; j < width; j++) {
-                //     let linear_index = ((width * i) + j) * bpp;
-                //     buff[linear_index] =     100;
-                //     buff[linear_index + 1] = 0;
-                //     buff[linear_index + 2] = 200;
-                //     buff[linear_index + 3] = 100;
-                //   }
-                // }
-
-
-                // let height = this.mesh.length;
-                // if (height > 0){
-                //   let width = this.mesh[0].mesh1d.length;
-                //   if (width > 0) {
-                //     const bpp = 4;
-                //     let buff = new Uint8Array(width * height * bpp);
-                //     for (let i = 0; i < height; i++) {
-                //       // should do check to make sure each ros is length width
-                //       if (this.mesh[i].mesh1d.length != width){}
-                //       for (let j = 0; j < width; j++) {
-                //         let linear_index = ((width * i) + j) * bpp;
-                //         buff[linear_index] = this.mesh[i].mesh1d[j] * 20;
-                //         buff[linear_index + 1] = 0;
-                //         buff[linear_index + 2] = 0;
-                //         buff[linear_index + 3] = 1.0;
-                //       }
-                //     }
-
-                //     let texture = PIXI.Texture.fromBuffer(buff, width, height);
-                let texture = this.array_to_pixi_texture(this.mesh, this.mesh_alpha)
+                let heat_texture = this.array_to_pixi_texture(this.mesh, this.mesh_alpha)
                 // console.log(texture.valid);
-                if (texture.valid) {
-                  let frag_src = `
-                    varying vec2 vTextureCoord;
-                    uniform sampler2D uSample;
-
-                    void main(void) {
-                      gl_FragColor = texture2D(uSample, vTextureCoord);
-                    }
-                  `
+                if (heat_texture.valid) {
+                  this.heat_filter.uniforms.uSample = heat_texture;
 
                   // Filled black rectangle this is mapped to
                   graphic.beginFill('Black');
                   graphic.lineStyle(this.stroke_width, 'Black');
                   graphic.drawRect(-scale*this.scale.x/2, -scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
                   graphic.endFill();
-
-                  graphic.filters = [new PIXI.Filter("", frag_src, {uSample: texture})];
+                  graphic.filters = [this.heat_filter];
                 }
                 break;
 
