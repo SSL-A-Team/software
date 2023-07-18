@@ -39,7 +39,7 @@ export class Field {
             name: "shader_test",
             type: 6,
             position: {x: 0, y: 0},
-            scale: {x: 1, y: 1},
+            scale: {x: 6, y: 6},
             mesh: [{mesh1d: [1,4,5,5,6,7,8,1,7,4,14,1,34,1]},
                    {mesh1d: [1,4,5,5,6,7,8,1,7,4,14,1,34,1]},
                    {mesh1d: [1,4,5,5,6,7,8,1,7,4,14,1,34,1]},

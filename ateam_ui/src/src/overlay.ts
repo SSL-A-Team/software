@@ -2,6 +2,7 @@ import { RenderConfig } from "@/state"
 import { Field } from "@/field"
 import * as PIXI from "pixi.js";
 import { Texture } from "pixi.js";
+import * as glsify from "glslify";
 
 // Overlay Types
 export class Overlay {
@@ -37,27 +38,16 @@ export class Overlay {
             this.lifetime_end = Date.now() + this.lifetime;
         }
 
-        // LOADING A SHADER
-        // https://github.com/pixijs/pixijs/issues/3654
-        // Yes, PIXI includes glslify. You could use the loader.
-
-        // const loader = new PIXI.Loader(); // you can also create your own if you want
-        // loader.add('frag', 'assets/shaders/heatmap.frag');
-        // loader.load((loader, resources) => {
-        //   // this.heatmap_shader = PIXI.Shader("", resources['frag'].data);
-        //   this.frag_src = resources['frag'].data
-        // });
-
-        let frag_src = `
+          let frag_src = `
           varying vec2 vTextureCoord;
           uniform sampler2D uSample;
+          #pragma glslify: cmap = require('glsl-colormap/jet')
 
           void main(void) {
-            gl_FragColor = texture2D(uSample, vTextureCoord);
+            gl_FragColor = cmap(texture2D(uSample, vTextureCoord));
           }
         `
-        this.heat_filter = new PIXI.Filter("", frag_src, {uSample: this.heat_texture});
-        // this.heat_filter = new PIXI.Filter("", frag_src);
+        this.heat_filter = new PIXI.Filter("", frag_src);
 
     }
 
@@ -152,7 +142,7 @@ export class Overlay {
                 // ASSUMPTION MESH IS IN Y then X or row then column (row-major)
                 // Could just use flat if this was directly an array of arrays
                 let heat_texture = this.array_to_pixi_texture(this.mesh, this.mesh_alpha)
-                // console.log(texture.valid);
+                // console.log(heat_texture.valid);
                 if (heat_texture.valid) {
                   this.heat_filter.uniforms.uSample = heat_texture;
 
@@ -192,7 +182,7 @@ export class Overlay {
             }
           }
 
-          return PIXI.Texture.fromBuffer(buff, width, height);
+          return PIXI.Texture.fromBuffer(buff, width, height, {scaleMode: PIXI.SCALE_MODES.LINEAR	});
         }
       }
 
