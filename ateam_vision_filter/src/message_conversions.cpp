@@ -22,7 +22,6 @@
 
 #include <tf2/utils.h>
 #include <tf2/LinearMath/Quaternion.h>
-
 #include <string>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -30,31 +29,43 @@
 namespace ateam_vision_filter::message_conversions
 {
 
-ateam_msgs::msg::BallState toMsg(const Ball & obj)
+ateam_msgs::msg::BallState toMsg(const std::optional<Ball> & maybe_ball)
 {
   ateam_msgs::msg::BallState ball_state_msg;
-  ball_state_msg.pose.position.x = obj.position.x();
-  ball_state_msg.pose.position.y = obj.position.y();
-  ball_state_msg.twist.linear.x = obj.velocity.x();
-  ball_state_msg.twist.linear.y = obj.velocity.y();
-  ball_state_msg.accel.linear.x = obj.acceleration.x();
-  ball_state_msg.accel.linear.y = obj.acceleration.y();
+  ball_state_msg.visible = maybe_ball.has_value();
+  if (maybe_ball.has_value()) {
+    auto obj = maybe_ball.value();
+
+    ball_state_msg.pose.position.x = obj.position.x();
+    ball_state_msg.pose.position.y = obj.position.y();
+    ball_state_msg.twist.linear.x = obj.velocity.x();
+    ball_state_msg.twist.linear.y = obj.velocity.y();
+    ball_state_msg.accel.linear.x = obj.acceleration.x();
+    ball_state_msg.accel.linear.y = obj.acceleration.y();
+  }
 
   return ball_state_msg;
 }
 
-ateam_msgs::msg::RobotState toMsg(const Robot & obj)
+ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot)
 {
   ateam_msgs::msg::RobotState robot_state_msg;
-  robot_state_msg.pose.position.x = obj.position.x();
-  robot_state_msg.pose.position.y = obj.position.y();
-  robot_state_msg.twist.linear.x = obj.velocity.x();
-  robot_state_msg.twist.linear.y = obj.velocity.y();
-  robot_state_msg.accel.linear.x = obj.acceleration.x();
-  robot_state_msg.accel.linear.y = obj.acceleration.y();
-  robot_state_msg.pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
-  robot_state_msg.twist.angular.z = obj.omega;
-  robot_state_msg.accel.angular.z = obj.alpha;
+  robot_state_msg.visible = maybe_robot.has_value();
+
+  if (maybe_robot.has_value()) {
+    auto obj = maybe_robot.value();
+
+    robot_state_msg.pose.position.x = obj.position.x();
+    robot_state_msg.pose.position.y = obj.position.y();
+    robot_state_msg.twist.linear.x = obj.velocity.x();
+    robot_state_msg.twist.linear.y = obj.velocity.y();
+    robot_state_msg.accel.linear.x = obj.acceleration.x();
+    robot_state_msg.accel.linear.y = obj.acceleration.y();
+    robot_state_msg.pose.orientation =
+      tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
+    robot_state_msg.twist.angular.z = obj.omega;
+    robot_state_msg.accel.angular.z = obj.alpha;
+  }
 
   return robot_state_msg;
 }
@@ -83,6 +94,8 @@ ateam_msgs::msg::FieldInfo fromMsg(
   if (ros_msg.field_length < 1.0 || ros_msg.field_width < 1.0) {
     field_info.valid = false;
     return field_info;
+  } else {
+    field_info.valid = true;
   }
 
   field_info.field_length = ros_msg.field_length;
@@ -95,6 +108,7 @@ ateam_msgs::msg::FieldInfo fromMsg(
     [](ssl_league_msgs::msg::VisionFieldLineSegment line_msg, std::string target_name) -> bool {
       return line_msg.name == target_name;
     };
+
 
   // did just realize I could have done this as a std transform
   auto lines_to_points = [&](auto & name_array, auto & target_array) {
@@ -135,11 +149,6 @@ ateam_msgs::msg::FieldInfo fromMsg(
   right_side_info.goal_posts.at(1).x = field_info.field_length / 2.0;
   right_side_info.goal_posts.at(1).y = -field_info.goal_width / 2.0;
 
-  std::array<std::string,
-    2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
-  lines_to_points(right_penalty_names, right_side_info.goalie_corners);
-
-  // TODO(cavidano): assign based off known team info
   // note left and right can be different according to Joe
   // Temporary stupid assignment working under the assumption we are on left side
   // This gets inverted later if side is not right

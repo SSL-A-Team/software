@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(ateam_common)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -g)
+  add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -13,6 +13,7 @@ find_package(Protobuf REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(ateam_msgs REQUIRED)
+find_package(ateam_geometry REQUIRED)
 find_package(angles REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
@@ -21,14 +22,14 @@ add_library(${PROJECT_NAME} SHARED
   src/bi_directional_udp.cpp
   src/multicast_receiver.cpp
   src/parameters.cpp
-  src/team_info_listener.cpp
-  src/game_state_listener.cpp
+  src/status.cpp
+  src/game_controller_listener.cpp
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
-  Eigen3
+  ateam_geometry
   ateam_msgs
   angles
   ssl_league_msgs
@@ -43,11 +44,12 @@ target_include_directories(${PROJECT_NAME}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+
 # Export symbols so we can backtrace
 set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(Boost Protobuf angles)
+ament_export_dependencies(Boost Protobuf angles ateam_geometry)
 
 install(
   DIRECTORY include/

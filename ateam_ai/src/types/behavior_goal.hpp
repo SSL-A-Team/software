@@ -68,6 +68,8 @@ struct CostParam
   std::optional<std::function<Eigen::Vector2d(Eigen::Vector2d)>> gradient;
 };
 
+struct HaltParam {};
+
 struct BehaviorGoal
 {
   enum Type
@@ -86,23 +88,31 @@ struct BehaviorGoal
 
     // Normal moves
     MoveToPoint,
-    CostFunctionPoint
+    CostFunctionPoint,
+
+    // Stoppage
+    Halt
   } type;
 
+  // Priority enum must be decreasing in order of high priority to low priority
+  // Hard assumptions exist on the enum ordering of ints
   enum Priority
   {
+    Reserved,
     Required,
     Medium,
     Low
   } priority;
 
+  std::size_t reserved_robot_id = 0;
+
   using Params = std::variant<KickParam, ReceiveParam, ShotParam, ReceiveShotParam, MoveParam,
-      CostParam>;
+      CostParam, HaltParam>;
   Params params;
 
   // TODO(jneiger): Add type<->param checking for consistency
-  BehaviorGoal(Type type, Priority priority, Params params)
-  : type(type), priority(priority), params(params) {}
+  BehaviorGoal(Type type, Priority priority, Params params, std::size_t reserved_robot_id = 0)
+  : type(type), priority(priority), params(params), reserved_robot_id(reserved_robot_id) {}
 };
 
 #endif  // TYPES__BEHAVIOR_GOAL_HPP_

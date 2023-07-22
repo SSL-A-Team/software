@@ -1,0 +1,16 @@
+<launch>
+  <arg name="ssl_vision_ip" default="224.5.23.2"/>
+  <arg name="ssl_vision_port" default="10020"/>
+  <arg name="ssl_vision_interface_address" default="10.193.15.132"/>
+  <arg name="use_world_velocities" default="false"/>
+
+  <node name="ssl_vision_bridge" pkg="ateam_ssl_vision_bridge" exec="ssl_vision_bridge_node" respawn="True">
+    <param name="ssl_vision_ip" value="$(var ssl_vision_ip)"/>
+    <param name="ssl_vision_port" value="$(var ssl_vision_port)"/>
+    <param name="net_interface_address" value="$(var ssl_vision_interface_address)"/>
+  </node>
+  <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True"/>
+  <node name="kenobi_node" pkg="ateam_kenobi" exec="ateam_kenobi_node" respawn="True">
+    <param name="use_world_velocities" value="$(var use_world_velocities)"/>
+  </node>
+</launch>

@@ -4,9 +4,14 @@ project(ateam_bringup)
 find_package(ament_cmake REQUIRED)
 
 install(DIRECTORY
-  gc_config
   launch
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(DIRECTORY
+  scripts/
+  DESTINATION lib/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
 )
 
 if(BUILD_TESTING)

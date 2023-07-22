@@ -50,25 +50,33 @@ class TestJoystickControlNode(unittest.TestCase):
     def setUp(self):
         self.context = rclpy.Context()
         rclpy.init(context=self.context)
-        self.node = rclpy.create_node('test_joystick_control_node', context=self.context,
-                                      allow_undeclared_parameters=True,
-                                      automatically_declare_parameters_from_overrides=True)
+        self.node = rclpy.create_node(
+            'test_joystick_control_node',
+            context=self.context,
+            allow_undeclared_parameters=True,
+            automatically_declare_parameters_from_overrides=True)
         self.message_pump = launch_testing_ros.MessagePump(
             self.node, context=self.context)
         self.pub = self.node.create_publisher(
             sensor_msgs.msg.Joy, '/joy', 1)
 
         self.sub_0 = self.node.create_subscription(
-            ateam_msgs.msg.RobotMotionCommand, '/motion_commands/robot_0', self.callback_0, 1)
+            ateam_msgs.msg.RobotMotionCommand,
+            '/motion_commands/robot_0',
+            self.callback_0,
+            1)
         self.received_msg_0 = None
 
         self.sub_1 = self.node.create_subscription(
-            ateam_msgs.msg.RobotMotionCommand, '/motion_commands/robot_1', self.callback_1, 1)
+            ateam_msgs.msg.RobotMotionCommand,
+            '/motion_commands/robot_1',
+            self.callback_1,
+            1)
         self.received_msg_1 = None
 
         self.set_parameter_client = self.node.create_client(
             rcl_interfaces.srv.SetParameters, '/joystick_control_node/set_parameters')
-        self.assertTrue(self.set_parameter_client.wait_for_service(1.0))
+        self.assertTrue(self.set_parameter_client.wait_for_service(5.0))
 
         self.message_pump.start()
 
@@ -146,24 +154,25 @@ class TestJoystickControlNode(unittest.TestCase):
             self.pub.publish(joy_msg)
             time.sleep(0.1)
 
-        self.assertIsNone(self.received_msg_0)
-        self.assertIsNotNone(self.received_msg_1)
+        # Robot 0 should get one more all-zero message when the controller switches
+        self.assertIsNotNone(self.received_msg_0)
+        self.assertAlmostEqual(self.received_msg_0.twist.linear.x, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.linear.y, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.linear.z, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.angular.x, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.angular.y, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.angular.z, 0.0)
 
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.x, -1.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.y, -1.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.z, 0.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.angular.x, 0.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.angular.y, 0.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.angular.z, -1.0)
+        self.assertIsNotNone(self.received_msg_1)
+        self.assertAlmostEqual(self.received_msg_1.twist.linear.x, -1.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.linear.y, -1.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.linear.z, 0.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.x, 0.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.y, 0.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.z, -1.0) 
 
     def test_2_invalidRobotIdsShouldBeRejected(self):
-        self.assertFalse(self.setRobotId(-1).results[0].successful)
+        self.assertFalse(self.setRobotId(-2).results[0].successful)
         self.assertFalse(self.setRobotId(16).results[0].successful)
 
     def callback_0(self, msg):

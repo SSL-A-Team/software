@@ -24,12 +24,12 @@
 #include <iostream>
 #include <string>
 
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
-#include <ateam_common/team_info_listener.hpp>
+#include <ateam_common/game_controller_listener.hpp>
+
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 
 #include "world.hpp"
 #include "message_conversions.hpp"
@@ -44,7 +44,7 @@ class VisionFilterNode : public rclcpp::Node
 public:
   explicit VisionFilterNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_vision_filter", options),
-    info_listener_(*this)
+    game_controller_listener_(*this)
   {
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
@@ -93,7 +93,7 @@ public:
 
     // Our field convention is we should always been on the negative half.
     // So if this is positive for our team we should invert coords
-    if (info_listener_.GetTeamSide() == ateam_common::TeamInfoListener::TeamSide::PositiveHalf) {
+    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
       camera_measurement.invert();
       message_conversions::invert_field_info(field_msg);
     }
@@ -103,8 +103,6 @@ public:
       world_.update_camera(camera_id, camera_measurement);
     }
 
-    // const std::lock_guard<std::mutex> lock(field_mutex_);
-    // field_msg_ = field_msg;
     if (field_msg.valid) {
       field_publisher_->publish(field_msg);
     }
@@ -118,24 +116,18 @@ public:
     world_.predict();
 
     std::optional<Ball> maybe_ball = world_.get_ball_estimate();
-    if (maybe_ball.has_value()) {
-      ball_publisher_->publish(message_conversions::toMsg(maybe_ball.value()));
-    }
+    ball_publisher_->publish(message_conversions::toMsg(maybe_ball));
 
     std::array<std::optional<Robot>, 16> blue_team_robots = world_.get_blue_robots_estimate();
     for (std::size_t id = 0; id < 16; id++) {
       const auto & maybe_robot = blue_team_robots.at(id);
-      if (maybe_robot.has_value()) {
-        blue_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot.value()));
-      }
+      blue_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot));
     }
 
     std::array<std::optional<Robot>, 16> yellow_team_robots = world_.get_yellow_robots_estimate();
     for (std::size_t id = 0; id < 16; id++) {
       const auto & maybe_robot = yellow_team_robots.at(id);
-      if (maybe_robot.has_value()) {
-        yellow_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot.value()));
-      }
+      yellow_robots_publisher_.at(id)->publish(message_conversions::toMsg(maybe_robot));
     }
   }
 
@@ -148,15 +140,14 @@ private:
   rclcpp::Publisher<ateam_msgs::msg::VisionWorldState>::SharedPtr vision_state_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::FieldInfo>::SharedPtr field_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
-
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
-  ateam_common::TeamInfoListener info_listener_;
+  ateam_common::GameControllerListener game_controller_listener_;
 
   std::mutex world_mutex_;
   World world_;
 
-//   std::mutex field_mutex_;
-//   ateam_msgs::msg::FieldInfo field_msg_;
+  // std::mutex field_mutex_;
+  // ateam_msgs::msg::FieldInfo field_msg_;
 };
 }  // namespace ateam_vision_filter
 

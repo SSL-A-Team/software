@@ -21,7 +21,6 @@
 #ifndef BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
 #define BEHAVIOR__BEHAVIOR_EXECUTOR_HPP_
 
-
 #include <optional>
 #include <array>
 
@@ -33,6 +32,7 @@
 #include "types/world.hpp"
 #include "types/trajectory.hpp"
 #include "util/directed_graph.hpp"
+
 
 /**
  * Given a set of behaviors
