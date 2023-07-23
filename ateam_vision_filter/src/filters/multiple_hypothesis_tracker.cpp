@@ -100,6 +100,11 @@ get_state_estimate() const
       return a.get_validity_score() > b.get_validity_score();
     });
 
+  if (best_track->get_validity_score() == 0) {
+    // exactly zero if its a new track
+    return std::nullopt;
+  }
+
   return std::make_pair(best_track->get_state_estimate(), best_track->get_validity_score());
 }
 
