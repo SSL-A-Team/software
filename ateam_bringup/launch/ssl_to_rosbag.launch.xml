@@ -1,8 +1,31 @@
 <launch>
+    <!-- Just a nice file for replaying ssl logs over the bridge and through the vision filter and into a ros bag -->
     <arg name="logfile" default="./log.gz"/>
 
-    <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node" />
-    <node name="ssl_vision_bridge" pkg="ateam_ssl_vision_bridge" exec="ssl_vision_bridge_node" />
+    <arg name="ssl_sim_radio_ip" default="127.0.0.1"/>
+    <!-- <arg name="ssl_sim_radio_port" default="10020"/> -->
+    <arg name="ssl_sim_radio_port" default="10301"/>
+    <arg name="ssl_vision_ip" default="224.5.23.2"/>
+    <arg name="ssl_vision_port" default="10006"/>
+    <!-- MAY NEED TO USE WIRESHARK TO FIGURE OUT WHAT THE ACTUAL VISION PORT IS IN USE ITS USALLY 10006 -->
+
+    <include file="$(find-pkg-share ateam_bringup)/launch/game_controller_nodes.launch.xml">
+        <arg name="gc_ip_address" value="127.0.0.1"/>
+        <arg name="net_interface_address" value=""/>
+    </include>
+
+    <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node">
+        <param name="ssl_sim_radio_ip" value="$(var ssl_sim_radio_ip)"/>
+        <param name="ssl_sim_radio_port" value="$(var ssl_sim_radio_port)"/>
+        <param name="net_interface_address" value=""/>
+    </node>
+
+    <node name="ssl_vision_bridge" pkg="ateam_ssl_vision_bridge" exec="ssl_vision_bridge_node" >
+        <param name="ssl_vision_ip" value="$(var ssl_vision_ip)"/>
+        <param name="ssl_vision_port" value="$(var ssl_vision_port)"/>
+        <param name="net_interface_address" value=""/>
+    </node>
+
     <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" />
 
     <include file="$(find-pkg-share ateam_ui)/launch/ateam_ui_debug_launch.py"/>
@@ -10,5 +33,6 @@
 
     <executable cmd="ros2 bag record -a" output="screen" />
 
-    <executable cmd="ssl-log-player -file $(var logfile)" output="screen" />
+    <!-- There is something weird about ssl-log-player having std input or else it will just not start playing the log so doing this so it has std input. Still auto starts -->
+    <!-- <executable cmd="xterm -e ssl-log-player -skip -file $(var logfile)"/> -->
 </launch>
