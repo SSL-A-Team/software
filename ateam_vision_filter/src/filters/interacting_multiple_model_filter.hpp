@@ -120,6 +120,7 @@ private:
   std::map<Models::ModelType, KalmanFilter> models;  // Kalman filter representing ModelType
   std::map<Models::ModelType, double> mu;  // ~= Probability of being in model ModelType
 
+  // Might actually want to make these into dynamic params
   double alpha = 0.9;  // How much to weight old updates when getting average frequency
   double relative_update_frequency = 0.5;
   unsigned int updates_until_valid_track = 10;
