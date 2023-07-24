@@ -1,7 +1,7 @@
 FROM ros:humble-ros-base-jammy AS ateam_workspace
 
 ARG HOST_SRC=./
-ARG WORKSPACE=/workspace
+ENV WORKSPACE=/workspace
 
 RUN mkdir -p ${WORKSPACE}
 
@@ -22,13 +22,15 @@ RUN apt-get update \
 
 RUN . /opt/ros/humble/setup.sh && colcon build
 
-RUN echo ". ${WORKSPACE}/install/setup.sh" >> /root/.bashrc
+# replace entrypoint file with effects of bash rc and change default entrypoint
+# I just want to kill myself I forgot the most basic things about docker like that it runs /bin/sh by default in a non interactive, non login shell
+RUN cp ${WORKSPACE}/src/ateam_bringup/docker/entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Will fail because of docker files
 CMD ["ros2", "launch", "ateam_bringup", "bringup_simulation.launch.py"]
 
 
 FROM ateam_workspace AS ssl_log_replay
-ARG WORKSPACE=/workspace
 WORKDIR ${WORKSPACE}
 RUN ./src/ateam_bringup/scripts/install_ssl_logging.sh

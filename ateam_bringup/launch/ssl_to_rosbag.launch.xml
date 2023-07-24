@@ -35,5 +35,5 @@
     <executable cmd="ros2 bag record -a" output="screen" />
 
     <!-- There is something weird about ssl-log-player having std input or else it will just not start playing the log so doing this so it has std input. Still auto starts -->
-    <executable cmd="xterm -e ssl-log-player -skip -referee-address '$(var gc_ip_address):$(var ref_port)'  -vision_address '$(var ssl_vision_ip):$(var ssl_vision_port)' -file $(var logfile)"/>
+    <executable cmd="xterm -e ssl-log-player -skip  -file $(var logfile)"/>
 </launch>

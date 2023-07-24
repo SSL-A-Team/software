@@ -2,8 +2,8 @@
   <arg name="gc_ip_address" default="10.193.12.10"/>
   <arg name="net_interface_address" default="10.193.15.132"/>
   <node name="gc_multicast_bridge_node" pkg="ateam_game_controller_bridge" exec="gc_multicast_bridge_node" respawn="True">
-    <param name="multicast.address" value="$(var multicast.address)"/>
-    <param name="multicast.port" value="$(var multicast.port)"/>
+    <!-- <param name="multicast.address" value="$(var multicast.address)"/>
+    <param name="multicast.port" value="$(var multicast.port)"/> -->
     <param name="net_interface_address" value="$(var net_interface_address)"/>
   </node>
   <node name="team_client_node" pkg="ateam_game_controller_bridge" exec="team_client_node" respawn="True">
