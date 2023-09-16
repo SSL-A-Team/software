@@ -42,23 +42,7 @@ class Preprocessor(Node):
         excluded_topic_list = ['vision_messages', 'uiclient_count', 'rosout', 'vision_messages', 'ui_connected_clients.csv', 'parameter_events']
         topic_list = [topic for topic in topics_table if topic not in excluded_topic_list]
 
-
-        # topic_list = [
-        #     'ball',
-        #     'blue_teamrobot1',
-        #     # 'blue_teamrobot2',
-        #     'blue_teamrobot3',
-        #     # 'blue_teamrobot4',
-        #     'blue_teamrobot5',
-        #     # 'yellow_teamrobot1',
-        #     'yellow_teamrobot2',
-        #     # 'yellow_teamrobot3',
-        #     'yellow_teamrobot4',
-        #     'yellow_teamrobot5',
-        #     'yellow_teamrobot6',
-        #     'yellow_teamrobot7',
-        #     # 'yellow_teamrobot9'
-        # ]
+        # I dont know why I didnt just do a glob of the *.csvs on path...
 
         csv_dir = os.path.join(bag_dir, "csvs")
 

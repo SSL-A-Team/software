@@ -32,14 +32,7 @@ class BagToCSVConverter(Node):
         output_dir = os.path.join(bag_dir, "csvs")
         os.makedirs(os.path.join(bag_dir, "csvs"), exist_ok=True)
 
-        storage_options = rosbag2_py._storage.StorageOptions(
-            uri=param_bag_path,
-            storage_id='')
-        converter_options = rosbag2_py._storage.ConverterOptions('', '')
-        self.reader.open(storage_options, converter_options)
-
-        topics_meta = self.reader.get_all_topics_and_types()
-        topics_table = {topic_meta.name : get_message(topic_meta.type) for topic_meta in topics_meta}
+        topics_table = self.get_topics_from_bag(param_bag_path)
         # get_message takes the string for message type and finds the MsgType object (message definition) for it from your ros env
         # so really just make ourselves a lookup table of topic name to MsgType/defs not message type strings ahead of time for deserialization
         # IMPORTANT this does require you have built the messages for any topic in the bag file
@@ -91,6 +84,17 @@ class BagToCSVConverter(Node):
 
         # TODO check the metadata.yaml to make sure these are right
         print(f"Total number of messages in the bagfile: {all_topics_count}")
+
+    def get_topics_from_bag(reader, param_bag_path) ->python :
+        storage_options = rosbag2_py._storage.storageoptions(
+            uri=param_bag_path,
+            storage_id='')
+        converter_options = rosbag2_py._storage.converteroptions('', '')
+        reader.open(storage_options, converter_options)
+
+        topics_meta = reader.get_all_topics_and_types()
+        topics_table = {topic_meta.name : get_message(topic_meta.type) for topic_meta in topics_meta}
+        return topics_table, topics_meta
 
 
 def main(args=None):
