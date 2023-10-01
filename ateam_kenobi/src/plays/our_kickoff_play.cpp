@@ -57,7 +57,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   std::vector<Robot> current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
-  /* Get list of robots that can be kickers which excludes the last robot to touch the ball in the 
+  /* Get list of robots that can be kickers which excludes the last robot to touch the ball in the
    * kickoff
    */
   auto valid_kickers = current_available_robots;
@@ -77,7 +77,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 
     // Go to starting point
     if (world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffOurs) {
-      /* TODO(anon): consider if we can make this dynamic enough to reuse this for more than 
+      /* TODO(anon): consider if we can make this dynamic enough to reuse this for more than
        * just kickoff
        */
       auto viz_circle = ateam_geometry::makeCircle(kicker_point, kRobotRadius);

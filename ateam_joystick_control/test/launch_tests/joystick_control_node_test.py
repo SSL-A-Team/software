@@ -150,7 +150,7 @@ class TestJoystickControlNode(unittest.TestCase):
         ]
         joy_msg.buttons = [0] * 11
 
-        while self.received_msg_0 is None and self.received_msg_1 is None:
+        while self.received_msg_0 is None or self.received_msg_1 is None:
             self.pub.publish(joy_msg)
             time.sleep(0.1)
 
@@ -169,7 +169,7 @@ class TestJoystickControlNode(unittest.TestCase):
         self.assertAlmostEqual(self.received_msg_1.twist.linear.z, 0.0)
         self.assertAlmostEqual(self.received_msg_1.twist.angular.x, 0.0)
         self.assertAlmostEqual(self.received_msg_1.twist.angular.y, 0.0)
-        self.assertAlmostEqual(self.received_msg_1.twist.angular.z, -1.0) 
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.z, -1.0)
 
     def test_2_invalidRobotIdsShouldBeRejected(self):
         self.assertFalse(self.setRobotId(-2).results[0].successful)
