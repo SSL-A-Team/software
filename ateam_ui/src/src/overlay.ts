@@ -22,12 +22,17 @@ export class Overlay {
     text: string | null
     depth: number
 
-    pixelsPerMeter: number = 140;
+    lifetime_end: number;
     
     constructor(id: string, msg: any) {
         this.id = id;
     	for (const member of Object.getOwnPropertyNames(msg)) {
             this[member] = msg[member];
+        }
+
+        // lifetime is falsey if it will live forever
+        if (this.lifetime) {
+            this.lifetime_end = Date.now() + this.lifetime;
         }
     }
 
@@ -44,9 +49,10 @@ export class Overlay {
             // There might be a way to improve performance if we can confirm that
             // we are just translating the overlay without changing its internal points
             graphic.clear();
-            this.draw(graphic, renderConfig);
+            if (!this.lifetime_end || Date.now() < this.lifetime_end) {
+                this.draw(graphic, renderConfig);
+            }
         } else {
-            console.log("creating graphic");
             graphic = new PIXI.Graphics();
             graphic.name = this.id;
             this.draw(graphic, renderConfig);
@@ -57,8 +63,8 @@ export class Overlay {
     draw(graphic: PIXI.Graphics, renderConfig: RenderConfig) {
         const scale = renderConfig.scale;
 
-        graphic.position.x = this.position.x;
-        graphic.position.y = this.position.y;
+        graphic.position.x = scale * this.position.x;
+        graphic.position.y = -scale * this.position.y;
         
         switch(this.type) {
             // POINT
@@ -72,9 +78,9 @@ export class Overlay {
             case 1:
                 if (this.points.length >= 2) {
                     graphic.lineStyle(this.stroke_width, this.stroke_color);
-                    graphic.moveTo(scale*this.points[0].x, scale*this.points[0].y);
+                    graphic.moveTo(scale*this.points[0].x, -scale*this.points[0].y);
                     for (var i = 1; i < this.points.length; i++) {
-                        graphic.lineTo(scale*this.points[i].x, scale*this.points[i].y);
+                        graphic.lineTo(scale*this.points[i].x, -scale*this.points[i].y);
                     }
                 }
                 break;
@@ -95,11 +101,11 @@ export class Overlay {
             // POLYGON
             case 4:
                 if (this.points.length >= 2){
-                    graphic.moveTo(scale*this.points.at(-1).x, scale*this.points.at(-1).y);
+                    graphic.moveTo(scale*this.points.at(-1).x, -scale*this.points.at(-1).y);
                     graphic.beginFill(this.fill_color);
                     graphic.lineStyle(this.stroke_width, this.stroke_color);
                     for (const point of this.points) {
-                        graphic.lineTo(scale*point.x, scale*point.y);
+                        graphic.lineTo(scale*point.x, -scale*point.y);
                     }
                     graphic.endFill();
                 }

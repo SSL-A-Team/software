@@ -13,7 +13,7 @@ export enum ErrorLevel {
 }
 
 export class RobotStatus {
-    connected: boolean
+    radio_connected: boolean = false;
     message: string
 
     sequence_number: number
@@ -67,6 +67,10 @@ export class Robot {
         this.status = new RobotStatus();
     }
 
+    isValid(): boolean {
+        return this.visible || this.status.radio_connected;
+    }
+
     rotation(): number {
         return (2.0*Math.acos(this.pose.orientation.z) * 180.0)/Math.PI;
     }
@@ -76,16 +80,16 @@ export class Robot {
         this.pose.orientation.w = Math.cos(degrees/2 * Math.PI/180);
     }
 
-    errorLevel(): ErrorLevel {
+    errorLevel(sim: boolean): ErrorLevel {
         // Critical
 
         // Battery Level TODO: find what level to use
-        if (this.status.battery_level <= 19.2) {
+        if (!sim && this.status.battery_level <= 19.2) {
             return ErrorLevel.Critical;
         }
 
         // Kicker Voltage TODO: find max voltage
-        if (this.status.kicker_charge_level >= 220) {
+        if (!sim && this.status.kicker_charge_level >= 220) {
             return ErrorLevel.Critical;
         }
 
@@ -104,6 +108,11 @@ export class Robot {
 
         // Warning
 
+        // Lost radio
+        if (!this.status.radio_connected) {
+            return ErrorLevel.Warning;
+        }
+
         // Robot tipped over, someone should probably go pick it up
         if (this.status.tipped_error) {
             return ErrorLevel.Warning;
@@ -116,7 +125,7 @@ export class Robot {
     update(container: PIXI.Container, renderConfig: RenderConfig) {
         const scale = renderConfig.scale;
         container.position.x = this.pose.position.x * scale;
-        container.position.y = this.pose.position.y * scale;
+        container.position.y = -this.pose.position.y * scale;
         container.getChildAt(0).angle = this.rotation() - 90;
         container.visible = this.visible;
     }
@@ -151,7 +160,7 @@ export class Robot {
         text.angle = -renderConfig.angle; // offset the rotation of the canvas so the text always appears right side up
 
         robot.position.x = this.pose.position.x * scale;
-        robot.position.y = this.pose.position.y * scale;
+        robot.position.y = -this.pose.position.y * scale;
         graphic.angle = this.rotation() - 90;
 
         robot.addChild(graphic);
