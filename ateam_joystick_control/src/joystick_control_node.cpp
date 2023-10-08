@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_common/topic_names.hpp>
@@ -78,6 +79,8 @@ public:
       std::bind(
         &JoystickControlNode::SetParameterCallback, this,
         std::placeholders::_1));
+
+    rclcpp::on_shutdown(std::bind_front(&JoystickControlNode::SendStop, this));
   }
 
 private:
@@ -88,19 +91,35 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscription_;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
 
+  void SendStop()
+  {
+    if (control_publisher_) {
+      ateam_msgs::msg::RobotMotionCommand command_message;
+      control_publisher_->publish(command_message);
+    }
+  }
+
   void CreatePublisher(const int robot_id)
   {
-    std::string topic = command_topic_template_;
-    const auto placeholder_pos = topic.find("{}");
-    if (placeholder_pos != std::string::npos) {
-      topic.replace(placeholder_pos, 2, std::to_string(robot_id));
+    if (robot_id == -1) {
+      control_publisher_.reset();
+    } else {
+      std::string topic = command_topic_template_;
+      const auto placeholder_pos = topic.find("{}");
+      if (placeholder_pos != std::string::npos) {
+        topic.replace(placeholder_pos, 2, std::to_string(robot_id));
+      }
+      control_publisher_ =
+        create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic, rclcpp::QoS{1});
     }
-    control_publisher_ =
-      create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic, rclcpp::QoS{1});
   }
 
   void JoyCallback(const sensor_msgs::msg::Joy::SharedPtr joy_message)
   {
+    if (!control_publisher_) {
+      return;
+    }
+
     ateam_msgs::msg::RobotMotionCommand command_message;
 
     command_message.twist.linear.x = get_parameter("mapping.linear.x.scale").as_double() *
@@ -111,7 +130,10 @@ private:
       joy_message->axes[get_parameter("mapping.angular.z.axis").as_int()];
 
     const auto kick_button = get_parameter("mapping.kick").as_int();
-    command_message.kick = joy_message->buttons[kick_button] && !prev_joy_msg_.buttons[kick_button];
+    if (joy_message->buttons[kick_button]) {
+      command_message.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
+      command_message.kick_speed = 5.0;
+    }
 
     const auto dribbler_inc_button = get_parameter("mapping.dribbler.increment").as_int();
     const auto dribbler_dec_button = get_parameter("mapping.dribbler.decrement").as_int();
@@ -149,12 +171,15 @@ private:
       return result;
     }
     const auto robot_id = robot_id_param_iter->as_int();
-    if (robot_id < 0 || robot_id > 15) {
+    if (robot_id < -1 || robot_id > 15) {
       result.successful = false;
-      result.reason = "'robot_id' must be in the range [0,15].";
+      result.reason = "'robot_id' must be in the range [-1,15].";
       return result;
     }
+
+    SendStop();
     CreatePublisher(robot_id);
+
     result.successful = true;
     return result;
   }
