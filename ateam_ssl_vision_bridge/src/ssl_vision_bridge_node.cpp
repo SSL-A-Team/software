@@ -40,8 +40,11 @@ class SSLVisionBridgeNode : public rclcpp::Node
 public:
   explicit SSLVisionBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ssl_vision_bridge", options),
-    multicast_receiver_("224.5.23.2",
-      10020,
+    multicast_receiver_(
+      (declare_parameter("ssl_vision_ip", "224.5.23.2"),
+      get_parameter("ssl_vision_ip").as_string()),
+      (declare_parameter("ssl_vision_port", 10020),
+      get_parameter("ssl_vision_port").as_int()),
       [this](const std::string &, const uint16_t, auto * buffer, size_t bytes_received) {
         SSL_WrapperPacket vision_proto;
 
@@ -54,8 +57,7 @@ public:
         } else {
           RCLCPP_WARN(get_logger(), "Failed to parse vision protobuf packet");
         }
-      })
-  {
+      }) {
     SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
     vision_publisher_ = create_publisher<ssl_league_msgs::msg::VisionWrapper>(
       std::string(Topics::kVisionMessages),
