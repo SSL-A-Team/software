@@ -64,7 +64,7 @@ class ATeamAINode : public rclcpp::Node
 public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_ai_node", options), game_controller_listener_(*this), \
-   evaluator_(realization_), executor_(realization_)
+    evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
     ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
