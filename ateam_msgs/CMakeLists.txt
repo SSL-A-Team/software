@@ -13,6 +13,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/BehaviorExecutorState.msg
   msg/Mesh1d.msg
   msg/Overlay.msg
+  msg/OverlayArray.msg
+  msg/RefereeInfo.msg
   msg/RobotFeedback.msg
   msg/RobotMotionCommand.msg
   msg/RobotState.msg
@@ -25,6 +27,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/VisionModelState.msg
   msg/VisionWorldState.msg
   msg/World.msg
+
+  msg/FieldInfo.msg
+  msg/FieldSidedInfo.msg
+
+  msg/PlayInfo.msg
 
   srv/ReconnectTeamClient.srv
   srv/SetDesiredKeeper.srv
