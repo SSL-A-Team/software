@@ -22,6 +22,11 @@
 #define ATEAM_GEOMETRY__TYPES_HPP_
 
 #include <CGAL/Simple_cartesian.h>
+#include <CGAL/point_generators_2.h>
+#include <CGAL/Polygon_2.h>
+#include <CGAL/Orthogonal_k_neighbor_search.h>
+#include <CGAL/Search_traits_2.h>
+
 #include <variant>
 
 namespace ateam_geometry
@@ -29,9 +34,19 @@ namespace ateam_geometry
 using Kernel = CGAL::Simple_cartesian<double>;
 using Point = Kernel::Point_2;
 using Segment = Kernel::Segment_2;
+using Ray = Kernel::Ray_2;
 using Rectangle = Kernel::Iso_rectangle_2;
 using Circle = Kernel::Circle_2;
-using AnyShape = std::variant<Point, Segment, Rectangle, Circle>;
+
+using AnyShape = std::variant<Point, Segment, Ray, Rectangle, Circle>;
+
+using PointCreator = CGAL::Creator_uniform_2<double, Point>;
+using Polygon = CGAL::Polygon_2<Kernel>;
+using Vector = Kernel::Vector_2;
+
+using TreeTraits = CGAL::Search_traits_2<Kernel>;
+using OrthoNeighborSearch = CGAL::Orthogonal_k_neighbor_search<TreeTraits>;
+using Tree = OrthoNeighborSearch::Tree;
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__TYPES_HPP_
