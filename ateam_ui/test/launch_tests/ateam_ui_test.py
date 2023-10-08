@@ -68,9 +68,11 @@ class TestUI(unittest.TestCase):
     def setUp(self):
         self.context = rclpy.Context()
         rclpy.init(context=self.context)
-        self.node = rclpy.create_node('test_ui_node', context=self.context,
-                                      allow_undeclared_parameters=True,
-                                      automatically_declare_parameters_from_overrides=True)
+        self.node = rclpy.create_node(
+            'test_ui_node',
+            context=self.context,
+            allow_undeclared_parameters=True,
+            automatically_declare_parameters_from_overrides=True)
         self.message_pump = launch_testing_ros.MessagePump(
             self.node, context=self.context)
 
@@ -87,12 +89,15 @@ class TestUI(unittest.TestCase):
 
     def test_0_subscribers_created(self):
 
+        time.sleep(10.0)
+
         nodes = self.node.get_node_names()
 
         # Rosbridge node discovered
         self.assertIn("rosbridge", nodes)
 
-        subscriptions = self.node.get_subscriber_names_and_types_by_node("rosbridge", "/ui")
+        subscriptions = self.node.get_subscriber_names_and_types_by_node(
+            "rosbridge", "/ui")
 
         # Rosbridge node initialized
         self.assertIsNotNone(subscriptions)

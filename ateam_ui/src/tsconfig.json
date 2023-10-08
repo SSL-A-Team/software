@@ -1,0 +1,22 @@
+{
+  "include": ["src/**/*", "src/**/*.vue"],
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "allowJs":true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "lib": [
+      "ES2021",
+      "DOM",
+      "DOM.Iterable"
+    ]
+  },
+
+  "references": [
+    {
+      "path": "./tsconfig.config.json"
+    }
+  ]
+}
