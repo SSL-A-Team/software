@@ -103,26 +103,86 @@ void GameControllerListener::RefereeMessageCallback(
 
   game_stage_ = static_cast<GameStage>(msg->stage);
 
-  // Yellow commands are even, blue are odd
-  // we_blue  odd(blue command)
-  // 0        0                   ours    leave it
-  // 0        1                   theirs  leave it
-  // 1        0                   theirs  add by 1 to be theirs
-  // 1        1                   ours    sub by 1 to be ours
-
-
-  // ignore if we dont know our team color yet
-  // only force start and above have this mapping
   uint8_t command = msg->command;
-  if (team_color_ != TeamColor::Unknown &&
-    command > static_cast<std::underlying_type_t<GameCommand>>(GameCommand::ForceStart))
-  {
-    if (team_color_ == TeamColor::Blue) {
-      bool command_is_blue = command % 2 == 1;
-      command += (command_is_blue ? -1 : 1);
-    }
+
+  // Cases in the switch here correspond with the options in the Referee message
+  // definition in the ssl_league_msgs package, translated to be for our/their
+  // team based on whether we are currently TeamColor::Yellow or TeamColor::Blue
+  // to the GameCommand format defined in the GameControllerListener's header file.
+  switch (command) {
+    case 0:
+      game_command_ = GameCommand::Halt;
+      break;
+    case 1:
+      game_command_ = GameCommand::Stop;
+      break;
+    case 2:
+      game_command_ = GameCommand::NormalStart;
+      break;
+    case 3:
+      game_command_ = GameCommand::ForceStart;
+      break;
+    case 4:
+      game_command_ = team_color_ ==
+        TeamColor::Yellow ? GameCommand::PrepareKickoffOurs : GameCommand::PrepareKickoffTheirs;
+      break;
+    case 5:
+      game_command_ = team_color_ ==
+        TeamColor::Blue ? GameCommand::PrepareKickoffOurs : GameCommand::PrepareKickoffTheirs;
+      break;
+    case 6:
+      game_command_ = team_color_ ==
+        TeamColor::Yellow ? GameCommand::PreparePenaltyOurs : GameCommand::PreparePenaltyTheirs;
+      break;
+    case 7:
+      game_command_ = team_color_ ==
+        TeamColor::Blue ? GameCommand::PreparePenaltyOurs : GameCommand::PreparePenaltyTheirs;
+      break;
+    case 8:
+      game_command_ = team_color_ ==
+        TeamColor::Yellow ? GameCommand::DirectFreeOurs : GameCommand::DirectFreeTheirs;
+      break;
+    case 9:
+      game_command_ = team_color_ ==
+        TeamColor::Blue ? GameCommand::DirectFreeOurs : GameCommand::DirectFreeTheirs;
+      break;
+    case 10:
+      game_command_ = team_color_ ==
+        TeamColor::Yellow ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
+      break;
+    case 11:
+      game_command_ = team_color_ ==
+        TeamColor::Blue ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
+      break;
+    case 12:
+      game_command_ = team_color_ ==
+        TeamColor::Yellow ? GameCommand::TimeoutOurs : GameCommand::TimeoutTheirs;
+      break;
+    case 13:
+      game_command_ = team_color_ ==
+        TeamColor::Blue ? GameCommand::TimeoutOurs : GameCommand::TimeoutTheirs;
+      break;
+    // Note: Command 14 and 15 (goal for yellow/blue) have been deprecated by the league
+    case 14:
+      game_command_ = team_color_ ==
+        TeamColor::Yellow ? GameCommand::GoalOurs : GameCommand::GoalTheirs;
+      break;
+    case 15:
+      game_command_ = team_color_ ==
+        TeamColor::Blue ? GameCommand::GoalOurs : GameCommand::GoalTheirs;
+      break;
+    case 16:
+      game_command_ = team_color_ ==
+        TeamColor::Yellow ? GameCommand::BallPlacementOurs : GameCommand::BallPlacementTheirs;
+      break;
+    case 17:
+      game_command_ = team_color_ ==
+        TeamColor::Blue ? GameCommand::BallPlacementOurs : GameCommand::BallPlacementTheirs;
+      break;
+    default:
+      game_command_ = GameCommand::Halt;
+      break;
   }
-  game_command_ = static_cast<GameCommand>(command);
 
   if (team_color_ != TeamColor::Unknown) {
     our_goalie_id_ = team_color_ == TeamColor::Blue ? msg->blue.goalkeeper : msg->yellow.goalkeeper;
