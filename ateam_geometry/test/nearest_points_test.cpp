@@ -18,16 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
-#define ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+#include <gtest/gtest.h>
 
-// This is a convenience header for including all ateam_geometry utilities
+#include "ateam_geometry/types.hpp"
+#include "ateam_geometry/nearest_points.hpp"
 
-#include "eigen_conversions.hpp"
-#include "make_circle.hpp"
-#include "nearest_points.hpp"
-#include "normalize.hpp"
-#include "types.hpp"
-#include "variant_do_intersect.hpp"
+TEST(NearestPointOnSegment, PointOffSegment)
+{
+  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
+  ateam_geometry::Point p(10, 0);
+  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
+  EXPECT_FLOAT_EQ(nearest_point.x(), 5);
+  EXPECT_FLOAT_EQ(nearest_point.y(), 5);
+}
 
-#endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+TEST(NearestPointOnSegment, PointOnSegment)
+{
+  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
+  ateam_geometry::Point p(1, 1);
+  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
+  EXPECT_FLOAT_EQ(nearest_point.x(), 1);
+  EXPECT_FLOAT_EQ(nearest_point.y(), 1);
+}
