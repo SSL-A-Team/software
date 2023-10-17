@@ -157,16 +157,16 @@ std::vector<std::string> GetIpV4Addresses()
   return addresses;
 }
 
-void MulticastReceiver::JoinMulticastGroupOnAllV4Interfaces(
-  const boost::asio::ip::address & multicast_address)
-{
-  const auto addresses = GetIpV4Addresses();
-  for (const auto & address : addresses) {
-    multicast_socket_.set_option(
-      boost::asio::ip::multicast::join_group(
-        multicast_address.to_v4(),
-        boost::asio::ip::make_address_v4(address)));
-    std::cerr << address << '\n';
-  }
-}
+// void MulticastReceiver::JoinMulticastGroupOnAllV4Interfaces(
+//   const boost::asio::ip::address & multicast_address)
+// {
+//   const auto addresses = GetIpV4Addresses();
+//   for (const auto & address : addresses) {
+//     multicast_socket_.set_option(
+//       boost::asio::ip::multicast::join_group(
+//         multicast_address.to_v4(),
+//         boost::asio::ip::make_address_v4(address)));
+//     std::cerr << address << '\n';
+//   }
+// }
 }  // namespace ateam_common
