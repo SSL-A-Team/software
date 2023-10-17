@@ -148,7 +148,7 @@ void GameControllerListener::RefereeMessageCallback(
       game_command_ = team_color_ ==
         TeamColor::Yellow ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
       break;
-    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_KICKOFF_BLUE:
+    case ssl_league_msgs::msg::Referee::COMMAND_INDIRECT_FREE_BLUE:
       game_command_ = team_color_ ==
         TeamColor::Blue ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
       break;
