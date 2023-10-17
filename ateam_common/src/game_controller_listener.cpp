@@ -21,6 +21,7 @@
 #include <string>
 
 #include "ateam_common/game_controller_listener.hpp"
+#include "ssl_league_msgs/msg/referee.hpp"
 
 namespace ateam_common
 {
@@ -105,77 +106,74 @@ void GameControllerListener::RefereeMessageCallback(
 
   uint8_t command = msg->command;
 
-  // Cases in the switch here correspond with the options in the Referee message
-  // definition in the ssl_league_msgs package, translated to be for our/their
-  // team based on whether we are currently TeamColor::Yellow or TeamColor::Blue
-  // to the GameCommand format defined in the GameControllerListener's header file.
+  // Translate the current game command to reflect our team color
   switch (command) {
-    case 0:
+    case ssl_league_msgs::msg::Referee::COMMAND_HALT:
       game_command_ = GameCommand::Halt;
       break;
-    case 1:
+    case ssl_league_msgs::msg::Referee::COMMAND_STOP:
       game_command_ = GameCommand::Stop;
       break;
-    case 2:
+    case ssl_league_msgs::msg::Referee::COMMAND_NORMAL_START:
       game_command_ = GameCommand::NormalStart;
       break;
-    case 3:
+    case ssl_league_msgs::msg::Referee::COMMAND_FORCE_START:
       game_command_ = GameCommand::ForceStart;
       break;
-    case 4:
+    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_KICKOFF_YELLOW:
       game_command_ = team_color_ ==
         TeamColor::Yellow ? GameCommand::PrepareKickoffOurs : GameCommand::PrepareKickoffTheirs;
       break;
-    case 5:
+    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_KICKOFF_BLUE:
       game_command_ = team_color_ ==
         TeamColor::Blue ? GameCommand::PrepareKickoffOurs : GameCommand::PrepareKickoffTheirs;
       break;
-    case 6:
+    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_PENALTY_YELLOW:
       game_command_ = team_color_ ==
         TeamColor::Yellow ? GameCommand::PreparePenaltyOurs : GameCommand::PreparePenaltyTheirs;
       break;
-    case 7:
+    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_PENALTY_BLUE:
       game_command_ = team_color_ ==
         TeamColor::Blue ? GameCommand::PreparePenaltyOurs : GameCommand::PreparePenaltyTheirs;
       break;
-    case 8:
+    case ssl_league_msgs::msg::Referee::COMMAND_DIRECT_FREE_YELLOW:
       game_command_ = team_color_ ==
         TeamColor::Yellow ? GameCommand::DirectFreeOurs : GameCommand::DirectFreeTheirs;
       break;
-    case 9:
+    case ssl_league_msgs::msg::Referee::COMMAND_DIRECT_FREE_BLUE:
       game_command_ = team_color_ ==
         TeamColor::Blue ? GameCommand::DirectFreeOurs : GameCommand::DirectFreeTheirs;
       break;
-    case 10:
+    case ssl_league_msgs::msg::Referee::COMMAND_INDIRECT_FREE_YELLOW:
       game_command_ = team_color_ ==
         TeamColor::Yellow ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
       break;
-    case 11:
+    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_KICKOFF_BLUE:
       game_command_ = team_color_ ==
         TeamColor::Blue ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
       break;
-    case 12:
+    case ssl_league_msgs::msg::Referee::COMMAND_TIMEOUT_YELLOW:
       game_command_ = team_color_ ==
         TeamColor::Yellow ? GameCommand::TimeoutOurs : GameCommand::TimeoutTheirs;
       break;
-    case 13:
+    case ssl_league_msgs::msg::Referee::COMMAND_TIMEOUT_BLUE:
       game_command_ = team_color_ ==
         TeamColor::Blue ? GameCommand::TimeoutOurs : GameCommand::TimeoutTheirs;
       break;
     // Note: Command 14 and 15 (goal for yellow/blue) have been deprecated by the league
-    case 14:
+    case ssl_league_msgs::msg::Referee::COMMAND_GOAL_YELLOW:
       game_command_ = team_color_ ==
         TeamColor::Yellow ? GameCommand::GoalOurs : GameCommand::GoalTheirs;
       break;
-    case 15:
+    case ssl_league_msgs::msg::Referee::COMMAND_GOAL_BLUE:
       game_command_ = team_color_ ==
         TeamColor::Blue ? GameCommand::GoalOurs : GameCommand::GoalTheirs;
       break;
-    case 16:
+    case ssl_league_msgs::msg::Referee::COMMAND_BALL_PLACEMENT_YELLOW:
       game_command_ = team_color_ ==
         TeamColor::Yellow ? GameCommand::BallPlacementOurs : GameCommand::BallPlacementTheirs;
       break;
-    case 17:
+    case ssl_league_msgs::msg::Referee::COMMAND_BALL_PLACEMENT_BLUE:
       game_command_ = team_color_ ==
         TeamColor::Blue ? GameCommand::BallPlacementOurs : GameCommand::BallPlacementTheirs;
       break;

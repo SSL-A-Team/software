@@ -69,6 +69,9 @@ TEST(RobotAssignment, less_goals_than_robots) {
     {0, 0},
     {1, 1},
   }};
+
+  auto result2 = assign(robots2, goals2);
+  EXPECT_EQ(result2, exp_result2);
 }
 
 TEST(RobotAssignment, more_goals_than_robots) {
@@ -89,4 +92,7 @@ TEST(RobotAssignment, more_goals_than_robots) {
     {0, 2},
     {1, 3},
   }};
+
+  auto result3 = assign(robots3, goals3);
+  EXPECT_EQ(result3, exp_result3);
 }
