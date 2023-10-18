@@ -1,3 +1,4 @@
+bool radio_connected
 uint16 sequence_number
 uint8 robot_revision_major
 uint8 robot_revision_minor
