@@ -18,16 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
-#define ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+#include <gtest/gtest.h>
 
-// This is a convenience header for including all ateam_geometry utilities
+#include "ateam_geometry/types.hpp"
+#include "ateam_geometry/normalize.hpp"
 
-#include "eigen_conversions.hpp"
-#include "make_circle.hpp"
-#include "nearest_points.hpp"
-#include "normalize.hpp"
-#include "types.hpp"
-#include "variant_do_intersect.hpp"
+TEST(Normalize, NormalizeNonZeroVector)
+{
+  ateam_geometry::Vector v(20, 10);
+  auto v_normalized = ateam_geometry::normalize(v);
+  EXPECT_FLOAT_EQ(v_normalized.x(), 0.89442718);
+  EXPECT_FLOAT_EQ(v_normalized.y(), 0.44721359);
+}
 
-#endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+
+TEST(Normalize, NormalizeZeroVector)
+{
+  ateam_geometry::Vector v(0, 0);
+  auto v_normalized = ateam_geometry::normalize(v);
+  EXPECT_TRUE(std::isnan(v_normalized.x()));
+  EXPECT_TRUE(std::isnan(v_normalized.y()));
+}
+
+TEST(Norm, NormalizedDistanceBetweenPoints)
+{
+  ateam_geometry::Point p1(10, 0);
+  ateam_geometry::Point p2(100, 5);
+  EXPECT_FLOAT_EQ(ateam_geometry::norm(p1, p2), 90.138779);
+}
+
+TEST(Norm, NormOfVector)
+{
+  ateam_geometry::Vector v(3, 4);
+  EXPECT_FLOAT_EQ(ateam_geometry::norm(v), 5);
+}
