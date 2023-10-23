@@ -154,6 +154,9 @@ public:
     return our_goalie_id_;
   }
 
+  // public for data conversion not through publish
+  void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
+
 private:
   const std::string team_name_;
   TeamColor team_color_{TeamColor::Unknown};
@@ -168,7 +171,6 @@ private:
 
   rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
 
-  void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
 };
 
 }  // namespace ateam_common
