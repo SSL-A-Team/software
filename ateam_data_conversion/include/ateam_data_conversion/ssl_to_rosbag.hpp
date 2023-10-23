@@ -20,7 +20,7 @@ namespace ateam_data_conversion
 class SslToRosbag
 {
 public: // ctors
-    explict SslToRosbag(std::string input_ssl_filename = "", std::string out_bag_filename = "");
+    explict SslToRosbag(std::string input_ssl_filename = "", std::string out_bag_filename = "./rosbag");
 };
 
 } // namespace

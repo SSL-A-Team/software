@@ -3,7 +3,7 @@
 // really I just wanted writing strategy to be flexible but this is not I should have made a generic writer class for any ros message that could come out of the logs
 namespace ateam_data_conversion
 {
-SslToRosbag::SslToRosbag(std::string input_ssl_filename, std::string out_bag_filename = "./rosbag") {
+SslToRosbag::SslToRosbag(std::string input_ssl_filename, std::string out_bag_filename) {
     // TODO Need to make output dir?
     std::unique_ptr<rosbag2_cpp::Writer> writer = std::make_unique<rosbag2_cpp::Writer>();
     writer->open(out_bag_filename);

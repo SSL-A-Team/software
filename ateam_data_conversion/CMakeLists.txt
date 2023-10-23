@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ateam_vision_filter)
+project(ateam_data_conversion)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -11,6 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
+find_package(ssl_league_protobufs REQUIRED)
 find_package(ateam_vision_filter REQUIRED)
 find_package(ateam_ssl_vision_bridge REQUIRED)
 
@@ -30,6 +31,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ateam_common
   ateam_msgs
   ssl_league_msgs
+  ssl_league_protobufs
   ateam_vision_filter
   ateam_ssl_vision_bridge
 )

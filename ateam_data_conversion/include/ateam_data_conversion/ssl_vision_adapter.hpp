@@ -3,10 +3,10 @@
 
 #include <variant>
 #include <array>
-#include <function>
+#include <functional>
 
-#include <ateam_vision_filter/world.hpp>
-#include <ateam_vision_filter/message_conversions.hpp>
+#include "world.hpp"
+#include <message_conversions.hpp>
 
 #include <ateam_common/game_controller_listener.hpp>
 
