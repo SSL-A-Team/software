@@ -44,7 +44,7 @@ class VisionFilterNode : public rclcpp::Node
 public:
   explicit VisionFilterNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_vision_filter", options),
-    game_controller_listener_(*this)
+    gc_listener_(*this)
   {
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
@@ -93,7 +93,7 @@ public:
 
     // Our field convention is we should always been on the negative half.
     // So if this is positive for our team we should invert coords
-    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
+    if (gc_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
       camera_measurement.invert();
       message_conversions::invert_field_info(field_msg);
     }
@@ -141,7 +141,7 @@ private:
   rclcpp::Publisher<ateam_msgs::msg::FieldInfo>::SharedPtr field_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
-  ateam_common::GameControllerListener game_controller_listener_;
+  ateam_common::GameControllerListener gc_listener_;
 
   std::mutex world_mutex_;
   World world_;

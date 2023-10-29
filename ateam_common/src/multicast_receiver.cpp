@@ -55,7 +55,7 @@ MulticastReceiver::MulticastReceiver(
         multicast_address,
         boost::asio::ip::make_address_v4(interface_address)));
   }
-  // JoinMulticastGroupOnAllV4Interfaces(multicast_address);
+
   multicast_socket_.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,
     boost::bind(

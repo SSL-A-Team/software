@@ -33,6 +33,7 @@
 #include <ateam_common/overlay.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/team_game_controller_listener.hpp>
+
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
@@ -66,6 +67,7 @@ public:
   explicit ATeamAINode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_ai_node", options), game_controller_listener_(*this), \
     game_controller_listener_(*this), evaluator_(realization_), executor_(realization_)
+    evaluator_(realization_), executor_(realization_)
   {
     REGISTER_NODE_PARAMS(this);
     ateam_common::Overlay::GetOverlay().SetNamespace("ateam_ai");
@@ -136,7 +138,6 @@ private:
 
   rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
 
-  ateam_common::GameControllerListener game_controller_listener_;
   ateam_common::GameControllerListener game_controller_listener_;
 
   BehaviorRealization realization_;

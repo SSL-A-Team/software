@@ -46,8 +46,8 @@ public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
     timeout_threshold_(declare_parameter("timeout_ms", 250)),
-    command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
-    game_controller_listener_(*this),
+
+    gc_listener_(*this),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
@@ -86,8 +86,7 @@ private:
   const std::chrono::milliseconds timeout_threshold_;
   const std::chrono::milliseconds command_timeout_threshold_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
-  std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
-  ateam_common::GameControllerListener game_controller_listener_;
+  ateam_common::GameControllerListener gc_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
@@ -201,9 +200,10 @@ private:
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
 
-    if (!(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
+
+    if (!(gc_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&
-      !(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Yellow &&
+      !(gc_listener_.GetTeamColor() == ateam_common::TeamColor::Yellow &&
       hello_data.color == TC_YELLOW))
     {
       RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Wrong team.");

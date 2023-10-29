@@ -50,7 +50,9 @@ TEST(RobotAssignment, assign_simple) {
   auto result1 = assign(robots1, goals1);
   EXPECT_EQ(result1, exp_result1);
 
+}
 
+TEST(RobotAssignment, less_goals_than_robots) {
   // less goals than robots
   std::vector<Robot> robots2 {{
     {{1, 0, 0}, {}, {}, 0},
@@ -70,6 +72,11 @@ TEST(RobotAssignment, assign_simple) {
   }};
 
 
+  auto result2 = assign(robots2, goals2);
+  EXPECT_EQ(result2, exp_result2);
+}
+
+TEST(RobotAssignment, more_goals_than_robots) {
   // More goals than robots
   std::vector<Robot> robots3 {{
     {{3, 0, 0}, {}, {}, 0},
@@ -89,20 +96,6 @@ TEST(RobotAssignment, assign_simple) {
   }};
 
 
-  // std::vector<Robot> robots4 {{
-  //   {{3, 0, 0}, {}, {}, 0},
-  //   {{4, 0, 0}, {}, {}, 1},
-  // }};
-
-  // std::vector<Eigen::Vector2d> goals4 {{
-  //   {1, 0},
-  //   {2, 0},
-  //   {3, 0},
-  //   {4, 0}
-  // }};
-
-  // std::map<size_t, size_t> exp_result4 {{
-  //   {0, 2},
-  //   {1, 3},
-  // }};
+  auto result3 = assign(robots3, goals3);
+  EXPECT_EQ(result3, exp_result3);
 }

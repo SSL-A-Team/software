@@ -18,33 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
-#define ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
+#include <gtest/gtest.h>
 
 #include "ateam_geometry/types.hpp"
+#include "ateam_geometry/nearest_points.hpp"
 
-namespace ateam_geometry
+TEST(NearestPointOnSegment, PointOffSegment)
 {
-
-inline ateam_geometry::Point NearestPointOnSegment(
-  const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
-{
-  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-  if (s.has_on(orthogonal_projection)) {
-    return orthogonal_projection;
-  }
-  return CGAL::squared_distance(orthogonal_projection, s.source()) <
-         CGAL::squared_distance(orthogonal_projection, s.target()) ?
-         s.source() : s.target();
+  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
+  ateam_geometry::Point p(10, 0);
+  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
+  EXPECT_FLOAT_EQ(nearest_point.x(), 5);
+  EXPECT_FLOAT_EQ(nearest_point.y(), 5);
 }
 
-// Thinking on it basically what I am about to do is GJK. Either the shapes intersect
-/*ateam_geometry::Point NearestPoints(AnyShape shape1 , AnyShape shape2)
+TEST(NearestPointOnSegment, PointOnSegment)
 {
-
-}*/
-
-
-}  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
+  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
+  ateam_geometry::Point p(1, 1);
+  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
+  EXPECT_FLOAT_EQ(nearest_point.x(), 1);
+  EXPECT_FLOAT_EQ(nearest_point.y(), 1);
+}

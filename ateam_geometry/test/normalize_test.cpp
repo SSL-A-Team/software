@@ -18,33 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
-#define ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
+#include <gtest/gtest.h>
 
 #include "ateam_geometry/types.hpp"
+#include "ateam_geometry/normalize.hpp"
 
-namespace ateam_geometry
+TEST(Normalize, NormalizeNonZeroVector)
 {
-
-inline ateam_geometry::Point NearestPointOnSegment(
-  const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
-{
-  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-  if (s.has_on(orthogonal_projection)) {
-    return orthogonal_projection;
-  }
-  return CGAL::squared_distance(orthogonal_projection, s.source()) <
-         CGAL::squared_distance(orthogonal_projection, s.target()) ?
-         s.source() : s.target();
+  ateam_geometry::Vector v(20, 10);
+  auto v_normalized = ateam_geometry::normalize(v);
+  EXPECT_FLOAT_EQ(v_normalized.x(), 0.89442718);
+  EXPECT_FLOAT_EQ(v_normalized.y(), 0.44721359);
 }
 
-// Thinking on it basically what I am about to do is GJK. Either the shapes intersect
-/*ateam_geometry::Point NearestPoints(AnyShape shape1 , AnyShape shape2)
+
+TEST(Normalize, NormalizeZeroVector)
 {
+  ateam_geometry::Vector v(0, 0);
+  auto v_normalized = ateam_geometry::normalize(v);
+  EXPECT_TRUE(std::isnan(v_normalized.x()));
+  EXPECT_TRUE(std::isnan(v_normalized.y()));
+}
 
-}*/
+TEST(Norm, NormalizedDistanceBetweenPoints)
+{
+  ateam_geometry::Point p1(10, 0);
+  ateam_geometry::Point p2(100, 5);
+  EXPECT_FLOAT_EQ(ateam_geometry::norm(p1, p2), 90.138779);
+}
 
-
-}  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
+TEST(Norm, NormOfVector)
+{
+  ateam_geometry::Vector v(3, 4);
+  EXPECT_FLOAT_EQ(ateam_geometry::norm(v), 5);
+}

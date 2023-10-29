@@ -33,6 +33,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ateam_msgs
   angles
   ssl_league_msgs
+  Eigen3
 )
 target_link_libraries(${PROJECT_NAME}
   Boost::boost
