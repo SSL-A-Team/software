@@ -22,7 +22,7 @@
 #ifndef TYPES__REFEREE_INFO_HPP_
 #define TYPES__REFEREE_INFO_HPP_
 
-#include <ateam_common/game_state_listener.hpp>
+#include <ateam_common/game_controller_listener.hpp>
 
 struct RefereeInfo
 {

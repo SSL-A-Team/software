@@ -18,16 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
-#define ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+#ifndef ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
+#define ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
 
-// This is a convenience header for including all ateam_geometry utilities
+#include "ateam_geometry/types.hpp"
 
-#include "eigen_conversions.hpp"
-#include "make_circle.hpp"
-#include "nearest_points.hpp"
-#include "normalize.hpp"
-#include "types.hpp"
-#include "variant_do_intersect.hpp"
+namespace ateam_geometry
+{
 
-#endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+inline ateam_geometry::Point NearestPointOnSegment(
+  const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
+{
+  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
+  if (s.has_on(orthogonal_projection)) {
+    return orthogonal_projection;
+  }
+  return CGAL::squared_distance(orthogonal_projection, s.source()) <
+         CGAL::squared_distance(orthogonal_projection, s.target()) ?
+         s.source() : s.target();
+}
+
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
