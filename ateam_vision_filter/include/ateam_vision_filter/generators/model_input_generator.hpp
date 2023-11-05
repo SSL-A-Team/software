@@ -18,24 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef GENERATORS__TRANSMISSION_PROBABILITY_GENERATOR_HPP_
-#define GENERATORS__TRANSMISSION_PROBABILITY_GENERATOR_HPP_
-
-// Builds a transmission probability matrix
-// given last robot estimate positions
-// last ball estimate position
-// Transmission of ball from slide to roll, etc
+#ifndef GENERATORS__MODEL_INPUT_GENERATOR_HPP_
+#define GENERATORS__MODEL_INPUT_GENERATOR_HPP_
 
 #include <Eigen/Dense>
 
-#include <array>
 #include <optional>
+#include <array>
 
-#include "types/ball.hpp"
-#include "types/models.hpp"
-#include "types/robot.hpp"
+#include <ateam_vision_filter/types/ball.hpp>
+#include <ateam_vision_filter/types/models.hpp>
+#include <ateam_vision_filter/types/robot.hpp>
 
-class TransmissionProbabilityGenerator
+class ModelInputGenerator
 {
 public:
   void update(
@@ -43,25 +38,23 @@ public:
     const std::array<std::optional<Robot>, 16> & yellow_robots,
     const std::optional<Ball> & ball);
 
-  /**
-   * @brief Return the relative probability of transitioning from a model to another model
-   *
-   * @param possible_state Current state of the object
-   * @param from_model Model that described the object in the previous frame
-   * @param to_model Model that describes the object in the current frame
-   * @return Relative probability of that transition
-   *
-   * @note Sum of probabilities will not be equal to 1, must be normalized
-   */
-  double get_transmission_probability(
+  Eigen::VectorXd get_model_input(
     const Eigen::VectorXd & possible_state,
-    const Models::ModelType & from_model,
-    const Models::ModelType & to_model) const;
+    const Models::ModelType & model_type) const;
 
 private:
   std::array<std::optional<Robot>, 16> blue_robots;
   std::array<std::optional<Robot>, 16> yellow_robots;
   std::optional<Ball> ball;
+
+  /**
+   * @return Closest robot to the position given (if one exists)
+   */
+  std::optional<Robot> get_closest_robot(const Eigen::Vector2d & position) const;
+
+  Eigen::VectorXd get_output_with_kick_at_speed(
+    const Eigen::VectorXd & possible_state,
+    const double kick_speed) const;
 };
 
-#endif  // GENERATORS__TRANSMISSION_PROBABILITY_GENERATOR_HPP_
+#endif  // GENERATORS__MODEL_INPUT_GENERATOR_HPP_

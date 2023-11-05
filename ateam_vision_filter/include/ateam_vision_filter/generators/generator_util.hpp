@@ -26,7 +26,7 @@
 #include <array>
 #include <optional>
 
-#include "types/robot.hpp"
+#include <ateam_vision_filter/types/robot.hpp>
 
 
 namespace generator_util

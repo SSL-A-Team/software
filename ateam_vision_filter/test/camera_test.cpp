@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#include "camera.hpp"
+#include <ateam_vision_filter/camera.hpp>
 
 TEST(Camera, getEstimateWithScore_ShouldReturnNullopt_WhenNoData)
 {

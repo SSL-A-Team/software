@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "filters/kalman_filter.hpp"
+#include <ateam_vision_filter/filters/kalman_filter.hpp>
 
 #include <gtest/gtest.h>
 

@@ -18,9 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "generators/transmission_probability_generator.hpp"
+#include <ateam_vision_filter/generators/transmission_probability_generator.hpp>
 
-#include "generators/generator_util.hpp"
+#include <ateam_vision_filter/generators/generator_util.hpp>
 
 void TransmissionProbabilityGenerator::update(
   const std::array<std::optional<Robot>, 16> & blue_robots,

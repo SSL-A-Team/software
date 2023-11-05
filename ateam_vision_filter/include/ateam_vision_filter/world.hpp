@@ -29,12 +29,12 @@
 
 #include <ateam_msgs/msg/vision_world_state.hpp>
 
-#include "camera.hpp"
-#include "generators/model_input_generator.hpp"
-#include "generators/transmission_probability_generator.hpp"
-#include "types/ball.hpp"
-#include "types/camera_measurement.hpp"
-#include "types/robot.hpp"
+#include <ateam_vision_filter/camera.hpp>
+#include <ateam_vision_filter/generators/model_input_generator.hpp>
+#include <ateam_vision_filter/generators/transmission_probability_generator.hpp>
+#include <ateam_vision_filter/types/ball.hpp>
+#include <ateam_vision_filter/types/camera_measurement.hpp>
+#include <ateam_vision_filter/types/robot.hpp>
 
 class World
 {

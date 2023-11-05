@@ -21,6 +21,7 @@
 #ifndef MESSAGE_CONVERSIONS_HPP_
 #define MESSAGE_CONVERSIONS_HPP_
 
+#include <optional>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
@@ -30,17 +31,17 @@
 #include <ssl_league_msgs/msg/vision_detection_frame.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
 
-#include "types/ball.hpp"
-#include "types/ball_measurement.hpp"
-#include "types/robot.hpp"
-#include "types/robot_measurement.hpp"
-#include "types/camera_measurement.hpp"
+#include <ateam_vision_filter/types/ball.hpp>
+#include <ateam_vision_filter/types/ball_measurement.hpp>
+#include <ateam_vision_filter/types/robot.hpp>
+#include <ateam_vision_filter/types/robot_measurement.hpp>
+#include <ateam_vision_filter/types/camera_measurement.hpp>
 
 namespace ateam_vision_filter::message_conversions
 {
 
-ateam_msgs::msg::BallState toMsg(const Ball & obj);
-ateam_msgs::msg::RobotState toMsg(const Robot & obj);
+ateam_msgs::msg::BallState toMsg(const std::optional<Ball> & maybe_ball);
+ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot);
 
 CameraMeasurement getCameraMeasurement(const ssl_league_msgs::msg::VisionWrapper & ros_msg);
 CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg);

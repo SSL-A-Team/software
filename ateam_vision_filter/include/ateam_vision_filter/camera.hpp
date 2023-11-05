@@ -30,10 +30,10 @@
 
 #include <ateam_msgs/msg/vision_camera_state.hpp>
 
-#include "filters/multiple_hypothesis_tracker.hpp"
-#include "generators/model_input_generator.hpp"
-#include "generators/transmission_probability_generator.hpp"
-#include "types/camera_measurement.hpp"
+#include <ateam_vision_filter/filters/multiple_hypothesis_tracker.hpp>
+#include <ateam_vision_filter/generators/model_input_generator.hpp>
+#include <ateam_vision_filter/generators/transmission_probability_generator.hpp>
+#include <ateam_vision_filter/types/camera_measurement.hpp>
 
 class Camera
 {

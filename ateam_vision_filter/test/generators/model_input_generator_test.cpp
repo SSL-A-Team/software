@@ -23,10 +23,10 @@
 #include <optional>
 #include <array>
 
-#include "generators/model_input_generator.hpp"
-#include "types/ball.hpp"
-#include "types/models.hpp"
-#include "types/robot.hpp"
+#include <ateam_vision_filter/generators/model_input_generator.hpp>
+#include <ateam_vision_filter/types/ball.hpp>
+#include <ateam_vision_filter/types/models.hpp>
+#include <ateam_vision_filter/types/robot.hpp>
 
 TEST(ModelInputGenerator, getModelInput_ShouldReturnSmallerVelocity_WhenBallRollingFriction)
 {

@@ -18,11 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "generators/generator_util.hpp"
+#include <ateam_vision_filter/generators/generator_util.hpp>
 
 #include <limits>
 
-#include "types/models.hpp"
+#include <ateam_vision_filter/types/models.hpp>
 
 std::optional<Robot> generator_util::get_closest_robot(
   const Eigen::Vector2d & position,

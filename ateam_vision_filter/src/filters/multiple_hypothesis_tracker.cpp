@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "filters/multiple_hypothesis_tracker.hpp"
+#include <ateam_vision_filter/filters/multiple_hypothesis_tracker.hpp>
 
 #include <algorithm>
 #include <map>
@@ -28,7 +28,7 @@
 #include <iostream>
 #include <limits>
 
-#include "ateam_common/assignment.hpp"
+#include <ateam_common/assignment.hpp>
 
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {
@@ -99,6 +99,11 @@ get_state_estimate() const
     tracks.begin(), tracks.end(), [](const auto & a, const auto & b) {
       return a.get_validity_score() > b.get_validity_score();
     });
+
+  if (best_track->get_validity_score() == 0) {
+    // exactly zero if its a new track
+    return std::nullopt;
+  }
 
   return std::make_pair(best_track->get_state_estimate(), best_track->get_validity_score());
 }

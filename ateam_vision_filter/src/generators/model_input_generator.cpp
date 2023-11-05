@@ -18,11 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "generators/model_input_generator.hpp"
+#include <ateam_vision_filter/generators/model_input_generator.hpp>
 
 #include <optional>
 
-#include "generators/generator_util.hpp"
+#include <ateam_vision_filter/generators/generator_util.hpp>
 
 void ModelInputGenerator::update(
   const std::array<std::optional<Robot>, 16> & blue_robots,

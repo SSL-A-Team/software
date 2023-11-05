@@ -26,9 +26,9 @@
 
 #include <ateam_msgs/msg/vision_mht_state.hpp>
 
-#include "filters/kalman_filter.hpp"
-#include "filters/interacting_multiple_model_filter.hpp"
-#include "types/models.hpp"
+#include <ateam_vision_filter/filters/kalman_filter.hpp>
+#include <ateam_vision_filter/filters/interacting_multiple_model_filter.hpp>
+#include <ateam_vision_filter/types/models.hpp>
 
 Camera::Camera(
   std::shared_ptr<ModelInputGenerator> model_input_generator,
