@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "camera.hpp"
+#include <ateam_vision_filter/camera.hpp>
 
 #include <memory>
 #include <utility>
