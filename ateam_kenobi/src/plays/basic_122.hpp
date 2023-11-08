@@ -48,12 +48,12 @@ private:
   void assignAndRunStriker(
     std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motino_commands);
+    16> & motion_commands);
 
   void assignAndRunBlockers(
     std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motino_commands);
+    16> & motion_commands);
 };
 
 }  // namespace ateam_kenobi::plays
