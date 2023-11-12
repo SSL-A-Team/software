@@ -24,7 +24,15 @@ export default {
     },
     computed: {
         getAIDescription: function() {
-            let object = JSON.parse(this.state.world.ai.description);
+            let object = null;
+            try {
+                object = JSON.parse(this.state.world.ai.description);
+            } catch(e) {
+                if (e instanceof SyntaxError) {
+                    console.log("Play description contained invalid JSON")
+                }
+            }
+
             if (object && this.state.world.ai.description != "{}") {
                 return object;
             }
