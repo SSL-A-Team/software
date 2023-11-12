@@ -13,10 +13,6 @@ import { Referee, GameProperty} from "@/referee";
 export default {
     inject: ['state'],
     props: ['team'],
-    mounted() {
-    },
-    methods: {
-    },
     computed: {
         getRefState: function() {
             return this.state.world.referee;
