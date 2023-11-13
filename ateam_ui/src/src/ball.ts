@@ -24,7 +24,7 @@ export class Ball {
     update(container: PIXI.Container, renderConfig: RenderConfig) {
         const scale = renderConfig.scale;
         container.position.x = this.pose.position.x * scale;
-        container.position.y = this.pose.position.y * scale;
+        container.position.y = -this.pose.position.y * scale;
         container.visible = this.visible;
     }
 
@@ -39,7 +39,7 @@ export class Ball {
 
         container.addChild(graphic);
         container.position.x = this.pose.position.x * scale;
-        container.position.y = this.pose.position.y * scale;
+        container.position.y = -this.pose.position.y * scale;
         container.visible = this.visible
     }
 }

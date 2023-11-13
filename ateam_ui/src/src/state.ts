@@ -5,6 +5,7 @@ import { Overlay } from "@/overlay"
 import { Referee } from "@/referee"
 import { Ball } from "@/ball"
 import { Field } from "@/field"
+import { AIState } from "@/AI"
 
 export class RenderConfig {
     angle: number = 0; // Rotation applied to the rendered field
@@ -16,7 +17,8 @@ export class WorldState {
     teams: Team[];
     ball: Ball;
     field: Field;
-    referee: Referee
+    referee: Referee;
+    ai: AIState;
 
     constructor() {
         this.team = TeamColor.Blue;
@@ -28,6 +30,7 @@ export class WorldState {
         this.field = new Field();
 
         this.referee = new Referee();
+        this.ai = new AIState();
     }
 }
 
@@ -40,9 +43,12 @@ export class AppState {
     publishers: ROSLIB.Topic[]
     subscriptions: ROSLIB.Topic[]
     services: ROSLIB.Service[]
+    params: ROSLIB.Param[]
 
     sim: boolean = true;
-    comp: boolean = true; // TODO: find a better way to set this value
+    comp: boolean = false; // TODO: find a better way to set this value
+
+    controlled_robot: number = null;
 
     setGoalie(goalie_id) {
         const request = new ROSLIB.ServiceRequest({
@@ -68,11 +74,22 @@ export class AppState {
         return "X";
     }
 
+    setJoystickRobot(id: number) {
+        // Toggle the selected robot off if it is the same
+        if (this.controlled_robot == id) {
+            this.controlled_robot = -1;
+        } else {
+            this.controlled_robot = id;
+        }
+        this.params["joystick_param"].set(this.controlled_robot);
+    }
+
     // TODO: figure out how to type ROSLIB Messages, the Message type doesn't seem to work properly
     getBallCallback() {
         const state = this; // fix dumb javascript things
         return function(msg: any) {
             state.world.ball.pose = msg.pose;
+            state.world.ball.visible = msg.visible;
         }
     }
 
@@ -83,6 +100,7 @@ export class AppState {
             robot.pose = msg.pose;
             robot.twist = msg.twist;
             robot.accel = msg.accel;
+            robot.visible = msg.visible;
         };
 
     }
@@ -101,22 +119,24 @@ export class AppState {
     getOverlayCallback() {
 	    const state = this; // fix dumb javascript things
 	    return function(msg:any) {
-            let id = msg.ns+"/"+msg.name;
-            switch(msg.command) {
-                // REPLACE
-                case 0:
-                    state.world.field.overlays[id] = new Overlay(id, msg);
-                    break;
-                // EDIT
-                case 1:
-                    //TODO: Not sure if this command is necessary, will implement later if it is
-                    // Might need to handle moving overlay between z-depths
-                    state.world.field.overlays[id] = new Overlay(id, msg);
-                    break;
-                // REMOVE
-                case 2:
-                    delete state.world.field.overlays[id];
-                    break;
+            for (const overlay of msg.overlays) {
+                let id = overlay.ns+"/"+overlay.name;
+                switch(overlay.command) {
+                    // REPLACE
+                    case 0:
+                        state.world.field.overlays[id] = new Overlay(id, overlay);
+                        break;
+                    // EDIT
+                    case 1:
+                        //TODO: Not sure if this command is necessary, will implement later if it is
+                        // Might need to handle moving overlay between z-depths
+                        state.world.field.overlays[id] = new Overlay(id, overlay);
+                        break;
+                    // REMOVE
+                    case 2:
+                        delete state.world.field.overlays[id];
+                        break;
+                }
             }
         }
     }
@@ -139,6 +159,21 @@ export class AppState {
             for (const member of Object.getOwnPropertyNames(state.world.referee)) {
                 state.world.referee[member] = msg[member];
             }
+
+            // TODO: probably pull this from the ros network instead
+            if (state.world.referee.blue.name == "A-Team") {
+                state.world.team = TeamColor.Blue;
+            } else if (state.world.referee.yellow.name == "A-Team") {
+                state.world.team = TeamColor.Yellow;
+            }
+        }
+    }
+
+    getPlayInfoCallback() {
+	    const state = this; // fix dumb javascript things
+	    return function(msg:any) {
+                state.world.ai.name = msg.name;
+                state.world.ai.description = msg.description;
         }
     }
 
@@ -149,6 +184,9 @@ export class AppState {
         this.publishers = [];
         this.subscriptions = [];
         this.services = [];
+        this.params = [];
+
+        this.controlled_robot = null;
 
         // Configure ROS
         this.ros = new ROSLIB.Ros({
@@ -214,8 +252,8 @@ export class AppState {
         // Set up overlay subscriber
         let overlayTopic = new ROSLIB.Topic({
             ros: this.ros,
-            name: '/overlay',
-            messageType: 'ateam_msgs/msg/Overlay'
+            name: '/overlays',
+            messageType: 'ateam_msgs/msg/OverlayArray'
         });
         overlayTopic.subscribe(this.getOverlayCallback());
         this.subscriptions["overlay"] = overlayTopic;
@@ -240,12 +278,29 @@ export class AppState {
         refereeTopic.subscribe(this.getRefereeCallback());
         this.subscriptions["referee"] = refereeTopic;
 
-        // Set Goalie Service
+        // Set up play info subscriber
+        let playInfoTopic = new ROSLIB.Topic({
+            ros: this.ros,
+            name: '/play_info',
+            messageType: 'ateam_msgs/msg/PlayInfo'
+        });
+
+        playInfoTopic.subscribe(this.getPlayInfoCallback());
+        this.subscriptions["playInfo"] = playInfoTopic;
+
+        // Set up Goalie Service
         let goalieService = new ROSLIB.Service({
             ros: this.ros,
             name: 'team_client_node/set_desired_keeper',
             serviceType: 'ateam_msgs/srv/SetDesiredKeeper'
         })
         this.services["setGoalie"] = goalieService;
+
+        // Set up joystick robot param service
+        const joystickParam = new ROSLIB.Param({
+            ros: this.ros,
+            name: "/joystick_control_node:robot_id"
+        });
+        this.params["joystick_param"] = joystickParam;
     }
 }
