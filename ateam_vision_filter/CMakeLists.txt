@@ -31,7 +31,7 @@ add_library(${PROJECT_NAME} SHARED
   src/world.cpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
