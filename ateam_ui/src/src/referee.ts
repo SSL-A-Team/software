@@ -1,7 +1,12 @@
 import { Team, TeamInfo, TeamColor } from "@/team"
 import ROSLIB from "roslib"
 
-enum gameStage {
+export class GameProperty{
+    name: String
+    color: String
+}
+
+export enum GameStage {
     STAGE_NORMAL_FIRST_HALF_PRE,
     STAGE_NORMAL_FIRST_HALF,
     STAGE_NORMAL_HALF_TIME,
@@ -18,7 +23,24 @@ enum gameStage {
     STAGE_POST_GAME
 }
 
-enum gameCommand {
+export const GameStageProperties: GameProperty[] = [
+    {name:"Normal First Half Pre", color:"yellow"},
+    {name:"Normal First Half", color:"green"},
+    {name:"Normal Half Time", color:"red"},
+    {name:"Normal Second Half Pre", color:"yellow"},
+    {name:"Normal Second Half", color:"green"},
+    {name:"Extra Time Break", color:"red"},
+    {name:"Extra First Half Pre", color:"yellow"},
+    {name:"Extra First Half", color:"green"},
+    {name:"Extra Half Time", color:"red"},
+    {name:"Extra Second Half Pre", color:"yellow"},
+    {name:"Extra Second Half", color:"green"},
+    {name:"Penalty Shootout Break", color:"red"},
+    {name:"Penalty Shootout", color:"green"},
+    {name:"Post Game", color:"red"}
+];
+
+export enum GameCommand {
     COMMAND_HALT,
     COMMAND_STOP,
     COMMAND_NORMAL_START,
@@ -40,10 +62,31 @@ enum gameCommand {
     COMMAND_GOAL_BLUE
 }
 
+export const GameCommandProperties: GameProperty[] = [
+    {name: "Halt", color:"red"},
+    {name: "Stop", color:"red"},
+    {name: "Normal Start", color:"green"},
+    {name: "Force Start", color:"green"},
+    {name: "Prepare Kickoff Yellow", color:"yellow"},
+    {name: "Prepare Kickoff Blue", color:"blue"},
+    {name: "Prepare Penalty Yellow", color:"yellow"},
+    {name: "Prepare Penalty Blue", color:"blue"},
+    {name: "Direct Free Yellow", color:"yellow"},
+    {name: "Direct Free Blue", color:"blue"},
+    {name: "Indirect Free Yellow", color:"yellow"},
+    {name: "Indirect Free Blue", color:"blue"},
+    {name: "Timeout Yellow", color:"yellow"},
+    {name: "Timeout Blue", color:"blue"},
+    {name: "Ball Placement Yellow", color:"yellow"},
+    {name: "Ball Placement Blue", color:"blue"},
+    {name: "Goal Yellow", color:"yellow"},
+    {name: "Goal Blue", color:"blue"}
+];
+
 export class Referee {
-    stage: gameStage = gameStage.STAGE_NORMAL_FIRST_HALF_PRE;
+    stage: GameStage = GameStage.STAGE_NORMAL_FIRST_HALF_PRE;
     stage_time_left: number;
-    command: gameCommand = gameCommand.COMMAND_HALT;
+    command: GameCommand = GameCommand.COMMAND_HALT;
     command_counter: number = 0;
     command_timestamp: number = 0; // May need to write a handler for this
     
@@ -52,12 +95,21 @@ export class Referee {
 
     designatedPosition: Point;
     blue_team_on_positive_half: boolean;
-    next_command: gameCommand;
+    next_command: GameCommand;
 
     current_action_time_remaining: number;
     
+    getStageProperty(): GameProperty {
+        return GameStageProperties[this.stage];
+    }
+
+    getCommandProperty(): GameProperty {
+        return GameCommandProperties[this.command];
+    }
+
     constructor() {
         this.blue = new TeamInfo();
+        this.yellow = new TeamInfo();
     }
 
     // TODO: Add game_events[]

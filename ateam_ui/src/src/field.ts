@@ -130,10 +130,8 @@ export class Field {
         const robotArray = Object.entries(state.world.teams).map(i => {return i[1].robots}).flat()
         const robots = app.stage.getChildByName("robots").children;
         for (var i = 0; i < robotArray.length; i++) {
-            if (robotArray[i].visible) {
                 const robot = robots[i] as PIXI.Container;
                 robotArray[i].update(robot, state.renderConfig);
-            }
         }
 
         state.world.ball.update(app.stage.getChildByName("ball").children[0] as PIXI.Container, state.renderConfig);

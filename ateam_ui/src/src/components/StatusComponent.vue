@@ -1,12 +1,7 @@
 <template>
     <v-container class="d-flex flex-column">
-        <p>Goalie ID: {{this.state.getGoalie()}}</p>
-            <v-select label="set ID" :items="Array.from({length: 16}, (value, index) => index)" density="compact" variant="solo" @update:modelValue="this.setGoalie"/>
-        <div ref="placeholder">
-            Add STATUS, manual control here
-        </div>
         <v-container class="d-flex flex-column">
-            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots" ref="robotCard" style="outline-offset:-1px">
+            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots" ref="robotCard" style="outline-offset:-1px" @click.stop="this.state.setJoystickRobot(robot.id)">
                     {{robot.id}}
                     <canvas ref="canvases" height=100 width=100 style="width:90px; height:90px;"/>
             </v-card>
@@ -27,28 +22,39 @@ export default {
     methods: {
         update: function() {
             for(const robot of this.state.world.teams[this.state.world.team].robots) {
-                this.drawStatus(robot, this.$refs.canvases[robot.id].getContext("2d"));
+                if (robot.isValid()) {
+                    this.drawStatus(robot, this.$refs.canvases[robot.id].getContext("2d"));
 
-                const element = this.$refs.robotCard[robot.id].$el;
-                const errorLevel = robot.errorLevel();
+                    const element = this.$refs.robotCard[robot.id].$el;
+                    const errorLevel = robot.errorLevel(this.state.sim);
 
-                element.getAnimations().forEach((animation) => {animation.cancel()});
-                switch (errorLevel) {
-                    case ErrorLevel.None:
-                        element.style =  "";
-                        break;
-                    case ErrorLevel.Warning:
-                        element.style = "outline: solid 5px yellow; outline-offset:-1px";
-                        break;
-                    case ErrorLevel.Error:
-                        element.style =  "outline: solid 5px red; outline-offset:-1px";
-                        break;
-                    case ErrorLevel.Critical:
-                        element.animate([
-                            {background: "red", outline: "solid 5px red"}],
-                            {easing: "steps(2, jump-none)", duration: 1000, iterations: Infinity}
-                        );
-                        break;
+                    // This is broken because we switched from redrawing on change to redrawing every 100ms
+                    // TODO: either figure out how to get reactive updating to work consistently
+                    //       or modify the error level animation handling to work properly
+                    element.getAnimations().forEach((animation) => {animation.cancel()});
+                    let style = "";
+                    if (robot.id == this.state.controlled_robot) {
+                        console.log("controlling ", robot.id);
+                        style += "background: green;";
+                    }
+
+                    switch (errorLevel) {
+                        case ErrorLevel.None:
+                            break;
+                        case ErrorLevel.Warning:
+                            style += " outline: solid 5px yellow; outline-offset:-1px";
+                            break;
+                        case ErrorLevel.Error:
+                            style +=  " outline: solid 5px red; outline-offset:-1px";
+                            break;
+                        case ErrorLevel.Critical:
+                            element.animate([
+                                {background: "red", outline: "solid 5px red"}],
+                                {easing: "steps(2, jump-none)", duration: 1000, iterations: Infinity}
+                            );
+                            break;
+                    }
+                    element.style = style;
                 }
             }
         },
@@ -72,10 +78,10 @@ export default {
             ctx.fill();
 
             // Draw team circle
+            ctx.fillStyle = robot.team;
             ctx.beginPath();
             ctx.arc(0, 0, .025*scale, 0, 2*Math.PI);
             ctx.closePath();
-            ctx.fillStyle = robot.team;
             ctx.fill();
 
             const pos = {
@@ -168,18 +174,33 @@ export default {
                     ctx.fillText(errString, wheels.textX[i]*scale, wheels.textY[i]*scale);
                 }
             }
+
+            if (!robot.status.radio_connected) {
+                ctx.fillStyle = "yellow";
+                ctx.font = "15px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("DC", .14*scale, -.14*scale);
+            }
         }
     },
     computed: {
         getRobotStatuses: function() {
             // If performance is a problem we can reduce this to just status members that would cause a redraw
             return this.state.world.teams[this.state.world.team].robots.map(robot => robot.status);
+        },
+        getControlledRobot: function() {
+            return this.state.controlled_robot;
         }
     },
     watch: {
         getRobotStatuses: {
             handler() {
-                this.update();
+            },
+            deep: true
+        },
+        getControlledRobot: {
+            handler() {
             },
             deep: true
         }
