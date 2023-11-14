@@ -30,28 +30,7 @@ export class Field {
 
     constructor() {
         this.fieldDimensions = new FieldDimensions();
-        // this.overlays = [];
         this.overlays = [];
-        this.overlays.push(new Overlay("shader_test",
-          {
-            id: "shader_test",
-            ns: "nope",
-            name: "shader_test",
-            type: 6,
-            position: {x: 0, y: 0},
-            scale: {x: 12, y: 9},
-            mesh: [{mesh1d: [1,4,5,5,6,7,8,1,7,4,14,1,34,1]},
-                   {mesh1d: [1,4,5,5,6,7,8,1,7,3,14,1,34,1]},
-                   {mesh1d: [1,4,5,5,6,7,8,1,7,4,14,1,34,1]},
-                   {mesh1d: [1,4,5,40,6,7,8,1,7,4,14,1,34,1]},
-                   {mesh1d: [1,4,14,5,6,7,8,1,3,4,14,1,34,1]},
-                   {mesh1d: [1,4,14,5,6,7,8,1,7,4,14,1,34,1]},
-                   {mesh1d: [1,4,14,5,6,7,8,1,7,4,14,1,34,1]},
-                   {mesh1d: [1,4,5,5,6,7,8,1,7,4,14,1,34,1]}
-                  ]
-          }
-        )
-      )
     }
 
     drawFieldLines(fieldLines: PIXI.Graphics, state: AppState) {
