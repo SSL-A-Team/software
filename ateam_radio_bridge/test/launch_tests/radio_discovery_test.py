@@ -28,7 +28,8 @@ def generate_test_description():
                     executable="radio_bridge_node",
                     parameters=[
                         {"discovery_address": discovery_address},
-                        {"default_team_color": "yellow"}
+                        {"default_team_color": "yellow"},
+                        {"net_interface_address":""}
                         ],
                 ),
                 # Had to add this delay when upgraded to Humble. Without this,
