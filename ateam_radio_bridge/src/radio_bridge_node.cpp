@@ -1,3 +1,24 @@
+// Copyright 2021 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+
 #include <array>
 #include <chrono>
 #include <numeric>
@@ -25,11 +46,13 @@ public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
     timeout_threshold_(declare_parameter("timeout_ms", 250)),
-    gc_listener_(*this),
+    command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
+    game_controller_listener_(*this),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
-      std::placeholders::_2, std::placeholders::_3, std::placeholders::_4))
+      std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
+      declare_parameter<std::string>("net_interface_address", "172.16.1.10"))
   {
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
@@ -61,15 +84,16 @@ public:
 
 private:
   const std::chrono::milliseconds timeout_threshold_;
+  const std::chrono::milliseconds command_timeout_threshold_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
-  ateam_common::GameControllerListener gc_listener_;
+  std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
+  ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
   std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
-  std::array<bool, 16> first_message_received_;
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
 
@@ -78,6 +102,7 @@ private:
     int robot_id)
   {
     motion_commands_[robot_id] = *command_msg;
+    motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
   void CloseConnection(const std::size_t & connection_index)
@@ -95,11 +120,17 @@ private:
     connection.reset();
   }
 
+  /**
+   * Close any connections whose last heartbeat time is too old.
+   * Send 'not connected' messages for appropriate robots.
+   */
   void ConnectionCheckCallback()
   {
-    // Close any connections whose last heartbeat time is too old
     for (auto i = 0ul; i < connections_.size(); ++i) {
       if (!connections_[i]) {
+        ateam_msgs::msg::RobotFeedback feedback_message;
+        feedback_message.radio_connected = false;
+        feedback_publishers_[i]->publish(feedback_message);
         continue;
       }
       const auto & last_heartbeat_time = last_heartbeat_timestamp_[i];
@@ -117,8 +148,11 @@ private:
       if (connections_[id] == nullptr) {
         continue;
       }
-      if (!first_message_received_[id]) {
-        continue;
+      if ((std::chrono::steady_clock::now() - motion_command_timestamps_[id]) >
+        command_timeout_threshold_)
+      {
+        motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
+        motion_commands_[id].kick = ateam_msgs::msg::RobotMotionCommand::KICK_DISABLE;
       }
       BasicControl control_msg;
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
@@ -126,11 +160,8 @@ private:
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
       control_msg.kick_vel = 0.0f;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
-      if (motion_commands_[id].kick) {
-        control_msg.kick_request = KR_KICK_NOW;
-      } else {
-        control_msg.kick_request = KR_ARM;
-      }
+      control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick);
+      control_msg.kick_vel = motion_commands_[id].kick_speed;
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),
@@ -170,9 +201,9 @@ private:
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
 
-    if (!(gc_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
+    if (!(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&
-      !(gc_listener_.GetTeamColor() == ateam_common::TeamColor::Yellow &&
+      !(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Yellow &&
       hello_data.color == TC_YELLOW))
     {
       RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Wrong team.");
@@ -206,7 +237,7 @@ private:
       get_logger(), "Creating connection for robot %d (%s:%d)", robot_id,
       sender_address.c_str(), sender_port);
 
-    first_message_received_[robot_id] = false;
+    motion_command_timestamps_[robot_id] = {};
     last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
     connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
       sender_address, sender_port,
@@ -252,7 +283,9 @@ private:
             return;
           }
           if (std::holds_alternative<BasicTelemetry>(data_var)) {
-            feedback_publishers_[robot_id]->publish(Convert(std::get<BasicTelemetry>(data_var)));
+            auto msg = Convert(std::get<BasicTelemetry>(data_var));
+            msg.radio_connected = true;
+            feedback_publishers_[robot_id]->publish(msg);
           }
           break;
         }
@@ -266,7 +299,7 @@ private:
         return;
     }
 
-    first_message_received_[robot_id] = true;
+    motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
   void TeamColorChangeCallback(const ateam_common::TeamColor)
