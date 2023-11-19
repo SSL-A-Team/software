@@ -16,7 +16,7 @@ add_library(${PROJECT_NAME} SHARED
   src/ssl_simulation_radio_bridge_node.cpp
   src/message_conversions.cpp
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
