@@ -28,6 +28,17 @@
 namespace ateam_radio_bridge
 {
 
+/**
+ * @brief Get the size of a radio packet based on its command code.
+ *
+ * Determines the size of a radio packet by inspecting its command code.
+ * Different command codes correspond to different packet sizes, including the header size.
+ * If the command code is not recognized, an exception is thrown.
+ *
+ * @param command_code The command code of the radio packet.
+ * @return The total size of the radio packet in bytes.
+ * @throws std::invalid_argument if the command code is unrecognized.
+ */
 std::size_t GetPacketSize(const CommandCode & command_code)
 {
   // For now, packet size only depends on command code
@@ -61,6 +72,15 @@ std::size_t GetPacketSize(const CommandCode & command_code)
   }
 }
 
+/**
+ * @brief Calculate CRC32 checksum for the provided RadioPacket.
+ *
+ * Calculates the CRC32 checksum for a RadioPacket by processing
+ * the bytes from the end of the CRC field to the end of the packet. The result
+ * is stored in the packet's crc32 field.
+ *
+ * @param packet The RadioPacket for which the CRC32 checksum is to be calculated.
+ */
 void SetCRC(RadioPacket & packet)
 {
   const auto crc_size = sizeof(packet.crc32);
@@ -72,6 +92,15 @@ void SetCRC(RadioPacket & packet)
   packet.crc32 = crc.checksum();
 }
 
+/**
+ * @brief Validate the CRC32 checksum of a given RadioPacket.
+ *
+ * Checks whether the CRC32 checksum of a RadioPacket is correct
+ * by recalculating the checksum and comparing it with the stored value in the packet.
+ *
+ * @param packet The RadioPacket to validate.
+ * @return true if the CRC32 checksum is correct, false otherwise.
+ */
 bool HasCorrectCRC(const RadioPacket & packet)
 {
   const auto crc_size = sizeof(packet.crc32);
@@ -83,6 +112,17 @@ bool HasCorrectCRC(const RadioPacket & packet)
   return packet.crc32 == crc.checksum();
 }
 
+/**
+ * @brief Create an empty radio packet with the specified command code.
+ *
+ * Generates a RadioPacket with minimal content. See
+   software-communication/ateam-common-packets/radio.h for the packet
+   definition.
+ *
+ * @param command_code The command code to be assigned to the created packet.
+ * @return A RadioPacket with default values and the specified command code.
+ *         The CRC32 checksum is computed and set.
+ */
 RadioPacket CreateEmptyPacket(const CommandCode command_code)
 {
   RadioPacket packet{
@@ -99,6 +139,19 @@ RadioPacket CreateEmptyPacket(const CommandCode command_code)
   return packet;
 }
 
+/**
+ * @brief Parse a raw byte stream into a RadioPacket.
+ *
+ * Extracts the header information and populates a RadioPacket structure. 
+ * from a raw byte stream. We validate the packet by checking for the correct
+ * number of bytes, and matching protocol versions.
+ *
+ * @param data A pointer to the raw byte stream containing the packet data.
+ * @param data_length The length of the raw byte stream.
+ * @param error A reference to a string that will store an error message if parsing fails.
+ * @return A RadioPacket structure representing the parsed packet. If parsing fails,
+ *         an empty RadioPacket is returned, and the error parameter is set.
+ */
 RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std::string & error)
 {
   RadioPacket packet;
@@ -134,6 +187,19 @@ RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std
   return packet;
 }
 
+/**
+ * @brief Extract payload data from a RadioPacket based on its command code.
+ *
+ * Extracts the payload data from a RadioPacket based on its command code
+ * and returns it as a PacketDataVariant. We perform basic validation, checking the
+ * correctness of the data length for specific command codes. If validation fails, an
+ * error message is set, and an empty PacketDataVariant is returned.
+ *
+ * @param packet The RadioPacket from which to extract payload data.
+ * @param error A reference to a string that will store an error message if extraction fails.
+ * @return A PacketDataVariant containing the extracted payload data.
+ *         If extraction fails, an empty PacketDataVariant is returned, and the error parameter is set.
+ */
 PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 {
   PacketDataVariant var;

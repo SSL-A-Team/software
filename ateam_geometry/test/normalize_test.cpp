@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,44 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <gtest/gtest.h>
 
-#ifndef PLAYS__BASIC_122_HPP_
-#define PLAYS__BASIC_122_HPP_
+#include "ateam_geometry/types.hpp"
+#include "ateam_geometry/normalize.hpp"
 
-#include <vector>
-#include "base_play.hpp"
-#include "skills/line_kick.hpp"
-#include "skills/blockers.hpp"
-#include "skills/goalie.hpp"
-
-namespace ateam_kenobi::plays
+TEST(Normalize, NormalizeNonZeroVector)
 {
+  ateam_geometry::Vector v(20, 10);
+  auto v_normalized = ateam_geometry::normalize(v);
+  EXPECT_FLOAT_EQ(v_normalized.x(), 0.89442718);
+  EXPECT_FLOAT_EQ(v_normalized.y(), 0.44721359);
+}
 
-class Basic122 : public BasePlay
+
+TEST(Normalize, NormalizeZeroVector)
 {
-public:
-  Basic122(visualization::OverlayPublisher & op, visualization::PlayInfoPublisher & pip);
+  ateam_geometry::Vector v(0, 0);
+  auto v_normalized = ateam_geometry::normalize(v);
+  EXPECT_TRUE(std::isnan(v_normalized.x()));
+  EXPECT_TRUE(std::isnan(v_normalized.y()));
+}
 
-  void reset() override;
+TEST(Norm, NormalizedDistanceBetweenPoints)
+{
+  ateam_geometry::Point p1(10, 0);
+  ateam_geometry::Point p2(100, 5);
+  EXPECT_FLOAT_EQ(ateam_geometry::norm(p1, p2), 90.138779);
+}
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world);
-
-private:
-  skills::LineKick striker_skill_;
-  skills::Blockers blockers_skill_;
-  skills::Goalie goalie_skill_;
-
-  void assignAndRunStriker(
-    std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
-
-  void assignAndRunBlockers(
-    std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
-};
-
-}  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__BASIC_122_HPP_
+TEST(Norm, NormOfVector)
+{
+  ateam_geometry::Vector v(3, 4);
+  EXPECT_FLOAT_EQ(ateam_geometry::norm(v), 5);
+}

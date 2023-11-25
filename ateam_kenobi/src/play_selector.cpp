@@ -45,26 +45,6 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
 {
   ateam_common::GameCommand current_game_command = world.referee_info.running_command;
 
-  if (current_game_command == ateam_common::GameCommand::Halt) {
-    return finalizeSelection(&halt_play_, current_game_command);
-  }
-
-  if (current_game_command == ateam_common::GameCommand::Stop) {
-    return finalizeSelection(&stop_play_, current_game_command);
-  }
-
-  if (world.our_penalty) {
-    return finalizeSelection(&our_penalty_play_, current_game_command);
-  }
-
-  if (world.their_penalty) {
-    return finalizeSelection(&their_penalty_play_, current_game_command);
-  }
-
-  // if(world.in_play) {
-  //   return finalizeSelection(&basic_122_play_, current_game_command);
-  // }
-
   plays::BasePlay * selected_play = &halt_play_;
 
   switch (current_game_command) {

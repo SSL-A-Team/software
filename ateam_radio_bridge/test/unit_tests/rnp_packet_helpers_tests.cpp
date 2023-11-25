@@ -25,6 +25,7 @@
 
 // TODO(barulicm) expand test coverage
 
+// Can we correctly set the CRC?
 TEST(SetCRC, BasicTest)
 {
   RadioPacket packet{
@@ -39,6 +40,7 @@ TEST(SetCRC, BasicTest)
   EXPECT_EQ(packet.crc32, 1560025497u);
 }
 
+// Do we reject (some) bad CRC values?
 TEST(HasCorrectCRC, BasicTest)
 {
   RadioPacket packet{
@@ -56,6 +58,7 @@ TEST(HasCorrectCRC, BasicTest)
   EXPECT_FALSE(ateam_radio_bridge::HasCorrectCRC(packet));
 }
 
+// Can we correctly create a data payload for a HelloRequest?
 TEST(SetDataPayload, HelloRequest)
 {
   RadioPacket packet;
@@ -69,6 +72,7 @@ TEST(SetDataPayload, HelloRequest)
   EXPECT_EQ(packet.data.hello_request.color, TC_BLUE);
 }
 
+// Do we create a packet correctly given a basic payload?
 TEST(CreatePacket, HelloRequest)
 {
   HelloRequest payload{
@@ -85,6 +89,7 @@ TEST(CreatePacket, HelloRequest)
   EXPECT_EQ(packet.data.hello_request.color, TC_YELLOW);
 }
 
+// Is the format of our empty radio packets correct?
 TEST(CreateEmptyPacket, Ack)
 {
   RadioPacket packet = ateam_radio_bridge::CreateEmptyPacket(CC_ACK);
@@ -95,6 +100,7 @@ TEST(CreateEmptyPacket, Ack)
   EXPECT_EQ(packet.data_length, 0);
 }
 
+// Are we parsing packets correctly?
 TEST(ParsePacket, HelloRequest)
 {
   std::array<uint8_t, 14> data = {
@@ -125,6 +131,7 @@ TEST(ParsePacket, HelloRequest)
   EXPECT_EQ(packet.data.hello_request.color, TC_BLUE);
 }
 
+// Are we able to extract data from a packet correctly?
 TEST(ExtractData, HelloRequest)
 {
   RadioPacket packet{

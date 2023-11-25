@@ -38,14 +38,6 @@ inline ateam_geometry::Point NearestPointOnSegment(
          s.source() : s.target();
 }
 
-
-// Thinking on it basically what I am about to do is GJK. Either the shapes intersect
-/*ateam_geometry::Point NearestPoints(AnyShape shape1 , AnyShape shape2)
-{
-
-}*/
-
-
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
