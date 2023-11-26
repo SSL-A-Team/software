@@ -39,7 +39,7 @@ protected:
   World world;
   path_planning::PlannerOptions planner_options;
   std::vector<ateam_geometry::AnyShape> obstacles;
-  std::chrono::time_point<std::chrono::system_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
   std::chrono::duration<double> allowed_extra_time = std::chrono::milliseconds(100);
 
   GetPathTest() {}
@@ -71,11 +71,13 @@ protected:
 TEST_F(GetPathTest, StraightPath) {
   const auto start = ateam_geometry::Point(0, 0);
   const auto end = ateam_geometry::Point(1, 1);
-  auto path = path_planner.getPath(
+  path_planning::PathPlanner::Path path = {start, end};
+  path_planning::PathPlanner::Path empty_path = {};
+  auto planner_path = path_planner.getPath(
     start, end, world, obstacles, planner_options);
   const auto end_time = std::chrono::steady_clock::now();
-  EXPECT_NE(path, {});
-  EXPECT_EQ(path, {start, end});
+  EXPECT_NE(planner_path, empty_path);
+  EXPECT_EQ(planner_path, path);
   //EXPECT_EQ(path.size(), 2);
   //EXPECT_LT(end_time - start_time, std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(planner_options.search_time_limit)) + allowed_extra_time);
 }
