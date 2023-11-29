@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,20 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__CONTROLS_TEST_PLAY_HPP_
+#define PLAYS__CONTROLS_TEST_PLAY_HPP_
 
-#ifndef PLAYS__ALL_PLAYS_HPP_
-#define PLAYS__ALL_PLAYS_HPP_
-
+#include "path_planning/path_planner.hpp"
+#include "motion/motion_controller.hpp"
 #include "base_play.hpp"
-#include "test_play.hpp"
-#include "controls_test_play.hpp"
-#include "halt_play.hpp"
-#include "stop_play.hpp"
-#include "wall_play.hpp"
-#include "our_kickoff_play.hpp"
-#include "test_kick_play.hpp"
-#include "basic_122.hpp"
-#include "our_penalty_play.hpp"
-#include "their_penalty_play.hpp"
+#include "skills/goalie.hpp"
+#include "ateam_geometry/types.hpp"
+#include <vector>
+#include <string>
 
-#endif  // PLAYS__ALL_PLAYS_HPP_
+namespace ateam_kenobi::plays
+{
+class ControlsTestPlay : public BasePlay
+{
+public:
+  explicit ControlsTestPlay(
+    visualization::OverlayPublisher & overlay_publisher,
+    visualization::PlayInfoPublisher & play_info_publisher);
+
+  void reset() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+
+  MotionController motion_controller_;
+  MotionOptions motion_options_;
+
+  int index = 0;
+  std::vector<ateam_geometry::Point> points;
+};
+}  // namespace ateam_kenobi::plays
+#endif  // PLAYS__CONTROLS_TEST_PLAY_HPP_

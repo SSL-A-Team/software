@@ -30,6 +30,7 @@ PlaySelector::PlaySelector(
   visualization::OverlayPublisher & overlay_publisher,
   visualization::PlayInfoPublisher & play_info_publisher)
 : test_play_(overlay_publisher, play_info_publisher),
+  controls_test_play_(overlay_publisher, play_info_publisher),
   halt_play_(overlay_publisher, play_info_publisher),
   stop_play_(overlay_publisher, play_info_publisher),
   wall_play_(overlay_publisher, play_info_publisher),
@@ -47,6 +48,14 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
 
   plays::BasePlay * selected_play = &halt_play_;
 
+  // TODO: make an actual way to select a play to run from the UI
+  if (current_game_command == ateam_common::GameCommand::Halt) {
+    selected_play = &halt_play_;
+  } else {
+    selected_play = &controls_test_play_;
+  }
+
+  /*
   switch (current_game_command) {
     case ateam_common::GameCommand::Halt:
     case ateam_common::GameCommand::TimeoutOurs:
@@ -88,6 +97,7 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       selected_play = &stop_play_;
       break;
   }
+  */
 
   return finalizeSelection(selected_play, current_game_command);
 }
