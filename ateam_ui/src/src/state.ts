@@ -9,7 +9,7 @@ import { AIState } from "@/AI"
 
 export class RenderConfig {
     angle: number = 0; // Rotation applied to the rendered field
-    scale: number = 140; // Pixels per meter (in the rendering canvas)   
+    scale: number = 140; // Pixels per meter (in the rendering canvas)
 }
 
 export class WorldState {
@@ -118,7 +118,7 @@ export class AppState {
 
     getOverlayCallback() {
 	    const state = this; // fix dumb javascript things
-	    return function(msg:any) {
+      return function(msg:any) {
             for (const overlay of msg.overlays) {
                 let id = overlay.ns+"/"+overlay.name;
                 switch(overlay.command) {
@@ -203,7 +203,7 @@ export class AppState {
 
         this.ros.on('close', function() {
             console.log('Connection to ROS server closed.');
-         
+
             // TODO: Handle disconnecting from ROS
             //Neutralino.app.exit();
         });
