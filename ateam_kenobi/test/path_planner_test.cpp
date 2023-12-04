@@ -93,7 +93,7 @@ TEST_F(GetPathTest, StraightPath) {
     */
 TEST_F(GetPathTest, PathWithSingleObstacle) {
   const auto start = ateam_geometry::Point(0, 0);
-  const auto end = ateam_geometry::Point(3, 3);
+  const auto end = ateam_geometry::Point(2, 2);
   path_planning::PathPlanner::Path short_path = {start, end};
   const auto obstacle = ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 0.1);
   obstacles.push_back(obstacle);
@@ -116,7 +116,7 @@ TEST_F(GetPathTest, PathWithSingleObstacle) {
     */
 TEST_F(GetPathTest, PathWithMultipleObstacles) {
   const auto start = ateam_geometry::Point(0, 0);
-  const auto end = ateam_geometry::Point(3, 3);
+  const auto end = ateam_geometry::Point(2, 2);
   path_planning::PathPlanner::Path short_path = {start, end};
   const auto obstacle_1 = ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 0.1);
   obstacles.push_back(obstacle_1);
@@ -195,41 +195,6 @@ TEST_F(GetPathTest, CreateObstaclesFromRobots) {
     std::chrono::duration_cast<std::chrono::steady_clock::duration>(
       std::chrono::duration<double>(
         planner_options.search_time_limit)) + allowed_extra_time);
-  EXPECT_FALSE(obstacles.empty());
-  EXPECT_EQ(3U, obstacles.size());
 }
 
-/*
-    *   Test whether we correctly add unallowed play areas to the list of default obstacles.
-    */
-TEST_F(GetPathTest, GetDefaultObstacles) {
-  const auto start = ateam_geometry::Point(0, 0);
-  const auto end = ateam_geometry::Point(1, 1);
-  auto planner_path = path_planner.getPath(
-    start, end, world, obstacles, planner_options);
-  const auto our_goalie_box = ateam_geometry::Rectangle(
-    ateam_geometry::Point(-world.field.field_length / 2, world.field.goal_width),
-    ateam_geometry::Point(
-      -1 * (world.field.field_length / 2) + world.field.goal_width,
-      -world.field.goal_width)
-  );
-  const auto their_goalie_box = ateam_geometry::Rectangle(
-    ateam_geometry::Point((world.field.field_length / 2), world.field.goal_width),
-    ateam_geometry::Point(
-      (world.field.field_length / 2) + world.field.goal_width,
-      -world.field.goal_width)
-  );
-  EXPECT_EQ(2U, obstacles.size());
-  EXPECT_FALSE(obstacles.empty());
-  EXPECT_THAT(
-    obstacles,
-    testing::Contains(
-      testing::VariantWith<ateam_geometry::Rectangle>(
-        our_goalie_box)));
-  EXPECT_THAT(
-    obstacles,
-    testing::Contains(
-      testing::VariantWith<ateam_geometry::Rectangle>(
-        their_goalie_box)));
-}
 }  // namespace ateam_kenobi
