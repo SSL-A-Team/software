@@ -64,8 +64,57 @@ ateam_msgs::msg::RobotFeedback ConvertBasicTelemetry(const BasicTelemetry & basi
   return robot_feedback;
 }
 
+void ConvertFloatArrayToTwist(const float (&fw_state_space_array)[3], geometry_msgs::msg::Twist & twist) {
+  twist.linear.x = fw_state_space_array[0];
+  twist.linear.y = fw_state_space_array[1];
+  twist.linear.z = 0.0;
+  twist.angular.x = 0.0;
+  twist.angular.y = 0.0;
+  twist.angular.z = fw_state_space_array[2];
+}
+
+geometry_msgs::msg::Twist ConvertFloatArrayToTwist(const float (&fw_state_space_array)[3]) {
+  geometry_msgs::msg::Twist twist;
+
+  ConvertFloatArrayToTwist(fw_state_space_array, twist);
+
+  return twist;
+}
+
+void ConvertMotorDebugTelemetry(const MotorDebugTelemetry & motor_debug_telemetry, ateam_msgs::msg::RobotMotorFeedback & ateam_motor_feedback) {
+  ateam_motor_feedback.setpoint = motor_debug_telemetry.wheel_setpoint;
+  ateam_motor_feedback.velocity = motor_debug_telemetry.wheel_velocity;
+  ateam_motor_feedback.torque = motor_debug_telemetry.wheel_torque;
+}
+
+ateam_msgs::msg::RobotMotorFeedback ConvertMotorDebugTelemetry(const MotorDebugTelemetry & motor_debug_telemetry) {
+  ateam_msgs::msg::RobotMotorFeedback robot_motor_feedback;
+
+  ConvertMotorDebugTelemetry(motor_debug_telemetry, robot_motor_feedback);
+
+  return robot_motor_feedback;
+}
+
 ateam_msgs::msg::RobotMotionFeedback ConvertControlDebugTelemetry(const ControlDebugTelemetry & control_debug_telemetry) {
-  
+  ateam_msgs::msg::RobotMotionFeedback robot_motion_feedback;
+
+  robot_motion_feedback.motors[robot_motion_feedback.FRONT_LEFT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_fl);
+  robot_motion_feedback.motors[robot_motion_feedback.FRONT_RIGHT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_fr);
+  robot_motion_feedback.motors[robot_motion_feedback.BACK_RIGHT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_br);
+  robot_motion_feedback.motors[robot_motion_feedback.BACK_LEFT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_bl);
+
+  robot_motion_feedback.body_velocity_setpoint = ConvertFloatArrayToTwist(control_debug_telemetry.commanded_body_velocity);
+  robot_motion_feedback.clamped_body_velocity_setpoint = ConvertFloatArrayToTwist(control_debug_telemetry.clamped_commanded_body_velocity);
+  robot_motion_feedback.body_velocity_state_estimate = ConvertFloatArrayToTwist(control_debug_telemetry.cgkf_body_velocity_state_estimate);
+  robot_motion_feedback.body_velocity_control_variable = ConvertFloatArrayToTwist(control_debug_telemetry.body_velocity_u);
+
+  // copying from some C arrays here, not a struct so add some sanity checks
+  assert((sizeof(control_debug_telemetry.wheel_velocity_u) / sizeof(control_debug_telemetry.wheel_velocity_u[0]) <= robot_motion_feedback.wheel_velocity_control_variable.size()));
+  assert((sizeof(control_debug_telemetry.wheel_velocity_clamped_u) / sizeof(control_debug_telemetry.wheel_velocity_clamped_u[0]) <= robot_motion_feedback.clamped_wheel_velocity_control_variable.size()));
+  std::copy(std::begin(control_debug_telemetry.wheel_velocity_u), std::end(control_debug_telemetry.wheel_velocity_u), std::begin(robot_motion_feedback.wheel_velocity_control_variable));
+  std::copy(std::begin(control_debug_telemetry.wheel_velocity_clamped_u), std::end(control_debug_telemetry.wheel_velocity_clamped_u), std::begin(robot_motion_feedback.clamped_wheel_velocity_control_variable));
+
+  return robot_motion_feedback;
 }
 
 }  // namespace ateam_radio_bridge

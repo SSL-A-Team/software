@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 #include "conversion.hpp"
 
-TEST(Convert, BasicTelemmetry)
+TEST(ConvertBasicTelemetry, BasicTelemmetry)
 {
   BasicTelemetry telemetry {
     0,
@@ -58,7 +58,7 @@ TEST(Convert, BasicTelemmetry)
     9.0,
     1.2
   };
-  const auto feedback_msg = ateam_radio_bridge::Convert(telemetry);
+  const auto feedback_msg = ateam_radio_bridge::ConvertBasicTelemetry(telemetry);
   EXPECT_EQ(feedback_msg.sequence_number, 0);
   EXPECT_EQ(feedback_msg.robot_revision_major, 1);
   EXPECT_EQ(feedback_msg.robot_revision_minor, 2);

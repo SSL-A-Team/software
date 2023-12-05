@@ -70,7 +70,7 @@ public:
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotMotionFeedback>(
       motion_feedback_publishers_,
       "~/robot_motion_feedback/robot",
-      rclcpp::SystemDefaultQoS(),
+      rclcpp::SystemDefaultsQoS(),
       this);
 
     connection_check_timer_ =
@@ -308,6 +308,7 @@ private:
             auto msg = ConvertControlDebugTelemetry(std::get<ControlDebugTelemetry>(data_var));
             motion_feedback_publishers_[robot_id]->publish(msg);
           }
+          break;
         }
       case CC_KEEPALIVE:
         last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();

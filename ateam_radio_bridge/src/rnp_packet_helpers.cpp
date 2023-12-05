@@ -223,6 +223,15 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
         var = packet.data.telemetry;
         break;
       }
+    case CC_CONTROL_DEBUG_TELEMETRY:
+      {
+        if (packet.data_length != sizeof(ControlDebugTelemetry)) {
+          error = "Incorrect data length for ControlDebugTelemetry type.";
+          break;
+        }
+        var = packet.data.control_debug_telemetry;
+        break;
+      }
     case CC_CONTROL:
       {
         if (packet.data_length != sizeof(BasicControl)) {
