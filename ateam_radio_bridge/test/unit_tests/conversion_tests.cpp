@@ -118,6 +118,9 @@ TEST(ConvertControlDebugTelemetry, PacketConversions) {
       1.0
     },
 
+    {10.0, 20.0, 30.0},
+    {100.0, 200.0, 300.0},
+
     {1.6, 1.7, 6.28},
     {1.5, 1.4, 6.00},
     {1.2, 1.1, 5.00},
@@ -143,6 +146,16 @@ TEST(ConvertControlDebugTelemetry, PacketConversions) {
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].setpoint, 3.14);
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].velocity, 3.20);
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].torque, 1.0);
+
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.orientation_covariance[0], -1.0);
+
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.x, 10.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.y, 20.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.z, 30.0);
+
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.x, 100.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.x, 200.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.x, 300.0);
 
   EXPECT_FLOAT_EQ(motion_feedback_msg.body_velocity_setpoint.linear.x, 1.6);
   EXPECT_FLOAT_EQ(motion_feedback_msg.body_velocity_setpoint.linear.y, 1.7);

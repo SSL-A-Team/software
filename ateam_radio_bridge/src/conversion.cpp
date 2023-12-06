@@ -64,6 +64,20 @@ ateam_msgs::msg::RobotFeedback ConvertBasicTelemetry(const BasicTelemetry & basi
   return robot_feedback;
 }
 
+void ConvertFloatArrayToVec3(const float (&float_arr_3)[3], geometry_msgs::msg::Vector3 & vec) {
+  vec.x = float_arr_3[0];
+  vec.y = float_arr_3[1];
+  vec.z = float_arr_3[2];
+}
+
+geometry_msgs::msg::Vector3 ConvertFloatArrayToVec3(const float (&float_arr_3)[3]) {
+  geometry_msgs::msg::Vector3 vec;
+
+  ConvertFloatArrayToVec3(float_arr_3, vec);
+
+  return vec;
+}
+
 void ConvertFloatArrayToTwist(const float (&fw_state_space_array)[3], geometry_msgs::msg::Twist & twist) {
   twist.linear.x = fw_state_space_array[0];
   twist.linear.y = fw_state_space_array[1];
@@ -102,6 +116,10 @@ ateam_msgs::msg::RobotMotionFeedback ConvertControlDebugTelemetry(const ControlD
   robot_motion_feedback.motors[robot_motion_feedback.FRONT_RIGHT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_fr);
   robot_motion_feedback.motors[robot_motion_feedback.BACK_RIGHT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_br);
   robot_motion_feedback.motors[robot_motion_feedback.BACK_LEFT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_bl);
+
+  robot_motion_feedback.imu.orientation_covariance[0] = -1.0;  // ROS2 docs say if a sensor doesn't provide a data point, then set element '0' of it's covariance to
+  robot_motion_feedback.imu.angular_velocity = ConvertFloatArrayToVec3(control_debug_telemetry.imu_gyro);
+  robot_motion_feedback.imu.linear_acceleration = ConvertFloatArrayToVec3(control_debug_telemetry.imu_accel);
 
   robot_motion_feedback.body_velocity_setpoint = ConvertFloatArrayToTwist(control_debug_telemetry.commanded_body_velocity);
   robot_motion_feedback.clamped_body_velocity_setpoint = ConvertFloatArrayToTwist(control_debug_telemetry.clamped_commanded_body_velocity);
