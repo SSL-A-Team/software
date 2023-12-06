@@ -67,6 +67,9 @@ std::size_t GetPacketSize(const CommandCode & command_code)
     case CC_HELLO_RESP:
       return kPacketHeaderSize + sizeof(HelloResponse);
       break;
+    case CC_CONTROL_DEBUG_TELEMETRY:
+      return kPacketHeaderSize + sizeof(ControlDebugTelemetry);
+      break;
     default:
       throw std::invalid_argument("Unrecognized command code.");
   }
