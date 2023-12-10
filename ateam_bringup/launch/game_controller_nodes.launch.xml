@@ -1,6 +1,6 @@
 <launch>
-  <arg name="gc_ip_address" default="10.193.12.10"/>
-  <arg name="net_interface_address" default="10.193.15.132"/>
+  <arg name="gc_ip_address" default="172.16.1.52"/>
+  <arg name="net_interface_address" default="172.16.1.255"/>
   <node name="gc_multicast_bridge_node" pkg="ateam_game_controller_bridge" exec="gc_multicast_bridge_node" respawn="True">
     <param name="net_interface_address" value="$(var net_interface_address)"/>
   </node>
