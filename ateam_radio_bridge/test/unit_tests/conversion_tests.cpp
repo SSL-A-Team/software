@@ -153,9 +153,9 @@ TEST(ConvertControlDebugTelemetry, PacketConversions) {
   EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.y, 20.0);
   EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.z, 30.0);
 
-  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.x, 100.0);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.x, 200.0);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.angular_velocity.x, 300.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.linear_acceleration.x, 100.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.linear_acceleration.y, 200.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.imu.linear_acceleration.z, 300.0);
 
   EXPECT_FLOAT_EQ(motion_feedback_msg.body_velocity_setpoint.linear.x, 1.6);
   EXPECT_FLOAT_EQ(motion_feedback_msg.body_velocity_setpoint.linear.y, 1.7);
