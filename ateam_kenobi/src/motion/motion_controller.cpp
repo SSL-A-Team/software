@@ -80,6 +80,10 @@ void MotionController::no_face()
 void MotionController::set_trajectory(const std::vector<ateam_geometry::Point> & trajectory)
 {
   this->trajectory = trajectory;
+  std::cout << "New Trajectory:\n";
+  for(const auto & point : trajectory) {
+    std::cout << "\t" << point.x() << ", " << point.y() << "\n";
+  }
   this->prev_point = 0;
 
   this->progress = 0;
@@ -106,6 +110,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   // TODO(anon): figure out what point on the trajectory to use as the target
   uint64_t index;
 
+  std::cout << "dt: " << dt << "\n";
+  std::cout << "Targetting threshold: " << (v_max * dt) << "\n";
+
   // find a point in the trajectory that is far enough away from our current location
   // for loop bound ensures index never exceeds the trajectory length even after the loop ends
   for (index = this->prev_point; index < this->trajectory.size() - 1; index++) {
@@ -115,6 +122,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       break;
     }
   }
+  
+  std::cout << "Targetting index " << index << "\n";
 
   // maybe do some sort of interpolation between points
 
@@ -125,6 +134,10 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
   double x_error = target.x() - robot.pos.x();
   double y_error = target.y() - robot.pos.y();
+  std::cout << "Target: (" << target.x() << ", " << target.y() << ")\n";
+  std::cout << "Pose: (" << robot.pos.x() << ", " << robot.pos.y() << ")\n";
+  std::cout << "Error: x: " << x_error << " y: " << y_error << "\n";
+  std::cout << std::endl;
 
   if (!trajectory_complete) {
     // Calculate translational movement commands
@@ -182,7 +195,7 @@ void MotionController::reset()
   // TODO(anon): handle pid gains better
   this->x_controller.initPid(3.0, 0, 0, 0, 0);
   this->y_controller.initPid(3.0, 0, 0, 0, 0);
-  this->t_controller.initPid(5.0, 0, 0, 0, 0);
+  this->t_controller.initPid(3.5, 0, 0.00001, 0, 0);
 
   this->progress = 0;
   this->total_dist = 0;

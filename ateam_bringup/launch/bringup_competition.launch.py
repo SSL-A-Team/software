@@ -61,7 +61,7 @@ def generate_launch_description():
         package="ateam_radio_bridge",
         executable="radio_bridge_node",
         name=radio_bridge_name,
-        parameters=[{"net_interface_address": "172.16.1.255"}],
+        parameters=[{"net_interface_address": "172.16.1.10"}],
         remappings=remap_indexed_topics(
             "/" + radio_bridge_name + "/robot_motion_commands/robot",
             "/robot_motion_commands/robot",

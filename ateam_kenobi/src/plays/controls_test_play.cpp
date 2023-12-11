@@ -24,6 +24,7 @@
 #include "types/world.hpp"
 #include "robot_assignment.hpp"
 #include "play_helpers/available_robots.hpp"
+#include <angles/angles.h>
 
 namespace ateam_kenobi::plays
 {
@@ -34,19 +35,24 @@ ControlsTestPlay::ControlsTestPlay(
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher);
 
-  this->points.push_back(ateam_geometry::Point(-0.5, -0.5));
-  this->points.push_back(ateam_geometry::Point(0.5, -0.5));
-  this->points.push_back(ateam_geometry::Point(0.5, 0.5));
-  this->points.push_back(ateam_geometry::Point(-0.5, 0.5));
+  points.push_back(ateam_geometry::Point(-1.5,0.0));
+  // this->points.push_back(ateam_geometry::Point(-1.5, -0.5));
+  // this->points.push_back(ateam_geometry::Point(-0.5, 0.5));
+  // this->points.push_back(ateam_geometry::Point(-0.5, 0.5));
+  // this->points.push_back(ateam_geometry::Point(-1.5, 0.5));
 
-  motion_controller_.face_travel();
-  motion_controller_.v_max = 1;
-  motion_controller_.t_max = 3;
+  headings = {0.0, M_PI};
+
+  // motion_controller_.face_absolute(-M_PI/4);
+  motion_controller_.v_max = 3;
+  motion_controller_.t_max = 18;
 }
 
 void ControlsTestPlay::reset()
 {
   motion_controller_.reset();
+  goal_hit = false;
+  goal_hit_time = std::chrono::steady_clock::now();
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestPlay::runFrame(
@@ -60,27 +66,47 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
     int robot_id = robot.id;
    
 
-    if (ateam_geometry::norm(robot.pos - this->points[this->index]) < 0.05 && ateam_geometry::norm(robot.vel) < 0.2) {
-      this->index++;
-      if (this->index >= this->points.size()) this->index = 0;
+    // if (ateam_geometry::norm(robot.pos - this->points[this->index]) < 0.05 && ateam_geometry::norm(robot.vel) < 0.2) {
+    //   this->index++;
+    //   if (this->index >= this->points.size()) this->index = 0;
+    // }
+
+
+    if(goal_hit){
+      if((std::chrono::steady_clock::now() - goal_hit_time) > std::chrono::seconds(3)) {
+        index = (index+1) % headings.size();
+        goal_hit = false;
+      }
+    } else if(fabs(angles::shortest_angular_distance(robot.theta, headings[index])) < angles::from_degrees(1)) {
+      goal_hit = true;
+      goal_hit_time = std::chrono::steady_clock::now();
     }
 
     const std::vector<ateam_geometry::Point> path = {
       robot.pos,
-      this->points[this->index]
+      // this->points[this->index]
+      points[0]
+      // robot.pos
     };
     overlay_publisher_.drawLine("controls_test_path", path, "purple");
 
     this->play_info_publisher_.message["robot"]["id"] = robot_id;
-    this->play_info_publisher_.message["robot"]["target"]["x"] = this->points[this->index].x();
-    this->play_info_publisher_.message["robot"]["target"]["y"] = this->points[this->index].y();
+    this->play_info_publisher_.message["robot"]["index"] = index;
+    this->play_info_publisher_.message["robot"]["goal_hit"] = goal_hit;
+    this->play_info_publisher_.message["robot"]["time_at_goal"] = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - goal_hit_time).count();
+    this->play_info_publisher_.message["robot"]["target"]["x"] = this->points[0].x();
+    this->play_info_publisher_.message["robot"]["target"]["y"] = this->points[0].y();
+    this->play_info_publisher_.message["robot"]["target"]["theta"] = headings[index];
     this->play_info_publisher_.message["robot"]["pos"]["x"] = robot.pos.x();
     this->play_info_publisher_.message["robot"]["pos"]["y"] = robot.pos.y();
+    this->play_info_publisher_.message["robot"]["pos"]["t"] = robot.theta;
     this->play_info_publisher_.message["robot"]["vel"]["x"] = robot.vel.x();
     this->play_info_publisher_.message["robot"]["vel"]["y"] = robot.vel.y();
+    this->play_info_publisher_.message["robot"]["vel"]["t"] = robot.omega;
 
 
-    motion_controller_.set_trajectory(std::vector<ateam_geometry::Point> {this->points[this->index]});
+    motion_controller_.set_trajectory(std::vector<ateam_geometry::Point> {this->points[0]});
+    motion_controller_.face_absolute(headings[index]);
 
     const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();

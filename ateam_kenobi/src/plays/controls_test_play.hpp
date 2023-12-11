@@ -51,6 +51,9 @@ private:
 
   int index = 0;
   std::vector<ateam_geometry::Point> points;
+  std::vector<double> headings;
+  bool goal_hit;
+  std::chrono::steady_clock::time_point goal_hit_time;
 };
 }  // namespace ateam_kenobi::plays
 #endif  // PLAYS__CONTROLS_TEST_PLAY_HPP_
