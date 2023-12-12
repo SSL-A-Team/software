@@ -100,6 +100,11 @@ private:
   control_toolbox::Pid x_controller;
   control_toolbox::Pid y_controller;
   control_toolbox::Pid t_controller;
+
+  rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr set_parameters_callback_handle;
+  rcl_interfaces::msg::SetParametersResult onSetParametersCallback(const std::vector<rclcpp::Parameter> &parameter_updates);
+
+  void setPidGains();
 };
 
 #endif  // MOTION__MOTION_CONTROLLER_HPP_

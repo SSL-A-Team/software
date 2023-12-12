@@ -42,6 +42,7 @@
 #include "visualization/overlay_publisher.hpp"
 #include "in_play_eval.hpp"
 #include "motion/world_to_body_vel.hpp"
+#include "singleton_node.hpp"
 
 namespace ateam_kenobi
 {
@@ -60,6 +61,7 @@ public:
     play_selector_(overlay_publisher_, play_info_publisher_),
     game_controller_listener_(*this)
   {
+    global_node = this;
     declare_parameter<bool>("use_world_velocities", false);
 
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(

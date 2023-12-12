@@ -19,6 +19,7 @@ find_package(ompl REQUIRED)
 add_library(kenobi_node_component SHARED
   src/kenobi_node.cpp
   src/play_selector.cpp
+  src/singleton_node.cpp
   src/path_planning/path_planner.cpp
   src/plays/test_play.cpp
   src/plays/controls_test_play.cpp
