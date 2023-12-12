@@ -58,7 +58,7 @@ TEST(ConvertBasicTelemmetry, PacketConversions)
     9.0,
     1.2
   };
-  const auto feedback_msg = ateam_radio_bridge::ConvertBasicTelemetry(telemetry);
+  const auto feedback_msg = ateam_radio_bridge::Convert(telemetry);
   EXPECT_EQ(feedback_msg.sequence_number, 0);
   EXPECT_EQ(feedback_msg.robot_revision_major, 1);
   EXPECT_EQ(feedback_msg.robot_revision_minor, 2);
@@ -130,7 +130,7 @@ TEST(ConvertControlDebugTelemetry, PacketConversions) {
     {1.0, 2.0, 3.0, 4.0}
   };
 
-  const auto motion_feedback_msg = ateam_radio_bridge::ConvertControlDebugTelemetry(control_debug_telemetry);
+  const auto motion_feedback_msg = ateam_radio_bridge::Convert(control_debug_telemetry);
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_LEFT_MOTOR].setpoint, 3.14);
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_LEFT_MOTOR].velocity, 3.12);
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_LEFT_MOTOR].torque, 2.0);

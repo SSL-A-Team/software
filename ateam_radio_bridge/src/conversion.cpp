@@ -21,10 +21,12 @@
 
 #include "conversion.hpp"
 
+#include <span>
+
 namespace ateam_radio_bridge
 {
 
-ateam_msgs::msg::RobotFeedback ConvertBasicTelemetry(const BasicTelemetry & basic_telemetry)
+ateam_msgs::msg::RobotFeedback Convert(const BasicTelemetry & basic_telemetry)
 {
   ateam_msgs::msg::RobotFeedback robot_feedback;
 
@@ -64,58 +66,46 @@ ateam_msgs::msg::RobotFeedback ConvertBasicTelemetry(const BasicTelemetry & basi
   return robot_feedback;
 }
 
-void ConvertFloatArrayToVec3(const float (&float_arr_3)[3], geometry_msgs::msg::Vector3 & vec) {
-  vec.x = float_arr_3[0];
-  vec.y = float_arr_3[1];
-  vec.z = float_arr_3[2];
-}
-
 geometry_msgs::msg::Vector3 ConvertFloatArrayToVec3(const float (&float_arr_3)[3]) {
   geometry_msgs::msg::Vector3 vec;
 
-  ConvertFloatArrayToVec3(float_arr_3, vec);
+  vec.x = float_arr_3[0];
+  vec.y = float_arr_3[1];
+  vec.z = float_arr_3[2];
 
   return vec;
 }
 
-void ConvertFloatArrayToTwist(const float (&fw_state_space_array)[3], geometry_msgs::msg::Twist & twist) {
+geometry_msgs::msg::Twist ConvertFloatArrayToTwist(const float (&fw_state_space_array)[3]) {
+  geometry_msgs::msg::Twist twist;
+
   twist.linear.x = fw_state_space_array[0];
   twist.linear.y = fw_state_space_array[1];
   twist.linear.z = 0.0;
   twist.angular.x = 0.0;
   twist.angular.y = 0.0;
   twist.angular.z = fw_state_space_array[2];
-}
-
-geometry_msgs::msg::Twist ConvertFloatArrayToTwist(const float (&fw_state_space_array)[3]) {
-  geometry_msgs::msg::Twist twist;
-
-  ConvertFloatArrayToTwist(fw_state_space_array, twist);
 
   return twist;
 }
 
-void ConvertMotorDebugTelemetry(const MotorDebugTelemetry & motor_debug_telemetry, ateam_msgs::msg::RobotMotorFeedback & ateam_motor_feedback) {
-  ateam_motor_feedback.setpoint = motor_debug_telemetry.wheel_setpoint;
-  ateam_motor_feedback.velocity = motor_debug_telemetry.wheel_velocity;
-  ateam_motor_feedback.torque = motor_debug_telemetry.wheel_torque;
-}
-
-ateam_msgs::msg::RobotMotorFeedback ConvertMotorDebugTelemetry(const MotorDebugTelemetry & motor_debug_telemetry) {
+ateam_msgs::msg::RobotMotorFeedback Convert(const MotorDebugTelemetry & motor_debug_telemetry) {
   ateam_msgs::msg::RobotMotorFeedback robot_motor_feedback;
 
-  ConvertMotorDebugTelemetry(motor_debug_telemetry, robot_motor_feedback);
+  robot_motor_feedback.setpoint = motor_debug_telemetry.wheel_setpoint;
+  robot_motor_feedback.velocity = motor_debug_telemetry.wheel_velocity;
+  robot_motor_feedback.torque = motor_debug_telemetry.wheel_torque;
 
   return robot_motor_feedback;
 }
 
-ateam_msgs::msg::RobotMotionFeedback ConvertControlDebugTelemetry(const ControlDebugTelemetry & control_debug_telemetry) {
+ateam_msgs::msg::RobotMotionFeedback Convert(const ControlDebugTelemetry & control_debug_telemetry) {
   ateam_msgs::msg::RobotMotionFeedback robot_motion_feedback;
 
-  robot_motion_feedback.motors[robot_motion_feedback.FRONT_LEFT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_fl);
-  robot_motion_feedback.motors[robot_motion_feedback.FRONT_RIGHT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_fr);
-  robot_motion_feedback.motors[robot_motion_feedback.BACK_RIGHT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_br);
-  robot_motion_feedback.motors[robot_motion_feedback.BACK_LEFT_MOTOR] = ConvertMotorDebugTelemetry(control_debug_telemetry.motor_bl);
+  robot_motion_feedback.motors[robot_motion_feedback.FRONT_LEFT_MOTOR] = Convert(control_debug_telemetry.motor_fl);
+  robot_motion_feedback.motors[robot_motion_feedback.FRONT_RIGHT_MOTOR] = Convert(control_debug_telemetry.motor_fr);
+  robot_motion_feedback.motors[robot_motion_feedback.BACK_RIGHT_MOTOR] = Convert(control_debug_telemetry.motor_br);
+  robot_motion_feedback.motors[robot_motion_feedback.BACK_LEFT_MOTOR] = Convert(control_debug_telemetry.motor_bl);
 
   robot_motion_feedback.imu.orientation_covariance[0] = -1.0;  // ROS2 docs say if a sensor doesn't provide a data point, then set element '0' of it's covariance to -1
   robot_motion_feedback.imu.angular_velocity = ConvertFloatArrayToVec3(control_debug_telemetry.imu_gyro);

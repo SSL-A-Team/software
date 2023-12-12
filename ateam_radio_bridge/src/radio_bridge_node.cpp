@@ -290,7 +290,7 @@ private:
             return;
           }
           if (std::holds_alternative<BasicTelemetry>(data_var)) {
-            auto msg = ConvertBasicTelemetry(std::get<BasicTelemetry>(data_var));
+            auto msg = Convert(std::get<BasicTelemetry>(data_var));
             msg.radio_connected = true;
             feedback_publishers_[robot_id]->publish(msg);
           }
@@ -305,7 +305,7 @@ private:
           }
 
           if (std::holds_alternative<ControlDebugTelemetry>(data_var)) {
-            auto msg = ConvertControlDebugTelemetry(std::get<ControlDebugTelemetry>(data_var));
+            auto msg = Convert(std::get<ControlDebugTelemetry>(data_var));
             motion_feedback_publishers_[robot_id]->publish(msg);
           }
           break;
