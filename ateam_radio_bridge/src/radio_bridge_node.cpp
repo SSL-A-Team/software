@@ -67,6 +67,12 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotMotionFeedback>(
+      motion_feedback_publishers_,
+      "~/robot_motion_feedback/robot",
+      rclcpp::SystemDefaultsQoS(),
+      this);
+
     connection_check_timer_ =
       create_wall_timer(
       std::chrono::duration<double>(
@@ -91,6 +97,7 @@ private:
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionFeedback>::SharedPtr, 16> motion_feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
   std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
@@ -286,6 +293,20 @@ private:
             auto msg = Convert(std::get<BasicTelemetry>(data_var));
             msg.radio_connected = true;
             feedback_publishers_[robot_id]->publish(msg);
+          }
+          break;
+        }
+      case CC_CONTROL_DEBUG_TELEMETRY:
+        {
+          const auto data_var = ExtractData(packet, error);
+          if (!error.empty()) {
+            RCLCPP_WARN(get_logger(), "Ignoring control debug message. %s", error.c_str());
+            return;
+          }
+
+          if (std::holds_alternative<ControlDebugTelemetry>(data_var)) {
+            auto msg = Convert(std::get<ControlDebugTelemetry>(data_var));
+            motion_feedback_publishers_[robot_id]->publish(msg);
           }
           break;
         }
