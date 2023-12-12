@@ -126,11 +126,13 @@ ateam_msgs::msg::RobotMotionFeedback ConvertControlDebugTelemetry(const ControlD
   robot_motion_feedback.body_velocity_state_estimate = ConvertFloatArrayToTwist(control_debug_telemetry.cgkf_body_velocity_state_estimate);
   robot_motion_feedback.body_velocity_control_variable = ConvertFloatArrayToTwist(control_debug_telemetry.body_velocity_u);
 
-  // copying from some C arrays here, not a struct so add some sanity checks
-  assert((sizeof(control_debug_telemetry.wheel_velocity_u) / sizeof(control_debug_telemetry.wheel_velocity_u[0]) <= robot_motion_feedback.wheel_velocity_control_variable.size()));
-  assert((sizeof(control_debug_telemetry.wheel_velocity_clamped_u) / sizeof(control_debug_telemetry.wheel_velocity_clamped_u[0]) <= robot_motion_feedback.clamped_wheel_velocity_control_variable.size()));
-  std::copy(std::begin(control_debug_telemetry.wheel_velocity_u), std::end(control_debug_telemetry.wheel_velocity_u), std::begin(robot_motion_feedback.wheel_velocity_control_variable));
-  std::copy(std::begin(control_debug_telemetry.wheel_velocity_clamped_u), std::end(control_debug_telemetry.wheel_velocity_clamped_u), std::begin(robot_motion_feedback.clamped_wheel_velocity_control_variable));
+  std::span wheel_velocity_u_span{control_debug_telemetry.wheel_velocity_u};
+  static_assert(wheel_velocity_u_span.size() == robot_motion_feedback.wheel_velocity_control_variable.size());
+  std::ranges::copy(wheel_velocity_u_span, robot_motion_feedback.wheel_velocity_control_variable.begin());
+
+  std::span wheel_velocity_clamped_u_span{control_debug_telemetry.wheel_velocity_clamped_u};
+  static_assert(wheel_velocity_clamped_u_span.size() == robot_motion_feedback.clamped_wheel_velocity_control_variable.size());
+  std::ranges::copy(wheel_velocity_clamped_u_span, robot_motion_feedback.clamped_wheel_velocity_control_variable.begin());
 
   return robot_motion_feedback;
 }
