@@ -33,8 +33,8 @@
 namespace ateam_radio_bridge
 {
 
-ateam_msgs::msg::RobotFeedback ConvertBasicTelemetry(const BasicTelemetry & basic_telemetry);
-ateam_msgs::msg::RobotMotionFeedback ConvertControlDebugTelemetry(const ControlDebugTelemetry & control_debug_telemetry);
+ateam_msgs::msg::RobotFeedback Convert(const BasicTelemetry & basic_telemetry);
+ateam_msgs::msg::RobotMotionFeedback Convert(const ControlDebugTelemetry & control_debug_telemetry);
 
 }
 
