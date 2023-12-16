@@ -99,6 +99,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('bag_path', help='Path to bag folder')
     arg_parser.add_argument('-s', '--storage', default='sqlite3', type=str, help='ID for the storage plugin to be used. Defaults to sqlite3.')
     arg_parser.add_argument('-t', '--topics', default='', type=str, nargs='+', help='Filters which topics are saved to the CSV. By default all topics are included')
+    arg_parser.add_argument('-o', '--output', default='output.csv', type=str, help="Name of the output file")
     args = arg_parser.parse_args()
     bag_reader = open_bag(args.bag_path, args.storage)
     if len(args.topics) > 0:
@@ -109,7 +110,7 @@ if __name__ == '__main__':
         topic_details = [topic_details[i] for i in range(len(topic_details)) if topic_details[i].name in args.topics]
     topic_type_map = {topic_details[i].name: topic_details[i].type for i in range(len(topic_details))}
     column_headers = get_column_headers(topic_details)
-    with open('output.csv', 'w') as csvfile:
+    with open(args.output, 'w') as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(column_headers)
         while bag_reader.has_next():
