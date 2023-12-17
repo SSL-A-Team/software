@@ -388,7 +388,11 @@ private:
     connections_[robot_id]->send(
       reinterpret_cast<const uint8_t *>(&command_packet),
       GetPacketSize(command_packet.command_code));
-    parameter_command_response_cv_.wait_for(lock, std::chrono::seconds(5), [this]{ return parameter_command_response_ready_.load(); });
+    if(!parameter_command_response_cv_.wait_for(lock, std::chrono::milliseconds(100), [this]{ return parameter_command_response_ready_.load(); })) {
+      response->success = false;
+      response->reason = "Timed out waiting for reply.";
+      return;
+    }
     // TODO is there any way for the response to indicate a problem?
     RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.command_code != PCC_ACK, "Got non-ack parmaeter command code in response packet.");
     RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.parameter_name != command.parameter_name, "Got a parameter ACK for a different parameter than was asked for. Expected %d but got %d", command.parameter_name, parameter_command_response_.parameter_name);
@@ -462,7 +466,11 @@ private:
       connections_[robot_id]->send(
         reinterpret_cast<const uint8_t *>(&command_packet),
         GetPacketSize(command_packet.command_code));
-      parameter_command_response_cv_.wait_for(lock, std::chrono::seconds(5), [this]{ return parameter_command_response_ready_.load(); });
+      if(!parameter_command_response_cv_.wait_for(lock, std::chrono::milliseconds(100), [this]{ return parameter_command_response_ready_.load(); })) {
+        response->success = false;
+        response->reason = "Timed out waiting for reply.";
+        return;
+      }
       // TODO is there any way for the response to indicate a problem?
       RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.command_code != PCC_ACK, "Got non-ack parmaeter command code in response packet.");
       RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.parameter_name != command.parameter_name, "Got a parameter ACK for a different parameter than was asked for. Expected %d but got %d", command.parameter_name, parameter_command_response_.parameter_name);
