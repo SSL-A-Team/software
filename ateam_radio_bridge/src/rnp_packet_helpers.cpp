@@ -269,11 +269,11 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
   // TODO populate with the real formats
   switch(parameter) {
     case VEL_PID_X:
-      return F32;
+      return PID_LIMITED_INTEGRAL_F32;
     case VEL_PID_Y:
-      return F32;
+      return PID_LIMITED_INTEGRAL_F32;
     case ANGULAR_VEL_PID_Z:
-      return F32;
+      return PID_LIMITED_INTEGRAL_F32;
     case VEL_CGKF_ENCODER_NOISE:
       return F32;
     case VEL_CGKF_GYRO_NOISE:
@@ -283,7 +283,7 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
     case VEL_CGFK_INITIAL_COVARIANCE:
       return F32;
     case VEL_CGKF_K_MATRIX:
-      return F32;
+      return MATRIX_F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
