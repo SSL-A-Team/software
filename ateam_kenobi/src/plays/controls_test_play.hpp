@@ -44,16 +44,24 @@ public:
     16> runFrame(const World & world) override;
 
 private:
+  struct Waypoint {
+    ateam_geometry::Point position;
+    AngleMode angle_mode;
+    double heading;
+    double hold_time_sec;
+  };
+
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
   MotionController motion_controller_;
   MotionOptions motion_options_;
 
   int index = 0;
-  std::vector<ateam_geometry::Point> points;
-  std::vector<double> headings;
+  std::vector<Waypoint> waypoints;
   bool goal_hit;
   std::chrono::steady_clock::time_point goal_hit_time;
+
+  bool isGoalHit(const Robot & robot);
 };
 }  // namespace ateam_kenobi::plays
 #endif  // PLAYS__CONTROLS_TEST_PLAY_HPP_

@@ -35,15 +35,18 @@ ControlsTestPlay::ControlsTestPlay(
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher);
 
-  points.push_back(ateam_geometry::Point(-1.5,0.0));
-  // this->points.push_back(ateam_geometry::Point(-1.5, -0.5));
-  // this->points.push_back(ateam_geometry::Point(-0.5, 0.5));
-  // this->points.push_back(ateam_geometry::Point(-0.5, 0.5));
-  // this->points.push_back(ateam_geometry::Point(-1.5, 0.5));
+  // Turn 180 deg in place
+  waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute,  0.0, 3.0});
+  waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute, M_PI, 3.0});
 
-  headings = {0.0, M_PI};
+  // Drive in square
+  // waypoints = {
+  //   {ateam_geometry::Point(-1.5,-0.5), AngleMode::face_absolute, 0.0, 3.0},
+  //   {ateam_geometry::Point(-0.5, 0.5), AngleMode::face_absolute, 0.0, 3.0},
+  //   {ateam_geometry::Point(-0.5, 0.5), AngleMode::face_absolute, 0.0, 3.0},
+  //   {ateam_geometry::Point(-1.5, 0.5), AngleMode::face_absolute, 0.0, 3.0},
+  // };
 
-  // motion_controller_.face_absolute(-M_PI/4);
   motion_controller_.v_max = 3;
   motion_controller_.t_max = 18;
 }
@@ -60,69 +63,82 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
   auto current_available_robots = play_helpers::getAvailableRobots(world);
+  if(current_available_robots.empty()) {
+    // No robots available to run
+    return maybe_motion_commands;
+  }
 
-  if (current_available_robots.size() > 0) {
-    const auto & robot = current_available_robots[0];
-    int robot_id = robot.id;
-   
+  const auto & robot = current_available_robots.front();
 
-    // if (ateam_geometry::norm(robot.pos - this->points[this->index]) < 0.05 && ateam_geometry::norm(robot.vel) < 0.2) {
-    //   this->index++;
-    //   if (this->index >= this->points.size()) this->index = 0;
-    // }
-
-
-    if(goal_hit){
-      if((std::chrono::steady_clock::now() - goal_hit_time) > std::chrono::seconds(3)) {
-        index = (index+1) % headings.size();
-        goal_hit = false;
-      }
-    } else if(fabs(angles::shortest_angular_distance(robot.theta, headings[index])) < angles::from_degrees(1)) {
-      goal_hit = true;
-      goal_hit_time = std::chrono::steady_clock::now();
+  if(goal_hit) {
+    if((std::chrono::steady_clock::now() - goal_hit_time) > std::chrono::duration<double>(waypoints[index].hold_time_sec)) {
+      index = (index+1) % waypoints.size();
+      goal_hit = false;
     }
-
-    const std::vector<ateam_geometry::Point> path = {
-      robot.pos,
-      // this->points[this->index]
-      points[0]
-      // robot.pos
-    };
-    overlay_publisher_.drawLine("controls_test_path", path, "purple");
-
-    this->play_info_publisher_.message["robot"]["id"] = robot_id;
-    this->play_info_publisher_.message["robot"]["index"] = index;
-    this->play_info_publisher_.message["robot"]["goal_hit"] = goal_hit;
-    this->play_info_publisher_.message["robot"]["time_at_goal"] = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - goal_hit_time).count();
-    this->play_info_publisher_.message["robot"]["target"]["x"] = this->points[0].x();
-    this->play_info_publisher_.message["robot"]["target"]["y"] = this->points[0].y();
-    this->play_info_publisher_.message["robot"]["target"]["theta"] = headings[index];
-    this->play_info_publisher_.message["robot"]["pos"]["x"] = robot.pos.x();
-    this->play_info_publisher_.message["robot"]["pos"]["y"] = robot.pos.y();
-    this->play_info_publisher_.message["robot"]["pos"]["t"] = robot.theta;
-    this->play_info_publisher_.message["robot"]["vel"]["x"] = robot.vel.x();
-    this->play_info_publisher_.message["robot"]["vel"]["y"] = robot.vel.y();
-    this->play_info_publisher_.message["robot"]["vel"]["t"] = robot.omega;
-
-
-    motion_controller_.set_trajectory(std::vector<ateam_geometry::Point> {this->points[0]});
-    motion_controller_.face_absolute(headings[index]);
-
-    const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-    world.current_time.time_since_epoch()).count();
-    maybe_motion_commands[robot_id] = motion_controller_.get_command(robot, current_time);
-
+  } else if (isGoalHit(robot)) {
+    goal_hit = true;
+    goal_hit_time = std::chrono::steady_clock::now();
   }
 
-  for (int i = 0; i < this->points.size(); i++) {
-    overlay_publisher_.drawCircle("controls_test_point" + std::to_string(i), 
-		                  ateam_geometry::makeCircle(this->points[i], .05), 
-				  "blue",
-				  "blue"
-				  );
+  
+  motion_controller_.set_trajectory(std::vector<ateam_geometry::Point> {waypoints[index].position});
+  switch(waypoints[index].angle_mode) {
+    case AngleMode::face_absolute:
+      motion_controller_.face_absolute(waypoints[index].heading);
+      break;
+    case AngleMode::face_travel:
+      motion_controller_.face_travel();
+      break;
+    case AngleMode::face_point:
+      // WARNING: face_point not supported in this play. Defaulting to no face.
+      [[fallthrough]];
+    case AngleMode::no_face:
+      motion_controller_.no_face();
+      break;
   }
+  const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(world.current_time.time_since_epoch()).count();
+  maybe_motion_commands[robot.id] = motion_controller_.get_command(robot, current_time);
+
+  const std::vector<ateam_geometry::Point> viz_path = {robot.pos, waypoints[index].position};
+  overlay_publisher_.drawLine("controls_test_path", viz_path, "purple");
+
+  play_info_publisher_.message["robot"]["id"] = robot.id;
+  play_info_publisher_.message["robot"]["index"] = index;
+  play_info_publisher_.message["robot"]["goal_hit"] = goal_hit;
+  play_info_publisher_.message["robot"]["time_at_goal"] = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - goal_hit_time).count();
+  play_info_publisher_.message["robot"]["target"]["x"] = waypoints[index].position.x();
+  play_info_publisher_.message["robot"]["target"]["y"] = waypoints[index].position.y();
+  play_info_publisher_.message["robot"]["target"]["angle_mode"] = waypoints[index].angle_mode;
+  play_info_publisher_.message["robot"]["target"]["theta"] = waypoints[index].heading;
+  play_info_publisher_.message["robot"]["pos"]["x"] = robot.pos.x();
+  play_info_publisher_.message["robot"]["pos"]["y"] = robot.pos.y();
+  play_info_publisher_.message["robot"]["pos"]["t"] = robot.theta;
+  play_info_publisher_.message["robot"]["vel"]["x"] = robot.vel.x();
+  play_info_publisher_.message["robot"]["vel"]["y"] = robot.vel.y();
+  play_info_publisher_.message["robot"]["vel"]["t"] = robot.omega;
   play_info_publisher_.send_play_message("Controls Test Play");
+
+  for (std::size_t i = 0; i < waypoints.size(); i++) {
+    overlay_publisher_.drawCircle("controls_test_point" + std::to_string(i), 
+		                              ateam_geometry::makeCircle(waypoints[i].position, .05), 
+				                          "blue",
+				                          "blue");
+  }
 
   return maybe_motion_commands;
 }
+
+bool ControlsTestPlay::isGoalHit(const Robot & robot)
+{
+  const bool position_goal_hit = ateam_geometry::norm(waypoints[index].position - robot.pos) < 0.01;
+  const bool heading_goal_hit = [&](){
+    if(waypoints[index].angle_mode == AngleMode::face_absolute) {
+      return std::abs(angles::shortest_angular_distance(waypoints[index].heading, robot.theta)) < angles::from_degrees(1);
+    } else {
+      return true;
+    }
+  }();
+  return position_goal_hit && heading_goal_hit;
+}
+
 }  // namespace ateam_kenobi::plays
