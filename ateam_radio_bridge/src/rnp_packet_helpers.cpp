@@ -266,7 +266,6 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 
 ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & parameter)
 {
-  // TODO populate with the real formats
   switch(parameter) {
     case VEL_PID_X:
       return PID_LIMITED_INTEGRAL_F32;
