@@ -305,4 +305,21 @@ std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format)
   }
 }
 
+
+float* GetParameterDataForSetFormat(ParameterCommand & command)
+{
+  switch(command.data_format) {
+    case F32:
+      return &command.data.f32;
+    case PID_F32:
+      return command.data.pid_f32;
+    case PID_LIMITED_INTEGRAL_F32:
+      return command.data.pidii_f32;
+    case MATRIX_F32:
+      return command.data.matrix_f32;
+    default:
+      throw std::invalid_argument("GetParameterDataForSetFormat: Unrecognized parameter data format.");
+  }
+}
+
 }  // namespace ateam_radio_bridge

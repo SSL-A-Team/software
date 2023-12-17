@@ -84,6 +84,8 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
 
 std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format);
 
+float* GetParameterDataForSetFormat(ParameterCommand & command);
+
 }  // ateam_radio_bridge
 
 #endif  // RNP_PACKET_HELPERS_HPP_
