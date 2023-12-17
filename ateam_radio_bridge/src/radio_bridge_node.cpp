@@ -369,56 +369,44 @@ private:
 
   void GetFirmwareParameterCallback(const ateam_msgs::srv::GetFirmwareParameter::Request::SharedPtr request, ateam_msgs::srv::GetFirmwareParameter::Response::SharedPtr response)
   {
-    const auto robot_id = request->robot_id;
-    if(robot_id < 0 || robot_id > 15) {
-      response->success = false;
-      response->reason = "Invalid robot ID";
-      return;
-    }
-    if(!connections_[robot_id]) {
-      response->success = false;
-      response->reason = "Selected robot is not connected.";
-      return;
-    }
-    ParameterCommand command;
-    command.command_code = PCC_READ;
-    command.parameter_name = static_cast<ParameterName>(request->parameter_id);
-    const auto command_packet = CreatePacket(CC_ROBOT_PARAMETER_COMMAND, command);
-    std::unique_lock<std::mutex> lock{parameter_command_response_mutex_};
-    parameter_command_robot_id_ = robot_id;
-    parameter_command_response_ready_ = false;
-    connections_[robot_id]->send(
-      reinterpret_cast<const uint8_t *>(&command_packet),
-      GetPacketSize(command_packet.command_code));
-    if(!parameter_command_response_cv_.wait_for(lock, std::chrono::milliseconds(100), [this]{ return parameter_command_response_ready_.load(); })) {
-      response->success = false;
-      response->reason = "Timed out waiting for reply.";
-      return;
-    }
-    // TODO is there any way for the response to indicate a problem?
-    RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.command_code != PCC_ACK, "Got non-ack parmaeter command code in response packet.");
-    RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.parameter_name != command.parameter_name, "Got a parameter ACK for a different parameter than was asked for. Expected %d but got %d", command.parameter_name, parameter_command_response_.parameter_name);
-    const float * packet_data;
-    switch(parameter_command_response_.data_format) {
-      case F32:
-        packet_data = &parameter_command_response_.data.f32;
-        break;
-      case PID_F32:
-        packet_data = parameter_command_response_.data.pid_f32;
-        break;
-      case PID_LIMITED_INTEGRAL_F32:
-        packet_data = parameter_command_response_.data.pidii_f32;
-        break;
-      case MATRIX_F32:
-        packet_data = parameter_command_response_.data.matrix_f32;
-        break;
-      default:
+    try {
+      const auto robot_id = request->robot_id;
+      if(robot_id < 0 || robot_id > 15) {
         response->success = false;
-        response->reason = "Unrecognized data format in response packet.";
+        response->reason = "Invalid robot ID";
         return;
+      }
+      if(!connections_[robot_id]) {
+        response->success = false;
+        response->reason = "Selected robot is not connected.";
+        return;
+      }
+      ParameterCommand command;
+      command.command_code = PCC_READ;
+      command.parameter_name = static_cast<ParameterName>(request->parameter_id);
+      const auto command_packet = CreatePacket(CC_ROBOT_PARAMETER_COMMAND, command);
+      std::unique_lock<std::mutex> lock{parameter_command_response_mutex_};
+      parameter_command_robot_id_ = robot_id;
+      parameter_command_response_ready_ = false;
+      connections_[robot_id]->send(
+        reinterpret_cast<const uint8_t *>(&command_packet),
+        GetPacketSize(command_packet.command_code));
+      if(!parameter_command_response_cv_.wait_for(lock, std::chrono::milliseconds(100), [this]{ return parameter_command_response_ready_.load(); })) {
+        response->success = false;
+        response->reason = "Timed out waiting for reply.";
+        return;
+      }
+      // TODO is there any way for the response to indicate a problem?
+      RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.command_code != PCC_ACK, "Got non-ack parmaeter command code in response packet.");
+      RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.parameter_name != command.parameter_name, "Got a parameter ACK for a different parameter than was asked for. Expected %d but got %d", command.parameter_name, parameter_command_response_.parameter_name);
+      const float * packet_data = GetParameterDataForSetFormat(parameter_command_response_);
+      std::copy_n(packet_data, GetDataSizeForParameterFormat(parameter_command_response_.data_format), std::back_inserter(response->data));
+      response->success = true;
+    } catch (std::exception & e) {
+      response->success = false;
+      response->reason = "Exception thrown: "s + e.what();
+      return;
     }
-    std::copy_n(packet_data, GetDataSizeForParameterFormat(parameter_command_response_.data_format), std::back_inserter(response->data));
-    response->success = true;
   }
 
   void SetFirmwareParameterCallback(const ateam_msgs::srv::SetFirmwareParameter::Request::SharedPtr request, ateam_msgs::srv::SetFirmwareParameter::Response::SharedPtr response)
@@ -445,21 +433,7 @@ private:
         response->reason = "Wrong data size. Expected "s + std::to_string(data_size) + " elements but got " + std::to_string(request->data.size()) + ".";
         return;
       }
-      float * data_slot;
-      switch(command.data_format) {
-        case F32:
-          data_slot = &command.data.f32;
-          break;
-        case PID_F32:
-          data_slot = command.data.pid_f32;
-          break;
-        case PID_LIMITED_INTEGRAL_F32:
-          data_slot = command.data.pidii_f32;
-          break;
-        case MATRIX_F32: 
-          data_slot = command.data.matrix_f32;
-          break;
-      }
+      float * data_slot = GetParameterDataForSetFormat(command);
       std::copy_n(request->data.begin(), data_size, data_slot);
       const auto command_packet = CreatePacket(CC_ROBOT_PARAMETER_COMMAND, command);
       std::unique_lock<std::mutex> lock{parameter_command_response_mutex_};
@@ -481,21 +455,7 @@ private:
         response->reason = "Ack'ed data format does not equal sent data format.";
         return;
       }
-      const float * response_data_slot;
-      switch(parameter_command_response_.data_format) {
-        case F32:
-          response_data_slot = &parameter_command_response_.data.f32;
-          break;
-        case PID_F32:
-          response_data_slot = parameter_command_response_.data.pid_f32;
-          break;
-        case PID_LIMITED_INTEGRAL_F32:
-          response_data_slot = parameter_command_response_.data.pidii_f32;
-          break;
-        case MATRIX_F32: 
-          response_data_slot = parameter_command_response_.data.matrix_f32;
-          break;
-      }
+      const float * response_data_slot = GetParameterDataForSetFormat(parameter_command_response_);
       if(!std::equal(request->data.begin(), request->data.end(), response_data_slot)) {
         response->success = false;
         response->reason = "Ack'ed paramter value does not equal sent data.";
