@@ -36,8 +36,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
   msg/PlayInfo.msg
 
+  srv/GetFirmwareParameter.srv
   srv/ReconnectTeamClient.srv
   srv/SetDesiredKeeper.srv
+  srv/SetFirmwareParameter.srv
   srv/SetTeamAdvantageChoice.srv
   srv/SubstituteBot.srv
 
