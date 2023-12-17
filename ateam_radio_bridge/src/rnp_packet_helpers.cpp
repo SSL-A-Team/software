@@ -70,6 +70,9 @@ std::size_t GetPacketSize(const CommandCode & command_code)
     case CC_CONTROL_DEBUG_TELEMETRY:
       return kPacketHeaderSize + sizeof(ControlDebugTelemetry);
       break;
+    case CC_ROBOT_PARAMETER_COMMAND:
+      return kPacketHeaderSize + sizeof(ParameterCommand);
+      break;
     default:
       throw std::invalid_argument("Unrecognized command code.");
   }
@@ -235,6 +238,15 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
         var = packet.data.control_debug_telemetry;
         break;
       }
+    case CC_ROBOT_PARAMETER_COMMAND:
+      {
+        if (packet.data_length != sizeof(ParameterCommand)) {
+          error = "Incorrect data length for ParameterCommand type.";
+          break;
+        }
+        var = packet.data.robot_parameter_command;
+        break;
+      }
     case CC_CONTROL:
       {
         if (packet.data_length != sizeof(BasicControl)) {
@@ -250,6 +262,47 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
   }
 
   return var;
+}
+
+ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & parameter)
+{
+  // TODO populate with the real formats
+  switch(parameter) {
+    case VEL_PID_X:
+      return F32;
+    case VEL_PID_Y:
+      return F32;
+    case ANGULAR_VEL_PID_Z:
+      return F32;
+    case VEL_CGKF_ENCODER_NOISE:
+      return F32;
+    case VEL_CGKF_GYRO_NOISE:
+      return F32;
+    case VEL_CGKF_PROCESS_NOISE:
+      return F32;
+    case VEL_CGFK_INITIAL_COVARIANCE:
+      return F32;
+    case VEL_CGKF_K_MATRIX:
+      return F32;
+    default:
+      throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
+  }
+}
+
+std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format)
+{
+  switch(format) {
+    case F32:
+      return 1;
+    case PID_F32:
+      return 3;
+    case PID_LIMITED_INTEGRAL_F32:
+      return 5;
+    case MATRIX_F32:
+      return 25;
+    default:
+      throw std::invalid_argument("GetDataSizeForParameterFormat: Unrecognized parameter data format.");
+  }
 }
 
 }  // namespace ateam_radio_bridge

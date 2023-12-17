@@ -22,10 +22,14 @@
 #include <array>
 #include <chrono>
 #include <numeric>
+#include <mutex>
+#include <thread>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_msgs/srv/set_firmware_parameter.hpp>
+#include <ateam_msgs/srv/get_firmware_parameter.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
@@ -36,6 +40,8 @@
 #include "ip_address_helpers.hpp"
 
 // TODO(barulicm) add warning if we see another instance of this running via multicast
+
+using namespace std::string_literals;
 
 namespace ateam_radio_bridge
 {
@@ -73,6 +79,9 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
+    get_param_service_ = create_service<ateam_msgs::srv::GetFirmwareParameter>("get_firmware_param", std::bind(&RadioBridgeNode::GetFirmwareParameterCallback, this, std::placeholders::_1, std::placeholders::_2));
+    set_param_service_ = create_service<ateam_msgs::srv::SetFirmwareParameter>("set_firmware_param", std::bind(&RadioBridgeNode::SetFirmwareParameterCallback, this, std::placeholders::_1, std::placeholders::_2));
+
     connection_check_timer_ =
       create_wall_timer(
       std::chrono::duration<double>(
@@ -98,11 +107,18 @@ private:
     16> motion_command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionFeedback>::SharedPtr, 16> motion_feedback_publishers_;
+  rclcpp::Service<ateam_msgs::srv::GetFirmwareParameter>::SharedPtr get_param_service_;
+  rclcpp::Service<ateam_msgs::srv::SetFirmwareParameter>::SharedPtr set_param_service_;
   ateam_common::MulticastReceiver discovery_receiver_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
   std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
+  ParameterCommand parameter_command_response_;
+  int parameter_command_robot_id_;
+  std::atomic_bool parameter_command_response_ready_ = false;
+  std::mutex parameter_command_response_mutex_;
+  std::condition_variable parameter_command_response_cv_;
 
   void motion_command_callback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr command_msg,
@@ -310,6 +326,27 @@ private:
           }
           break;
         }
+      case CC_ROBOT_PARAMETER_COMMAND:
+        {
+          const auto data_var = ExtractData(packet, error);
+          if (!error.empty()) {
+            RCLCPP_WARN(get_logger(), "Ignoring parameter command response message. %s", error.c_str());
+            return;
+          }
+          if(std::holds_alternative<ParameterCommand>(data_var)) {
+            std::unique_lock<std::mutex> lock{parameter_command_response_mutex_};
+            if(robot_id != parameter_command_robot_id_)
+            {
+              RCLCPP_WARN(get_logger(), "Ignoring parameter command response from wrong robot. Expected %d but %d replied.", parameter_command_robot_id_, robot_id);
+              return;
+            }
+            parameter_command_response_ = std::get<ParameterCommand>(data_var);
+            parameter_command_response_ready_ = true;
+            lock.unlock();
+            parameter_command_response_cv_.notify_one();
+          }
+          break;
+        }
       case CC_KEEPALIVE:
         last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
         break;
@@ -325,6 +362,140 @@ private:
   {
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);
+    }
+  }
+
+  void GetFirmwareParameterCallback(const ateam_msgs::srv::GetFirmwareParameter::Request::SharedPtr request, ateam_msgs::srv::GetFirmwareParameter::Response::SharedPtr response)
+  {
+    const auto robot_id = request->robot_id;
+    if(robot_id < 0 || robot_id > 15) {
+      response->success = false;
+      response->reason = "Invalid robot ID";
+      return;
+    }
+    if(!connections_[robot_id]) {
+      response->success = false;
+      response->reason = "Selected robot is not connected.";
+      return;
+    }
+    ParameterCommand command;
+    command.command_code = PCC_READ;
+    command.parameter_name = static_cast<ParameterName>(request->parameter_id);
+    const auto command_packet = CreatePacket(CC_ROBOT_PARAMETER_COMMAND, command);
+    std::unique_lock<std::mutex> lock{parameter_command_response_mutex_};
+    parameter_command_robot_id_ = robot_id;
+    parameter_command_response_ready_ = false;
+    connections_[robot_id]->send(
+      reinterpret_cast<const uint8_t *>(&command_packet),
+      GetPacketSize(command_packet.command_code));
+    parameter_command_response_cv_.wait_for(lock, std::chrono::seconds(5), [this]{ return parameter_command_response_ready_.load(); });
+    // TODO is there any way for the response to indicate a problem?
+    RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.command_code != PCC_ACK, "Got non-ack parmaeter command code in response packet.");
+    RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.parameter_name != command.parameter_name, "Got a parameter ACK for a different parameter than was asked for. Expected %d but got %d", command.parameter_name, parameter_command_response_.parameter_name);
+    const float * packet_data;
+    switch(parameter_command_response_.data_format) {
+      case F32:
+        packet_data = &parameter_command_response_.data.f32;
+        break;
+      case PID_F32:
+        packet_data = parameter_command_response_.data.pid_f32;
+        break;
+      case PID_LIMITED_INTEGRAL_F32:
+        packet_data = parameter_command_response_.data.pidii_f32;
+        break;
+      case MATRIX_F32:
+        packet_data = parameter_command_response_.data.matrix_f32;
+        break;
+      default:
+        response->success = false;
+        response->reason = "Unrecognized data format in response packet.";
+        return;
+    }
+    std::copy_n(packet_data, GetDataSizeForParameterFormat(parameter_command_response_.data_format), std::back_inserter(response->data));
+    response->success = true;
+  }
+
+  void SetFirmwareParameterCallback(const ateam_msgs::srv::SetFirmwareParameter::Request::SharedPtr request, ateam_msgs::srv::SetFirmwareParameter::Response::SharedPtr response)
+  {
+    try {
+      const auto robot_id = request->robot_id;
+      if(robot_id < 0 || robot_id > 15) {
+        response->success = false;
+        response->reason = "Invalid robot ID";
+        return;
+      }
+      if(!connections_[robot_id]) {
+        response->success = false;
+        response->reason = "Selected robot is not connected.";
+        return;
+      }
+      ParameterCommand command;
+      command.command_code = PCC_WRITE;
+      command.parameter_name = static_cast<ParameterName>(request->parameter_id);
+      command.data_format = GetParameterDataFormatForParameter(command.parameter_name);
+      const auto data_size = GetDataSizeForParameterFormat(command.data_format);
+      if(request->data.size() != data_size) {
+        response->success = false;
+        response->reason = "Wrong data size. Expected "s + std::to_string(data_size) + " elements but got " + std::to_string(request->data.size()) + ".";
+        return;
+      }
+      float * data_slot;
+      switch(command.data_format) {
+        case F32:
+          data_slot = &command.data.f32;
+          break;
+        case PID_F32:
+          data_slot = command.data.pid_f32;
+          break;
+        case PID_LIMITED_INTEGRAL_F32:
+          data_slot = command.data.pidii_f32;
+          break;
+        case MATRIX_F32: 
+          data_slot = command.data.matrix_f32;
+          break;
+      }
+      std::copy_n(request->data.begin(), data_size, data_slot);
+      const auto command_packet = CreatePacket(CC_ROBOT_PARAMETER_COMMAND, command);
+      std::unique_lock<std::mutex> lock{parameter_command_response_mutex_};
+      parameter_command_robot_id_ = robot_id;
+      parameter_command_response_ready_ = false;
+      connections_[robot_id]->send(
+        reinterpret_cast<const uint8_t *>(&command_packet),
+        GetPacketSize(command_packet.command_code));
+      parameter_command_response_cv_.wait_for(lock, std::chrono::seconds(5), [this]{ return parameter_command_response_ready_.load(); });
+      // TODO is there any way for the response to indicate a problem?
+      RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.command_code != PCC_ACK, "Got non-ack parmaeter command code in response packet.");
+      RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.parameter_name != command.parameter_name, "Got a parameter ACK for a different parameter than was asked for. Expected %d but got %d", command.parameter_name, parameter_command_response_.parameter_name);
+      if(parameter_command_response_.data_format != command.data_format) {
+        response->success = false;
+        response->reason = "Ack'ed data format does not equal sent data format.";
+        return;
+      }
+      const float * response_data_slot;
+      switch(parameter_command_response_.data_format) {
+        case F32:
+          response_data_slot = &parameter_command_response_.data.f32;
+          break;
+        case PID_F32:
+          response_data_slot = parameter_command_response_.data.pid_f32;
+          break;
+        case PID_LIMITED_INTEGRAL_F32:
+          response_data_slot = parameter_command_response_.data.pidii_f32;
+          break;
+        case MATRIX_F32: 
+          response_data_slot = parameter_command_response_.data.matrix_f32;
+          break;
+      }
+      if(!std::equal(request->data.begin(), request->data.end(), response_data_slot)) {
+        response->success = false;
+        response->reason = "Ack'ed paramter value does not equal sent data.";
+        return;
+      }
+      response->success = true;
+    } catch (std::exception & e) {
+      response->success = false;
+      response->reason = "Exception thrown: "s + e.what();
+      return;
     }
   }
 
