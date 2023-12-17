@@ -24,6 +24,7 @@
 
 #include "base_play.hpp"
 #include "test_play.hpp"
+#include "constant_vel_test.hpp"
 #include "controls_test_play.hpp"
 #include "halt_play.hpp"
 #include "stop_play.hpp"

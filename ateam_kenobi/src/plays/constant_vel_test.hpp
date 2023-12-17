@@ -18,49 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__CONTROLS_TEST_PLAY_HPP_
-#define PLAYS__CONTROLS_TEST_PLAY_HPP_
+#ifndef PLAYS__CONSTANT_VEL_TEST_HPP_
+#define PLAYS__CONSTANT_VEL_TEST_HPP_
 
-#include <array>
-#include <vector>
-#include "motion/motion_controller.hpp"
 #include "base_play.hpp"
-#include "ateam_geometry/types.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/joy.hpp>
 
 namespace ateam_kenobi::plays
 {
-class ControlsTestPlay : public BasePlay
+class ConstantVelTest : public BasePlay
 {
 public:
-  explicit ControlsTestPlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  ConstantVelTest(visualization::OverlayPublisher & overlay_publisher, visualization::PlayInfoPublisher & play_info_publisher);
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world) override;
 
 private:
-  struct Waypoint {
-    ateam_geometry::Point position;
-    AngleMode angle_mode;
-    double heading;
-    double hold_time_sec;
-  };
+  void joystickCallback(const sensor_msgs::msg::Joy::SharedPtr msg);
+  rcl_interfaces::msg::SetParametersResult onSetParametersCallback(const std::vector<rclcpp::Parameter> &);
 
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub;
+  rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr set_parameters_callback_handle;
 
-  MotionController motion_controller_;
-  MotionOptions motion_options_;
+  bool motion_enabled = false;
 
-  int index = 0;
-  std::vector<Waypoint> waypoints;
-  bool goal_hit;
-  std::chrono::steady_clock::time_point goal_hit_time;
-
-  bool isGoalHit(const Robot & robot);
+  double vel_x = 0.0;
+  double vel_y = 0.0;
+  double vel_t = 0.0;
 };
-}  // namespace ateam_kenobi::plays
-#endif  // PLAYS__CONTROLS_TEST_PLAY_HPP_
+}
+
+#endif  // PLAYS__CONSTANT_VEL_TEST_HPP_

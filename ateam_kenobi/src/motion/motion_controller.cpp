@@ -123,9 +123,6 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   // TODO(anon): figure out what point on the trajectory to use as the target
   uint64_t index;
 
-  std::cout << "dt: " << dt << "\n";
-  std::cout << "Targetting threshold: " << (v_max * dt) << "\n";
-
   // find a point in the trajectory that is far enough away from our current location
   // for loop bound ensures index never exceeds the trajectory length even after the loop ends
   for (index = this->prev_point; index < this->trajectory.size() - 1; index++) {
@@ -136,8 +133,6 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     }
   }
   
-  std::cout << "Targetting index " << index << "\n";
-
   // maybe do some sort of interpolation between points
 
   ateam_geometry::Point target = this->trajectory[index];
@@ -147,10 +142,6 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
   double x_error = target.x() - robot.pos.x();
   double y_error = target.y() - robot.pos.y();
-  std::cout << "Target: (" << target.x() << ", " << target.y() << ")\n";
-  std::cout << "Pose: (" << robot.pos.x() << ", " << robot.pos.y() << ")\n";
-  std::cout << "Error: x: " << x_error << " y: " << y_error << "\n";
-  std::cout << std::endl;
 
   if (!trajectory_complete) {
     // Calculate translational movement commands

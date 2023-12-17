@@ -22,6 +22,7 @@ add_library(kenobi_node_component SHARED
   src/singleton_node.cpp
   src/path_planning/path_planner.cpp
   src/plays/test_play.cpp
+  src/plays/constant_vel_test.cpp
   src/plays/controls_test_play.cpp
   src/plays/halt_play.cpp
   src/plays/stop_play.cpp

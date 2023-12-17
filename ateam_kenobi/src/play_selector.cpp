@@ -30,6 +30,7 @@ PlaySelector::PlaySelector(
   visualization::OverlayPublisher & overlay_publisher,
   visualization::PlayInfoPublisher & play_info_publisher)
 : test_play_(overlay_publisher, play_info_publisher),
+  constant_vel_test_play_(overlay_publisher, play_info_publisher),
   controls_test_play_(overlay_publisher, play_info_publisher),
   halt_play_(overlay_publisher, play_info_publisher),
   stop_play_(overlay_publisher, play_info_publisher),
@@ -53,6 +54,7 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
     selected_play = &halt_play_;
   } else {
     selected_play = &controls_test_play_;
+    // selected_play = &constant_vel_test_play_;
   }
 
   /*

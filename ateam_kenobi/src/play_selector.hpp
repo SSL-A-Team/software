@@ -41,6 +41,7 @@ public:
 
 private:
   plays::TestPlay test_play_;
+  plays::ConstantVelTest constant_vel_test_play_;
   plays::ControlsTestPlay controls_test_play_;
   plays::HaltPlay halt_play_;
   plays::StopPlay stop_play_;
