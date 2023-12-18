@@ -53,8 +53,8 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
   if (current_game_command == ateam_common::GameCommand::Halt) {
     selected_play = &halt_play_;
   } else {
-    selected_play = &controls_test_play_;
-    // selected_play = &constant_vel_test_play_;
+    // selected_play = &controls_test_play_;
+    selected_play = &constant_vel_test_play_;
   }
 
   /*

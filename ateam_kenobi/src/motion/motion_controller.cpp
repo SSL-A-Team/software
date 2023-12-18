@@ -36,28 +36,30 @@
 
 MotionController::MotionController()
 {
-  ateam_kenobi::global_node->declare_parameters<double>("motion_controller/x_pid",{
-    {"kp",3.0},
-    {"ki",0.0},
-    {"kd",0.0},
-    {"i_max",0.0},
-    {"i_min",0.0}
-  });
-  ateam_kenobi::global_node->declare_parameters<double>("motion_controller/y_pid",{
-    {"kp",3.0},
-    {"ki",0.0},
-    {"kd",0.0},
-    {"i_max",0.0},
-    {"i_min",0.0}
-  });
-  ateam_kenobi::global_node->declare_parameters<double>("motion_controller/t_pid",{
-    {"kp",3.5},
-    {"ki",0.0},
-    {"kd",0.0},
-    {"i_max",0.0},
-    {"i_min",0.0}
-  });
-  set_parameters_callback_handle = ateam_kenobi::global_node->add_on_set_parameters_callback(std::bind_front(&MotionController::onSetParametersCallback, this));
+  if(!ateam_kenobi::global_node->has_parameter("motion_controller.x_pid.kp")) {
+    ateam_kenobi::global_node->declare_parameters<double>("motion_controller.x_pid",{
+      {"kp",3.0},
+      {"ki",0.0},
+      {"kd",0.0},
+      {"i_max",0.0},
+      {"i_min",0.0}
+    });
+    ateam_kenobi::global_node->declare_parameters<double>("motion_controller.y_pid",{
+      {"kp",3.0},
+      {"ki",0.0},
+      {"kd",0.0},
+      {"i_max",0.0},
+      {"i_min",0.0}
+    });
+    ateam_kenobi::global_node->declare_parameters<double>("motion_controller.t_pid",{
+      {"kp",3.5},
+      {"ki",0.0},
+      {"kd",0.0},
+      {"i_max",0.0},
+      {"i_min",0.0}
+    });
+  }
+  // set_parameters_callback_handle = ateam_kenobi::global_node->add_on_set_parameters_callback(std::bind_front(&MotionController::onSetParametersCallback, this));
 
   this->reset();
 }
@@ -93,10 +95,6 @@ void MotionController::no_face()
 void MotionController::set_trajectory(const std::vector<ateam_geometry::Point> & trajectory)
 {
   this->trajectory = trajectory;
-  std::cout << "New Trajectory:\n";
-  for(const auto & point : trajectory) {
-    std::cout << "\t" << point.x() << ", " << point.y() << "\n";
-  }
   this->prev_point = 0;
 
   this->progress = 0;
@@ -197,6 +195,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   // TODO(anon): handle pid gains better
+  std::cerr << "enter MotionController::reset" << std::endl;
+  std::cerr << "MotionController::reset on thread " << std::this_thread::get_id() << std::endl;
   setPidGains();
   x_controller.reset();
   y_controller.reset();
@@ -210,34 +210,46 @@ void MotionController::reset()
   this->angle_mode = AngleMode::face_travel;
   this->face_towards.reset();
   this->face_angle = 0;
+  std::cerr << "exit MotionController::reset" << std::endl;
 }
 
 rcl_interfaces::msg::SetParametersResult MotionController::onSetParametersCallback(const std::vector<rclcpp::Parameter> &parameter_updates)
 {
+  std::cerr << "enter MotionController::onSetParametersCallback" << std::endl;
+  std::cerr << "MotionController::onSetParametersCallback on thread " << std::this_thread::get_id() << std::endl;
+
   setPidGains();
+
+  std::cerr << "after setPidGains() returned" << std::endl;
 
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
+  std::cerr << "exit MotionController::onSetParametersCallback" << std::endl;
   return result;
 }
 
 void MotionController::setPidGains()
 {
-  x_controller.setGains(ateam_kenobi::global_node->get_parameter("motion_controller/x_pid/kp").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/x_pid/ki").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/x_pid/kd").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/x_pid/i_max").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/x_pid/i_min").get_value<double>());
+  std::cerr << "setPidGains 1" << std::endl;
+  x_controller.setGains(ateam_kenobi::global_node->get_parameter("motion_controller.x_pid.kp").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.x_pid.ki").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.x_pid.kd").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.x_pid.i_max").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.x_pid.i_min").get_value<double>());
+
+  std::cerr << "setPidGains 2" << std::endl;
+  y_controller.setGains(ateam_kenobi::global_node->get_parameter("motion_controller.y_pid.kp").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.y_pid.ki").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.y_pid.kd").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.y_pid.i_max").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.y_pid.i_min").get_value<double>());
   
-  y_controller.setGains(ateam_kenobi::global_node->get_parameter("motion_controller/y_pid/kp").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/y_pid/ki").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/y_pid/kd").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/y_pid/i_max").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/y_pid/i_min").get_value<double>());
+  std::cerr << "setPidGains 3" << std::endl;
+  t_controller.setGains(ateam_kenobi::global_node->get_parameter("motion_controller.t_pid.kp").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.t_pid.ki").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.t_pid.kd").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.t_pid.i_max").get_value<double>(),
+                        ateam_kenobi::global_node->get_parameter("motion_controller.t_pid.i_min").get_value<double>());
   
-  t_controller.setGains(ateam_kenobi::global_node->get_parameter("motion_controller/t_pid/kp").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/t_pid/ki").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/t_pid/kd").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/t_pid/i_max").get_value<double>(),
-                        ateam_kenobi::global_node->get_parameter("motion_controller/t_pid/i_min").get_value<double>());
+  std::cerr << "setPidGains 4" << std::endl;
 }

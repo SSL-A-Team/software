@@ -42,7 +42,6 @@ EasyMoveTo::EasyMoveTo(visualization::OverlayPublisher & overlay_publisher)
 : instance_name_("EasyMoveToViz" + std::to_string(instance_index_)),
   overlay_publisher_(&overlay_publisher)
 {
-  std::cerr << "EasyMoveTo instance " << instance_index_ << '\n';
   instance_index_++;
 }
 
