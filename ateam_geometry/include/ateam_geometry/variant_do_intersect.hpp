@@ -62,7 +62,7 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
     // Also use our custom disk intersection functions if objB
     // is a circle
     if (std::holds_alternative<Circle>(object_b)) {
-      // Need to evaluate based on constexpr of a type
+      // TODO: Need to evaluate based on constexpr of a type
     }
     else {
       bool intersects =  std::visit(
