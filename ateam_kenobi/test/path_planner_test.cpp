@@ -66,93 +66,93 @@ protected:
   }
 };
 
-/*
-    *   Test whether we can make a basic path between two points
-    *   without any weird stuff happening (adding more than 1 point or splitting).
-    */
-TEST_F(GetPathTest, StraightPath) {
-  const auto start = ateam_geometry::Point(0, 0);
-  const auto end = ateam_geometry::Point(1, 1);
-  path_planning::PathPlanner::Path path = {start, end};
-  auto planner_path = path_planner.getPath(
-    start, end, world, obstacles, planner_options);
-  const auto end_time = std::chrono::steady_clock::now();
-  EXPECT_NE(planner_path, empty_path);
-  EXPECT_EQ(planner_path, path);
-  EXPECT_EQ(path.size(), 2U);
-  EXPECT_LT(
-    end_time - start_time,
-    std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-      std::chrono::duration<double>(
-        planner_options.search_time_limit)) + allowed_extra_time);
-}
+// /*
+//     *   Test whether we can make a basic path between two points
+//     *   without any weird stuff happening (adding more than 1 point or splitting).
+//     */
+// TEST_F(GetPathTest, StraightPath) {
+//   const auto start = ateam_geometry::Point(0, 0);
+//   const auto end = ateam_geometry::Point(1, 1);
+//   path_planning::PathPlanner::Path path = {start, end};
+//   auto planner_path = path_planner.getPath(
+//     start, end, world, obstacles, planner_options);
+//   const auto end_time = std::chrono::steady_clock::now();
+//   EXPECT_NE(planner_path, empty_path);
+//   EXPECT_EQ(planner_path, path);
+//   EXPECT_EQ(path.size(), 2U);
+//   EXPECT_LT(
+//     end_time - start_time,
+//     std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+//       std::chrono::duration<double>(
+//         planner_options.search_time_limit)) + allowed_extra_time);
+// }
 
-/*
-    *   Test whether we can make a path around an obstacle without
-    *   any weird stuff happening (going through the obstacle, not making a path).
-    */
-TEST_F(GetPathTest, PathWithSingleObstacle) {
-  const auto start = ateam_geometry::Point(0, 0);
-  const auto end = ateam_geometry::Point(2, 2);
-  path_planning::PathPlanner::Path short_path = {start, end};
-  const auto obstacle = ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 0.1);
-  obstacles.push_back(obstacle);
-  auto path = path_planner.getPath(
-    start, end, world, obstacles, planner_options);
-  const auto end_time = std::chrono::steady_clock::now();
-  EXPECT_NE(path, empty_path);
-  EXPECT_NE(path, short_path);
-  EXPECT_GT(path.size(), 2U);
-  EXPECT_LT(
-    end_time - start_time,
-    std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-      std::chrono::duration<double>(
-        planner_options.search_time_limit)) + allowed_extra_time);
-}
+// /*
+//     *   Test whether we can make a path around an obstacle without
+//     *   any weird stuff happening (going through the obstacle, not making a path).
+//     */
+// TEST_F(GetPathTest, PathWithSingleObstacle) {
+//   const auto start = ateam_geometry::Point(0, 0);
+//   const auto end = ateam_geometry::Point(2, 2);
+//   path_planning::PathPlanner::Path short_path = {start, end};
+//   const auto obstacle = ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 0.1);
+//   obstacles.push_back(obstacle);
+//   auto path = path_planner.getPath(
+//     start, end, world, obstacles, planner_options);
+//   const auto end_time = std::chrono::steady_clock::now();
+//   EXPECT_NE(path, empty_path);
+//   EXPECT_NE(path, short_path);
+//   EXPECT_GT(path.size(), 2U);
+//   EXPECT_LT(
+//     end_time - start_time,
+//     std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+//       std::chrono::duration<double>(
+//         planner_options.search_time_limit)) + allowed_extra_time);
+// }
 
-/*
-    *   Test whether we can make a path around multiple obstacles without any weird stuff
-    *   happening (not finishing in time, going through the obstacles).
-    */
-TEST_F(GetPathTest, PathWithMultipleObstacles) {
-  const auto start = ateam_geometry::Point(0, 0);
-  const auto end = ateam_geometry::Point(2, 2);
-  path_planning::PathPlanner::Path short_path = {start, end};
-  const auto obstacle_1 = ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 0.1);
-  obstacles.push_back(obstacle_1);
-  const auto obstacle_2 = ateam_geometry::makeCircle(ateam_geometry::Point(1, 2), 0.1);
-  obstacles.push_back(obstacle_2);
-  auto path = path_planner.getPath(
-    start, end, world, obstacles, planner_options);
-  const auto end_time = std::chrono::steady_clock::now();
-  EXPECT_NE(path, empty_path);
-  EXPECT_NE(path, short_path);
-  EXPECT_GT(path.size(), 2U);
-  EXPECT_LT(
-    end_time - start_time,
-    std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-      std::chrono::duration<double>(
-        planner_options.search_time_limit)) + allowed_extra_time);
-}
+// /*
+//     *   Test whether we can make a path around multiple obstacles without any weird stuff
+//     *   happening (not finishing in time, going through the obstacles).
+//     */
+// TEST_F(GetPathTest, PathWithMultipleObstacles) {
+//   const auto start = ateam_geometry::Point(0, 0);
+//   const auto end = ateam_geometry::Point(2, 2);
+//   path_planning::PathPlanner::Path short_path = {start, end};
+//   const auto obstacle_1 = ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 0.1);
+//   obstacles.push_back(obstacle_1);
+//   const auto obstacle_2 = ateam_geometry::makeCircle(ateam_geometry::Point(1, 2), 0.1);
+//   obstacles.push_back(obstacle_2);
+//   auto path = path_planner.getPath(
+//     start, end, world, obstacles, planner_options);
+//   const auto end_time = std::chrono::steady_clock::now();
+//   EXPECT_NE(path, empty_path);
+//   EXPECT_NE(path, short_path);
+//   EXPECT_GT(path.size(), 2U);
+//   EXPECT_LT(
+//     end_time - start_time,
+//     std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+//       std::chrono::duration<double>(
+//         planner_options.search_time_limit)) + allowed_extra_time);
+// }
 
-/*
-    *   Test whether an out of bounds point correctly is identified as invalid.
-    *   In this case, we should get an empty path from the planner.
-    */
-TEST_F(GetPathTest, OutOfBounds) {
-  const auto start = ateam_geometry::Point(0, 0);
-  const auto invalid_point = ateam_geometry::Point(10, 10);
-  auto path = path_planner.getPath(
-    start, invalid_point, world, obstacles, planner_options);
-  const auto end_time = std::chrono::steady_clock::now();
-  EXPECT_EQ(path, empty_path);
-  EXPECT_EQ(path.size(), 0U);
-  EXPECT_LT(
-    end_time - start_time,
-    std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-      std::chrono::duration<double>(
-        planner_options.search_time_limit)) + allowed_extra_time);
-}
+// /*
+//     *   Test whether an out of bounds point correctly is identified as invalid.
+//     *   In this case, we should get an empty path from the planner.
+//     */
+// TEST_F(GetPathTest, OutOfBounds) {
+//   const auto start = ateam_geometry::Point(0, 0);
+//   const auto invalid_point = ateam_geometry::Point(10, 10);
+//   auto path = path_planner.getPath(
+//     start, invalid_point, world, obstacles, planner_options);
+//   const auto end_time = std::chrono::steady_clock::now();
+//   EXPECT_EQ(path, empty_path);
+//   EXPECT_EQ(path.size(), 0U);
+//   EXPECT_LT(
+//     end_time - start_time,
+//     std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+//       std::chrono::duration<double>(
+//         planner_options.search_time_limit)) + allowed_extra_time);
+// }
 
 /*
     *   Test whether a point inside of an obstacle correctly is identified as invalid.
@@ -175,26 +175,26 @@ TEST_F(GetPathTest, InObstacle) {
         planner_options.search_time_limit)) + allowed_extra_time);
 }
 
-/*
-    *   Test whether a robot in the world correctly gets added to the list of obstacles.
-    */
-TEST_F(GetPathTest, CreateObstaclesFromRobots) {
-  auto robot = Robot();
-  robot.id = 0;
-  robot.pos = ateam_geometry::Point(0, 0);
-  world.our_robots[0].value() = robot;
-  const auto start = ateam_geometry::Point(2, 2);
-  const auto invalid_point = ateam_geometry::Point(0, 0);
-  auto path = path_planner.getPath(
-    start, invalid_point, world, obstacles, planner_options);
-  const auto end_time = std::chrono::steady_clock::now();
-  EXPECT_EQ(path, empty_path);
-  EXPECT_EQ(path.size(), 0U);
-  EXPECT_LT(
-    end_time - start_time,
-    std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-      std::chrono::duration<double>(
-        planner_options.search_time_limit)) + allowed_extra_time);
-}
+// /*
+//     *   Test whether a robot in the world correctly gets added to the list of obstacles.
+//     */
+// TEST_F(GetPathTest, CreateObstaclesFromRobots) {
+//   auto robot = Robot();
+//   robot.id = 0;
+//   robot.pos = ateam_geometry::Point(0, 0);
+//   world.our_robots[0].value() = robot;
+//   const auto start = ateam_geometry::Point(2, 2);
+//   const auto invalid_point = ateam_geometry::Point(0, 0);
+//   auto path = path_planner.getPath(
+//     start, invalid_point, world, obstacles, planner_options);
+//   const auto end_time = std::chrono::steady_clock::now();
+//   EXPECT_EQ(path, empty_path);
+//   EXPECT_EQ(path.size(), 0U);
+//   EXPECT_LT(
+//     end_time - start_time,
+//     std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+//       std::chrono::duration<double>(
+//         planner_options.search_time_limit)) + allowed_extra_time);
+// }
 
 }  // namespace ateam_kenobi

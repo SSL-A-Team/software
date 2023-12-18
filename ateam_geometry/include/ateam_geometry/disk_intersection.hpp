@@ -113,7 +113,7 @@ inline bool diskRectangleIntersection(const Circle & disk,
 
   // Check that the maximum distance between the center of the circle and the box is not (strictly)
   // smaller than the radius of the center, otherwise the box is entirely contained.
-  double sq_distance = 0;
+  sq_distance = 0;
   if(center.x() <= (rec.xmin() + rec.xmax()) / 2)
   {
     double d = rec.xmax() - center.x();

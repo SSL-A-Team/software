@@ -23,6 +23,7 @@
 #include <ranges>
 #include <algorithm>
 #include <vector>
+#include <iostream>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 
@@ -51,11 +52,12 @@ PathPlanner::Path PathPlanner::getPath(
   if (options.avoid_ball) {
     augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
   }
-
-  if (!isStateValid(goal, world, augmented_obstacles, options)) {
+  std::cout << "Checking goal state" << std::endl;
+  if (!isStateValid(goal, world, augmented_obstacles, options)) {  
     return {};
   }
 
+  std::cout << "Our goal is valid" << std::endl;
   Path path = {start, goal};
 
   while (true) {
@@ -106,6 +108,14 @@ bool PathPlanner::isStateValid(
     state,
     kRobotRadius + options.footprint_inflation
   );
+
+  std::cout << robot_footprint << std::endl;
+  std::cout << "We are checking each obstacle." << std::endl;
+  for (auto &obstacle: obstacles) {
+    std::visit([](auto arg){std::cout << typeid(arg).name() << " ";}, obstacle);
+    std::visit([](auto arg){std::cout << arg << " ";}, obstacle); 
+    std::cout << ateam_geometry::variantDoIntersect(robot_footprint, obstacle) << std::endl;
+  }
 
   return std::ranges::none_of(
     obstacles, [&robot_footprint](const ateam_geometry::AnyShape & obstacle) {
