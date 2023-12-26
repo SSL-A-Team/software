@@ -32,6 +32,7 @@
 #include <hello_data.h>
 #include <basic_control.h>
 #include <basic_telemetry.h>
+#include <robot_parameters.h>
 
 namespace ateam_radio_bridge
 {
@@ -85,6 +86,8 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
 std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format);
 
 float* GetParameterDataForSetFormat(ParameterCommand & command);
+
+bool CheckParameterPacketAck(const ParameterCommand & packet, std::string & error_reason);
 
 }  // ateam_radio_bridge
 
