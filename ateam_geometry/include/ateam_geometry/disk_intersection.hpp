@@ -31,6 +31,7 @@
 
 #include <CGAL/Distance_2/Point_2_Segment_2.h>
 #include <variant>
+#include <algorithm>
 #include "ateam_geometry/types.hpp"
 
 namespace ateam_geometry
@@ -43,8 +44,9 @@ namespace ateam_geometry
  * @param disk1 A circle including its interior (disk)
  * @param disk2 A different circle including its interior (disk)
  */
-inline bool diskDiskIntersection(const Circle & disk1,
-                                 const Circle & disk2)
+inline bool diskDiskIntersection(
+  const Circle & disk1,
+  const Circle & disk2)
 {
   double sr1 = disk1.squared_radius();
   double sr2 = disk2.squared_radius();
@@ -67,15 +69,17 @@ inline bool diskDiskIntersection(const Circle & disk1,
  * @param disk A circle including its interior (disk)
  * @param rec A rectangle, including its interior
  */
-inline bool diskRectangleIntersection(const Circle & disk,
-                                      const Rectangle & rec)
+inline bool diskRectangleIntersection(
+  const Circle & disk,
+  const Rectangle & rec)
 {
   Point center = disk.center();
 
   // First, to address degenerate cases:
   // Determine if the center of the circle is within the rectangle
   if (center.x() >= rec.xmin() && center.x() <= rec.xmax() &&
-    center.y() >= rec.ymin() && center.y() <= rec.ymax()) {
+    center.y() >= rec.ymin() && center.y() <= rec.ymax())
+  {
     return true;
   }
 
@@ -83,59 +87,47 @@ inline bool diskRectangleIntersection(const Circle & disk,
   // Check that the minimum distance to the box is smaller than the radius, otherwise there is
   // no intersection.
   double sq_distance = 0;
-  if(center.x() < rec.xmin())
-  {
+  if (center.x() < rec.xmin()) {
     double d = rec.xmin() - center.x();
     sq_distance += d * d;
-  }
-  else if(center.x() > rec.xmax())
-  {
+  } else if (center.x() > rec.xmax()) {
     double d = center.x() - rec.xmax();
     sq_distance += d * d;
   }
 
-  if(center.y() < rec.ymin())
-  {
+  if (center.y() < rec.ymin()) {
     double d = rec.ymin() - center.y();
     sq_distance += d * d;
-  }
-  else if(center.y() > rec.ymax())
-  {
+  } else if (center.y() > rec.ymax()) {
     double d = center.y() - rec.ymax();
     sq_distance += d * d;
   }
 
   // Note that with the way the distance above is computed, the distance is '0' if the box strictly
   // contains the circle. But since we use '>', we don't exit
-  if(sq_distance > disk.squared_radius()){
+  if (sq_distance > disk.squared_radius()) {
     return false;
   }
 
   // Check that the maximum distance between the center of the circle and the box is not (strictly)
   // smaller than the radius of the center, otherwise the box is entirely contained.
   sq_distance = 0;
-  if(center.x() <= (rec.xmin() + rec.xmax()) / 2)
-  {
+  if (center.x() <= (rec.xmin() + rec.xmax()) / 2) {
     double d = rec.xmax() - center.x();
     sq_distance += d * d;
-  }
-  else
-  {
+  } else {
     double d = center.x() - rec.xmin();
     sq_distance += d * d;
   }
 
-  if(center.y() < (rec.ymin() + rec.ymax()) / 2)
-  {
+  if (center.y() < (rec.ymin() + rec.ymax()) / 2) {
     double d = rec.ymax() - center.y();
     sq_distance += d * d;
-  }
-  else
-  {
+  } else {
     double d = center.y() - rec.ymin();
     sq_distance += d * d;
   }
-  return (sq_distance >= disk.squared_radius());
+  return sq_distance >= disk.squared_radius();
 }
 
 /**
@@ -144,31 +136,31 @@ inline bool diskRectangleIntersection(const Circle & disk,
  * @param disk A circle including its interior (disk)
  * @param point A point in 2D space
  */
-inline bool diskPointIntersection(const Circle & disk,
-                                  const Point & point){
-    Point center = disk.center();
+inline bool diskPointIntersection(
+  const Circle & disk,
+  const Point & point)
+{
+  Point center = disk.center();
 
-    double sq_distance = 0;
+  double sq_distance = 0;
 
-    if (point.x() < center.x()){
-        double d = center.x() - point.x();
-        sq_distance += d * d;
-    } else if (point.x() > center.x())
-    {
-        double d = point.x() - center.x();
-        sq_distance += d * d;
-    }
+  if (point.x() < center.x()) {
+    double d = center.x() - point.x();
+    sq_distance += d * d;
+  } else if (point.x() > center.x()) {
+    double d = point.x() - center.x();
+    sq_distance += d * d;
+  }
 
-    if (point.y() < center.y()){
-        double d = center.y() - point.y();
-        sq_distance += d * d;
-    } else if (point.y() > center.y())
-    {
-        double d = point.y() - center.y();
-        sq_distance += d * d;
-    }
+  if (point.y() < center.y()) {
+    double d = center.y() - point.y();
+    sq_distance += d * d;
+  } else if (point.y() > center.y()) {
+    double d = point.y() - center.y();
+    sq_distance += d * d;
+  }
 
-    return (sq_distance <= disk.squared_radius());
+  return sq_distance <= disk.squared_radius();
 }
 
 /**
@@ -178,9 +170,11 @@ inline bool diskPointIntersection(const Circle & disk,
  * @param disk A circle including its interior (disk)
  * @param segment A 2D line segment
  */
-inline bool segmentDiskIntersection(const Circle & disk,
-                                    const Segment & segment) {
-    return CGAL::do_intersect(disk, segment);
+inline bool segmentDiskIntersection(
+  const Circle & disk,
+  const Segment & segment)
+{
+  return CGAL::do_intersect(disk, segment);
 }
 
 /**
@@ -190,9 +184,11 @@ inline bool segmentDiskIntersection(const Circle & disk,
  * @param disk A circle including its interior (disk)
  * @param segment A 2D line segment
  */
-inline bool rayDiskIntersection(const Circle & disk,
-                                const Ray & ray){
-    return CGAL::do_intersect(disk, ray);
+inline bool rayDiskIntersection(
+  const Circle & disk,
+  const Ray & ray)
+{
+  return CGAL::do_intersect(disk, ray);
 }
 
 }  // namespace ateam_geometry

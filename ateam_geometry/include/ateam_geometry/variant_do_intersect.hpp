@@ -46,33 +46,34 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
 {
   // Use our custom disk intersection if ObjA is a cirlce
   if constexpr (std::is_same_v<ObjA, Circle>) {
-    return std::visit([&object_a](const auto &b) {
-            if constexpr (std::is_same_v<decltype(b), Circle>) {
-                return diskDiskIntersection(object_a, b);
-            } else if constexpr (std::is_same_v<decltype(b), Rectangle>) {
-                return diskRectangleIntersection(object_a, b);
-            } else if constexpr (std::is_same_v<decltype(b), Point>) {
-                return diskPointIntersection(object_a, b);
-            // Other CGAL types assume a disk
-            } else {
-              return CGAL::do_intersect(object_a, b);
-            }
-    }, object_b);
+    return std::visit(
+      [&object_a](const auto & b) {
+        if constexpr (std::is_same_v<decltype(b), Circle>) {
+          return diskDiskIntersection(object_a, b);
+        } else if constexpr (std::is_same_v<decltype(b), Rectangle>) {
+          return diskRectangleIntersection(object_a, b);
+        } else if constexpr (std::is_same_v<decltype(b), Point>) {
+          return diskPointIntersection(object_a, b);
+          // Other CGAL types assume a disk
+        } else {
+          return CGAL::do_intersect(object_a, b);
+        }
+      }, object_b);
   } else {
     // Also use our custom disk intersection functions if objB
     // is a circle
     if (std::holds_alternative<Circle>(object_b)) {
-      // TODO: Need to evaluate based on constexpr of a type
+      if constexpr (std::is_same_v<ObjA, Rectangle>) {
+        return diskRectangleIntersection(std::get<Circle>(object_b), object_a);
+      } else if constexpr (std::is_same_v<ObjA, Point>) {
+        return diskPointIntersection(std::get<Circle>(object_b), object_a);
+      }
     }
-    else {
-      bool intersects =  std::visit(
-          [&object_a](const auto & b) {
-            return CGAL::do_intersect(object_a, b);
-          }, object_b);
-      return intersects;
-    }
-          
-    return true;
+    bool intersects = std::visit(
+      [&object_a](const auto & b) {
+        return CGAL::do_intersect(object_a, b);
+      }, object_b);
+    return intersects;
   }
 }
 
