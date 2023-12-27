@@ -22,6 +22,7 @@
 #define ATEAM_GEOMETRY__VARIANT_DO_INTERSECT_HPP_
 
 #include <variant>
+#include <iostream>
 #include "ateam_geometry/types.hpp"
 #include "ateam_geometry/disk_intersection.hpp"
 
@@ -46,19 +47,13 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
 {
   // Use our custom disk intersection if ObjA is a cirlce
   if constexpr (std::is_same_v<ObjA, Circle>) {
-    return std::visit(
-      [&object_a](const auto & b) {
-        if constexpr (std::is_same_v<decltype(b), Circle>) {
-          return diskDiskIntersection(object_a, b);
-        } else if constexpr (std::is_same_v<decltype(b), Rectangle>) {
-          return diskRectangleIntersection(object_a, b);
-        } else if constexpr (std::is_same_v<decltype(b), Point>) {
-          return diskPointIntersection(object_a, b);
-          // Other CGAL types assume a disk
-        } else {
-          return CGAL::do_intersect(object_a, b);
-        }
-      }, object_b);
+    if (std::holds_alternative<Circle>(object_b)) {
+      return diskDiskIntersection(object_a, std::get<Circle>(object_b));
+    } else if (std::holds_alternative<Rectangle>(object_b)) {
+      return diskRectangleIntersection(object_a, std::get<Rectangle>(object_b));
+    } else if (std::holds_alternative<Point>(object_b)) {
+      return diskPointIntersection(object_a, std::get<Point>(object_b));
+    }
   } else {
     // Also use our custom disk intersection functions if objB
     // is a circle
@@ -69,12 +64,12 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
         return diskPointIntersection(std::get<Circle>(object_b), object_a);
       }
     }
-    bool intersects = std::visit(
-      [&object_a](const auto & b) {
-        return CGAL::do_intersect(object_a, b);
-      }, object_b);
-    return intersects;
   }
+  bool intersects = std::visit(
+    [&object_a](const auto & b) {
+      return CGAL::do_intersect(object_a, b);
+    }, object_b);
+  return intersects;
 }
 
 /**
@@ -91,6 +86,7 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
  */
 inline bool variantDoIntersect(const AnyShape & object_a, const AnyShape & object_b)
 {
+  std::cout << "HELLO" << std::endl;
   return std::visit(
     [&object_b](const auto & a) {
       return variantDoIntersect(a, object_b);
