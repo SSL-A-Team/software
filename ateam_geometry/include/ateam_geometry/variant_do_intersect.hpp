@@ -22,7 +22,6 @@
 #define ATEAM_GEOMETRY__VARIANT_DO_INTERSECT_HPP_
 
 #include <variant>
-#include <iostream>
 #include "ateam_geometry/types.hpp"
 #include "ateam_geometry/disk_intersection.hpp"
 
@@ -86,7 +85,6 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
  */
 inline bool variantDoIntersect(const AnyShape & object_a, const AnyShape & object_b)
 {
-  std::cout << "HELLO" << std::endl;
   return std::visit(
     [&object_b](const auto & a) {
       return variantDoIntersect(a, object_b);

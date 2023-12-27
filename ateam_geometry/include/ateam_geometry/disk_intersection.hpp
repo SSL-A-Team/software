@@ -32,7 +32,6 @@
 #include <CGAL/Distance_2/Point_2_Segment_2.h>
 #include <variant>
 #include <algorithm>
-#include <iostream>
 #include "ateam_geometry/types.hpp"
 
 namespace ateam_geometry
@@ -57,8 +56,6 @@ inline bool diskDiskIntersection(
   if (squared_dist <= std::max(sr1, sr2)) {
     return true;
   }
-
-  std::cout << "Disk disk" << std::endl;
 
   double temp = sr1 + sr2 - squared_dist;
 
