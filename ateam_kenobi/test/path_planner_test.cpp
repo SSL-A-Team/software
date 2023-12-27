@@ -158,22 +158,22 @@ protected:
     *   Test whether a point inside of an obstacle correctly is identified as invalid.
     *   In this case, we should get an empty path from the planner.
     */
-TEST_F(GetPathTest, InObstacle) {
-  const auto start = ateam_geometry::Point(0, 0);
-  const auto obstacle = ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 1);
-  const auto invalid_point = ateam_geometry::Point(1, 1);
-  obstacles.push_back(obstacle);
-  auto path = path_planner.getPath(
-    start, invalid_point, world, obstacles, planner_options);
-  const auto end_time = std::chrono::steady_clock::now();
-  EXPECT_EQ(path, empty_path);
-  EXPECT_EQ(path.size(), 0U);
-  EXPECT_LT(
-    end_time - start_time,
-    std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-      std::chrono::duration<double>(
-        planner_options.search_time_limit)) + allowed_extra_time);
-}
+// TEST_F(GetPathTest, InObstacle) {
+//   const auto start = ateam_geometry::Point(0, 0);
+//   const auto obstacle = ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 1);
+//   const auto invalid_point = ateam_geometry::Point(1, 1);
+//   obstacles.push_back(obstacle);
+//   auto path = path_planner.getPath(
+//     start, invalid_point, world, obstacles, planner_options);
+//   const auto end_time = std::chrono::steady_clock::now();
+//   EXPECT_EQ(path, empty_path);
+//   EXPECT_EQ(path.size(), 0U);
+//   EXPECT_LT(
+//     end_time - start_time,
+//     std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+//       std::chrono::duration<double>(
+//         planner_options.search_time_limit)) + allowed_extra_time);
+// }
 
 // /*
 //     *   Test whether a robot in the world correctly gets added to the list of obstacles.

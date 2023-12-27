@@ -111,7 +111,7 @@ bool PathPlanner::isStateValid(
 
   std::cout << robot_footprint << std::endl;
   std::cout << "We are checking each obstacle." << std::endl;
-  for (auto &obstacle: obstacles) {
+  for (auto &obstacle : obstacles) {
     std::visit([](auto arg){std::cout << typeid(arg).name() << " ";}, obstacle);
     std::visit([](auto arg){std::cout << arg << " ";}, obstacle); 
     std::cout << ateam_geometry::variantDoIntersect(robot_footprint, obstacle) << std::endl;
