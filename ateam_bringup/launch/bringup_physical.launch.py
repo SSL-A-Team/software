@@ -42,7 +42,7 @@ def generate_launch_description():
         DeclareLaunchArgument("gc_interface_address", default_value="172.16.1.10"),
         DeclareLaunchArgument("gc_server_address", default_value="172.16.1.52"),
         DeclareLaunchArgument("radio_interface_address", default_value="172.16.1.10"),
-        
+
         # Competition IPs
         # DeclareLaunchArgument("vision_interface_address", default_value="10.193.15.132"),
         # DeclareLaunchArgument("gc_interface_address", default_value="10.193.15.132"),
@@ -50,7 +50,9 @@ def generate_launch_description():
         # DeclareLaunchArgument("radio_interface_address", default_value="172.16.1.10"),
 
         IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(PackageLaunchFileSubstitution("ateam_bringup","game_controller_nodes.launch.xml")),
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution("ateam_bringup",
+                                              "game_controller_nodes.launch.xml")),
             launch_arguments={
                 "gc_ip_address": LaunchConfiguration("gc_server_address"),
                 "net_interface_address": LaunchConfiguration("gc_interface_address")
@@ -58,14 +60,18 @@ def generate_launch_description():
         ),
 
         IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(PackageLaunchFileSubstitution("ateam_bringup","autonomy.launch.xml")),
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution("ateam_bringup",
+                                              "autonomy.launch.xml")),
             launch_arguments={
                 "ssl_vision_interface_address": LaunchConfiguration("vision_interface_address")
             }.items()
         ),
 
         IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(PackageLaunchFileSubstitution("ateam_bringup","ui.launch.xml"))
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution("ateam_bringup",
+                                              "ui.launch.xml"))
         ),
 
         Node(
@@ -73,7 +79,9 @@ def generate_launch_description():
             executable="radio_bridge_node",
             name="radio_bridge",
             parameters=[{"net_interface_address": LaunchConfiguration("radio_interface_address")}],
-            remappings=remap_indexed_topics("~/robot_motion_commands/robot", "/robot_motion_commands/robot") +
-                       remap_indexed_topics("~/robot_feedback/robot", "/robot_feedback/robot")
+            remappings=remap_indexed_topics("~/robot_motion_commands/robot",
+                                            "/robot_motion_commands/robot") +
+                       remap_indexed_topics("~/robot_feedback/robot",
+                                            "/robot_feedback/robot")
         )
     ])
