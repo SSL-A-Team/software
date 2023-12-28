@@ -35,7 +35,9 @@ def generate_launch_description():
         DeclareLaunchArgument("sim_radio_ip", default_value="127.0.0.1"),
 
         IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(PackageLaunchFileSubstitution("ateam_bringup","ssl_grsim.launch.xml")),
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution("ateam_bringup",
+                                              "ssl_grsim.launch.xml")),
             launch_arguments={
                 "headless": LaunchConfiguration("headless_sim")
             }.items(),
@@ -43,12 +45,16 @@ def generate_launch_description():
         ),
 
         IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(PackageLaunchFileSubstitution("ateam_bringup","ssl_game_controller.launch.xml")),
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution("ateam_bringup",
+                                              "ssl_game_controller.launch.xml")),
             condition=IfCondition(LaunchConfiguration("start_gc"))
         ),
 
         IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(PackageLaunchFileSubstitution("ateam_bringup","game_controller_nodes.launch.xml")),
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution("ateam_bringup",
+                                              "game_controller_nodes.launch.xml")),
             launch_arguments={
                 "net_interface_address": "",
                 "gc_ip_address": "127.0.0.1"
@@ -56,7 +62,9 @@ def generate_launch_description():
         ),
 
         IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(PackageLaunchFileSubstitution("ateam_bringup","autonomy.launch.xml")),
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution("ateam_bringup",
+                                              "autonomy.launch.xml")),
             launch_arguments={
                 "ssl_vision_interface_address": "",
                 "use_world_velocities": "true"
@@ -64,7 +72,9 @@ def generate_launch_description():
         ),
 
         IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(PackageLaunchFileSubstitution("ateam_bringup","ui.launch.xml"))
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution("ateam_bringup",
+                                              "ui.launch.xml"))
         ),
 
         Node(
