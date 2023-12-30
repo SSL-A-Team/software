@@ -44,31 +44,19 @@ namespace ateam_geometry
 template<typename ObjA>
 bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
 {
-  // Use our custom disk intersection if ObjA is a cirlce
   if constexpr (std::is_same_v<ObjA, Circle>) {
-    if (std::holds_alternative<Circle>(object_b)) {
-      return diskDiskIntersection(object_a, std::get<Circle>(object_b));
-    } else if (std::holds_alternative<Rectangle>(object_b)) {
-      return diskRectangleIntersection(object_a, std::get<Rectangle>(object_b));
-    } else if (std::holds_alternative<Point>(object_b)) {
-      return diskPointIntersection(object_a, std::get<Point>(object_b));
-    }
-  } else {
-    // Also use our custom disk intersection functions if objB
-    // is a circle
-    if (std::holds_alternative<Circle>(object_b)) {
-      if constexpr (std::is_same_v<ObjA, Rectangle>) {
-        return diskRectangleIntersection(std::get<Circle>(object_b), object_a);
-      } else if constexpr (std::is_same_v<ObjA, Point>) {
-        return diskPointIntersection(std::get<Circle>(object_b), object_a);
-      }
-    }
+    return std::visit(
+      [&object_a](const auto & b) {
+        return ateam_geometry::doDiskIntersect(object_a, b);
+      }, object_b);
   }
-  bool intersects = std::visit(
+  if (std::holds_alternative<Circle>(object_b)) {
+    return ateam_geometry::doDiskIntersect(std::get<Circle>(object_b), object_a);
+  }
+  return std::visit(
     [&object_a](const auto & b) {
       return CGAL::do_intersect(object_a, b);
     }, object_b);
-  return intersects;
 }
 
 /**
@@ -83,6 +71,7 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
  * @return true The two geometry objects intersect
  * @return false The two geometry objects do not intersect
  */
+template<>
 inline bool variantDoIntersect(const AnyShape & object_a, const AnyShape & object_b)
 {
   return std::visit(
