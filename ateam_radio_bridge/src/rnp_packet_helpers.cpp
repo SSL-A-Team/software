@@ -283,6 +283,12 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return F32;
     case VEL_CGKF_K_MATRIX:
       return MATRIX_F32;
+    case RC_BODY_VEL_LIMIT:
+      return VEC3_F32;
+    case RC_BODY_ACC_LIMIT:
+      return VEC3_F32;
+    case RC_WHEEL_ACC_LIMIT:
+      return VEC4_F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
@@ -293,6 +299,10 @@ std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format)
   switch(format) {
     case F32:
       return 1;
+    case VEC3_F32:
+      return 3;
+    case VEC4_F32:
+      return 4;
     case PID_F32:
       return 3;
     case PID_LIMITED_INTEGRAL_F32:
@@ -310,6 +320,10 @@ float* GetParameterDataForSetFormat(ParameterCommand & command)
   switch(command.data_format) {
     case F32:
       return &command.data.f32;
+    case VEC3_F32:
+      return command.data.vec3_f32;
+    case VEC4_F32:
+      return command.data.vec4_f32;
     case PID_F32:
       return command.data.pid_f32;
     case PID_LIMITED_INTEGRAL_F32:

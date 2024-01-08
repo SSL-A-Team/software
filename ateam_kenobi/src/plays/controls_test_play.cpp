@@ -36,18 +36,18 @@ ControlsTestPlay::ControlsTestPlay(
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher);
 
   // Turn 180 deg in place
-  waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute,  0.0, 3.0});
-  waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute, M_PI, 3.0});
+  // waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute,  0.0, 3.0});
+  // waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute, M_PI, 3.0});
 
   // Drive in square
-  // waypoints = {
-  //   {ateam_geometry::Point(-1.5,-0.5), AngleMode::face_absolute, 0.0, 3.0},
-  //   {ateam_geometry::Point(-0.5, 0.5), AngleMode::face_absolute, 0.0, 3.0},
-  //   {ateam_geometry::Point(-0.5, 0.5), AngleMode::face_absolute, 0.0, 3.0},
-  //   {ateam_geometry::Point(-1.5, 0.5), AngleMode::face_absolute, 0.0, 3.0},
-  // };
+  waypoints = {
+    {ateam_geometry::Point(-1.5,-1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.5, 1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point( 0.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point( 0.0,-1.0), AngleMode::face_absolute, 0.0, 3.0},
+  };
 
-  motion_controller_.v_max = 3;
+  motion_controller_.v_max = 2;
   motion_controller_.t_max = 18;
 }
 
@@ -130,10 +130,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 
 bool ControlsTestPlay::isGoalHit(const Robot & robot)
 {
-  const bool position_goal_hit = ateam_geometry::norm(waypoints[index].position - robot.pos) < 0.01;
+  const bool position_goal_hit = ateam_geometry::norm(waypoints[index].position - robot.pos) < 0.05;
   const bool heading_goal_hit = [&](){
     if(waypoints[index].angle_mode == AngleMode::face_absolute) {
-      return std::abs(angles::shortest_angular_distance(waypoints[index].heading, robot.theta)) < angles::from_degrees(1);
+      return std::abs(angles::shortest_angular_distance(waypoints[index].heading, robot.theta)) < angles::from_degrees(5);
     } else {
       return true;
     }

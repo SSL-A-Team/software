@@ -384,6 +384,7 @@ private:
       ParameterCommand command;
       command.command_code = PCC_READ;
       command.parameter_name = static_cast<ParameterName>(request->parameter_id);
+      command.data_format = GetParameterDataFormatForParameter(command.parameter_name);
       const auto command_packet = CreatePacket(CC_ROBOT_PARAMETER_COMMAND, command);
       std::unique_lock<std::mutex> lock{parameter_command_response_mutex_};
       parameter_command_robot_id_ = robot_id;
@@ -396,8 +397,17 @@ private:
         response->reason = "Timed out waiting for reply.";
         return;
       }
-      // TODO is there any way for the response to indicate a problem?
-      RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.command_code != PCC_ACK, "Got non-ack parmaeter command code in response packet.");
+      if(parameter_command_response_.command_code == PCC_NACK_INVALID_NAME) {
+        response->success = false;
+        response->reason = "Invalid parameter name.";
+        return;
+      } else if(parameter_command_response_.command_code == PCC_NACK_INVALID_TYPE_FOR_NAME) {
+        response->success = false;
+        response->reason = "Wrong type for given parameter name.";
+        return;
+      } else if(parameter_command_response_.command_code != PCC_ACK) {
+        RCLCPP_WARN(get_logger(), "Got non-ack/nack parmaeter command code in response packet.");
+      }
       RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.parameter_name != command.parameter_name, "Got a parameter ACK for a different parameter than was asked for. Expected %d but got %d", command.parameter_name, parameter_command_response_.parameter_name);
       const float * packet_data = GetParameterDataForSetFormat(parameter_command_response_);
       std::copy_n(packet_data, GetDataSizeForParameterFormat(parameter_command_response_.data_format), std::back_inserter(response->data));
@@ -447,8 +457,17 @@ private:
         response->reason = "Timed out waiting for reply.";
         return;
       }
-      // TODO is there any way for the response to indicate a problem?
-      RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.command_code != PCC_ACK, "Got non-ack parmaeter command code in response packet.");
+      if(parameter_command_response_.command_code == PCC_NACK_INVALID_NAME) {
+        response->success = false;
+        response->reason = "Invalid parameter name.";
+        return;
+      } else if(parameter_command_response_.command_code == PCC_NACK_INVALID_TYPE_FOR_NAME) {
+        response->success = false;
+        response->reason = "Wrong type for given parameter name.";
+        return;
+      } else if(parameter_command_response_.command_code != PCC_ACK) {
+        RCLCPP_WARN(get_logger(), "Got non-ack/nack parmaeter command code in response packet.");
+      }
       RCLCPP_WARN_EXPRESSION(get_logger(), parameter_command_response_.parameter_name != command.parameter_name, "Got a parameter ACK for a different parameter than was asked for. Expected %d but got %d", command.parameter_name, parameter_command_response_.parameter_name);
       if(parameter_command_response_.data_format != command.data_format) {
         response->success = false;

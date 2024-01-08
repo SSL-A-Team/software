@@ -34,7 +34,7 @@ ConstantVelTest::ConstantVelTest(
 {
   ateam_kenobi::global_node->declare_parameters<double>("constant_vel_test.vel",{
     {"x", 0.0},
-    {"y", 0.0},
+    {"y", 1.0},
     {"t", 0.0}
   });
   joy_sub = ateam_kenobi::global_node->create_subscription<sensor_msgs::msg::Joy>(std::string(Topics::kJoystick), rclcpp::QoS{1}, std::bind(&ConstantVelTest::joystickCallback, this, std::placeholders::_1));
