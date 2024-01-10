@@ -100,11 +100,12 @@ get_state_estimate() const
       return a.get_validity_score() > b.get_validity_score();
     });
 
-  // exactly zero if its a new track
+  // a new track has a validity score of zero and function says its invalid for a few frames
+  // dont return it if its the only track and is invalid
   if (best_track->get_validity_score() == 0) {
-      return std::nullopt;
+    return std::nullopt;
   }
-  
+
   return std::make_pair(best_track->get_state_estimate(), best_track->get_validity_score());
 }
 

@@ -45,7 +45,8 @@ TEST(Camera, getEstimateWithScore_ShouldReturnNullopt_WhenNoData)
   }
 }
 
-TEST(Camera, getBallEstimateWithScore_ShouldReturnData_WhenPredictAndUpdate)
+// TODO make should not return data in small cycle tests
+TEST(Camera, getBallEstimateWithScore_ShouldNotReturnData_WhenPredictAndUpdate)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> tpg =
@@ -61,6 +62,31 @@ TEST(Camera, getBallEstimateWithScore_ShouldReturnData_WhenPredictAndUpdate)
 
   camera.update(camera_measurement);
   camera.predict();
+
+  auto ball_with_score = camera.get_ball_estimate_with_score();
+
+  ASSERT_FALSE(ball_with_score.has_value());
+}
+
+// TODO Rename to consistent
+TEST(Camera, getBallEstimateWithScore_ShouldReturnData_WhenPredictAndUpdateConsistent)
+{
+  std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
+  std::shared_ptr<TransmissionProbabilityGenerator> tpg =
+    std::make_shared<TransmissionProbabilityGenerator>();
+  Camera camera(mig, tpg);
+  BallMeasurement ball_measurement;
+  std::vector<BallMeasurement> ball_measurements;
+  CameraMeasurement camera_measurement;
+
+  ball_measurement.position = Eigen::Vector2d{1, 3};
+  ball_measurements.push_back(ball_measurement);
+  camera_measurement.ball = ball_measurements;
+
+  for (size_t i = 0; i < 20; i++) {
+    camera.update(camera_measurement);
+    camera.predict();
+  }
 
   auto ball_with_score = camera.get_ball_estimate_with_score();
 
@@ -105,7 +131,7 @@ TEST(Camera, getBallEstimateWithScore_ShouldReturnBestData_WhenConsistentAndInco
   EXPECT_NEAR(std::get<0>(ball_with_score.value()).acceleration.norm(), 0, 1e-6);
 }
 
-TEST(Camera, getRobotEstimatesWithScore_ShouldReturnData_WhenPredictAndUpdate)
+TEST(Camera, getRobotEstimatesWithScore_ShouldNotReturnData_WhenPredictAndUpdate)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> tpg =
@@ -123,6 +149,35 @@ TEST(Camera, getRobotEstimatesWithScore_ShouldReturnData_WhenPredictAndUpdate)
 
   camera.update(camera_measurement);
   camera.predict();
+
+  auto robots_with_score = camera.get_yellow_robot_estimates_with_score();
+
+  for (size_t i = 0; i < 16; i++) {
+    EXPECT_FALSE(robots_with_score.at(i).has_value());
+  }
+}
+
+TEST(Camera, getRobotEstimatesWithScore_ShouldReturnData_WhenPredictAndUpdateConsistent)
+{
+  std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
+  std::shared_ptr<TransmissionProbabilityGenerator> tpg =
+    std::make_shared<TransmissionProbabilityGenerator>();
+  Camera camera(mig, tpg);
+  RobotMeasurement robot_measurement;
+  std::array<std::vector<RobotMeasurement>, 16> robot_measurements;
+  CameraMeasurement camera_measurement;
+
+  robot_measurement.position = Eigen::Vector2d{1, 3};
+  robot_measurement.theta = 5;
+  robot_measurements.at(1).push_back(robot_measurement);
+  camera_measurement.blue_robots = robot_measurements;
+  camera_measurement.yellow_robots = robot_measurements;
+
+
+  for (size_t i = 0; i < 20; i++) {
+    camera.update(camera_measurement);
+    camera.predict();
+  }
 
   auto robots_with_score = camera.get_yellow_robot_estimates_with_score();
 
