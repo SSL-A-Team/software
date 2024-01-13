@@ -284,11 +284,11 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
     case VEL_CGKF_K_MATRIX:
       return MATRIX_F32;
     case RC_BODY_VEL_LIMIT:
-      return F32;  // TODO
+      return VEC3_F32;
     case RC_BODY_ACC_LIMIT:
-      return F32;  // TODO
+      return VEC3_F32;
     case RC_WHEEL_ACC_LIMIT:
-      return F32;  // TODO
+      return VEC4_F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
