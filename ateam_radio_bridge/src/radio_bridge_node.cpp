@@ -340,8 +340,6 @@ private:
           packet.command_code);
         return;
     }
-
-    motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
   void TeamColorChangeCallback(const ateam_common::TeamColor)
