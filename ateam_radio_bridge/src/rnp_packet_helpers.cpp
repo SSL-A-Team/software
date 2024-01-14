@@ -70,6 +70,9 @@ std::size_t GetPacketSize(const CommandCode & command_code)
     case CC_CONTROL_DEBUG_TELEMETRY:
       return kPacketHeaderSize + sizeof(ControlDebugTelemetry);
       break;
+    case CC_ROBOT_PARAMETER_COMMAND:
+      return kPacketHeaderSize + sizeof(ParameterCommand);
+      break;
     default:
       throw std::invalid_argument("Unrecognized command code.");
   }
@@ -235,6 +238,15 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
         var = packet.data.control_debug_telemetry;
         break;
       }
+    case CC_ROBOT_PARAMETER_COMMAND:
+      {
+        if (packet.data_length != sizeof(ParameterCommand)) {
+          error = "Incorrect data length for ParameterCommand type.";
+          break;
+        }
+        var = packet.data.robot_parameter_command;
+        break;
+      }
     case CC_CONTROL:
       {
         if (packet.data_length != sizeof(BasicControl)) {
@@ -250,6 +262,95 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
   }
 
   return var;
+}
+
+ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & parameter)
+{
+  switch(parameter) {
+    case VEL_PID_X:
+      return PID_LIMITED_INTEGRAL_F32;
+    case VEL_PID_Y:
+      return PID_LIMITED_INTEGRAL_F32;
+    case ANGULAR_VEL_PID_Z:
+      return PID_LIMITED_INTEGRAL_F32;
+    case VEL_CGKF_ENCODER_NOISE:
+      return F32;
+    case VEL_CGKF_GYRO_NOISE:
+      return F32;
+    case VEL_CGKF_PROCESS_NOISE:
+      return F32;
+    case VEL_CGFK_INITIAL_COVARIANCE:
+      return F32;
+    case VEL_CGKF_K_MATRIX:
+      return MATRIX_F32;
+    case RC_BODY_VEL_LIMIT:
+      return VEC3_F32;
+    case RC_BODY_ACC_LIMIT:
+      return VEC3_F32;
+    case RC_WHEEL_ACC_LIMIT:
+      return VEC4_F32;
+    default:
+      throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
+  }
+}
+
+std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format)
+{
+  switch(format) {
+    case F32:
+      return 1;
+    case VEC3_F32:
+      return 3;
+    case VEC4_F32:
+      return 4;
+    case PID_F32:
+      return 3;
+    case PID_LIMITED_INTEGRAL_F32:
+      return 5;
+    case MATRIX_F32:
+      return 25;
+    default:
+      throw std::invalid_argument("GetDataSizeForParameterFormat: Unrecognized parameter data format.");
+  }
+}
+
+
+float* GetParameterDataForSetFormat(ParameterCommand & command)
+{
+  switch(command.data_format) {
+    case F32:
+      return &command.data.f32;
+    case VEC3_F32:
+      return command.data.vec3_f32;
+    case VEC4_F32:
+      return command.data.vec4_f32;
+    case PID_F32:
+      return command.data.pid_f32;
+    case PID_LIMITED_INTEGRAL_F32:
+      return command.data.pidii_f32;
+    case MATRIX_F32:
+      return command.data.matrix_f32;
+    default:
+      throw std::invalid_argument("GetParameterDataForSetFormat: Unrecognized parameter data format.");
+  }
+}
+
+
+bool CheckParameterPacketAck(const ParameterCommand & packet, std::string & error_reason)
+{
+  if(packet.command_code == PCC_NACK_INVALID_NAME) {
+    error_reason = "Invalid parameter name.";
+    return false;
+  }
+  if(packet.command_code == PCC_NACK_INVALID_TYPE_FOR_NAME) {
+    error_reason = "Wrong parameter type for given parameter.";
+    return false;
+  }
+  if(packet.command_code != PCC_ACK) {
+    error_reason = "Non ack/nack command code recieved.";
+    return false;
+  }
+  return true;
 }
 
 }  // namespace ateam_radio_bridge
