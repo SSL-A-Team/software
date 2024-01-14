@@ -220,7 +220,7 @@ void PathPlanner::addDefaultObstacles(
     ateam_geometry::Rectangle(
       ateam_geometry::Point(-world.field.field_length / 2, world.field.goal_width),
       ateam_geometry::Point(
-        -1 * (world.field.field_length / 2) + world.field.goal_width,
+        -1 * (world.field.field_length / 2) + world.field.goal_depth,
         -world.field.goal_width)
   ));
   // their goalie box
@@ -228,7 +228,7 @@ void PathPlanner::addDefaultObstacles(
     ateam_geometry::Rectangle(
       ateam_geometry::Point((world.field.field_length / 2), world.field.goal_width),
       ateam_geometry::Point(
-        (world.field.field_length / 2) + world.field.goal_width,
+        (world.field.field_length / 2) - world.field.goal_depth,
         -world.field.goal_width)
   ));
 }

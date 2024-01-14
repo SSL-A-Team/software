@@ -50,6 +50,8 @@ protected:
     world.field.field_length = 9;
     world.field.field_width = 6;
     world.field.boundary_width = 0.01;
+    world.field.goal_width = 2;
+    world.field.goal_depth = 1;
     world.ball.pos = ateam_geometry::Point(-4.5, -3.0);
     start_time = std::chrono::steady_clock::now();
   }
@@ -100,11 +102,11 @@ TEST_F(GetPathTest, PathWithSingleObstacle) {
       std::chrono::duration<double>(
         planner_options.search_time_limit)) + allowed_extra_time);
 
-  std::cout << "Found path:\n";
-  for (const auto p : path) {
-    std::cout << '\t' << p << '\n';
-  }
-  FAIL();
+  // std::cout << "Found path:\n";
+  // for (const auto p : path) {
+  //   std::cout << '\t' << p << '\n';
+  // }
+  // FAIL();
 }
 
 /* Test whether we can make a path around multiple obstacles without any weird stuff
@@ -130,11 +132,11 @@ TEST_F(GetPathTest, PathWithMultipleObstacles) {
       std::chrono::duration<double>(
         planner_options.search_time_limit)) + allowed_extra_time);
 
-  std::cout << "Found path:\n";
-  for (const auto p : path) {
-    std::cout << '\t' << p << '\n';
-  }
-  FAIL();
+  // std::cout << "Found path:\n";
+  // for (const auto p : path) {
+  //   std::cout << '\t' << p << '\n';
+  // }
+  // FAIL();
 }
 
 /* Test whether an out of bounds point correctly is identified as invalid.
@@ -186,6 +188,23 @@ TEST_F(GetPathTest, CreateObstaclesFromRobots) {
   const auto invalid_point = ateam_geometry::Point(0, 0);
   auto path = path_planner.getPath(
     start, invalid_point, world, obstacles, planner_options);
+  const auto end_time = std::chrono::steady_clock::now();
+  EXPECT_EQ(path, empty_path);
+  EXPECT_EQ(path.size(), 0U);
+  EXPECT_LT(
+    end_time - start_time,
+    std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+      std::chrono::duration<double>(
+        planner_options.search_time_limit)) + allowed_extra_time);
+}
+
+/* Test that path planner correctly rejects goals in opponent defense area
+ */
+TEST_F(GetPathTest, DisallowGoalsInOpponentDefenseArea)
+{
+  const auto start = ateam_geometry::Point(0,0);
+  const auto goal = ateam_geometry::Point(4, 0);
+  const auto path = path_planner.getPath(start, goal, world, obstacles, planner_options);
   const auto end_time = std::chrono::steady_clock::now();
   EXPECT_EQ(path, empty_path);
   EXPECT_EQ(path.size(), 0U);
