@@ -1,0 +1,5 @@
+<launch>
+  <arg name="ui_debug" default="false"/>
+  <include if="$(var ui_debug)" file="$(find-pkg-share ateam_ui)/launch/ateam_ui_debug_launch.py"/>
+  <include unless="$(var ui_debug)" file="$(find-pkg-share ateam_ui)/launch/ateam_ui_launch.py"/>
+</launch>
