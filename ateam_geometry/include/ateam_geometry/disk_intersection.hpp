@@ -44,7 +44,7 @@ namespace ateam_geometry
  * @param disk1 A circle including its interior (disk)
  * @param disk2 A different circle including its interior (disk)
  */
-inline bool diskDiskIntersection(
+inline bool doDiskIntersect(
   const Circle & disk1,
   const Circle & disk2)
 {
@@ -69,7 +69,7 @@ inline bool diskDiskIntersection(
  * @param disk A circle including its interior (disk)
  * @param rec A rectangle, including its interior
  */
-inline bool diskRectangleIntersection(
+inline bool doDiskIntersect(
   const Circle & disk,
   const Rectangle & rec)
 {
@@ -136,7 +136,7 @@ inline bool diskRectangleIntersection(
  * @param disk A circle including its interior (disk)
  * @param point A point in 2D space
  */
-inline bool diskPointIntersection(
+inline bool doDiskIntersect(
   const Circle & disk,
   const Point & point)
 {
@@ -170,7 +170,7 @@ inline bool diskPointIntersection(
  * @param disk A circle including its interior (disk)
  * @param segment A 2D line segment
  */
-inline bool segmentDiskIntersection(
+inline bool doDiskIntersect(
   const Circle & disk,
   const Segment & segment)
 {
@@ -184,7 +184,7 @@ inline bool segmentDiskIntersection(
  * @param disk A circle including its interior (disk)
  * @param segment A 2D line segment
  */
-inline bool rayDiskIntersection(
+inline bool doDiskIntersect(
   const Circle & disk,
   const Ray & ray)
 {

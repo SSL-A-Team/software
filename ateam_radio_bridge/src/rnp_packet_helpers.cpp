@@ -67,6 +67,9 @@ std::size_t GetPacketSize(const CommandCode & command_code)
     case CC_HELLO_RESP:
       return kPacketHeaderSize + sizeof(HelloResponse);
       break;
+    case CC_CONTROL_DEBUG_TELEMETRY:
+      return kPacketHeaderSize + sizeof(ControlDebugTelemetry);
+      break;
     default:
       throw std::invalid_argument("Unrecognized command code.");
   }
@@ -221,6 +224,15 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
           break;
         }
         var = packet.data.telemetry;
+        break;
+      }
+    case CC_CONTROL_DEBUG_TELEMETRY:
+      {
+        if (packet.data_length != sizeof(ControlDebugTelemetry)) {
+          error = "Incorrect data length for ControlDebugTelemetry type.";
+          break;
+        }
+        var = packet.data.control_debug_telemetry;
         break;
       }
     case CC_CONTROL:

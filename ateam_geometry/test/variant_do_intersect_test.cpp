@@ -46,6 +46,90 @@ TEST(VariantDoIntersect, CircleToCircle)
   a = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
   b = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
   EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+
+  a = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
+  b = ateam_geometry::Circle(ateam_geometry::Point(3, 3), 1);
+  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+}
+
+TEST(VariantDoIntersect, CircleToSegment)
+{
+  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::AnyShape b = ateam_geometry::Segment(
+    ateam_geometry::Point(0, 0),
+    ateam_geometry::Point(0.5, 0)
+  );
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+
+  b = ateam_geometry::Segment(
+    ateam_geometry::Point(2, 0),
+    ateam_geometry::Point(0, 0)
+  );
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+
+  b = ateam_geometry::Segment(
+    ateam_geometry::Point(2, 0),
+    ateam_geometry::Point(2, 2.5)
+  );
+  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+}
+
+TEST(VariantDoIntersect, CircleToRectangle)
+{
+  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::AnyShape b = ateam_geometry::Rectangle(
+    ateam_geometry::Point(0, 0),
+    ateam_geometry::Point(1, 2)
+  );
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+
+  b = ateam_geometry::Rectangle(
+    ateam_geometry::Point(-1, -1),
+    ateam_geometry::Point(1, 1)
+  );
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+
+  b = ateam_geometry::Rectangle(
+    ateam_geometry::Point(-2, -2),
+    ateam_geometry::Point(-1.5, -1.5)
+  );
+  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+}
+
+TEST(VariantDoIntersect, CircleToRay)
+{
+  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::AnyShape b = ateam_geometry::Ray(
+    ateam_geometry::Point(0, 0),
+    ateam_geometry::Point(1, 2)
+  );
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  b = ateam_geometry::Ray(
+    ateam_geometry::Point(-2, -2),
+    ateam_geometry::Point(1, 1)
+  );
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+
+  b = ateam_geometry::Ray(
+    ateam_geometry::Point(-2, -2),
+    ateam_geometry::Point(-3, -3)
+  );
+  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+}
+
+TEST(VariantDoIntersect, CircleToCircle)
+{
+  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::AnyShape b = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 0.5);
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+
+  a = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
+  b = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1.5);
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+
+  a = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
+  b = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
+  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
 }
 
 TEST(VariantDoIntersect, CircleToSegment)

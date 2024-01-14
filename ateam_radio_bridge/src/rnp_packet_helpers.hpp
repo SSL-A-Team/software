@@ -76,7 +76,7 @@ RadioPacket CreateEmptyPacket(const CommandCode command_code);
 RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std::string & error);
 
 using PacketDataVariant = std::variant<std::monostate, HelloRequest, BasicTelemetry,
-    BasicControl>;
+    BasicControl, ControlDebugTelemetry>;
 
 PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error);
 
