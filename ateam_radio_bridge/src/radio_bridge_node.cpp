@@ -22,10 +22,14 @@
 #include <array>
 #include <chrono>
 #include <numeric>
+#include <mutex>
+#include <thread>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_msgs/srv/set_firmware_parameter.hpp>
+#include <ateam_msgs/srv/get_firmware_parameter.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
@@ -34,8 +38,11 @@
 #include "rnp_packet_helpers.hpp"
 #include "conversion.hpp"
 #include "ip_address_helpers.hpp"
+#include "firmware_parameter_server.hpp"
 
 // TODO(barulicm) add warning if we see another instance of this running via multicast
+
+using namespace std::string_literals;
 
 namespace ateam_radio_bridge
 {
@@ -52,7 +59,8 @@ public:
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-      declare_parameter<std::string>("net_interface_address", "172.16.1.10"))
+      declare_parameter<std::string>("net_interface_address", "172.16.1.10")),
+    firmware_parameter_server_(*this, connections_)
   {
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
@@ -99,6 +107,7 @@ private:
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionFeedback>::SharedPtr, 16> motion_feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
+  FirmwareParameterServer firmware_parameter_server_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
   std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
@@ -307,6 +316,18 @@ private:
           if (std::holds_alternative<ControlDebugTelemetry>(data_var)) {
             auto msg = Convert(std::get<ControlDebugTelemetry>(data_var));
             motion_feedback_publishers_[robot_id]->publish(msg);
+          }
+          break;
+        }
+      case CC_ROBOT_PARAMETER_COMMAND:
+        {
+          const auto data_var = ExtractData(packet, error);
+          if (!error.empty()) {
+            RCLCPP_WARN(get_logger(), "Ignoring parameter command response message. %s", error.c_str());
+            return;
+          }
+          if(std::holds_alternative<ParameterCommand>(data_var)) {
+            firmware_parameter_server_.HandleIncomingParameterPacket(robot_id, std::get<ParameterCommand>(data_var));
           }
           break;
         }

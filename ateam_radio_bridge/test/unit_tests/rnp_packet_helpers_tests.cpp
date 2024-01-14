@@ -80,7 +80,7 @@ TEST(CreatePacket, HelloRequest)
     TC_YELLOW
   };
   RadioPacket packet = ateam_radio_bridge::CreatePacket(CC_HELLO_REQ, payload);
-  EXPECT_EQ(packet.crc32, 3171905816u);
+  EXPECT_EQ(packet.crc32, 1906667910u);
   EXPECT_EQ(packet.major_version, kProtocolVersionMajor);
   EXPECT_EQ(packet.minor_version, kProtocolVersionMinor);
   EXPECT_EQ(packet.command_code, CC_HELLO_REQ);
@@ -93,7 +93,7 @@ TEST(CreatePacket, HelloRequest)
 TEST(CreateEmptyPacket, Ack)
 {
   RadioPacket packet = ateam_radio_bridge::CreateEmptyPacket(CC_ACK);
-  EXPECT_EQ(packet.crc32, 3718166540u);
+  EXPECT_EQ(packet.crc32, 381840297u);
   EXPECT_EQ(packet.major_version, kProtocolVersionMajor);
   EXPECT_EQ(packet.minor_version, kProtocolVersionMinor);
   EXPECT_EQ(packet.command_code, CC_ACK);

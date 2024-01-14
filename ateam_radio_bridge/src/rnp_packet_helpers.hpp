@@ -32,6 +32,7 @@
 #include <hello_data.h>
 #include <basic_control.h>
 #include <basic_telemetry.h>
+#include <robot_parameters.h>
 
 namespace ateam_radio_bridge
 {
@@ -76,9 +77,17 @@ RadioPacket CreateEmptyPacket(const CommandCode command_code);
 RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std::string & error);
 
 using PacketDataVariant = std::variant<std::monostate, HelloRequest, BasicTelemetry,
-    BasicControl, ControlDebugTelemetry>;
+    BasicControl, ControlDebugTelemetry, ParameterCommand>;
 
 PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error);
+
+ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & parameter);
+
+std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format);
+
+float* GetParameterDataForSetFormat(ParameterCommand & command);
+
+bool CheckParameterPacketAck(const ParameterCommand & packet, std::string & error_reason);
 
 }  // ateam_radio_bridge
 
