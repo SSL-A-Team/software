@@ -181,10 +181,10 @@ class TestRadioBridgeNode(unittest.TestCase):
     def test_2_commandMessage(self):
         data = self.sock.recv(508)
         expected_data = bytearray(b"\x00") * 36
-        expected_data[0:4] = [92, 255, 234, 93]  # CRC
+        expected_data[0:4] = [57, 152, 86, 229]  # CRC
         expected_data[8] = 201  # Command code: CC_CONTROL
         expected_data[9:11] = [0, 24]  # Data length
-        expected_data[32] = 0  # Kicker request: KR_ARM
+        expected_data[32] = 1  # Kicker request: KR_ARM
         self.assertEqual(
             len(data),
             len(expected_data),
