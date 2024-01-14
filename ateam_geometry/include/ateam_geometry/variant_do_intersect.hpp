@@ -71,6 +71,7 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
  * @return true The two geometry objects intersect
  * @return false The two geometry objects do not intersect
  */
+template<>
 inline bool variantDoIntersect(const AnyShape & object_a, const AnyShape & object_b)
 {
   return std::visit(
