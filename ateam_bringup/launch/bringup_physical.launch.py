@@ -22,42 +22,40 @@ import launch
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
 from launch_ros.actions import Node
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 
 
+def remap_indexed_topics(pattern_from, pattern_to):
+    return list(
+        zip(
+            [pattern_from + str(i) for i in range(16)],
+            [pattern_to + str(i) for i in range(16)],
+        )
+    )
+
+
 def generate_launch_description():
     return launch.LaunchDescription([
-        DeclareLaunchArgument("start_sim", default_value="True"),
-        DeclareLaunchArgument("start_gc", default_value="True"),
-        DeclareLaunchArgument("headless_sim", default_value="True"),
-        DeclareLaunchArgument("sim_radio_ip", default_value="127.0.0.1"),
+        # Marietta IPs
+        DeclareLaunchArgument("vision_interface_address", default_value="172.16.1.10"),
+        DeclareLaunchArgument("gc_interface_address", default_value="172.16.1.10"),
+        DeclareLaunchArgument("gc_server_address", default_value="172.16.1.52"),
+        DeclareLaunchArgument("radio_interface_address", default_value="172.16.1.10"),
 
-        IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution("ateam_bringup",
-                                              "ssl_grsim.launch.xml")),
-            launch_arguments={
-                "headless": LaunchConfiguration("headless_sim")
-            }.items(),
-            condition=IfCondition(LaunchConfiguration("start_sim"))
-        ),
-
-        IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution("ateam_bringup",
-                                              "ssl_game_controller.launch.xml")),
-            condition=IfCondition(LaunchConfiguration("start_gc"))
-        ),
+        # Competition IPs
+        # DeclareLaunchArgument("vision_interface_address", default_value="10.193.15.132"),
+        # DeclareLaunchArgument("gc_interface_address", default_value="10.193.15.132"),
+        # DeclareLaunchArgument("gc_server_address", default_value="10.193.12.10"),
+        # DeclareLaunchArgument("radio_interface_address", default_value="172.16.1.10"),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution("ateam_bringup",
                                               "game_controller_nodes.launch.xml")),
             launch_arguments={
-                "net_interface_address": "",
-                "gc_ip_address": "127.0.0.1"
+                "gc_ip_address": LaunchConfiguration("gc_server_address"),
+                "net_interface_address": LaunchConfiguration("gc_interface_address")
             }.items()
         ),
 
@@ -66,8 +64,7 @@ def generate_launch_description():
                 PackageLaunchFileSubstitution("ateam_bringup",
                                               "autonomy.launch.xml")),
             launch_arguments={
-                "ssl_vision_interface_address": "",
-                "use_world_velocities": "true"
+                "ssl_vision_interface_address": LaunchConfiguration("vision_interface_address")
             }.items()
         ),
 
@@ -78,11 +75,13 @@ def generate_launch_description():
         ),
 
         Node(
-            package="ateam_ssl_simulation_radio_bridge",
-            executable="ssl_simulation_radio_bridge_node",
+            package="ateam_radio_bridge",
+            executable="radio_bridge_node",
             name="radio_bridge",
-            parameters=[{
-                "ssl_sim_radio_ip": LaunchConfiguration("sim_radio_ip")
-            }]
+            parameters=[{"net_interface_address": LaunchConfiguration("radio_interface_address")}],
+            remappings=remap_indexed_topics("~/robot_motion_commands/robot",
+                                            "/robot_motion_commands/robot") +
+                       remap_indexed_topics("~/robot_feedback/robot",
+                                            "/robot_feedback/robot")
         )
     ])

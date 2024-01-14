@@ -335,4 +335,22 @@ float* GetParameterDataForSetFormat(ParameterCommand & command)
   }
 }
 
+
+bool CheckParameterPacketAck(const ParameterCommand & packet, std::string & error_reason)
+{
+  if(packet.command_code == PCC_NACK_INVALID_NAME) {
+    error_reason = "Invalid parameter name.";
+    return false;
+  }
+  if(packet.command_code == PCC_NACK_INVALID_TYPE_FOR_NAME) {
+    error_reason = "Wrong parameter type for given parameter.";
+    return false;
+  }
+  if(packet.command_code != PCC_ACK) {
+    error_reason = "Non ack/nack command code recieved.";
+    return false;
+  }
+  return true;
+}
+
 }  // namespace ateam_radio_bridge
