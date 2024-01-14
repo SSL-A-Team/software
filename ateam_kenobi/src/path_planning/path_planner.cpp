@@ -52,12 +52,12 @@ PathPlanner::Path PathPlanner::getPath(
   if (options.avoid_ball) {
     augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
   }
-  std::cout << "Checking goal state" << std::endl;
-  if (!isStateValid(goal, world, augmented_obstacles, options)) {  
+
+  if (!isStateValid(goal, world, augmented_obstacles, options)) {
     return {};
   }
 
-  std::cout << "Our goal is valid" << std::endl;
+
   Path path = {start, goal};
 
   while (true) {
@@ -86,6 +86,8 @@ PathPlanner::Path PathPlanner::getPath(
     }
   }
 
+  simplifyPath(path, world, augmented_obstacles, options);
+
   return path;
 }
 
@@ -108,14 +110,6 @@ bool PathPlanner::isStateValid(
     state,
     kRobotRadius + options.footprint_inflation
   );
-
-  std::cout << robot_footprint << std::endl;
-  std::cout << "We are checking each obstacle." << std::endl;
-  for (auto &obstacle : obstacles) {
-    std::visit([](auto arg){std::cout << typeid(arg).name() << " ";}, obstacle);
-    std::visit([](auto arg){std::cout << arg << " ";}, obstacle); 
-    std::cout << ateam_geometry::variantDoIntersect(robot_footprint, obstacle) << std::endl;
-  }
 
   return std::ranges::none_of(
     obstacles, [&robot_footprint](const ateam_geometry::AnyShape & obstacle) {
@@ -159,6 +153,7 @@ PathPlanner::SplitResult PathPlanner::splitSegmentIfNecessary(
     };
   }
   const auto collision_point = maybe_collision_point.value();
+  std::cout << "Collision found at " << collision_point << '\n';
   const auto p1 = path[ind1];
   const auto p2 = path[ind2];
   auto change_vector = (ateam_geometry::normalize(p2 - p1) * kRobotRadius).perpendicular(
@@ -170,6 +165,7 @@ PathPlanner::SplitResult PathPlanner::splitSegmentIfNecessary(
     direction *= -1;
     if (isStateValid(new_point, world, obstacles, options)) {
       path.insert(path.begin() + ind2, new_point);
+      std::cout << "Split path to add " << new_point << '\n';
       return {
         .split_needed = true,
         .split_succeeded = true
@@ -235,6 +231,29 @@ void PathPlanner::addDefaultObstacles(
         (world.field.field_length / 2) + world.field.goal_width,
         -world.field.goal_width)
   ));
+}
+
+void PathPlanner::simplifyPath(
+  Path & path, const World & world,
+  const std::vector<ateam_geometry::AnyShape> & obstacles,
+  const PlannerOptions & options)
+{
+  if (path.size() < 3) {
+    return;
+  }
+
+  auto candidate_index = 1;
+  while (candidate_index < path.size() - 1) {
+    auto maybe_collision_point =
+      getCollisionPoint(
+      path.at(candidate_index - 1), path.at(
+        candidate_index + 1), world, obstacles, options);
+    if (maybe_collision_point) {
+      candidate_index++;
+    } else {
+      path.erase(path.begin() + candidate_index);
+    }
+  }
 }
 
 }  // namespace ateam_kenobi::path_planning

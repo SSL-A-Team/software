@@ -95,6 +95,10 @@ private:
     std::vector<ateam_geometry::AnyShape> & obstacles);
 
   void addDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles);
+
+  void simplifyPath(Path & path, const World & world,
+    const std::vector<ateam_geometry::AnyShape> & obstacles,
+    const PlannerOptions & options);
 };
 
 }  // namespace ateam_kenobi::path_planning
