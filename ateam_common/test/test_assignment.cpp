@@ -97,12 +97,12 @@ MATCHER_P(HasUnfilledData, original, "") {
     return true;
   }
 
-  // Average cell value in the non-original cells should be UNFILLED_LARGE_VALUE
+  // Average cell value in the non-original cells should be INF
   Eigen::MatrixXd temp = arg;
   std::size_t diff = arg.size() - original.size();
   temp.block(0, 0, original.rows(), original.cols()) = Eigen::MatrixXd::Zero(
     original.rows(), original.cols());
-  return temp.sum() / diff == ainternal::UNFILLED_LARGE_VALUE;
+  return temp.sum() / diff == ainternal::INF;
 }
 
 TEST(Assignment, SquareizeMatrix)

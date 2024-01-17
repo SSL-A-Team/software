@@ -26,6 +26,9 @@
 #include <unordered_map>
 #include <optional>
 
+#include <rclcpp/rclcpp.hpp>
+#include <ateam_common/assignment_strategies.hpp>
+
 namespace ateam_common
 {
 namespace assignment
@@ -52,7 +55,7 @@ std::unordered_map<std::size_t, std::size_t> optimize_assignment_impl(
   const Eigen::MatrixXd & cost_matrix);
 
 // Unfilled data when squarizing the matrix will be set to this value
-constexpr double UNFILLED_LARGE_VALUE = 1e10;
+constexpr double INF = 0;
 
 // Marked zeros can have multiple types
 enum ZerosType
