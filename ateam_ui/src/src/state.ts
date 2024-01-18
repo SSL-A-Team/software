@@ -57,8 +57,13 @@ export class AppState {
 
         this.services["setGoalie"].callService(request,
             function(result) {
-                // is there anything we need to do with this?
+                if(!result.success) {
+                    console.log("Failed to set goalie ID: ", result.reason);
+                } else {
+                    console.log("Goalie ID set!");
+                }
             });
+        console.log("Goalie ID set request sent.");
     }
 
     getGoalie(): string {
@@ -291,7 +296,7 @@ export class AppState {
         // Set up Goalie Service
         let goalieService = new ROSLIB.Service({
             ros: this.ros,
-            name: 'team_client_node/set_desired_keeper',
+            name: '/team_client_node/set_desired_keeper',
             serviceType: 'ateam_msgs/srv/SetDesiredKeeper'
         })
         this.services["setGoalie"] = goalieService;
