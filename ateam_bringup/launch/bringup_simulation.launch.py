@@ -33,6 +33,7 @@ def generate_launch_description():
         DeclareLaunchArgument("start_gc", default_value="True"),
         DeclareLaunchArgument("headless_sim", default_value="True"),
         DeclareLaunchArgument("sim_radio_ip", default_value="127.0.0.1"),
+        DeclareLaunchArgument("team_name", default_value="A-Team"),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
@@ -57,7 +58,8 @@ def generate_launch_description():
                                               "game_controller_nodes.launch.xml")),
             launch_arguments={
                 "net_interface_address": "",
-                "gc_ip_address": "127.0.0.1"
+                "gc_ip_address": "127.0.0.1",
+                "team_name": LaunchConfiguration("team_name")
             }.items()
         ),
 
@@ -67,7 +69,9 @@ def generate_launch_description():
                                               "autonomy.launch.xml")),
             launch_arguments={
                 "ssl_vision_interface_address": "",
-                "ssl_vision_port": "10020"
+                "use_world_velocities": "true",
+                "ssl_vision_port": "10020",
+                "team_name": LaunchConfiguration("team_name")
             }.items()
         ),
 
@@ -82,7 +86,8 @@ def generate_launch_description():
             executable="ssl_simulation_radio_bridge_node",
             name="radio_bridge",
             parameters=[{
-                "ssl_sim_radio_ip": LaunchConfiguration("sim_radio_ip")
+                "ssl_sim_radio_ip": LaunchConfiguration("sim_radio_ip"),
+                "gc_team_name": LaunchConfiguration("team_name")
             }]
         )
     ])
