@@ -69,7 +69,6 @@ def generate_launch_description():
                                               "autonomy.launch.xml")),
             launch_arguments={
                 "ssl_vision_interface_address": "",
-                "use_world_velocities": "true",
                 "ssl_vision_port": "10020",
                 "team_name": LaunchConfiguration("team_name")
             }.items()
