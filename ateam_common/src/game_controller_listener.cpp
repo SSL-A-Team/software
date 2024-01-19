@@ -34,6 +34,8 @@ GameControllerListener::GameControllerListener(
   color_callback_(color_callback),
   side_callback_(side_callback)
 {
+  auto logger = node.get_logger().get_child("GameControllerListener");
+  RCLCPP_INFO(logger, "Using team name: %s", team_name_.c_str());
   const auto default_team_color =
     node.declare_parameter<std::string>("default_team_color", "blue");
   if (default_team_color == "yellow") {
@@ -43,12 +45,12 @@ GameControllerListener::GameControllerListener(
   } else if (default_team_color == "unknown") {
     team_color_ = TeamColor::Unknown;
     RCLCPP_WARN(
-      node.get_logger(),
+      logger,
       "EXPLICIT UNKNOWN GIVEN FOR TEAM COLOR.");
   } else {
     team_color_ = TeamColor::Unknown;
     RCLCPP_WARN(
-      node.get_logger(),
+      logger,
       "Unrecognized value for param 'default_team_color'. Ignoring and defaulting to Unknown.");
   }
 
@@ -62,7 +64,7 @@ GameControllerListener::GameControllerListener(
     team_side_ = TeamSide::Unknown;
   } else {
     RCLCPP_WARN(
-      node.get_logger(),
+      logger,
       "Unrecognized value for param 'default_team_side'. Ignoring and defaulting to Unknown.");
   }
 
