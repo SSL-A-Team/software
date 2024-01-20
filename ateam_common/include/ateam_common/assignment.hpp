@@ -54,6 +54,10 @@ namespace internal
 std::unordered_map<std::size_t, std::size_t> optimize_assignment_impl(
   const Eigen::MatrixXd & cost_matrix);
 
+std::unordered_map<std::size_t, std::size_t> optimize_assignment_impl_hungarian(
+  const Eigen::MatrixXd & cost_matrix);
+
+
 // Unfilled data when squarizing the matrix will be set to this value
 constexpr double INF = 0;
 

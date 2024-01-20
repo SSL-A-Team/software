@@ -66,7 +66,7 @@ inline std::unordered_map<size_t, size_t> assign(
    */
   Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(
     available_robots.size(),
-    goal_positions.size(), 0);  // NOT INFINITY
+    goal_positions.size(), std::numeric_limits<double>::max());  // NOT INFINITY
   for (size_t i = 0; i < available_robots.size(); i++) {
     for (size_t j = 0; j < goal_positions.size(); j++) {
       costs(i, j) = sqrt(CGAL::squared_distance(available_robots.at(i).pos, goal_positions.at(j)));

@@ -46,56 +46,57 @@ std::unordered_map<std::size_t, std::size_t> optimize_assignment(
 std::unordered_map<std::size_t, std::size_t> internal::optimize_assignment_impl(
   const Eigen::MatrixXd & cost_matrix)
 {
-  return ateam_common::assignment::johnsons_hungarian<double>(cost_matrix);
+  return ateam_common::assignment::hungarian<double>(cost_matrix);
+  // return ateam_common::assignment::johnsons_hungarian<double>(cost_matrix);
+  // return ateam_common::assignment::internal::optimize_assignment_impl_hungarian(<double>(cost_matrix);
 }
 
-// std::unordered_map<std::size_t, std::size_t> internal::optimize_assignment_impl(
-//   const Eigen::MatrixXd & cost_matrix)
-// {
-  // CostMarkCovers cmc;
-  // cmc.cost_matrix = squarize_matrix(cost_matrix);
+std::unordered_map<std::size_t, std::size_t> internal::optimize_assignment_impl_hungarian(const Eigen::MatrixXd & cost_matrix)
+{
+  CostMarkCovers cmc;
+  cmc.cost_matrix = squarize_matrix(cost_matrix);
 
-  // apply_step_1(cmc);
-  // apply_step_2(cmc);
-  // apply_step_3(cmc);
+  apply_step_1(cmc);
+  apply_step_2(cmc);
+  apply_step_3(cmc);
 
-  // uint32_t loops = 0;
-  // // TODO(COLLIN) Make this an actual const
-  // const uint32_t loop_limit = 40;
-  // do {
-  //   apply_step_4(cmc);
-  //   apply_step_5(cmc);
-  //   loops++;
-  // } while (!has_unique_assignments(cmc) && loops < loop_limit);
+  uint32_t loops = 0;
+  // TODO(COLLIN) Make this an actual const
+  const uint32_t loop_limit = 40;
+  do {
+    apply_step_4(cmc);
+    apply_step_5(cmc);
+    loops++;
+  } while (!has_unique_assignments(cmc) && loops < loop_limit);
 
-  // if (loops >= loop_limit) {
-  //     // RCLCPP_ERROR_STREAM(rclcpp::get_logger(), "assignment ran for more than: " << std::to_string(loop_limit) << " loops");
-  //     std::cout << "cost: \n" << cmc.cost_matrix << std::endl;
-  //     std::cout << "assignment ran for more than: " << std::to_string(loop_limit) << " loops" <<std::endl;
-  // }
-  // // std::cout << "assignment ran for: " << std::to_string(loops) << " loops" <<std::endl;
+  if (loops >= loop_limit) {
+      // RCLCPP_ERROR_STREAM(rclcpp::get_logger(), "assignment ran for more than: " << std::to_string(loop_limit) << " loops");
+      std::cout << "cost: \n" << cmc.cost_matrix << std::endl;
+      std::cout << "assignment ran for more than: " << std::to_string(loop_limit) << " loops" <<std::endl;
+  }
+  // std::cout << "assignment ran for: " << std::to_string(loops) << " loops" <<std::endl;
 
-  // std::unordered_map<std::size_t, std::size_t> assignment;
-  // for (int i = 0; i < cmc.mark_matrix.rows(); i++) {
-  //   bool is_row_inbounds = i < cost_matrix.rows();
-  //   if (!is_row_inbounds) {
-  //     continue;
-  //   }
+  std::unordered_map<std::size_t, std::size_t> assignment;
+  for (int i = 0; i < cmc.mark_matrix.rows(); i++) {
+    bool is_row_inbounds = i < cost_matrix.rows();
+    if (!is_row_inbounds) {
+      continue;
+    }
 
-  //   for (int j = 0; j < cmc.mark_matrix.cols(); j++) {
-  //     bool is_col_inbounds = j < cost_matrix.cols();
-  //     if (!is_col_inbounds) {
-  //       continue;
-  //     }
+    for (int j = 0; j < cmc.mark_matrix.cols(); j++) {
+      bool is_col_inbounds = j < cost_matrix.cols();
+      if (!is_col_inbounds) {
+        continue;
+      }
 
-  //     bool is_starred = cmc.mark_matrix(i, j) == ZerosType::STARRED;
-  //     if (is_starred) {
-  //       assignment[i] = j;
-  //     }
-  //   }
-  // }
-//   return assignment;
-// }
+      bool is_starred = cmc.mark_matrix(i, j) == ZerosType::STARRED;
+      if (is_starred) {
+        assignment[i] = j;
+      }
+    }
+  }
+  return assignment;
+}
 
 namespace internal
 {

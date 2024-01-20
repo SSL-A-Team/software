@@ -75,7 +75,10 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution("ateam_bringup",
-                                              "ui.launch.xml"))
+                                              "ui.launch.xml")),
+            launch_arguments={
+                "ui_debug": "true"
+            }.items()
         ),
 
         Node(

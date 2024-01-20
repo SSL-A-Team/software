@@ -1,12 +1,18 @@
 <launch>
     <arg name="logfile" default="./log.gz"/>
+    <arg name="net_interface_address" default="127.0.0.1"/>
 
     <node name="radio_bridge" pkg="ateam_ssl_simulation_radio_bridge" exec="ssl_simulation_radio_bridge_node" />
     <node name="ssl_vision_bridge" pkg="ateam_ssl_vision_bridge" exec="ssl_vision_bridge_node" />
+
+    <node name="gc_multicast_bridge_node" pkg="ateam_game_controller_bridge" exec="gc_multicast_bridge_node" respawn="True">
+        <param name="net_interface_address" value="$(var net_interface_address)"/>
+    </node>
+
     <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" />
 
     <include file="$(find-pkg-share ateam_ui)/launch/ateam_ui_debug_launch.py"/>
-    <!-- <executable cmd="chrome 127.0.0.1:3000" output="screen"/> -->
+    <executable cmd="chrome 127.0.0.1:3000" output="screen"/>
 
     <executable cmd="ros2 bag record -a" output="screen" />
 
