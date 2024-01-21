@@ -59,7 +59,8 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       selected_play = &stop_play_;
       break;
     case ateam_common::GameCommand::NormalStart:
-      return finalizeSelection(pickNormalStartPlay(), current_game_command);
+      selected_play = pickNormalStartPlay(world);
+      break;
     case ateam_common::GameCommand::ForceStart:
       selected_play = &basic_122_play_;
       break;
@@ -89,7 +90,10 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       break;
   }
 
-  return finalizeSelection(selected_play, current_game_command);
+
+  resetPlayIfNeeded(selected_play);
+
+  return selected_play;
 }
 
 void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)
@@ -103,22 +107,12 @@ void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)
   }
 }
 
-plays::BasePlay * PlaySelector::finalizeSelection(
-  plays::BasePlay * play,
-  ateam_common::GameCommand current_game_command)
+plays::BasePlay * PlaySelector::pickNormalStartPlay(const World & world)
 {
-  resetPlayIfNeeded(play);
-
-  if (current_game_command != previous_game_command_) {
-    previous_game_command_ = current_game_command;
+  if(world.in_play) {
+    return &basic_122_play_;
   }
-
-  return play;
-}
-
-plays::BasePlay * PlaySelector::pickNormalStartPlay()
-{
-  switch (previous_game_command_) {
+  switch (world.referee_info.prev_command) {
     case ateam_common::GameCommand::PrepareKickoffOurs:
       return &our_kickoff_play_;
     case ateam_common::GameCommand::PrepareKickoffTheirs:
@@ -140,7 +134,6 @@ plays::BasePlay * PlaySelector::pickNormalStartPlay()
     default:
       return &basic_122_play_;
   }
-  return &halt_play_;
 }
 
 }  // namespace ateam_kenobi

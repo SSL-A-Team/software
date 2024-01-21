@@ -121,7 +121,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::kickBall(const World & world, cons
   command.twist.linear.x = std::cos(robot.theta) * 0.5;
   command.twist.linear.y = std::sin(robot.theta) * 0.5;
   command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
-  command.kick_speed = 5.0;
+  command.kick_speed = kick_speed_;
   return command;
 }
 }  // namespace ateam_kenobi::skills

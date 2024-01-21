@@ -51,7 +51,6 @@ public:
 private:
   skills::LineKick line_kick_skill_;
   skills::Goalie goalie_skill_;
-  std::vector<ateam_geometry::Point> defender_positions_;
 
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 

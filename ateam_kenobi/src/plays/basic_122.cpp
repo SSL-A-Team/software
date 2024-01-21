@@ -61,10 +61,14 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
 }
 
 void Basic122::assignAndRunStriker(
-  std::vector<Robot> & available_robots, const World & world,
+  std::vector<Robot> available_robots, const World & world,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
+  if(world.double_touch_forbidden_id_) {
+    play_helpers::removeRobotWithId(available_robots, world.double_touch_forbidden_id_.value());
+  }
+
   std::vector<ateam_geometry::Point> assignable_positions;
   assignable_positions.push_back(striker_skill_.getAssignmentPoint(world));
   auto assignment_map = robot_assignment::assign(available_robots, assignable_positions);

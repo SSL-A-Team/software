@@ -32,21 +32,13 @@ OurKickoffPlay::OurKickoffPlay(
   visualization::OverlayPublisher & overlay_publisher,
   visualization::PlayInfoPublisher & play_info_publisher)
 : BasePlay(overlay_publisher, play_info_publisher),
-  goalie_skill_(overlay_publisher, play_info_publisher),
-  line_kick_skill_(overlay_publisher)
+  line_kick_skill_(overlay_publisher),
+  goalie_skill_(overlay_publisher, play_info_publisher)
 {
 }
 
 void OurKickoffPlay::reset()
 {
-  defender_positions_.clear();
-
-  // Get 4 defenders
-  defender_positions_.push_back(ateam_geometry::Point(-0.3, -1.5));
-  defender_positions_.push_back(ateam_geometry::Point(-0.3, 1.5));
-  defender_positions_.push_back(ateam_geometry::Point(-2, 2));
-  defender_positions_.push_back(ateam_geometry::Point(-2, -2));
-
   goalie_skill_.reset();
 }
 
@@ -96,7 +88,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 
       // Kick the ball
     } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
-      line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
+      line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 4.0, world.field.field_width/4));
+      line_kick_skill_.setKickSpeed(2.5);
       maybe_motion_commands.at(kicker.id) = line_kick_skill_.runFrame(world, kicker);
 
       // we passed over the center line so we probably touched the ball
@@ -108,10 +101,17 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     }
   }
 
+  std::vector<ateam_geometry::Point> defender_positions = {
+    ateam_geometry::Point(-0.3, world.field.field_width/4),
+    ateam_geometry::Point(-0.3, -world.field.field_width/4),
+    ateam_geometry::Point(-world.field.field_length/4, world.field.field_width*0.375),
+    ateam_geometry::Point(-world.field.field_length/4, -world.field.field_width*0.375)
+  };
+
   // handle all non-kicker robots
   const auto & robot_assignments = robot_assignment::assign(
     current_available_robots,
-    defender_positions_);
+    defender_positions);
 
   for (const auto [robot_id, pos_ind] : robot_assignments) {
     const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
@@ -125,7 +125,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 
     auto & easy_move_to = easy_move_tos_.at(robot_id);
 
-    const auto & target_position = defender_positions_.at(pos_ind);
+    const auto & target_position = defender_positions.at(pos_ind);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
     overlay_publisher_.drawCircle(

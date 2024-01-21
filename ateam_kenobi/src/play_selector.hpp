@@ -56,11 +56,7 @@ private:
 
   void resetPlayIfNeeded(plays::BasePlay * play);
 
-  plays::BasePlay * finalizeSelection(
-    plays::BasePlay * play,
-    ateam_common::GameCommand current_game_command);
-
-  plays::BasePlay * pickNormalStartPlay();
+  plays::BasePlay * pickNormalStartPlay(const World & world);
 };
 
 }  // namespace ateam_kenobi

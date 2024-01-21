@@ -43,12 +43,17 @@ public:
 
   ateam_geometry::Point getAssignmentPoint(const World & world);
 
+  void setKickSpeed(double speed) {
+    kick_speed_ = speed;
+  }
+
   ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
 private:
   const double kPreKickOffset = kRobotRadius + 0.1;
   visualization::OverlayPublisher & overlay_publisher_;
   ateam_geometry::Point target_point_;
+  double kick_speed_ = 5.0;
   play_helpers::EasyMoveTo easy_move_to_;
 
   enum class State
