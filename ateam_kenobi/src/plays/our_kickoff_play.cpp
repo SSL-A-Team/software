@@ -89,7 +89,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
       // Kick the ball
     } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
       line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 4.0, world.field.field_width/4));
-      line_kick_skill_.setKickSpeed(2.5);
+      line_kick_skill_.setKickSpeed(0.4);
       maybe_motion_commands.at(kicker.id) = line_kick_skill_.runFrame(world, kicker);
 
       // we passed over the center line so we probably touched the ball
