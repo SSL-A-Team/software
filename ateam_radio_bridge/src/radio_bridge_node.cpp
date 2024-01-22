@@ -220,20 +220,6 @@ private:
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
 
-    std::string color_name;
-    switch(game_controller_listener_.GetTeamColor()) {
-      case ateam_common::TeamColor::Unknown:
-        color_name = "Unknown";
-        break;
-      case ateam_common::TeamColor::Blue:
-        color_name = "Blue";
-        break;
-      case ateam_common::TeamColor::Yellow:
-        color_name = "Yellow";
-        break;
-    }
-    RCLCPP_INFO(get_logger(), "Team color is %s", color_name.c_str());
-
     if (!(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&
       !(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Yellow &&
@@ -359,21 +345,8 @@ private:
     }
   }
 
-  void TeamColorChangeCallback(const ateam_common::TeamColor color)
+  void TeamColorChangeCallback(const ateam_common::TeamColor)
   {
-        std::string color_name;
-    switch(color) {
-      case ateam_common::TeamColor::Unknown:
-        color_name = "Unknown";
-        break;
-      case ateam_common::TeamColor::Blue:
-        color_name = "Blue";
-        break;
-      case ateam_common::TeamColor::Yellow:
-        color_name = "Yellow";
-        break;
-    }
-    RCLCPP_INFO(get_logger(), "Team color changed to %s", color_name.c_str());
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);
     }
