@@ -36,6 +36,7 @@ add_library(kenobi_node_component SHARED
   src/play_helpers/available_robots.cpp
   src/skills/goalie.cpp
   src/skills/line_kick.cpp
+  src/skills/pivot_kick.cpp
   src/skills/blockers.cpp
 )
 target_include_directories(kenobi_node_component PUBLIC
