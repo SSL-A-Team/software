@@ -217,7 +217,6 @@ private:
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
     }
     in_play_eval_.update(world_);
-    RCLCPP_INFO(get_logger(), "Ball is %s", (world_.in_play ? "in play." : "out of play."));
     double_touch_eval_.update(world_);
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
       auto & clk = *this->get_clock();

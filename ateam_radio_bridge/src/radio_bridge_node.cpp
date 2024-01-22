@@ -54,7 +54,7 @@ public:
   : rclcpp::Node("radio_bridge", options),
     timeout_threshold_(declare_parameter("timeout_ms", 250)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
-    game_controller_listener_(*this),
+    game_controller_listener_(*this, std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
@@ -124,6 +124,10 @@ private:
   void CloseConnection(const std::size_t & connection_index)
   {
     auto & connection = connections_.at(connection_index);
+    if(!connection) {
+      // Connection already closed
+      return;
+    }
     RCLCPP_INFO(
       get_logger(), "Closing connection to robot %ld (%s:%d)", connection_index,
       connection->GetRemoteIPAddress().c_str(), connection->GetRemotePort());
@@ -215,6 +219,20 @@ private:
     }
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
+
+    std::string color_name;
+    switch(game_controller_listener_.GetTeamColor()) {
+      case ateam_common::TeamColor::Unknown:
+        color_name = "Unknown";
+        break;
+      case ateam_common::TeamColor::Blue:
+        color_name = "Blue";
+        break;
+      case ateam_common::TeamColor::Yellow:
+        color_name = "Yellow";
+        break;
+    }
+    RCLCPP_INFO(get_logger(), "Team color is %s", color_name.c_str());
 
     if (!(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&
@@ -341,8 +359,21 @@ private:
     }
   }
 
-  void TeamColorChangeCallback(const ateam_common::TeamColor)
+  void TeamColorChangeCallback(const ateam_common::TeamColor color)
   {
+        std::string color_name;
+    switch(color) {
+      case ateam_common::TeamColor::Unknown:
+        color_name = "Unknown";
+        break;
+      case ateam_common::TeamColor::Blue:
+        color_name = "Blue";
+        break;
+      case ateam_common::TeamColor::Yellow:
+        color_name = "Yellow";
+        break;
+    }
+    RCLCPP_INFO(get_logger(), "Team color changed to %s", color_name.c_str());
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);
     }

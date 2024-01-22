@@ -82,12 +82,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+
+  goalie_skill_.runFrame(world, maybe_motion_commands);
+
   auto current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
-
-  if (current_available_robots.empty()) {
-    return maybe_motion_commands;
-  }
 
   ateam_geometry::Segment wall_line = ateam_geometry::Segment(
     ateam_geometry::Point(-3, 0.25 * current_available_robots.size() / 2.0),
@@ -124,8 +123,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
 
     maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
   }
-
-  goalie_skill_.runFrame(world, maybe_motion_commands);
 
   play_info_publisher_.send_play_message("Wall Play");
   return maybe_motion_commands;
