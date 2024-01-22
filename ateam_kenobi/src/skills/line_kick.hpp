@@ -61,7 +61,7 @@ private:
 
   ateam_geometry::Point getPreKickPosition(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand moveToPreKick(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand moveBehindBall(const World & world, const Robot & robot);
 
   ateam_msgs::msg::RobotMotionCommand faceBall(const World & world, const Robot & robot);
 

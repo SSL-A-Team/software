@@ -50,15 +50,34 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
     hysteresis = 2.0;
   }
 
+  const auto ball_to_target = target_point_ - world.ball.pos;
+  const auto robot_to_ball = world.ball.pos - robot.pos;
+
+  // scalar projection (distance along the vector) of the robot to the ball 
+  // along the ball to target vector
+  const auto robot_proj_dist_to_ball = (ball_to_target * robot_to_ball)
+    / ateam_geometry::norm(ball_to_target);
+
+  // vector projection of the robot to the ball along the ball to target vector
+  const auto robot_proj_ball = ball_to_target * robot_proj_dist_to_ball
+    / ateam_geometry::norm(ball_to_target);
+
+  const auto robot_perp_ball = robot_to_ball - robot_proj_ball;
+  const auto robot_perp_dist_to_ball = ateam_geometry::norm(robot_perp_ball);
+
+  std::cerr << "proj: " << robot_proj_dist_to_ball << "perp: " << robot_perp_dist_to_ball << std::endl;
+ 
   const auto distance_to_pre_kick = ateam_geometry::norm(robot.pos, pre_kick_position);
-  if (distance_to_pre_kick > 0.05 * hysteresis) {
-    if (prev_state_ != State::MoveToPreKick) {
+
+  if (robot_proj_dist_to_ball > 0.1 && robot_perp_ball > 0.2) {
+    if (prev_state_ != State::MoveBehindBall) {
       easy_move_to_.reset();
-      prev_state_ = State::MoveToPreKick;
+      prev_state_ = State::MoveBehindBall;
     }
-    return moveToPreKick(world, robot);
+    return moveBehindBall(world, robot);
   }
 
+/*
   const auto robot_to_ball = target_point_ - robot.pos;
   const auto robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
   if (angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) > 0.05 * hysteresis) {
@@ -68,13 +87,18 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
     }
     return faceBall(world, robot);
   }
+*/
 
   if (prev_state_ != State::KickBall) {
     easy_move_to_.reset();
     prev_state_ = State::KickBall;
   }
 
-  return kickBall(world, robot);
+  command.twist.linear.x = std::cos(robot.theta) * 0.5;
+  command.twist.linear.y = std::sin(robot.theta) * 0.5;
+  command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
+  command.kick_speed = 5.0;
+
 }
 
 ateam_geometry::Point LineKick::getPreKickPosition(const World & world)
@@ -83,7 +107,7 @@ ateam_geometry::Point LineKick::getPreKickPosition(const World & world)
            world.ball.pos - target_point_));
 }
 
-ateam_msgs::msg::RobotMotionCommand LineKick::moveToPreKick(
+ateam_msgs::msg::RobotMotionCommand LineKick::moveBehindBall(
   const World & world,
   const Robot & robot)
 {
