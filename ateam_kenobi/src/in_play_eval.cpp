@@ -28,26 +28,33 @@ namespace ateam_kenobi
 
 void InPlayEval::Update(World & world)
 {
+  const auto game_command = world.referee_info.running_command;
   // Force start always puts the ball in play
-  if (world.referee_info.running_command == ateam_common::GameCommand::ForceStart) {
+  if (game_command == ateam_common::GameCommand::ForceStart) {
     in_play_ = true;
   }
   // Stop / Halt puts the ball out of play
-  else if (world.referee_info.running_command == ateam_common::GameCommand::Stop ||
-    world.referee_info.running_command == ateam_common::GameCommand::Halt)
+  else if (game_command == ateam_common::GameCommand::Stop ||
+    game_command == ateam_common::GameCommand::Halt)
   {
     in_play_ = false;
     ball_start_pos_.reset();
   }
-  // Game is resuming, establish starting conditions
-  else if (IsGameResuming(world)) {
-    ball_start_pos_ = world.ball.pos;
+  // Game is exitting Stop command, decide in-play rules based on new command
+  else if (game_command != prev_game_command_ &&
+    prev_game_command_ == ateam_common::GameCommand::Stop)
+  {
     SetTimeout(world);
     SetDistanceThreshold(world);
   }
+  // Game is resuming, establish starting conditions
+  else if (IsGameResuming(world)) {
+    ball_start_pos_ = world.ball.pos;
+    timeout_start_ = std::chrono::steady_clock::now();
+  }
   // If timeout passed, ball's in play
-  else if (timeout_time_.time_since_epoch().count() != 0 &&
-    std::chrono::steady_clock::now() > timeout_time_)
+  else if (timeout_duration_ &&
+    std::chrono::steady_clock::now() > (timeout_start_ + timeout_duration_.value()))
   {
     in_play_ = true;
   }
@@ -62,7 +69,7 @@ void InPlayEval::Update(World & world)
   }
 
   world.in_play = in_play_;
-  prev_game_command_ = world.referee_info.running_command;
+  prev_game_command_ = game_command;
 }
 
 void InPlayEval::SetTimeout(const World & world)
@@ -70,17 +77,17 @@ void InPlayEval::SetTimeout(const World & world)
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::PrepareKickoffOurs:
     case ateam_common::GameCommand::PrepareKickoffTheirs:
-      timeout_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+      timeout_duration_ = std::chrono::seconds(10);
       break;
     case ateam_common::GameCommand::DirectFreeOurs:
     case ateam_common::GameCommand::DirectFreeTheirs:
       // Division A
-      // timeout_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+      // timeout_duration_ = std::chrono::seconds(5);
       // Division B
-      timeout_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+      timeout_duration_ = std::chrono::seconds(10);
       break;
     default:
-      timeout_time_ = {}; // No timeout
+      timeout_duration_.reset();
       break;
   }
 }
