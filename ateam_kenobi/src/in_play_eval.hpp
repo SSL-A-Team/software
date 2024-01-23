@@ -48,6 +48,8 @@ private:
 
   void SetDistanceThreshold(const World & world);
 
+  bool IsGameResuming(const World & world);
+
 };
 
 }  // namespace ateam_kenobi
