@@ -34,19 +34,21 @@ namespace ateam_kenobi
 class InPlayEval
 {
 public:
-
   void Update(World & world);
 
 private:
   bool in_play_ = false;
   std::optional<ateam_geometry::Point> ball_start_pos_;
   ateam_common::GameCommand prev_game_command_;
-  std::chrono::steady_clock::time_point timeout_time_ = {};
+  std::optional<std::chrono::steady_clock::duration> timeout_duration_;
+  std::chrono::steady_clock::time_point timeout_start_;
   double ball_moved_threshold_ = 0;
 
   void SetTimeout(const World & world);
 
   void SetDistanceThreshold(const World & world);
+
+  bool IsGameResuming(const World & world);
 
 };
 
