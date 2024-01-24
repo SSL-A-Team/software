@@ -29,9 +29,8 @@
 namespace ateam_kenobi::plays
 {
 NormalPlay::NormalPlay(
-  visualization::OverlayPublisher & overlay_publisher,
   visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher)
+: BasePlay("NormalPlay", play_info_publisher)
 {
 }
 
@@ -85,8 +84,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> NormalPlay::r
       world.current_time.time_since_epoch()).count();
     maybe_motion_commands.at(robot_id) = motion_controller.get_command(robot, current_time);
 
-    overlay_publisher_.drawLine("test_path" + std::to_string(robot_id), path, "purple");
-    overlay_publisher_.drawCircle(
+    getOverlays().drawLine("test_path" + std::to_string(robot_id), path, "purple");
+    getOverlays().drawCircle(
       "robot" + std::to_string(robot_id),
       ateam_geometry::makeCircle(robot.pos, 0.2), "purple", "transparent");
   }

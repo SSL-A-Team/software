@@ -30,9 +30,7 @@ namespace ateam_kenobi::plays
 class HaltPlay : public BasePlay
 {
 public:
-  explicit HaltPlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  explicit HaltPlay(visualization::PlayInfoPublisher & play_info_publisher);
 
   void reset() override;
 

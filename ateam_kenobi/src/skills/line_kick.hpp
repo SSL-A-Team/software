@@ -24,7 +24,7 @@
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
-#include "visualization/overlay_publisher.hpp"
+#include "visualization/overlays.hpp"
 #include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
@@ -34,7 +34,7 @@ namespace ateam_kenobi::skills
 class LineKick
 {
 public:
-  explicit LineKick(visualization::OverlayPublisher & overlay_publisher);
+  explicit LineKick(visualization::Overlays overlays);
 
   void setTargetPoint(ateam_geometry::Point point)
   {
@@ -47,7 +47,7 @@ public:
 
 private:
   const double kPreKickOffset = kRobotRadius + 0.1;
-  visualization::OverlayPublisher & overlay_publisher_;
+  visualization::Overlays overlays_;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 

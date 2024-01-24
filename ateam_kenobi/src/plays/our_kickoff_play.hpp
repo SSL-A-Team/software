@@ -38,7 +38,6 @@ class OurKickoffPlay : public BasePlay
 {
 public:
   explicit OurKickoffPlay(
-    visualization::OverlayPublisher & overlay_publisher,
     visualization::PlayInfoPublisher & play_info_publisher);
 
   void reset() override;

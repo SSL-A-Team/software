@@ -40,7 +40,6 @@ class WallPlay : public BasePlay
 {
 public:
   explicit WallPlay(
-    visualization::OverlayPublisher & overlay_publisher,
     visualization::PlayInfoPublisher & play_info_publisher);
   void reset() override;
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,

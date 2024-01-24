@@ -27,11 +27,11 @@
 namespace ateam_kenobi::plays
 {
 
-Basic122::Basic122(visualization::OverlayPublisher & op, visualization::PlayInfoPublisher & pip)
-: BasePlay(op, pip),
-  striker_skill_(op),
-  blockers_skill_(op),
-  goalie_skill_(op, pip)
+Basic122::Basic122(visualization::PlayInfoPublisher & pip)
+: BasePlay("Basic122", pip),
+  striker_skill_(getOverlays().getChild("striker")),
+  blockers_skill_(getOverlays().getChild("blockers")),
+  goalie_skill_(getOverlays().getChild("goalie"), pip)
 {
 }
 

@@ -33,10 +33,9 @@ class TestKickPlay : public BasePlay
 {
 public:
   explicit TestKickPlay(
-    visualization::OverlayPublisher & overlay_publisher,
     visualization::PlayInfoPublisher & play_info_publisher)
-  : BasePlay(overlay_publisher, play_info_publisher),
-    line_kick_skill_(overlay_publisher)
+  : BasePlay("TestKickPlay", play_info_publisher),
+    line_kick_skill_(getOverlays().getChild("line_kick"))
   {}
 
   void reset() override {}

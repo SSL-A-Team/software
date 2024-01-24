@@ -26,24 +26,19 @@
 namespace ateam_kenobi::play_helpers
 {
 
-std::size_t EasyMoveTo::instance_index_ = 0;
-
 void EasyMoveTo::CreateArray(
   std::array<EasyMoveTo, 16> & dst,
-  visualization::OverlayPublisher & overlay_publisher)
+  visualization::Overlays overlays)
 {
   std::generate(
-    dst.begin(), dst.end(), [&overlay_publisher]() {
-      return EasyMoveTo(overlay_publisher);
+    dst.begin(), dst.end(), [&overlays,ind=0]() mutable{
+      return EasyMoveTo(overlays.getChild(std::to_string(ind++)));
     });
 }
 
-EasyMoveTo::EasyMoveTo(visualization::OverlayPublisher & overlay_publisher)
-: instance_name_("EasyMoveToViz" + std::to_string(instance_index_)),
-  overlay_publisher_(&overlay_publisher)
+EasyMoveTo::EasyMoveTo(visualization::Overlays overlays)
+: overlays_(overlays)
 {
-  std::cerr << "EasyMoveTo instance " << instance_index_ << '\n';
-  instance_index_++;
 }
 
 
@@ -54,7 +49,7 @@ EasyMoveTo & EasyMoveTo::operator=(EasyMoveTo && other)
   planner_options_ = other.planner_options_;
   path_planner_ = other.path_planner_;
   motion_controller_ = other.motion_controller_;
-  overlay_publisher_ = other.overlay_publisher_;
+  overlays_ = other.overlays_;
   return *this;
 }
 
@@ -139,18 +134,14 @@ void EasyMoveTo::drawTrajectoryOverlay(
   const path_planning::PathPlanner::Path & path,
   const Robot & robot)
 {
-  if (!overlay_publisher_) {
-    // Thid shouldn't be hit in normal code, but just in case, fail gracefully.
-    return;
-  }
   if (path.empty()) {
     const std::vector<ateam_geometry::Point> points = {
       robot.pos,
       target_position_
     };
-    overlay_publisher_->drawLine(instance_name_ + "_path", points, "red");
+    overlays_.drawLine(instance_name_ + "_path", points, "red");
   } else {
-    overlay_publisher_->drawLine(instance_name_ + "_path", path, "purple");
+    overlays_.drawLine(instance_name_ + "_path", path, "purple");
   }
 }
 

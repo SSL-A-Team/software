@@ -28,12 +28,11 @@
 namespace ateam_kenobi::plays
 {
 TestPlay::TestPlay(
-  visualization::OverlayPublisher & overlay_publisher,
   visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher),
-  goalie_skill_(overlay_publisher, play_info_publisher)
+: BasePlay("TestPlay", play_info_publisher),
+  goalie_skill_(getOverlays().getChild("goalie"), play_info_publisher)
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher);
+  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
 
 void TestPlay::reset()

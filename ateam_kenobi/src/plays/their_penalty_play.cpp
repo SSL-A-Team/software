@@ -27,12 +27,11 @@ namespace ateam_kenobi::plays
 {
 
 TheirPenaltyPlay::TheirPenaltyPlay(
-  visualization::OverlayPublisher & op,
   visualization::PlayInfoPublisher & pip)
-: BasePlay(op, pip),
-  goalie_skill_(op, pip)
+: BasePlay("TheirPenaltyPlay", pip),
+  goalie_skill_(getOverlays().getChild("goalie"), pip)
 {
-  play_helpers::EasyMoveTo::CreateArray(move_tos_, op);
+  play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
 
 void TheirPenaltyPlay::reset()

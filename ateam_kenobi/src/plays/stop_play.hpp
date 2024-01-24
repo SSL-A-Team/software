@@ -34,7 +34,6 @@ class StopPlay : public BasePlay
 {
 public:
   explicit StopPlay(
-    visualization::OverlayPublisher & overlay_publisher,
     visualization::PlayInfoPublisher & play_info_publisher);
 
   void reset() override;

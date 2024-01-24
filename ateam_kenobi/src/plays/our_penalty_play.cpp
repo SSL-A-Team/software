@@ -26,12 +26,11 @@ namespace ateam_kenobi::plays
 {
 
 OurPenaltyPlay::OurPenaltyPlay(
-  visualization::OverlayPublisher & op,
   visualization::PlayInfoPublisher & pip)
-: BasePlay(op, pip),
-  line_kick_skill_(op)
+: BasePlay("OurPenaltyPlay", pip),
+  line_kick_skill_(getOverlays().getChild("line_kick"))
 {
-  play_helpers::EasyMoveTo::CreateArray(move_tos_, op);
+  play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
 
 void OurPenaltyPlay::reset()

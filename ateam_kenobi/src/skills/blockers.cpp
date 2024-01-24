@@ -28,10 +28,9 @@
 namespace ateam_kenobi::skills
 {
 
-Blockers::Blockers(visualization::OverlayPublisher & overlay_publisher)
-: overlay_publisher_(overlay_publisher)
+Blockers::Blockers(visualization::Overlays overlays)
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher_);
+  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlays.getChild("EasyMoveTo"));
 }
 
 void Blockers::reset()

@@ -25,9 +25,8 @@
 namespace ateam_kenobi::plays
 {
 StopPlay::StopPlay(
-  visualization::OverlayPublisher & overlay_publisher,
   visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher)
+: BasePlay("StopPlay", play_info_publisher)
 {
   StopPlay::reset();
 }
@@ -74,7 +73,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     stop_motion_commands[robot_id] = std::nullopt;  // already done but just to be explicit
   }
   // Draw Keepout Circle
-  overlay_publisher_.drawCircle(
+  getOverlays().drawCircle(
     "keepout_circle",
     ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
 

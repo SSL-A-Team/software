@@ -29,11 +29,10 @@
 namespace ateam_kenobi::plays
 {
 OurKickoffPlay::OurKickoffPlay(
-  visualization::OverlayPublisher & overlay_publisher,
   visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher),
-  goalie_skill_(overlay_publisher, play_info_publisher),
-  line_kick_skill_(overlay_publisher)
+: BasePlay("OurKickoffPlay", play_info_publisher),
+  line_kick_skill_(getOverlays().getChild("line_kick")),
+  goalie_skill_(getOverlays().getChild("goalie"), play_info_publisher)
 {
 }
 
@@ -81,7 +80,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
        * just kickoff
        */
       auto viz_circle = ateam_geometry::makeCircle(kicker_point, kRobotRadius);
-      overlay_publisher_.drawCircle(
+      getOverlays().drawCircle(
         "destination_" + std::to_string(
           kicker.id), viz_circle, "blue", "transparent");
 
@@ -128,7 +127,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     const auto & target_position = defender_positions_.at(pos_ind);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
-    overlay_publisher_.drawCircle(
+    getOverlays().drawCircle(
       "destination_" + std::to_string(
         robot_id), viz_circle, "blue", "transparent");
 

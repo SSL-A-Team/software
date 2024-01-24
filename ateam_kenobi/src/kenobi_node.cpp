@@ -39,7 +39,6 @@
 #include "types/world.hpp"
 #include "types/message_conversions.hpp"
 #include "play_selector.hpp"
-#include "visualization/overlay_publisher.hpp"
 #include "in_play_eval.hpp"
 #include "motion/world_to_body_vel.hpp"
 
@@ -55,12 +54,13 @@ class KenobiNode : public rclcpp::Node
 public:
   explicit KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("kenobi_node", options),
-    overlay_publisher_("Kenobi", *this),
     play_info_publisher_(*this),
-    play_selector_(overlay_publisher_, play_info_publisher_),
+    play_selector_(play_info_publisher_),
     game_controller_listener_(*this)
   {
     declare_parameter<bool>("use_world_velocities", false);
+
+    overlay_publisher_new_ = create_publisher<ateam_msgs::msg::OverlayArray>("/overlays", rclcpp::SystemDefaultsQoS());
 
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
       blue_robots_subscriptions_,
@@ -101,10 +101,10 @@ public:
 
 private:
   World world_;
-  visualization::OverlayPublisher overlay_publisher_;
   visualization::PlayInfoPublisher play_info_publisher_;
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
+  rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_new_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> blue_robots_subscriptions_;
@@ -244,7 +244,10 @@ private:
       return {};
     }
     const auto motion_commands = play->runFrame(world);
-    overlay_publisher_.publishOverlays();
+
+    overlay_publisher_new_->publish(play->getOverlays().getMsg());
+    play->getOverlays().clear();
+
     return motion_commands;
   }
 
