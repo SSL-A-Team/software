@@ -31,7 +31,7 @@ void EasyMoveTo::CreateArray(
   visualization::Overlays overlays)
 {
   std::generate(
-    dst.begin(), dst.end(), [&overlays,ind=0]() mutable{
+    dst.begin(), dst.end(), [&overlays, ind = 0]() mutable {
       return EasyMoveTo(overlays.getChild(std::to_string(ind++)));
     });
 }

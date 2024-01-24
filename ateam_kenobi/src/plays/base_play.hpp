@@ -24,6 +24,7 @@
 
 #include <array>
 #include <optional>
+#include <string>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "visualization/overlays.hpp"
 #include "visualization/play_info_publisher.hpp"
@@ -35,7 +36,8 @@ namespace ateam_kenobi::plays
 class BasePlay
 {
 public:
-  explicit BasePlay(std::string play_name,
+  explicit BasePlay(
+    std::string play_name,
     visualization::PlayInfoPublisher & play_info_publisher)
   : play_name_(play_name), overlays_(play_name), play_info_publisher_(play_info_publisher) {}
 
@@ -46,11 +48,13 @@ public:
   virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
     const World & world) = 0;
 
-  const std::string & getName() const {
+  const std::string & getName() const
+  {
     return play_name_;
   }
 
-  visualization::Overlays & getOverlays() {
+  visualization::Overlays & getOverlays()
+  {
     return overlays_;
   }
 

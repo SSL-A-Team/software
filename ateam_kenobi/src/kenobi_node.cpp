@@ -60,7 +60,9 @@ public:
   {
     declare_parameter<bool>("use_world_velocities", false);
 
-    overlay_publisher_new_ = create_publisher<ateam_msgs::msg::OverlayArray>("/overlays", rclcpp::SystemDefaultsQoS());
+    overlay_publisher_new_ = create_publisher<ateam_msgs::msg::OverlayArray>(
+      "/overlays",
+      rclcpp::SystemDefaultsQoS());
 
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
       blue_robots_subscriptions_,

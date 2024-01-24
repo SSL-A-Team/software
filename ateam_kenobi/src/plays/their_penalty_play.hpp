@@ -32,7 +32,7 @@ namespace ateam_kenobi::plays
 class TheirPenaltyPlay : public BasePlay
 {
 public:
-  TheirPenaltyPlay(visualization::PlayInfoPublisher & pip);
+  explicit TheirPenaltyPlay(visualization::PlayInfoPublisher & pip);
 
   void reset() override;
 
