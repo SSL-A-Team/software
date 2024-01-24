@@ -31,7 +31,6 @@ add_library(kenobi_node_component SHARED
   src/types/message_conversions.cpp
   src/motion/motion_controller.cpp
   src/visualization/overlays.cpp
-  src/visualization/play_info_publisher.cpp
   src/play_helpers/easy_move_to.cpp
   src/play_helpers/available_robots.cpp
   src/skills/goalie.cpp

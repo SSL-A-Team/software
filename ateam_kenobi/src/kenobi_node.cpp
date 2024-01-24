@@ -59,11 +59,13 @@ public:
   {
     declare_parameter<bool>("use_world_velocities", false);
 
-    overlay_publisher_new_ = create_publisher<ateam_msgs::msg::OverlayArray>(
+    overlay_publisher_ = create_publisher<ateam_msgs::msg::OverlayArray>(
       "/overlays",
       rclcpp::SystemDefaultsQoS());
 
-    play_info_publisher_ = create_publisher<ateam_msgs::msg::PlayInfo>("/play_info", rclcpp::SystemDefaultsQoS());
+    play_info_publisher_ = create_publisher<ateam_msgs::msg::PlayInfo>(
+      "/play_info",
+      rclcpp::SystemDefaultsQoS());
 
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
       blue_robots_subscriptions_,
@@ -106,7 +108,7 @@ private:
   World world_;
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
-  rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_new_;
+  rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
@@ -248,7 +250,7 @@ private:
     }
     const auto motion_commands = play->runFrame(world);
 
-    overlay_publisher_new_->publish(play->getOverlays().getMsg());
+    overlay_publisher_->publish(play->getOverlays().getMsg());
     play->getOverlays().clear();
 
 

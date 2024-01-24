@@ -32,7 +32,7 @@ namespace ateam_kenobi::skills
 class Goalie
 {
 public:
-  Goalie(visualization::Overlays overlays);
+  explicit Goalie(visualization::Overlays overlays);
 
   void reset();
 

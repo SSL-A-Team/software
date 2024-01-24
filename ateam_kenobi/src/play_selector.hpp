@@ -31,7 +31,6 @@ namespace ateam_kenobi
 class PlaySelector
 {
 public:
-
   plays::BasePlay * getPlay(const World & world);
 
 private:

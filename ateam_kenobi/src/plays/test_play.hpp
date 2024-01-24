@@ -31,7 +31,7 @@ namespace ateam_kenobi::plays
 class TestPlay : public BasePlay
 {
 public:
-  explicit TestPlay();
+  TestPlay();
 
   void reset() override;
 

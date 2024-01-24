@@ -32,7 +32,7 @@ namespace ateam_kenobi::plays
 class TestKickPlay : public BasePlay
 {
 public:
-  explicit TestKickPlay()
+  TestKickPlay()
   : BasePlay("TestKickPlay"),
     line_kick_skill_(getOverlays().getChild("line_kick"))
   {}
