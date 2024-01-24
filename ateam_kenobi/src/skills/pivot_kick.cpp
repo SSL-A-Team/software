@@ -41,14 +41,11 @@ ateam_geometry::Point PivotKick::getAssignmentPoint(const World & world)
 
 ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, const Robot & robot)
 {
-  overlay_publisher_.drawLine("LineKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
-
-  // TODO: REMOVE THIS
-  return pivot(world, robot);
+  overlay_publisher_.drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
 
   float hysteresis = 1.0;
   // Make it harder to accidentally leave kick state
-  if (prev_state_ == State::KickBall) {
+  if (prev_state_ != State::Capture) {
     hysteresis = 4.0;
   }
 
@@ -57,12 +54,12 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
   const auto robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
   // need to be able to detect breakbeam from kenobi
 
-  if (distance_to_ball > 0.135 * hysteresis || angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) > 0.15 * hysteresis) {
+  bool breakbeam = distance_to_ball < 0.098 * hysteresis || angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) < 0.15 * hysteresis;
+  if (!breakbeam) {
     if (prev_state_ != State::Capture) {
       easy_move_to_.reset();
       prev_state_ = State::Capture;
     }
-    std::cerr << "capturing" <<std::endl;
     return capture(world, robot);
   }
 
@@ -73,7 +70,6 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
       easy_move_to_.reset();
       prev_state_ = State::Pivot;
     }
-    std::cerr << "pivoting" <<std::endl;
     return pivot(world, robot);
   }
 
@@ -82,7 +78,6 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
     prev_state_ = State::KickBall;
   }
 
-  std::cerr << "kicking" <<std::endl;
   return kickBall(world, robot);
 }
 
