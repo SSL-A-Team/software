@@ -67,11 +67,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 
   // get the closest valid kicker
   ateam_geometry::Point kicker_point = ateam_geometry::Point(-0.25, 0);
-  const auto & maybe_kicker =
+  const Robot & kicker =
     world.our_robots.at(robot_assignment::assign(valid_kickers, {kicker_point}).begin()->first);
 
-  if (maybe_kicker.has_value()) {
-    const Robot & kicker = maybe_kicker.value();
+  if (kicker.is_valid()) {
+
     // handle kicker behavior and remove it from the total available
     play_helpers::removeRobotWithId(current_available_robots, kicker.id);
 
@@ -114,14 +114,12 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     defender_positions_);
 
   for (const auto [robot_id, pos_ind] : robot_assignments) {
-    const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
+    const Robot & robot = world.our_robots.at(robot_id);
 
-    if (!maybe_assigned_robot) {
+    if (!robot.is_valid()) {
       // TODO(barulicm): log this?
       continue;
     }
-
-    const Robot & robot = maybe_assigned_robot.value();
 
     auto & easy_move_to = easy_move_tos_.at(robot_id);
 
@@ -140,8 +138,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 
   // Have the goalie do stuff
   goalie_skill_.runFrame(world, maybe_motion_commands);
-  if (world.our_robots.at(world.referee_info.our_goalie_id).has_value()) {
-    const Robot & goalie_robot = world.our_robots.at(world.referee_info.our_goalie_id).value();
+  const Robot & goalie_robot = world.our_robots.at(world.referee_info.our_goalie_id);
+  if (goalie_robot.is_valid()) {
     this->play_info_publisher_.message["Our Kickoff Play"]["robots"][world.referee_info.
       our_goalie_id]["pos"] = {goalie_robot.pos.x(), goalie_robot.pos.y()};
   }

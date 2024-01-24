@@ -48,8 +48,8 @@ void Goalie::runFrame(
   16> & motion_commands)
 {
   const auto robot_id = world.referee_info.our_goalie_id;
-  const auto & maybe_robot = world.our_robots.at(robot_id);
-  if (!maybe_robot) {
+  const auto & robot = world.our_robots.at(robot_id);
+  if (robot.is_valid()) {
     // Assigned robot is not visible
     return;
   }
@@ -65,7 +65,7 @@ void Goalie::runFrame(
       goalie_line,
       world.ball.pos));
   easy_move_to_.face_point(world.ball.pos);
-  motion_commands.at(robot_id) = easy_move_to_.runFrame(maybe_robot.value(), world);
+  motion_commands.at(robot_id) = easy_move_to_.runFrame(robot, world);
 }
 
 }  // namespace ateam_kenobi::skills

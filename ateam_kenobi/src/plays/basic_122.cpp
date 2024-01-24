@@ -72,12 +72,12 @@ void Basic122::assignAndRunStriker(
     return;
   }
   const auto robot_id = assignment_map.begin()->first;
-  auto maybe_robot = world.our_robots[robot_id];
-  if (!maybe_robot) {
+  const Robot & robot = world.our_robots[robot_id];
+  if (!robot.is_valid()) {
     return;
   }
   striker_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length, 0.0));
-  motion_commands[robot_id] = striker_skill_.runFrame(world, maybe_robot.value());
+  motion_commands[robot_id] = striker_skill_.runFrame(world, robot);
 
   play_helpers::removeRobotWithId(available_robots, robot_id);
 }
@@ -98,13 +98,13 @@ void Basic122::assignAndRunBlockers(
   auto assignment_map = robot_assignment::assign(available_robots, assignable_positions);
   std::vector<Robot> assigned_robots;
   for (auto [robot_id, pos_ind] : assignment_map) {
-    auto maybe_robot = world.our_robots[robot_id];
-    if (!maybe_robot) {
+    const Robot & robot = world.our_robots[robot_id];
+    if (!robot.is_valid()) {
       continue;
     }
-    const auto & robot = maybe_robot.value();
     assigned_robots.push_back(robot);
   }
+
   auto skill_commands = blockers_skill_.runFrame(world, assigned_robots);
   for (auto robot_ind = 0ul; robot_ind < assigned_robots.size(); ++robot_ind) {
     const auto robot_id = assigned_robots[robot_ind].id;

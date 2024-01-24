@@ -29,10 +29,22 @@ namespace ateam_kenobi
 struct Robot
 {
   int id;
+  bool visible = false;
+  bool radio_connected = false;
+
   ateam_geometry::Point pos;
   double theta;
   ateam_geometry::Vector vel;
   double omega;
+
+  bool breakbeam_ball_detected = false;
+
+  // I don't know if these are actually in the radio packet
+  // but might as well handle them now
+  bool kicker_available = true;
+  bool chipper_available = false;
+
+  bool is_valid() const { return visible && radio_connected; }
 };
 }  // namespace ateam_kenobi
 

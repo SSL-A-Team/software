@@ -101,14 +101,12 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     current_available_robots,
     positions_to_assign);
   for (const auto [robot_id, pos_ind] : robot_assignments) {
-    const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
+    const auto & robot = world.our_robots.at(robot_id);
 
-    if (!maybe_assigned_robot) {
+    if (!robot.is_valid()) {
       // TODO(barulicm): log this?
       continue;
     }
-
-    const Robot & robot = maybe_assigned_robot.value();
 
     auto & easy_move_to = easy_move_tos_.at(robot_id);
 

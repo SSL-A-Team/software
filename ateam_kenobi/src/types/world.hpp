@@ -41,8 +41,8 @@ struct World
   RefereeInfo referee_info;
 
   Ball ball;
-  std::array<std::optional<Robot>, 16> our_robots;
-  std::array<std::optional<Robot>, 16> their_robots;
+  std::array<Robot, 16> our_robots;
+  std::array<Robot, 16> their_robots;
 
   bool in_play;
   bool our_penalty;
