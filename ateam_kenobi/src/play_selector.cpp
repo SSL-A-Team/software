@@ -26,20 +26,6 @@
 namespace ateam_kenobi
 {
 
-PlaySelector::PlaySelector(
-  visualization::PlayInfoPublisher & play_info_publisher)
-: test_play_(play_info_publisher),
-  halt_play_(play_info_publisher),
-  stop_play_(play_info_publisher),
-  wall_play_(play_info_publisher),
-  our_kickoff_play_(play_info_publisher),
-  test_kick_play_(play_info_publisher),
-  basic_122_play_(play_info_publisher),
-  our_penalty_play_(play_info_publisher),
-  their_penalty_play_(play_info_publisher)
-{
-}
-
 plays::BasePlay * PlaySelector::getPlay(const World & world)
 {
   ateam_common::GameCommand current_game_command = world.referee_info.running_command;

@@ -34,7 +34,7 @@ namespace ateam_kenobi::plays
 class Basic122 : public BasePlay
 {
 public:
-  explicit Basic122(visualization::PlayInfoPublisher & pip);
+  Basic122();
 
   void reset() override;
 

@@ -61,10 +61,9 @@ std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
 }
 
 
-WallPlay::WallPlay(
-  visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay("WallPlay", play_info_publisher),
-  goalie_skill_(getOverlays().getChild("goalie"), play_info_publisher)
+WallPlay::WallPlay()
+: BasePlay("WallPlay"),
+  goalie_skill_(getOverlays().getChild("goalie"))
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
@@ -126,7 +125,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
 
   goalie_skill_.runFrame(world, maybe_motion_commands);
 
-  play_info_publisher_.send_play_message("Wall Play");
   return maybe_motion_commands;
 }
 

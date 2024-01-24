@@ -26,16 +26,13 @@
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
 #include "visualization/overlays.hpp"
-#include "visualization/play_info_publisher.hpp"
 
 namespace ateam_kenobi::skills
 {
 class Goalie
 {
 public:
-  Goalie(
-    visualization::Overlays overlays,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  Goalie(visualization::Overlays overlays);
 
   void reset();
 
@@ -45,7 +42,6 @@ public:
 
 private:
   visualization::Overlays overlays_;
-  visualization::PlayInfoPublisher & play_info_publisher_;
   play_helpers::EasyMoveTo easy_move_to_;
 };
 

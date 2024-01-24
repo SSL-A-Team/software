@@ -31,8 +31,7 @@ namespace ateam_kenobi::plays
 class TestPlay : public BasePlay
 {
 public:
-  explicit TestPlay(
-    visualization::PlayInfoPublisher & play_info_publisher);
+  explicit TestPlay();
 
   void reset() override;
 

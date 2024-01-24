@@ -33,8 +33,7 @@ namespace ateam_kenobi::plays
 class StopPlay : public BasePlay
 {
 public:
-  explicit StopPlay(
-    visualization::PlayInfoPublisher & play_info_publisher);
+  explicit StopPlay();
 
   void reset() override;
 

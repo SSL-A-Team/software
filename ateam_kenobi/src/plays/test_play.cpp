@@ -27,10 +27,9 @@
 
 namespace ateam_kenobi::plays
 {
-TestPlay::TestPlay(
-  visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay("TestPlay", play_info_publisher),
-  goalie_skill_(getOverlays().getChild("goalie"), play_info_publisher)
+TestPlay::TestPlay()
+: BasePlay("TestPlay"),
+  goalie_skill_(getOverlays().getChild("goalie"))
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
@@ -62,7 +61,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
 
   goalie_skill_.runFrame(world, maybe_motion_commands);
 
-  play_info_publisher_.send_play_message("Test Play");
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

@@ -26,10 +26,9 @@
 namespace ateam_kenobi::plays
 {
 
-TheirPenaltyPlay::TheirPenaltyPlay(
-  visualization::PlayInfoPublisher & pip)
-: BasePlay("TheirPenaltyPlay", pip),
-  goalie_skill_(getOverlays().getChild("goalie"), pip)
+TheirPenaltyPlay::TheirPenaltyPlay()
+: BasePlay("TheirPenaltyPlay"),
+  goalie_skill_(getOverlays().getChild("goalie"))
 {
   play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
@@ -83,7 +82,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyP
     i++;
   }
 
-  play_info_publisher_.send_play_message("Their Penalty Play");
   return motion_commands;
 }
 }  // namespace ateam_kenobi::plays

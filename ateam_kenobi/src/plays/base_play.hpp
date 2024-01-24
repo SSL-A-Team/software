@@ -27,7 +27,7 @@
 #include <string>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "visualization/overlays.hpp"
-#include "visualization/play_info_publisher.hpp"
+#include <nlohmann/json.hpp>
 #include "types/world.hpp"
 
 namespace ateam_kenobi::plays
@@ -36,10 +36,8 @@ namespace ateam_kenobi::plays
 class BasePlay
 {
 public:
-  explicit BasePlay(
-    std::string play_name,
-    visualization::PlayInfoPublisher & play_info_publisher)
-  : play_name_(play_name), overlays_(play_name), play_info_publisher_(play_info_publisher) {}
+  explicit BasePlay(std::string play_name)
+  : play_name_(play_name), overlays_(play_name) {}
 
   virtual ~BasePlay() = default;
 
@@ -58,10 +56,15 @@ public:
     return overlays_;
   }
 
+  nlohmann::json & getPlayInfo()
+  {
+    return play_info_;
+  }
+
 protected:
   std::string play_name_;
   visualization::Overlays overlays_;
-  visualization::PlayInfoPublisher & play_info_publisher_;
+  nlohmann::json play_info_;
 };
 
 }  // namespace ateam_kenobi::plays

@@ -24,10 +24,8 @@
 namespace ateam_kenobi::skills
 {
 
-Goalie::Goalie(
-  visualization::Overlays overlays,
-  visualization::PlayInfoPublisher & play_info_publisher)
-: overlays_(overlays), play_info_publisher_(play_info_publisher),
+Goalie::Goalie(visualization::Overlays overlays)
+: overlays_(overlays),
   easy_move_to_(overlays.getChild("EasyMoveTo"))
 {
   reset();
