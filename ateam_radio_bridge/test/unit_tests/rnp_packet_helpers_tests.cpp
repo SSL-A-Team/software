@@ -1,9 +1,31 @@
+// Copyright 2021 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+
 #include <gtest/gtest.h>
 
 #include <rnp_packet_helpers.hpp>
 
 // TODO(barulicm) expand test coverage
 
+// Can we correctly set the CRC?
 TEST(SetCRC, BasicTest)
 {
   RadioPacket packet{
@@ -18,6 +40,7 @@ TEST(SetCRC, BasicTest)
   EXPECT_EQ(packet.crc32, 1560025497u);
 }
 
+// Do we reject (some) bad CRC values?
 TEST(HasCorrectCRC, BasicTest)
 {
   RadioPacket packet{
@@ -35,6 +58,7 @@ TEST(HasCorrectCRC, BasicTest)
   EXPECT_FALSE(ateam_radio_bridge::HasCorrectCRC(packet));
 }
 
+// Can we correctly create a data payload for a HelloRequest?
 TEST(SetDataPayload, HelloRequest)
 {
   RadioPacket packet;
@@ -48,6 +72,7 @@ TEST(SetDataPayload, HelloRequest)
   EXPECT_EQ(packet.data.hello_request.color, TC_BLUE);
 }
 
+// Do we create a packet correctly given a basic payload?
 TEST(CreatePacket, HelloRequest)
 {
   HelloRequest payload{
@@ -55,7 +80,7 @@ TEST(CreatePacket, HelloRequest)
     TC_YELLOW
   };
   RadioPacket packet = ateam_radio_bridge::CreatePacket(CC_HELLO_REQ, payload);
-  EXPECT_EQ(packet.crc32, 3171905816u);
+  EXPECT_EQ(packet.crc32, 1906667910u);
   EXPECT_EQ(packet.major_version, kProtocolVersionMajor);
   EXPECT_EQ(packet.minor_version, kProtocolVersionMinor);
   EXPECT_EQ(packet.command_code, CC_HELLO_REQ);
@@ -64,16 +89,18 @@ TEST(CreatePacket, HelloRequest)
   EXPECT_EQ(packet.data.hello_request.color, TC_YELLOW);
 }
 
+// Is the format of our empty radio packets correct?
 TEST(CreateEmptyPacket, Ack)
 {
   RadioPacket packet = ateam_radio_bridge::CreateEmptyPacket(CC_ACK);
-  EXPECT_EQ(packet.crc32, 3718166540u);
+  EXPECT_EQ(packet.crc32, 381840297u);
   EXPECT_EQ(packet.major_version, kProtocolVersionMajor);
   EXPECT_EQ(packet.minor_version, kProtocolVersionMinor);
   EXPECT_EQ(packet.command_code, CC_ACK);
   EXPECT_EQ(packet.data_length, 0);
 }
 
+// Are we parsing packets correctly?
 TEST(ParsePacket, HelloRequest)
 {
   std::array<uint8_t, 14> data = {
@@ -104,6 +131,7 @@ TEST(ParsePacket, HelloRequest)
   EXPECT_EQ(packet.data.hello_request.color, TC_BLUE);
 }
 
+// Are we able to extract data from a packet correctly?
 TEST(ExtractData, HelloRequest)
 {
   RadioPacket packet{

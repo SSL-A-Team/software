@@ -18,28 +18,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <string>
 
-#include "ateam_common/game_state_listener.hpp"
+#ifndef PLAYS__BASIC_122_HPP_
+#define PLAYS__BASIC_122_HPP_
 
-namespace ateam_common
+#include <vector>
+#include "base_play.hpp"
+#include "skills/line_kick.hpp"
+#include "skills/blockers.hpp"
+#include "skills/goalie.hpp"
+
+namespace ateam_kenobi::plays
 {
 
-GameStateListener::GameStateListener(rclcpp::Node & node)
+class Basic122 : public BasePlay
 {
-  rclcpp::QoS qos(1);
-  qos.reliable();
-  qos.transient_local();
-  ref_subscription_ = node.create_subscription<ssl_league_msgs::msg::Referee>(
-    "/gc_multicast_bridge_node/referee_messages", qos,
-    std::bind(&GameStateListener::RefereeMessageCallback, this, std::placeholders::_1));
-}
+public:
+  Basic122(visualization::OverlayPublisher & op, visualization::PlayInfoPublisher & pip);
 
-void GameStateListener::RefereeMessageCallback(
-  const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
-{
-  game_command_ = static_cast<GameCommand>(msg->command);
-  game_stage_ = static_cast<GameStage>(msg->stage);
-}
+  void reset() override;
 
-}  // namespace ateam_common
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world);
+
+private:
+  skills::LineKick striker_skill_;
+  skills::Blockers blockers_skill_;
+  skills::Goalie goalie_skill_;
+
+  void assignAndRunStriker(
+    std::vector<Robot> & available_robots, const World & world,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & motion_commands);
+
+  void assignAndRunBlockers(
+    std::vector<Robot> & available_robots, const World & world,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & motion_commands);
+};
+
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__BASIC_122_HPP_

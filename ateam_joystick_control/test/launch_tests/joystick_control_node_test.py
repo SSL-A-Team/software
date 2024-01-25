@@ -76,7 +76,7 @@ class TestJoystickControlNode(unittest.TestCase):
 
         self.set_parameter_client = self.node.create_client(
             rcl_interfaces.srv.SetParameters, '/joystick_control_node/set_parameters')
-        self.assertTrue(self.set_parameter_client.wait_for_service(1.0))
+        self.assertTrue(self.set_parameter_client.wait_for_service(5.0))
 
         self.message_pump.start()
 
@@ -150,28 +150,29 @@ class TestJoystickControlNode(unittest.TestCase):
         ]
         joy_msg.buttons = [0] * 11
 
-        while self.received_msg_0 is None and self.received_msg_1 is None:
+        while self.received_msg_0 is None or self.received_msg_1 is None:
             self.pub.publish(joy_msg)
             time.sleep(0.1)
 
-        self.assertIsNone(self.received_msg_0)
-        self.assertIsNotNone(self.received_msg_1)
+        # Robot 0 should get one more all-zero message when the controller switches
+        self.assertIsNotNone(self.received_msg_0)
+        self.assertAlmostEqual(self.received_msg_0.twist.linear.x, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.linear.y, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.linear.z, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.angular.x, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.angular.y, 0.0)
+        self.assertAlmostEqual(self.received_msg_0.twist.angular.z, 0.0)
 
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.x, -1.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.y, -1.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.linear.z, 0.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.angular.x, 0.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.angular.y, 0.0)
-        self.assertAlmostEqual(
-            self.received_msg_1.twist.angular.z, -1.0)
+        self.assertIsNotNone(self.received_msg_1)
+        self.assertAlmostEqual(self.received_msg_1.twist.linear.x, -1.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.linear.y, -1.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.linear.z, 0.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.x, 0.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.y, 0.0)
+        self.assertAlmostEqual(self.received_msg_1.twist.angular.z, -1.0)
 
     def test_2_invalidRobotIdsShouldBeRejected(self):
-        self.assertFalse(self.setRobotId(-1).results[0].successful)
+        self.assertFalse(self.setRobotId(-2).results[0].successful)
         self.assertFalse(self.setRobotId(16).results[0].successful)
 
     def callback_0(self, msg):

@@ -23,6 +23,7 @@
 
 #include <variant>
 #include "ateam_geometry/types.hpp"
+#include "ateam_geometry/disk_intersection.hpp"
 
 namespace ateam_geometry
 {
@@ -43,6 +44,15 @@ namespace ateam_geometry
 template<typename ObjA>
 bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
 {
+  if constexpr (std::is_same_v<ObjA, Circle>) {
+    return std::visit(
+      [&object_a](const auto & b) {
+        return ateam_geometry::doDiskIntersect(object_a, b);
+      }, object_b);
+  }
+  if (std::holds_alternative<Circle>(object_b)) {
+    return ateam_geometry::doDiskIntersect(std::get<Circle>(object_b), object_a);
+  }
   return std::visit(
     [&object_a](const auto & b) {
       return CGAL::do_intersect(object_a, b);
@@ -61,14 +71,14 @@ bool variantDoIntersect(const ObjA & object_a, const AnyShape & object_b)
  * @return true The two geometry objects intersect
  * @return false The two geometry objects do not intersect
  */
-bool variantDoIntersect(const AnyShape & object_a, const AnyShape & object_b)
+template<>
+inline bool variantDoIntersect(const AnyShape & object_a, const AnyShape & object_b)
 {
   return std::visit(
     [&object_b](const auto & a) {
       return variantDoIntersect(a, object_b);
     }, object_a);
 }
-
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__VARIANT_DO_INTERSECT_HPP_

@@ -3,15 +3,15 @@
     mapping:
       linear:
         x:
-          axis: 0
-          scale: 0.01
-        y:
           axis: 1
-          scale: 0.01
+          scale: 2.0
+        y:
+          axis: 0
+          scale: 2.0
       angular:
         z:
           axis: 3
-          scale: 0.01
+          scale: 4.0
       kick: 5
       dribbler:
         increment: 3
