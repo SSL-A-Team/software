@@ -37,7 +37,8 @@ void EasyMoveTo::CreateArray(
 }
 
 EasyMoveTo::EasyMoveTo(visualization::Overlays overlays)
-: overlays_(overlays)
+: path_planner_(overlays.getChild("path_planner")),
+  overlays_(overlays)
 {
 }
 

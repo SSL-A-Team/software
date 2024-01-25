@@ -87,7 +87,9 @@ ateam_msgs::msg::RobotMotionCommand LineKick::moveToPreKick(
   const World & world,
   const Robot & robot)
 {
-  easy_move_to_.setPlannerOptions({});
+  path_planning::PlannerOptions options;
+  options.draw_obstacles = true;
+  easy_move_to_.setPlannerOptions(options);
   easy_move_to_.setTargetPosition(getPreKickPosition(world));
   easy_move_to_.face_travel();
   std::vector<ateam_geometry::AnyShape> obstacles = {
@@ -98,7 +100,9 @@ ateam_msgs::msg::RobotMotionCommand LineKick::moveToPreKick(
 
 ateam_msgs::msg::RobotMotionCommand LineKick::faceBall(const World & world, const Robot & robot)
 {
-  easy_move_to_.setPlannerOptions({});
+  path_planning::PlannerOptions options;
+  options.draw_obstacles = true;
+  easy_move_to_.setPlannerOptions(options);
   easy_move_to_.setTargetPosition(robot.pos);
   easy_move_to_.face_point(target_point_);
   easy_move_to_.setMaxAngularVelocity(1.0);
@@ -116,6 +120,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::kickBall(const World & world, cons
   planner_options.avoid_ball = false;
   planner_options.footprint_inflation = 0.0;
   planner_options.use_default_obstacles = false;
+  planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
   auto command = easy_move_to_.runFrame(robot, world);
   command.twist.linear.x = std::cos(robot.theta) * 0.5;

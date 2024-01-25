@@ -29,7 +29,8 @@
 namespace ateam_kenobi::path_planning
 {
 
-PathPlanner::PathPlanner()
+PathPlanner::PathPlanner(visualization::Overlays overlays)
+: overlays_(overlays)
 {
 }
 
@@ -50,6 +51,10 @@ PathPlanner::Path PathPlanner::getPath(
 
   if (options.avoid_ball) {
     augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
+  }
+
+  if (options.draw_obstacles) {
+    drawObstacles(augmented_obstacles);
   }
 
   if (!isStateValid(goal, world, augmented_obstacles, options)) {
@@ -225,6 +230,32 @@ void PathPlanner::addDefaultObstacles(
         (world.field.field_length / 2) - world.field.goal_depth,
         -world.field.goal_width)
   ));
+}
+
+
+void PathPlanner::drawObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles)
+{
+  auto drawObstacle = [this, obstacle_ind = 0](const auto & shape)mutable {
+      const auto name = "obstacle" + std::to_string(obstacle_ind);
+      const auto color = "FF00007F";
+      using ShapeT = std::decay_t<decltype(shape)>;
+      if constexpr (std::is_same_v<ShapeT, ateam_geometry::Point>) {
+        overlays_.drawCircle(name, ateam_geometry::makeCircle(shape, 2.5), color, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Segment>) {
+        overlays_.drawLine(name, {shape.source(), shape.target()}, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Ray>) {
+        overlays_.drawLine(name, {shape.source(), shape.point(10)}, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Rectangle>) {
+        overlays_.drawRectangle(name, shape, color, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Circle>) {
+        overlays_.drawCircle(name, shape, color, color);
+      } else {
+        std::cerr << "Shape to draw not recognized!\n";
+      }
+      obstacle_ind++;
+    };
+
+  std::ranges::for_each(obstacles, [&drawObstacle](const auto & s) {std::visit(drawObstacle, s);});
 }
 
 }  // namespace ateam_kenobi::path_planning

@@ -25,6 +25,7 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include "types/world.hpp"
+#include "visualization/overlays.hpp"
 
 namespace ateam_kenobi::path_planning
 {
@@ -50,6 +51,8 @@ struct PlannerOptions
   double collision_check_resolution = 0.05;
 
   bool use_default_obstacles = true;
+
+  bool draw_obstacles = false;
 };
 
 class PathPlanner
@@ -58,7 +61,7 @@ public:
   using Position = ateam_geometry::Point;
   using Path = std::vector<Position>;
 
-  PathPlanner();
+  PathPlanner(visualization::Overlays overlays = {});
 
   Path getPath(
     const Position & start, const Position & goal, const World & world,
@@ -66,6 +69,8 @@ public:
     const PlannerOptions & options = PlannerOptions());
 
 private:
+  visualization::Overlays overlays_;
+
   bool isStateValid(
     const ateam_geometry::Point & state,
     const World & world,
@@ -95,6 +100,8 @@ private:
     std::vector<ateam_geometry::AnyShape> & obstacles);
 
   void addDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles);
+
+  void drawObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles);
 };
 
 }  // namespace ateam_kenobi::path_planning
