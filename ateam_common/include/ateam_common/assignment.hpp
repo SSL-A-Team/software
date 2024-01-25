@@ -28,11 +28,13 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_common/assignment_strategies.hpp>
+#include <ateam_common/hungarian.hpp>
 
 namespace ateam_common
 {
 namespace assignment
 {
+
 /**
  * Given a Matrix of N rows and M columns, where...
  *  * each of the N rows is a robot to assign

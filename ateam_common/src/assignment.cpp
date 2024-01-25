@@ -46,7 +46,17 @@ std::unordered_map<std::size_t, std::size_t> optimize_assignment(
 std::unordered_map<std::size_t, std::size_t> internal::optimize_assignment_impl(
   const Eigen::MatrixXd & cost_matrix)
 {
-  return ateam_common::assignment::hungarian<double>(cost_matrix);
+  ::HungarianAlgorithm hungarian{};
+  std::vector<int> result_vec;
+  hungarian.Solve(cost_matrix, result_vec);
+
+  std::unordered_map<std::size_t, std::size_t> result;
+  for (size_t i = 0; i < result_vec.size(); i++) {
+    result.emplace(i, result_vec[i]);
+  }
+  return result;
+
+  // return ateam_common::assignment::hungarian<double>(cost_matrix);
   // return ateam_common::assignment::johnsons_hungarian<double>(cost_matrix);
   // return ateam_common::assignment::internal::optimize_assignment_impl_hungarian(<double>(cost_matrix);
 }

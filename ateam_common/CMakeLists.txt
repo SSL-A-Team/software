@@ -18,6 +18,7 @@ find_package(angles REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
+  src/hungarian.cpp
   src/assignment.cpp
   src/bi_directional_udp.cpp
   src/multicast_receiver.cpp
