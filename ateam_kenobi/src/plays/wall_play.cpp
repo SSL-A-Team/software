@@ -61,13 +61,11 @@ std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
 }
 
 
-WallPlay::WallPlay(
-  visualization::OverlayPublisher & overlay_publisher,
-  visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher),
-  goalie_skill_(overlay_publisher, play_info_publisher)
+WallPlay::WallPlay()
+: BasePlay("WallPlay"),
+  goalie_skill_(getOverlays().getChild("goalie"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher);
+  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
 
 void WallPlay::reset()
@@ -114,7 +112,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     const auto & target_position = positions_to_assign.at(pos_ind);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
-    overlay_publisher_.drawCircle(
+    getOverlays().drawCircle(
       "destination_" + std::to_string(
         robot_id), viz_circle, "blue", "transparent");
 
@@ -124,7 +122,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
   }
 
-  play_info_publisher_.send_play_message("Wall Play");
   return maybe_motion_commands;
 }
 

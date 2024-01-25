@@ -30,6 +30,7 @@
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/overlay.hpp>
+#include <ateam_msgs/msg/play_info.hpp>
 #include <ateam_msgs/msg/world.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
@@ -39,7 +40,6 @@
 #include "types/world.hpp"
 #include "types/message_conversions.hpp"
 #include "play_selector.hpp"
-#include "visualization/overlay_publisher.hpp"
 #include "in_play_eval.hpp"
 #include "double_touch_eval.hpp"
 #include "motion/world_to_body_vel.hpp"
@@ -56,12 +56,17 @@ class KenobiNode : public rclcpp::Node
 public:
   explicit KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("kenobi_node", options),
-    overlay_publisher_("Kenobi", *this),
-    play_info_publisher_(*this),
-    play_selector_(overlay_publisher_, play_info_publisher_),
     game_controller_listener_(*this)
   {
     declare_parameter<bool>("use_world_velocities", false);
+
+    overlay_publisher_ = create_publisher<ateam_msgs::msg::OverlayArray>(
+      "/overlays",
+      rclcpp::SystemDefaultsQoS());
+
+    play_info_publisher_ = create_publisher<ateam_msgs::msg::PlayInfo>(
+      "/play_info",
+      rclcpp::SystemDefaultsQoS());
 
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
       blue_robots_subscriptions_,
@@ -102,13 +107,13 @@ public:
 
 private:
   World world_;
-  visualization::OverlayPublisher overlay_publisher_;
-  visualization::PlayInfoPublisher play_info_publisher_;
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
   ateam_common::GameCommand cached_game_command_;
   ateam_common::GameCommand prev_game_command_;
+  rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
+  rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> blue_robots_subscriptions_;
@@ -251,7 +256,17 @@ private:
       return {};
     }
     const auto motion_commands = play->runFrame(world);
-    overlay_publisher_.publishOverlays();
+
+    overlay_publisher_->publish(play->getOverlays().getMsg());
+    play->getOverlays().clear();
+
+
+    ateam_msgs::msg::PlayInfo play_info_msg;
+    play_info_msg.name = play->getName();
+    play_info_msg.description = play->getPlayInfo().dump();
+    play->getPlayInfo().clear();
+    play_info_publisher_->publish(play_info_msg);
+
     return motion_commands;
   }
 

@@ -27,9 +27,9 @@
 namespace ateam_kenobi::skills
 {
 
-LineKick::LineKick(visualization::OverlayPublisher & overlay_publisher)
-: overlay_publisher_(overlay_publisher),
-  easy_move_to_(overlay_publisher_)
+LineKick::LineKick(visualization::Overlays overlays)
+: overlays_(overlays),
+  easy_move_to_(overlays.getChild("EasyMoveTo"))
 {
 }
 
@@ -42,7 +42,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
 {
   const auto pre_kick_position = getPreKickPosition(world);
 
-  overlay_publisher_.drawLine("LineKick_line", {pre_kick_position, target_point_}, "#FFFF007F");
+  overlays_.drawLine("kick_line", {pre_kick_position, target_point_}, "#FFFF007F");
 
   float hysteresis = 1.0;
   // Make it harder to accidentally leave kick state

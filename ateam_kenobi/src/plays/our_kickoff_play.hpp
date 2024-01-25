@@ -37,9 +37,7 @@ namespace ateam_kenobi::plays
 class OurKickoffPlay : public BasePlay
 {
 public:
-  explicit OurKickoffPlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  OurKickoffPlay();
 
   void reset() override;
 

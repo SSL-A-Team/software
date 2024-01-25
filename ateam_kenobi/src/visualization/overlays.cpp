@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,31 +19,43 @@
 // THE SOFTWARE.
 
 
-#include "overlay_publisher.hpp"
-#include <algorithm>
-#include <numeric>
-#include <string>
-#include <vector>
+#include "overlays.hpp"
+#include <memory>
 
 namespace ateam_kenobi::visualization
 {
 
-OverlayPublisher::OverlayPublisher(const std::string & ns, rclcpp::Node & node)
-: ns(ns),
-  publisher_(node.create_publisher<ateam_msgs::msg::OverlayArray>(
-      "/overlays",
-      rclcpp::SystemDefaultsQoS()))
+Overlays::Overlays(std::string ns, ateam_msgs::msg::OverlayArray::SharedPtr msg)
+: ns_(ns), overlay_array_(msg)
 {
+  if (!overlay_array_) {
+    overlay_array_ = std::make_shared<ateam_msgs::msg::OverlayArray>();
+  }
 }
 
-void OverlayPublisher::drawLine(
-  const std::string & name,
-  const std::vector<ateam_geometry::Point> & points,
+Overlays Overlays::getChild(std::string name)
+{
+  return Overlays(ns_ + "/" + name, overlay_array_);
+}
+
+
+const ateam_msgs::msg::OverlayArray & Overlays::getMsg() const
+{
+  return *overlay_array_;
+}
+
+void Overlays::clear()
+{
+  overlay_array_->overlays.clear();
+}
+
+void Overlays::drawLine(
+  const std::string & name, const std::vector<ateam_geometry::Point> & points,
   const std::string & color, const uint8_t stroke_width,
   const uint32_t lifetime)
 {
   ateam_msgs::msg::Overlay msg;
-  msg.ns = ns;
+  msg.ns = ns_;
   msg.name = name;
   msg.visible = true;
   msg.type = ateam_msgs::msg::Overlay::LINE;
@@ -61,16 +73,17 @@ void OverlayPublisher::drawLine(
       point_msg.y = point.y();
       return point_msg;
     });
-  overlays_.overlays.push_back(msg);
+  addOverlay(msg);
 }
 
-void OverlayPublisher::drawCircle(
+void Overlays::drawCircle(
   const std::string & name, const ateam_geometry::Circle & circle,
-  const std::string & stroke_color, const std::string & fill_color, const uint8_t stroke_width,
+  const std::string & stroke_color,
+  const std::string & fill_color, const uint8_t stroke_width,
   const uint32_t lifetime)
 {
   ateam_msgs::msg::Overlay msg;
-  msg.ns = ns;
+  msg.ns = ns_;
   msg.name = name;
   msg.visible = true;
   msg.type = ateam_msgs::msg::Overlay::ELLIPSE;
@@ -84,17 +97,17 @@ void OverlayPublisher::drawCircle(
   msg.fill_color = fill_color;
   msg.lifetime = lifetime;
   msg.depth = 1;
-  overlays_.overlays.push_back(msg);
+  addOverlay(msg);
 }
 
-void OverlayPublisher::drawPolygon(
-  const std::string & name,
-  const ateam_geometry::Polygon & polygon,
-  const std::string & stroke_color, const std::string & fill_color,
-  const uint8_t stroke_width, const uint32_t lifetime)
+void Overlays::drawPolygon(
+  const std::string & name, const ateam_geometry::Polygon & polygon,
+  const std::string & stroke_color,
+  const std::string & fill_color, const uint8_t stroke_width,
+  const uint32_t lifetime)
 {
   ateam_msgs::msg::Overlay msg;
-  msg.ns = ns;
+  msg.ns = ns_;
   msg.name = name;
   msg.visible = true;
   msg.type = ateam_msgs::msg::Overlay::POLYGON;
@@ -114,16 +127,16 @@ void OverlayPublisher::drawPolygon(
       point_msg.y = vertex.y();
       return point_msg;
     });
-  overlays_.overlays.push_back(msg);
+  addOverlay(msg);
 }
 
-void OverlayPublisher::drawText(
+void Overlays::drawText(
   const std::string & name, const std::string & text, const ateam_geometry::Point & position,
   const std::string & color, const uint8_t font_size,
   const uint32_t lifetime)
 {
   ateam_msgs::msg::Overlay msg;
-  msg.ns = ns;
+  msg.ns = ns_;
   msg.name = name;
   msg.visible = true;
   msg.type = ateam_msgs::msg::Overlay::TEXT;
@@ -135,18 +148,16 @@ void OverlayPublisher::drawText(
   msg.lifetime = lifetime;
   msg.depth = 1;
   msg.text = text;
-  overlays_.overlays.push_back(msg);
+  addOverlay(msg);
 }
 
-void OverlayPublisher::drawRectangle(
-  const std::string & name,
-  const ateam_geometry::Rectangle & rectangle,
-  const std::string & stroke_color,
-  const std::string & fill_color, const uint8_t stroke_width,
-  const uint32_t lifetime)
+void Overlays::drawRectangle(
+  const std::string & name, const ateam_geometry::Rectangle & rectangle,
+  const std::string & stroke_color, const std::string & fill_color,
+  const uint8_t stroke_width, const uint32_t lifetime)
 {
   ateam_msgs::msg::Overlay msg;
-  msg.ns = ns;
+  msg.ns = ns_;
   msg.name = name;
   msg.visible = true;
   msg.type = ateam_msgs::msg::Overlay::RECTANGLE;
@@ -160,13 +171,14 @@ void OverlayPublisher::drawRectangle(
   msg.fill_color = fill_color;
   msg.depth = 1;
   msg.lifetime = lifetime;
-  overlays_.overlays.push_back(msg);
+  addOverlay(msg);
 }
 
-void OverlayPublisher::publishOverlays()
+void Overlays::addOverlay(ateam_msgs::msg::Overlay overlay)
 {
-  if (!overlays_.overlays.empty()) {publisher_->publish(overlays_);}
-  overlays_.overlays.clear();
+  if (overlay_array_) {
+    overlay_array_->overlays.push_back(overlay);
+  }
 }
 
 }  // namespace ateam_kenobi::visualization

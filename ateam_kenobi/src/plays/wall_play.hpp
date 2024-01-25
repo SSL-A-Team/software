@@ -39,9 +39,7 @@ inline std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
 class WallPlay : public BasePlay
 {
 public:
-  explicit WallPlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  WallPlay();
   void reset() override;
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override;

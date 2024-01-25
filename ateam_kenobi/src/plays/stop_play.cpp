@@ -24,10 +24,8 @@
 
 namespace ateam_kenobi::plays
 {
-StopPlay::StopPlay(
-  visualization::OverlayPublisher & overlay_publisher,
-  visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher)
+StopPlay::StopPlay()
+: BasePlay("StopPlay")
 {
   StopPlay::reset();
 }
@@ -53,7 +51,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     if (maybe_robot.has_value()) {
       // move the robot if its in the danger zone halt if its not
       if (ateam_geometry::norm(maybe_robot.value().pos, world.ball.pos) < radius) {
-        play_info_publisher_.message["robots"][std::to_string(robot_id)] = "moving";
+        getPlayInfo()["robots"][std::to_string(robot_id)] = "moving";
         const auto & robot = maybe_robot.value();
         ateam_geometry::Vector offset_vector = radius * ateam_geometry::normalize(
           robot.pos - world.ball.pos);
@@ -65,7 +63,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
         easy_move_to.setTargetPosition(destination);
         stop_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
       } else {
-        play_info_publisher_.message["robots"][std::to_string(robot_id)] = "safe";
+        getPlayInfo()["robots"][std::to_string(robot_id)] = "safe";
         // literally halt if this one robot is not in the danger zone
         stop_motion_commands[robot_id] = ateam_msgs::msg::RobotMotionCommand{};
       }
@@ -74,11 +72,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     stop_motion_commands[robot_id] = std::nullopt;  // already done but just to be explicit
   }
   // Draw Keepout Circle
-  overlay_publisher_.drawCircle(
+  getOverlays().drawCircle(
     "keepout_circle",
     ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
 
-  play_info_publisher_.send_play_message("Stop Play");
   return stop_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

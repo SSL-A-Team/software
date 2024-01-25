@@ -28,12 +28,10 @@
 
 namespace ateam_kenobi::plays
 {
-OurKickoffPlay::OurKickoffPlay(
-  visualization::OverlayPublisher & overlay_publisher,
-  visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher),
-  line_kick_skill_(overlay_publisher),
-  goalie_skill_(overlay_publisher, play_info_publisher)
+OurKickoffPlay::OurKickoffPlay()
+: BasePlay("OurKickoffPlay"),
+  line_kick_skill_(getOverlays().getChild("line_kick")),
+  goalie_skill_(getOverlays().getChild("goalie"))
 {
 }
 
@@ -73,7 +71,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
        * just kickoff
        */
       auto viz_circle = ateam_geometry::makeCircle(kicker_point, kRobotRadius);
-      overlay_publisher_.drawCircle(
+      getOverlays().drawCircle(
         "destination_" + std::to_string(
           kicker.id), viz_circle, "blue", "transparent");
 
@@ -83,8 +81,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
       easy_move_to.face_point(world.ball.pos);
       maybe_motion_commands.at(kicker.id) = easy_move_to.runFrame(kicker, world);
 
-      play_info_publisher_.message["Our Kickoff Play"]["State"] = "Preparing";
-      play_info_publisher_.message["Our Kickoff Play"]["Kicker Id"] = kicker.id;
+      getPlayInfo()["State"] = "Preparing";
+      getPlayInfo()["Kicker Id"] = kicker.id;
 
       // Kick the ball
     } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
@@ -97,7 +95,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
         prev_id_ = kicker.id;
       }
 
-      play_info_publisher_.message["Our Kickoff Play"]["State"] = "Kicking";
+      getPlayInfo()["State"] = "Kicking";
     }
   }
 
@@ -128,7 +126,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     const auto & target_position = defender_positions.at(pos_ind);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
-    overlay_publisher_.drawCircle(
+    getOverlays().drawCircle(
       "destination_" + std::to_string(
         robot_id), viz_circle, "blue", "transparent");
 
@@ -142,11 +140,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   goalie_skill_.runFrame(world, maybe_motion_commands);
   if (world.our_robots.at(world.referee_info.our_goalie_id).has_value()) {
     const Robot & goalie_robot = world.our_robots.at(world.referee_info.our_goalie_id).value();
-    this->play_info_publisher_.message["Our Kickoff Play"]["robots"][world.referee_info.
+    getPlayInfo()["robots"][world.referee_info.
       our_goalie_id]["pos"] = {goalie_robot.pos.x(), goalie_robot.pos.y()};
   }
 
-  play_info_publisher_.send_play_message("our_kickoff_play");
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays
