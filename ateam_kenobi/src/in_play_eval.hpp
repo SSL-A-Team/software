@@ -48,8 +48,15 @@ private:
 
   void SetDistanceThreshold(const World & world);
 
+  bool IsGameStopped(const World & world);
+
+  bool IsStopCommandEnding(const World & world);
+
   bool IsGameResuming(const World & world);
 
+  bool HasBallMoved(const World & world);
+
+  bool HasTimeoutExpired();
 };
 
 }  // namespace ateam_kenobi

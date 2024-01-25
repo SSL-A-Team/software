@@ -20,8 +20,9 @@
 
 #include "in_play_eval.hpp"
 
-#include <cmath>
 #include <CGAL/squared_distance_2.h>
+#include <cmath>
+#include <limits>
 
 namespace ateam_kenobi
 {
@@ -29,42 +30,20 @@ namespace ateam_kenobi
 void InPlayEval::Update(World & world)
 {
   const auto game_command = world.referee_info.running_command;
-  // Force start always puts the ball in play
   if (game_command == ateam_common::GameCommand::ForceStart) {
     in_play_ = true;
-  }
-  // Stop / Halt puts the ball out of play
-  else if (game_command == ateam_common::GameCommand::Stop ||
-    game_command == ateam_common::GameCommand::Halt)
-  {
+  } else if (IsGameStopped(world)) {
     in_play_ = false;
     ball_start_pos_.reset();
-  }
-  // Game is exitting Stop command, decide in-play rules based on new command
-  else if (game_command != prev_game_command_ &&
-    prev_game_command_ == ateam_common::GameCommand::Stop)
-  {
+  } else if (IsStopCommandEnding(world)) {
     SetTimeout(world);
     SetDistanceThreshold(world);
-  }
-  // Game is resuming, establish starting conditions
-  else if (IsGameResuming(world)) {
+  } else if (IsGameResuming(world)) {
     ball_start_pos_ = world.ball.pos;
     timeout_start_ = std::chrono::steady_clock::now();
-  }
-  // If timeout passed, ball's in play
-  else if (timeout_duration_ &&
-    std::chrono::steady_clock::now() > (timeout_start_ + timeout_duration_.value()))
-  {
+  } else if (HasTimeoutExpired()) {
     in_play_ = true;
-  }
-  // If ball moved far enough, it's in play
-  else if (ball_start_pos_ &&
-    std::sqrt(
-      CGAL::squared_distance(
-        world.ball.pos,
-        ball_start_pos_.value())) > ball_moved_threshold_)
-  {
+  } else if (HasBallMoved(world)) {
     in_play_ = true;
   }
 
@@ -110,6 +89,19 @@ void InPlayEval::SetDistanceThreshold(const World & world)
 }
 
 
+bool InPlayEval::IsGameStopped(const World & world)
+{
+  return world.referee_info.running_command == ateam_common::GameCommand::Stop ||
+         world.referee_info.running_command == ateam_common::GameCommand::Halt;
+}
+
+bool InPlayEval::IsStopCommandEnding(const World & world)
+{
+  return world.referee_info.running_command != prev_game_command_ &&
+         prev_game_command_ == ateam_common::GameCommand::Stop;
+}
+
+
 bool InPlayEval::IsGameResuming(const World & world)
 {
   if (world.referee_info.running_command == prev_game_command_) {
@@ -124,6 +116,27 @@ bool InPlayEval::IsGameResuming(const World & world)
   }
 
   return false;
+}
+
+bool InPlayEval::HasBallMoved(const World & world)
+{
+  if (!ball_start_pos_) {
+    return false;
+  }
+
+  return CGAL::approximate_sqrt(
+    CGAL::squared_distance(
+      world.ball.pos,
+      ball_start_pos_.value())) > ball_moved_threshold_;
+}
+
+bool InPlayEval::HasTimeoutExpired()
+{
+  if (!timeout_duration_) {
+    return false;
+  }
+
+  return std::chrono::steady_clock::now() > (timeout_start_ + timeout_duration_.value());
 }
 
 }  // namespace ateam_kenobi
