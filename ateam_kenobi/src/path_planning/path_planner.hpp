@@ -96,7 +96,8 @@ private:
 
   void addDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles);
 
-  void simplifyPath(Path & path, const World & world,
+  void simplifyPath(
+    Path & path, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
 };
