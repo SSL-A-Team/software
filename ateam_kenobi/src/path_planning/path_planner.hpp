@@ -50,6 +50,13 @@ struct PlannerOptions
   double collision_check_resolution = 0.05;
 
   bool use_default_obstacles = true;
+
+  /**
+   * @brief If true, any obstacles touching the start point will be ignored for all planning.
+   *
+   * Useful if you want to plan a path to escape a virtual obstacle like a keep out zone.
+   */
+  bool ignore_start_obstacle = true;
 };
 
 class PathPlanner
@@ -66,6 +73,12 @@ public:
     const PlannerOptions & options = PlannerOptions());
 
 private:
+  void removeCollidingObstacles(
+    std::vector<ateam_geometry::AnyShape> & obstacles,
+    const ateam_geometry::Point & point, const PlannerOptions & options);
+
+  bool isStateInBounds(const ateam_geometry::Point & state, const World & world);
+
   bool isStateValid(
     const ateam_geometry::Point & state,
     const World & world,
@@ -99,6 +112,11 @@ private:
   void simplifyPath(
     Path & path, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
+    const PlannerOptions & options);
+
+  void trimPathAfterCollision(
+    Path & path, const World & world,
+    std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
 };
 

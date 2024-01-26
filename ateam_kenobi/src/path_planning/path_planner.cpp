@@ -53,10 +53,19 @@ PathPlanner::Path PathPlanner::getPath(
     augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
   }
 
-  if (!isStateValid(goal, world, augmented_obstacles, options)) {
+  if (!isStateInBounds(start, world)) {
     return {};
   }
 
+  if (options.ignore_start_obstacle) {
+    removeCollidingObstacles(augmented_obstacles, start, options);
+  } else if (!isStateValid(start, world, augmented_obstacles, options)) {
+    return {};
+  }
+
+  if (!isStateValid(goal, world, augmented_obstacles, options)) {
+    return {};
+  }
 
   Path path = {start, goal};
 
@@ -64,7 +73,9 @@ PathPlanner::Path PathPlanner::getPath(
     const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(
       std::chrono::steady_clock::now() - start_time).count();
     if (elapsed_time > options.search_time_limit) {
-      return path;
+      std::cerr << "Path planning timed out.\n";
+      trimPathAfterCollision(path, world, augmented_obstacles, options);
+      break;
     }
     bool had_to_split = false;
     for (auto ind = 0u; ind < (path.size() - 1); ++ind) {
@@ -91,18 +102,40 @@ PathPlanner::Path PathPlanner::getPath(
   return path;
 }
 
+void PathPlanner::removeCollidingObstacles(
+  std::vector<ateam_geometry::AnyShape> & obstacles,
+  const ateam_geometry::Point & point, const PlannerOptions & options)
+{
+  auto robot_footprint = ateam_geometry::makeCircle(
+    point,
+    kRobotRadius + options.footprint_inflation
+  );
+
+  auto is_obstacle_colliding = [&robot_footprint](const ateam_geometry::AnyShape & obstacle) {
+      return ateam_geometry::variantDoIntersect(robot_footprint, obstacle);
+    };
+
+  const auto new_end = std::remove_if(obstacles.begin(), obstacles.end(), is_obstacle_colliding);
+
+  obstacles.erase(new_end, obstacles.end());
+}
+
+bool PathPlanner::isStateInBounds(const ateam_geometry::Point & state, const World & world)
+{
+  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - kRobotRadius;
+  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - kRobotRadius;
+  const ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
+    ateam_geometry::Point(x_bound, y_bound));
+  return CGAL::do_intersect(state, pathable_region);
+}
+
 bool PathPlanner::isStateValid(
   const ateam_geometry::Point & state,
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
-  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - kRobotRadius;
-  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - kRobotRadius;
-  const ateam_geometry::Rectangle pathable_region(
-    ateam_geometry::Point(-x_bound, -y_bound),
-    ateam_geometry::Point(x_bound, y_bound));
-  if (!CGAL::do_intersect(state, pathable_region)) {
+  if (!isStateInBounds(state, world)) {
     return false;
   }
 
@@ -252,6 +285,23 @@ void PathPlanner::simplifyPath(
       candidate_index++;
     } else {
       path.erase(path.begin() + candidate_index);
+    }
+  }
+}
+
+void PathPlanner::trimPathAfterCollision(
+  Path & path, const World & world,
+  std::vector<ateam_geometry::AnyShape> & obstacles,
+  const PlannerOptions & options)
+{
+  for (auto ind = 0u; ind < (path.size() - 1); ++ind) {
+    const auto maybe_collision = getCollisionPoint(
+      path[ind], path[ind + 1], world, obstacles,
+      options);
+    if (maybe_collision) {
+      path.erase(path.begin() + ind + 1, path.end());
+      path.push_back(maybe_collision.value());
+      break;
     }
   }
 }
