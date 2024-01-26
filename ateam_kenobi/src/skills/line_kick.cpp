@@ -44,8 +44,14 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
 
   overlay_publisher_.drawLine("LineKick_line", {pre_kick_position, target_point_}, "#FFFF007F");
 
+  float hysteresis = 1.0;
+  // Make it harder to accidentally leave kick state
+  if (prev_state_ == State::KickBall) {
+    hysteresis = 2.0;
+  }
+
   const auto distance_to_pre_kick = ateam_geometry::norm(robot.pos, pre_kick_position);
-  if (distance_to_pre_kick > 0.05) {
+  if (distance_to_pre_kick > 0.05 * hysteresis) {
     if (prev_state_ != State::MoveToPreKick) {
       easy_move_to_.reset();
       prev_state_ = State::MoveToPreKick;
@@ -55,7 +61,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
 
   const auto robot_to_ball = target_point_ - robot.pos;
   const auto robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
-  if (angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) > 0.02) {
+  if (angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) > 0.05 * hysteresis) {
     if (prev_state_ != State::FaceBall) {
       easy_move_to_.reset();
       prev_state_ = State::FaceBall;
@@ -67,6 +73,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
     easy_move_to_.reset();
     prev_state_ = State::KickBall;
   }
+
   return kickBall(world, robot);
 }
 
