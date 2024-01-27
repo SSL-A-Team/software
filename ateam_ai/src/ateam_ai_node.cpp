@@ -204,7 +204,8 @@ private:
     };
 
     // Multiple def error
-    // field.center_circle = ateam_geometry::makeCircle({field_msg->center_circle.x, field_msg->center_circle.y}, field_msg->center_circle_radius);
+    // field.center_circle = ateam_geometry::makeCircle({field_msg->center_circle.x,
+    // field_msg->center_circle.y}, field_msg->center_circle_radius);
 
     // I could have just defined conversion operators for all of this but
     // Im pretty sure joe wanted ros separate from cpp
@@ -219,7 +220,9 @@ private:
     convert_point_array(field_msg->field_corners.points, field.field_corners.begin());
     convert_point_array(field_msg->ours.defense_area_corners.points, field.ours.goalie_box.begin());
     convert_point_array(field_msg->ours.goal_corners.points, field.ours.goal.begin());
-    convert_point_array(field_msg->theirs.defense_area_corners.points, field.theirs.goalie_box.begin());
+    convert_point_array(
+      field_msg->theirs.defense_area_corners.points,
+      field.theirs.goalie_box.begin());
     convert_point_array(field_msg->theirs.goal_corners.points, field.theirs.goal.begin());
 
     std::lock_guard<std::mutex> lock(world_mutex_);

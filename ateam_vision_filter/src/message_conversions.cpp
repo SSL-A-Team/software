@@ -139,10 +139,12 @@ ateam_msgs::msg::FieldInfo fromMsg(
   left_side_info.goal_corners.points.at(1).x = -field_info.field_length / 2.0;
   left_side_info.goal_corners.points.at(1).y = -field_info.goal_width / 2.0;
 
-  left_side_info.goal_corners.points.at(2).x = -field_info.field_length / 2.0 - field_info.goal_depth;
+  left_side_info.goal_corners.points.at(2).x = -field_info.field_length / 2.0 -
+    field_info.goal_depth;
   left_side_info.goal_corners.points.at(2).y = -field_info.goal_width / 2.0;
 
-  left_side_info.goal_corners.points.at(3).x = -field_info.field_length / 2.0 - field_info.goal_depth;
+  left_side_info.goal_corners.points.at(3).x = -field_info.field_length / 2.0 -
+    field_info.goal_depth;
   left_side_info.goal_corners.points.at(3).y = field_info.goal_width / 2.0;
 
 
@@ -150,7 +152,7 @@ ateam_msgs::msg::FieldInfo fromMsg(
     2> left_penalty_names = {"LeftFieldLeftPenaltyStretch", "LeftFieldRightPenaltyStretch"};
   lines_to_points(left_penalty_names, left_side_info.defense_area_corners.points);
 
-    // TODO VISION GOAL ESTIMATES
+  // TODO(Collin) VISION GOAL ESTIMATES
   ateam_msgs::msg::FieldSidedInfo right_side_info {};
   right_side_info.goal_corners.points.resize(4);
   right_side_info.goal_corners.points.at(0).x = field_info.field_length / 2.0;
@@ -159,10 +161,12 @@ ateam_msgs::msg::FieldInfo fromMsg(
   right_side_info.goal_corners.points.at(1).x = field_info.field_length / 2.0;
   right_side_info.goal_corners.points.at(1).y = -field_info.goal_width / 2.0;
 
-  right_side_info.goal_corners.points.at(2).x = field_info.field_length / 2.0 + field_info.goal_depth;
+  right_side_info.goal_corners.points.at(2).x = field_info.field_length / 2.0 +
+    field_info.goal_depth;
   right_side_info.goal_corners.points.at(2).y = -field_info.goal_width / 2.0;
 
-  right_side_info.goal_corners.points.at(3).x = field_info.field_length / 2.0 + field_info.goal_depth;
+  right_side_info.goal_corners.points.at(3).x = field_info.field_length / 2.0 +
+    field_info.goal_depth;
   right_side_info.goal_corners.points.at(3).y = field_info.goal_width / 2.0;
 
 
@@ -170,9 +174,9 @@ ateam_msgs::msg::FieldInfo fromMsg(
     2> right_penalty_names = {"RightFieldLeftPenaltyStretch", "RightFieldRightPenaltyStretch"};
   lines_to_points(right_penalty_names, right_side_info.defense_area_corners.points);
 
-   auto itr = std::find_if(
-          ros_msg.field_arcs.begin(), ros_msg.field_arcs.end(),
-          std::bind(check_field_line_name, std::placeholders::_1, "CenterCircle"));
+  auto itr = std::find_if(
+    ros_msg.field_arcs.begin(), ros_msg.field_arcs.end(),
+    std::bind(check_field_line_name, std::placeholders::_1, "CenterCircle"));
   if (itr != ros_msg.field_arcs.end()) {
     field_info.center_circle = itr->center;
     field_info.center_circle_radius = itr->radius;

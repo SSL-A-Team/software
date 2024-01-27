@@ -31,7 +31,6 @@ struct FieldSidedInfo
   std::array<ateam_geometry::Point, 4> defense_area_corners;
   std::array<ateam_geometry::Point, 4> goal_corners;
   std::array<ateam_geometry::Point, 2> goal_posts;
-
 };
 struct Field
 {
