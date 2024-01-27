@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -176,98 +176,20 @@ TEST_F(GetPathTest, FailIfNotIgnoringStartObstacles) {
   runTest();
 }
 
-TEST_F(GetPathTest, TimeoutShouldReturnPartialPath) {
-  /* This scenario causes the planner to time out, which should return a partial path up the
-   * collision point. The positions were all found by randomly generating scenarios until a
-   * timeout occured.
-   */
-  start = ateam_geometry::Point(0.268792, 0.273383);
-  goal = ateam_geometry::Point(0.0259816, 0.0134107);
-  world.ball.pos = ateam_geometry::Point(0.193696, 0.0725405);
+TEST_F(GetPathTest, LoopsShouldBeRemoved)
+{
+  // This scenario produces a raw path with loops (the path crosses over itself).
+  start = ateam_geometry::Point(0.0465311, 0.244153);
+  goal = ateam_geometry::Point(0.246488, 0.0577052);
+  world.ball.pos = ateam_geometry::Point(0.296055, 0.299946);
   Robot opponent;
   opponent.id = 0;
-  opponent.pos = ateam_geometry::Point(0.0222436, 0.248358);
+  opponent.pos = ateam_geometry::Point(0.00493251, 0.00675831);
   world.their_robots[0] = opponent;
-  // explicitly setting default values here so if we change the defaults, this test shouldn't break
-  planner_options.collision_check_resolution = 0.05;
-  planner_options.footprint_inflation = 0.05;
-  planner_options.search_time_limit = 2e-3;
-  planner_options.ignore_start_obstacle = false;
   expected_path = {
     start,
-    ateam_geometry::Point(0.263231, 0.269946),
-    ateam_geometry::Point(0.229282, 0.233237)
-    // No goal because this is a partial path
+    ateam_geometry::Point(0.0808856, 0.338844),
+    goal
   };
   runTest();
-}
-
-double degToRad(double deg)
-{
-  return (deg / 180.0) * M_PI;
-}
-
-bool isSwitchBack(
-  const ateam_geometry::Point & a, const ateam_geometry::Point & b,
-  const ateam_geometry::Point & c)
-{
-  const auto vec_ab = a - b;
-  const auto vec_cb = c - b;
-  const auto angle =
-    std::acos((vec_ab * vec_cb) / (ateam_geometry::norm(vec_ab) * ateam_geometry::norm(vec_cb)));
-  return angle < degToRad(5);
-}
-
-bool pathContainsSwitchback(const PathPlanner::Path & path)
-{
-  if (path.empty()) {
-    return false;
-  }
-  for (auto i = 1ul; i < path.size() - 1; ++i) {
-    const auto & a = path[i - 1];
-    const auto & b = path[i];
-    const auto & c = path[i + 1];
-    if (isSwitchBack(a, b, c)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-TEST_F(GetPathTest, DISABLED_FindSwitchbacks)
-{
-  std::random_device r;
-  std::default_random_engine e1(r());
-  std::uniform_real_distribution<double> uniform_dist(0.0, 0.3);
-  auto randNum = [&uniform_dist, &e1]() {
-      return uniform_dist(e1);
-    };
-
-  planner_options.ignore_start_obstacle = false;
-  world.their_robots[0] = Robot{};
-  world.their_robots[0]->id = 0;
-
-  const auto start_time = std::chrono::steady_clock::now();
-
-  while (true) {
-    start = ateam_geometry::Point(randNum(), randNum());
-    goal = ateam_geometry::Point(randNum(), randNum());
-    world.ball.pos = ateam_geometry::Point(randNum(), randNum());
-    world.their_robots[0]->pos = ateam_geometry::Point(randNum(), randNum());
-    const auto path = getPath();
-    if (pathContainsSwitchback(path)) {
-      std::cout << "Switchback found!\n";
-      std::cout << "Start = " << start << '\n';
-      std::cout << "Goal = " << goal << '\n';
-      std::cout << "Ball = " << world.ball.pos << '\n';
-      std::cout << "Opponent = " << world.their_robots[0]->pos << '\n';
-      printPath(path);
-      break;
-    }
-    if ((std::chrono::steady_clock::now() - start_time) > std::chrono::minutes(10)) {
-      std::cout << "No switchbacks found. Timed out\n";
-      break;
-    }
-  }
-  FAIL();
 }

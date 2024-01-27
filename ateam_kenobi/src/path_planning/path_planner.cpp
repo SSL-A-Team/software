@@ -97,7 +97,8 @@ PathPlanner::Path PathPlanner::getPath(
     }
   }
 
-  simplifyPath(path, world, augmented_obstacles, options);
+  removeLoops(path);
+  removeSkippablePoints(path, world, augmented_obstacles, options);
 
   return path;
 }
@@ -266,25 +267,86 @@ void PathPlanner::addDefaultObstacles(
   ));
 }
 
-void PathPlanner::simplifyPath(
+void PathPlanner::removeSkippablePoints(
   Path & path, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
+  std::cout << "Un-Simplified Path:\n";
+  for (const auto & p : path) {
+    std::cout << p.x() << ", " << p.y() << '\n';
+  }
+
   if (path.size() < 3) {
     return;
   }
 
-  auto candidate_index = 1;
-  while (candidate_index < path.size() - 1) {
-    auto maybe_collision_point =
-      getCollisionPoint(
-      path.at(candidate_index - 1), path.at(
-        candidate_index + 1), world, obstacles, options);
-    if (maybe_collision_point) {
-      candidate_index++;
-    } else {
+  auto were_points_removed = true;
+  while (were_points_removed) {
+    were_points_removed = false;
+    auto candidate_index = 1ul;
+    while (candidate_index < path.size() - 1) {
+      auto maybe_collision_point =
+        getCollisionPoint(
+        path[candidate_index - 1], path[candidate_index + 1], world, obstacles,
+        options);
+      // Ignore collisions at path end since that means planning timed out
+      if (maybe_collision_point &&
+        CGAL::squared_distance(*maybe_collision_point, path.back()) > 1e-6)
+      {
+        std::cout << "Cannot shortcut from (" << path[candidate_index - 1] << ") to (" <<
+          path[candidate_index + 1] << ") because of collision at (" <<
+          maybe_collision_point.value() << ")\n";
+        candidate_index++;
+        continue;
+      }
+      const auto & prem = *(path.begin() + candidate_index);
+      std::cout << "Removing point " << candidate_index << " (" << prem.x() << ", " << prem.y() <<
+        ")\n";
       path.erase(path.begin() + candidate_index);
+      were_points_removed = true;
+    }
+  }
+}
+
+void PathPlanner::removeLoops(Path & path)
+{
+  using ateam_geometry::Point;
+  using ateam_geometry::Segment;
+  if (path.size() < 4) {
+    return;
+  }
+  // Check all but last two segments
+  for (auto ind1 = 0ul; ind1 < path.size() - 3; ++ind1) {
+    // Check all segments after ind1->ind1+1, skipping the first
+    for (auto ind2 = ind1 + 2; ind2 < path.size() - 1; ) {
+      const auto seg1 = Segment(path[ind1], path[ind1 + 1]);
+      const auto seg2 = Segment(path[ind2], path[ind2 + 1]);
+      const auto maybe_intersection = CGAL::intersection(seg1, seg2);
+      if (!maybe_intersection) {
+        ++ind2;
+        continue;
+      }
+      const auto & intersection_var = maybe_intersection.value();
+      Point new_point;
+      if (const Point * intersection_point = boost::get<Point>(&intersection_var)) {
+        new_point = *intersection_point;
+      } else if (const Segment * intersection_seg = boost::get<Segment>(&intersection_var)) {
+        new_point = intersection_seg->target();
+      }
+      std::cout << "Removing loop.\n";
+      std::cout << "Pre-loop = " << path[ind1] << '\n';
+      std::cout << "New point = " << new_point << '\n';
+      std::cout << "Post-loop = " << path[ind2 + 1] << '\n';
+      // put intersection point in path (replacing first segment's end point)
+      path[ind1 + 1] = new_point;
+      // remove all points along the loop (keep second segment's end point)
+      path.erase(path.begin() + ind1 + 2, path.begin() + ind2 + 1);
+      ind2 = ind1 + 2;
+      if (path.size() < 4) {
+        // path now too small to have loops
+        return;
+      }
     }
   }
 }

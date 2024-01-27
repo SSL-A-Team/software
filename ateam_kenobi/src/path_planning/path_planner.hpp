@@ -109,10 +109,12 @@ private:
 
   void addDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles);
 
-  void simplifyPath(
+  void removeSkippablePoints(
     Path & path, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
+
+  void removeLoops(Path & path);
 
   void trimPathAfterCollision(
     Path & path, const World & world,
