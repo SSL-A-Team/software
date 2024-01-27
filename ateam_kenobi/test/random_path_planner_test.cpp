@@ -126,19 +126,19 @@ void renderSecenario(
   script << "plt.show()\n";
 
   FILE * pystdin = popen("python3 -", "w");
-  if(pystdin == nullptr) {
+  if (pystdin == nullptr) {
     std::cerr << "Failed to start python interpretter.\n";
     return;
   }
 
   const auto script_string = script.str();
   const auto num_bytes_written = fwrite(script_string.c_str(), 1, script_string.size(), pystdin);
-  if(num_bytes_written < script_string.size()) {
+  if (num_bytes_written < script_string.size()) {
     std::cerr << "Failed to send script to python interpretter.\n";
   }
 
   const auto exit_code = pclose(pystdin);
-  if(exit_code != 0) {
+  if (exit_code != 0) {
     std::cerr << "Python interpretter ended with non-zero exit code: " << exit_code << '\n';
   }
 }
@@ -196,7 +196,6 @@ int main(int argc, char ** argv)
 
     if (isBadPath(path)) {
       std::cout << "Bad path found!\n";
-      
       std::cout << "start = " << start << '\n';
       std::cout << "goal = " << goal << '\n';
       std::cout << "ball = " << world.ball.pos << '\n';
@@ -207,7 +206,7 @@ int main(int argc, char ** argv)
         std::cout << p << '\n';
       }
 
-      if(render_scenario) {
+      if (render_scenario) {
         renderSecenario(start, goal, world.ball.pos, world.their_robots[0]->pos, path);
       }
 
