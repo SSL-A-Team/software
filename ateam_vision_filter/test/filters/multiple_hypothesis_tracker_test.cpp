@@ -62,14 +62,12 @@ TEST(MultipleHypothesisTracker, getStateEstimate_ShouldReturnEstimate_WhenOneMea
 
   std::optional<std::pair<Eigen::VectorXd, double>> ret = mht.get_state_estimate();
 
-  ASSERT_TRUE(ret.has_value());
-  EXPECT_NEAR(ret.value().first.x(), 1.0, 1e-6);
-  EXPECT_NEAR(ret.value().first.y(), 2.0, 1e-6);
+  ASSERT_FALSE(ret.has_value());
 }
 
 TEST(
   MultipleHypothesisTracker,
-  getStateEstimate_ShouldReturnEstimate_WhenOneMeasuremntThenOneMeasurement)
+  getStateEstimate_ShouldNotReturnEstimate_WhenOneMeasuremntThenOneMeasurement)
 {
   MultipleHypothesisTracker mht;
   KalmanFilter kf;
@@ -97,14 +95,12 @@ TEST(
 
   std::optional<std::pair<Eigen::VectorXd, double>> ret = mht.get_state_estimate();
 
-  ASSERT_TRUE(ret.has_value());
-  EXPECT_NEAR(ret.value().first.x(), 1.0, 1e-6);
-  EXPECT_NEAR(ret.value().first.y(), 2.0, 1e-6);
+  ASSERT_FALSE(ret.has_value());
 }
 
 TEST(
   MultipleHypothesisTracker,
-  getStateEstimate_ShouldReturnEstimate_WhenTwoMeasuremntThenTwoMeasurement)
+  getStateEstimate_ShouldNotReturnEstimate_WhenTwoMeasuremntThenTwoMeasurement)
 {
   MultipleHypothesisTracker mht;
   KalmanFilter kf;
@@ -133,9 +129,7 @@ TEST(
 
   std::optional<std::pair<Eigen::VectorXd, double>> ret = mht.get_state_estimate();
 
-  ASSERT_TRUE(ret.has_value());
-  EXPECT_NEAR(ret.value().first.x(), 1.0, 1e-6);
-  EXPECT_NEAR(ret.value().first.y(), 2.0, 1e-6);
+  ASSERT_FALSE(ret.has_value());
 }
 
 TEST(

@@ -53,8 +53,11 @@ TEST(World, getBallEstimate_ShouldReturnData_WhenOneCameraConsistent)
   ball_measurements.push_back(ball_measurement);
   camera_measurement.ball = ball_measurements;
 
-  world.update_camera(0, camera_measurement);
-  world.predict();
+  // valid after 10 measurements
+  for (size_t i = 0; i < 20; i++) {
+    world.update_camera(0, camera_measurement);
+    world.predict();
+  }
 
   auto ball_estimate = world.get_ball_estimate();
 
@@ -79,9 +82,11 @@ TEST(World, getBallEstimate_ShouldReturnAverageData_WhenTwoCameraConsistent)
   ball_measurements2.push_back(ball_measurement2);
   camera_measurement2.ball = ball_measurements2;
 
-  world.update_camera(0, camera_measurement1);
-  world.update_camera(1, camera_measurement2);
-  world.predict();
+  for (size_t i = 0; i < 20; i++) {
+    world.update_camera(0, camera_measurement1);
+    world.update_camera(1, camera_measurement2);
+    world.predict();
+  }
 
   auto ball_estimate = world.get_ball_estimate();
 
@@ -105,8 +110,10 @@ TEST(World, getRobotEstimate_ShouldReturnData_WhenOneCameraConsistent)
   camera_measurement.yellow_robots = robot_measurements;
   camera_measurement.blue_robots = robot_measurements;
 
-  world.update_camera(0, camera_measurement);
-  world.predict();
+  for (size_t i = 0; i < 20; i++) {
+    world.update_camera(0, camera_measurement);
+    world.predict();
+  }
 
   auto yellow_robots_estimate = world.get_yellow_robots_estimate();
   auto blue_robots_estimate = world.get_blue_robots_estimate();
@@ -164,9 +171,11 @@ TEST(World, getRobotEstimate_ShouldReturnAverageData_WhenTwoCameraConsistent)
   camera_measurement2.blue_robots = robot_measurements2;
 
 
-  world.update_camera(0, camera_measurement1);
-  world.update_camera(1, camera_measurement2);
-  world.predict();
+  for (size_t i = 0; i < 20; i++) {
+    world.update_camera(0, camera_measurement1);
+    world.update_camera(1, camera_measurement2);
+    world.predict();
+  }
 
   auto yellow_robots_estimate = world.get_yellow_robots_estimate();
   auto blue_robots_estimate = world.get_blue_robots_estimate();
