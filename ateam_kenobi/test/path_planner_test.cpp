@@ -178,7 +178,9 @@ TEST_F(GetPathTest, FailIfNotIgnoringStartObstacles) {
 
 TEST_F(GetPathTest, LoopsShouldBeRemoved)
 {
-  // This scenario produces a raw path with loops (the path crosses over itself).
+  /* This scenario produces a raw path with loops (the path crosses over itself). The test ensures
+   * the loop removal function works.
+   */
   start = ateam_geometry::Point(0.0465311, 0.244153);
   goal = ateam_geometry::Point(0.246488, 0.0577052);
   world.ball.pos = ateam_geometry::Point(0.296055, 0.299946);

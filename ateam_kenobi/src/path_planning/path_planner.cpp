@@ -187,7 +187,6 @@ PathPlanner::SplitResult PathPlanner::splitSegmentIfNecessary(
     };
   }
   const auto collision_point = maybe_collision_point.value();
-  std::cout << "Collision found at " << collision_point << '\n';
   const auto p1 = path[ind1];
   const auto p2 = path[ind2];
   auto change_vector = (ateam_geometry::normalize(p2 - p1) * kRobotRadius).perpendicular(
@@ -199,7 +198,6 @@ PathPlanner::SplitResult PathPlanner::splitSegmentIfNecessary(
     direction *= -1;
     if (isStateValid(new_point, world, obstacles, options)) {
       path.insert(path.begin() + ind2, new_point);
-      std::cout << "Split path to add " << new_point << '\n';
       return {
         .split_needed = true,
         .split_succeeded = true
@@ -272,11 +270,6 @@ void PathPlanner::removeSkippablePoints(
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
-  std::cout << "Un-Simplified Path:\n";
-  for (const auto & p : path) {
-    std::cout << p.x() << ", " << p.y() << '\n';
-  }
-
   if (path.size() < 3) {
     return;
   }
@@ -294,15 +287,10 @@ void PathPlanner::removeSkippablePoints(
       if (maybe_collision_point &&
         CGAL::squared_distance(*maybe_collision_point, path.back()) > 1e-6)
       {
-        std::cout << "Cannot shortcut from (" << path[candidate_index - 1] << ") to (" <<
-          path[candidate_index + 1] << ") because of collision at (" <<
-          maybe_collision_point.value() << ")\n";
         candidate_index++;
         continue;
       }
       const auto & prem = *(path.begin() + candidate_index);
-      std::cout << "Removing point " << candidate_index << " (" << prem.x() << ", " << prem.y() <<
-        ")\n";
       path.erase(path.begin() + candidate_index);
       were_points_removed = true;
     }
@@ -334,10 +322,6 @@ void PathPlanner::removeLoops(Path & path)
       } else if (const Segment * intersection_seg = boost::get<Segment>(&intersection_var)) {
         new_point = intersection_seg->target();
       }
-      std::cout << "Removing loop.\n";
-      std::cout << "Pre-loop = " << path[ind1] << '\n';
-      std::cout << "New point = " << new_point << '\n';
-      std::cout << "Post-loop = " << path[ind2 + 1] << '\n';
       // put intersection point in path (replacing first segment's end point)
       path[ind1 + 1] = new_point;
       // remove all points along the loop (keep second segment's end point)
