@@ -217,9 +217,9 @@ private:
       };
 
     convert_point_array(field_msg->field_corners.points, field.field_corners.begin());
-    convert_point_array(field_msg->ours.goalie_box_corners.points, field.ours.goalie_box.begin());
+    convert_point_array(field_msg->ours.defense_area_corners.points, field.ours.goalie_box.begin());
     convert_point_array(field_msg->ours.goal_corners.points, field.ours.goal.begin());
-    convert_point_array(field_msg->theirs.goalie_box_corners.points, field.theirs.goalie_box.begin());
+    convert_point_array(field_msg->theirs.defense_area_corners.points, field.theirs.goalie_box.begin());
     convert_point_array(field_msg->theirs.goal_corners.points, field.theirs.goal.begin());
 
     std::lock_guard<std::mutex> lock(world_mutex_);

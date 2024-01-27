@@ -1,2 +1,2 @@
-geometry_msgs/Polygon  goalie_box_corners
+geometry_msgs/Polygon  defense_area_corners
 geometry_msgs/Polygon  goal_corners
