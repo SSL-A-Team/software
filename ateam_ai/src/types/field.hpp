@@ -24,10 +24,13 @@
 #include <Eigen/Dense>
 #include <array>
 
+#include <ateam_geometry/ateam_geometry.hpp>
+
 struct FieldSidedInfo
 {
-  std::array<Eigen::Vector2d, 4> goalie_corners;
-  std::array<Eigen::Vector2d, 2> goal_posts;
+  // could be non axis aligned which was the whole point so didnt want to use our types yet
+  std::array<Eigen::Vector2d, 4> goalie_box;
+  std::array<Eigen::Vector2d, 4> goal;
 };
 struct Field
 {
@@ -40,6 +43,7 @@ struct Field
   float goal_width;
   float goal_depth;
   float boundary_width;
+  ateam_geometry::Circle center_circle;
   std::array<Eigen::Vector2d, 4> field_corners;
   FieldSidedInfo ours;
   FieldSidedInfo theirs;
