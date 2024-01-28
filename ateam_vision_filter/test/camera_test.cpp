@@ -45,7 +45,7 @@ TEST(Camera, getEstimateWithScore_ShouldReturnNullopt_WhenNoData)
   }
 }
 
-// TODO make should not return data in small cycle tests
+// TODO(Collin) make should not return data in small cycle tests
 TEST(Camera, getBallEstimateWithScore_ShouldNotReturnData_WhenPredictAndUpdate)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
@@ -68,7 +68,6 @@ TEST(Camera, getBallEstimateWithScore_ShouldNotReturnData_WhenPredictAndUpdate)
   ASSERT_FALSE(ball_with_score.has_value());
 }
 
-// TODO Rename to consistent
 TEST(Camera, getBallEstimateWithScore_ShouldReturnData_WhenPredictAndUpdateConsistent)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
