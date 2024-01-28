@@ -33,7 +33,7 @@ inline auto normalize(T const & V)
 {
   auto const slen = V.squared_length();
   auto const d = CGAL::approximate_sqrt(slen);
-  return V / d;
+  return d > 0 ? (V / d) : V;
 }
 
 
