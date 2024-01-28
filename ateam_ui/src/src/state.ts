@@ -13,6 +13,7 @@ export class RenderConfig {
 }
 
 export class WorldState {
+    team_name: string;
     team: TeamColor;
     teams: Team[];
     ball: Ball;
@@ -21,9 +22,10 @@ export class WorldState {
     ai: AIState;
 
     constructor() {
+        this.team_name = "A-Team";
         this.team = TeamColor.Blue;
         this.teams = [];
-        this.teams[TeamColor.Blue] = new Team("A-Team", TeamColor.Blue, -1);
+        this.teams[TeamColor.Blue] = new Team(this.team_name, TeamColor.Blue, -1);
         this.teams[TeamColor.Yellow] = new Team("Opponent", TeamColor.Yellow, 1);
 
         this.ball = new Ball();
@@ -87,6 +89,19 @@ export class AppState {
             this.controlled_robot = id;
         }
         this.params["joystick_param"].set(this.controlled_robot);
+    }
+
+    getTeamNameCallback() {
+        const state = this; // fix dumb javascript things
+        return function(value: any) {
+            state.world.team_name = value;
+
+            if (state.world.referee.blue.name == state.world.team_name) {
+                state.world.team = TeamColor.Blue;
+            } else if (state.world.referee.yellow.name == state.world.team_name) {
+                state.world.team = TeamColor.Yellow;
+            }
+        }
     }
 
     // TODO: figure out how to type ROSLIB Messages, the Message type doesn't seem to work properly
@@ -166,9 +181,9 @@ export class AppState {
             }
 
             // TODO: probably pull this from the ros network instead
-            if (state.world.referee.blue.name == "A-Team") {
+            if (state.world.referee.blue.name == state.world.team_name) {
                 state.world.team = TeamColor.Blue;
-            } else if (state.world.referee.yellow.name == "A-Team") {
+            } else if (state.world.referee.yellow.name == state.world.team_name) {
                 state.world.team = TeamColor.Yellow;
             }
         }
@@ -300,6 +315,13 @@ export class AppState {
             serviceType: 'ateam_msgs/srv/SetDesiredKeeper'
         })
         this.services["setGoalie"] = goalieService;
+
+        let teamNameParam = new ROSLIB.Param({
+            ros: this.ros,
+            name: "/team_client_node:team_name"
+        });
+        teamNameParam.get(this.getTeamNameCallback());
+        this.params["team_name_param"] = teamNameParam;
 
         // Set up joystick robot param service
         const joystickParam = new ROSLIB.Param({
