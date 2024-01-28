@@ -1,2 +1,2 @@
-geometry_msgs/Point[]  goalie_corners
-geometry_msgs/Point[]  goal_posts
+geometry_msgs/Polygon  defense_area_corners
+geometry_msgs/Polygon  goal_corners
