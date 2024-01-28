@@ -252,21 +252,31 @@ void PathPlanner::addDefaultObstacles(
   const World & world,
   std::vector<ateam_geometry::AnyShape> & obstacles)
 {
+  /* top_Vertex_2 breaks ties by largest X value and bottom_vertex_2 breaks ties by smallest X
+   * value. Assuming the defense areas are axis-aligned rectangles (which should be a safe
+   * assumption), these two functions give us the opposite corner vertexes we need to build a
+   * Rectangle object.
+   */
+
   // our goalie box
   obstacles.push_back(
     ateam_geometry::Rectangle(
-      ateam_geometry::Point(-world.field.field_length / 2, world.field.goal_width),
-      ateam_geometry::Point(
-        -1 * (world.field.field_length / 2) + world.field.goal_depth,
-        -world.field.goal_width)
+      *CGAL::top_vertex_2(
+        world.field.ours.defense_area_corners.begin(),
+        world.field.ours.defense_area_corners.end()),
+      *CGAL::bottom_vertex_2(
+        world.field.ours.defense_area_corners.begin(),
+        world.field.ours.defense_area_corners.end())
   ));
   // their goalie box
   obstacles.push_back(
     ateam_geometry::Rectangle(
-      ateam_geometry::Point((world.field.field_length / 2), world.field.goal_width),
-      ateam_geometry::Point(
-        (world.field.field_length / 2) - world.field.goal_depth,
-        -world.field.goal_width)
+      *CGAL::top_vertex_2(
+        world.field.theirs.defense_area_corners.begin(),
+        world.field.theirs.defense_area_corners.end()),
+      *CGAL::bottom_vertex_2(
+        world.field.theirs.defense_area_corners.begin(),
+        world.field.theirs.defense_area_corners.end())
   ));
 }
 
@@ -295,7 +305,6 @@ void PathPlanner::removeSkippablePoints(
         candidate_index++;
         continue;
       }
-      const auto & prem = *(path.begin() + candidate_index);
       path.erase(path.begin() + candidate_index);
       were_points_removed = true;
     }
