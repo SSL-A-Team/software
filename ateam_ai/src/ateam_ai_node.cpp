@@ -203,6 +203,10 @@ private:
       .boundary_width = field_msg->boundary_width
     };
 
+    // Multiple def error
+    // field.center_circle = ateam_geometry::makeCircle({field_msg->center_circle.x,
+    // field_msg->center_circle.y}, field_msg->center_circle_radius);
+
     // I could have just defined conversion operators for all of this but
     // Im pretty sure joe wanted ros separate from cpp
     auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
@@ -213,11 +217,13 @@ private:
           });
       };
 
-    convert_point_array(field_msg->field_corners, field.field_corners.begin());
-    convert_point_array(field_msg->ours.goalie_corners, field.ours.goalie_corners.begin());
-    convert_point_array(field_msg->ours.goal_posts, field.ours.goal_posts.begin());
-    convert_point_array(field_msg->theirs.goalie_corners, field.theirs.goalie_corners.begin());
-    convert_point_array(field_msg->theirs.goal_posts, field.theirs.goal_posts.begin());
+    convert_point_array(field_msg->field_corners.points, field.field_corners.begin());
+    convert_point_array(field_msg->ours.defense_area_corners.points, field.ours.goalie_box.begin());
+    convert_point_array(field_msg->ours.goal_corners.points, field.ours.goal.begin());
+    convert_point_array(
+      field_msg->theirs.defense_area_corners.points,
+      field.theirs.goalie_box.begin());
+    convert_point_array(field_msg->theirs.goal_corners.points, field.theirs.goal.begin());
 
     std::lock_guard<std::mutex> lock(world_mutex_);
     world_.field = field;
