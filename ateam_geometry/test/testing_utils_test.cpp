@@ -21,21 +21,43 @@
 #include <gtest/gtest.h>
 
 #include "ateam_geometry/types.hpp"
-#include "ateam_geometry/nearest_points.hpp"
 #include "ateam_geometry_testing/testing_utils.hpp"
 
-TEST(NearestPointOnSegment, PointOffSegment)
+using ateam_geometry::Point;
+
+TEST(PointIsNearTests, MatchNearPoints)
 {
-  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
-  ateam_geometry::Point p(10, 0);
-  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
-  EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(5, 5)));
+  EXPECT_THAT(Point(1, 1), PointIsNear(Point(1, 1)));
+  EXPECT_THAT(Point(1, 1), PointIsNear(Point(1.005, 1.005)));
 }
 
-TEST(NearestPointOnSegment, PointOnSegment)
+TEST(PointIsNearTests, DontMatchFarPoints)
 {
-  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
-  ateam_geometry::Point p(1, 1);
-  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
-  EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(1, 1)));
+  EXPECT_THAT(Point(0, 0), testing::Not(PointIsNear(Point(2, 2))));
+}
+
+TEST(PointIsNearTests, AllowChangingThreshold)
+{
+  EXPECT_THAT(Point(0, 0), PointIsNear(Point(2, 2), 3.0));
+  EXPECT_THAT(Point(0, 0), testing::Not(PointIsNear(Point(4, 4), 3.0)));
+}
+
+TEST(PointsAreNearTests, MatchNearPoints)
+{
+  std::vector<Point> points = {{0, 0}, {5, 5}};
+  EXPECT_THAT(points, testing::Pointwise(PointsAreNear(), points));
+}
+
+TEST(PointsAreNearTests, DontMatchFarPoints)
+{
+  std::vector<Point> p1 = {{1, 2}, {3, 4}};
+  std::vector<Point> p2 = {{5, 6}, {7, 8}};
+  EXPECT_THAT(p1, testing::Pointwise(testing::Not(PointsAreNear()), p2));
+}
+
+TEST(PointsAreNearTests, AllowChangingThreshold)
+{
+  std::vector<Point> p1 = {{1, 2}, {3, 4}};
+  std::vector<Point> p2 = {{5, 6}, {7, 8}};
+  EXPECT_THAT(p1, testing::Pointwise(PointsAreNear(10.0), p2));
 }
