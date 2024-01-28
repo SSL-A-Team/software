@@ -210,7 +210,7 @@ private:
     if (game_controller_listener_.GetOurGoalieID().has_value()) {
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
     }
-    in_play_eval_.update(world_);
+    in_play_eval_.Update(world_);
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
       auto & clk = *this->get_clock();
       RCLCPP_WARN_THROTTLE(
