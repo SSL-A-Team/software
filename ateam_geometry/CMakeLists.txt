@@ -39,6 +39,22 @@ install(TARGETS ${PROJECT_NAME}
         INCLUDES DESTINATION include)
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gmock REQUIRED)
+  add_library(${PROJECT_NAME}_testing INTERFACE)
+  target_include_directories(${PROJECT_NAME}_testing INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  )
+  set_target_properties(${PROJECT_NAME}_testing PROPERTIES CXX_STANDARD 20)
+  target_link_libraries(${PROJECT_NAME}_testing INTERFACE ${PROJECT_NAME})
+  ament_export_targets(${PROJECT_NAME}_testing HAS_LIBRARY_TARGET)
+  install(TARGETS ${PROJECT_NAME}_testing
+          EXPORT ${PROJECT_NAME}_testing
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib
+          RUNTIME DESTINATION bin
+          INCLUDES DESTINATION include)
+
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
   add_subdirectory(test)
