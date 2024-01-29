@@ -69,7 +69,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
   const auto robot_perp_dist_to_ball = ateam_geometry::norm(robot_perp_ball);
 
   // Check if: robot is behind the ball but not too far, robot is in line with the ball and target
-  if (robot_proj_dist_to_ball < 0.1 || robot_proj_dist_to_ball > 0.2 || robot_perp_dist_to_ball > 0.03) {
+  if (robot_proj_dist_to_ball < 0.12 || robot_proj_dist_to_ball > 0.22 || robot_perp_dist_to_ball > 0.025) {
     if (prev_state_ != State::MoveBehindBall) {
       easy_move_to_.reset();
       prev_state_ = State::MoveBehindBall;

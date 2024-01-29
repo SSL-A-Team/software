@@ -50,7 +50,7 @@ public:
   ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
 private:
-  const double kPreKickOffset = kRobotRadius + 0.1;
+  const double kPreKickOffset = kRobotRadius + 0.12;
   visualization::Overlays overlays_;
   ateam_geometry::Point target_point_;
   double kick_speed_ = 5.0;
