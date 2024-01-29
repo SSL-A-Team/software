@@ -47,14 +47,17 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
   float hysteresis = 1.0;
   // Make it harder to accidentally leave kick state
   if (prev_state_ == State::KickBall) {
-    hysteresis = 2.0;
+    hysteresis = 3.0;
   }
 
+
   const auto ball_to_target = target_point_ - world.ball.pos;
+  const auto ball_to_target_angle = std::atan2(ball_to_target.y(), ball_to_target.x());
+
   const auto robot_to_ball = world.ball.pos - robot.pos;
 
   // scalar projection (distance along the vector) of the robot to the ball 
-  // along the ball to target vector
+  // along the ball to target vector. A negative value indicates we are on the wrong side of the ball
   const auto robot_proj_dist_to_ball = (ball_to_target * robot_to_ball)
     / ateam_geometry::norm(ball_to_target);
 
@@ -65,87 +68,77 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
   const auto robot_perp_ball = robot_to_ball - robot_proj_ball;
   const auto robot_perp_dist_to_ball = ateam_geometry::norm(robot_perp_ball);
 
-  std::cerr << "proj: " << robot_proj_dist_to_ball << "perp: " << robot_perp_dist_to_ball << std::endl;
- 
-  const auto distance_to_pre_kick = ateam_geometry::norm(robot.pos, pre_kick_position);
-
-  if (robot_proj_dist_to_ball > 0.1 && robot_perp_ball > 0.2) {
+  // Check if: robot is behind the ball but not too far, robot is in line with the ball and target
+  if (robot_proj_dist_to_ball < 0.1 || robot_proj_dist_to_ball > 0.2 || robot_perp_dist_to_ball > 0.03) {
     if (prev_state_ != State::MoveBehindBall) {
       easy_move_to_.reset();
       prev_state_ = State::MoveBehindBall;
     }
-    return moveBehindBall(world, robot);
+
+    easy_move_to_.face_absolute(ball_to_target_angle);
+
+    /* We can enable this if we are too slow to get to the ball
+    // Face travel until we get closer
+    easy_move_to_.face_travel();
+    if (ateam_geometry::norm(robot_to_ball) < 0.5) {
+      easy_move_to_.face_absolute(ball_to_target_angle);
+    }
+    */
+
+    MotionOptions motion_options;
+    motion_options.completion_threshold = 0;
+    easy_move_to_.setMotionOptions(motion_options);
+    easy_move_to_.setPlannerOptions({});
+    easy_move_to_.setTargetPosition(getPreKickPosition(world));
+    std::vector<ateam_geometry::AnyShape> obstacles = {
+      ateam_geometry::makeCircle(world.ball.pos, 0.02)
+    };
+    return easy_move_to_.runFrame(robot, world, obstacles);
   }
 
-/*
-  const auto robot_to_ball = target_point_ - robot.pos;
-  const auto robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
-  if (angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) > 0.05 * hysteresis) {
+  const auto robot_to_target = target_point_ - robot.pos;
+  const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
+  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.05 * hysteresis) {
     if (prev_state_ != State::FaceBall) {
       easy_move_to_.reset();
       prev_state_ = State::FaceBall;
     }
-    return faceBall(world, robot);
+
+    easy_move_to_.setTargetPosition(robot.pos);
+    easy_move_to_.face_point(target_point_);
+    //easy_move_to_.setMaxAngularVelocity(1.0);
+    return easy_move_to_.runFrame(robot, world);
   }
-*/
 
   if (prev_state_ != State::KickBall) {
     easy_move_to_.reset();
     prev_state_ = State::KickBall;
   }
 
-  command.twist.linear.x = std::cos(robot.theta) * 0.5;
-  command.twist.linear.y = std::sin(robot.theta) * 0.5;
-  command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
-  command.kick_speed = 5.0;
+  path_planning::PlannerOptions planner_options;
+  planner_options.avoid_ball = false;
+  planner_options.footprint_inflation = 0.0;
+  planner_options.use_default_obstacles = false;
+  easy_move_to_.setPlannerOptions(planner_options);
 
+  // Handle robot angle
+  easy_move_to_.face_point(target_point_);
+  easy_move_to_.setTargetPosition(world.ball.pos);
+  auto command = easy_move_to_.runFrame(robot, world);
+
+  // Override the velocity to move directly into the ball
+  int velocity = 1.5;
+  command.twist.linear.x = std::cos(robot.theta) * velocity;
+  command.twist.linear.y = std::sin(robot.theta) * velocity;
+  command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
+  command.kick_speed = kick_speed_;
+
+  return command;
 }
 
 ateam_geometry::Point LineKick::getPreKickPosition(const World & world)
 {
   return world.ball.pos + (kPreKickOffset * ateam_geometry::normalize(
            world.ball.pos - target_point_));
-}
-
-ateam_msgs::msg::RobotMotionCommand LineKick::moveBehindBall(
-  const World & world,
-  const Robot & robot)
-{
-  easy_move_to_.setPlannerOptions({});
-  easy_move_to_.setTargetPosition(getPreKickPosition(world));
-  easy_move_to_.face_travel();
-  std::vector<ateam_geometry::AnyShape> obstacles = {
-    ateam_geometry::makeCircle(world.ball.pos, 0.02)
-  };
-  return easy_move_to_.runFrame(robot, world, obstacles);
-}
-
-ateam_msgs::msg::RobotMotionCommand LineKick::faceBall(const World & world, const Robot & robot)
-{
-  easy_move_to_.setPlannerOptions({});
-  easy_move_to_.setTargetPosition(robot.pos);
-  easy_move_to_.face_point(target_point_);
-  easy_move_to_.setMaxAngularVelocity(1.0);
-  return easy_move_to_.runFrame(robot, world);
-}
-
-ateam_msgs::msg::RobotMotionCommand LineKick::kickBall(const World & world, const Robot & robot)
-{
-  const auto robot_to_ball = (world.ball.pos - robot.pos);
-  easy_move_to_.setTargetPosition(
-    robot.pos +
-    (0.1 * ateam_geometry::normalize(robot_to_ball)));
-  easy_move_to_.face_point(target_point_);
-  path_planning::PlannerOptions planner_options;
-  planner_options.avoid_ball = false;
-  planner_options.footprint_inflation = 0.0;
-  planner_options.use_default_obstacles = false;
-  easy_move_to_.setPlannerOptions(planner_options);
-  auto command = easy_move_to_.runFrame(robot, world);
-  command.twist.linear.x = std::cos(robot.theta) * 0.5;
-  command.twist.linear.y = std::sin(robot.theta) * 0.5;
-  command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
-  command.kick_speed = 5.0;
-  return command;
 }
 }  // namespace ateam_kenobi::skills

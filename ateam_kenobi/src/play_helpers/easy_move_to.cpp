@@ -74,6 +74,12 @@ void EasyMoveTo::setPlannerOptions(path_planning::PlannerOptions options)
   planner_options_ = options;
 }
 
+void EasyMoveTo::setMotionOptions(MotionOptions options)
+{
+  motion_options_ = options;
+}
+
+
 void EasyMoveTo::face_point(std::optional<ateam_geometry::Point> point)
 {
   motion_controller_.face_point(point);
@@ -132,7 +138,7 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::getMotionCommand(
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
   motion_controller_.set_trajectory(path);
-  return motion_controller_.get_command(robot, current_time);
+  return motion_controller_.get_command(robot, current_time, motion_options_);
 }
 
 void EasyMoveTo::drawTrajectoryOverlay(

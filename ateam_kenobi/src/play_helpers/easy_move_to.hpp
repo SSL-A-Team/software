@@ -57,6 +57,7 @@ public:
   void setTargetPosition(ateam_geometry::Point target_position);
 
   void setPlannerOptions(path_planning::PlannerOptions options);
+  void setMotionOptions(MotionOptions options);
 
   void face_point(std::optional<ateam_geometry::Point> point);
   void face_absolute(double angle);
