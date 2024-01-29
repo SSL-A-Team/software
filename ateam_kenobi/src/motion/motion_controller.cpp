@@ -194,63 +194,63 @@ void MotionController::reset()
   this->face_angle = 0;
 }
 
-void MotionController::set_x_pid_gain(PidType pid, GainType gain, double value){
-  control_toolbox::Gains gains = this->x_controller.getGains();
+void MotionController::set_x_pid_gain(GainType gain, double value){
+  control_toolbox::Pid::Gains gains = this->x_controller.getGains();
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
     case GainType::i:
       gains.i_gain_ = value;
-    case GainType::d
+    case GainType::d:
       gains.d_gain_ = value;
   }
   this->x_controller.setGains(gains);
 };
 
-void MotionController::set_y_pid_gain(PidType pid, GainType gain, double value){
-  control_toolbox::Gains gains = this->y_controller.getGains();
+void MotionController::set_y_pid_gain(GainType gain, double value){
+  control_toolbox::Pid::Gains gains = this->y_controller.getGains();
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
     case GainType::i:
       gains.i_gain_ = value;
-    case GainType::d
+    case GainType::d:
       gains.d_gain_ = value;
   }
   this->y_controller.setGains(gains);
 };
 
-void MotionController::set_t_pid_gain(PidType pid, GainType gain, double value){
-  control_toolbox::Gains gains = this->t_controller.getGains();
+void MotionController::set_t_pid_gain(GainType gain, double value){
+  control_toolbox::Pid::Gains gains = this->t_controller.getGains();
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
     case GainType::i:
       gains.i_gain_ = value;
-    case GainType::d
+    case GainType::d:
       gains.d_gain_ = value;
   }
   this->t_controller.setGains(gains);
 };
 
-void MotionController::set_x_pid_gains(PidType pid, double p, double i, double d){
-  control_toolbox::Gains gains;
+void MotionController::set_x_pid_gains(double p, double i, double d){
+  control_toolbox::Pid::Gains gains;
   gains.p_gain_ = p;
   gains.i_gain_ = i;
   gains.d_gain_ = d;
   this->x_controller.setGains(gains);
 };
 
-void MotionController::set_y_pid_gains(PidType pid, double p, double i, double d){
-  control_toolbox::Gains gains;
+void MotionController::set_y_pid_gains(double p, double i, double d){
+  control_toolbox::Pid::Gains gains;
   gains.p_gain_ = p;
   gains.i_gain_ = i;
   gains.d_gain_ = d;
   this->y_controller.setGains(gains);
 };
 
-void MotionController::set_t_pid_gains(PidType pid, double p, double i, double d){
-  control_toolbox::Gains gains;
+void MotionController::set_t_pid_gains(double p, double i, double d){
+  control_toolbox::Pid::Gains gains;
   gains.p_gain_ = p;
   gains.i_gain_ = i;
   gains.d_gain_ = d;

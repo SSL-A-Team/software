@@ -47,7 +47,7 @@ enum class GainType
   p,
   i,
   d
-}
+};
 
 struct MotionOptions
 {
