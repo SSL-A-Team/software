@@ -17,8 +17,8 @@ export default {
     mounted() {
         // size is based on 140 pixels per meter times the standard max field size including boundaries (13.4 x 10.4m)
         // TODO: Make this properly resize itself
-        const width = 1876;
-        const height = 1456;
+        const width = 1876*0.66;
+        const height = 1456*0.66;
         this.pixi = new PIXI.Application({
             width: width,
             height: height,
