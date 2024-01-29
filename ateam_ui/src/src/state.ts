@@ -184,7 +184,7 @@ export class AppState {
 
                 const dim_1 = Math.abs(first_point.x - second_point.x);
                 const dim_2 = Math.abs(first_point.y - second_point.y);
-                
+
                 return [Math.min(dim_1, dim_2), Math.max(dim_1, dim_2)]
             }
 
