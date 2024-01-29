@@ -110,20 +110,23 @@ ateam_msgs::msg::FieldInfo fromMsg(
     };
 
 
-  // did just realize I could have done this as a std transform
   auto lines_to_points = [&](auto & name_array, auto & target_array) {
-      target_array.resize(name_array.size() * 2);
-      for (size_t i = 0; i < name_array.size(); i++) {
-        auto & name = name_array.at(i);
-        auto itr = std::find_if(
-          ros_msg.field_lines.begin(), ros_msg.field_lines.end(),
-          std::bind(check_field_line_name, std::placeholders::_1, name));
-        if (itr != ros_msg.field_lines.end()) {
-          target_array.at(i).x = itr->p1.x;
-          target_array.at(i).y = itr->p1.y;
-          target_array.at(2 * i + 1).x = itr->p2.x;
-          target_array.at(2 * i + 1).y = itr->p2.y;
+      for (const auto & name : name_array) {
+        const auto line_iter = std::find_if(
+          ros_msg.field_lines.begin(),
+          ros_msg.field_lines.end(), [&name](const auto & line) {return line.name == name;});
+        if (line_iter == ros_msg.field_lines.end()) {
+          // TODO(mbarulic) Log missing line?
+          continue;
         }
+        geometry_msgs::msg::Point32 p1;
+        p1.x = line_iter->p1.x;
+        p1.y = line_iter->p1.y;
+        target_array.push_back(p1);
+        geometry_msgs::msg::Point32 p2;
+        p2.x = line_iter->p2.x;
+        p2.y = line_iter->p2.y;
+        target_array.push_back(p2);
       }
     };
 
