@@ -193,3 +193,46 @@ void MotionController::reset()
   this->face_towards.reset();
   this->face_angle = 0;
 }
+
+void MotionController::set_pid_gain(PidType pid, GainType gain, double value){
+  control_toolbox::Gains current_gains;
+  switch (pid) {
+    case PidType::x:
+      gains = this->x_controller.getGains();
+    case PidType::y:
+      gains = this->y_controller.getGains();
+    case PidType::t:
+      gains = this->t_controller.getGains();
+  }
+  switch (gain) {
+    case GainType::p:
+      gains.p_ = value;
+    case GainType::i:
+      gains.i_ = value;
+    case GainType::d
+      gains.d_ = value;
+  }
+  switch (pid) {
+    case PidType::x:
+      this->x_controller.setGains(gains);
+    case PidType::y:
+      this->y_controller.setGains(gains);
+    case PidType::t:
+      this->t_controller.setGains(gains);
+  }
+};
+
+void MotionController::set_pid_gains(PidType pid, double p, double i, double d){
+  control_toolbox::Gains gains;
+  gains._p = p;
+  gains._i = i;
+  gains._d = d;
+  switch(pid){
+    case PidType::x:
+      this->x_controller.setGains(gains);
+    case PidType::y:
+      this->y_controller.setGains(gains);
+    case PidType::t:
+      this->t_controller.setGains(gains);
+  }
+};
