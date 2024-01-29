@@ -42,13 +42,6 @@ enum class AngleMode
   no_face
 };
 
-enum class PidType
-{
-  x,
-  y,
-  t
-};
-
 enum class GainType
 {
   p,
@@ -90,8 +83,12 @@ public:
   void reset();
 
   // Set gains for individual PID controllers
-  void set_pid_gain(PidType pid, GainType gain, double value);
-  void set_pid_gains(PidType pid, double p, double i, double d);
+  void set_x_pid_gain(GainType gain, double value);
+  void set_y_pid_gain(GainType gain, double value);
+  void set_t_pid_gain(GainType gain, double value);
+  void set_x_pid_gains(double p, double i, double d);
+  void set_y_pid_gains(double p, double i, double d);
+  void set_t_pid_gains(double p, double i, double d);
 
 // Velocity limits
   double v_max = 2;
