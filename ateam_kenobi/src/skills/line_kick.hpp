@@ -58,19 +58,13 @@ private:
 
   enum class State
   {
-    MoveToPreKick,
+    MoveBehindBall,
     FaceBall,
     KickBall
   };
-  State prev_state_ = State::MoveToPreKick;
+  State prev_state_ = State::MoveBehindBall;
 
   ateam_geometry::Point getPreKickPosition(const World & world);
-
-  ateam_msgs::msg::RobotMotionCommand moveToPreKick(const World & world, const Robot & robot);
-
-  ateam_msgs::msg::RobotMotionCommand faceBall(const World & world, const Robot & robot);
-
-  ateam_msgs::msg::RobotMotionCommand kickBall(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills
