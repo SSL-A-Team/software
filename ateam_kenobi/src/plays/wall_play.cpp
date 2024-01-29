@@ -86,9 +86,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
   auto current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
+  const auto & our_defense_corners = world.field.ours.defense_area_corners;
+  const double defense_area_depth = std::abs(CGAL::right_vertex_2(our_defense_corners.begin(), our_defense_corners.end())->x() - CGAL::left_vertex_2(our_defense_corners.begin(), our_defense_corners.end())->x());
+  const double wall_x = ((-1 * world.field.field_length) / 2.0) + defense_area_depth + 0.2;
+
   ateam_geometry::Segment wall_line = ateam_geometry::Segment(
-    ateam_geometry::Point(-3, 0.25 * current_available_robots.size() / 2.0),
-    ateam_geometry::Point(-3, -0.25 * current_available_robots.size() / 2.0)
+    ateam_geometry::Point(wall_x, 0.25 * current_available_robots.size() / 2.0),
+    ateam_geometry::Point(wall_x, -0.25 * current_available_robots.size() / 2.0)
   );
 
   std::vector<ateam_geometry::Point> positions_to_assign =
