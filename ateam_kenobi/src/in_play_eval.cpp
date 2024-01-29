@@ -35,15 +35,17 @@ void InPlayEval::Update(World & world)
   } else if (IsGameStopped(world)) {
     in_play_ = false;
     ball_start_pos_.reset();
+    timeout_duration_.reset();
+    timeout_start_ = std::chrono::steady_clock::time_point::max();
   } else if (IsStopCommandEnding(world)) {
     SetTimeout(world);
     SetDistanceThreshold(world);
   } else if (IsGameResuming(world)) {
     ball_start_pos_ = world.ball.pos;
     timeout_start_ = std::chrono::steady_clock::now();
-  } else if (HasTimeoutExpired()) {
+  } else if (!in_play_ && HasTimeoutExpired()) {
     in_play_ = true;
-  } else if (HasBallMoved(world)) {
+  } else if (!in_play_ && HasBallMoved(world)) {
     in_play_ = true;
   }
 
@@ -136,7 +138,7 @@ bool InPlayEval::HasTimeoutExpired()
     return false;
   }
 
-  return std::chrono::steady_clock::now() > (timeout_start_ + timeout_duration_.value());
+  return (std::chrono::steady_clock::now() - timeout_duration_.value()) > timeout_start_;
 }
 
 }  // namespace ateam_kenobi
