@@ -46,7 +46,6 @@
 import { ref, inject } from 'vue';
 import { Referee, GameProperty } from '@/referee';
 import TeamGameComponent from './TeamGameComponent.vue';
-import TeamGameComponentInline from './TeamGameComponentInline.vue';
 
 export default {
 	inject: ['state'],
