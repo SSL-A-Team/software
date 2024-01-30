@@ -1,4 +1,3 @@
-bool valid
 float32 field_length
 float32 field_width
 float32 goal_width
