@@ -3,20 +3,20 @@
 		<v-app-bar app ref="Top Bar" color="#cbb26b" density="compact">
 			<v-app-bar-title> ATeam UI </v-app-bar-title>
 		</v-app-bar>
-		<v-main>
-			<v-container fluid class="d-inline-flex justify-space-between">
-				<v-row class="flex-nowrap">
-					<v-col v-if="!this.state.comp" class="flex-grow-0 flex-shrink-0">
+		<v-main style="height: 100vh; width: 100vw">
+			<v-container fluid class="w-100 h-100 pa-0 justify-space-between">
+				<v-row class="ma-0 w-100 h-100">
+					<v-col cols="1" v-if="!this.state.comp" class="pa-1 h-100" style="min-width: 180px">
 						<RefButtonsComponent />
 					</v-col>
-					<v-col class="flex-grow-0 flex-shrink-0">
+					<v-col cols="1" class="pa-1 h-100" style="min-width: 220px; max-width: 220px; overflow-y: scroll">
 						<StatusComponent ref="robotStatus" />
 					</v-col>
-					<v-col class="flex-grow-1 flex-shrink-1" style="height: auto">
+					<v-col align="center" class="h-100 px-1 pt-2">
 						<GameStatusComponent ref="refStatus" />
-						<FieldComponent ref="mainField" class="ma-2 pa-2" />
+						<FieldComponent ref="mainField" />
 					</v-col>
-					<v-col class="flex-grow-0 flex-shrink-0" style="max-width: 15vw">
+					<v-col cols="2" class="pa-1 h-100" style="min-width: 220px">
 						<AIComponent ref="AIStatus" />
 					</v-col>
 				</v-row>

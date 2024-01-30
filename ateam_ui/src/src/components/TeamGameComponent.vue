@@ -1,7 +1,14 @@
 <template>
-	<v-card variant="outlined" :style="{ color: this.team.color, padding: '5px' }">
-		<p>Team: {{ this.team.name }}</p>
-		<p style="text-align: center">Score: {{ this.team.score }}</p>
+	<v-card
+		class="pa-1 d-inline-block"
+		variant="outlined"
+		:style="{ color: this.team.color }"
+		style="max-width: 600px; white-space: nowrap"
+	>
+		<p style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
+			Team: {{ this.team.name }}
+		</p>
+		<p style="text-align: center; white-space: nowrap">Score: {{ this.team.score }}</p>
 	</v-card>
 </template>
 

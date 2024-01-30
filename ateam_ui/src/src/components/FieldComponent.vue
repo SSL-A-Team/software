@@ -1,5 +1,5 @@
 <template>
-	<canvas ref="canvas" style="width: 100%; height: auto; display: block" />
+	<canvas ref="canvas" style="max-width: 100%; max-height: calc(100% - 160px)" />
 </template>
 
 <script lang="ts">
