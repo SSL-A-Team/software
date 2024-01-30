@@ -90,7 +90,7 @@ CameraMeasurement fromMsg(
     cameraFrame.blue_robots.at(robot_id).push_back(fromMsg(blue_robot_detection));
   }
 
-  if(team_side == ateam_common::TeamSide::PositiveHalf) {
+  if (team_side == ateam_common::TeamSide::PositiveHalf) {
     cameraFrame.invert();
   }
 
