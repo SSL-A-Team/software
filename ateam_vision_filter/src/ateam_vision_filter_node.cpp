@@ -85,9 +85,10 @@ public:
   void vision_callback(
     const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
   {
+    const auto team_side = game_controller_listener_.GetTeamSide();
     if (!vision_wrapper_msg->detection.empty()) {
       const auto camera_measurement = message_conversions::fromMsg(
-        vision_wrapper_msg->detection.front());
+        vision_wrapper_msg->detection.front(), team_side);
       const auto camera_id = vision_wrapper_msg->detection.front().camera_id;
       {
         const std::lock_guard<std::mutex> lock(world_mutex_);
@@ -97,9 +98,7 @@ public:
 
     if (!vision_wrapper_msg->geometry.empty()) {
       field_publisher_->publish(
-        message_conversions::fromMsg(
-          vision_wrapper_msg->geometry.front(),
-          game_controller_listener_.GetTeamSide()));
+        message_conversions::fromMsg(vision_wrapper_msg->geometry.front(), team_side));
     }
   }
 

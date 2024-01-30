@@ -71,7 +71,9 @@ ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot)
   return robot_state_msg;
 }
 
-CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg)
+CameraMeasurement fromMsg(
+  const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg,
+  const ateam_common::TeamSide & team_side)
 {
   CameraMeasurement cameraFrame;
   for (const auto & ball_detection : ros_msg.balls) {
@@ -86,6 +88,10 @@ CameraMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionFrame & ros
   for (const auto & blue_robot_detection : ros_msg.robots_blue) {
     std::size_t robot_id = blue_robot_detection.robot_id;
     cameraFrame.blue_robots.at(robot_id).push_back(fromMsg(blue_robot_detection));
+  }
+
+  if(team_side == ateam_common::TeamSide::PositiveHalf) {
+    cameraFrame.invert();
   }
 
   return cameraFrame;
