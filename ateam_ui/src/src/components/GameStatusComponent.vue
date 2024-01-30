@@ -73,8 +73,7 @@ export default {
 		}
 	},
 	components: {
-		TeamGameComponent,
-		TeamGameComponentInline
+		TeamGameComponent
 	}
 };
 </script>
