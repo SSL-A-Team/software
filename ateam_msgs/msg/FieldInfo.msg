@@ -4,6 +4,8 @@ float32 field_width
 float32 goal_width
 float32 goal_depth
 float32 boundary_width
-geometry_msgs/Point[] field_corners
+geometry_msgs/Point32 center_circle
+float32 center_circle_radius
+geometry_msgs/Polygon field_corners
 FieldSidedInfo ours
 FieldSidedInfo theirs

@@ -36,8 +36,8 @@ TEST(Normalize, NormalizeZeroVector)
 {
   ateam_geometry::Vector v(0, 0);
   auto v_normalized = ateam_geometry::normalize(v);
-  EXPECT_TRUE(std::isnan(v_normalized.x()));
-  EXPECT_TRUE(std::isnan(v_normalized.y()));
+  EXPECT_FLOAT_EQ(v_normalized.x(), 0);
+  EXPECT_FLOAT_EQ(v_normalized.y(), 0);
 }
 
 TEST(Norm, NormalizedDistanceBetweenPoints)

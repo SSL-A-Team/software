@@ -22,14 +22,14 @@
 
 #include "ateam_geometry/types.hpp"
 #include "ateam_geometry/nearest_points.hpp"
+#include "ateam_geometry_testing/testing_utils.hpp"
 
 TEST(NearestPointOnSegment, PointOffSegment)
 {
   ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
   ateam_geometry::Point p(10, 0);
   auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
-  EXPECT_FLOAT_EQ(nearest_point.x(), 5);
-  EXPECT_FLOAT_EQ(nearest_point.y(), 5);
+  EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(5, 5)));
 }
 
 TEST(NearestPointOnSegment, PointOnSegment)
@@ -37,6 +37,5 @@ TEST(NearestPointOnSegment, PointOnSegment)
   ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
   ateam_geometry::Point p(1, 1);
   auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
-  EXPECT_FLOAT_EQ(nearest_point.x(), 1);
-  EXPECT_FLOAT_EQ(nearest_point.y(), 1);
+  EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(1, 1)));
 }

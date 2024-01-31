@@ -26,7 +26,7 @@ export default {
         getAIDescription: function() {
             let object = null;
             try {
-                object = JSON.parse(this.state.world.ai.description);
+                object[this.state.world.ai.name] = JSON.parse(this.state.world.ai.description);
             } catch(e) {
                 if (e instanceof SyntaxError) {
                     console.log("Play description contained invalid JSON")

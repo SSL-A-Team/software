@@ -54,12 +54,11 @@ RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int ro
   }
 
   RobotMoveCommand * robot_move_command = proto_robot_command->mutable_move_command();
-  MoveGlobalVelocity * global_velocity_command =
-    robot_move_command->mutable_global_velocity();
+  MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
 
-  global_velocity_command->set_x(ros_msg.twist.linear.x);
-  global_velocity_command->set_y(ros_msg.twist.linear.y);
-  global_velocity_command->set_angular(ros_msg.twist.angular.z);
+  local_velocity_command->set_forward(ros_msg.twist.linear.x);
+  local_velocity_command->set_left(ros_msg.twist.linear.y);
+  local_velocity_command->set_angular(ros_msg.twist.angular.z);
 
   return robots_control;
 }

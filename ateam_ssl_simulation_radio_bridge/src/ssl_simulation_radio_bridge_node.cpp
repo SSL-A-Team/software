@@ -67,6 +67,15 @@ public:
       Topics::kRobotFeedbackPrefix,
       rclcpp::SystemDefaultsQoS(),
       this);
+
+    std::ranges::fill(command_timestamps_, std::chrono::steady_clock::time_point::max());
+    zero_command_timer_ =
+      create_wall_timer(
+      std::chrono::milliseconds(
+        declare_parameter(
+          "command_timeout_ms",
+          100)),
+      std::bind(&SSLSimulationRadioBridgeNode::zero_command_timer_callback, this));
   }
 
   void team_color_change_callback(const ateam_common::TeamColor color)
@@ -91,20 +100,25 @@ public:
       std::bind_front(&SSLSimulationRadioBridgeNode::feedback_callback, this));
   }
 
-  void message_callback(
-    const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg,
-    int robot_id)
+  void send_command(const ateam_msgs::msg::RobotMotionCommand & msg, const int robot_id)
   {
     if (!udp_) {
       return;
     }
-    RobotControl robots_control = message_conversions::fromMsg(*robot_commands_msg, robot_id);
-
+    RobotControl robots_control = message_conversions::fromMsg(msg, robot_id);
     std::vector<uint8_t> buffer;
     buffer.resize(robots_control.ByteSizeLong());
     if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
       udp_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
     }
+  }
+
+  void message_callback(
+    const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg,
+    int robot_id)
+  {
+    command_timestamps_[robot_id] = std::chrono::steady_clock::now();
+    send_command(*robot_commands_msg, robot_id);
   }
 
   void feedback_callback(const uint8_t * buffer, size_t bytes_received)
@@ -124,12 +138,37 @@ public:
     }
   }
 
+  void send_zero_command(const int id)
+  {
+    ateam_msgs::msg::RobotMotionCommand msg;
+    msg.dribbler_speed = 0.0;
+    msg.kick = ateam_msgs::msg::RobotMotionCommand::KICK_DISABLE;
+    msg.twist.linear.x = 0.0;
+    msg.twist.angular.z = 0.0;
+    send_command(msg, id);
+  }
+
+  void zero_command_timer_callback()
+  {
+    const auto timeout_duration = std::chrono::milliseconds(
+      get_parameter(
+        "command_timeout_ms").as_int());
+    const auto timeout_time = std::chrono::steady_clock::now() - timeout_duration;
+    for (auto id = 0; id < 16; ++id) {
+      if (command_timestamps_[id] < timeout_time) {
+        send_zero_command(id);
+      }
+    }
+  }
+
 private:
   ateam_common::GameControllerListener gc_listener_;
   std::unique_ptr<ateam_common::BiDirectionalUDP> udp_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
+  rclcpp::TimerBase::SharedPtr zero_command_timer_;
+  std::array<std::chrono::steady_clock::time_point, 16> command_timestamps_;
 };
 
 }  // namespace ateam_ssl_simulation_radio_bridge

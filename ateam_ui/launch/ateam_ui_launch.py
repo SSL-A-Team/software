@@ -39,6 +39,13 @@ def generate_launch_description():
         executable="rosbridge_websocket.py"
     )
 
+    rosapi_node = launch_ros.actions.Node(
+        package="rosapi",
+        namespace="ui",
+        name="rosapi",
+        executable="rosapi_node"
+    )
+
     shutdown_handler = launch.actions.RegisterEventHandler(
         launch.event_handlers.OnProcessExit(
             target_action=ui_process,
@@ -51,5 +58,6 @@ def generate_launch_description():
     return launch.LaunchDescription([
         ui_process,
         rosbridge_node,
+        rosapi_node,
         shutdown_handler
     ])

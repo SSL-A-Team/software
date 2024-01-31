@@ -2,7 +2,7 @@
     <v-row class="nowrap justify-space-between" align="center">
         <v-row align="center">
         <p>Goalie ID: {{this.state.getGoalie()}}</p>
-            <v-select label="set ID" class="flex-grow-0 align-end" :items="Array.from({length: 16}, (value, index) => index)" density="compact" variant="solo" @update:modelValue="this.state.setGoalie"/>
+            <v-select label="set ID" class="flex-grow-0 align-end" :items="Array.from({length: 16}, (value, index) => index)" density="compact" variant="solo" @update:modelValue="setGoalieId"/>
         </v-row>
         <v-spacer/>
     </v-row> 
@@ -29,6 +29,9 @@ export default {
     mounted() {
     },
     methods: {
+        setGoalieId(new_id) {
+            this.state.setGoalie(new_id);
+        }
     },
     computed: {
         getRefState: function() {

@@ -174,7 +174,6 @@ private:
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
-      control_msg.kick_vel = 0.0f;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
