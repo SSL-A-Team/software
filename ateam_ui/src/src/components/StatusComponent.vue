@@ -28,10 +28,10 @@ export default {
                     const element = this.$refs.robotCard[robot.id].$el;
                     const errorLevel = robot.errorLevel(this.state.sim);
 
-                    // This is broken because we switched from redrawing on change to redrawing every 100ms
-                    // TODO: either figure out how to get reactive updating to work consistently
-                    //       or modify the error level animation handling to work properly
-                    element.getAnimations().forEach((animation) => {animation.cancel()});
+                    if (errorLevel != ErrorLevel.Critical) {
+                        element.getAnimations().forEach((animation) => {animation.cancel()});
+                    }
+
                     let style = "";
                     if (robot.id == this.state.controlled_robot) {
                         console.log("controlling ", robot.id);
@@ -48,10 +48,12 @@ export default {
                             style +=  " outline: solid 5px red; outline-offset:-1px";
                             break;
                         case ErrorLevel.Critical:
-                            element.animate([
-                                {background: "red", outline: "solid 5px red"}],
-                                {easing: "steps(2, jump-none)", duration: 1000, iterations: Infinity}
-                            );
+                            if (element.getAnimations().length == 0) {
+                                element.animate([
+                                    {background: "red", outline: "solid 5px red"}],
+                                    {easing: "steps(2, jump-none)", duration: 1000, iterations: Infinity}
+                                );
+                            }
                             break;
                     }
                     element.style = style;
