@@ -22,7 +22,7 @@ export default {
     methods: {
         update: function() {
             for(const robot of this.state.world.teams[this.state.world.team].robots) {
-                if (robot.isValid()) {
+                if (robot.isValid() && this.$refs.canvases[robot.id]) {
                     this.drawStatus(robot, this.$refs.canvases[robot.id].getContext("2d"));
 
                     const element = this.$refs.robotCard[robot.id].$el;
@@ -39,6 +39,9 @@ export default {
 
                     switch (errorLevel) {
                         case ErrorLevel.None:
+                            if (!robot.visible) {
+                                style += " outline: solid 5px blue; outline-offset:-1px";
+                            }
                             break;
                         case ErrorLevel.Warning:
                             style += " outline: solid 5px yellow; outline-offset:-1px";
