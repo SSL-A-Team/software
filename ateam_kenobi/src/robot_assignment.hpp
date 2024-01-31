@@ -44,10 +44,13 @@ namespace ateam_kenobi::robot_assignment
 // #define USE_HACKY_ASSIGNMENT
 #define USE_GREEDY_ASSIGNMENT
 
-inline std::unordered_map<size_t, size_t> greedyAssignment(const std::vector<Robot> & available_robots, const std::vector<ateam_geometry::Point> & goal_positions) {
+inline std::unordered_map<size_t, size_t> greedyAssignment(
+  const std::vector<Robot> & available_robots,
+  const std::vector<ateam_geometry::Point> & goal_positions)
+{
   std::unordered_map<size_t, size_t> assignments;
 
-  if(available_robots.empty() || goal_positions.empty()) {
+  if (available_robots.empty() || goal_positions.empty()) {
     return assignments;
   }
 
@@ -62,7 +65,7 @@ inline std::unordered_map<size_t, size_t> greedyAssignment(const std::vector<Rob
 
   const auto num_assignments = std::min(available_robots.size(), goal_positions.size());
 
-  for(auto row = 0ul; row < num_assignments; ++row) {
+  for (auto row = 0ul; row < num_assignments; ++row) {
     Eigen::MatrixXd::Index min_index;
     costs.row(row).minCoeff(&min_index);
     assignments[available_robots[min_index].id] = row;
