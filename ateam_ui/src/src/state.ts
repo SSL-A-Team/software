@@ -188,16 +188,16 @@ export class AppState {
                 return [Math.min(dim_1, dim_2), Math.max(dim_1, dim_2)]
             }
 
-            if (msg.ours.defense_area_corners.length) {
-                const defense_dims = get_dims(msg.ours.defense_area_corners);
+            if (msg.ours.defense_area_corners.points.length) {
+                const defense_dims = get_dims(msg.ours.defense_area_corners.points);
                 state.world.field.fieldDimensions.penaltyShort = defense_dims[0];
                 state.world.field.fieldDimensions.penaltyLong = defense_dims[1];
             }
 
-            if (msg.ours.goal_corners.length) {
-                const goal_dims = get_dims(msg.ours.defense_area_corners);
-                state.world.field.fieldDimensions.goalDepth = defense_dims[0];
-                state.world.field.fieldDimensions.goalWidth = defense_dims[1];
+            if (msg.ours.goal_corners.points.length) {
+                const goal_dims = get_dims(msg.ours.goal_corners.points);
+                state.world.field.fieldDimensions.goalDepth = goal_dims[0];
+                state.world.field.fieldDimensions.goalWidth = goal_dims[1];
             }
         }
     }
