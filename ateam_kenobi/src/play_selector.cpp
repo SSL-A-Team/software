@@ -32,6 +32,16 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
 
   plays::BasePlay * selected_play = &halt_play_;
 
+  // switch(current_game_command) {
+  //   case ateam_common::GameCommand::Halt:
+  //   case ateam_common::GameCommand::Stop:
+  //     selected_play = &halt_play_;
+  //     break;
+  //   default:
+  //     selected_play = &controls_test_play_;
+  //     break;
+  // }
+
   switch (current_game_command) {
     case ateam_common::GameCommand::Halt:
     case ateam_common::GameCommand::TimeoutOurs:
@@ -74,7 +84,6 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       selected_play = &stop_play_;
       break;
   }
-
 
   resetPlayIfNeeded(selected_play);
 
