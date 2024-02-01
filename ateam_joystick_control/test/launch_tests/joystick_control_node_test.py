@@ -110,9 +110,12 @@ class TestJoystickControlNode(unittest.TestCase):
         ]
         joy_msg.buttons = [0] * 11
 
+        timeout = time.time() + 1
         while self.received_msg_0 is None and self.received_msg_1 is None:
             self.pub.publish(joy_msg)
             time.sleep(0.1)
+            if time.time() >= timeout:
+                break
 
         self.assertIsNotNone(self.received_msg_0)
         self.assertIsNone(self.received_msg_1)
@@ -150,9 +153,12 @@ class TestJoystickControlNode(unittest.TestCase):
         ]
         joy_msg.buttons = [0] * 11
 
+        timeout = time.time() + 1
         while self.received_msg_0 is None or self.received_msg_1 is None:
             self.pub.publish(joy_msg)
             time.sleep(0.1)
+            if time.time() >= timeout:
+                break
 
         # Robot 0 should get one more all-zero message when the controller switches
         self.assertIsNotNone(self.received_msg_0)
