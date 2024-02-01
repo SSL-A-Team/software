@@ -73,7 +73,7 @@ std::vector<ateam_msgs::msg::RobotMotionCommand> Blockers::runFrame(
     const auto robot_id = robot.id;
     auto & move_to = easy_move_tos_[robot_id];
     move_to.setTargetPosition(position);
-    move_to.face_travel();
+    move_to.face_point(world.ball.pos);
     motion_commands.push_back(move_to.runFrame(robot, world));
   }
 
@@ -101,6 +101,6 @@ std::vector<Robot> Blockers::getRankedBlockableRobots(const World & world)
 ateam_geometry::Point Blockers::getBlockingPosition(const World & world, const Robot & blockee)
 {
   return blockee.pos +
-         ((kRobotDiameter + 0.1) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
+         ((kRobotDiameter + 0.15) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
 }
 }  // namespace ateam_kenobi::skills

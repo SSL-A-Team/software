@@ -77,7 +77,11 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       break;
     case ateam_common::GameCommand::DirectFreeTheirs:
     case ateam_common::GameCommand::IndirectFreeTheirs:
-      selected_play = &wall_play_;
+      if(world.in_play) {
+        selected_play = &basic_122_play_;
+      } else {
+        selected_play = &wall_play_;
+      }
       break;
     case ateam_common::GameCommand::BallPlacementOurs:
     case ateam_common::GameCommand::BallPlacementTheirs:

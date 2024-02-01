@@ -56,7 +56,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
 
   line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
 
-  if (world.in_play) {
+  if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
     // Kick ball
     line_kick_skill_.runFrame(world, kicking_robot);
   } else {
@@ -64,7 +64,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
     const auto destination = line_kick_skill_.getAssignmentPoint(world);
     auto & move_to = move_tos_[kicking_robot.id];
     move_to.setTargetPosition(destination);
-    move_to.face_travel();
+    move_to.face_point(world.ball.pos);
     move_to.setMaxVelocity(1.5);
     motion_commands[kicking_robot.id] = move_to.runFrame(kicking_robot, world);
   }

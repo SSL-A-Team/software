@@ -59,17 +59,18 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
 }
 
 void Basic122::assignAndRunStriker(
-  std::vector<Robot> available_robots, const World & world,
+  std::vector<Robot> & available_robots, const World & world,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
+  std::vector<Robot> striker_eligible_robots = available_robots;
   if(world.double_touch_forbidden_id_) {
-    play_helpers::removeRobotWithId(available_robots, world.double_touch_forbidden_id_.value());
+    play_helpers::removeRobotWithId(striker_eligible_robots, world.double_touch_forbidden_id_.value());
   }
 
   std::vector<ateam_geometry::Point> assignable_positions;
   assignable_positions.push_back(striker_skill_.getAssignmentPoint(world));
-  auto assignment_map = robot_assignment::assign(available_robots, assignable_positions);
+  auto assignment_map = robot_assignment::assign(striker_eligible_robots, assignable_positions);
   if (assignment_map.empty()) {
     return;
   }
@@ -78,7 +79,7 @@ void Basic122::assignAndRunStriker(
   if (!maybe_robot) {
     return;
   }
-  striker_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length, 0.0));
+  striker_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length/2, 0.0));
   motion_commands[robot_id] = striker_skill_.runFrame(world, maybe_robot.value());
 
   play_helpers::removeRobotWithId(available_robots, robot_id);

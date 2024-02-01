@@ -46,7 +46,7 @@ private:
   skills::Goalie goalie_skill_;
 
   void assignAndRunStriker(
-    std::vector<Robot> available_robots, const World & world,
+    std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 
