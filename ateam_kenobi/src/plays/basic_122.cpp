@@ -60,7 +60,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
 
   std::vector<std::vector<int>> disallowed_ids;
   if (world.double_touch_forbidden_id_) {
-    disallowed_ids.push_back({*world.double_touch_forbidden_id_});
+    std::fill_n(std::back_inserter(disallowed_ids), assignment_positions.size(), std::vector<int>{});
+    disallowed_ids[0].push_back(*world.double_touch_forbidden_id_);
   }
 
   const auto assignments = play_helpers::assignRobots(

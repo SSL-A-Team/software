@@ -87,6 +87,9 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
     case ateam_common::GameCommand::BallPlacementTheirs:
       selected_play = &stop_play_;
       break;
+    default:
+      std::cerr << "WARNING: Play selector falling through because of unrecognized game command: " << static_cast<int>(current_game_command) << '\n';
+      break;
   }
 
   resetPlayIfNeeded(selected_play);
