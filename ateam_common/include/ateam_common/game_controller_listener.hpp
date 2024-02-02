@@ -156,7 +156,7 @@ public:
 
   const std::optional<uint32_t> & GetTheirGoalieID() const
   {
-    return our_goalie_id_;
+    return their_goalie_id_;
   }
 
   const ssl_league_msgs::msg::Referee & GetLatestRefereeMessage() const
