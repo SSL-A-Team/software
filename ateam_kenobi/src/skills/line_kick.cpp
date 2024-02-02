@@ -79,7 +79,6 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
   // robot velocity vector perpendicular to the ball
   const auto robot_vel_perp = robot.vel - robot_vel_proj;
   const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
-  std::cerr << robot_vel_perp_mag << std::endl;
 
   // Check if: robot is behind the ball but not too far, robot is in line with the ball and target
   //           robot velocity perpendicular to the ball is low
