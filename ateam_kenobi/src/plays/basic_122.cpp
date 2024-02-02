@@ -90,6 +90,7 @@ void Basic122::runStriker(
   const Robot & striker_bot, const World & world,
   ateam_msgs::msg::RobotMotionCommand & motion_command)
 {
+  play_info_["Striker ID"] = striker_bot.id;
   striker_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2, 0.0));
   motion_command = striker_skill_.runFrame(world, striker_bot);
 }
@@ -100,7 +101,7 @@ void Basic122::runBlockers(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
-  const auto skill_commands = blockers_skill_.runFrame(world, blocker_bots);
+  const auto skill_commands = blockers_skill_.runFrame(world, blocker_bots, &play_info_);
 
   for (auto robot_ind = 0ul; robot_ind < blocker_bots.size(); ++robot_ind) {
     motion_commands[blocker_bots[robot_ind].id] = skill_commands[robot_ind];
