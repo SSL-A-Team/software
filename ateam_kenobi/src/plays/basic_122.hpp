@@ -45,13 +45,12 @@ private:
   skills::Blockers blockers_skill_;
   skills::Goalie goalie_skill_;
 
-  void assignAndRunStriker(
-    std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
+  void runStriker(
+    const Robot & striker_bot, const World & world,
+    ateam_msgs::msg::RobotMotionCommand & motion_command);
 
-  void assignAndRunBlockers(
-    std::vector<Robot> & available_robots, const World & world,
+  void runBlockers(
+    const std::vector<Robot> & blocker_bots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 };
