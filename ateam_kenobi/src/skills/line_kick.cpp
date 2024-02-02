@@ -68,8 +68,24 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
   const auto robot_perp_ball = robot_to_ball - robot_proj_ball;
   const auto robot_perp_dist_to_ball = ateam_geometry::norm(robot_perp_ball);
 
+  // scalar projection (magnitude) of robot velocity along target vector
+  const auto robot_vel_proj_mag = (ball_to_target * robot.vel)
+    / ateam_geometry::norm(ball_to_target);
+
+  // vector projection of robot velocity along target vector
+  const auto robot_vel_proj = ball_to_target * robot_vel_proj_mag
+    / ateam_geometry::norm(ball_to_target);
+
+  // robot velocity vector perpendicular to the ball
+  const auto robot_vel_perp = robot.vel - robot_vel_proj;
+  const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
+  std::cerr << robot_vel_perp_mag << std::endl;
+
   // Check if: robot is behind the ball but not too far, robot is in line with the ball and target
-  if (robot_proj_dist_to_ball < 0.12 || robot_proj_dist_to_ball > 0.22 || robot_perp_dist_to_ball > 0.025) {
+  //           robot velocity perpendicular to the ball is low
+  if (robot_proj_dist_to_ball < 0.12 / hysteresis || robot_proj_dist_to_ball > 0.22 || robot_perp_dist_to_ball > 0.025
+      || abs(robot_vel_perp_mag) > 0.2) {
+
     if (prev_state_ != State::MoveBehindBall) {
       easy_move_to_.reset();
       prev_state_ = State::MoveBehindBall;
