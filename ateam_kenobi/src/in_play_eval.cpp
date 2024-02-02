@@ -32,22 +32,31 @@ void InPlayEval::Update(World & world)
   const auto game_command = world.referee_info.running_command;
   if (game_command == ateam_common::GameCommand::ForceStart) {
     in_play_ = true;
-  } else if (IsGameStopped(world)) {
+  }
+  if (IsGameStopping(world)) {
     in_play_ = false;
     ball_start_pos_.reset();
     timeout_duration_.reset();
     timeout_start_ = std::chrono::steady_clock::time_point::max();
-  } else if (IsStopCommandEnding(world)) {
+  }
+  if (IsStopCommandEnding(world)) {
     SetTimeout(world);
     SetDistanceThreshold(world);
-  } else if (IsGameResuming(world)) {
+  }
+  if (IsGameResuming(world)) {
     ball_start_pos_ = world.ball.pos;
     timeout_start_ = std::chrono::steady_clock::now();
-  } else if (!in_play_ && HasTimeoutExpired()) {
-    in_play_ = true;
-  } else if (!in_play_ && HasBallMoved(world)) {
+  }
+  if (!in_play_ && HasTimeoutExpired()) {
     in_play_ = true;
   }
+  if (!in_play_ && HasBallMoved(world)) {
+    in_play_ = true;
+  }
+
+  /* If none of the above conditions have hit, our in play status hasn't changed and we keep the
+   * existing value.
+   */
 
   world.in_play = in_play_;
   prev_game_command_ = game_command;
@@ -91,8 +100,11 @@ void InPlayEval::SetDistanceThreshold(const World & world)
 }
 
 
-bool InPlayEval::IsGameStopped(const World & world)
+bool InPlayEval::IsGameStopping(const World & world)
 {
+  if(world.referee_info.running_command == prev_game_command_) {
+    return false;
+  }
   return world.referee_info.running_command == ateam_common::GameCommand::Stop ||
          world.referee_info.running_command == ateam_common::GameCommand::Halt;
 }

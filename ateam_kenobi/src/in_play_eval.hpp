@@ -48,7 +48,7 @@ private:
 
   void SetDistanceThreshold(const World & world);
 
-  bool IsGameStopped(const World & world);
+  bool IsGameStopping(const World & world);
 
   bool IsStopCommandEnding(const World & world);
 
