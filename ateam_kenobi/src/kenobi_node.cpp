@@ -228,6 +228,9 @@ private:
     if (game_controller_listener_.GetOurGoalieID().has_value()) {
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
     }
+    if (game_controller_listener_.GetTheirGoalieID().has_value()) {
+      world_.referee_info.their_goalie_id = game_controller_listener_.GetTheirGoalieID().value();
+    }
     in_play_eval_.Update(world_);
     double_touch_eval_.update(world_);
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
