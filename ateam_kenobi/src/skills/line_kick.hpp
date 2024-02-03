@@ -69,7 +69,7 @@ private:
   void chooseState(const World & world, const Robot & robot);
 
   bool isRobotBehindBall(const World & world, const Robot & robot);
-  bool isRobotFacingBall(const World & world, const Robot & robot);
+  bool isRobotFacingBall(const Robot & robot);
   bool isBallMoving(const World & world);
 
   ateam_msgs::msg::RobotMotionCommand runMoveBehindBall(const World & world, const Robot & robot);

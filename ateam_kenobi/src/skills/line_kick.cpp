@@ -77,7 +77,7 @@ void LineKick::chooseState(const World & world, const Robot & robot)
     case State::FaceBall:
       if(!isRobotBehindBall(world, robot)) {
         state_ = State::MoveBehindBall;
-      } else if (isRobotFacingBall(world, robot)) {
+      } else if (isRobotFacingBall(robot)) {
         state_ = State::KickBall;
       }
       break;
@@ -123,7 +123,7 @@ bool LineKick::isRobotBehindBall(const World & world, const Robot & robot)
   return proj_dist_is_good && perp_dist_is_good && robot_vel_is_good;
 }
 
-bool LineKick::isRobotFacingBall(const World & world, const Robot & robot)
+bool LineKick::isRobotFacingBall(const Robot & robot)
 {
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());

@@ -104,6 +104,6 @@ std::vector<Robot> Blockers::getRankedBlockableRobots(const World & world)
 ateam_geometry::Point Blockers::getBlockingPosition(const World & world, const Robot & blockee)
 {
   return blockee.pos +
-         ((kRobotDiameter + 0.15) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
+         ((kRobotDiameter * 2) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
 }
 }  // namespace ateam_kenobi::skills

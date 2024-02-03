@@ -200,10 +200,13 @@ void MotionController::set_x_pid_gain(GainType gain, double value)
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
+      break;
     case GainType::i:
       gains.i_gain_ = value;
+      break;
     case GainType::d:
       gains.d_gain_ = value;
+      break;
   }
   this->x_controller.setGains(gains);
 }
@@ -214,10 +217,13 @@ void MotionController::set_y_pid_gain(GainType gain, double value)
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
+      break;
     case GainType::i:
       gains.i_gain_ = value;
+      break;
     case GainType::d:
       gains.d_gain_ = value;
+      break;
   }
   this->y_controller.setGains(gains);
 }
@@ -228,10 +234,13 @@ void MotionController::set_t_pid_gain(GainType gain, double value)
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
+      break;
     case GainType::i:
       gains.i_gain_ = value;
+      break;
     case GainType::d:
       gains.d_gain_ = value;
+      break;
   }
   this->t_controller.setGains(gains);
 }
