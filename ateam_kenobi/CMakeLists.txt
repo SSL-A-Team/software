@@ -44,6 +44,7 @@ target_include_directories(kenobi_node_component PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
 target_compile_features(kenobi_node_component PUBLIC cxx_std_20)
+target_compile_options(kenobi_node_component PRIVATE -Werror -Wall -Wextra -Wpedantic)
 ament_target_dependencies(
   kenobi_node_component
   "rclcpp"
