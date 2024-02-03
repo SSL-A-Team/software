@@ -27,6 +27,7 @@ namespace ateam_kenobi::plays
 
 OurPenaltyPlay::OurPenaltyPlay()
 : BasePlay("OurPenaltyPlay"),
+  goalie_skill_(getOverlays().getChild("goalie")),
   line_kick_skill_(getOverlays().getChild("line_kick"))
 {
   play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
@@ -44,6 +45,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
+  goalie_skill_.runFrame(world, motion_commands);
+
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
@@ -54,13 +57,17 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   auto kicking_robot = available_robots.front();
   available_robots.erase(available_robots.begin());
 
+  play_info_["Kicker ID"] = kicking_robot.id;
+
   line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
 
   if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
     // Kick ball
-    line_kick_skill_.runFrame(world, kicking_robot);
+    play_info_["State"] = "Kicking";
+    motion_commands[kicking_robot.id] = line_kick_skill_.runFrame(world, kicking_robot);
   } else {
     // Stage for kick
+    play_info_["State"] = "Preparing";
     const auto destination = line_kick_skill_.getAssignmentPoint(world);
     auto & move_to = move_tos_[kicking_robot.id];
     move_to.setTargetPosition(destination);
@@ -69,17 +76,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
     motion_commands[kicking_robot.id] = move_to.runFrame(kicking_robot, world);
   }
 
-  auto i = 0;
-  ateam_geometry::Point pattern_start(kRobotDiameter - (world.field.field_length / 2.0),
+  ateam_geometry::Point pattern_point(kRobotDiameter - (world.field.field_length / 2.0),
     kRobotDiameter - (world.field.field_width / 2.0));
   ateam_geometry::Vector pattern_step(kRobotDiameter + 0.2, 0.0);
   for (const auto & robot : available_robots) {
     auto & move_to = move_tos_[robot.id];
-    move_to.setTargetPosition(pattern_start + (i * pattern_step));
+    move_to.setTargetPosition(pattern_point);
     move_to.setMaxVelocity(1.5);
     move_to.face_travel();
     motion_commands[robot.id] = move_to.runFrame(robot, world);
-    i++;
+    pattern_point += pattern_step;
   }
 
   return motion_commands;
