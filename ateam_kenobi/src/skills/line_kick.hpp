@@ -62,9 +62,19 @@ private:
     FaceBall,
     KickBall
   };
-  State prev_state_ = State::MoveBehindBall;
+  State state_ = State::MoveBehindBall;
 
   ateam_geometry::Point getPreKickPosition(const World & world);
+
+  void chooseState(const World & world, const Robot & robot);
+
+  bool isRobotBehindBall(const World & world, const Robot & robot);
+  bool isRobotFacingBall(const World & world, const Robot & robot);
+  bool isBallMoving(const World & world);
+
+  ateam_msgs::msg::RobotMotionCommand runMoveBehindBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runFaceBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runKickBall(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills
