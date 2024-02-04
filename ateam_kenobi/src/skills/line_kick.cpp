@@ -147,7 +147,9 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runMoveBehindBall(
   MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
-  easy_move_to_.setPlannerOptions({});
+  path_planning::PlannerOptions planner_options;
+  planner_options.draw_obstacles = true;
+  easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(getPreKickPosition(world));
   std::vector<ateam_geometry::AnyShape> obstacles = {
     ateam_geometry::makeCircle(world.ball.pos, 0.02)

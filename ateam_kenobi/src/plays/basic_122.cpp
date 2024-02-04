@@ -23,6 +23,7 @@
 #include <vector>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
+#include "play_helpers/window_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -60,7 +61,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
 
   std::vector<std::vector<int>> disallowed_ids;
   if (world.double_touch_forbidden_id_) {
-    std::fill_n(std::back_inserter(disallowed_ids), assignment_positions.size(), std::vector<int>{});
+    std::fill_n(
+      std::back_inserter(disallowed_ids), assignment_positions.size(),
+      std::vector<int>{});
     disallowed_ids[0].push_back(*world.double_touch_forbidden_id_);
   }
 
@@ -70,13 +73,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
 
   const auto & striker = assignments[0];
 
-  if(striker) {
+  if (striker) {
     runStriker(*striker, world, motion_commands[striker->id].emplace());
   }
 
   std::vector<Robot> blockers;
-  for(auto ind = 1ul; ind < assignments.size(); ++ind) {
-    if(assignments[ind]) {
+  for (auto ind = 1ul; ind < assignments.size(); ++ind) {
+    if (assignments[ind]) {
       blockers.push_back(*assignments[ind]);
     }
   }
@@ -91,7 +94,24 @@ void Basic122::runStriker(
   ateam_msgs::msg::RobotMotionCommand & motion_command)
 {
   play_info_["Striker ID"] = striker_bot.id;
-  striker_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2, 0.0));
+  const ateam_geometry::Segment goal_segment(ateam_geometry::Point(
+      world.field.field_length / 2,
+      -world.field.goal_width / 2),
+    ateam_geometry::Point(world.field.field_length / 2, world.field.goal_width / 2));
+  auto robots = play_helpers::getVisibleRobots(world.our_robots);
+  play_helpers::removeRobotWithId(robots, striker_bot.id);
+  std::ranges::copy(play_helpers::getVisibleRobots(world.their_robots), std::back_inserter(robots));
+
+  const auto windows = play_helpers::window_evaluation::getWindows(goal_segment, world.ball.pos, robots);
+  play_helpers::window_evaluation::drawWindows(windows, world.ball.pos, overlays_.getChild("Windows"));
+  const auto target_window = play_helpers::window_evaluation::getLargestWindow(windows);
+  ateam_geometry::Point target_point;
+  if(target_window) {
+    target_point = CGAL::midpoint(*target_window);
+  } else {
+    target_point = ateam_geometry::Point(world.field.field_length / 2, 0.0);
+  }
+  striker_skill_.setTargetPoint(target_point);
   motion_command = striker_skill_.runFrame(world, striker_bot);
 }
 
