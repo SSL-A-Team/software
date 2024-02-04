@@ -44,6 +44,9 @@ private:
   skills::Goalie goalie_skill_;
   skills::LineKick line_kick_skill_;
   std::array<play_helpers::EasyMoveTo, 16> move_tos_;
+  std::chrono::steady_clock::time_point kick_time_ = std::chrono::steady_clock::time_point::max();
+
+  ateam_geometry::Point chooseKickTarget(const World & world);
 };
 
 }  // namespace ateam_kenobi::plays

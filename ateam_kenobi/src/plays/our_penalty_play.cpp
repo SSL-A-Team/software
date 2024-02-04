@@ -21,6 +21,7 @@
 
 #include "our_penalty_play.hpp"
 #include "play_helpers/available_robots.hpp"
+#include "play_helpers/window_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -59,21 +60,30 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
 
   play_info_["Kicker ID"] = kicking_robot.id;
 
-  line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
-
   if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
-    // Kick ball
-    play_info_["State"] = "Kicking";
-    motion_commands[kicking_robot.id] = line_kick_skill_.runFrame(world, kicking_robot);
+    if (kick_time_ == std::chrono::steady_clock::time_point::max()) {
+      kick_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+    }
   } else {
+    kick_time_ = std::chrono::steady_clock::time_point::max();
+  }
+
+  if (kick_time_ == std::chrono::steady_clock::time_point::max() ||
+    kick_time_ > std::chrono::steady_clock::now())
+  {
     // Stage for kick
     play_info_["State"] = "Preparing";
+    line_kick_skill_.setTargetPoint(chooseKickTarget(world));
     const auto destination = line_kick_skill_.getAssignmentPoint(world);
     auto & move_to = move_tos_[kicking_robot.id];
     move_to.setTargetPosition(destination);
     move_to.face_point(world.ball.pos);
     move_to.setMaxVelocity(1.5);
     motion_commands[kicking_robot.id] = move_to.runFrame(kicking_robot, world);
+  } else {
+    // Kick ball
+    play_info_["State"] = "Kicking";
+    motion_commands[kicking_robot.id] = line_kick_skill_.runFrame(world, kicking_robot);
   }
 
   ateam_geometry::Point pattern_point(kRobotDiameter - (world.field.field_length / 2.0),
@@ -89,5 +99,25 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   }
 
   return motion_commands;
+}
+
+
+ateam_geometry::Point OurPenaltyPlay::chooseKickTarget(const World & world)
+{
+  const ateam_geometry::Segment goal_segment(ateam_geometry::Point(
+      world.field.field_length / 2,
+      -world.field.goal_width / 2),
+    ateam_geometry::Point(world.field.field_length / 2, world.field.goal_width / 2));
+  const auto their_robots = play_helpers::getVisibleRobots(world.their_robots);
+  const auto windows = play_helpers::window_evaluation::getWindows(
+    goal_segment, world.ball.pos, their_robots);
+  play_helpers::window_evaluation::drawWindows(
+    windows, world.ball.pos, getOverlays().getChild("Windows"));
+  const auto target_window = play_helpers::window_evaluation::getLargestWindow(windows);
+  if (target_window) {
+    return CGAL::midpoint(*target_window);
+  } else {
+    return ateam_geometry::Point(world.field.field_length / 2, 0);
+  }
 }
 }  // namespace ateam_kenobi::plays

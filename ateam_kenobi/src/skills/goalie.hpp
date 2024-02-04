@@ -41,10 +41,15 @@ public:
     const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 
+  double & possesionTolerance() {
+    return possesion_threshold_;
+  }
+
 private:
   visualization::Overlays overlays_;
   play_helpers::EasyMoveTo easy_move_to_;
   LineKick line_kick_;
+  double possesion_threshold_ = 0.03;
 
   bool doesOpponentHavePossesion(const World & world);
   bool isBallHeadedTowardsGoal(const World & world);

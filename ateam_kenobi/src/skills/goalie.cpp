@@ -87,7 +87,7 @@ bool Goalie::doesOpponentHavePossesion(const World & world)
       return CGAL::approximate_sqrt(CGAL::squared_distance(ball_pos, maybe_robot->pos));
     });
   const auto min_distance = *std::min_element(distances.begin(), distances.end());
-  return min_distance < kRobotRadius + 0.03;
+  return min_distance < kRobotRadius + possesion_threshold_;
 }
 
 bool Goalie::isBallHeadedTowardsGoal(const World & world)
