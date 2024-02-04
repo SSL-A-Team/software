@@ -24,7 +24,10 @@
 
 #include "types/models.hpp"
 
-std::optional<Robot> generator_util::get_closest_robot(
+namespace ateam_vision_filter::generator_util
+{
+
+std::optional<Robot> get_closest_robot(
   const Eigen::Vector2d & position,
   const std::array<std::optional<Robot>, 16> & blue_robots,
   const std::array<std::optional<Robot>, 16> & yellow_robots)
@@ -60,7 +63,7 @@ std::optional<Robot> generator_util::get_closest_robot(
 }
 
 
-bool generator_util::is_near_robot(
+bool is_near_robot(
   const Eigen::Vector2d & position,
   const std::optional<Robot> & robot)
 {
@@ -71,7 +74,7 @@ bool generator_util::is_near_robot(
   return (robot.value().position - position).norm() < 0.5;
 }
 
-bool generator_util::is_in_robot_mouth(
+bool is_in_robot_mouth(
   const Eigen::Vector2d & position,
   const std::optional<Robot> & robot)
 {
@@ -87,7 +90,7 @@ bool generator_util::is_in_robot_mouth(
          heading.dot(robot_to_ball) / (heading.norm() * robot_to_ball.norm());
 }
 
-bool generator_util::is_moving_towards_robot(
+bool is_moving_towards_robot(
   const Eigen::Vector2d & position,
   const Eigen::Vector2d & velocity,
   const std::optional<Robot> & robot)
@@ -96,3 +99,5 @@ bool generator_util::is_moving_towards_robot(
 
   return ball_to_robot.dot(velocity) > 0;
 }
+
+}  // namespace ateam_vision_filter::generator_util

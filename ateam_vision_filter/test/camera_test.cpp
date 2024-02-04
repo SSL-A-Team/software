@@ -25,6 +25,8 @@
 
 #include "camera.hpp"
 
+using namespace ateam_vision_filter;
+
 TEST(Camera, getEstimateWithScore_ShouldReturnNullopt_WhenNoData)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();

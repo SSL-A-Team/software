@@ -26,6 +26,8 @@
 #include <utility>
 #include <vector>
 
+using namespace ateam_vision_filter;
+
 TEST(MultipleHypothesisTracker, getStateEstimate_ShouldReturnNothing_WhenNoTracks)
 {
   MultipleHypothesisTracker mht;

@@ -24,6 +24,9 @@
 #include <Eigen/Dense>
 #include <angles/angles.h>
 
+namespace ateam_vision_filter
+{
+
 struct RobotMeasurement
 {
   Eigen::Vector2d position;
@@ -35,5 +38,7 @@ struct RobotMeasurement
     theta = angles::normalize_angle_positive(theta + M_PI);
   }
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // TYPES__ROBOT_MEASUREMENT_HPP_
