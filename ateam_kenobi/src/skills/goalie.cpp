@@ -22,6 +22,9 @@
 #include "goalie.hpp"
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/nearest_points.hpp>
+#include "play_helpers/window_evaluation.hpp"
+#include "play_helpers/available_robots.hpp"
+
 namespace ateam_kenobi::skills
 {
 
@@ -234,13 +237,33 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(const World & world, co
 
 ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, const Robot & goalie)
 {
-  const ateam_geometry::Point goal_center(-world.field.field_length / 2, 0);
+  const ateam_geometry::Segment target_seg(ateam_geometry::Point(0, -world.field.field_width / 2),
+    ateam_geometry::Point(0, world.field.field_width / 2));
 
-  const auto kick_vector = world.ball.pos - goal_center;
+  auto robots = play_helpers::getVisibleRobots(world.our_robots);
+  play_helpers::removeRobotWithId(robots, goalie.id);
+  std::ranges::copy(play_helpers::getVisibleRobots(world.their_robots), std::back_inserter(robots));
 
-  const auto kick_target = world.ball.pos + (kick_vector * 3);
+  const auto windows = play_helpers::window_evaluation::getWindows(
+    target_seg, world.ball.pos,
+    robots);
+  play_helpers::window_evaluation::drawWindows(
+    windows, world.ball.pos, overlays_.getChild(
+      "windows"));
+  const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
 
-  line_kick_.setTargetPoint(kick_target);
+  ateam_geometry::Point target_point;
+
+  if (largest_window) {
+    target_point = CGAL::midpoint(*largest_window);
+  } else {
+    // If no window exists, just kick away from the goal
+    const ateam_geometry::Point goal_center(-world.field.field_length / 2, 0);
+    const auto kick_vector = world.ball.pos - goal_center;
+    target_point = world.ball.pos + (kick_vector * 3);
+  }
+
+  line_kick_.setTargetPoint(target_point);
 
   return line_kick_.runFrame(world, goalie);
 }
