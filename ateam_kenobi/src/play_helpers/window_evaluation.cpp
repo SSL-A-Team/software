@@ -65,7 +65,7 @@ void removeSegmentFromWindows(
   const ateam_geometry::Segment & seg,
   std::vector<ateam_geometry::Segment> & windows)
 {
-  for (auto window_iter = windows.begin(); window_iter != windows.end(); ++window_iter) {
+  for (auto window_iter = windows.begin(); window_iter < windows.end(); ++window_iter) {
     const auto window = *window_iter;
     const auto maybe_intersection = CGAL::intersection(window, seg);
     if (!maybe_intersection) {
