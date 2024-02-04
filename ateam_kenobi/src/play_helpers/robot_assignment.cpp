@@ -36,7 +36,11 @@ std::vector<std::optional<Robot>> assignRobots(
 
   for (auto row = 0ul; row < num_assignments; ++row) {
     Eigen::MatrixXd::Index min_index;
-    costs.row(row).minCoeff(&min_index);
+    if(costs.row(row).minCoeff(&min_index) == std::numeric_limits<double>::max()) {
+      // Don't assign 'infinite' cost robots.
+      // Should only be hit if no bots are available.
+      continue;
+    }
     assignments[row] = available_robots[min_index];
     costs.col(min_index).fill(std::numeric_limits<double>::max());
   }

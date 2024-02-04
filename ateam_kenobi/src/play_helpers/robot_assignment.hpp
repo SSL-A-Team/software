@@ -3,6 +3,7 @@
 #define PLAY_HELPERS__ROBOT_ASSIGNMENT_
 
 #include <vector>
+#include <optional>
 #include "types/robot.hpp"
 
 namespace ateam_kenobi::play_helpers
