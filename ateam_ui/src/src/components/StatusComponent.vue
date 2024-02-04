@@ -1,9 +1,9 @@
 <template>
     <v-container class="d-flex flex-column">
         <v-container class="d-flex flex-column">
-            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots.filter((obj)=> obj.isValid())" ref="robotCard" style="outline-offset:-1px" @click.stop="this.state.setJoystickRobot(robot.id)">
+            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots.filter((obj)=> obj.isValid())" :ref="'robotCard' + robot.id" style="outline-offset:-1px" @click.stop="this.state.setJoystickRobot(robot.id)">
                     {{robot.id}}
-                    <canvas ref="canvases" height=100 width=100 style="width:90px; height:90px;"/>
+                    <canvas :ref="'canvas' + robot.id" height=100 width=100 style="width:90px; height:90px;"/>
             </v-card>
         </v-container>
     </v-container>
@@ -22,10 +22,11 @@ export default {
     methods: {
         update: function() {
             for(const robot of this.state.world.teams[this.state.world.team].robots) {
-                if (robot.isValid() && this.$refs.canvases[robot.id]) {
-                    this.drawStatus(robot, this.$refs.canvases[robot.id].getContext("2d"));
+                if (robot.isValid() && this.$refs["robotCard" + robot.id]) {
+                    let canvas = this.$refs["canvas" + robot.id][0];
+                    this.drawStatus(robot, canvas.getContext("2d"));
 
-                    const element = this.$refs.robotCard[robot.id].$el;
+                    const element = this.$refs["robotCard" + robot.id][0].$el;
                     const errorLevel = robot.errorLevel(this.state.sim);
 
                     if (errorLevel != ErrorLevel.Critical) {
