@@ -22,7 +22,7 @@
 
 #include <ateam_common/robot_constants.hpp>
 #include "wall_play.hpp"
-#include "robot_assignment.hpp"
+#include "play_helpers/robot_assignment.hpp"
 #include "types/robot.hpp"
 #include "skills/goalie.hpp"
 #include "play_helpers/available_robots.hpp"
@@ -87,7 +87,12 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
   play_helpers::removeGoalie(current_available_robots, world);
 
   const auto & our_defense_corners = world.field.ours.defense_area_corners;
-  const double defense_area_depth = std::abs(CGAL::right_vertex_2(our_defense_corners.begin(), our_defense_corners.end())->x() - CGAL::left_vertex_2(our_defense_corners.begin(), our_defense_corners.end())->x());
+  const double defense_area_depth =
+    std::abs(
+    CGAL::right_vertex_2(
+      our_defense_corners.begin(),
+      our_defense_corners.end())->x() -
+    CGAL::left_vertex_2(our_defense_corners.begin(), our_defense_corners.end())->x());
   const double wall_x = ((-1 * world.field.field_length) / 2.0) + defense_area_depth + 0.2;
 
   ateam_geometry::Segment wall_line = ateam_geometry::Segment(
@@ -98,32 +103,29 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
   std::vector<ateam_geometry::Point> positions_to_assign =
     get_equally_spaced_points_on_segment(wall_line, current_available_robots.size());
 
-  const auto & robot_assignments = robot_assignment::assign(
+  const auto robot_assignments = play_helpers::assignRobots(
     current_available_robots,
     positions_to_assign);
-  for (const auto [robot_id, pos_ind] : robot_assignments) {
-    const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
 
-    if (!maybe_assigned_robot) {
-      // TODO(barulicm): log this?
+  for (auto ind = 0ul; ind < robot_assignments.size(); ++ind) {
+    const auto & maybe_robot = robot_assignments[ind];
+    if (!maybe_robot) {
       continue;
     }
+    const auto & robot = *maybe_robot;
+    const auto & target_position = positions_to_assign[ind];
 
-    const Robot & robot = maybe_assigned_robot.value();
-
-    auto & easy_move_to = easy_move_tos_.at(robot_id);
-
-    const auto & target_position = positions_to_assign.at(pos_ind);
+    auto & easy_move_to = easy_move_tos_.at(robot.id);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
     getOverlays().drawCircle(
       "destination_" + std::to_string(
-        robot_id), viz_circle, "blue", "transparent");
+        robot.id), viz_circle, "blue", "transparent");
 
     easy_move_to.setTargetPosition(target_position);
     easy_move_to.face_absolute(0);   // face away from our goal
 
-    maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
+    maybe_motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
   }
 
   return maybe_motion_commands;

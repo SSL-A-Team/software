@@ -20,33 +20,38 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "robot_assignment.hpp"
+#include "play_helpers/robot_assignment.hpp"
 
 
 using namespace ateam_kenobi;  // NOLINT(build/namespaces)
-using namespace ateam_kenobi::robot_assignment;  // NOLINT(build/namespaces)
+using namespace ateam_kenobi::play_helpers;  // NOLINT(build/namespaces)
 
-TEST(GreedyAssignmentTest, EmptyRobots)
+using testing::ElementsAre;
+using testing::Optional;
+using testing::Field;
+using testing::Eq;
+
+TEST(RobotAssignmentTest, EmptyRobots)
 {
   std::vector<Robot> robots;
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(0, 0)
   };
-  const auto assignments = greedyAssignment(robots, goals);
-  EXPECT_TRUE(assignments.empty());
+  const auto assignments = assignRobots(robots, goals);
+  EXPECT_THAT(assignments, ElementsAre(Eq(std::nullopt)));
 }
 
-TEST(GreedyAssignmentTest, EmptyGoals)
+TEST(RobotAssignmentTest, EmptyGoals)
 {
   std::vector<Robot> robots = {
     {}
   };
   std::vector<ateam_geometry::Point> goals;
-  const auto assignments = greedyAssignment(robots, goals);
+  const auto assignments = assignRobots(robots, goals);
   EXPECT_TRUE(assignments.empty());
 }
 
-TEST(GreedyAssignmentTest, OneRobotOneGoal)
+TEST(RobotAssignmentTest, OneRobotOneGoal)
 {
   std::vector<Robot> robots {
     {1, ateam_geometry::Point(1, 2)}
@@ -54,11 +59,11 @@ TEST(GreedyAssignmentTest, OneRobotOneGoal)
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(3, 4)
   };
-  const auto assignments = greedyAssignment(robots, goals);
-  EXPECT_THAT(assignments, testing::UnorderedElementsAre(testing::Pair(1, 0)));
+  const auto assignments = assignRobots(robots, goals);
+  EXPECT_THAT(assignments, ElementsAre(Optional(Field(&Robot::id, Eq(1)))));
 }
 
-TEST(GreedyAssignmentTest, TwoRobotsOneGoal)
+TEST(RobotAssignmentTest, TwoRobotsOneGoal)
 {
   std::vector<Robot> robots {
     {1, ateam_geometry::Point(1, 2)},
@@ -67,11 +72,11 @@ TEST(GreedyAssignmentTest, TwoRobotsOneGoal)
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(3, 4)
   };
-  const auto assignments = greedyAssignment(robots, goals);
-  EXPECT_THAT(assignments, testing::UnorderedElementsAre(testing::Pair(2, 0)));
+  const auto assignments = assignRobots(robots, goals);
+  EXPECT_THAT(assignments, ElementsAre(Optional(Field(&Robot::id, Eq(2)))));
 }
 
-TEST(GreedyAssignmentTest, TwoRobotsTwoGoals)
+TEST(RobotAssignmentTest, TwoRobotsTwoGoals)
 {
   std::vector<Robot> robots {
     {1, ateam_geometry::Point(1, 2)},
@@ -81,11 +86,11 @@ TEST(GreedyAssignmentTest, TwoRobotsTwoGoals)
     ateam_geometry::Point(0, 0),
     ateam_geometry::Point(3, 4)
   };
-  const auto assignments = greedyAssignment(robots, goals);
-  EXPECT_THAT(assignments, testing::UnorderedElementsAre(testing::Pair(1, 0), testing::Pair(2, 1)));
+  const auto assignments = assignRobots(robots, goals);
+  EXPECT_THAT(assignments, ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
 }
 
-TEST(GreedyAssignmentTest, TwoRobotsSameDistance)
+TEST(RobotAssignmentTest, TwoRobotsSameDistance)
 {
   std::vector<Robot> robots {
     {1, ateam_geometry::Point(0, 1)},
@@ -95,6 +100,18 @@ TEST(GreedyAssignmentTest, TwoRobotsSameDistance)
     ateam_geometry::Point(1, 0),
     ateam_geometry::Point(-1, 0)
   };
-  const auto assignments = greedyAssignment(robots, goals);
-  EXPECT_THAT(assignments, testing::UnorderedElementsAre(testing::Pair(1, 0), testing::Pair(2, 1)));
+  const auto assignments = assignRobots(robots, goals);
+  EXPECT_THAT(assignments, ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
+}
+
+TEST(RobotAssignmentTest, DisallowAssigningDisallowedRobots)
+{
+  std::vector<Robot> robots {
+    {1, ateam_geometry::Point(0,0)}
+  };
+  std::vector<ateam_geometry::Point> goals = {
+    ateam_geometry::Point(0,0)
+  };
+  const auto assignments = assignRobots(robots, goals);
+  EXPECT_THAT(assignments, testing::ElementsAre(Eq(std::nullopt)));
 }

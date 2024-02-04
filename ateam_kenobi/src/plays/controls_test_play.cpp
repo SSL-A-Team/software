@@ -22,7 +22,6 @@
 #include "ateam_geometry/types.hpp"
 #include "ateam_geometry/make_circle.hpp"
 #include "types/world.hpp"
-#include "robot_assignment.hpp"
 #include "play_helpers/available_robots.hpp"
 #include <angles/angles.h>
 
