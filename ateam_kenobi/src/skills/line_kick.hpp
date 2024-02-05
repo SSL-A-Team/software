@@ -50,7 +50,7 @@ public:
   ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
 private:
-  const double kPreKickOffset = kRobotRadius + 0.12;
+  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.05;
   visualization::Overlays overlays_;
   ateam_geometry::Point target_point_;
   double kick_speed_ = 5.0;
@@ -68,7 +68,8 @@ private:
 
   void chooseState(const World & world, const Robot & robot);
 
-  bool isRobotBehindBall(const World & world, const Robot & robot);
+  bool isRobotBehindBall(const World & world, const Robot & robot, double hysteresis);
+  bool isRobotSettled(const World & world, const Robot & robot);
   bool isRobotFacingBall(const Robot & robot);
   bool isBallMoving(const World & world);
 

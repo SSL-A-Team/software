@@ -70,19 +70,19 @@ void LineKick::chooseState(const World & world, const Robot & robot)
 {
   switch (state_) {
     case State::MoveBehindBall:
-      if (isRobotBehindBall(world, robot)) {
+      if (isRobotBehindBall(world, robot, 1.0) && isRobotSettled(world, robot)) {
         state_ = State::FaceBall;
       }
       break;
     case State::FaceBall:
-      if(!isRobotBehindBall(world, robot)) {
+      if(!isRobotBehindBall(world, robot, 3.0)) {
         state_ = State::MoveBehindBall;
       } else if (isRobotFacingBall(robot)) {
         state_ = State::KickBall;
       }
       break;
     case State::KickBall:
-      if(!isRobotBehindBall(world, robot)) {
+      if(!isRobotBehindBall(world, robot, 3.0)) {
         state_ = State::MoveBehindBall;
       } else if (isBallMoving(world)) {
         state_ = State::MoveBehindBall;
@@ -92,7 +92,7 @@ void LineKick::chooseState(const World & world, const Robot & robot)
 }
 
 
-bool LineKick::isRobotBehindBall(const World & world, const Robot & robot)
+bool LineKick::isRobotBehindBall(const World & world, const Robot & robot, double hysteresis)
 {
   const auto ball_to_target = target_point_ - world.ball.pos;
 
@@ -107,6 +107,15 @@ bool LineKick::isRobotBehindBall(const World & world, const Robot & robot)
   const auto robot_perp_ball = robot_to_ball - robot_proj_ball;
   const auto robot_perp_dist_to_ball = ateam_geometry::norm(robot_perp_ball);
 
+  const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis && robot_proj_dist_to_ball < 0.22;
+  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.007 * hysteresis;
+
+  return proj_dist_is_good && perp_dist_is_good;
+}
+
+bool LineKick::isRobotSettled(const World & world, const Robot & robot)
+{
+  const auto ball_to_target = target_point_ - world.ball.pos;
   const auto robot_vel_proj_mag = (ball_to_target * robot.vel) /
     ateam_geometry::norm(ball_to_target);
 
@@ -116,11 +125,8 @@ bool LineKick::isRobotBehindBall(const World & world, const Robot & robot)
   const auto robot_vel_perp = robot.vel - robot_vel_proj;
   const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
 
-  const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 && robot_proj_dist_to_ball < 0.22;
-  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.025;
   const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.2;
-
-  return proj_dist_is_good && perp_dist_is_good && robot_vel_is_good;
+  return robot_vel_is_good;
 }
 
 bool LineKick::isRobotFacingBall(const Robot & robot)
@@ -148,6 +154,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runMoveBehindBall(
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options;
+  planner_options.footprint_inflation = 0.04;
   planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(getPreKickPosition(world));
@@ -174,12 +181,13 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runKickBall(const World & world, c
   easy_move_to_.setPlannerOptions(planner_options);
 
   // Handle robot angle
-  easy_move_to_.face_point(target_point_);
+  //easy_move_to_.face_point(target_point_);
+  easy_move_to_.face_point(world.ball.pos);
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
 
   // Override the velocity to move directly into the ball
-  int velocity = 1.5;
+  double velocity = 0.4;
   command.twist.linear.x = std::cos(robot.theta) * velocity;
   command.twist.linear.y = std::sin(robot.theta) * velocity;
   command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
