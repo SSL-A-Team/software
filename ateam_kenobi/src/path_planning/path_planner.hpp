@@ -46,7 +46,7 @@ struct PlannerOptions
    * @brief The size by which the radius of the robot will be augmented during collision checking
    *
    */
-  double footprint_inflation = 0.05;
+  double footprint_inflation = 0.06;
 
   double collision_check_resolution = 0.05;
 

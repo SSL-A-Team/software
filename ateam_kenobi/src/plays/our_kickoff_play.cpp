@@ -103,7 +103,7 @@ void OurKickoffPlay::runKicker(
       ateam_geometry::Point(
         world.field.field_length / 4.0,
         world.field.field_width / 4));
-    line_kick_skill_.setKickSpeed(0.4);
+    line_kick_skill_.setKickSpeed(0.45);
     motion_commands.at(kicker.id) = line_kick_skill_.runFrame(world, kicker);
 
     getPlayInfo()["State"] = "Kicking";
