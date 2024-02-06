@@ -38,7 +38,7 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
   //     selected_play = &halt_play_;
   //     break;
   //   default:
-  //     selected_play = &test_kick_play_;
+  //     selected_play = &triangle_pass_play_;
   //     break;
   // }
 

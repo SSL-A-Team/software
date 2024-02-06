@@ -15,6 +15,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(ateam_geometry REQUIRED)
 find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
+find_package(angles REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/in_play_eval.cpp
@@ -30,6 +31,7 @@ add_library(kenobi_node_component SHARED
   src/plays/our_penalty_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/controls_test_play.cpp
+  src/plays/triangle_pass_play.cpp
   src/types/message_conversions.cpp
   src/motion/motion_controller.cpp
   src/visualization/overlays.cpp
@@ -57,6 +59,7 @@ ament_target_dependencies(
   "ateam_geometry"
   "control_toolbox"
   "OMPL"
+  "angles"
 )
 rclcpp_components_register_node(
   kenobi_node_component

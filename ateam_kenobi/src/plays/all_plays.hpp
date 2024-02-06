@@ -33,5 +33,6 @@
 #include "our_penalty_play.hpp"
 #include "their_penalty_play.hpp"
 #include "controls_test_play.hpp"
+#include "triangle_pass_play.hpp"
 
 #endif  // PLAYS__ALL_PLAYS_HPP_
