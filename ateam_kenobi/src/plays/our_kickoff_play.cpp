@@ -101,7 +101,7 @@ void OurKickoffPlay::runKicker(
   } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
     line_kick_skill_.setTargetPoint(
       ateam_geometry::Point(
-        world.field.field_length / 4.0,
+        world.field.field_length / 8,
         world.field.field_width / 4));
     line_kick_skill_.setKickSpeed(0.45);
     motion_commands.at(kicker.id) = line_kick_skill_.runFrame(world, kicker);
