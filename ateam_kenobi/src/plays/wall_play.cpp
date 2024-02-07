@@ -34,28 +34,21 @@ std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
   std::vector<ateam_geometry::Point> points_on_segment;
 
   if (num_points == 1) {
-    points_on_segment.push_back(segment.vertex(0));
+    points_on_segment.push_back(CGAL::midpoint(segment));
   }
 
   auto source = segment.vertex(0);
   auto target = segment.vertex(1);
 
-  ateam_geometry::Point spacing = ateam_geometry::Point(
-    // source.x() + target.x() / (num_points - 1),
+  ateam_geometry::Vector spacing(
     0,
     CGAL::approximate_sqrt((source - target).squared_length()) / (num_points - 1)
   );
 
+  auto segment_point = source;
   for (int i = 0; i < num_points; ++i) {
-    auto segment_point = ateam_geometry::Point(
-      // source.x() + (spacing.x() * i),
-      target.x(),
-      target.y() + (spacing.y() * i)
-      // both of these were source in the last nothing else changed
-    );
-
     points_on_segment.push_back(segment_point);
-    // WHAT THE ACTUAL FUCK
+    segment_point += spacing;
   }
   return points_on_segment;
 }
@@ -123,7 +116,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
         robot.id), viz_circle, "blue", "transparent");
 
     easy_move_to.setTargetPosition(target_position);
-    easy_move_to.face_absolute(0);   // face away from our goal
+    easy_move_to.face_point(world.ball.pos);
 
     maybe_motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
   }
