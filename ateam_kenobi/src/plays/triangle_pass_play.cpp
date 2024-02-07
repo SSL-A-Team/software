@@ -12,7 +12,7 @@ TrianglePassPlay::TrianglePassPlay()
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 
-  positions.emplace_back(1, 0);
+  positions.emplace_back(0.85, 0);
   const auto angle = angles::from_degrees(120);
   CGAL::Aff_transformation_2<ateam_geometry::Kernel> rotate_transform(CGAL::ROTATION, std::sin(
       angle), std::cos(angle));
@@ -44,19 +44,41 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TrianglePassP
 
   const auto ball_speed = ateam_geometry::norm(world.ball.vel);
 
+  ball_vel_avg_ = (0.8 * ball_vel_avg_) + (0.2 * ball_speed);
+
+  auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
+      return CGAL::compare_distance_to_point(world.ball.pos, lhs.pos, rhs.pos) == CGAL::SMALLER;
+    };
+
+  const auto closest_robot_iter = std::min_element(
+    available_robots.begin(),
+    available_robots.end(), byDistToBall);
+  const auto & closest_robot = *closest_robot_iter;
+  const auto dist_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(world.ball.pos, closest_robot.pos));
+
   switch (state_) {
     case State::Kicking:
-      if (ball_speed > 1.0) {
+      if (ball_speed > 0.2) {
         state_ = State::Receiving;
+        latch_receive_ = false;
       }
       runKicking(available_robots, world, maybe_motion_commands);
+      getPlayInfo()["State"] = "Kicking";
       break;
     case State::Receiving:
-      if (ball_speed < 0.1) {
-        state_ = State::Kicking;
+      if (ball_vel_avg_ < 0.1) {
+        state_ = State::BackOff;
       }
       runReceiving(available_robots, world, maybe_motion_commands);
+      getPlayInfo()["State"] = "Receiving";
       break;
+    case State::BackOff:
+      if(dist_to_ball > 0.3) {
+        state_ = State::Kicking;
+      }
+      runBackOff(available_robots, world, maybe_motion_commands);
+      getPlayInfo()["State"] = "BackOff";
+    break;
   }
 
   for (auto ind = 0ul; ind < available_robots.size(); ++ind) {
@@ -96,29 +118,47 @@ void TrianglePassPlay::runKicking(
   const auto & closest_robot = *closest_robot_iter;
   const auto & receiver_robot = *receiver_robot_iter;
 
+  last_kicked_id_ = closest_robot.id;
+
   getPlayInfo()["Robots"][std::to_string(closest_robot.id)] = "Kicker";
   getPlayInfo()["Robots"][std::to_string(receiver_robot.id)] = "Receiver";
 
   line_kick_.setTargetPoint(receiver_robot.pos);
-  line_kick_.setKickSpeed(3.0);
-  motion_commands[closest_robot.id] = line_kick_.runFrame(world, closest_robot);
+  line_kick_.setKickSpeed(0.55);
+  auto & motion_command = motion_commands[closest_robot.id];
+  motion_command = line_kick_.runFrame(world, closest_robot);
+  // motion_command->dribbler_speed = 200;
+
 }
 
 void TrianglePassPlay::runReceiving(
-  const std::vector<Robot> & available_robots, const World & world,
+  std::vector<Robot> available_robots, const World & world,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
   const ateam_geometry::Ray ball_ray(world.ball.pos, world.ball.vel);
+
+  play_helpers::removeRobotWithId(available_robots, last_kicked_id_);
+
+  const auto ball_speed = ateam_geometry::norm(world.ball.vel);
 
   auto byDistToBallRay = [&ball_ray](const Robot & lhs, const Robot & rhs) {
       return CGAL::squared_distance(lhs.pos, ball_ray) <
              CGAL::squared_distance(rhs.pos, ball_ray);
     };
 
+  auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
+      return CGAL::compare_distance_to_point(world.ball.pos, lhs.pos, rhs.pos) == CGAL::SMALLER;
+    };
+
+  std::function<bool(const Robot &, const Robot &)> compFunc = byDistToBallRay;
+  if (ball_speed < 0.2) {
+    compFunc = byDistToBall;
+  }
+
   const auto & receiver_robot = *std::min_element(
     available_robots.begin(),
-    available_robots.end(), byDistToBallRay);
+    available_robots.end(), compFunc);
 
   getPlayInfo()["Robots"][std::to_string(receiver_robot.id)] = "Receiver";
 
@@ -131,12 +171,46 @@ void TrianglePassPlay::runReceiving(
   emt.face_point(world.ball.pos);
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
+  planner_options.use_default_obstacles = false;
   emt.setPlannerOptions(planner_options);
-  motion_commands[receiver_robot.id] = emt.runFrame(receiver_robot, world);
-  std::cerr <<
-      std::hypot(
-    motion_commands[receiver_robot.id]->twist.linear.x,
-    motion_commands[receiver_robot.id]->twist.linear.y) << '\n';
+  auto & motion_command = motion_commands[receiver_robot.id];
+  motion_command = emt.runFrame(receiver_robot, world);
+  motion_command->dribbler_speed = 200;
+  if (CGAL::approximate_sqrt(CGAL::squared_distance(receiver_robot.pos, world.ball.pos)) < 0.5) {
+    ateam_geometry::Vector robot_vel(motion_command->twist.linear.x,
+      motion_command->twist.linear.y);
+    robot_vel += ateam_geometry::normalize(world.ball.vel) * 0.35;
+    motion_command->twist.linear.x = robot_vel.x();
+    motion_command->twist.linear.y = robot_vel.y();
+  }
+  const auto ball_close = CGAL::approximate_sqrt(CGAL::squared_distance(receiver_robot.pos, world.ball.pos)) < 0.11;
+  if (latch_receive_ || ball_close) {
+    motion_command->twist.linear.x = 0;
+    motion_command->twist.linear.y = 0;
+    latch_receive_ = true;
+  }
+}
+
+void TrianglePassPlay::runBackOff(
+  const std::vector<Robot> & available_robots, const World & world,
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  16> & motion_commands)
+{
+  auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
+      return CGAL::compare_distance_to_point(world.ball.pos, lhs.pos, rhs.pos) == CGAL::SMALLER;
+    };
+
+  const auto closest_robot_iter = std::min_element(
+    available_robots.begin(),
+    available_robots.end(), byDistToBall);
+  const auto & receiver_robot = *closest_robot_iter;
+  getPlayInfo()["Robots"][std::to_string(receiver_robot.id)] = "Receiver";
+
+  const auto ball_to_bot_vec = receiver_robot.pos - world.ball.pos;
+  const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
+  auto & motion_command = motion_commands[receiver_robot.id] = ateam_msgs::msg::RobotMotionCommand{};
+  motion_command->twist.linear.x = vel.x();
+  motion_command->twist.linear.y = vel.y();
 }
 
 }  // namespace ateam_kenobi::plays
