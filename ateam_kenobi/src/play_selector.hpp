@@ -41,6 +41,7 @@ private:
   plays::OurKickoffPlay our_kickoff_play_;
   plays::TestKickPlay test_kick_play_;
   plays::Basic122 basic_122_play_;
+  plays::BallPlacementPlay ball_placement_play_;
   plays::OurPenaltyPlay our_penalty_play_;
   plays::TheirPenaltyPlay their_penalty_play_;
   plays::ControlsTestPlay controls_test_play_;

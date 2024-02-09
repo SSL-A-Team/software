@@ -71,7 +71,7 @@ ateam_msgs::msg::RefereeInfo toMsg(const RefereeInfo & obj)
 
   geometry_msgs::msg::Point32 designated_position;
   designated_position.x = obj.designated_position.x();
-  designated_position.x = obj.designated_position.y();
+  designated_position.y = obj.designated_position.y();
   ref_msg.designated_position = designated_position;
 
   return ref_msg;

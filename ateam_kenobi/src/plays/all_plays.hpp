@@ -30,6 +30,7 @@
 #include "our_kickoff_play.hpp"
 #include "test_kick_play.hpp"
 #include "basic_122.hpp"
+#include "ball_placement_play.hpp"
 #include "our_penalty_play.hpp"
 #include "their_penalty_play.hpp"
 #include "controls_test_play.hpp"

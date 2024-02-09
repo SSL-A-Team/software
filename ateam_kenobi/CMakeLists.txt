@@ -28,6 +28,7 @@ add_library(kenobi_node_component SHARED
   src/plays/our_kickoff_play.cpp
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
+  src/plays/ball_placement_play.cpp
   src/plays/our_penalty_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/controls_test_play.cpp
