@@ -29,9 +29,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> BallPlacement
 
   auto available_robots = play_helpers::getAvailableRobots(world);
 
-  // TODO: add conversion in kenobi node to team coordinates
-  // TODO: I cannot stress how important it is to not get "Thank you"ed over this again
-  // TODO: No, really
   placement_point = world.referee_info.designated_position;
 
   const auto ball_dist = ateam_geometry::norm(placement_point - world.ball.pos);
