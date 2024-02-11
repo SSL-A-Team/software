@@ -149,6 +149,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
   planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(getStartPosition(world));
+  easy_move_to_.setMaxVelocity(1.5);
   return easy_move_to_.runFrame(robot, world);
 }
 
@@ -170,7 +171,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, con
   easy_move_to_.setTargetPosition(target_point_ + (kRobotRadius * ateam_geometry::normalize(robot_to_target)));
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.dribbler_speed = 200;
+  command.dribbler_speed = 50;
 
   return command;
 }

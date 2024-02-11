@@ -226,11 +226,12 @@ private:
     world_.referee_info.prev_command = game_controller_listener_.GetPreviousGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
 
-    auto designated_position = ateam_geometry::Point(game_controller_listener_.GetDesignatedPosition().x, game_controller_listener_.GetDesignatedPosition().y);
-    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositveHalf) {
-      designated_position *= -1.0;
+    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
+      world_.referee_info.designated_position = ateam_geometry::Point(-game_controller_listener_.GetDesignatedPosition().x, -game_controller_listener_.GetDesignatedPosition().y);
+    } else {
+     world_.referee_info.designated_position = ateam_geometry::Point(game_controller_listener_.GetDesignatedPosition().x, game_controller_listener_.GetDesignatedPosition().y); 
     }
-    world_.referee_info.designated_position = designated_position;
+
 
     if (game_controller_listener_.GetOurGoalieID().has_value()) {
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();

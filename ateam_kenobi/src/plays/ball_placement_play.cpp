@@ -52,7 +52,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> BallPlacement
       break;
     case State::Receiving:
       if (ball_speed < 0.05) {
-        if (ball_dist < 0.1) {
+        if (ball_dist < 0.14) {
           state_ = State::Done;
         } else {
           state_ = State::Placing;
@@ -89,8 +89,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> BallPlacement
       auto & emt = easy_move_tos_[robot.id];
 
       const auto ball_to_robot = robot.pos - world.ball.pos;
+      const auto placement_to_robot = robot.pos - placement_point;
       if (ateam_geometry::norm(ball_to_robot) < 0.6) {
         emt.setTargetPosition(world.ball.pos + 0.7*ateam_geometry::normalize(ball_to_robot));
+      } else if ((ateam_geometry::norm(placement_to_robot) < 0.6)){
+         emt.setTargetPosition(placement_point + 0.7*ateam_geometry::normalize(placement_to_robot));
       } else {
         emt.setTargetPosition(robot.pos);
       }
@@ -152,7 +155,7 @@ void BallPlacementPlay::runKicking(
 
   if (ateam_geometry::norm(receiver_robot.pos - placement_point) < 0.1) {
     line_kick_.setTargetPoint(placement_point);
-    line_kick_.setKickSpeed(3.0);
+    line_kick_.setKickSpeed(0.55);
     motion_commands[kick_robot.id] = line_kick_.runFrame(world, kick_robot);
   } else {
     // Line up for the kick while we wait for the receiver
@@ -160,8 +163,8 @@ void BallPlacementPlay::runKicking(
     emt.face_point(placement_point);
     path_planning::PlannerOptions planner_options;
     emt.setPlannerOptions(planner_options);
-    const auto ball_to_placement = placement_point - world.ball.pos;
-    emt.setTargetPosition(world.ball.pos - (kRobotRadius + 0.7) * ateam_geometry::normalize(ball_to_placement));
+    const auto placement_to_ball = world.ball.pos - placement_point;
+    emt.setTargetPosition(world.ball.pos + (kRobotRadius + 0.7) * ateam_geometry::normalize(placement_to_ball));
     motion_commands[kick_robot.id] = line_kick_.runFrame(world, kick_robot);
   }
 
