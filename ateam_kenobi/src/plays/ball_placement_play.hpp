@@ -3,6 +3,7 @@
 
 #include "base_play.hpp"
 #include "skills/line_kick.hpp"
+#include "skills/dribble.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
@@ -20,6 +21,8 @@ public:
 
 private:
   skills::LineKick line_kick_;
+  skills::Dribble dribble_;
+  bool latch_receive_ = false;
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   ateam_geometry::Point placement_point;
 
