@@ -47,6 +47,10 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
 
   plays::BasePlay * selected_play = &halt_play_;
 
+  if (current_game_command != ateam_common::GameCommand::Halt) {
+    return &test_kick_play_;
+  }
+
   switch (current_game_command) {
     case ateam_common::GameCommand::Halt:
     case ateam_common::GameCommand::TimeoutOurs:

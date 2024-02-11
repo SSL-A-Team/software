@@ -46,7 +46,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
   float hysteresis = 1.0;
   // Make it harder to accidentally leave kick state
   if (prev_state_ != State::Capture) {
-    hysteresis = 4.0;
+    hysteresis = 2.0;
   }
 
   const auto robot_to_ball = world.ball.pos - robot.pos;
@@ -54,12 +54,13 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
   const auto robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
   // need to be able to detect breakbeam from kenobi
 
-  bool breakbeam = distance_to_ball < 0.098 * hysteresis || angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) < 0.15 * hysteresis;
+  bool breakbeam = distance_to_ball < (kRobotRadius * hysteresis) && angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) < 0.1 * hysteresis;
   if (!breakbeam) {
     if (prev_state_ != State::Capture) {
       easy_move_to_.reset();
       prev_state_ = State::Capture;
     }
+    std::cerr << "capturing" << std::endl;
     return capture(world, robot);
   }
 
@@ -70,6 +71,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
       easy_move_to_.reset();
       prev_state_ = State::Pivot;
     }
+    std::cerr << "pivoting" << std::endl;
     return pivot(world, robot);
   }
 
@@ -78,6 +80,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
     prev_state_ = State::KickBall;
   }
 
+   std::cerr << "kicking" << std::endl;
   return kickBall(world, robot);
 }
 
@@ -107,7 +110,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::capture(
   }
 
   auto command = easy_move_to_.runFrame(robot, world);
-  command.dribbler_speed = 500;
+  command.dribbler_speed = 200;
   return command;
 }
 
@@ -130,7 +133,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::pivot(const World & world, const 
 
   command.twist.linear.x = std::sin(robot.theta) * velocity;
   command.twist.linear.y = -std::cos(robot.theta) * velocity;
-  command.dribbler_speed = 500;
+  command.dribbler_speed = 200;
   return command;
 }
 
