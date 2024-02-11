@@ -45,6 +45,8 @@ private:
   plays::TheirPenaltyPlay their_penalty_play_;
   plays::ControlsTestPlay controls_test_play_;
   plays::TrianglePassPlay triangle_pass_play_;
+  plays::WaypointsPlay waypoints_play_;
+  plays::SpinningAPlay spinning_a_play_;
 
   ateam_common::GameCommand previous_game_command_ = ateam_common::GameCommand::Halt;
   void * prev_play_address_ = nullptr;

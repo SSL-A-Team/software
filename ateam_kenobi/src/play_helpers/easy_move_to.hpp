@@ -78,7 +78,6 @@ public:
   }
 
 private:
-  std::string instance_name_;
   ateam_geometry::Point target_position_;
   path_planning::PlannerOptions planner_options_;
   path_planning::PathPlanner path_planner_;

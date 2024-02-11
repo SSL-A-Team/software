@@ -68,11 +68,11 @@ PathPlanner::Path PathPlanner::getPath(
     drawObstacles(augmented_obstacles);
   }
 
-  if (!isStateValid(goal, world, augmented_obstacles, options)) {
-    return {};
-  }
-
   Path path = {start, goal};
+
+  if (!isStateValid(goal, world, augmented_obstacles, options)) {
+    trimPathAfterCollision(path, world, augmented_obstacles, options);
+  }
 
   while (true) {
     const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(

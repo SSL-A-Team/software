@@ -19,9 +19,9 @@
 // THE SOFTWARE.
 
 
-#include "play_helpers/easy_move_to.hpp"
 #include "easy_move_to.hpp"
 #include <chrono>
+#include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::play_helpers
 {
@@ -45,7 +45,6 @@ EasyMoveTo::EasyMoveTo(visualization::Overlays overlays)
 
 EasyMoveTo & EasyMoveTo::operator=(EasyMoveTo && other)
 {
-  instance_name_ = other.instance_name_;
   target_position_ = other.target_position_;
   planner_options_ = other.planner_options_;
   path_planner_ = other.path_planner_;
@@ -146,9 +145,12 @@ void EasyMoveTo::drawTrajectoryOverlay(
       robot.pos,
       target_position_
     };
-    overlays_.drawLine(instance_name_ + "_path", points, "red");
+    overlays_.drawLine("path", points, "red");
   } else {
-    overlays_.drawLine(instance_name_ + "_path", path, "purple");
+    overlays_.drawLine("path", path, "purple");
+    if(CGAL::squared_distance(path.back(), target_position_) > kRobotRadius*kRobotRadius) {
+      overlays_.drawLine("afterpath", {path.back(), target_position_}, "red");
+    }
   }
 }
 

@@ -32,6 +32,8 @@ add_library(kenobi_node_component SHARED
   src/plays/their_penalty_play.cpp
   src/plays/controls_test_play.cpp
   src/plays/triangle_pass_play.cpp
+  src/plays/waypoints_play.cpp
+  src/plays/spinning_a_play.cpp
   src/types/message_conversions.cpp
   src/motion/motion_controller.cpp
   src/visualization/overlays.cpp
