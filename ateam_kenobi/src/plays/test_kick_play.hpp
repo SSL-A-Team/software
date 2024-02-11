@@ -23,7 +23,7 @@
 #define PLAYS__TEST_KICK_PLAY_HPP_
 
 #include "base_play.hpp"
-#include "skills/line_kick.hpp"
+#include "skills/pivot_kick.hpp"
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
@@ -36,7 +36,7 @@ public:
     visualization::OverlayPublisher & overlay_publisher,
     visualization::PlayInfoPublisher & play_info_publisher)
   : BasePlay(overlay_publisher, play_info_publisher),
-    line_kick_skill_(overlay_publisher)
+    pivot_kick_skill_(overlay_publisher)
   {}
 
   void reset() override {}
@@ -51,14 +51,14 @@ public:
     }
     const auto robot = robots.front();
     // aim for center of opponent goal
-    line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
-    motion_commands[robot.id] = line_kick_skill_.runFrame(world, robot);
+    pivot_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
+    motion_commands[robot.id] = pivot_kick_skill_.runFrame(world, robot);
     play_info_publisher_.send_play_message("TestKickPlay");
     return motion_commands;
   }
 
 private:
-  skills::LineKick line_kick_skill_;
+  skills::PivotKick pivot_kick_skill_;
 };
 
 }  // namespace ateam_kenobi::plays
