@@ -40,7 +40,7 @@ std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
   auto source = segment.vertex(0);
   auto target = segment.vertex(1);
 
-  ateam_geometry::Vector spacing = (source - target) / (num_points - 1);
+  ateam_geometry::Vector spacing = (target - source) / (num_points - 1);
 
   auto segment_point = source;
   for (int i = 0; i < num_points; ++i) {
