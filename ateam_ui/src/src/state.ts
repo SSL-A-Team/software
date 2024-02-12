@@ -4,7 +4,7 @@ import { Team, TeamInfo, TeamColor } from "@/team"
 import { Overlay } from "@/overlay"
 import { Referee } from "@/referee"
 import { Ball } from "@/ball"
-import { Field } from "@/field"
+import { Field, FieldDimensions, FieldSidedInfo } from "@/field"
 import { AIState } from "@/AI"
 
 export class RenderConfig {
@@ -169,6 +169,36 @@ export class AppState {
             state.world.field.fieldDimensions.goalWidth = msg.goal_width;
             state.world.field.fieldDimensions.goalDepth = msg.goal_depth;
             state.world.field.fieldDimensions.border = msg.boundary_width;
+
+            let get_dims = function(rectangle_corners:Point[]) {
+                const first_point = rectangle_corners[0];
+
+                // find the opposite corner
+                let second_point;
+                for (let i = 1; i < rectangle_corners.length; i++) {
+                    second_point = rectangle_corners[i];
+                    if (first_point.x != second_point.x && first_point.y != second_point.y) {
+                        break;
+                    }
+                }
+
+                const dim_1 = Math.abs(first_point.x - second_point.x);
+                const dim_2 = Math.abs(first_point.y - second_point.y);
+
+                return [Math.min(dim_1, dim_2), Math.max(dim_1, dim_2)]
+            }
+
+            if (msg.ours.defense_area_corners.points.length) {
+                const defense_dims = get_dims(msg.ours.defense_area_corners.points);
+                state.world.field.fieldDimensions.penaltyShort = defense_dims[0];
+                state.world.field.fieldDimensions.penaltyLong = defense_dims[1];
+            }
+
+            if (msg.ours.goal_corners.points.length) {
+                const goal_dims = get_dims(msg.ours.goal_corners.points);
+                state.world.field.fieldDimensions.goalDepth = goal_dims[0];
+                state.world.field.fieldDimensions.goalWidth = goal_dims[1];
+            }
         }
     }
 

@@ -42,6 +42,13 @@ enum class AngleMode
   no_face
 };
 
+enum class GainType
+{
+  p,
+  i,
+  d
+};
+
 struct MotionOptions
 {
   /**
@@ -74,6 +81,14 @@ public:
 
   // Reset the PID controllers and remove previous time to recalculate dt
   void reset();
+
+  // Set gains for individual PID controllers
+  void set_x_pid_gain(GainType gain, double value);
+  void set_y_pid_gain(GainType gain, double value);
+  void set_t_pid_gain(GainType gain, double value);
+  void set_x_pid_gains(double p, double i, double d);
+  void set_y_pid_gains(double p, double i, double d);
+  void set_t_pid_gains(double p, double i, double d);
 
 // Velocity limits
   double v_max = 2;
