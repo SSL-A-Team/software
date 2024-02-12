@@ -101,4 +101,13 @@ TEST(KmAssignment, non_square_assignment) {
   EXPECT_EQ(out3x2.at(0), 1);
   EXPECT_EQ(out3x2.at(1), 0);
   EXPECT_EQ(out3x2.at(2), -1);
+
+  Eigen::Matrix<double, 2, 3> cost2x3{
+    {1, 10, 5},
+    {10, 1, 5},
+  };
+  auto out2x3 = km_assignment::max_cost_assignment(cost2x3);
+  EXPECT_EQ(out2x3.size(), 3);
+  EXPECT_EQ(out2x3.at(0), 1);
+  EXPECT_EQ(out2x3.at(1), 0);
 }
