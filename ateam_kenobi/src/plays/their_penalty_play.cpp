@@ -58,9 +58,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyP
     goalie_skill_.runFrame(world, motion_commands);
   } else {
     const auto robot_id = world.referee_info.our_goalie_id;
-    const auto & maybe_robot = world.our_robots[robot_id];
-    if (maybe_robot) {
-      const auto & robot = maybe_robot.value();
+    const auto & robot = world.our_robots[robot_id];
+    if (!robot.is_valid()) {
       auto & move_to = move_tos_[robot_id];
       move_to.setTargetPosition(ateam_geometry::Point(-world.field.field_length / 2.0, 0.0));
       move_to.face_absolute(0.0);

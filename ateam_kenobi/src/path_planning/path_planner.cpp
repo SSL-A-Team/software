@@ -177,18 +177,23 @@ void PathPlanner::addRobotsToObstacles(
   const ateam_geometry::Point & start_pos,
   std::vector<ateam_geometry::AnyShape> & obstacles)
 {
-  auto obstacle_from_robot = [](const std::optional<Robot> & robot) {
+
+  auto obstacle_from_robot = [](const Robot & robot) {
       return ateam_geometry::AnyShape(
-        ateam_geometry::makeCircle(robot.value().pos, kRobotRadius));
+        ateam_geometry::makeCircle(robot.pos, kRobotRadius));
     };
 
-  auto not_current_robot = [&start_pos](const std::optional<Robot> & robot) {
+  auto not_current_robot = [&start_pos](const Robot & robot) {
       // Assume any robot close enough to the start pos is the robot trying to navigate
-      return (robot.value().pos - start_pos).squared_length() > std::pow(kRobotRadius, 2);
+      return (robot.pos - start_pos).squared_length() > std::pow(kRobotRadius, 2);
+    };
+
+  auto robot_is_visible = [](const Robot & robot) {
+      return robot.visible;
     };
 
   auto our_robot_obstacles = world.our_robots |
-    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
+    std::views::filter(robot_is_visible) |
     std::views::filter(not_current_robot) |
     std::views::transform(obstacle_from_robot);
   obstacles.insert(
@@ -197,7 +202,7 @@ void PathPlanner::addRobotsToObstacles(
     our_robot_obstacles.end());
 
   auto their_robot_obstacles = world.their_robots |
-    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
+    std::views::filter(robot_is_visible) |
     std::views::transform(obstacle_from_robot);
   obstacles.insert(
     obstacles.end(),

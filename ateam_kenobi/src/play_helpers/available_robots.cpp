@@ -26,26 +26,27 @@ namespace ateam_kenobi::play_helpers
 
 std::vector<Robot> getAvailableRobots(const World & world)
 {
-  return getVisibleRobots(world.our_robots);
-}
-
-std::vector<Robot> getVisibleRobots(const std::array<std::optional<Robot>, 16> & robots)
-{
   std::vector<Robot> available_robots;
-  for (const auto & maybe_robot : robots) {
-    if (maybe_robot) {
-      available_robots.push_back(maybe_robot.value());
+  for (const auto & robot : world.our_robots) {
+    if (robot.is_valid()) {
+      available_robots.push_back(robot);
     }
   }
   return available_robots;
 }
 
-void removeGoalie(std::vector<Robot> & robots, const World & world)
+std::vector<Robot> getVisibleRobots(const std::array<Robot, 16> & robots)
 {
-  return removeRobotWithId(robots, world.referee_info.our_goalie_id);
+  std::vector<Robot> visible_robots;
+  for (const auto & robot : robots) {
+    if (robot.visible) {
+      visible_robots.push_back(robot);
+    }
+  }
+  return visible_robots;
 }
 
-void removeGoalie(std::array<std::optional<Robot>, 16> & robots, const World & world)
+void removeGoalie(std::vector<Robot> & robots, const World & world)
 {
   return removeRobotWithId(robots, world.referee_info.our_goalie_id);
 }
@@ -58,9 +59,4 @@ void removeRobotWithId(std::vector<Robot> & robots, int id)
         return robot.id == id;
       }), robots.end());
 }
-
-void removeRobotWithId(std::array<std::optional<Robot>, 16> & robots, int id)
-{
-  robots.at(id).reset();
-}
-}  // namespace ateam_kenobi::play_helpers
+} // namespace ateam_kenobi::play_helpers
