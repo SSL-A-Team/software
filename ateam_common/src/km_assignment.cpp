@@ -24,6 +24,27 @@
 #include "km_assignment.hpp"
 
 namespace ateam_common::assignment {
+    const float EPSILON = 1e-10;
+
+    const Eigen::MatrixXd make_square_cost_matrix(
+        const Eigen::MatrixXd & matrix)
+    {
+        if (matrix.rows() == matrix.cols()) {
+            return matrix;
+        }
+
+        std::size_t new_dim = std::max(matrix.rows(), matrix.cols());
+        
+        // The value of any non-existant cost is 0 (since we are 
+        // trying to find a MAX cost matching)
+        Eigen::MatrixXd new_mat =
+            Eigen::MatrixXd::Constant(new_dim, new_dim, 0);
+
+        new_mat.block(0, 0, matrix.rows(), matrix.cols()) = matrix;
+
+        return new_mat;
+    }
+
     inline void compute_slack(
         const long x,
         std::vector<double>& slack,
@@ -33,7 +54,7 @@ namespace ateam_common::assignment {
         const std::vector<double>& ly
     )
     {
-        for (long y = 0; y < static_cast<int>(cost.cols()); ++y)
+        for (size_t y = 0; y < static_cast<int>(cost.cols()); ++y)
         {
             if (lx[x] + ly[y] - cost(x,y) < slack[y])
             {
@@ -137,10 +158,10 @@ namespace ateam_common::assignment {
                 {
                     const long x = q.front();
                     q.pop_front();
-                    for (long y = 0; y < cost_size; ++y)
+                    for (size_t y = 0; y < cost_size; ++y)
                     {
                         // Need to replace with within an epsilon
-                        if (cost_matrix(x,y) == lx[x] + ly[y] && !T[y])
+                        if (std::abs(cost_matrix(x,y)- (lx[x] + ly[y])) < EPSILON && !T[y])
                         {
                             // if vertex y isn't matched with anything
                             // then we have an augmenting path
@@ -194,9 +215,9 @@ namespace ateam_common::assignment {
 
                 // Reset the queue for when we need to augment the path
                 q.clear();
-                for (long y = 0; y < cost_size; ++y)
+                for (size_t y = 0; y < cost_size; ++y)
                 {
-                    if (!T[y] && slack[y] == 0)
+                    if (!T[y] && slack[y] < EPSILON)
                     {
                         // if vertex y isn't matched with anything
                         if (yx[y] == -1)
