@@ -48,6 +48,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
 
   goalie_skill_.runFrame(world, maybe_motion_commands);
 
+  kicker_point_ = ateam_geometry::Point(-0.3, world.field.field_width / 4);
+
   support_positions_ = {
     ateam_geometry::Point(-0.3, world.field.field_width / 4),
     ateam_geometry::Point(-0.3, -world.field.field_width / 4),

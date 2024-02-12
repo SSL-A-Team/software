@@ -53,7 +53,7 @@ private:
 
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
-  const ateam_geometry::Point kicker_point_ = ateam_geometry::Point(-0.25, 0);
+  ateam_geometry::Point kicker_point_ = ateam_geometry::Point(-0.25, 0);
 
   std::vector<ateam_geometry::Point> support_positions_;
 
