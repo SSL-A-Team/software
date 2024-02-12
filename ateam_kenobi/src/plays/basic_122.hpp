@@ -53,6 +53,8 @@ private:
     const std::vector<Robot> & blocker_bots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
+
+  bool doTheyHavePossession(const World & world);
 };
 
 }  // namespace ateam_kenobi::plays

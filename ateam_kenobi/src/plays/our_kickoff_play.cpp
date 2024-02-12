@@ -49,8 +49,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   goalie_skill_.runFrame(world, maybe_motion_commands);
 
   support_positions_ = {
-    ateam_geometry::Point(-0.3, world.field.field_width / 4),
-    ateam_geometry::Point(-0.3, -world.field.field_width / 4),
+    ateam_geometry::Point(-0.3, world.field.field_width / 3),
+    ateam_geometry::Point(-0.3, -world.field.field_width / 3),
     ateam_geometry::Point(-world.field.field_length / 4, world.field.field_width * 0.375),
     ateam_geometry::Point(-world.field.field_length / 4, -world.field.field_width * 0.375)
   };
@@ -100,9 +100,7 @@ void OurKickoffPlay::runKicker(
     getPlayInfo()["Kicker Id"] = kicker.id;
   } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
     line_kick_skill_.setTargetPoint(
-      ateam_geometry::Point(
-        world.field.field_length / 8,
-        world.field.field_width / 4));
+      ateam_geometry::Point(-0.3, world.field.field_width / 4));
     line_kick_skill_.setKickSpeed(0.45);
     motion_commands.at(kicker.id) = line_kick_skill_.runFrame(world, kicker);
 
@@ -130,7 +128,7 @@ void OurKickoffPlay::runSupportBots(
         robot.id), viz_circle, "blue", "transparent");
 
     easy_move_to.setTargetPosition(target_position);
-    easy_move_to.face_absolute(0);  // face away from our goal
+    easy_move_to.face_point(world.ball.pos);
 
     motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
   }

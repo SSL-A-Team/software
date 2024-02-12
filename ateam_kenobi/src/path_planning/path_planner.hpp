@@ -126,6 +126,11 @@ private:
     std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
 
+  std::optional<ateam_geometry::Point> findLastCollisionFreePoint(
+    const ateam_geometry::Point & start, const ateam_geometry::Point & goal, const World & world,
+    std::vector<ateam_geometry::AnyShape> & obstacles,
+    const PlannerOptions & options);
+
   void drawObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles);
 };
 

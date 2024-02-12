@@ -52,15 +52,19 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
 
   goalie_skill_.runFrame(world, motion_commands);
 
+  const auto use_striker = !doTheyHavePossession(world);
+
   std::vector<ateam_geometry::Point> assignment_positions;
-  assignment_positions.push_back(striker_skill_.getAssignmentPoint(world));
+  if(use_striker) {
+    assignment_positions.push_back(striker_skill_.getAssignmentPoint(world));
+  }
   const auto blocker_assignment_positions = blockers_skill_.getAssignmentPoints(world);
   assignment_positions.insert(
     assignment_positions.end(),
     blocker_assignment_positions.begin(), blocker_assignment_positions.end());
 
   std::vector<std::vector<int>> disallowed_ids;
-  if (world.double_touch_forbidden_id_) {
+  if (use_striker && world.double_touch_forbidden_id_) {
     std::fill_n(
       std::back_inserter(disallowed_ids), assignment_positions.size(),
       std::vector<int>{});
@@ -71,14 +75,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
     available_robots, assignment_positions,
     disallowed_ids);
 
-  const auto & striker = assignments[0];
+  if(use_striker) {
+    const auto & striker = assignments[0];
 
-  if (striker) {
-    runStriker(*striker, world, motion_commands[striker->id].emplace());
+    if (striker) {
+      runStriker(*striker, world, motion_commands[striker->id].emplace());
+    }
   }
 
   std::vector<Robot> blockers;
-  for (auto ind = 1ul; ind < assignments.size(); ++ind) {
+  for (auto ind = use_striker ? 1ul : 0ul; ind < assignments.size(); ++ind) {
     if (assignments[ind]) {
       blockers.push_back(*assignments[ind]);
     }
@@ -127,4 +133,15 @@ void Basic122::runBlockers(
     motion_commands[blocker_bots[robot_ind].id] = skill_commands[robot_ind];
   }
 }
+
+bool Basic122::doTheyHavePossession(const World & world) {
+  const auto found_iter = std::ranges::find_if(world.their_robots, [&world](const auto & robot){
+    if(!robot) {
+      return false;
+    }
+    return CGAL::approximate_sqrt(CGAL::squared_distance(robot->pos, world.ball.pos)) < (kRobotRadius + kBallRadius) * 1.05;
+  });
+  return found_iter != world.their_robots.end();
+}
+
 }  // namespace ateam_kenobi::plays

@@ -71,7 +71,11 @@ PathPlanner::Path PathPlanner::getPath(
   Path path = {start, goal};
 
   if (!isStateValid(goal, world, augmented_obstacles, options)) {
-    trimPathAfterCollision(path, world, augmented_obstacles, options);
+    const auto maybe_new_goal = findLastCollisionFreePoint(start, goal, world, augmented_obstacles, options);
+    if(!maybe_new_goal) {
+      return {};
+    }
+    path.back() = *maybe_new_goal;
   }
 
   while (true) {
@@ -366,6 +370,26 @@ void PathPlanner::trimPathAfterCollision(
   }
 }
 
+std::optional<ateam_geometry::Point> PathPlanner::findLastCollisionFreePoint(
+  const ateam_geometry::Point & start, const ateam_geometry::Point & goal, const World & world,
+  std::vector<ateam_geometry::AnyShape> & obstacles,
+  const PlannerOptions & options)
+{
+  const auto direction_vector = start - goal;
+  const auto segment_length = std::sqrt(direction_vector.squared_length());
+  const auto step_vector = direction_vector * (options.collision_check_resolution / segment_length);
+  const int step_count = segment_length / options.collision_check_resolution;
+  for (auto step = 0; step < step_count; ++step) {
+    const auto state = goal + (step * step_vector);
+    if (isStateValid(state, world, obstacles, options)) {
+      return state;
+    }
+  }
+  if (isStateValid(start, world, obstacles, options)) {
+    return start;
+  }
+  return std::nullopt;
+}
 
 void PathPlanner::drawObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles)
 {
