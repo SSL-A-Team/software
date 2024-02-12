@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -51,21 +51,6 @@ TEST(KmAssignment, trivial_assignment) {
   EXPECT_EQ(out5x5.at(2), 1);
   EXPECT_EQ(out5x5.at(3), 3);
   EXPECT_EQ(out5x5.at(4), 4);
-
-  // Eigen::Matrix<double, 2, 3> cost2x3{
-  //   {1, 10, 5},
-  //   {10, 1, 5},
-  // };
-  // auto out2x3 = assignment::optimize_assignment(cost2x3);
-  // EXPECT_EQ(out2x3.size(), 2);
-  // EXPECT_EQ(out2x3.at(0), 0);
-  // EXPECT_EQ(out2x3.at(1), 1);
-
-  // Eigen::Matrix<double, 8, 1> cost8x1{{3.1}, {3.09}, {3.64}, {3.44}, {3.47}, {3.44}, {3.85},
-  //   {3.44}};
-  // auto out8x1 = assignment::optimize_assignment(cost8x1.transpose());
-  // EXPECT_EQ(out8x1.size(), 1);
-  // EXPECT_EQ(out8x1.at(0), 1);
 }
 
 TEST(KmAssignment, negative_cost_assignment) {
