@@ -135,13 +135,30 @@ void Basic122::runBlockers(
 }
 
 bool Basic122::doTheyHavePossession(const World & world) {
-  const auto found_iter = std::ranges::find_if(world.their_robots, [&world](const auto & robot){
-    if(!robot) {
-      return false;
-    }
-    return CGAL::approximate_sqrt(CGAL::squared_distance(robot->pos, world.ball.pos)) < (kRobotRadius + kBallRadius) * 1.05;
-  });
-  return found_iter != world.their_robots.end();
+  auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
+    return CGAL::compare_distance_to_point(world.ball.pos, lhs.pos, rhs.pos) == CGAL::SMALLER;
+  };
+
+  const auto their_robots = play_helpers::getVisibleRobots(world.their_robots);
+  if(their_robots.empty()) {
+    return false;
+  }
+
+  const auto closest_their_robot = *std::ranges::min_element(their_robots, byDistToBall);
+
+  if(CGAL::approximate_sqrt(CGAL::squared_distance(closest_their_robot.pos, world.ball.pos)) > kRobotRadius + 0.15) {
+    return false;
+  }
+
+  const auto our_robots = play_helpers::getVisibleRobots(world.our_robots);
+
+  if(our_robots.empty()) {
+    return true;
+  }
+
+  const auto closest_our_robot = *std::ranges::min_element(our_robots, byDistToBall);
+
+  return CGAL::compare_distance_to_point(world.ball.pos, closest_our_robot.pos, closest_their_robot.pos) == CGAL::LARGER;
 }
 
 }  // namespace ateam_kenobi::plays
