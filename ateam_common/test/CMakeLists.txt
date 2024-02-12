@@ -21,5 +21,5 @@ target_link_libraries(test_geometry ${PROJECT_NAME})
 ament_add_gmock(test_assignment test_assignment.cpp)
 target_link_libraries(test_assignment ${PROJECT_NAME})
 
-ament_add_gmock(test_assignment test_km_assignment.cpp)
+ament_add_gmock(test_km_assignment test_km_assignment.cpp)
 target_link_libraries(test_km_assignment ${PROJECT_NAME})

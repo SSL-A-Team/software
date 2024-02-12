@@ -23,22 +23,22 @@
 #include <Eigen/Dense>
 #include <vector>
 
-namespace ateam_common::assignment {
-    const Eigen::MatrixXd make_square_cost_matrix(
-        const Eigen::MatrixXd & cost_matrix);
+namespace ateam_common::km_assignment
+{
+const Eigen::MatrixXd make_square_cost_matrix(
+  const Eigen::MatrixXd & cost_matrix);
 
-    inline void compute_slack(
-        const long x,
-        std::vector<double>& slack,
-        std::vector<double>& slackx,
-        const Eigen::MatrixXd& cost,
-        const std::vector<double>& lx,
-        const std::vector<double>& ly
-    );
+inline void compute_slack(
+  const int x,
+  std::vector<double> & slack,
+  std::vector<double> & slackx,
+  const Eigen::MatrixXd & cost,
+  const Eigen::VectorXd & lx,
+  const Eigen::VectorXd & ly
+);
 
-    std::vector<long> max_cost_assignment (
-        const Eigen::MatrixXd& cost_matrix
-    );
-}
-
-#endif // ATEAM_COMMON__KM_ASSIGNMENT_HPP_
+std::vector<int> max_cost_assignment(
+  const Eigen::MatrixXd & cost_matrix
+);
+}  // namespace ateam_common::km_assignment
+#endif  // ATEAM_COMMON__KM_ASSIGNMENT_HPP_

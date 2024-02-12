@@ -23,40 +23,34 @@
 
 #include "ateam_common/km_assignment.hpp"
 
-namespace assignment = ateam_common::assignment;
+namespace km_assignment = ateam_common::km_assignment;
 
-TEST(Assignment, optimize_assignment) {
-  Eigen::Matrix<double, 3, 3> cost3x3{{10, 4, 7}, {5, 8, 3}, {1, 4, 9}};
-  auto out3x3 = km_assignment::max_cost_assignment(cost3x3);
+TEST(KmAssignment, trivial_assignment) {
+  Eigen::Matrix<double, 3, 3> cost3x3{
+    {10, 4, 7},
+    {5, 8, 3},
+    {1, 4, 9}
+  };
+  std::vector<int> out3x3 = km_assignment::max_cost_assignment(cost3x3);
   EXPECT_EQ(out3x3.size(), 3);
   EXPECT_EQ(out3x3.at(0), 0);
   EXPECT_EQ(out3x3.at(1), 1);
   EXPECT_EQ(out3x3.at(2), 2);
 
-  // Eigen::Matrix<double, 5, 5> cost5x5{
-  //   {10, 5, 13, 15, 16},
-  //   {3, 9, 18, 13, 6},
-  //   {10, 7, 2, 2, 2},
-  //   {7, 11, 9, 7, 12},
-  //   {7, 9, 10, 4, 12}
-  // };
-  // auto out5x5 = assignment::optimize_assignment(cost5x5);
-  // EXPECT_EQ(out5x5.size(), 5);
-  // EXPECT_EQ(out5x5.at(0), 1);
-  // EXPECT_EQ(out5x5.at(1), 0);
-  // EXPECT_EQ(out5x5.at(2), 4);
-  // EXPECT_EQ(out5x5.at(3), 2);
-  // EXPECT_EQ(out5x5.at(4), 3);
-
-  // Eigen::Matrix<double, 3, 2> cost3x2{
-  //   {1, 10},
-  //   {10, 1},
-  //   {5, 5}
-  // };
-  // auto out3x2 = assignment::optimize_assignment(cost3x2);
-  // EXPECT_EQ(out3x2.size(), 2);
-  // EXPECT_EQ(out3x2.at(0), 0);
-  // EXPECT_EQ(out3x2.at(1), 1);
+  Eigen::Matrix<double, 5, 5> cost5x5{
+    {20, 5, 13, 15, 16},
+    {3, 9, 18, 13, 6},
+    {10, 19, 2, 2, 2},
+    {7, 11, 9, 17, 12},
+    {7, 9, 10, 4, 15}
+  };
+  std::vector<int> out5x5 = km_assignment::max_cost_assignment(cost5x5);
+  EXPECT_EQ(out5x5.size(), 5);
+  EXPECT_EQ(out5x5.at(0), 0);
+  EXPECT_EQ(out5x5.at(1), 2);
+  EXPECT_EQ(out5x5.at(2), 1);
+  EXPECT_EQ(out5x5.at(3), 3);
+  EXPECT_EQ(out5x5.at(4), 4);
 
   // Eigen::Matrix<double, 2, 3> cost2x3{
   //   {1, 10, 5},
@@ -72,4 +66,39 @@ TEST(Assignment, optimize_assignment) {
   // auto out8x1 = assignment::optimize_assignment(cost8x1.transpose());
   // EXPECT_EQ(out8x1.size(), 1);
   // EXPECT_EQ(out8x1.at(0), 1);
+}
+
+TEST(KmAssignment, negative_cost_assignment) {
+  Eigen::Matrix<double, 3, 3> cost3x3{
+    {-10, -4, 0},
+    {1, 0, -5},
+    {0, 4, -10}
+  };
+  std::vector<int> out3x3 = km_assignment::max_cost_assignment(cost3x3);
+  EXPECT_EQ(out3x3.size(), 3);
+  EXPECT_EQ(out3x3.at(0), 2);
+  EXPECT_EQ(out3x3.at(1), 0);
+  EXPECT_EQ(out3x3.at(2), 1);
+
+  Eigen::Matrix<double, 2, 2> cost2x2{
+    {-10.02, -4},
+    {1, 0.005}
+  };
+  std::vector<int> out2x2 = km_assignment::max_cost_assignment(cost2x2);
+  EXPECT_EQ(out2x2.size(), 2);
+  EXPECT_EQ(out2x2.at(0), 1);
+  EXPECT_EQ(out2x2.at(1), 0);
+}
+
+TEST(KmAssignment, non_square_assignment) {
+  Eigen::Matrix<double, 3, 2> cost3x2{
+    {1, 10},
+    {10, 1},
+    {5, 5}
+  };
+  auto out3x2 = km_assignment::max_cost_assignment(cost3x2);
+  EXPECT_EQ(out3x2.size(), 3);
+  EXPECT_EQ(out3x2.at(0), 1);
+  EXPECT_EQ(out3x2.at(1), 0);
+  EXPECT_EQ(out3x2.at(2), -1);
 }
