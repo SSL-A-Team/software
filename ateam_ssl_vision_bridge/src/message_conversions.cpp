@@ -170,8 +170,12 @@ ssl_league_msgs::msg::VisionGeometryData fromProto(const SSL_GeometryData & prot
 ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket & proto_msg)
 {
   ssl_league_msgs::msg::VisionWrapper ros_msg;
-  ros_msg.detection = fromProto(proto_msg.detection());
-  ros_msg.geometry = fromProto(proto_msg.geometry());
+  if (proto_msg.has_detection()) {
+    ros_msg.detection.push_back(fromProto(proto_msg.detection()));
+  }
+  if (proto_msg.has_geometry()) {
+    ros_msg.geometry.push_back(fromProto(proto_msg.geometry()));
+  }
 
   return ros_msg;
 }
