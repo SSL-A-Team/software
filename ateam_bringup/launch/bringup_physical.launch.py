@@ -49,6 +49,8 @@ def generate_launch_description():
         # DeclareLaunchArgument("gc_server_address", default_value="10.193.12.10"),
         # DeclareLaunchArgument("radio_interface_address", default_value="172.16.1.10"),
 
+        DeclareLaunchArgument("team_name", default_value="A-Team"),
+
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution("ateam_bringup",
@@ -78,10 +80,14 @@ def generate_launch_description():
             package="ateam_radio_bridge",
             executable="radio_bridge_node",
             name="radio_bridge",
-            parameters=[{"net_interface_address": LaunchConfiguration("radio_interface_address")}],
+            parameters=[{
+                "net_interface_address": LaunchConfiguration("radio_interface_address"),
+                "gc_team_name": LaunchConfiguration("team_name")
+            }],
             remappings=remap_indexed_topics("~/robot_motion_commands/robot",
                                             "/robot_motion_commands/robot") +
                        remap_indexed_topics("~/robot_feedback/robot",
-                                            "/robot_feedback/robot")
+                                            "/robot_feedback/robot"),
+            respawn=True
         )
     ])
