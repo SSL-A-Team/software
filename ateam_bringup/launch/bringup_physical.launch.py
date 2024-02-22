@@ -26,13 +26,11 @@ from launch_ros.actions import Node
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 
 
-def remap_indexed_topics(pattern_from, pattern_to):
-    return list(
-        zip(
-            [pattern_from + str(i) for i in range(16)],
-            [pattern_to + str(i) for i in range(16)],
-        )
-    )
+def remap_indexed_topics(pattern_pairs):
+    return [
+        [(pattern_from+str(i), pattern_to+str(i)) for i in range(16)]
+        for pattern_from, pattern_to in pattern_pairs
+    ]
 
 
 def generate_launch_description():
@@ -84,10 +82,10 @@ def generate_launch_description():
                 "net_interface_address": LaunchConfiguration("radio_interface_address"),
                 "gc_team_name": LaunchConfiguration("team_name")
             }],
-            remappings=remap_indexed_topics("~/robot_motion_commands/robot",
-                                            "/robot_motion_commands/robot") +
-                       remap_indexed_topics("~/robot_feedback/robot",
-                                            "/robot_feedback/robot"),
-            respawn=True
+            respawn=True,
+            remappings=remap_indexed_topics([
+                ("~/robot_motion_commands/robot", "/robot_motion_commands/robot"),
+                ("~/robot_feedback/robot", "/robot_feedback/robot")
+            ])
         )
     ])
