@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 
-using namespace ateam_vision_filter;
+using namespace ateam_vision_filter;  // NOLINT(build/namespaces)
 
 TEST(MultipleHypothesisTracker, getStateEstimate_ShouldReturnNothing_WhenNoTracks)
 {

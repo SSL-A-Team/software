@@ -29,7 +29,7 @@
 #include "generators/transmission_probability_generator.hpp"
 #include "types/models.hpp"
 
-using namespace ateam_vision_filter;
+using namespace ateam_vision_filter;  // NOLINT(build/namespaces)
 
 TEST(InteractingMultipleModelFilter, getStateEstimate_ShouldReturnIntial_WhenNothingChanges)
 {
