@@ -30,6 +30,9 @@
 #include "types/models.hpp"
 #include "types/robot.hpp"
 
+namespace ateam_vision_filter
+{
+
 class ModelInputGenerator
 {
 public:
@@ -56,5 +59,7 @@ private:
     const Eigen::VectorXd & possible_state,
     const double kick_speed) const;
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // GENERATORS__MODEL_INPUT_GENERATOR_HPP_

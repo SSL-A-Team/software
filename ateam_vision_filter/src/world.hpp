@@ -36,6 +36,9 @@
 #include "types/camera_measurement.hpp"
 #include "types/robot.hpp"
 
+namespace ateam_vision_filter
+{
+
 class World
 {
 public:
@@ -81,5 +84,7 @@ private:
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;
   std::map<CameraID, Camera> cameras;
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // WORLD_HPP_

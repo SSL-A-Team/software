@@ -24,6 +24,8 @@
 
 #include <vector>
 
+using namespace ateam_vision_filter;
+
 TEST(KalmanFilter, getXHat_ShouldReturnIntial_WhenNoPredictOrUpdate)
 {
   KalmanFilter kf;

@@ -29,7 +29,7 @@
 #include "types/robot.hpp"
 
 
-namespace generator_util
+namespace ateam_vision_filter::generator_util
 {
 /**
  * @return Closest robot to the position given (if one exists)
