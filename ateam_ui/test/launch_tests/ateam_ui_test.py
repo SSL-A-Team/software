@@ -89,6 +89,8 @@ class TestUI(unittest.TestCase):
 
     def test_0_subscribers_created(self):
 
+        time.sleep(10.0)
+
         nodes = self.node.get_node_names()
 
         # Rosbridge node discovered

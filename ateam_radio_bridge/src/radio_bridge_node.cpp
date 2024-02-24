@@ -22,10 +22,14 @@
 #include <array>
 #include <chrono>
 #include <numeric>
+#include <mutex>
+#include <thread>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_msgs/srv/set_firmware_parameter.hpp>
+#include <ateam_msgs/srv/get_firmware_parameter.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
@@ -34,8 +38,11 @@
 #include "rnp_packet_helpers.hpp"
 #include "conversion.hpp"
 #include "ip_address_helpers.hpp"
+#include "firmware_parameter_server.hpp"
 
 // TODO(barulicm) add warning if we see another instance of this running via multicast
+
+using namespace std::string_literals;
 
 namespace ateam_radio_bridge
 {
@@ -47,12 +54,13 @@ public:
   : rclcpp::Node("radio_bridge", options),
     timeout_threshold_(declare_parameter("timeout_ms", 250)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
-    game_controller_listener_(*this),
+    game_controller_listener_(*this, std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-      declare_parameter<std::string>("net_interface_address", "172.16.1.10"))
+      declare_parameter<std::string>("net_interface_address", "172.16.1.10")),
+    firmware_parameter_server_(*this, connections_)
   {
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
@@ -64,6 +72,12 @@ public:
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotFeedback>(
       feedback_publishers_,
       "~/robot_feedback/robot",
+      rclcpp::SystemDefaultsQoS(),
+      this);
+
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotMotionFeedback>(
+      motion_feedback_publishers_,
+      "~/robot_motion_feedback/robot",
       rclcpp::SystemDefaultsQoS(),
       this);
 
@@ -91,7 +105,9 @@ private:
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionFeedback>::SharedPtr, 16> motion_feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
+  FirmwareParameterServer firmware_parameter_server_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
   std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
@@ -108,6 +124,10 @@ private:
   void CloseConnection(const std::size_t & connection_index)
   {
     auto & connection = connections_.at(connection_index);
+    if(!connection) {
+      // Connection already closed
+      return;
+    }
     RCLCPP_INFO(
       get_logger(), "Closing connection to robot %ld (%s:%d)", connection_index,
       connection->GetRemoteIPAddress().c_str(), connection->GetRemotePort());
@@ -158,7 +178,6 @@ private:
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
-      control_msg.kick_vel = 0.0f;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
@@ -289,6 +308,32 @@ private:
           }
           break;
         }
+      case CC_CONTROL_DEBUG_TELEMETRY:
+        {
+          const auto data_var = ExtractData(packet, error);
+          if (!error.empty()) {
+            RCLCPP_WARN(get_logger(), "Ignoring control debug message. %s", error.c_str());
+            return;
+          }
+
+          if (std::holds_alternative<ControlDebugTelemetry>(data_var)) {
+            auto msg = Convert(std::get<ControlDebugTelemetry>(data_var));
+            motion_feedback_publishers_[robot_id]->publish(msg);
+          }
+          break;
+        }
+      case CC_ROBOT_PARAMETER_COMMAND:
+        {
+          const auto data_var = ExtractData(packet, error);
+          if (!error.empty()) {
+            RCLCPP_WARN(get_logger(), "Ignoring parameter command response message. %s", error.c_str());
+            return;
+          }
+          if(std::holds_alternative<ParameterCommand>(data_var)) {
+            firmware_parameter_server_.HandleIncomingParameterPacket(robot_id, std::get<ParameterCommand>(data_var));
+          }
+          break;
+        }
       case CC_KEEPALIVE:
         last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
         break;
@@ -298,8 +343,6 @@ private:
           packet.command_code);
         return;
     }
-
-    motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
   void TeamColorChangeCallback(const ateam_common::TeamColor)

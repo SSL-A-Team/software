@@ -28,7 +28,8 @@ def generate_test_description():
                     executable="radio_bridge_node",
                     parameters=[
                         {"discovery_address": discovery_address},
-                        {"default_team_color": "yellow"}
+                        {"default_team_color": "yellow"},
+                        {"net_interface_address":""}
                         ],
                 ),
                 # Had to add this delay when upgraded to Humble. Without this,
@@ -78,7 +79,7 @@ class TestRadioBridgeNode(unittest.TestCase):
 
     def test_0_discoveryResponse(self):
         self.sock.sendto(
-            struct.pack("IHHBHBB", 653411691, 0, 0, 101, 2, 0, 0),
+            struct.pack("IHHBHBB", 653411691, 0, 1, 101, 2, 0, 0),
             discovery_endpoint
         )
         data, sender = self.sock.recvfrom(52)
@@ -118,7 +119,7 @@ class TestRadioBridgeNode(unittest.TestCase):
             "IHHBHHBBffIffffff",
             1112834395,
             0,
-            0,
+            1,
             102,
             40,
             1,
@@ -180,10 +181,11 @@ class TestRadioBridgeNode(unittest.TestCase):
     def test_2_commandMessage(self):
         data = self.sock.recv(508)
         expected_data = bytearray(b"\x00") * 36
-        expected_data[0:4] = [92, 255, 234, 93]  # CRC
+        expected_data[0:4] = [49, 123, 54, 217]  # CRC
+        expected_data[5:7] = [0, 1]  # protocol minor version
         expected_data[8] = 201  # Command code: CC_CONTROL
         expected_data[9:11] = [0, 24]  # Data length
-        expected_data[32] = 0  # Kicker request: KR_ARM
+        expected_data[32] = 1  # Kicker request: KR_ARM
         self.assertEqual(
             len(data),
             len(expected_data),

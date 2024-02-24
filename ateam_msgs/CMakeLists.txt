@@ -6,6 +6,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -17,6 +18,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/RefereeInfo.msg
   msg/RobotFeedback.msg
   msg/RobotMotionCommand.msg
+  msg/RobotMotionFeedback.msg
+  msg/RobotMotorFeedback.msg
   msg/RobotState.msg
   msg/Sample3d.msg
   msg/TeamClientConnectionStatus.msg
@@ -33,8 +36,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
   msg/PlayInfo.msg
 
+  srv/GetFirmwareParameter.srv
   srv/ReconnectTeamClient.srv
   srv/SetDesiredKeeper.srv
+  srv/SetFirmwareParameter.srv
   srv/SetTeamAdvantageChoice.srv
   srv/SubstituteBot.srv
 
@@ -42,6 +47,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   builtin_interfaces
   std_msgs
   geometry_msgs
+  sensor_msgs
   ssl_league_msgs
   ADD_LINTER_TESTS
 )

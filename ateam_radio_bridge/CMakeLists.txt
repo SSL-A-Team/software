@@ -13,6 +13,7 @@ find_package(ateam_common REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/conversion.cpp
+  src/firmware_parameter_server.cpp
   src/ip_address_helpers.cpp
   src/radio_bridge_node.cpp
   src/rnp_packet_helpers.cpp

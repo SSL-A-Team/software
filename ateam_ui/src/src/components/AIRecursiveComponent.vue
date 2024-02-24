@@ -10,13 +10,12 @@
                     :name= "member"
                     :node= "this.node[member]"
                     :spacing= "this.spacing + 5"
-                    style="whitespace: nowrap"
+                    style="white-space: normal"
             />
         </div>
 </template>
 
 <script lang="ts">
-import { props } from "vue";
 
 export default {
     props: {

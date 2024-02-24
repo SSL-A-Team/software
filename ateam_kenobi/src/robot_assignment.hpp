@@ -42,6 +42,38 @@ namespace ateam_kenobi::robot_assignment
 {
 
 // #define USE_HACKY_ASSIGNMENT
+#define USE_GREEDY_ASSIGNMENT
+
+inline std::unordered_map<size_t, size_t> greedyAssignment(
+  const std::vector<Robot> & available_robots,
+  const std::vector<ateam_geometry::Point> & goal_positions)
+{
+  std::unordered_map<size_t, size_t> assignments;
+
+  if (available_robots.empty() || goal_positions.empty()) {
+    return assignments;
+  }
+
+  Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(
+    goal_positions.size(),
+    available_robots.size(), std::numeric_limits<double>::max());
+  for (size_t i = 0; i < goal_positions.size(); i++) {
+    for (size_t j = 0; j < available_robots.size(); j++) {
+      costs(i, j) = sqrt(CGAL::squared_distance(available_robots.at(j).pos, goal_positions.at(i)));
+    }
+  }
+
+  const auto num_assignments = std::min(available_robots.size(), goal_positions.size());
+
+  for (auto row = 0ul; row < num_assignments; ++row) {
+    Eigen::MatrixXd::Index min_index;
+    costs.row(row).minCoeff(&min_index);
+    assignments[available_robots[min_index].id] = row;
+    costs.col(min_index).fill(std::numeric_limits<double>::max());
+  }
+
+  return assignments;
+}
 
 inline std::unordered_map<size_t, size_t> assign(
   const std::vector<Robot> & available_robots,
@@ -58,6 +90,10 @@ inline std::unordered_map<size_t, size_t> assign(
     assignments[available_robots[index].id] = index;
   }
   return assignments;
+
+#elif defined(USE_GREEDY_ASSIGNMENT)
+
+  return greedyAssignment(available_robots, goal_positions);
 
 #else
 

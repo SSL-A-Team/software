@@ -24,7 +24,6 @@
 
 #include <optional>
 #include <array>
-#include <vector>
 #include <chrono>
 
 #include "types/ball.hpp"

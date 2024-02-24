@@ -24,7 +24,6 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/point_generators_2.h>
 #include <CGAL/Polygon_2.h>
-// When I talked to Christian about it we said put this stuff here as a general def of search traits
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Search_traits_2.h>
 

@@ -24,6 +24,12 @@ export class FieldDimensions {
     floorWidth: number = 10.4
 }
 
+export class FieldSidedInfo {
+    defense_area_corners: Point[];
+    goal_corners: Point[];
+}
+
+
 export class Field {
     fieldDimensions: FieldDimensions;
     overlays: Overlay[];
@@ -67,10 +73,10 @@ export class Field {
 
             // Goal Box
             fieldLines.lineStyle(4, 0xFFFFFF);
-            fieldLines.moveTo(goalX, -scale * this.fieldDimensions.goalWidth);
-            fieldLines.lineTo(goalX - direction * scale * this.fieldDimensions.goalWidth, -scale * this.fieldDimensions.goalWidth);
-            fieldLines.lineTo(goalX - direction * scale * this.fieldDimensions.goalWidth, scale * this.fieldDimensions.goalWidth);
-            fieldLines.lineTo(goalX, scale * this.fieldDimensions.goalWidth);
+            fieldLines.moveTo(goalX, -scale * this.fieldDimensions.penaltyLong/2);
+            fieldLines.lineTo(goalX - direction * scale * this.fieldDimensions.penaltyShort, -scale * this.fieldDimensions.penaltyLong/2);
+            fieldLines.lineTo(goalX - direction * scale * this.fieldDimensions.penaltyShort, scale * this.fieldDimensions.penaltyLong/2);
+            fieldLines.lineTo(goalX, scale * this.fieldDimensions.penaltyLong/2);
 
             // Goal
             fieldLines.lineStyle(4, color);
