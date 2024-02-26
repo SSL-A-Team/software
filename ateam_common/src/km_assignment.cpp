@@ -40,14 +40,14 @@ const Eigen::MatrixXd make_square_cost_matrix(
   //  The value of any non-existant cost is 0 (since we are
   //  trying to find a MAX cost matching)
   Eigen::MatrixXd new_mat =
-    Eigen::MatrixXd::Constant(new_dim, new_dim, std::numeric_limits<double>::min());
+    Eigen::MatrixXd::Constant(new_dim, new_dim, std::numeric_limits<double>::lowest());
 
   new_mat.block(0, 0, matrix.rows(), matrix.cols()) = matrix;
 
   return new_mat;
 }
 
-inline void compute_slack(
+void compute_slack(
   const int x,
   std::vector<double> & slack,
   std::vector<double> & slackx,
@@ -73,18 +73,12 @@ std::vector<int> max_cost_assignment(
     cost = make_square_cost_matrix(cost_matrix);
   }
   /*
-      The dlib implementation of this algorithm is based on info available below...
-      although the links were broken when I tried them.
-          http://www.math.uwo.ca/~mdawes/courses/344/kuhn-munkres.pdf
-          http://www.topcoder.com/tc?module=Static&d1=tutorials&d2=hungarianAlgorithm
-
-      I used this reference instead:
+      The dlib implementation of this algorithm was based on a series of broken
+      links, so I used this reference instead:
           https://cse.hkust.edu.hk/~golin/COMP572/Notes/Matching.pdf
       */
 
   Eigen::VectorXd lx, ly;
-  std::vector<int> xy;
-  std::vector<int> yx;
   std::vector<char> S, T;
   std::vector<double> slack;
   std::vector<double> slackx;
@@ -93,8 +87,8 @@ std::vector<int> max_cost_assignment(
   size_t cost_size = static_cast<size_t>(cost.cols());
 
   // Initially, nothing is matched.
-  xy.assign(cost_size, -1);
-  yx.assign(cost_size, -1);
+  std::vector<int> xy(cost_size, -1);
+  std::vector<int> yx(cost_size, -1);
   /*
       We maintain the following invariant:
           Vertex x is matched to vertex xy[x] and
