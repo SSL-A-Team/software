@@ -28,7 +28,7 @@ namespace ateam_common::km_assignment
 const Eigen::MatrixXd make_square_cost_matrix(
   const Eigen::MatrixXd & cost_matrix);
 
-inline void compute_slack(
+void compute_slack(
   const int x,
   std::vector<double> & slack,
   std::vector<double> & slackx,
