@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "message_conversions.hpp"
+#include <ateam_game_controller_bridge/message_conversions.hpp>
 #include <algorithm>
 #include <rclcpp/time.hpp>
 

@@ -27,7 +27,8 @@
 #include <ateam_msgs/srv/reconnect_team_client.hpp>
 #include <ateam_msgs/srv/set_team_advantage_choice.hpp>
 #include <ateam_msgs/msg/team_client_connection_status.hpp>
-#include "team_client.hpp"
+
+#include <ateam_game_controller_bridge/team_client.hpp>
 
 namespace ateam_game_controller_bridge
 {

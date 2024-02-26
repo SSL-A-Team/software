@@ -26,7 +26,7 @@
 #include <ateam_common/protobuf_logging.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
-#include "message_conversions.hpp"
+#include <ateam_game_controller_bridge/message_conversions.hpp>
 
 namespace ateam_game_controller_bridge
 {

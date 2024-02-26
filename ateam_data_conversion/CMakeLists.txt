@@ -8,51 +8,55 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
-find_package(ateam_common REQUIRED)
-find_package(ateam_msgs REQUIRED)
-find_package(ssl_league_msgs REQUIRED)
-find_package(ssl_league_protobufs REQUIRED)
-find_package(ateam_vision_filter REQUIRED)
 find_package(ateam_ssl_vision_bridge REQUIRED)
+find_package(ateam_game_controller_bridge REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
-  src/ssl_log_replayer.cpp
-  src/ssl_to_rosbag_node.cpp
-  src/ssl_to_rosbag_cli.cpp
-  src/ssl_to_rosbag.cpp
-  src/ssl_vision_adapter.cpp
+  src/ssl_log_reader.cpp
+  src/ssl_log_replayer_node.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE include)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-ament_target_dependencies(${PROJECT_NAME}
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+
+set(FIND_DEPS
   rclcpp
   rclcpp_components
-  ateam_common
-  ateam_msgs
-  ssl_league_msgs
-  ssl_league_protobufs
-  ateam_vision_filter
+  # ateam_common
+  # ateam_msgs
+  # ssl_league_msgs
+  # ssl_league_protobufs
   ateam_ssl_vision_bridge
+  ateam_game_controller_bridge
+)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+ament_target_dependencies(${PROJECT_NAME}
+  ${FIND_DEPS}
 )
 
 rclcpp_components_register_node(
   ${PROJECT_NAME}
-  PLUGIN "ateam_data_conversion::SslToRosbagNode"
-  EXECUTABLE ssl_to_rosbag_node
+  PLUGIN "ateam_data_conversion::SSLLogReplayerNode"
+  EXECUTABLE ssl_log_replayer_node
 )
-install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
-# if(BUILD_TESTING)
-#   find_package(ament_lint_auto REQUIRED)
-#   ament_lint_auto_find_test_dependencies()
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
+)
 
-#   find_package(ament_cmake_gtest REQUIRED)
-#   ament_add_gtest(${PROJECT_NAME}_test
-#   )
-#   target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
-#   target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
-#   set_target_properties(${PROJECT_NAME}_test PROPERTIES CXX_STANDARD 17)
-# endif()
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(${FIND_DEPS})
 
 ament_package()

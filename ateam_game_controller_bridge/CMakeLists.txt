@@ -19,8 +19,16 @@ add_library(${PROJECT_NAME} SHARED
   src/team_client_node.cpp
   src/team_client.cpp
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-ament_target_dependencies(${PROJECT_NAME}
+
+# std cmake relocatable package practice stuff
+# apparently for colocn supposed to put this even another directory down?
+# https://colcon.readthedocs.io/en/released/user/overriding-packages.html#id21
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+
+set(FIND_DEPS
   rclcpp
   rclcpp_components
   ateam_common
@@ -28,6 +36,12 @@ ament_target_dependencies(${PROJECT_NAME}
   ssl_league_msgs
   ssl_league_protobufs
 )
+
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+ament_target_dependencies(${PROJECT_NAME}
+  ${FIND_DEPS}
+)
+
 rclcpp_components_register_node(
   ${PROJECT_NAME}
   PLUGIN "ateam_game_controller_bridge::GCMulticastBridgeNode"
@@ -38,7 +52,22 @@ rclcpp_components_register_node(
   PLUGIN "ateam_game_controller_bridge::TeamClientNode"
   EXECUTABLE team_client_node
 )
-install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
+)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(${FIND_DEPS})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

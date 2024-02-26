@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "message_conversions.hpp"
+#include <ateam_ssl_vision_bridge/message_conversions.hpp>
 
 #include <tf2/LinearMath/Quaternion.h>
 

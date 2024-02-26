@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef MESSAGE_CONVERSIONS_HPP_
-#define MESSAGE_CONVERSIONS_HPP_
+#ifndef ATEAM_GAME_CONTROLLER_BRIDGE__MESSAGE_CONVERSIONS_HPP_
+#define ATEAM_GAME_CONTROLLER_BRIDGE__MESSAGE_CONVERSIONS_HPP_
 
 #include <ssl_league_protobufs/ssl_gc_referee_message.pb.h>
 #include <ssl_league_protobufs/ssl_gc_game_event.pb.h>

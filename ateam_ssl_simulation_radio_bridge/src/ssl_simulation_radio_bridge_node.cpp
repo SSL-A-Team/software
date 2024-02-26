@@ -113,28 +113,6 @@ public:
     }
   }
 
-  void team_color_change_callback(const ateam_common::TeamColor color)
-  {
-    int port = 0;
-    switch (color) {
-      case ateam_common::TeamColor::Blue:
-        port = get_parameter("ssl_sim_blue_port").as_int();
-        break;
-      case ateam_common::TeamColor::Yellow:
-        port = get_parameter("ssl_sim_yellow_port").as_int();
-        break;
-      case ateam_common::TeamColor::Unknown:
-        RCLCPP_WARN(get_logger(), "Unknown team color. Robot radio connection disabled.");
-        udp_.reset();
-        return;
-    }
-    RCLCPP_INFO(get_logger(), "Changing radio port to %d", port);
-    udp_ = std::make_unique<ateam_common::BiDirectionalUDP>(
-      get_parameter(
-        "ssl_sim_radio_ip").as_string(), port,
-      std::bind_front(&SSLSimulationRadioBridgeNode::feedback_callback, this));
-  }
-
   void message_callback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr robot_commands_msg,
     int robot_id)

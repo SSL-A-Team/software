@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef MESSAGE_CONVERSIONS_HPP_
-#define MESSAGE_CONVERSIONS_HPP_
+#ifndef ATEAM_SSL_VISION_BRIDGE__MESSAGE_CONVERSIONS_HPP_
+#define ATEAM_SSL_VISION_BRIDGE__MESSAGE_CONVERSIONS_HPP_
 
 #include <ssl_league_protobufs/ssl_vision_detection.pb.h>
 #include <ssl_league_protobufs/ssl_vision_geometry.pb.h>
@@ -52,4 +52,4 @@ ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket & proto_ms
 
 }  // namespace ateam_ssl_vision_bridge::message_conversions
 
-#endif  // MESSAGE_CONVERSIONS_HPP_
+#endif  // ATEAM_SSL_VISION_BRIDGE__MESSAGE_CONVERSIONS_HPP_

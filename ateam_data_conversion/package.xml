@@ -14,8 +14,8 @@
   <depend>ateam_common</depend>
   <depend>ateam_msgs</depend>
   <depend>ssl_league_msgs</depend>
-  <depend>ateam_vision_filter</depend>
   <depend>ateam_ssl_vision_bridge</depend>
+  <depend>ateam_game_controller_bridge</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

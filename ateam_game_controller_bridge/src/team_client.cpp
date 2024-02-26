@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "team_client.hpp"
+#include <ateam_game_controller_bridge/team_client.hpp>
 #include <google/protobuf/util/delimited_message_util.h>
 #include <string>
 

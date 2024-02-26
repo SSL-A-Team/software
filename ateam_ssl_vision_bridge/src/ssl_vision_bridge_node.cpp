@@ -31,7 +31,7 @@
 #include <ateam_common/topic_names.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
 
-#include "message_conversions.hpp"
+#include <ateam_ssl_vision_bridge/message_conversions.hpp>
 
 namespace ateam_ssl_vision_bridge
 {

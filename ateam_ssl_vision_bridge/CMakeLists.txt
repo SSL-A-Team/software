@@ -19,8 +19,13 @@ add_library(${PROJECT_NAME} SHARED
   src/ssl_vision_bridge_node.cpp
   src/message_conversions.cpp
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-ament_target_dependencies(${PROJECT_NAME}
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+
+set(FIND_DEPS
   rclcpp
   rclcpp_components
   ateam_common
@@ -30,12 +35,33 @@ ament_target_dependencies(${PROJECT_NAME}
   tf2
   tf2_geometry_msgs
 )
+
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+ament_target_dependencies(${PROJECT_NAME}
+  ${FIND_DEPS}
+)
+
 rclcpp_components_register_node(
   ${PROJECT_NAME}
   PLUGIN "ateam_ssl_vision_bridge::SSLVisionBridgeNode"
   EXECUTABLE ssl_vision_bridge_node
 )
-install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
+)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(${FIND_DEPS})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
