@@ -17,21 +17,26 @@ namespace ateam_data_conversion
 {
 using MessageVariant_t = std::variant<ssl_league_msgs::msg::VisionWrapper, ssl_league_msgs::msg::Referee>;
 
+// https://github.com/RoboCup-SSL/ssl-logtools/blob/94a80c667d789a910aa9b59ddb201038f700d059/src/common/format/message_type.h#L21
 enum MessageType
 {
     MESSAGE_BLANK = 0,
     MESSAGE_UNKNOWN = 1,
     MESSAGE_SSL_VISION_2010 = 2,
     MESSAGE_SSL_REFBOX_2013 = 3,
-    MESSAGE_SSL_VISION_2013 = 4,
-    MESSAGE_SSL_VISION_2014 = 5
-
+    MESSAGE_SSL_VISION_2014 = 4,
+    MESSAGE_SSL_VISION_TRACKER_2020 = 5,
+    MESSAGE_INDEX_2021 = 6
 };
+
+
+static const char* DEFAULT_FILE_HEADER_NAME = "SSL_LOG_FILE";
+static const int32_t DEFAULT_FILE_VERSION = 1;
 
 // really nothing here is needed when we go straight to ros
 struct FileHeader
 {
-    std::string name; // SSL_LOG_FILE
+    char name[12]; // SSL_LOG_FILE
     int32_t version; // Default file format is version 1
 };
 
@@ -63,6 +68,7 @@ private: // vars
     FileHeader file_header_;
     std::ifstream in_{};
 };
+
 
 } // namespace ateam_data_conversion
 

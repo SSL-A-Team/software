@@ -10,6 +10,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_ssl_vision_bridge REQUIRED)
 find_package(ateam_game_controller_bridge REQUIRED)
+find_package(rosgraph_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/ssl_log_reader.cpp
