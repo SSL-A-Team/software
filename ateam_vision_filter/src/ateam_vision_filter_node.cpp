@@ -27,6 +27,7 @@
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/game_controller_listener.hpp>
+#include <ateam_common/node_handle.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
@@ -36,8 +37,14 @@
 
 using namespace std::chrono_literals;
 
+namespace ateam_common::node_handle
+{
+  rclcpp::Node::SharedPtr node_handle {};
+}
+
 namespace ateam_vision_filter
 {
+
 
 class VisionFilterNode : public rclcpp::Node
 {
@@ -46,7 +53,8 @@ public:
   : rclcpp::Node("ateam_vision_filter", options),
     game_controller_listener_(*this)
   {
-    timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
+    // allows for sim time vs create wall clock with does not. You can look through the source if you disagree
+    timer_ = rclcpp::create_timer(this, this->get_clock(), 10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
     ball_publisher_ = create_publisher<ateam_msgs::msg::BallState>(
       std::string(Topics::kBall),
@@ -80,6 +88,7 @@ public:
       std::string(Topics::kVisionMessages),
       10,
       std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
+
   }
 
   void vision_callback(
@@ -104,6 +113,11 @@ public:
 
   void timer_callback()
   {
+    // gross global state way of doing this for now. Its like using zustand to avoid prop drilling all over again
+    if (!ateam_common::node_handle::node_handle) [[unlikely]] {
+      ateam_common::node_handle::node_handle = shared_from_this();
+    }
+
     const std::lock_guard<std::mutex> lock(world_mutex_);
     vision_state_publisher_->publish(world_.get_vision_world_state());
 

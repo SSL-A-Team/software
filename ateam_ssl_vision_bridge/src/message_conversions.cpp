@@ -64,8 +64,9 @@ ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame & 
 {
   ssl_league_msgs::msg::VisionDetectionFrame ros_msg;
   ros_msg.frame_number = proto_msg.frame_number();
-  ros_msg.t_capture = rclcpp::Time(proto_msg.t_capture() * 1000);
-  ros_msg.t_sent = rclcpp::Time(proto_msg.t_sent() * 1000);
+  // NOTE(Collin) these times are off from any ros time as the source is using gettimeofday() which is localized and includes leap seconds
+  ros_msg.t_capture = rclcpp::Time(proto_msg.t_capture() * 1e9);
+  ros_msg.t_sent = rclcpp::Time(proto_msg.t_sent() * 1e9);
   ros_msg.camera_id = proto_msg.camera_id();
   std::transform(
     proto_msg.balls().begin(),

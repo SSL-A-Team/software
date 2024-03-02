@@ -33,6 +33,7 @@ public:
       rclcpp::SystemDefaultsQoS());
 
     SSLLogReader log_reader(declare_parameter<std::string>("ssl_log_path", ""));
+    // TODO(Collin) put proper shutdown var on this
     while (log_reader.has_next()) {
       auto maybe_msg = log_reader.next();
       if (maybe_msg.has_value()) {

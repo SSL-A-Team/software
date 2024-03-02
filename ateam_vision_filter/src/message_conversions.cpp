@@ -27,6 +27,8 @@
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
+#include <ateam_common/node_handle.hpp>
+
 namespace ateam_vision_filter::message_conversions
 {
 
@@ -55,7 +57,7 @@ ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot)
 
   if (maybe_robot.has_value()) {
     auto obj = maybe_robot.value();
-
+    robot_state_msg.timestamp = ateam_common::node_handle::now();
     robot_state_msg.pose.position.x = obj.position.x();
     robot_state_msg.pose.position.y = obj.position.y();
     robot_state_msg.twist.linear.x = obj.velocity.x();

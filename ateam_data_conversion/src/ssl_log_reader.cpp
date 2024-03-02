@@ -41,6 +41,7 @@ std::optional<MessageVariant_t> SSLLogReader::next() {
     DataHeader header;
     in_.read((char*) &header, sizeof(header));
     // Log data is stored big endian, convert to host byte order
+    // from comparing times sent in the vision filter and ref this is time logged basically
     header.timestamp_ns = be64toh(header.timestamp_ns);
     header.type = be32toh(header.type);
     header.message_size = be32toh(header.message_size);
@@ -53,36 +54,48 @@ std::optional<MessageVariant_t> SSLLogReader::next() {
     // Do people stylistically care about break here since everything returns?
     switch (header.type) {
         case MessageType::MESSAGE_UNKNOWN:
+        {
             // Have to figure out type by trying to parse the message
             if (referee_proto.ParseFromArray(data.data(), data.size())) {
-                // ref has its own timestamp
-                return ateam_game_controller_bridge::message_conversions::fromProto(referee_proto);
+                auto msg = ateam_game_controller_bridge::message_conversions::fromProto(referee_proto);
+                msg.timestamp = rclcpp::Time(header.timestamp_ns);
+                return msg;
             } else if (vision_proto.ParseFromArray(data.data(), data.size())) {
-                return ateam_ssl_vision_bridge::message_conversions::fromProto(vision_proto);
-                // ros_msg.timestamp = rclcpp::Time(msg.header.timestamp.ns * 1000);
+                // vision timestamps
+                auto msg = ateam_ssl_vision_bridge::message_conversions::fromProto(vision_proto);
+                if (msg.detection.size() > 0) {
+                    msg.detection.at(0).t_sent = rclcpp::Time(header.timestamp_ns);
+                }
+                return msg;
             } else {
-                std::cout << "Error unsupported or corrupt packet found in log file!" << std::endl;
+                std::cerr << "Error unsupported or corrupt packet found in log file!" << std::endl;
                 return std::nullopt;
             }
+        }
         case MessageType::MESSAGE_SSL_REFBOX_2013:
+        {
             referee_proto.ParseFromArray(data.data(), data.size());
-            // ref has its own timestamp
-            return ateam_game_controller_bridge::message_conversions::fromProto(referee_proto);
+            auto msg = ateam_game_controller_bridge::message_conversions::fromProto(referee_proto);
+            msg.timestamp = rclcpp::Time(header.timestamp_ns);
+            return msg;
+        }
         case MessageType::MESSAGE_SSL_VISION_2010:
         case MessageType::MESSAGE_SSL_VISION_2014:
+        {
             vision_proto.ParseFromArray(data.data(), data.size());
-            return ateam_ssl_vision_bridge::message_conversions::fromProto(vision_proto);
-            // ros_msg.timestamp = rclcpp::Time(msg.header.timestamp.ns * 1000);
-            // TODO(Collin) Unsure if this timestamp is useful because i didnt realize ssl vision has
-            // a time sent and a time captured
-            // See if this is the same. This is probably just time logged which is not useful then
+            auto msg = ateam_ssl_vision_bridge::message_conversions::fromProto(vision_proto);
+            if (msg.detection.size() > 0) {
+                msg.detection.at(0).t_sent = rclcpp::Time(header.timestamp_ns);
+            }
+            return msg;
+        }
         case MessageType::MESSAGE_SSL_VISION_TRACKER_2020:
             // TODO(Collin) currently just discarded
             return std::nullopt;
         case MessageType::MESSAGE_BLANK:
             return std::nullopt;
         default:
-            std::cout << "Error unsupported message type found in log file!" << std::endl;
+            std::cerr << "Error unsupported message type found in log file!" << std::endl;
             return std::nullopt;
     }
 }

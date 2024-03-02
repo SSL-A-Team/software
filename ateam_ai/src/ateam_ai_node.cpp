@@ -115,8 +115,8 @@ public:
       std::string(Topics::kField),
       10,
       std::bind(&ATeamAINode::field_callback, this, std::placeholders::_1));
-
-    timer_ = create_wall_timer(10ms, std::bind(&ATeamAINode::timer_callback, this));
+    rclcpp::Clock ros_clock(RCL_ROS_TIME);
+    timer_ = rclcpp::create_timer(this, ros_clock, 10ms, std::bind(&ATeamAINode::timer_callback, this));
   }
 
 private:

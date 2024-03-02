@@ -34,6 +34,7 @@
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
+#include <ateam_common/node_handle.hpp>
 #include <ateam_geometry/types.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "types/world.hpp"
@@ -42,6 +43,11 @@
 #include "visualization/overlay_publisher.hpp"
 #include "in_play_eval.hpp"
 #include "motion/world_to_body_vel.hpp"
+
+namespace ateam_common::node_handle
+{
+  rclcpp::Node::SharedPtr node_handle {};
+}
 
 namespace ateam_kenobi
 {
@@ -94,9 +100,11 @@ public:
       10,
       std::bind(&KenobiNode::field_callback, this, std::placeholders::_1));
 
-    timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
+    timer_ = rclcpp::create_timer(this, this->get_clock(), 10ms, std::bind(&KenobiNode::timer_callback, this));
 
     RCLCPP_INFO(get_logger(), "Kenobi node ready.");
+
+    ateam_common::node_handle::node_handle = shared_from_this();
   }
 
 private:
