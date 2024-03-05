@@ -5,7 +5,7 @@
 
     <!-- must be an unzipped log -->
     <!-- required allows this to kill the setup when its done with replay -->
-    <node name="ssl_log_replayer" pkg="ateam_data_conversion" exec="ssl_log_replayer_node" output="screen">
+    <node name="ssl_log_replayer" pkg="ateam_data_conversion" exec="ssl_log_replayer_node" output="screen" required="true">
         <param name="ssl_log_path" value="$(var logfile)"/>
     </node>
 

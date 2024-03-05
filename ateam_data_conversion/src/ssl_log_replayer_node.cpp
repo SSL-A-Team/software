@@ -57,6 +57,9 @@ public:
 
       }
     }
+    RCLCPP_INFO_STREAM(this->get_logger(), "log exhausted exiting");
+    // deaded
+    exit();
   }
 
 private:
