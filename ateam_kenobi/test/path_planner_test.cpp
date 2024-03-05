@@ -165,6 +165,7 @@ TEST_F(GetPathTest, AllowIgnoringStartObstacles)
   goal = ateam_geometry::Point(1, 1);
   obstacles.push_back(ateam_geometry::makeCircle(start, 0.5));
   expected_path = {start, goal};
+  planner_options.ignore_start_obstacle = true;
   runTest();
 }
 
