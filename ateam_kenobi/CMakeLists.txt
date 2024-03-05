@@ -17,6 +17,7 @@ find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
 
 add_library(kenobi_node_component SHARED
+  src/in_play_eval.cpp
   src/kenobi_node.cpp
   src/play_selector.cpp
   src/path_planning/path_planner.cpp
