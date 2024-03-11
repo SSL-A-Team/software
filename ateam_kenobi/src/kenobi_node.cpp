@@ -183,6 +183,7 @@ private:
 
   void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
   {
+    // TODO(Collin) move this to message conversions to live with its sibiling
     Field field;
     field.field_length = field_msg->field_length;
     field.field_width = field_msg->field_width;
@@ -198,11 +199,17 @@ private:
           });
       };
 
-    convert_point_array(field_msg->field_corners, field.field_corners.begin());
-    convert_point_array(field_msg->ours.goalie_corners, field.ours.goalie_corners.begin());
-    convert_point_array(field_msg->ours.goal_posts, field.ours.goal_posts.begin());
-    convert_point_array(field_msg->theirs.goalie_corners, field.theirs.goalie_corners.begin());
-    convert_point_array(field_msg->theirs.goal_posts, field.theirs.goal_posts.begin());
+    convert_point_array(field_msg->field_corners.points, field.field_corners.begin());
+    convert_point_array(
+      field_msg->ours.defense_area_corners.points,
+      field.ours.defense_area_corners.begin());
+    convert_point_array(field_msg->ours.goal_corners.points, field.ours.goal_corners.begin());
+    convert_point_array(
+      field_msg->theirs.defense_area_corners.points,
+      field.theirs.defense_area_corners.begin());
+    convert_point_array(field_msg->theirs.goal_corners.points, field.theirs.goal_corners.begin());
+    field.ours.goal_posts = {field.ours.goal_corners[0], field.ours.goal_corners[1]};
+    field.theirs.goal_posts = {field.theirs.goal_corners[0], field.theirs.goal_corners[1]};
 
     world_.field = field;
   }
@@ -215,7 +222,7 @@ private:
     if (game_controller_listener_.GetOurGoalieID().has_value()) {
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
     }
-    in_play_eval_.update(world_);
+    in_play_eval_.Update(world_);
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
       auto & clk = *this->get_clock();
       RCLCPP_WARN_THROTTLE(

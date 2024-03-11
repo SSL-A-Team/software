@@ -25,6 +25,9 @@
 
 // Standard kalman filter
 
+namespace ateam_vision_filter
+{
+
 class KalmanFilter
 {
 public:
@@ -57,5 +60,7 @@ private:
   Eigen::VectorXd x_hat;
   Eigen::MatrixXd P;
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // FILTERS__KALMAN_FILTER_HPP_

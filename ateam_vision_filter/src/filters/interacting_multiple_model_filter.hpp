@@ -46,6 +46,9 @@
 #include "generators/model_input_generator.hpp"
 #include "generators/transmission_probability_generator.hpp"
 
+namespace ateam_vision_filter
+{
+
 class InteractingMultipleModelFilter
 {
 public:
@@ -128,5 +131,7 @@ private:
   std::shared_ptr<ModelInputGenerator> model_input_generator;
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // FILTERS__INTERACTING_MULTIPLE_MODEL_FILTER_HPP_

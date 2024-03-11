@@ -47,6 +47,9 @@ struct World
   bool in_play;
   bool our_penalty;
   bool their_penalty;
+
+  // Holds the ID of the robot not allowed to touch the ball, if any
+  std::optional<int> double_touch_forbidden_id_;
 };
 }  // namespace ateam_kenobi
 

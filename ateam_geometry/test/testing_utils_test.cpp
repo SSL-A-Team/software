@@ -18,38 +18,46 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NORMALIZE_HPP_
-#define ATEAM_GEOMETRY__NORMALIZE_HPP_
+#include <gtest/gtest.h>
 
-#include <Eigen/Dense>
 #include "ateam_geometry/types.hpp"
+#include "ateam_geometry_testing/testing_utils.hpp"
 
+using ateam_geometry::Point;
 
-namespace ateam_geometry
+TEST(PointIsNearTests, MatchNearPoints)
 {
-
-template<typename T>
-inline auto normalize(T const & V)
-{
-  auto const slen = V.squared_length();
-  auto const d = CGAL::approximate_sqrt(slen);
-  return d > 0 ? (V / d) : V;
+  EXPECT_THAT(Point(1, 1), PointIsNear(Point(1, 1)));
+  EXPECT_THAT(Point(1, 1), PointIsNear(Point(1.005, 1.005)));
 }
 
-
-template<typename T, typename U>
-inline double norm(T const & V, U const & C)
+TEST(PointIsNearTests, DontMatchFarPoints)
 {
-  return CGAL::approximate_sqrt(CGAL::squared_distance(V, C));
+  EXPECT_THAT(Point(0, 0), testing::Not(PointIsNear(Point(2, 2))));
 }
 
-template<typename T>
-inline double norm(T const & V)
+TEST(PointIsNearTests, AllowChangingThreshold)
 {
-  return CGAL::approximate_sqrt(V.squared_length());
+  EXPECT_THAT(Point(0, 0), PointIsNear(Point(2, 2), 3.0));
+  EXPECT_THAT(Point(0, 0), testing::Not(PointIsNear(Point(4, 4), 3.0)));
 }
 
-}  // namespace ateam_geometry
+TEST(PointsAreNearTests, MatchNearPoints)
+{
+  std::vector<Point> points = {{0, 0}, {5, 5}};
+  EXPECT_THAT(points, testing::Pointwise(PointsAreNear(), points));
+}
 
+TEST(PointsAreNearTests, DontMatchFarPoints)
+{
+  std::vector<Point> p1 = {{1, 2}, {3, 4}};
+  std::vector<Point> p2 = {{5, 6}, {7, 8}};
+  EXPECT_THAT(p1, testing::Pointwise(testing::Not(PointsAreNear()), p2));
+}
 
-#endif  // ATEAM_GEOMETRY__NORMALIZE_HPP_
+TEST(PointsAreNearTests, AllowChangingThreshold)
+{
+  std::vector<Point> p1 = {{1, 2}, {3, 4}};
+  std::vector<Point> p2 = {{5, 6}, {7, 8}};
+  EXPECT_THAT(p1, testing::Pointwise(PointsAreNear(10.0), p2));
+}
