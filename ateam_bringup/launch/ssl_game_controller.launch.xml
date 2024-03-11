@@ -1,4 +1,6 @@
 <launch>
   <arg name="data_directory" default="$(find-pkg-share ateam_bringup)/data" />
+  <arg name="expose_gc_to_net" default="false" />
   <executable cmd="docker run --net host --rm robocupssl/ssl-game-controller" output="screen" respawn="True"/>
+  <executable if="$(var expose_gc_to_net)" cmd="socat tcp-listen:8082,reuseaddr,fork tcp:127.0.0.1:8081" />
 </launch>
