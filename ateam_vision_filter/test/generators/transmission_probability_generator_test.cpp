@@ -28,6 +28,8 @@
 #include "types/models.hpp"
 #include "types/robot.hpp"
 
+using namespace ateam_vision_filter;  // NOLINT(build/namespaces)
+
 TEST(
   TransmissionProbabilityGenerator,
   getTransmissionProbability_ShouldReturn085_WhenSameModelToFrom)

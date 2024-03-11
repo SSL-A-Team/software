@@ -30,6 +30,9 @@
 #include "filters/interacting_multiple_model_filter.hpp"
 #include "types/models.hpp"
 
+namespace ateam_vision_filter
+{
+
 Camera::Camera(
   std::shared_ptr<ModelInputGenerator> model_input_generator,
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator)
@@ -232,3 +235,5 @@ std::array<std::optional<Camera::RobotWithScore>, 16> Camera::get_robot_estimate
 
   return output;
 }
+
+}  // namespace ateam_vision_filter
