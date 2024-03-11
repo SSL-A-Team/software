@@ -54,7 +54,7 @@ public:
   : rclcpp::Node("radio_bridge", options),
     timeout_threshold_(declare_parameter("timeout_ms", 250)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
-    game_controller_listener_(*this),
+    game_controller_listener_(*this, std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
@@ -124,6 +124,10 @@ private:
   void CloseConnection(const std::size_t & connection_index)
   {
     auto & connection = connections_.at(connection_index);
+    if(!connection) {
+      // Connection already closed
+      return;
+    }
     RCLCPP_INFO(
       get_logger(), "Closing connection to robot %ld (%s:%d)", connection_index,
       connection->GetRemoteIPAddress().c_str(), connection->GetRemotePort());
