@@ -23,6 +23,9 @@
 
 #include <Eigen/Dense>
 
+namespace ateam_vision_filter
+{
+
 struct BallMeasurement
 {
   Eigen::Vector2d position;
@@ -32,5 +35,7 @@ struct BallMeasurement
     position *= -1.0;
   }
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // TYPES__BALL_MEASUREMENT_HPP_

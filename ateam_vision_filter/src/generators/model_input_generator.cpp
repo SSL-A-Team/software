@@ -24,6 +24,9 @@
 
 #include "generators/generator_util.hpp"
 
+namespace ateam_vision_filter
+{
+
 void ModelInputGenerator::update(
   const std::array<std::optional<Robot>, 16> & blue_robots,
   const std::array<std::optional<Robot>, 16> & yellow_robots,
@@ -230,3 +233,5 @@ Eigen::VectorXd ModelInputGenerator::get_output_with_kick_at_speed(
 
   return output;
 }
+
+}  // namespace ateam_vision_filter

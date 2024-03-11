@@ -36,6 +36,9 @@
 
 #include "filters/interacting_multiple_model_filter.hpp"
 
+namespace ateam_vision_filter
+{
+
 class MultipleHypothesisTracker
 {
 public:
@@ -60,5 +63,7 @@ private:
 
   std::vector<InteractingMultipleModelFilter> tracks;
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // FILTERS__MULTIPLE_HYPOTHESIS_TRACKER_HPP_

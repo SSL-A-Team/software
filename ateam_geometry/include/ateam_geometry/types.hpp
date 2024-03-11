@@ -37,6 +37,7 @@ using Segment = Kernel::Segment_2;
 using Ray = Kernel::Ray_2;
 using Rectangle = Kernel::Iso_rectangle_2;
 using Circle = Kernel::Circle_2;
+using Line = Kernel::Line_2;
 
 using AnyShape = std::variant<Point, Segment, Ray, Rectangle, Circle>;
 

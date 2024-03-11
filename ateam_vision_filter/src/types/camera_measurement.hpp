@@ -27,6 +27,9 @@
 #include "types/ball_measurement.hpp"
 #include "types/robot_measurement.hpp"
 
+namespace ateam_vision_filter
+{
+
 struct CameraMeasurement
 {
   std::array<std::vector<RobotMeasurement>, 16> yellow_robots;
@@ -52,5 +55,7 @@ struct CameraMeasurement
     invert_array(ball);
   }
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // TYPES__CAMERA_MEASUREMENT_HPP_
