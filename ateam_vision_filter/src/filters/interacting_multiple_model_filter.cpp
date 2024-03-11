@@ -27,6 +27,9 @@
 #include <vector>
 #include <iostream>
 
+namespace ateam_vision_filter
+{
+
 void InteractingMultipleModelFilter::setup(
   const KalmanFilter & base_model,
   std::vector<Models::ModelType> model_types,
@@ -227,3 +230,5 @@ double InteractingMultipleModelFilter::normal_multivariate_distribution_pdf(
          std::exp(-1.0 / 2.0 * (x - mu).transpose() * sigma.inverse() * (x - mu)) +
          1e-6;
 }
+
+}  // namespace ateam_vision_filter

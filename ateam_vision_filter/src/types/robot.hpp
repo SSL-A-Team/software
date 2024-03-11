@@ -23,6 +23,9 @@
 
 #include <Eigen/Dense>
 
+namespace ateam_vision_filter
+{
+
 class Robot
 {
 public:
@@ -43,5 +46,7 @@ public:
     velocity(from_state.block(3, 0, 2, 1)), omega(from_state(5, 0)),
     acceleration(from_state.block(6, 0, 2, 1)), alpha(from_state(8, 0)) {}
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // TYPES__ROBOT_HPP_
