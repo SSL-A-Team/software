@@ -108,10 +108,10 @@ void GameControllerListener::RefereeMessageCallback(
 
   game_stage_ = static_cast<GameStage>(msg->stage);
 
-  game_command_ = ConvertGameCommand(msg->command);
-  if (game_command_ != cached_game_command_) {
-    prev_game_command_ = cached_game_command_;
-    cached_game_command_ = game_command_;
+  const auto new_game_command = ConvertGameCommand(msg->command);
+  if (new_game_command != game_command_) {
+    prev_game_command_ = game_command_;
+    game_command_ = new_game_command;
   }
 
   if (team_color_ != TeamColor::Unknown) {
