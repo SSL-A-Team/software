@@ -30,9 +30,7 @@ namespace ateam_kenobi::plays
 class NormalPlay : public BasePlay
 {
 public:
-  explicit NormalPlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  NormalPlay();
 
   void reset() override;
 

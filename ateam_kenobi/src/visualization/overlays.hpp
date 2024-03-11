@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,23 +19,29 @@
 // THE SOFTWARE.
 
 
-#ifndef VISUALIZATION__OVERLAY_PUBLISHER_HPP_
-#define VISUALIZATION__OVERLAY_PUBLISHER_HPP_
+#ifndef VISUALIZATION__OVERLAYS_HPP_
+#define VISUALIZATION__OVERLAYS_HPP_
 
 #include <string>
 #include <vector>
-#include <rclcpp/node.hpp>
 #include <ateam_msgs/msg/overlay_array.hpp>
-#include <ateam_msgs/msg/play_info.hpp>
 #include <ateam_geometry/types.hpp>
 
 namespace ateam_kenobi::visualization
 {
 
-class OverlayPublisher
+class Overlays
 {
 public:
-  explicit OverlayPublisher(const std::string & ns, rclcpp::Node & node);
+  Overlays() = default;
+
+  explicit Overlays(std::string ns, ateam_msgs::msg::OverlayArray::SharedPtr msg = nullptr);
+
+  Overlays getChild(std::string name);
+
+  const ateam_msgs::msg::OverlayArray & getMsg() const;
+
+  void clear();
 
   void drawLine(
     const std::string & name, const std::vector<ateam_geometry::Point> & points,
@@ -64,19 +70,14 @@ public:
     const std::string & stroke_color = "white", const std::string & fill_color = "#FFFFFF7F",
     const uint8_t stroke_width = 5, const uint32_t lifetime = kDefaultLifetime);
 
-  /**
-   * @brief Publishes and clears the current buffer of overlays.
-   * @note Plays should NOT call this function. It will be called for you at the end of the frame.
-   */
-  void publishOverlays();
-
 private:
   static const uint32_t kDefaultLifetime = 200;
-  const std::string ns;
-  ateam_msgs::msg::OverlayArray overlays_;
-  rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr publisher_;
+  std::string ns_;
+  ateam_msgs::msg::OverlayArray::SharedPtr overlay_array_;
+
+  void addOverlay(ateam_msgs::msg::Overlay overlay);
 };
 
 }  // namespace ateam_kenobi::visualization
 
-#endif  // VISUALIZATION__OVERLAY_PUBLISHER_HPP_
+#endif  // VISUALIZATION__OVERLAYS_HPP_

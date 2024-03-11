@@ -27,11 +27,11 @@
 namespace ateam_kenobi::plays
 {
 
-Basic122::Basic122(visualization::OverlayPublisher & op, visualization::PlayInfoPublisher & pip)
-: BasePlay(op, pip),
-  striker_skill_(op),
-  blockers_skill_(op),
-  goalie_skill_(op, pip)
+Basic122::Basic122()
+: BasePlay("Basic122"),
+  striker_skill_(getOverlays().getChild("striker")),
+  blockers_skill_(getOverlays().getChild("blockers")),
+  goalie_skill_(getOverlays().getChild("goalie"))
 {
 }
 
@@ -54,8 +54,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
   assignAndRunStriker(available_robots, world, motion_commands);
 
   assignAndRunBlockers(available_robots, world, motion_commands);
-
-  play_info_publisher_.send_play_message("Basic122");
 
   return motion_commands;
 }

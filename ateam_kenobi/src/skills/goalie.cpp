@@ -24,11 +24,9 @@
 namespace ateam_kenobi::skills
 {
 
-Goalie::Goalie(
-  visualization::OverlayPublisher & overlay_publisher,
-  visualization::PlayInfoPublisher & play_info_publisher)
-: overlay_publisher_(overlay_publisher), play_info_publisher_(play_info_publisher),
-  easy_move_to_(overlay_publisher)
+Goalie::Goalie(visualization::Overlays overlays)
+: overlays_(overlays),
+  easy_move_to_(overlays.getChild("EasyMoveTo"))
 {
   reset();
 }
@@ -58,7 +56,7 @@ void Goalie::runFrame(
     ateam_geometry::Point(-(world.field.field_length / 2.0) + 0.25, world.field.goal_width / 2.0),
     ateam_geometry::Point(-(world.field.field_length / 2.0) + 0.25, -world.field.goal_width / 2.0)
   );
-  overlay_publisher_.drawLine("goalie_line", {goalie_line.point(0), goalie_line.point(1)}, "blue");
+  overlays_.drawLine("goalie_line", {goalie_line.point(0), goalie_line.point(1)}, "blue");
 
   easy_move_to_.setTargetPosition(
     ateam_geometry::NearestPointOnSegment(

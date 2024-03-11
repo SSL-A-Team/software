@@ -32,11 +32,9 @@ namespace ateam_kenobi::plays
 class TestKickPlay : public BasePlay
 {
 public:
-  explicit TestKickPlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher)
-  : BasePlay(overlay_publisher, play_info_publisher),
-    line_kick_skill_(overlay_publisher)
+  TestKickPlay()
+  : BasePlay("TestKickPlay"),
+    line_kick_skill_(getOverlays().getChild("line_kick"))
   {}
 
   void reset() override {}
@@ -53,7 +51,6 @@ public:
     // aim for center of opponent goal
     line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
     motion_commands[robot.id] = line_kick_skill_.runFrame(world, robot);
-    play_info_publisher_.send_play_message("TestKickPlay");
     return motion_commands;
   }
 
