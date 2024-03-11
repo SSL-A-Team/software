@@ -34,6 +34,7 @@ add_library(kenobi_node_component SHARED
   src/visualization/overlays.cpp
   src/play_helpers/easy_move_to.cpp
   src/play_helpers/available_robots.cpp
+  src/play_helpers/window_evaluation.cpp
   src/skills/goalie.cpp
   src/skills/line_kick.cpp
   src/skills/blockers.cpp
