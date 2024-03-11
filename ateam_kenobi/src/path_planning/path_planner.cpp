@@ -23,6 +23,7 @@
 #include <ranges>
 #include <algorithm>
 #include <vector>
+#include <iostream>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 
@@ -52,6 +53,16 @@ PathPlanner::Path PathPlanner::getPath(
     augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
   }
 
+  if (!isStateInBounds(start, world)) {
+    return {};
+  }
+
+  if (options.ignore_start_obstacle) {
+    removeCollidingObstacles(augmented_obstacles, start, options);
+  } else if (!isStateValid(start, world, augmented_obstacles, options)) {
+    return {};
+  }
+
   if (!isStateValid(goal, world, augmented_obstacles, options)) {
     return {};
   }
@@ -62,7 +73,9 @@ PathPlanner::Path PathPlanner::getPath(
     const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(
       std::chrono::steady_clock::now() - start_time).count();
     if (elapsed_time > options.search_time_limit) {
-      return path;
+      std::cerr << "Path planning timed out.\n";
+      trimPathAfterCollision(path, world, augmented_obstacles, options);
+      break;
     }
     bool had_to_split = false;
     for (auto ind = 0u; ind < (path.size() - 1); ++ind) {
@@ -84,7 +97,37 @@ PathPlanner::Path PathPlanner::getPath(
     }
   }
 
+  removeLoops(path);
+  removeSkippablePoints(path, world, augmented_obstacles, options);
+
   return path;
+}
+
+void PathPlanner::removeCollidingObstacles(
+  std::vector<ateam_geometry::AnyShape> & obstacles,
+  const ateam_geometry::Point & point, const PlannerOptions & options)
+{
+  auto robot_footprint = ateam_geometry::makeCircle(
+    point,
+    kRobotRadius + options.footprint_inflation
+  );
+
+  auto is_obstacle_colliding = [&robot_footprint](const ateam_geometry::AnyShape & obstacle) {
+      return ateam_geometry::variantDoIntersect(robot_footprint, obstacle);
+    };
+
+  const auto new_end = std::remove_if(obstacles.begin(), obstacles.end(), is_obstacle_colliding);
+
+  obstacles.erase(new_end, obstacles.end());
+}
+
+bool PathPlanner::isStateInBounds(const ateam_geometry::Point & state, const World & world)
+{
+  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - kRobotRadius;
+  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - kRobotRadius;
+  const ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
+    ateam_geometry::Point(x_bound, y_bound));
+  return CGAL::do_intersect(state, pathable_region);
 }
 
 bool PathPlanner::isStateValid(
@@ -93,12 +136,7 @@ bool PathPlanner::isStateValid(
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
-  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - kRobotRadius;
-  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - kRobotRadius;
-  const ateam_geometry::Rectangle pathable_region(
-    ateam_geometry::Point(-x_bound, -y_bound),
-    ateam_geometry::Point(x_bound, y_bound));
-  if (!CGAL::do_intersect(state, pathable_region)) {
+  if (!isStateInBounds(state, world)) {
     return false;
   }
 
@@ -225,6 +263,93 @@ void PathPlanner::addDefaultObstacles(
         (world.field.field_length / 2) - world.field.goal_depth,
         -world.field.goal_width)
   ));
+}
+
+void PathPlanner::removeSkippablePoints(
+  Path & path, const World & world,
+  const std::vector<ateam_geometry::AnyShape> & obstacles,
+  const PlannerOptions & options)
+{
+  if (path.size() < 3) {
+    return;
+  }
+
+  auto were_points_removed = true;
+  while (were_points_removed) {
+    were_points_removed = false;
+    auto candidate_index = 1ul;
+    while (candidate_index < path.size() - 1) {
+      auto maybe_collision_point =
+        getCollisionPoint(
+        path[candidate_index - 1], path[candidate_index + 1], world, obstacles,
+        options);
+      // Ignore collisions at path end since that means planning timed out
+      if (maybe_collision_point &&
+        CGAL::squared_distance(*maybe_collision_point, path.back()) > 1e-6)
+      {
+        candidate_index++;
+        continue;
+      }
+      const auto & prem = *(path.begin() + candidate_index);
+      path.erase(path.begin() + candidate_index);
+      were_points_removed = true;
+    }
+  }
+}
+
+void PathPlanner::removeLoops(Path & path)
+{
+  using ateam_geometry::Point;
+  using ateam_geometry::Segment;
+  if (path.size() < 4) {
+    return;
+  }
+  // Check all but last two segments
+  for (auto ind1 = 0ul; ind1 < path.size() - 3; ++ind1) {
+    // Check all segments after ind1->ind1+1, skipping the first
+    for (auto ind2 = ind1 + 2; ind2 < path.size() - 1; ) {
+      const auto seg1 = Segment(path[ind1], path[ind1 + 1]);
+      const auto seg2 = Segment(path[ind2], path[ind2 + 1]);
+      const auto maybe_intersection = CGAL::intersection(seg1, seg2);
+      if (!maybe_intersection) {
+        ++ind2;
+        continue;
+      }
+      const auto & intersection_var = maybe_intersection.value();
+      Point new_point;
+      if (const Point * intersection_point = boost::get<Point>(&intersection_var)) {
+        new_point = *intersection_point;
+      } else if (const Segment * intersection_seg = boost::get<Segment>(&intersection_var)) {
+        new_point = intersection_seg->target();
+      }
+      // put intersection point in path (replacing first segment's end point)
+      path[ind1 + 1] = new_point;
+      // remove all points along the loop (keep second segment's end point)
+      path.erase(path.begin() + ind1 + 2, path.begin() + ind2 + 1);
+      ind2 = ind1 + 2;
+      if (path.size() < 4) {
+        // path now too small to have loops
+        return;
+      }
+    }
+  }
+}
+
+void PathPlanner::trimPathAfterCollision(
+  Path & path, const World & world,
+  std::vector<ateam_geometry::AnyShape> & obstacles,
+  const PlannerOptions & options)
+{
+  for (auto ind = 0u; ind < (path.size() - 1); ++ind) {
+    const auto maybe_collision = getCollisionPoint(
+      path[ind], path[ind + 1], world, obstacles,
+      options);
+    if (maybe_collision) {
+      path.erase(path.begin() + ind + 1, path.end());
+      path.push_back(maybe_collision.value());
+      break;
+    }
+  }
 }
 
 }  // namespace ateam_kenobi::path_planning

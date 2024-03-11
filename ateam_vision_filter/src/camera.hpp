@@ -35,6 +35,9 @@
 #include "generators/transmission_probability_generator.hpp"
 #include "types/camera_measurement.hpp"
 
+namespace ateam_vision_filter
+{
+
 class Camera
 {
 public:
@@ -98,5 +101,7 @@ private:
   std::array<MultipleHypothesisTracker, 16> blue_team;
   MultipleHypothesisTracker ball;
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // CAMERA_HPP_

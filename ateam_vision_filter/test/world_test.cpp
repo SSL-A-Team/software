@@ -25,6 +25,8 @@
 
 #include "world.hpp"
 
+using namespace ateam_vision_filter;  // NOLINT(build/namespaces)
+
 TEST(World, getEstimate_ShouldReturnNullopt_WhenNoData)
 {
   World world;
