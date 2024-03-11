@@ -58,25 +58,25 @@ public:
       double_touch_rule_applies_ = true;
     }
 
-    if(!double_touch_rule_applies_) {
+    if (!double_touch_rule_applies_) {
       world.double_touch_forbidden_id_.reset();
       return;
     }
 
     const auto maybe_toucher = GetRobotTouchingBall(world);
 
-    if(!prev_touching_id_ && maybe_toucher) {
+    if (!prev_touching_id_ && maybe_toucher) {
       // A robot has started touching the ball
       const auto toucher_id = maybe_toucher.value().id;
-      if(forbidden_id_ && toucher_id != forbidden_id_.value()) {
+      if (forbidden_id_ && toucher_id != forbidden_id_.value()) {
         // This is the second robot to touch the ball, double-touch hold is released
         forbidden_id_.reset();
       }
     }
 
-    if(prev_touching_id_ && !maybe_toucher) {
+    if (prev_touching_id_ && !maybe_toucher) {
       // A robot has stopped touching the ball
-      if(!forbidden_id_) {
+      if (!forbidden_id_) {
         // This was the first robot to touch the ball, it can't touch it again
         forbidden_id_ = prev_touching_id_;
       }
@@ -105,14 +105,16 @@ private:
         if (!maybe_robot) {
           return false;
         }
-        return std::sqrt(CGAL::squared_distance(maybe_robot.value().pos, world.ball.pos)) < (kRobotRadius + 0.025);
+        return std::sqrt(
+          CGAL::squared_distance(
+            maybe_robot.value().pos,
+            world.ball.pos)) < (kRobotRadius + 0.025);
       });
     if (found_iter == world.our_robots.end()) {
       return {};
     }
     return *found_iter;
   }
-
 };
 
 }  // namespace ateam_kenobi

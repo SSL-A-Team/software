@@ -24,7 +24,7 @@
 
 #include <vector>
 
-using namespace ateam_vision_filter;
+using namespace ateam_vision_filter;  // NOLINT(build/namespaces)
 
 TEST(KalmanFilter, getXHat_ShouldReturnIntial_WhenNoPredictOrUpdate)
 {

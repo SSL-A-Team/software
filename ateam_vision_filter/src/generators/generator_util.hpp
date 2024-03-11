@@ -58,6 +58,6 @@ bool is_in_robot_mouth(
 bool is_moving_towards_robot(
   const Eigen::Vector2d & position, const Eigen::Vector2d & velocity,
   const std::optional<Robot> & robot);
-}  // namespace generator_util
+}  // namespace ateam_vision_filter::generator_util
 
 #endif  // GENERATORS__GENERATOR_UTIL_HPP_

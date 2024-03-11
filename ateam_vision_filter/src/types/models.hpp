@@ -23,7 +23,7 @@
 
 #include <Eigen/Dense>
 
-namespace Models
+namespace ateam_vision_filter::Models
 {
 
 enum ModelType
@@ -188,6 +188,6 @@ const Eigen::MatrixXd R =
   0, 0, sigma_theta_squared).finished();
 
 }  // namespace Robot
-}  // namespace Models
+}  // namespace ateam_vision_filter::Models
 
 #endif  // TYPES__MODELS_HPP_

@@ -28,7 +28,7 @@
 #include "types/models.hpp"
 #include "types/robot.hpp"
 
-using namespace ateam_vision_filter;
+using namespace ateam_vision_filter;  // NOLINT(build/namespaces)
 
 TEST(ModelInputGenerator, getModelInput_ShouldReturnSmallerVelocity_WhenBallRollingFriction)
 {
