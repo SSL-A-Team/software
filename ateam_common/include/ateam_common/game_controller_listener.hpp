@@ -170,7 +170,6 @@ private:
   TeamSide team_side_{TeamSide::Unknown};
   GameStage game_stage_{GameStage::Unknown};
   GameCommand game_command_{GameCommand::Halt};
-  GameCommand cached_game_command_{GameCommand::Halt};
   GameCommand prev_game_command_{GameCommand::Halt};
   std::optional<uint32_t> our_goalie_id_ {};
   std::optional<uint32_t> their_goalie_id_ {};
