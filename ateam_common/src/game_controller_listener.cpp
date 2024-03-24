@@ -79,6 +79,8 @@ GameControllerListener::GameControllerListener(
 void GameControllerListener::RefereeMessageCallback(
   const ssl_league_msgs::msg::Referee::ConstSharedPtr msg)
 {
+  referee_msg_ = *msg;
+
   const auto prev_color = team_color_;
   if (msg->blue.name == team_name_) {
     team_color_ = TeamColor::Blue;
@@ -106,82 +108,10 @@ void GameControllerListener::RefereeMessageCallback(
 
   game_stage_ = static_cast<GameStage>(msg->stage);
 
-  uint8_t command = msg->command;
-
-  // Translate the current game command to reflect our team color
-  switch (command) {
-    case ssl_league_msgs::msg::Referee::COMMAND_HALT:
-      game_command_ = GameCommand::Halt;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_STOP:
-      game_command_ = GameCommand::Stop;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_NORMAL_START:
-      game_command_ = GameCommand::NormalStart;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_FORCE_START:
-      game_command_ = GameCommand::ForceStart;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_KICKOFF_YELLOW:
-      game_command_ = team_color_ ==
-        TeamColor::Yellow ? GameCommand::PrepareKickoffOurs : GameCommand::PrepareKickoffTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_KICKOFF_BLUE:
-      game_command_ = team_color_ ==
-        TeamColor::Blue ? GameCommand::PrepareKickoffOurs : GameCommand::PrepareKickoffTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_PENALTY_YELLOW:
-      game_command_ = team_color_ ==
-        TeamColor::Yellow ? GameCommand::PreparePenaltyOurs : GameCommand::PreparePenaltyTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_PENALTY_BLUE:
-      game_command_ = team_color_ ==
-        TeamColor::Blue ? GameCommand::PreparePenaltyOurs : GameCommand::PreparePenaltyTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_DIRECT_FREE_YELLOW:
-      game_command_ = team_color_ ==
-        TeamColor::Yellow ? GameCommand::DirectFreeOurs : GameCommand::DirectFreeTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_DIRECT_FREE_BLUE:
-      game_command_ = team_color_ ==
-        TeamColor::Blue ? GameCommand::DirectFreeOurs : GameCommand::DirectFreeTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_INDIRECT_FREE_YELLOW:
-      game_command_ = team_color_ ==
-        TeamColor::Yellow ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_INDIRECT_FREE_BLUE:
-      game_command_ = team_color_ ==
-        TeamColor::Blue ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_TIMEOUT_YELLOW:
-      game_command_ = team_color_ ==
-        TeamColor::Yellow ? GameCommand::TimeoutOurs : GameCommand::TimeoutTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_TIMEOUT_BLUE:
-      game_command_ = team_color_ ==
-        TeamColor::Blue ? GameCommand::TimeoutOurs : GameCommand::TimeoutTheirs;
-      break;
-    // Note: Command 14 and 15 (goal for yellow/blue) have been deprecated by the league
-    case ssl_league_msgs::msg::Referee::COMMAND_GOAL_YELLOW:
-      game_command_ = team_color_ ==
-        TeamColor::Yellow ? GameCommand::GoalOurs : GameCommand::GoalTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_GOAL_BLUE:
-      game_command_ = team_color_ ==
-        TeamColor::Blue ? GameCommand::GoalOurs : GameCommand::GoalTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_BALL_PLACEMENT_YELLOW:
-      game_command_ = team_color_ ==
-        TeamColor::Yellow ? GameCommand::BallPlacementOurs : GameCommand::BallPlacementTheirs;
-      break;
-    case ssl_league_msgs::msg::Referee::COMMAND_BALL_PLACEMENT_BLUE:
-      game_command_ = team_color_ ==
-        TeamColor::Blue ? GameCommand::BallPlacementOurs : GameCommand::BallPlacementTheirs;
-      break;
-    default:
-      game_command_ = GameCommand::Halt;
-      break;
+  const auto new_game_command = ConvertGameCommand(msg->command);
+  if (new_game_command != game_command_) {
+    prev_game_command_ = game_command_;
+    game_command_ = new_game_command;
   }
 
   if (team_color_ != TeamColor::Unknown) {
@@ -191,6 +121,68 @@ void GameControllerListener::RefereeMessageCallback(
   } else {
     our_goalie_id_ = std::nullopt;
     their_goalie_id_ = std::nullopt;
+  }
+}
+
+GameCommand GameControllerListener::ConvertGameCommand(const uint8_t msg_command)
+{
+  // Translate the current game command to reflect our team color
+  switch (msg_command) {
+    case ssl_league_msgs::msg::Referee::COMMAND_HALT:
+      return GameCommand::Halt;
+    case ssl_league_msgs::msg::Referee::COMMAND_STOP:
+      return GameCommand::Stop;
+    case ssl_league_msgs::msg::Referee::COMMAND_NORMAL_START:
+      return GameCommand::NormalStart;
+    case ssl_league_msgs::msg::Referee::COMMAND_FORCE_START:
+      return GameCommand::ForceStart;
+    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_KICKOFF_YELLOW:
+      return team_color_ ==
+             TeamColor::Yellow ?
+             GameCommand::PrepareKickoffOurs : GameCommand::PrepareKickoffTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_KICKOFF_BLUE:
+      return team_color_ ==
+             TeamColor::Blue ? GameCommand::PrepareKickoffOurs : GameCommand::PrepareKickoffTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_PENALTY_YELLOW:
+      return team_color_ ==
+             TeamColor::Yellow ?
+             GameCommand::PreparePenaltyOurs : GameCommand::PreparePenaltyTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_PREPARE_PENALTY_BLUE:
+      return team_color_ ==
+             TeamColor::Blue ? GameCommand::PreparePenaltyOurs : GameCommand::PreparePenaltyTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_DIRECT_FREE_YELLOW:
+      return team_color_ ==
+             TeamColor::Yellow ? GameCommand::DirectFreeOurs : GameCommand::DirectFreeTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_DIRECT_FREE_BLUE:
+      return team_color_ ==
+             TeamColor::Blue ? GameCommand::DirectFreeOurs : GameCommand::DirectFreeTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_INDIRECT_FREE_YELLOW:
+      return team_color_ ==
+             TeamColor::Yellow ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_INDIRECT_FREE_BLUE:
+      return team_color_ ==
+             TeamColor::Blue ? GameCommand::IndirectFreeOurs : GameCommand::IndirectFreeTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_TIMEOUT_YELLOW:
+      return team_color_ ==
+             TeamColor::Yellow ? GameCommand::TimeoutOurs : GameCommand::TimeoutTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_TIMEOUT_BLUE:
+      return team_color_ ==
+             TeamColor::Blue ? GameCommand::TimeoutOurs : GameCommand::TimeoutTheirs;
+    // Note: Command 14 and 15 (goal for yellow/blue) have been deprecated by the league
+    case ssl_league_msgs::msg::Referee::COMMAND_GOAL_YELLOW:
+      return team_color_ ==
+             TeamColor::Yellow ? GameCommand::GoalOurs : GameCommand::GoalTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_GOAL_BLUE:
+      return team_color_ ==
+             TeamColor::Blue ? GameCommand::GoalOurs : GameCommand::GoalTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_BALL_PLACEMENT_YELLOW:
+      return team_color_ ==
+             TeamColor::Yellow ? GameCommand::BallPlacementOurs : GameCommand::BallPlacementTheirs;
+    case ssl_league_msgs::msg::Referee::COMMAND_BALL_PLACEMENT_BLUE:
+      return team_color_ ==
+             TeamColor::Blue ? GameCommand::BallPlacementOurs : GameCommand::BallPlacementTheirs;
+    default:
+      return GameCommand::Halt;
   }
 }
 
