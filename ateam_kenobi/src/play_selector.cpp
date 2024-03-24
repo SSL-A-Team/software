@@ -84,6 +84,8 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       }
       break;
     case ateam_common::GameCommand::BallPlacementOurs:
+      selected_play = &ball_placement_play_;
+      break;
     case ateam_common::GameCommand::BallPlacementTheirs:
       selected_play = &stop_play_;
       break;

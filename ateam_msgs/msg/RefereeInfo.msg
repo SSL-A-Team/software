@@ -3,3 +3,5 @@ uint8 their_goalie_id
 uint8 game_stage
 uint8 game_command
 uint8 prev_command
+
+geometry_msgs/Point32 designated_position

@@ -28,6 +28,7 @@ add_library(kenobi_node_component SHARED
   src/plays/our_kickoff_play.cpp
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
+  src/plays/ball_placement_play.cpp
   src/plays/our_penalty_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/controls_test_play.cpp
@@ -43,6 +44,7 @@ add_library(kenobi_node_component SHARED
   src/play_helpers/window_evaluation.cpp
   src/skills/goalie.cpp
   src/skills/line_kick.cpp
+  src/skills/dribble.cpp
   src/skills/blockers.cpp
 )
 target_include_directories(kenobi_node_component PUBLIC
