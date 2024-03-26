@@ -26,6 +26,7 @@
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
 #include "visualization/overlays.hpp"
+#include "line_kick.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -40,9 +41,44 @@ public:
     const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 
+  double & possesionTolerance() {
+    return possesion_threshold_;
+  }
+
 private:
   visualization::Overlays overlays_;
   play_helpers::EasyMoveTo easy_move_to_;
+  LineKick line_kick_;
+  double possesion_threshold_ = 0.03;
+
+  bool doesOpponentHavePossesion(const World & world);
+  bool isBallHeadedTowardsGoal(const World & world);
+  bool isBallInDefenseArea(const World & world);
+
+  /**
+   * @brief Default behavior of robot staying in line with ball
+   * @return ateam_msgs::msg::RobotMotionCommand
+   */
+  ateam_msgs::msg::RobotMotionCommand runDefaultBehavior(const World & world, const Robot & goalie);
+
+  /**
+   * @brief Block a possible shot when opponents have the ball
+   * @return ateam_msgs::msg::RobotMotionCommand
+   */
+  ateam_msgs::msg::RobotMotionCommand runBlockShot(const World & world, const Robot & goalie);
+
+  /**
+   * @brief Block ball when headed towards goal
+   * @return ateam_msgs::msg::RobotMotionCommand
+   */
+  ateam_msgs::msg::RobotMotionCommand runBlockBall(const World & world, const Robot & goalie);
+
+  /**
+   * @brief Kick ball out of defense area
+   * @return ateam_msgs::msg::RobotMotionCommand
+   */
+  ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie);
+
 };
 
 }  // namespace ateam_kenobi::skills

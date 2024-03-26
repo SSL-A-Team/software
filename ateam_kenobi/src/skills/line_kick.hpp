@@ -43,29 +43,39 @@ public:
 
   ateam_geometry::Point getAssignmentPoint(const World & world);
 
+  void setKickSpeed(double speed) {
+    kick_speed_ = speed;
+  }
+
   ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
 private:
-  const double kPreKickOffset = kRobotRadius + 0.1;
+  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.07;
   visualization::Overlays overlays_;
   ateam_geometry::Point target_point_;
+  double kick_speed_ = 5.0;
   play_helpers::EasyMoveTo easy_move_to_;
 
   enum class State
   {
-    MoveToPreKick,
+    MoveBehindBall,
     FaceBall,
     KickBall
   };
-  State prev_state_ = State::MoveToPreKick;
+  State state_ = State::MoveBehindBall;
 
   ateam_geometry::Point getPreKickPosition(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand moveToPreKick(const World & world, const Robot & robot);
+  void chooseState(const World & world, const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand faceBall(const World & world, const Robot & robot);
+  bool isRobotBehindBall(const World & world, const Robot & robot, double hysteresis);
+  bool isRobotSettled(const World & world, const Robot & robot);
+  bool isRobotFacingBall(const Robot & robot);
+  bool isBallMoving(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand kickBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runMoveBehindBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runFaceBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runKickBall(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills

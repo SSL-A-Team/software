@@ -19,9 +19,9 @@
 // THE SOFTWARE.
 
 
-#include "play_helpers/easy_move_to.hpp"
 #include "easy_move_to.hpp"
 #include <chrono>
+#include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::play_helpers
 {
@@ -37,14 +37,14 @@ void EasyMoveTo::CreateArray(
 }
 
 EasyMoveTo::EasyMoveTo(visualization::Overlays overlays)
-: overlays_(overlays)
+: path_planner_(overlays.getChild("path_planner")),
+  overlays_(overlays)
 {
 }
 
 
 EasyMoveTo & EasyMoveTo::operator=(EasyMoveTo && other)
 {
-  instance_name_ = other.instance_name_;
   target_position_ = other.target_position_;
   planner_options_ = other.planner_options_;
   path_planner_ = other.path_planner_;
@@ -68,6 +68,12 @@ void EasyMoveTo::setPlannerOptions(path_planning::PlannerOptions options)
 {
   planner_options_ = options;
 }
+
+void EasyMoveTo::setMotionOptions(MotionOptions options)
+{
+  motion_options_ = options;
+}
+
 
 void EasyMoveTo::face_point(std::optional<ateam_geometry::Point> point)
 {
@@ -127,7 +133,7 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::getMotionCommand(
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
   motion_controller_.set_trajectory(path);
-  return motion_controller_.get_command(robot, current_time);
+  return motion_controller_.get_command(robot, current_time, motion_options_);
 }
 
 void EasyMoveTo::drawTrajectoryOverlay(
@@ -139,9 +145,12 @@ void EasyMoveTo::drawTrajectoryOverlay(
       robot.pos,
       target_position_
     };
-    overlays_.drawLine(instance_name_ + "_path", points, "red");
+    overlays_.drawLine("path", points, "red");
   } else {
-    overlays_.drawLine(instance_name_ + "_path", path, "purple");
+    overlays_.drawLine("path", path, "purple");
+    if(CGAL::squared_distance(path.back(), target_position_) > kRobotRadius*kRobotRadius) {
+      overlays_.drawLine("afterpath", {path.back(), target_position_}, "red");
+    }
   }
 }
 
