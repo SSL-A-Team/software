@@ -54,7 +54,7 @@ TEST(RobotAssignmentTest, EmptyGoals)
 TEST(RobotAssignmentTest, OneRobotOneGoal)
 {
   std::vector<Robot> robots {
-    {1, ateam_geometry::Point(1, 2)}
+    {1, ateam_geometry::Point(1, 2), 0.0, ateam_geometry::Vector{}, 0.0}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(3, 4)
@@ -66,8 +66,8 @@ TEST(RobotAssignmentTest, OneRobotOneGoal)
 TEST(RobotAssignmentTest, TwoRobotsOneGoal)
 {
   std::vector<Robot> robots {
-    {1, ateam_geometry::Point(1, 2)},
-    {2, ateam_geometry::Point(3, 4)}
+    {1, ateam_geometry::Point(1, 2), 0.0, ateam_geometry::Vector{}, 0.0},
+    {2, ateam_geometry::Point(3, 4), 0.0, ateam_geometry::Vector{}, 0.0}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(3, 4)
@@ -79,8 +79,8 @@ TEST(RobotAssignmentTest, TwoRobotsOneGoal)
 TEST(RobotAssignmentTest, TwoRobotsTwoGoals)
 {
   std::vector<Robot> robots {
-    {1, ateam_geometry::Point(1, 2)},
-    {2, ateam_geometry::Point(3, 4)}
+    {1, ateam_geometry::Point(1, 2), 0.0, ateam_geometry::Vector{}, 0.0},
+    {2, ateam_geometry::Point(3, 4), 0.0, ateam_geometry::Vector{}, 0.0}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(0, 0),
@@ -95,8 +95,8 @@ TEST(RobotAssignmentTest, TwoRobotsTwoGoals)
 TEST(RobotAssignmentTest, TwoRobotsSameDistance)
 {
   std::vector<Robot> robots {
-    {1, ateam_geometry::Point(0, 1)},
-    {2, ateam_geometry::Point(0, -1)}
+    {1, ateam_geometry::Point(0, 1), 0.0, ateam_geometry::Vector{}, 0.0},
+    {2, ateam_geometry::Point(0, -1), 0.0, ateam_geometry::Vector{}, 0.0}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(1, 0),
@@ -111,11 +111,14 @@ TEST(RobotAssignmentTest, TwoRobotsSameDistance)
 TEST(RobotAssignmentTest, DisallowAssigningDisallowedRobots)
 {
   std::vector<Robot> robots {
-    {1, ateam_geometry::Point(0, 0)}
+    {1, ateam_geometry::Point(0, 0), 0.0, ateam_geometry::Vector{}, 0.0}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(0, 0)
   };
-  const auto assignments = assignRobots(robots, goals);
+  std::vector<std::vector<int>> disallowed_ids = {
+    {1}
+  };
+  const auto assignments = assignRobots(robots, goals, disallowed_ids);
   EXPECT_THAT(assignments, testing::ElementsAre(Eq(std::nullopt)));
 }

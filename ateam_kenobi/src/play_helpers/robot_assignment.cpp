@@ -34,7 +34,7 @@ std::vector<std::optional<Robot>> assignRobots(
 {
   assert(disallowed_robot_ids.empty() || disallowed_robot_ids.size() == positions.size());
 
-  std::vector<std::optional<Robot>> assignments(available_robots.size(), std::nullopt);
+  std::vector<std::optional<Robot>> assignments(positions.size(), std::nullopt);
 
   if (available_robots.empty() || positions.empty()) {
     return assignments;
