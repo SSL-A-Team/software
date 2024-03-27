@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,44 +19,55 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__BASIC_122_HPP_
-#define PLAYS__BASIC_122_HPP_
+#ifndef PLAYS__WAYPOINTS_PLAY_HPP_
+#define PLAYS__WAYPOINTS_PLAY_HPP_
 
+#include <array>
+#include <chrono>
+#include <tuple>
 #include <vector>
+#include <string>
+#include <ateam_geometry/types.hpp>
 #include "base_play.hpp"
-#include "skills/line_kick.hpp"
-#include "skills/blockers.hpp"
-#include "skills/goalie.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class Basic122 : public BasePlay
+class WaypointsPlay : public BasePlay
 {
 public:
-  Basic122();
+  WaypointsPlay();
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world);
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
 
 private:
-  skills::LineKick striker_skill_;
-  skills::Blockers blockers_skill_;
-  skills::Goalie goalie_skill_;
+  struct Pose
+  {
+    ateam_geometry::Point position;
+    double heading;
+  };
 
-  void runStriker(
-    const Robot & striker_bot, const World & world,
-    ateam_msgs::msg::RobotMotionCommand & motion_command);
+  struct Waypoint
+  {
+    std::vector<Pose> poses;
+    int64_t duration_ms;
+  };
 
-  void runBlockers(
-    const std::vector<Robot> & blocker_bots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  std::vector<Waypoint> waypoints_;
+  std::chrono::steady_clock::time_point next_transition_time_ =
+    std::chrono::steady_clock::time_point::max();
+  std::size_t waypoint_index_ = 0;
 
-  bool doTheyHavePossession(const World & world);
+  void addWaypoint(
+    const int64_t duration_ms, const std::vector<std::tuple<double, double,
+    double>> & poses);
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__BASIC_122_HPP_
+#endif  // PLAYS__WAYPOINTS_PLAY_HPP_

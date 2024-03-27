@@ -32,6 +32,16 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
 
   plays::BasePlay * selected_play = &halt_play_;
 
+  // switch(current_game_command) {
+  //   case ateam_common::GameCommand::Halt:
+  //   case ateam_common::GameCommand::Stop:
+  //     selected_play = &halt_play_;
+  //     break;
+  //   default:
+  //     selected_play = &spinning_a_play_;
+  //     break;
+  // }
+
   switch (current_game_command) {
     case ateam_common::GameCommand::Halt:
     case ateam_common::GameCommand::TimeoutOurs:
@@ -44,7 +54,8 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       selected_play = &stop_play_;
       break;
     case ateam_common::GameCommand::NormalStart:
-      return finalizeSelection(pickNormalStartPlay(), current_game_command);
+      selected_play = pickNormalStartPlay(world);
+      break;
     case ateam_common::GameCommand::ForceStart:
       selected_play = &basic_122_play_;
       break;
@@ -66,15 +77,26 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       break;
     case ateam_common::GameCommand::DirectFreeTheirs:
     case ateam_common::GameCommand::IndirectFreeTheirs:
-      selected_play = &wall_play_;
+      if (world.in_play) {
+        selected_play = &basic_122_play_;
+      } else {
+        selected_play = &wall_play_;
+      }
       break;
     case ateam_common::GameCommand::BallPlacementOurs:
     case ateam_common::GameCommand::BallPlacementTheirs:
       selected_play = &stop_play_;
       break;
+    default:
+      std::cerr <<
+        "WARNING: Play selector falling through because of unrecognized game command: " <<
+        static_cast<int>(current_game_command) << '\n';
+      break;
   }
 
-  return finalizeSelection(selected_play, current_game_command);
+  resetPlayIfNeeded(selected_play);
+
+  return selected_play;
 }
 
 void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)
@@ -88,22 +110,12 @@ void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)
   }
 }
 
-plays::BasePlay * PlaySelector::finalizeSelection(
-  plays::BasePlay * play,
-  ateam_common::GameCommand current_game_command)
+plays::BasePlay * PlaySelector::pickNormalStartPlay(const World & world)
 {
-  resetPlayIfNeeded(play);
-
-  if (current_game_command != previous_game_command_) {
-    previous_game_command_ = current_game_command;
+  if (world.in_play) {
+    return &basic_122_play_;
   }
-
-  return play;
-}
-
-plays::BasePlay * PlaySelector::pickNormalStartPlay()
-{
-  switch (previous_game_command_) {
+  switch (world.referee_info.prev_command) {
     case ateam_common::GameCommand::PrepareKickoffOurs:
       return &our_kickoff_play_;
     case ateam_common::GameCommand::PrepareKickoffTheirs:
@@ -125,7 +137,6 @@ plays::BasePlay * PlaySelector::pickNormalStartPlay()
     default:
       return &basic_122_play_;
   }
-  return &halt_play_;
 }
 
 }  // namespace ateam_kenobi

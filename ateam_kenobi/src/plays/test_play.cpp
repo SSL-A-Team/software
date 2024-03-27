@@ -22,7 +22,6 @@
 #include "ateam_geometry/types.hpp"
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
-#include "robot_assignment.hpp"
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays

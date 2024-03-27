@@ -22,8 +22,7 @@
 #include "our_kickoff_play.hpp"
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
-#include "skills/kick.hpp"
-#include "robot_assignment.hpp"
+#include "play_helpers/robot_assignment.hpp"
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
@@ -37,14 +36,6 @@ OurKickoffPlay::OurKickoffPlay()
 
 void OurKickoffPlay::reset()
 {
-  defender_positions_.clear();
-
-  // Get 4 defenders
-  defender_positions_.push_back(ateam_geometry::Point(-0.3, -1.5));
-  defender_positions_.push_back(ateam_geometry::Point(-0.3, 1.5));
-  defender_positions_.push_back(ateam_geometry::Point(-2, 2));
-  defender_positions_.push_back(ateam_geometry::Point(-2, -2));
-
   goalie_skill_.reset();
 }
 
@@ -55,95 +46,92 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   std::vector<Robot> current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
-  /* Get list of robots that can be kickers which excludes the last robot to touch the ball in the
-   * kickoff
-   */
-  auto valid_kickers = current_available_robots;
-  if (prev_id_ != -1) {
-    play_helpers::removeRobotWithId(valid_kickers, prev_id_);
+  goalie_skill_.runFrame(world, maybe_motion_commands);
+
+  support_positions_ = {
+    ateam_geometry::Point(-0.3, world.field.field_width / 3),
+    ateam_geometry::Point(-0.3, -world.field.field_width / 3),
+    ateam_geometry::Point(-world.field.field_length / 4, world.field.field_width * 0.375),
+    ateam_geometry::Point(-world.field.field_length / 4, -world.field.field_width * 0.375)
+  };
+
+  std::vector<ateam_geometry::Point> assignment_points;
+  assignment_points.push_back(kicker_point_);
+  assignment_points.insert(
+    assignment_points.end(), support_positions_.begin(),
+    support_positions_.end());
+
+  std::vector<std::vector<int>> disallowed_ids(assignment_points.size(), std::vector<int>{});
+  if (world.double_touch_forbidden_id_) {
+    disallowed_ids[0] = {*world.double_touch_forbidden_id_};
   }
 
-  // get the closest valid kicker
-  ateam_geometry::Point kicker_point = ateam_geometry::Point(-0.25, 0);
-  const auto & maybe_kicker =
-    world.our_robots.at(robot_assignment::assign(valid_kickers, {kicker_point}).begin()->first);
-
-  if (maybe_kicker.has_value()) {
-    const Robot & kicker = maybe_kicker.value();
-    // handle kicker behavior and remove it from the total available
-    play_helpers::removeRobotWithId(current_available_robots, kicker.id);
-
-    // Go to starting point
-    if (world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffOurs) {
-      /* TODO(anon): consider if we can make this dynamic enough to reuse this for more than
-       * just kickoff
-       */
-      auto viz_circle = ateam_geometry::makeCircle(kicker_point, kRobotRadius);
-      getOverlays().drawCircle(
-        "destination_" + std::to_string(
-          kicker.id), viz_circle, "blue", "transparent");
+  const auto assignments = play_helpers::assignRobots(
+    current_available_robots, assignment_points,
+    disallowed_ids);
 
 
-      auto & easy_move_to = easy_move_tos_.at(kicker.id);
-      easy_move_to.setTargetPosition(kicker_point);
-      easy_move_to.face_point(world.ball.pos);
-      maybe_motion_commands.at(kicker.id) = easy_move_to.runFrame(kicker, world);
-
-      getPlayInfo()["State"] = "Preparing";
-      getPlayInfo()["Kicker Id"] = kicker.id;
-
-      // Kick the ball
-    } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
-      line_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
-      maybe_motion_commands.at(kicker.id) = line_kick_skill_.runFrame(world, kicker);
-
-      // we passed over the center line so we probably touched the ball
-      if (kicker.pos.x() > 0.1) {
-        prev_id_ = kicker.id;
-      }
-
-      getPlayInfo()["State"] = "Kicking";
-    }
+  if (assignments[0].has_value()) {
+    runKicker(world, *assignments[0], maybe_motion_commands);
   }
 
-  // handle all non-kicker robots
-  const auto & robot_assignments = robot_assignment::assign(
-    current_available_robots,
-    defender_positions_);
+  std::vector<std::optional<Robot>> support_bots(assignments.begin() + 1, assignments.end());
+  runSupportBots(world, support_bots, maybe_motion_commands);
 
-  for (const auto [robot_id, pos_ind] : robot_assignments) {
-    const auto & maybe_assigned_robot = world.our_robots.at(robot_id);
+  return maybe_motion_commands;
+}
 
-    if (!maybe_assigned_robot) {
-      // TODO(barulicm): log this?
+void OurKickoffPlay::runKicker(
+  const World & world, const Robot & kicker,
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+{
+  if (world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffOurs) {
+    auto viz_circle = ateam_geometry::makeCircle(kicker_point_, kRobotRadius);
+    getOverlays().drawCircle(
+      "destination_" + std::to_string(
+        kicker.id), viz_circle, "blue", "transparent");
+
+    auto & easy_move_to = easy_move_tos_.at(kicker.id);
+    easy_move_to.setTargetPosition(kicker_point_);
+    easy_move_to.face_point(world.ball.pos);
+    motion_commands.at(kicker.id) = easy_move_to.runFrame(kicker, world);
+
+    getPlayInfo()["State"] = "Preparing";
+    getPlayInfo()["Kicker Id"] = kicker.id;
+  } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
+    line_kick_skill_.setTargetPoint(
+      ateam_geometry::Point(-0.3, world.field.field_width / 3));
+    line_kick_skill_.setKickSpeed(0.45);
+    motion_commands.at(kicker.id) = line_kick_skill_.runFrame(world, kicker);
+
+    getPlayInfo()["State"] = "Kicking";
+  }
+}
+
+void OurKickoffPlay::runSupportBots(
+  const World & world, const std::vector<std::optional<Robot>> & support_bots,
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+{
+  for (auto ind = 0ul; ind < support_bots.size(); ++ind) {
+    const auto & maybe_robot = support_bots[ind];
+    if (!maybe_robot) {
       continue;
     }
+    const auto & robot = *maybe_robot;
+    const auto & target_position = support_positions_[ind];
 
-    const Robot & robot = maybe_assigned_robot.value();
-
-    auto & easy_move_to = easy_move_tos_.at(robot_id);
-
-    const auto & target_position = defender_positions_.at(pos_ind);
+    auto & easy_move_to = easy_move_tos_.at(robot.id);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
     getOverlays().drawCircle(
       "destination_" + std::to_string(
-        robot_id), viz_circle, "blue", "transparent");
+        robot.id), viz_circle, "blue", "transparent");
 
     easy_move_to.setTargetPosition(target_position);
-    easy_move_to.face_absolute(0);  // face away from our goal
+    easy_move_to.face_point(world.ball.pos);
 
-    maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
+    motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
   }
-
-  // Have the goalie do stuff
-  goalie_skill_.runFrame(world, maybe_motion_commands);
-  if (world.our_robots.at(world.referee_info.our_goalie_id).has_value()) {
-    const Robot & goalie_robot = world.our_robots.at(world.referee_info.our_goalie_id).value();
-    getPlayInfo()["robots"][world.referee_info.
-      our_goalie_id]["pos"] = {goalie_robot.pos.x(), goalie_robot.pos.y()};
-  }
-
-  return maybe_motion_commands;
 }
+
 }  // namespace ateam_kenobi::plays

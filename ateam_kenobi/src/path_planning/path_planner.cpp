@@ -30,7 +30,8 @@
 namespace ateam_kenobi::path_planning
 {
 
-PathPlanner::PathPlanner()
+PathPlanner::PathPlanner(visualization::Overlays overlays)
+: overlays_(overlays)
 {
 }
 
@@ -63,11 +64,21 @@ PathPlanner::Path PathPlanner::getPath(
     return {};
   }
 
-  if (!isStateValid(goal, world, augmented_obstacles, options)) {
-    return {};
+  if (options.draw_obstacles) {
+    drawObstacles(augmented_obstacles);
   }
 
   Path path = {start, goal};
+
+  if (!isStateValid(goal, world, augmented_obstacles, options)) {
+    const auto maybe_new_goal = findLastCollisionFreePoint(
+      start, goal, world, augmented_obstacles,
+      options);
+    if (!maybe_new_goal) {
+      return {};
+    }
+    path.back() = *maybe_new_goal;
+  }
 
   while (true) {
     const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(
@@ -247,21 +258,31 @@ void PathPlanner::addDefaultObstacles(
   const World & world,
   std::vector<ateam_geometry::AnyShape> & obstacles)
 {
+  /* top_Vertex_2 breaks ties by largest X value and bottom_vertex_2 breaks ties by smallest X
+   * value. Assuming the defense areas are axis-aligned rectangles (which should be a safe
+   * assumption), these two functions give us the opposite corner vertexes we need to build a
+   * Rectangle object.
+   */
+
   // our goalie box
   obstacles.push_back(
     ateam_geometry::Rectangle(
-      ateam_geometry::Point(-world.field.field_length / 2, world.field.goal_width),
-      ateam_geometry::Point(
-        -1 * (world.field.field_length / 2) + world.field.goal_depth,
-        -world.field.goal_width)
+      *CGAL::top_vertex_2(
+        world.field.ours.defense_area_corners.begin(),
+        world.field.ours.defense_area_corners.end()),
+      *CGAL::bottom_vertex_2(
+        world.field.ours.defense_area_corners.begin(),
+        world.field.ours.defense_area_corners.end())
   ));
   // their goalie box
   obstacles.push_back(
     ateam_geometry::Rectangle(
-      ateam_geometry::Point((world.field.field_length / 2), world.field.goal_width),
-      ateam_geometry::Point(
-        (world.field.field_length / 2) - world.field.goal_depth,
-        -world.field.goal_width)
+      *CGAL::top_vertex_2(
+        world.field.theirs.defense_area_corners.begin(),
+        world.field.theirs.defense_area_corners.end()),
+      *CGAL::bottom_vertex_2(
+        world.field.theirs.defense_area_corners.begin(),
+        world.field.theirs.defense_area_corners.end())
   ));
 }
 
@@ -290,7 +311,6 @@ void PathPlanner::removeSkippablePoints(
         candidate_index++;
         continue;
       }
-      const auto & prem = *(path.begin() + candidate_index);
       path.erase(path.begin() + candidate_index);
       were_points_removed = true;
     }
@@ -350,6 +370,52 @@ void PathPlanner::trimPathAfterCollision(
       break;
     }
   }
+}
+
+std::optional<ateam_geometry::Point> PathPlanner::findLastCollisionFreePoint(
+  const ateam_geometry::Point & start, const ateam_geometry::Point & goal, const World & world,
+  std::vector<ateam_geometry::AnyShape> & obstacles,
+  const PlannerOptions & options)
+{
+  const auto direction_vector = start - goal;
+  const auto segment_length = std::sqrt(direction_vector.squared_length());
+  const auto step_vector = direction_vector * (options.collision_check_resolution / segment_length);
+  const int step_count = segment_length / options.collision_check_resolution;
+  for (auto step = 0; step < step_count; ++step) {
+    const auto state = goal + (step * step_vector);
+    if (isStateValid(state, world, obstacles, options)) {
+      return state;
+    }
+  }
+  if (isStateValid(start, world, obstacles, options)) {
+    return start;
+  }
+  return std::nullopt;
+}
+
+void PathPlanner::drawObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles)
+{
+  auto drawObstacle = [this, obstacle_ind = 0](const auto & shape)mutable {
+      const auto name = "obstacle" + std::to_string(obstacle_ind);
+      const auto color = "FF00007F";
+      using ShapeT = std::decay_t<decltype(shape)>;
+      if constexpr (std::is_same_v<ShapeT, ateam_geometry::Point>) {
+        overlays_.drawCircle(name, ateam_geometry::makeCircle(shape, 2.5), color, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Segment>) {
+        overlays_.drawLine(name, {shape.source(), shape.target()}, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Ray>) {
+        overlays_.drawLine(name, {shape.source(), shape.point(10)}, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Rectangle>) {
+        overlays_.drawRectangle(name, shape, color, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Circle>) {
+        overlays_.drawCircle(name, shape, color, color);
+      } else {
+        std::cerr << "Shape to draw not recognized!\n";
+      }
+      obstacle_ind++;
+    };
+
+  std::ranges::for_each(obstacles, [&drawObstacle](const auto & s) {std::visit(drawObstacle, s);});
 }
 
 }  // namespace ateam_kenobi::path_planning

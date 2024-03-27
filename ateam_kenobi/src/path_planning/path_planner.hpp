@@ -25,6 +25,7 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include "types/world.hpp"
+#include "visualization/overlays.hpp"
 
 namespace ateam_kenobi::path_planning
 {
@@ -45,7 +46,7 @@ struct PlannerOptions
    * @brief The size by which the radius of the robot will be augmented during collision checking
    *
    */
-  double footprint_inflation = 0.05;
+  double footprint_inflation = 0.06;
 
   double collision_check_resolution = 0.05;
 
@@ -57,6 +58,8 @@ struct PlannerOptions
    * Useful if you want to plan a path to escape a virtual obstacle like a keep out zone.
    */
   bool ignore_start_obstacle = true;
+
+  bool draw_obstacles = false;
 };
 
 class PathPlanner
@@ -65,7 +68,7 @@ public:
   using Position = ateam_geometry::Point;
   using Path = std::vector<Position>;
 
-  PathPlanner();
+  explicit PathPlanner(visualization::Overlays overlays = {});
 
   Path getPath(
     const Position & start, const Position & goal, const World & world,
@@ -73,6 +76,8 @@ public:
     const PlannerOptions & options = PlannerOptions());
 
 private:
+  visualization::Overlays overlays_;
+
   void removeCollidingObstacles(
     std::vector<ateam_geometry::AnyShape> & obstacles,
     const ateam_geometry::Point & point, const PlannerOptions & options);
@@ -120,6 +125,13 @@ private:
     Path & path, const World & world,
     std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
+
+  std::optional<ateam_geometry::Point> findLastCollisionFreePoint(
+    const ateam_geometry::Point & start, const ateam_geometry::Point & goal, const World & world,
+    std::vector<ateam_geometry::AnyShape> & obstacles,
+    const PlannerOptions & options);
+
+  void drawObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles);
 };
 
 }  // namespace ateam_kenobi::path_planning

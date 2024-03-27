@@ -33,7 +33,7 @@ void HaltPlay::reset()
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> HaltPlay::runFrame(
-  const World & world)
+  const World &)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> halt_motion_commands;
   for (size_t i = 0; i < 16; ++i) {

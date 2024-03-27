@@ -27,6 +27,10 @@ namespace ateam_kenobi::plays
 StopPlay::StopPlay()
 : BasePlay("StopPlay")
 {
+  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlays_.getChild("EasyMoveTo"));
+  for (auto & move_to : easy_move_tos_) {
+    move_to.setMaxVelocity(1.0);
+  }
   StopPlay::reset();
 }
 
@@ -34,7 +38,6 @@ void StopPlay::reset()
 {
   for (auto & move_to : easy_move_tos_) {
     move_to.reset();
-    move_to.setMaxVelocity(1.0);
   }
 }
 
@@ -57,7 +60,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
           robot.pos - world.ball.pos);
 
         const auto & destination = ateam_geometry::Point(
-          robot.pos.x() + offset_vector.x(), robot.pos.y() + offset_vector.y());
+          world.ball.pos.x() + offset_vector.x(), world.ball.pos.y() + offset_vector.y());
 
         auto & easy_move_to = easy_move_tos_.at(robot_id);
         easy_move_to.setTargetPosition(destination);

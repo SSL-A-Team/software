@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,44 +19,56 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__BASIC_122_HPP_
-#define PLAYS__BASIC_122_HPP_
+#ifndef PLAYS__TRIANGLE_PASS_PLAY_HPP_
+#define PLAYS__TRIANGLE_PASS_PLAY_HPP_
 
 #include <vector>
 #include "base_play.hpp"
 #include "skills/line_kick.hpp"
-#include "skills/blockers.hpp"
-#include "skills/goalie.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class Basic122 : public BasePlay
+class TrianglePassPlay : public BasePlay
 {
 public:
-  Basic122();
+  TrianglePassPlay();
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world);
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
 
 private:
-  skills::LineKick striker_skill_;
-  skills::Blockers blockers_skill_;
-  skills::Goalie goalie_skill_;
+  skills::LineKick line_kick_;
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  std::vector<ateam_geometry::Point> positions;
+  double ball_vel_avg_ = 0.0;
+  bool latch_receive_ = false;
+  int last_kicked_id_ = 0;
 
-  void runStriker(
-    const Robot & striker_bot, const World & world,
-    ateam_msgs::msg::RobotMotionCommand & motion_command);
+  enum class State
+  {
+    Kicking,
+    Receiving,
+    BackOff
+  } state_ = State::Kicking;
 
-  void runBlockers(
-    const std::vector<Robot> & blocker_bots, const World & world,
+  void runKicking(
+    const std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
-
-  bool doTheyHavePossession(const World & world);
+  void runReceiving(
+    std::vector<Robot> available_robots, const World & world,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & motion_commands);
+  void runBackOff(
+    const std::vector<Robot> & available_robots, const World & world,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & motion_commands);
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__BASIC_122_HPP_
+#endif  // PLAYS__TRIANGLE_PASS_PLAY_HPP_
