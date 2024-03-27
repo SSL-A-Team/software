@@ -71,8 +71,10 @@ PathPlanner::Path PathPlanner::getPath(
   Path path = {start, goal};
 
   if (!isStateValid(goal, world, augmented_obstacles, options)) {
-    const auto maybe_new_goal = findLastCollisionFreePoint(start, goal, world, augmented_obstacles, options);
-    if(!maybe_new_goal) {
+    const auto maybe_new_goal = findLastCollisionFreePoint(
+      start, goal, world, augmented_obstacles,
+      options);
+    if (!maybe_new_goal) {
       return {};
     }
     path.back() = *maybe_new_goal;

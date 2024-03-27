@@ -41,7 +41,8 @@ public:
     const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 
-  double & possesionTolerance() {
+  double & possesionTolerance()
+  {
     return possesion_threshold_;
   }
 
@@ -78,7 +79,6 @@ private:
    * @return ateam_msgs::msg::RobotMotionCommand
    */
   ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie);
-
 };
 
 }  // namespace ateam_kenobi::skills

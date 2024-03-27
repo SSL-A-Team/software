@@ -102,7 +102,7 @@ void InPlayEval::SetDistanceThreshold(const World & world)
 
 bool InPlayEval::IsGameStopping(const World & world)
 {
-  if(world.referee_info.running_command == prev_game_command_) {
+  if (world.referee_info.running_command == prev_game_command_) {
     return false;
   }
   return world.referee_info.running_command == ateam_common::GameCommand::Stop ||

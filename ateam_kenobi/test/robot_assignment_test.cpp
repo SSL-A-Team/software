@@ -87,7 +87,9 @@ TEST(RobotAssignmentTest, TwoRobotsTwoGoals)
     ateam_geometry::Point(3, 4)
   };
   const auto assignments = assignRobots(robots, goals);
-  EXPECT_THAT(assignments, ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
+  EXPECT_THAT(
+    assignments,
+    ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
 }
 
 TEST(RobotAssignmentTest, TwoRobotsSameDistance)
@@ -101,16 +103,18 @@ TEST(RobotAssignmentTest, TwoRobotsSameDistance)
     ateam_geometry::Point(-1, 0)
   };
   const auto assignments = assignRobots(robots, goals);
-  EXPECT_THAT(assignments, ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
+  EXPECT_THAT(
+    assignments,
+    ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
 }
 
 TEST(RobotAssignmentTest, DisallowAssigningDisallowedRobots)
 {
   std::vector<Robot> robots {
-    {1, ateam_geometry::Point(0,0)}
+    {1, ateam_geometry::Point(0, 0)}
   };
   std::vector<ateam_geometry::Point> goals = {
-    ateam_geometry::Point(0,0)
+    ateam_geometry::Point(0, 0)
   };
   const auto assignments = assignRobots(robots, goals);
   EXPECT_THAT(assignments, testing::ElementsAre(Eq(std::nullopt)));

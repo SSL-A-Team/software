@@ -148,7 +148,7 @@ void EasyMoveTo::drawTrajectoryOverlay(
     overlays_.drawLine("path", points, "red");
   } else {
     overlays_.drawLine("path", path, "purple");
-    if(CGAL::squared_distance(path.back(), target_position_) > kRobotRadius*kRobotRadius) {
+    if (CGAL::squared_distance(path.back(), target_position_) > kRobotRadius * kRobotRadius) {
       overlays_.drawLine("afterpath", {path.back(), target_position_}, "red");
     }
   }

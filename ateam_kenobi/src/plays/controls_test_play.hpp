@@ -41,7 +41,8 @@ public:
     16> runFrame(const World & world) override;
 
 private:
-  struct Waypoint {
+  struct Waypoint
+  {
     ateam_geometry::Point position;
     AngleMode angle_mode;
     double heading;

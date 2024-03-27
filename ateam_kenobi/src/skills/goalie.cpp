@@ -20,6 +20,8 @@
 
 
 #include "goalie.hpp"
+#include <algorithm>
+#include <limits>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/nearest_points.hpp>
 #include "play_helpers/window_evaluation.hpp"
@@ -182,14 +184,10 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, co
 
   ateam_geometry::Point shot_point_on_extended_goalie_line;
 
-  if (const ateam_geometry::Point * intersection_point =
-    boost::get<ateam_geometry::Point>(&*maybe_intersection))
-  {
-    shot_point_on_extended_goalie_line = *intersection_point;
-  } else if (const ateam_geometry::Segment * intersection_seg =
-    boost::get<ateam_geometry::Segment>(&*maybe_intersection))
-  {
-    shot_point_on_extended_goalie_line = intersection_seg->source();
+  if (const auto * point = boost::get<ateam_geometry::Point>(&*maybe_intersection)) {
+    shot_point_on_extended_goalie_line = *point;
+  } else if (const auto * segment = boost::get<ateam_geometry::Segment>(&*maybe_intersection)) {
+    shot_point_on_extended_goalie_line = segment->source();
   }
 
   easy_move_to_.setTargetPosition(
@@ -219,14 +217,10 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(const World & world, co
 
   ateam_geometry::Point target_point;
 
-  if (const ateam_geometry::Point * intersection_point =
-    boost::get<ateam_geometry::Point>(&*maybe_intersection))
-  {
-    target_point = *intersection_point;
-  } else if (const ateam_geometry::Segment * intersection_seg =
-    boost::get<ateam_geometry::Segment>(&*maybe_intersection))
-  {
-    target_point = intersection_seg->source();
+  if (const auto * point = boost::get<ateam_geometry::Point>(&*maybe_intersection)) {
+    target_point = *point;
+  } else if (const auto * segment = boost::get<ateam_geometry::Segment>(&*maybe_intersection)) {
+    target_point = segment->source();
   }
 
   easy_move_to_.setTargetPosition(target_point);

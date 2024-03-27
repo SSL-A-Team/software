@@ -68,7 +68,7 @@ public:
   using Position = ateam_geometry::Point;
   using Path = std::vector<Position>;
 
-  PathPlanner(visualization::Overlays overlays = {});
+  explicit PathPlanner(visualization::Overlays overlays = {});
 
   Path getPath(
     const Position & start, const Position & goal, const World & world,

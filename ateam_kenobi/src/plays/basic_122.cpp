@@ -20,6 +20,7 @@
 
 
 #include "basic_122.hpp"
+#include <algorithm>
 #include <vector>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
@@ -97,10 +98,10 @@ void Basic122::runStriker(
   play_info_["Striker ID"] = striker_bot.id;
 
   const auto they_have_possession = doTheyHavePossession(world);
-  
+
   play_info_["Possession"] = they_have_possession ? "theirs" : "ours";
 
-  if(they_have_possession) {
+  if (they_have_possession) {
     const auto ball_to_bot_vec = striker_bot.pos - world.ball.pos;
     const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
     motion_command.twist.linear.x = vel.x();

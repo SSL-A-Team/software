@@ -222,7 +222,11 @@ private:
   {
     world_.current_time = std::chrono::steady_clock::now();
     world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
-    world_.referee_info.command_time = std::chrono::system_clock::time_point(std::chrono::nanoseconds(rclcpp::Time(game_controller_listener_.GetLatestRefereeMessage().command_timestamp).nanoseconds()));
+    world_.referee_info.command_time =
+      std::chrono::system_clock::time_point(
+      std::chrono::nanoseconds(
+        rclcpp::Time(
+          game_controller_listener_.GetLatestRefereeMessage().command_timestamp).nanoseconds()));
     world_.referee_info.prev_command = game_controller_listener_.GetPreviousGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
     if (game_controller_listener_.GetOurGoalieID().has_value()) {

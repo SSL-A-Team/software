@@ -77,7 +77,7 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       break;
     case ateam_common::GameCommand::DirectFreeTheirs:
     case ateam_common::GameCommand::IndirectFreeTheirs:
-      if(world.in_play) {
+      if (world.in_play) {
         selected_play = &basic_122_play_;
       } else {
         selected_play = &wall_play_;
@@ -88,7 +88,9 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
       selected_play = &stop_play_;
       break;
     default:
-      std::cerr << "WARNING: Play selector falling through because of unrecognized game command: " << static_cast<int>(current_game_command) << '\n';
+      std::cerr <<
+        "WARNING: Play selector falling through because of unrecognized game command: " <<
+        static_cast<int>(current_game_command) << '\n';
       break;
   }
 
@@ -110,7 +112,7 @@ void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)
 
 plays::BasePlay * PlaySelector::pickNormalStartPlay(const World & world)
 {
-  if(world.in_play) {
+  if (world.in_play) {
     return &basic_122_play_;
   }
   switch (world.referee_info.prev_command) {

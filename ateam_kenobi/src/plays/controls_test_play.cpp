@@ -19,11 +19,11 @@
 // THE SOFTWARE.
 
 #include "controls_test_play.hpp"
-#include "ateam_geometry/types.hpp"
-#include "ateam_geometry/make_circle.hpp"
+#include <angles/angles.h>
+#include <ateam_geometry/types.hpp>
+#include <ateam_geometry/make_circle.hpp>
 #include "types/world.hpp"
 #include "play_helpers/available_robots.hpp"
-#include <angles/angles.h>
 
 namespace ateam_kenobi::plays
 {
@@ -38,10 +38,10 @@ ControlsTestPlay::ControlsTestPlay()
 
   // Drive in square
   waypoints = {
-    {ateam_geometry::Point(-1.5,-1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.5, -1.0), AngleMode::face_absolute, 0.0, 3.0},
     {ateam_geometry::Point(-1.5, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point( 0.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point( 0.0,-1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(0.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(0.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
   };
 
   motion_controller_.v_max = 2;
@@ -60,16 +60,18 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
   auto current_available_robots = play_helpers::getAvailableRobots(world);
-  if(current_available_robots.empty()) {
+  if (current_available_robots.empty()) {
     // No robots available to run
     return maybe_motion_commands;
   }
 
   const auto & robot = current_available_robots.front();
 
-  if(goal_hit) {
-    if((std::chrono::steady_clock::now() - goal_hit_time) > std::chrono::duration<double>(waypoints[index].hold_time_sec)) {
-      index = (index+1) % waypoints.size();
+  if (goal_hit) {
+    if ((std::chrono::steady_clock::now() - goal_hit_time) >
+      std::chrono::duration<double>(waypoints[index].hold_time_sec))
+    {
+      index = (index + 1) % waypoints.size();
       goal_hit = false;
     }
   } else if (isGoalHit(robot)) {
@@ -77,9 +79,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
     goal_hit_time = std::chrono::steady_clock::now();
   }
 
-  
+
   motion_controller_.set_trajectory(std::vector<ateam_geometry::Point> {waypoints[index].position});
-  switch(waypoints[index].angle_mode) {
+  switch (waypoints[index].angle_mode) {
     case AngleMode::face_absolute:
       motion_controller_.face_absolute(waypoints[index].heading);
       break;
@@ -93,7 +95,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
       motion_controller_.no_face();
       break;
   }
-  const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(world.current_time.time_since_epoch()).count();
+  const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+    world.current_time.time_since_epoch()).count();
   maybe_motion_commands[robot.id] = motion_controller_.get_command(robot, current_time);
 
   const std::vector<ateam_geometry::Point> viz_path = {robot.pos, waypoints[index].position};
@@ -102,7 +105,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   play_info_["robot"]["id"] = robot.id;
   play_info_["robot"]["index"] = index;
   play_info_["robot"]["goal_hit"] = goal_hit;
-  play_info_["robot"]["time_at_goal"] = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - goal_hit_time).count();
+  play_info_["robot"]["time_at_goal"] = std::chrono::duration_cast<std::chrono::duration<double>>(
+    std::chrono::steady_clock::now() - goal_hit_time).count();
   play_info_["robot"]["target"]["x"] = waypoints[index].position.x();
   play_info_["robot"]["target"]["y"] = waypoints[index].position.y();
   play_info_["robot"]["target"]["angle_mode"] = waypoints[index].angle_mode;
@@ -115,10 +119,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   play_info_["robot"]["vel"]["t"] = robot.omega;
 
   for (std::size_t i = 0; i < waypoints.size(); i++) {
-    overlays_.drawCircle("controls_test_point" + std::to_string(i), 
-		                              ateam_geometry::makeCircle(waypoints[i].position, .05), 
-				                          "blue",
-				                          "blue");
+    overlays_.drawCircle(
+      "controls_test_point" + std::to_string(i),
+      ateam_geometry::makeCircle(waypoints[i].position, .05),
+      "blue",
+      "blue");
   }
 
   return maybe_motion_commands;
@@ -127,13 +132,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 bool ControlsTestPlay::isGoalHit(const Robot & robot)
 {
   const bool position_goal_hit = ateam_geometry::norm(waypoints[index].position - robot.pos) < 0.05;
-  const bool heading_goal_hit = [&](){
-    if(waypoints[index].angle_mode == AngleMode::face_absolute) {
-      return std::abs(angles::shortest_angular_distance(waypoints[index].heading, robot.theta)) < angles::from_degrees(5);
-    } else {
-      return true;
-    }
-  }();
+  const bool heading_goal_hit = [&]() {
+      if (waypoints[index].angle_mode == AngleMode::face_absolute) {
+        return std::abs(
+          angles::shortest_angular_distance(
+            waypoints[index].heading,
+            robot.theta)) < angles::from_degrees(5);
+      } else {
+        return true;
+      }
+    }();
   return position_goal_hit && heading_goal_hit;
 }
 

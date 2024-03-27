@@ -1,5 +1,28 @@
+// Copyright 2024 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+
 #include "waypoints_play.hpp"
 #include <angles/angles.h>
+#include <algorithm>
+#include <tuple>
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
@@ -23,11 +46,11 @@ WaypointsPlay::WaypointsPlay()
   addWaypoint(
     5000, {
       {-0.20, -0.11, M_PI},
-      {-0.20,  0.11, M_PI},
-      { 0.00, -0.22, M_PI},
-      { 0.00,  0.22, M_PI},
-      { 0.20, -0.33, M_PI},
-      { 0.20,  0.33, M_PI}
+      {-0.20, 0.11, M_PI},
+      {0.00, -0.22, M_PI},
+      {0.00, 0.22, M_PI},
+      {0.20, -0.33, M_PI},
+      {0.20, 0.33, M_PI}
     });
 }
 
@@ -77,7 +100,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WaypointsPlay
 }
 
 void WaypointsPlay::addWaypoint(
-  const long int duration_ms, const std::vector<std::tuple<double,
+  const int64_t duration_ms, const std::vector<std::tuple<double,
   double, double>> & poses)
 {
   std::vector<Pose> waypoint_poses;
@@ -88,4 +111,4 @@ void WaypointsPlay::addWaypoint(
   waypoints_.emplace_back(waypoint_poses, duration_ms);
 }
 
-} // namespace ateam_kenobi::plays
+}  // namespace ateam_kenobi::plays

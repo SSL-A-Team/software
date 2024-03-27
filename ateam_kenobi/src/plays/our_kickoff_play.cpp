@@ -112,9 +112,9 @@ void OurKickoffPlay::runSupportBots(
   const World & world, const std::vector<std::optional<Robot>> & support_bots,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
 {
-  for(auto ind = 0ul; ind < support_bots.size(); ++ind) {
+  for (auto ind = 0ul; ind < support_bots.size(); ++ind) {
     const auto & maybe_robot = support_bots[ind];
-    if(!maybe_robot) {
+    if (!maybe_robot) {
       continue;
     }
     const auto & robot = *maybe_robot;

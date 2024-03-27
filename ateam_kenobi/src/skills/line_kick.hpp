@@ -43,7 +43,8 @@ public:
 
   ateam_geometry::Point getAssignmentPoint(const World & world);
 
-  void setKickSpeed(double speed) {
+  void setKickSpeed(double speed)
+  {
     kick_speed_ = speed;
   }
 

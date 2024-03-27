@@ -1,5 +1,27 @@
+// Copyright 2024 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+
 #include "triangle_pass_play.hpp"
 #include <angles/angles.h>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include "play_helpers/available_robots.hpp"
 
@@ -54,7 +76,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TrianglePassP
     available_robots.begin(),
     available_robots.end(), byDistToBall);
   const auto & closest_robot = *closest_robot_iter;
-  const auto dist_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(world.ball.pos, closest_robot.pos));
+  const auto dist_to_ball =
+    CGAL::approximate_sqrt(CGAL::squared_distance(world.ball.pos, closest_robot.pos));
 
   switch (state_) {
     case State::Kicking:
@@ -73,12 +96,12 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TrianglePassP
       getPlayInfo()["State"] = "Receiving";
       break;
     case State::BackOff:
-      if(dist_to_ball > 0.3) {
+      if (dist_to_ball > 0.3) {
         state_ = State::Kicking;
       }
       runBackOff(available_robots, world, maybe_motion_commands);
       getPlayInfo()["State"] = "BackOff";
-    break;
+      break;
   }
 
   for (auto ind = 0ul; ind < available_robots.size(); ++ind) {
@@ -128,7 +151,6 @@ void TrianglePassPlay::runKicking(
   auto & motion_command = motion_commands[closest_robot.id];
   motion_command = line_kick_.runFrame(world, closest_robot);
   // motion_command->dribbler_speed = 200;
-
 }
 
 void TrianglePassPlay::runReceiving(
@@ -183,7 +205,8 @@ void TrianglePassPlay::runReceiving(
     motion_command->twist.linear.x = robot_vel.x();
     motion_command->twist.linear.y = robot_vel.y();
   }
-  const auto ball_close = CGAL::approximate_sqrt(CGAL::squared_distance(receiver_robot.pos, world.ball.pos)) < 0.11;
+  const auto ball_close =
+    CGAL::approximate_sqrt(CGAL::squared_distance(receiver_robot.pos, world.ball.pos)) < 0.11;
   if (latch_receive_ || ball_close) {
     motion_command->twist.linear.x = 0;
     motion_command->twist.linear.y = 0;
@@ -208,7 +231,8 @@ void TrianglePassPlay::runBackOff(
 
   const auto ball_to_bot_vec = receiver_robot.pos - world.ball.pos;
   const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
-  auto & motion_command = motion_commands[receiver_robot.id] = ateam_msgs::msg::RobotMotionCommand{};
+  auto & motion_command = motion_commands[receiver_robot.id] =
+    ateam_msgs::msg::RobotMotionCommand{};
   motion_command->twist.linear.x = vel.x();
   motion_command->twist.linear.y = vel.y();
 }

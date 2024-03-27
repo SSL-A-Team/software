@@ -75,14 +75,14 @@ void LineKick::chooseState(const World & world, const Robot & robot)
       }
       break;
     case State::FaceBall:
-      if(!isRobotBehindBall(world, robot, 3.0)) {
+      if (!isRobotBehindBall(world, robot, 3.0)) {
         state_ = State::MoveBehindBall;
       } else if (isRobotFacingBall(robot)) {
         state_ = State::KickBall;
       }
       break;
     case State::KickBall:
-      if(!isRobotBehindBall(world, robot, 3.0)) {
+      if (!isRobotBehindBall(world, robot, 3.0)) {
         state_ = State::MoveBehindBall;
       } else if (isBallMoving(world)) {
         state_ = State::MoveBehindBall;
@@ -107,7 +107,8 @@ bool LineKick::isRobotBehindBall(const World & world, const Robot & robot, doubl
   const auto robot_perp_ball = robot_to_ball - robot_proj_ball;
   const auto robot_perp_dist_to_ball = ateam_geometry::norm(robot_perp_ball);
 
-  const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis && robot_proj_dist_to_ball < 0.22;
+  const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis &&
+    robot_proj_dist_to_ball < 0.22;
   const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.007 * hysteresis;
 
   return proj_dist_is_good && perp_dist_is_good;
@@ -178,7 +179,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runKickBall(const World & world, c
   easy_move_to_.setPlannerOptions(planner_options);
 
   // Handle robot angle
-  //easy_move_to_.face_point(target_point_);
+  // easy_move_to_.face_point(target_point_);
   easy_move_to_.face_point(world.ball.pos);
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);

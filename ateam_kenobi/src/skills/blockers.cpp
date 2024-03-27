@@ -75,8 +75,9 @@ std::vector<ateam_msgs::msg::RobotMotionCommand> Blockers::runFrame(
     move_to.setTargetPosition(position);
     move_to.face_point(world.ball.pos);
     motion_commands.push_back(move_to.runFrame(robot, world));
-    if(play_info) {
-      (*play_info)["Blockers"][std::to_string(robot.id)]["Blocking"] = blockable_robots[robot_index].id;
+    if (play_info) {
+      (*play_info)["Blockers"][std::to_string(robot.id)]["Blocking"] =
+        blockable_robots[robot_index].id;
     }
   }
 
