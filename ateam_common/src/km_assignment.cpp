@@ -22,6 +22,7 @@
 #include <limits>
 #include <vector>
 #include <deque>
+#include <iostream>
 #include "ateam_common/km_assignment.hpp"
 
 namespace ateam_common::km_assignment
@@ -37,15 +38,32 @@ const Eigen::MatrixXd make_square_cost_matrix(
 
   std::size_t new_dim = std::max(matrix.rows(), matrix.cols());
 
-  //  The value of any non-existant cost is the minimum possible value
-  //  (since we are trying to find a MAX cost matching and this will
-  //  ensure a non-existant value is not selected.
+  //  The value of any non-existant cost is 0, less than any assigable
+  //  real cost.
   Eigen::MatrixXd new_mat =
-    Eigen::MatrixXd::Constant(new_dim, new_dim, std::numeric_limits<double>::lowest());
+    Eigen::MatrixXd::Constant(new_dim, new_dim, 0);
 
   new_mat.block(0, 0, matrix.rows(), matrix.cols()) = matrix;
 
   return new_mat;
+}
+
+const Eigen::MatrixXd scale_matrix(
+  const Eigen::MatrixXd & matrix, bool is_max_cost)
+{
+  Eigen::MatrixXd new_matrix = matrix;
+  if (is_max_cost) {
+    new_matrix *= -1;
+  }
+  double matMin = new_matrix.minCoeff();
+  // If there are no negative values, no rescaling needed.
+  if (matMin > 0) {
+    return new_matrix;
+  }
+  // Otherwise, shift so the entire matrix is moved to be > 0
+  new_matrix += (Eigen::MatrixXd::Ones(
+      new_matrix.rows(), new_matrix.cols()) * matMin);
+  return new_matrix
 }
 
 void compute_slack(
@@ -74,7 +92,8 @@ value.
 }
 
 std::vector<int> max_cost_assignment(
-  const Eigen::MatrixXd & cost_matrix
+  const Eigen::MatrixXd & cost_matrix,
+  bool max_cost
 )
 {
   /*
@@ -87,18 +106,23 @@ std::vector<int> max_cost_assignment(
   as well as use fp (and not just int) values.
   https://github.com/davisking/dlib/blob/master/dlib/optimization/max_cost_assignment.h
 
-  This resource can be used for reference: 
+  This resource can be used for reference:
   (two different links, but the content is identical)
       https://cse.hkust.edu.hk/~golin/COMP572/Notes/Matching.pdf
       https://www.columbia.edu/~cs2035/courses/ieor6614.S16/GolinAssignmentNotes.pdf
+
+  This resource is a bit more clear but I unfortunately found it after the two above:
+    https://cp-algorithms.com/graph/hungarian-algorithm.html#implementation-of-the-hungarian-algorithm
   */
   auto cost = cost_matrix;
   if (cost_matrix.cols() != cost_matrix.rows()) {
     cost = make_square_cost_matrix(cost_matrix);
   }
 
+  cost = scale_matrix(cost, max_cost);
+
   // Labeling (weight) of X and Y
-  Eigen::VectorXd lx, ly; 
+  Eigen::VectorXd lx, ly;
   // Boolean indicator for whether node is a member of set S or T
   // S includes only nodes in X, T only nodes in Y
   std::vector<char> S, T;
@@ -106,13 +130,12 @@ std::vector<int> max_cost_assignment(
   std::vector<double> slack;
   // The corresponding edge for each slack value (matching of y to x)
   std::vector<double> slackx;
-  // Contains the indices of 
+  // Contains the indices of the augmenting path
   std::vector<int> aug_path;
 
   // Size of each set of nodes in the bipartite graph
   size_t cost_size = static_cast<size_t>(cost.cols());
 
-  // 
   /*
   Vertex x is matched to vertex xy[x] and vertex y is matched to vertex yx[y].
   We start with a graph where nothing is matched (all matches set to -1)
