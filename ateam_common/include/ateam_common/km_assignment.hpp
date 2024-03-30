@@ -51,6 +51,20 @@ const Eigen::MatrixXd make_square_cost_matrix(
   const Eigen::MatrixXd & cost_matrix);
 
 /*
+  Replace any nan costs in the cost matrix with 0s.
+*/
+const Eigen::MatrixXd replace_nan_costs_with_zeros(
+  const Eigen::MatrixXd & matrix);
+
+/*
+  Replace any nan costs in the cost matrix with a specified value
+*/
+const Eigen::MatrixXd replace_nan_costs_with_value(
+  const Eigen::MatrixXd & matrix,
+  double value);
+
+
+/*
 Calculate slack used to update the labeling (weight) of nodes.
 
 - Initialized before starting the algorithm.

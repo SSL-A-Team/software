@@ -120,3 +120,25 @@ TEST(KmAssignment, min_cost_assignment) {
   EXPECT_EQ(out2x2.at(0), 0);
   EXPECT_EQ(out2x2.at(1), 1);
 }
+
+TEST(KmAssignment, handle_nan) {
+  Eigen::Matrix<double, 3, 3> cost3x3{
+    {-10, -4, 0},
+    {1, 0, -5},
+    {NAN, 4, -10}
+  };
+  std::vector<int> out3x3 = km_assignment::max_cost_assignment(cost3x3);
+  EXPECT_EQ(out3x3.size(), 3);
+  EXPECT_EQ(out3x3.at(0), 2);
+  EXPECT_EQ(out3x3.at(1), 0);
+  EXPECT_EQ(out3x3.at(2), 1);
+
+  Eigen::Matrix<double, 2, 2> cost2x2{
+    {NAN, -4},
+    {1, 0.005}
+  };
+  std::vector<int> out2x2 = km_assignment::max_cost_assignment(cost2x2);
+  EXPECT_EQ(out2x2.size(), 2);
+  EXPECT_EQ(out2x2.at(0), 1);
+  EXPECT_EQ(out2x2.at(1), 0);
+}

@@ -20,6 +20,7 @@
 
 #include <Eigen/Dense>
 #include <limits>
+#include <cmath>
 #include <vector>
 #include <deque>
 #include <iostream>
@@ -28,6 +29,28 @@
 namespace ateam_common::km_assignment
 {
 const float EPSILON = 1e-10;
+
+const Eigen::MatrixXd scale_matrix(
+  const Eigen::MatrixXd & matrix, bool is_max_cost)
+{
+  Eigen::MatrixXd new_matrix = matrix;
+  if (!is_max_cost) {
+    new_matrix *= -1;
+  }
+  // If any of the coefficients are NaN, ensure we ignore them using
+  // Eigen's NaNPropagation template:
+  // https://eigen.tuxfamily.org/index.php?title=3.4#Improvement_to_NaN_propagation
+  double matMin = new_matrix.template minCoeff<Eigen::PropagateNumbers>();
+
+  // If there are no negative values, no rescaling needed.
+  if (matMin > 0) {
+    return new_matrix;
+  }
+  // Otherwise, shift so the entire matrix is moved to be > 0
+  new_matrix -= (Eigen::MatrixXd::Ones(
+      new_matrix.rows(), new_matrix.cols()) * matMin);
+  return new_matrix;
+}
 
 const Eigen::MatrixXd make_square_cost_matrix(
   const Eigen::MatrixXd & matrix)
@@ -48,21 +71,20 @@ const Eigen::MatrixXd make_square_cost_matrix(
   return new_mat;
 }
 
-const Eigen::MatrixXd scale_matrix(
-  const Eigen::MatrixXd & matrix, bool is_max_cost)
+const Eigen::MatrixXd replace_nan_costs_with_zeros(
+  const Eigen::MatrixXd & matrix)
 {
-  Eigen::MatrixXd new_matrix = matrix;
-  if (!is_max_cost) {
-    new_matrix *= -1;
-  }
-  double matMin = new_matrix.minCoeff();
-  // If there are no negative values, no rescaling needed.
-  if (matMin > 0) {
-    return new_matrix;
-  }
-  // Otherwise, shift so the entire matrix is moved to be > 0
-  new_matrix += (Eigen::MatrixXd::Ones(
-      new_matrix.rows(), new_matrix.cols()) * matMin);
+  Eigen::MatrixXd zero_mask = Eigen::MatrixXd::Zero(matrix.rows(), matrix.cols());
+  Eigen::MatrixXd new_matrix = (matrix.array().isNaN()).select(zero_mask, matrix);
+  return new_matrix;
+}
+
+const Eigen::MatrixXd replace_nan_costs_with_value(
+  const Eigen::MatrixXd & matrix,
+  double value)
+{
+  Eigen::MatrixXd value_mask = Eigen::MatrixXd::Ones(matrix.rows(), matrix.cols()) * value;
+  Eigen::MatrixXd new_matrix = (matrix.array().isNaN()).select(value_mask, matrix);
   return new_matrix;
 }
 
@@ -121,8 +143,8 @@ std::vector<int> max_cost_assignment(
   if (cost_matrix.cols() != cost_matrix.rows()) {
     cost = make_square_cost_matrix(cost_matrix);
   }
-
   cost = scale_matrix(cost, max_cost);
+  cost = replace_nan_costs_with_zeros(cost);
 
   // Step 1: Create an initial feasible labeling,
   // clear out sets S and T, and reset our slack values.
