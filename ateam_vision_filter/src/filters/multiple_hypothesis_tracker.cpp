@@ -52,6 +52,9 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
     }
   }
 
+  // std::vector<int> assignment =
+  //   ateam_common::km_assignment::max_cost_assignment(costs, false);
+
   std::unordered_map assignment = ateam_common::assignment::optimize_assignment(costs);
   std::vector<bool> used_measurements(measurements.size(), false);
 
