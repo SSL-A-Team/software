@@ -52,7 +52,7 @@ const Eigen::MatrixXd scale_matrix(
   const Eigen::MatrixXd & matrix, bool is_max_cost)
 {
   Eigen::MatrixXd new_matrix = matrix;
-  if (is_max_cost) {
+  if (!is_max_cost) {
     new_matrix *= -1;
   }
   double matMin = new_matrix.minCoeff();
@@ -63,7 +63,7 @@ const Eigen::MatrixXd scale_matrix(
   // Otherwise, shift so the entire matrix is moved to be > 0
   new_matrix += (Eigen::MatrixXd::Ones(
       new_matrix.rows(), new_matrix.cols()) * matMin);
-  return new_matrix
+  return new_matrix;
 }
 
 void compute_slack(
@@ -114,6 +114,9 @@ std::vector<int> max_cost_assignment(
   This resource is a bit more clear but I unfortunately found it after the two above:
     https://cp-algorithms.com/graph/hungarian-algorithm.html#implementation-of-the-hungarian-algorithm
   */
+
+  // Make sure our matrix fits our algorithms requirements
+  // (it is square and non-negative).
   auto cost = cost_matrix;
   if (cost_matrix.cols() != cost_matrix.rows()) {
     cost = make_square_cost_matrix(cost_matrix);
@@ -121,20 +124,28 @@ std::vector<int> max_cost_assignment(
 
   cost = scale_matrix(cost, max_cost);
 
-  // Labeling (weight) of X and Y
-  Eigen::VectorXd lx, ly;
+  // Step 1: Create an initial feasible labeling,
+  // clear out sets S and T, and reset our slack values.
+
+  // Size of each set of nodes in the bipartite graph
+  size_t cost_size = static_cast<size_t>(cost.cols());
+
+  // Initial labeling.
+  // We set all ly = 0, all lx to their max value.
+  Eigen::VectorXd ly = Eigen::VectorXd().setConstant(cost_size, 0);
+  Eigen::VectorXd lx = cost.rowwise().maxCoeff();
+
   // Boolean indicator for whether node is a member of set S or T
   // S includes only nodes in X, T only nodes in Y
   std::vector<char> S, T;
+
   // Min l(x) + l(y) - cost(x,y) given the current S and T
   std::vector<double> slack;
   // The corresponding edge for each slack value (matching of y to x)
   std::vector<double> slackx;
+
   // Contains the indices of the augmenting path
   std::vector<int> aug_path;
-
-  // Size of each set of nodes in the bipartite graph
-  size_t cost_size = static_cast<size_t>(cost.cols());
 
   /*
   Vertex x is matched to vertex xy[x] and vertex y is matched to vertex yx[y].
@@ -142,16 +153,10 @@ std::vector<int> max_cost_assignment(
   X corresponds to rows of the cost matrix and y corresponds to the
   columns of the cost matrix.
   */
-  std::vector<int> xy(cost_size, -1); // Edges of X to Y
-  std::vector<int> yx(cost_size, -1); // Edges of Y to X
-
-  // Step 1: Create an initial feasible labeling,
-  // clear out sets S and T, and reset our slack values.
-
-  // Initial labeling.
-  // We set all ly = 0, all lx to their max value.
-  ly.setConstant(cost_size, 0);
-  lx = cost.rowwise().maxCoeff();
+  // Edges of X to Y
+  std::vector<int> xy(cost_size, -1);
+  // Edges of Y to X
+  std::vector<int> yx(cost_size, -1);
 
   // Now grow the match set by picking edges from the equality subgraph until
   // we have a complete matching.

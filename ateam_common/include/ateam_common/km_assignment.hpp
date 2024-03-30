@@ -27,9 +27,9 @@ namespace ateam_common::km_assignment
 {
 /*
   Ensure the input cost matrix is non-negative. If not "is_max_cost",
-  invert the matrix so the maximum is a minimum and vice versa (since
-  this implementation of the Hungarian algorithm finds the MAX value
-  matching).
+  multiply the matrix by -1 so the maximum is a minimum and vice versa
+  (since this implementation of the Hungarian algorithm finds the
+  MAX value matching).
 
   Returns a new version of the input matrix scaled from 0 to inf.
 */
@@ -93,7 +93,7 @@ void compute_slack(
 */
 std::vector<int> max_cost_assignment(
   const Eigen::MatrixXd & cost_matrix,
-  bool max_cost
+  bool max_cost = true
 );
 
 }  // namespace ateam_common::km_assignment
