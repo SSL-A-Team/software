@@ -30,6 +30,9 @@
 
 #include "ateam_common/assignment.hpp"
 
+namespace ateam_vision_filter
+{
+
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {
   this->base_track = base_track;
@@ -125,3 +128,5 @@ void MultipleHypothesisTracker::life_cycle_management()
         return !track.has_been_updated_regularly();
       }), tracks.end());
 }
+
+}  // namespace ateam_vision_filter

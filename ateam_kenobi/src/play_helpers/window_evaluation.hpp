@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,38 +19,39 @@
 // THE SOFTWARE.
 
 
-#ifndef TYPES__WORLD_HPP_
-#define TYPES__WORLD_HPP_
+#ifndef PLAY_HELPERS__WINDOW_EVALUATION_HPP_
+#define PLAY_HELPERS__WINDOW_EVALUATION_HPP_
 
 #include <optional>
-#include <array>
-#include <chrono>
-
-#include "types/ball.hpp"
-#include "types/field.hpp"
-#include "types/referee_info.hpp"
+#include <vector>
+#include <ateam_geometry/types.hpp>
 #include "types/robot.hpp"
+#include "visualization/overlays.hpp"
 
-namespace ateam_kenobi
+namespace ateam_kenobi::play_helpers::window_evaluation
 {
-struct World
-{
-  std::chrono::steady_clock::time_point current_time;
 
-  Field field;
-  RefereeInfo referee_info;
+std::vector<ateam_geometry::Segment> getWindows(
+  const ateam_geometry::Segment & target,
+  const ateam_geometry::Point & source,
+  const std::vector<Robot> & robots);
 
-  Ball ball;
-  std::array<std::optional<Robot>, 16> our_robots;
-  std::array<std::optional<Robot>, 16> their_robots;
+std::optional<ateam_geometry::Segment> getLargestWindow(
+  const std::vector<ateam_geometry::Segment> & windows);
 
-  bool in_play;
-  bool our_penalty;
-  bool their_penalty;
+std::optional<ateam_geometry::Segment> projectRobotShadowOntoLine(
+  const Robot & robot,
+  const ateam_geometry::Point & source,
+  const ateam_geometry::Line & line);
 
-  // Holds the ID of the robot not allowed to touch the ball, if any
-  std::optional<int> double_touch_forbidden_id_;
-};
-}  // namespace ateam_kenobi
+void removeSegmentFromWindows(
+  const ateam_geometry::Segment & seg,
+  std::vector<ateam_geometry::Segment> & windows);
 
-#endif  // TYPES__WORLD_HPP_
+void drawWindows(
+  const std::vector<ateam_geometry::Segment> & windows,
+  const ateam_geometry::Point & source, visualization::Overlays overlays_);
+
+}  // namespace ateam_kenobi::play_helpers::window_evaluation
+
+#endif  // PLAY_HELPERS__WINDOW_EVALUATION_HPP_

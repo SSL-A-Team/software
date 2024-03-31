@@ -22,6 +22,9 @@
 
 #include "generators/generator_util.hpp"
 
+namespace ateam_vision_filter
+{
+
 void TransmissionProbabilityGenerator::update(
   const std::array<std::optional<Robot>, 16> & blue_robots,
   const std::array<std::optional<Robot>, 16> & yellow_robots,
@@ -117,3 +120,5 @@ double TransmissionProbabilityGenerator::get_transmission_probability(
   // Not possible to transition
   return 0.0;
 }
+
+}  // namespace ateam_vision_filter

@@ -25,17 +25,14 @@
 #include <ateam_geometry/nearest_points.hpp>
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
-#include "visualization/overlay_publisher.hpp"
-#include "visualization/play_info_publisher.hpp"
+#include "visualization/overlays.hpp"
 
 namespace ateam_kenobi::skills
 {
 class Goalie
 {
 public:
-  Goalie(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  explicit Goalie(visualization::Overlays overlays);
 
   void reset();
 
@@ -44,8 +41,7 @@ public:
     16> & motion_commands);
 
 private:
-  visualization::OverlayPublisher & overlay_publisher_;
-  visualization::PlayInfoPublisher & play_info_publisher_;
+  visualization::Overlays overlays_;
   play_helpers::EasyMoveTo easy_move_to_;
 };
 

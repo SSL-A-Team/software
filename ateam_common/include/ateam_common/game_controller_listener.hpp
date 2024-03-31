@@ -144,6 +144,11 @@ public:
     return game_command_;
   }
 
+  const GameCommand & GetPreviousGameCommand() const
+  {
+    return prev_game_command_;
+  }
+
   const std::optional<uint32_t> & GetOurGoalieID() const
   {
     return our_goalie_id_;
@@ -151,7 +156,12 @@ public:
 
   const std::optional<uint32_t> & GetTheirGoalieID() const
   {
-    return our_goalie_id_;
+    return their_goalie_id_;
+  }
+
+  const ssl_league_msgs::msg::Referee & GetLatestRefereeMessage() const
+  {
+    return referee_msg_;
   }
 
 private:
@@ -160,8 +170,10 @@ private:
   TeamSide team_side_{TeamSide::Unknown};
   GameStage game_stage_{GameStage::Unknown};
   GameCommand game_command_{GameCommand::Halt};
+  GameCommand prev_game_command_{GameCommand::Halt};
   std::optional<uint32_t> our_goalie_id_ {};
   std::optional<uint32_t> their_goalie_id_ {};
+  ssl_league_msgs::msg::Referee referee_msg_;
 
   ColorCallback color_callback_;
   SideCallback side_callback_;
@@ -169,6 +181,8 @@ private:
   rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr ref_subscription_;
 
   void RefereeMessageCallback(const ssl_league_msgs::msg::Referee::ConstSharedPtr msg);
+
+  GameCommand ConvertGameCommand(const uint8_t msg_command);
 };
 
 }  // namespace ateam_common
