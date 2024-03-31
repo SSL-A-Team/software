@@ -30,7 +30,7 @@ namespace ateam_common::km_assignment
 {
 const float EPSILON = 1e-10;
 
-const Eigen::MatrixXd scale_matrix(
+Eigen::MatrixXd scale_cost_matrix(
   const Eigen::MatrixXd & matrix, bool is_max_cost)
 {
   Eigen::MatrixXd new_matrix = matrix;
@@ -43,7 +43,7 @@ const Eigen::MatrixXd scale_matrix(
   double matMin = new_matrix.template minCoeff<Eigen::PropagateNumbers>();
 
   // If there are no negative values, no rescaling needed.
-  if (matMin > 0) {
+  if (matMin >= 0.0) {
     return new_matrix;
   }
   // Otherwise, shift so the entire matrix is moved to be > 0
@@ -52,7 +52,7 @@ const Eigen::MatrixXd scale_matrix(
   return new_matrix;
 }
 
-const Eigen::MatrixXd make_square_cost_matrix(
+Eigen::MatrixXd make_square_cost_matrix(
   const Eigen::MatrixXd & matrix)
 {
   if (matrix.rows() == matrix.cols()) {
@@ -71,7 +71,7 @@ const Eigen::MatrixXd make_square_cost_matrix(
   return new_mat;
 }
 
-const Eigen::MatrixXd replace_nan_costs_with_zeros(
+Eigen::MatrixXd replace_nan_costs_with_zeros(
   const Eigen::MatrixXd & matrix)
 {
   Eigen::MatrixXd zero_mask = Eigen::MatrixXd::Zero(matrix.rows(), matrix.cols());
@@ -79,7 +79,7 @@ const Eigen::MatrixXd replace_nan_costs_with_zeros(
   return new_matrix;
 }
 
-const Eigen::MatrixXd replace_nan_costs_with_value(
+Eigen::MatrixXd replace_nan_costs_with_value(
   const Eigen::MatrixXd & matrix,
   double value)
 {
@@ -140,10 +140,10 @@ std::vector<int> max_cost_assignment(
   // Make sure our matrix fits our algorithms requirements
   // (it is square and non-negative).
   auto cost = cost_matrix;
+  cost = scale_cost_matrix(cost, max_cost);
   if (cost_matrix.cols() != cost_matrix.rows()) {
     cost = make_square_cost_matrix(cost_matrix);
   }
-  cost = scale_matrix(cost, max_cost);
   cost = replace_nan_costs_with_zeros(cost);
 
   // Step 1: Create an initial feasible labeling,

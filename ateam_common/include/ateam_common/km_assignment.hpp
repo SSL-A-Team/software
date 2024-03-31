@@ -33,7 +33,7 @@ namespace ateam_common::km_assignment
 
   Returns a new version of the input matrix scaled from 0 to inf.
 */
-const Eigen::MatrixXd scale_matrix(
+Eigen::MatrixXd scale_cost_matrix(
   const Eigen::MatrixXd & cost_matrix,
   bool is_max_cost);
 
@@ -47,19 +47,19 @@ const Eigen::MatrixXd scale_matrix(
   added rows or columns of 0s starting at n + 1 / m + 1 needed to make
   the matrix square.
 */
-const Eigen::MatrixXd make_square_cost_matrix(
+Eigen::MatrixXd make_square_cost_matrix(
   const Eigen::MatrixXd & cost_matrix);
 
 /*
   Replace any nan costs in the cost matrix with 0s.
 */
-const Eigen::MatrixXd replace_nan_costs_with_zeros(
+Eigen::MatrixXd replace_nan_costs_with_zeros(
   const Eigen::MatrixXd & matrix);
 
 /*
   Replace any nan costs in the cost matrix with a specified value
 */
-const Eigen::MatrixXd replace_nan_costs_with_value(
+Eigen::MatrixXd replace_nan_costs_with_value(
   const Eigen::MatrixXd & matrix,
   double value);
 
