@@ -110,8 +110,6 @@ private:
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
-  ateam_common::GameCommand cached_game_command_;
-  ateam_common::GameCommand prev_game_command_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
