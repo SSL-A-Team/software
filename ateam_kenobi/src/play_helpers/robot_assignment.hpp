@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,44 +19,21 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__BASIC_122_HPP_
-#define PLAYS__BASIC_122_HPP_
+#ifndef PLAY_HELPERS__ROBOT_ASSIGNMENT_HPP_
+#define PLAY_HELPERS__ROBOT_ASSIGNMENT_HPP_
 
 #include <vector>
-#include "base_play.hpp"
-#include "skills/line_kick.hpp"
-#include "skills/blockers.hpp"
-#include "skills/goalie.hpp"
+#include <optional>
+#include "types/robot.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::play_helpers
 {
 
-class Basic122 : public BasePlay
-{
-public:
-  Basic122();
+std::vector<std::optional<Robot>> assignRobots(
+  const std::vector<Robot> & available_robots,
+  const std::vector<ateam_geometry::Point> & positions,
+  const std::vector<std::vector<int>> & disallowed_robot_ids = {});
 
-  void reset() override;
+}  // namespace ateam_kenobi::play_helpers
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world);
-
-private:
-  skills::LineKick striker_skill_;
-  skills::Blockers blockers_skill_;
-  skills::Goalie goalie_skill_;
-
-  void runStriker(
-    const Robot & striker_bot, const World & world,
-    ateam_msgs::msg::RobotMotionCommand & motion_command);
-
-  void runBlockers(
-    const std::vector<Robot> & blocker_bots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
-
-  bool doTheyHavePossession(const World & world);
-};
-
-}  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__BASIC_122_HPP_
+#endif  // PLAY_HELPERS__ROBOT_ASSIGNMENT_HPP_

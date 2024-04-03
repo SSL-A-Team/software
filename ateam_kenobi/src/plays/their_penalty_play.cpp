@@ -31,6 +31,7 @@ TheirPenaltyPlay::TheirPenaltyPlay()
   goalie_skill_(getOverlays().getChild("goalie"))
 {
   play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
+  goalie_skill_.possesionTolerance() = 0.3;
 }
 
 void TheirPenaltyPlay::reset()
@@ -52,22 +53,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyP
     return {};
   }
 
-  if (world.in_play) {
-    goalie_skill_.runFrame(world, motion_commands);
-  } else {
-    const auto robot_id = world.referee_info.our_goalie_id;
-    const auto & maybe_robot = world.our_robots[robot_id];
-    if (maybe_robot) {
-      const auto & robot = maybe_robot.value();
-      auto & move_to = move_tos_[robot_id];
-      move_to.setTargetPosition(ateam_geometry::Point(-world.field.field_length / 2.0, 0.0));
-      move_to.face_absolute(0.0);
-      path_planning::PlannerOptions options;
-      options.use_default_obstacles = false;
-      move_to.setPlannerOptions(options);
-      motion_commands[robot_id] = move_to.runFrame(robot, world);
-    }
-  }
+  goalie_skill_.runFrame(world, motion_commands);
 
   auto i = 0;
   ateam_geometry::Point pattern_start(kRobotDiameter - (world.field.field_length / 2.0),

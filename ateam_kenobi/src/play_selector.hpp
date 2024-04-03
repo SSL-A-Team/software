@@ -43,6 +43,10 @@ private:
   plays::Basic122 basic_122_play_;
   plays::OurPenaltyPlay our_penalty_play_;
   plays::TheirPenaltyPlay their_penalty_play_;
+  plays::ControlsTestPlay controls_test_play_;
+  plays::TrianglePassPlay triangle_pass_play_;
+  plays::WaypointsPlay waypoints_play_;
+  plays::SpinningAPlay spinning_a_play_;
 
   ateam_common::GameCommand previous_game_command_ = ateam_common::GameCommand::Halt;
   void * prev_play_address_ = nullptr;
@@ -50,11 +54,7 @@ private:
 
   void resetPlayIfNeeded(plays::BasePlay * play);
 
-  plays::BasePlay * finalizeSelection(
-    plays::BasePlay * play,
-    ateam_common::GameCommand current_game_command);
-
-  plays::BasePlay * pickNormalStartPlay();
+  plays::BasePlay * pickNormalStartPlay(const World & world);
 };
 
 }  // namespace ateam_kenobi
