@@ -1,7 +1,7 @@
 find_package(ament_cmake_gmock REQUIRED)
 
 ament_add_gmock(ateam_kenobi_tests
-  greedy_assignment_test.cpp
+  robot_assignment_test.cpp
   path_planner_test.cpp
 )
 
