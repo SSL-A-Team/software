@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <nlohmann/json.hpp>
 #include "visualization/overlays.hpp"
 #include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
@@ -42,7 +43,7 @@ public:
 
   std::vector<ateam_msgs::msg::RobotMotionCommand> runFrame(
     const World & world,
-    const std::vector<Robot> & robots);
+    const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
 
 private:
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;

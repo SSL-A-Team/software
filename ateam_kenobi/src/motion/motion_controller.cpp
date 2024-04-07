@@ -180,9 +180,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   // TODO(anon): handle pid gains better
-  this->x_controller.initPid(3.0, 0, 0, 0, 0);
-  this->y_controller.initPid(3.0, 0, 0, 0, 0);
-  this->t_controller.initPid(5.0, 0, 0, 0, 0);
+  this->x_controller.initPid(2.7, 0.0, 0.0, 0, 0);
+  this->y_controller.initPid(2.7, 0.0, 0.0, 0, 0);
+  this->t_controller.initPid(5.0, 0.5, 0, 0, 0);
 
   this->progress = 0;
   this->total_dist = 0;
@@ -200,10 +200,13 @@ void MotionController::set_x_pid_gain(GainType gain, double value)
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
+      break;
     case GainType::i:
       gains.i_gain_ = value;
+      break;
     case GainType::d:
       gains.d_gain_ = value;
+      break;
   }
   this->x_controller.setGains(gains);
 }
@@ -214,10 +217,13 @@ void MotionController::set_y_pid_gain(GainType gain, double value)
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
+      break;
     case GainType::i:
       gains.i_gain_ = value;
+      break;
     case GainType::d:
       gains.d_gain_ = value;
+      break;
   }
   this->y_controller.setGains(gains);
 }
@@ -228,10 +234,13 @@ void MotionController::set_t_pid_gain(GainType gain, double value)
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
+      break;
     case GainType::i:
       gains.i_gain_ = value;
+      break;
     case GainType::d:
       gains.d_gain_ = value;
+      break;
   }
   this->t_controller.setGains(gains);
 }

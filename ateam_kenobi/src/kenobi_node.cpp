@@ -41,6 +41,7 @@
 #include "types/message_conversions.hpp"
 #include "play_selector.hpp"
 #include "in_play_eval.hpp"
+#include "double_touch_eval.hpp"
 #include "motion/world_to_body_vel.hpp"
 
 namespace ateam_kenobi
@@ -108,6 +109,7 @@ private:
   World world_;
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
+  DoubleTouchEval double_touch_eval_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
@@ -218,11 +220,21 @@ private:
   {
     world_.current_time = std::chrono::steady_clock::now();
     world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
+    world_.referee_info.command_time =
+      std::chrono::system_clock::time_point(
+      std::chrono::nanoseconds(
+        rclcpp::Time(
+          game_controller_listener_.GetLatestRefereeMessage().command_timestamp).nanoseconds()));
+    world_.referee_info.prev_command = game_controller_listener_.GetPreviousGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
     if (game_controller_listener_.GetOurGoalieID().has_value()) {
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
     }
+    if (game_controller_listener_.GetTheirGoalieID().has_value()) {
+      world_.referee_info.their_goalie_id = game_controller_listener_.GetTheirGoalieID().value();
+    }
     in_play_eval_.Update(world_);
+    double_touch_eval_.update(world_);
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
       auto & clk = *this->get_clock();
       RCLCPP_WARN_THROTTLE(
