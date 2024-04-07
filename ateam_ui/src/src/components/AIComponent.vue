@@ -24,7 +24,7 @@ export default {
     },
     computed: {
         getAIDescription: function() {
-            let object = null;
+            let object = {};
             try {
                 object[this.state.world.ai.name] = JSON.parse(this.state.world.ai.description);
             } catch(e) {
