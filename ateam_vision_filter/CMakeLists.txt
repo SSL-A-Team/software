@@ -67,6 +67,7 @@ if(BUILD_TESTING)
   target_include_directories(${PROJECT_NAME}_test PRIVATE test src)
   target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
   set_target_properties(${PROJECT_NAME}_test PROPERTIES CXX_STANDARD 17)
-endif()
+  target_compile_options(${PROJECT_NAME}_test PRIVATE -g)
+  endif()
 
 ament_package()

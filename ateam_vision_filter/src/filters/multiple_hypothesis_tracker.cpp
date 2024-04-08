@@ -29,6 +29,7 @@
 #include <limits>
 
 #include "ateam_common/assignment.hpp"
+#include "ateam_common/km_assignment.hpp"
 
 namespace ateam_vision_filter
 {
@@ -36,6 +37,7 @@ namespace ateam_vision_filter
 void MultipleHypothesisTracker::set_base_track(const InteractingMultipleModelFilter & base_track)
 {
   this->base_track = base_track;
+  this->tracks.push_back(base_track);
 }
 
 void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & measurements)
@@ -46,28 +48,43 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
   // in other words the assignment matricies costs represent the
   // distance between each existing track and each measurement
 
+  if (tracks.empty()) {
+    tracks.push_back(this->base_track);
+  }
+
   Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(
     tracks.size(),
-    measurements.size(), std::numeric_limits<double>::infinity());
+    measurements.size(), 0.0);
+
   for (size_t i = 0; i < tracks.size(); i++) {
     for (size_t j = 0; j < measurements.size(); j++) {
       costs(i, j) = (measurements.at(j) - tracks.at(i).get_position_estimate()).norm();
     }
   }
 
-  std::unordered_map assignment = ateam_common::assignment::optimize_assignment(costs);
+  std::vector<int> tracks_to_measurements = ateam_common::km_assignment::max_cost_assignment(
+    costs,
+    false);
+  // std::unordered_map assignment = ateam_common::assignment::optimize_assignment(costs);
   std::vector<bool> used_measurements(measurements.size(), false);
 
   // iterate over assigned measurement track pairs and update the track
-  for (const auto & [track_idx, measurement_idx] : assignment) {
+  for (size_t i = 0; i < tracks_to_measurements.size(); ++i) {
     // Assigned edge
-    used_measurements.at(measurement_idx) = true;
+    const auto measurement_index = tracks_to_measurements[i];
 
-    const auto & measurement = measurements.at(measurement_idx);
-    auto & track = tracks.at(track_idx);
+    if (tracks_to_measurements[i] == -1) {
+      continue;
+    }
+
+    used_measurements.at(i) = true;
+    const auto & measurement = measurements.at(measurement_index);
+
+    auto & track = tracks.at(i);
 
     // Only add the measurement if they're within some range of the track
     // since measurements aren't super consistent
+    // TODO(Christian): Do we need to reenable this if statement
     // if ((measurement - track.get_position_estimate()).norm() < 1) {
     track.update(measurement);
   }
