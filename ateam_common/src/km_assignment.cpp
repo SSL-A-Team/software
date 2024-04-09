@@ -141,8 +141,8 @@ std::vector<int> max_cost_assignment(
   // (it is square and non-negative).
   auto cost = cost_matrix;
   cost = scale_cost_matrix(cost, max_cost);
-  if (cost_matrix.cols() != cost_matrix.rows()) {
-    cost = make_square_cost_matrix(cost_matrix);
+  if (cost.cols() != cost.rows()) {
+    cost = make_square_cost_matrix(cost);
   }
   cost = replace_nan_costs_with_zeros(cost);
 
