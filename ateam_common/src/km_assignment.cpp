@@ -23,7 +23,6 @@
 #include <cmath>
 #include <vector>
 #include <deque>
-#include <iostream>
 #include "ateam_common/km_assignment.hpp"
 
 namespace ateam_common::km_assignment
@@ -88,6 +87,15 @@ Eigen::MatrixXd replace_nan_costs_with_value(
   return new_matrix;
 }
 
+Eigen::MatrixXd replace_forbidden_costs_with_zeros(
+  const Eigen::MatrixXd & matrix,
+  std::vector<int> & forbidden_x,
+  std::vector<int> & forbidden_y
+){
+  // For each x in forbidden x, set the row to 0
+  // For each y in forbidden y, set the column to 0
+};
+
 void compute_slack(
   const int x,
   std::vector<double> & slack,
@@ -115,7 +123,9 @@ value.
 
 std::vector<int> max_cost_assignment(
   const Eigen::MatrixXd & cost_matrix,
-  bool max_cost
+  bool max_cost,
+  std::vector<int> & forbidden_x,
+  std::vector<int> & forbidden_y
 )
 {
   /*
@@ -328,4 +338,11 @@ std::vector<int> max_cost_assignment(
   // based on our feasible labeling
   return xy;
 }
+
+std::vector<int> min_cost_assignment(
+  const Eigen::MatrixXd & cost_matrix,
+){
+  return max_cost_assignment(cost_matrix, false);
+};
+
 }  // namespace ateam_common::km_assignment
