@@ -165,7 +165,7 @@ std::vector<int> max_cost_assignment(
     cost = make_square_cost_matrix(cost);
   }
   cost = replace_nan_costs_with_zeros(cost);
-  cost = replace_forbidden_costs_with_zeros(cost_matrix, forbidden_x, forbidden_y);
+  cost = replace_forbidden_costs_with_zeros(cost, forbidden_x, forbidden_y);
 
   // Step 1: Create an initial feasible labeling,
   // clear out sets S and T, and reset our slack values.
