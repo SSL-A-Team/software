@@ -65,8 +65,8 @@ Eigen::MatrixXd replace_nan_costs_with_value(
 
 Eigen::MatrixXd replace_forbidden_costs_with_zeros(
   const Eigen::MatrixXd & matrix,
-  std::vector<int> & forbidden_x,
-  std::vector<int> & forbidden_y);
+  std::vector<int> forbidden_x, 
+  std::vector<int> forbidden_y);
 /*
 Calculate slack used to update the labeling (weight) of nodes.
 
@@ -110,11 +110,15 @@ void compute_slack(
 */
 std::vector<int> max_cost_assignment(
   const Eigen::MatrixXd & cost_matrix,
-  bool max_cost = true
+  bool max_cost = true,
+  std::vector<int> forbidden_x = std::vector<int>(),
+  std::vector<int> forbidden_y = std::vector<int>()
 );
 
 std::vector<int> min_cost_assignment(
   const Eigen::MatrixXd & cost_matrix,
+  std::vector<int> forbidden_x = std::vector<int>(),
+  std::vector<int> forbidden_y = std::vector<int>()
 );
 
 }  // namespace ateam_common::km_assignment
