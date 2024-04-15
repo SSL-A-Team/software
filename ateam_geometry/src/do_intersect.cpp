@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,39 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-/**
- * This module exists because the geometry library we use (CGAL) doesn't
- * treat circles consistently as open or closed. Here we have intersection
- * code that consistently treats them as disks (closed circles).
- * See Wikipedia if you want to read more:
- * https://en.wikipedia.org/wiki/Disk_(mathematics)
-*/
-
-#ifndef ATEAM_GEOMETRY__DISK_INTERSECTION_HPP_
-#define ATEAM_GEOMETRY__DISK_INTERSECTION_HPP_
-
-#include <CGAL/Distance_2/Point_2_Segment_2.h>
-#include <variant>
-#include <algorithm>
-#include "ateam_geometry/types.hpp"
+#include "ateam_geometry/do_intersect.hpp"
 
 namespace ateam_geometry
 {
 
-/**
- * @brief Disk intersection that accounts for the degenerate case where
- * one disk is completely inside the other.
- *
- * @param disk1 A circle including its interior (disk)
- * @param disk2 A different circle including its interior (disk)
- */
-inline bool doDiskIntersect(
-  const Circle & disk1,
-  const Circle & disk2)
+template<>
+bool do_intersect(const AnyShape & a, const AnyShape & b)
 {
-  double sr1 = disk1.squared_radius();
-  double sr2 = disk2.squared_radius();
-  double squared_dist = squared_distance(disk1.center(), disk2.center());
+  return std::visit(
+    [&b](const auto & any_shape_a_val) {
+      return ateam_geometry::do_intersect(any_shape_a_val, b);
+    }, a);
+}
+
+template<>
+bool do_intersect(const Disk & disk_a, const Disk & disk_b)
+{
+  double sr1 = disk_a.squared_radius();
+  double sr2 = disk_b.squared_radius();
+  double squared_dist = CGAL::squared_distance(disk_a.center(), disk_b.center());
 
   // Check if one circle is completely inside the other
   if (squared_dist <= std::max(sr1, sr2)) {
@@ -62,16 +49,8 @@ inline bool doDiskIntersect(
   return !(4 * sr1 * sr2 < temp * temp);
 }
 
-/**
- * @brief Disk-rectangle intersection that accounts for the degenerate case where
- * the disk is completely inside the rectangle.
- *
- * @param disk A circle including its interior (disk)
- * @param rec A rectangle, including its interior
- */
-inline bool doDiskIntersect(
-  const Circle & disk,
-  const Rectangle & rec)
+template<>
+bool do_intersect(const Disk & disk, const Rectangle & rec)
 {
   Point center = disk.center();
 
@@ -130,15 +109,8 @@ inline bool doDiskIntersect(
   return sq_distance >= disk.squared_radius();
 }
 
-/**
- * @brief Disk-point intersection that assumes a circle is closed.
- *
- * @param disk A circle including its interior (disk)
- * @param point A point in 2D space
- */
-inline bool doDiskIntersect(
-  const Circle & disk,
-  const Point & point)
+template<>
+bool do_intersect(const Disk & disk, const Point & point)
 {
   Point center = disk.center();
 
@@ -163,34 +135,18 @@ inline bool doDiskIntersect(
   return sq_distance <= disk.squared_radius();
 }
 
-/**
- * @brief Disk-line segment intersection. The CGAL case assumes the interior
- * of a circle is a disk, so we can just reuse it.
- *
- * @param disk A circle including its interior (disk)
- * @param segment A 2D line segment
- */
-inline bool doDiskIntersect(
-  const Circle & disk,
-  const Segment & segment)
+template<>
+bool do_intersect(const Disk & disk, const Segment & segment)
 {
-  return CGAL::do_intersect(disk, segment);
+  // The CGAL implementation already treats circles as disks in this case.
+  return CGAL::do_intersect(disk.AsCircle(), segment);
 }
 
-/**
- * @brief Disk-ray intersection. The CGAL case assumes the interior
- * of a circle is a disk, so we can just reuse it.
- *
- * @param disk A circle including its interior (disk)
- * @param segment A 2D line segment
- */
-inline bool doDiskIntersect(
-  const Circle & disk,
-  const Ray & ray)
+template<>
+bool do_intersect(const Disk & disk, const Ray & ray)
 {
-  return CGAL::do_intersect(disk, ray);
+  // The CGAL implementation already treats circles as disks in this case.
+  return CGAL::do_intersect(disk.AsCircle(), ray);
 }
 
 }  // namespace ateam_geometry
-
-#endif  // ATEAM_GEOMETRY__DISK_INTERSECTION_HPP_
