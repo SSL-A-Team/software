@@ -13,7 +13,7 @@ set(CGAL_DATA_DIR ".") # Silence CGAL warning since we don't use its data direct
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
 find_package(CGAL REQUIRED)
 
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED
   src/do_intersect.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC

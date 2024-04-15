@@ -25,8 +25,10 @@
 
 #include "any_shape.hpp"
 #include "arc.hpp"
+#include "do_intersect.hpp"
 #include "disk.hpp"
 #include "eigen_conversions.hpp"
+#include "intersection.hpp"
 #include "make_circle.hpp"
 #include "nearest_points.hpp"
 #include "normalize.hpp"

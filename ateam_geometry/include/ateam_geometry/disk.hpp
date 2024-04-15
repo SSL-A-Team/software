@@ -52,6 +52,11 @@ public:
   }
 };
 
+inline Disk makeDisk(Point center, double radius)
+{
+  return Disk(center, radius * radius);
+}
+
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__DISK_HPP_

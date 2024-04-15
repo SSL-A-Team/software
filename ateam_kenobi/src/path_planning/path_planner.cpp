@@ -51,7 +51,7 @@ PathPlanner::Path PathPlanner::getPath(
   }
 
   if (options.avoid_ball) {
-    augmented_obstacles.push_back(ateam_geometry::makeCircle(world.ball.pos, 0.04267 / 2));
+    augmented_obstacles.push_back(ateam_geometry::makeDisk(world.ball.pos, 0.04267 / 2));
   }
 
   if (!isStateInBounds(start, world)) {
@@ -118,13 +118,13 @@ void PathPlanner::removeCollidingObstacles(
   std::vector<ateam_geometry::AnyShape> & obstacles,
   const ateam_geometry::Point & point, const PlannerOptions & options)
 {
-  auto robot_footprint = ateam_geometry::makeCircle(
+  auto robot_footprint = ateam_geometry::makeDisk(
     point,
     kRobotRadius + options.footprint_inflation
   );
 
   auto is_obstacle_colliding = [&robot_footprint](const ateam_geometry::AnyShape & obstacle) {
-      return ateam_geometry::variantDoIntersect(robot_footprint, obstacle);
+      return ateam_geometry::do_intersect(robot_footprint, obstacle);
     };
 
   const auto new_end = std::remove_if(obstacles.begin(), obstacles.end(), is_obstacle_colliding);
@@ -151,14 +151,14 @@ bool PathPlanner::isStateValid(
     return false;
   }
 
-  auto robot_footprint = ateam_geometry::makeCircle(
+  auto robot_footprint = ateam_geometry::makeDisk(
     state,
     kRobotRadius + options.footprint_inflation
   );
 
   return std::ranges::none_of(
     obstacles, [&robot_footprint](const ateam_geometry::AnyShape & obstacle) {
-      return ateam_geometry::variantDoIntersect(robot_footprint, obstacle);
+      return ateam_geometry::do_intersect(robot_footprint, obstacle);
     });
 }
 
@@ -228,7 +228,7 @@ void PathPlanner::addRobotsToObstacles(
 {
   auto obstacle_from_robot = [](const std::optional<Robot> & robot) {
       return ateam_geometry::AnyShape(
-        ateam_geometry::makeCircle(robot.value().pos, kRobotRadius));
+        ateam_geometry::makeDisk(robot.value().pos, kRobotRadius));
     };
 
   auto not_current_robot = [&start_pos](const std::optional<Robot> & robot) {
