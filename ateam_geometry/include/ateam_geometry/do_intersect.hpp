@@ -38,9 +38,6 @@ namespace ateam_geometry
 template<typename A, typename B>
 bool do_intersect(const A & a, const B & b)
 {
-  if constexpr (std::is_same_v<B, Disk>) {
-    std::cerr << "Calling do_intersect template with B type of Disk\n";
-  }
   return CGAL::do_intersect(a, b);
 }
 
