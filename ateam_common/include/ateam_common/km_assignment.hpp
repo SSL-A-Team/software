@@ -22,9 +22,20 @@
 
 #include <Eigen/Dense>
 #include <vector>
+#include <map>
 
 namespace ateam_common::km_assignment
 {
+/*
+Whether to perform max cost assignment (the default setting of our Hungarian assignment
+implementation) or the min cost assignment (will invert all costs in the matrix and
+scale appropriately)
+*/
+enum class AssignmentType
+{
+  MaxCost = 0,
+  MinCost = 1
+};
 /*
   Ensure the input cost matrix is non-negative. If not "is_max_cost",
   multiply the matrix by -1 so the maximum is a minimum and vice versa
@@ -35,7 +46,7 @@ namespace ateam_common::km_assignment
 */
 Eigen::MatrixXd scale_cost_matrix(
   const Eigen::MatrixXd & cost_matrix,
-  bool is_max_cost);
+  AssignmentType max_or_min);
 
 /*
   Ensure the input cost matrix is square. If needed, add rows or
@@ -63,10 +74,16 @@ Eigen::MatrixXd replace_nan_costs_with_value(
   const Eigen::MatrixXd & matrix,
   double value);
 
+/*
+  Replace costs of forbidden assignments with zeros AFTER scaling the cost matrix
+  to ensure the tasks are not assigned.
+
+  The forbidden_assignments map agents (rows) to vectors of forbidden tasks (a vector of column indices).
+*/
 Eigen::MatrixXd replace_forbidden_costs_with_zeros(
   const Eigen::MatrixXd & matrix,
-  std::vector<int> forbidden_x, 
-  std::vector<int> forbidden_y);
+  std::map<int, std::vector<int>> forbidden_assignments);
+
 /*
 Calculate slack used to update the labeling (weight) of nodes.
 
@@ -88,7 +105,10 @@ void compute_slack(
   Find the maximum cost assignment of a bipartite graph (i.e. robots and field positions)
   using the Hungarian (Kuhn-Munkres) Maximum Matching Algorithm.
 
-  You can find the min cost assignment by setting "max_cost" to false.
+  You can find the min cost assignment instead by setting the max_or_min AssignmentType to MinCost.
+
+  Forbid a particular agent (row) from assigning a task (column) by adding the task to the
+  forbidden_assignments vector at that row index in the forbidden assignments map.
 
   Returns a vector of the assigned column index (task) for each row (agent) in the matrix.
 
@@ -108,17 +128,10 @@ void compute_slack(
   but I unfortunately found it after the dlib implementation:
     https://cp-algorithms.com/graph/hungarian-algorithm.html#implementation-of-the-hungarian-algorithm
 */
-std::vector<int> max_cost_assignment(
+std::vector<int> km_assignment(
   const Eigen::MatrixXd & cost_matrix,
-  bool max_cost = true,
-  std::vector<int> forbidden_x = std::vector<int>(),
-  std::vector<int> forbidden_y = std::vector<int>()
-);
-
-std::vector<int> min_cost_assignment(
-  const Eigen::MatrixXd & cost_matrix,
-  std::vector<int> forbidden_x = std::vector<int>(),
-  std::vector<int> forbidden_y = std::vector<int>()
+  AssignmentType max_or_min = AssignmentType::MaxCost,
+  std::map<int, std::vector<int>> forbidden_assignments = std::map<int, std::vector<int>>()
 );
 
 }  // namespace ateam_common::km_assignment
