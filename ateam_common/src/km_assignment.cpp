@@ -339,6 +339,18 @@ std::vector<int> km_assignment(
     }
   }
 
+  // Just in case:
+  // if an X in the forbidden assignments keys, set xy[X] to -1
+  // or if any item in xy = val, set it to -1
+  // to ensure they are not actually assigned.
+  for (const auto & [key, val] : forbidden_assignments) {
+    for (const auto & v : val) {
+      if (xy.at(key) == v) {
+        xy[key] = -1;
+      }
+    }
+  }
+
   // Return our perfect matching
   // based on our feasible labeling
   return xy;
