@@ -42,6 +42,7 @@ using Line = Kernel::Line_2;
 using PointCreator = CGAL::Creator_uniform_2<double, Point>;
 using Polygon = CGAL::Polygon_2<Kernel>;
 using Vector = Kernel::Vector_2;
+using Direction = Kernel::Direction_2;
 
 using TreeTraits = CGAL::Search_traits_2<Kernel>;
 using OrthoNeighborSearch = CGAL::Orthogonal_k_neighbor_search<TreeTraits>;

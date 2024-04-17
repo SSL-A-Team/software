@@ -27,13 +27,18 @@
 namespace ateam_geometry
 {
 
+/**
+ * @brief Represents a circular arc
+ *
+ * The arc represented runs counter-clockwise from start direction to end direction.
+ */
 class Arc
 {
 public:
   Arc() {}
 
-  Arc(Point center, double radius, double start, double end)
-  : center_(center), radius_(radius), start_angle_(start), end_angle_(end) {}
+  Arc(Point center, double radius, Direction start, Direction end)
+  : center_(center), radius_(radius), start_(start), end_(end) {}
 
   const Point & center() const {return center_;}
   Point & center() {return center_;}
@@ -41,37 +46,37 @@ public:
   const double & radius() const {return radius_;}
   double & radius() {return radius_;}
 
-  const double & start() const {return start_angle_;}
-  double & start() {return start_angle_;}
+  const Direction & start() const {return start_;}
+  Direction & start() {return start_;}
 
-  const double & end() const {return end_angle_;}
-  double & end() {return end_angle_;}
+  const Direction & end() const {return end_;}
+  Direction & end() {return end_;}
 
   Point source() const
   {
-    return center_ + (radius_ * Vector(std::cos(start_angle_), std::sin(start_angle_)));
+    return center_ + (radius_ * start_.vector());
   }
 
   Point target() const
   {
-    return center_ + (radius_ * Vector(std::cos(end_angle_), std::sin(end_angle_)));
+    return center_ + (radius_ * end_.vector());
   }
 
   double length() const
   {
-    return std::abs(end_angle_ - start_angle_) * radius_;
+    return angle() * radius_;
   }
 
   double angle() const
   {
-    return std::abs(end_angle_ - start_angle_);
+    return std::abs(std::atan2(end_.dy(), end_.dx()) - std::atan2(start_.dy(), start_.dx()));
   }
 
 private:
   Point center_;
   double radius_;
-  double start_angle_;
-  double end_angle_;
+  Direction start_;
+  Direction end_;
 };
 
 }  // namespace ateam_geometry

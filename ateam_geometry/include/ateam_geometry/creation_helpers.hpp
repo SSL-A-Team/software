@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,39 +18,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__INTERSECTION_HPP_
-#define ATEAM_GEOMETRY__INTERSECTION_HPP_
+#ifndef ATEAM_GEOMETRY__CREATION_HELPERS_HPP_
+#define ATEAM_GEOMETRY__CREATION_HELPERS_HPP_
 
-#include <CGAL/intersections.h>
-#include <utility>
 #include "types.hpp"
-#include "arc.hpp"
+#include "disk.hpp"
 
 namespace ateam_geometry
 {
 
-template<typename A, typename B>
-typename CGAL::Intersection_traits<Kernel, A, B>::result_type intersection(const A & a, const B & b)
+/**
+ * @brief Factory utility to work around CGAL wanting the squared radius in the circle constructor.
+ *
+ * @param center Center point of the circle
+ * @param radius Radius of the circle
+ * @return Circle
+ */
+inline Circle makeCircle(Point center, double radius)
 {
-  return CGAL::intersection(a, b);
+  return ateam_geometry::Circle(center, radius * radius);
 }
 
-std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
-  const Circle & circle,
-  const Line & line);
+/**
+ * @brief Factory utility to work around CGAL wanting the squared radius in the circle constructor
+ * inheritted by Disk.
+ *
+ * @param center
+ * @param radius
+ * @return Disk
+ */
+inline Disk makeDisk(Point center, double radius)
+{
+  return Disk(center, radius * radius);
+}
 
-std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
-  const Arc & arc,
-  const Line & line);
-
-std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
-  const Arc & arc,
-  const Ray & ray);
-
-std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
-  const Arc & arc,
-  const Segment & segment);
+/**
+ * @brief Creates a Direction from an angle
+ *
+ * @param angle Angle of the Direction in radians
+ * @return Direction
+ */
+inline Direction directionFromAngle(double angle)
+{
+  return Direction(std::cos(angle), std::sin(angle));
+}
 
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__INTERSECTION_HPP_
+#endif  // ATEAM_GEOMETRY__CREATION_HELPERS_HPP_

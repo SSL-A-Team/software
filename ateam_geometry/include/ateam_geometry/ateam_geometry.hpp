@@ -29,7 +29,7 @@
 #include "disk.hpp"
 #include "eigen_conversions.hpp"
 #include "intersection.hpp"
-#include "make_circle.hpp"
+#include "creation_helpers.hpp"
 #include "nearest_points.hpp"
 #include "normalize.hpp"
 #include "types.hpp"

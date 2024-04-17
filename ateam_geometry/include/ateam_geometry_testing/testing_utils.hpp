@@ -25,16 +25,19 @@
 #include <CGAL/squared_distance_2.h>
 #include <tuple>
 #include <ateam_geometry/types.hpp>
+#include <ateam_geometry/comparisons.hpp>
 
-class PointIsNearMatcher : public ::testing::MatcherInterface<ateam_geometry::Point>
+class PointIsNearMatcher : public ::testing::MatcherInterface<const ateam_geometry::Point &>
 {
 public:
   explicit PointIsNearMatcher(const ateam_geometry::Point target, double threshold = 0.01)
-  : target_(target), threshold_squared_(threshold * threshold) {}
+  : target_(target), threshold_(threshold) {}
 
-  bool MatchAndExplain(ateam_geometry::Point p, ::testing::MatchResultListener *) const override
+  bool MatchAndExplain(
+    const ateam_geometry::Point & p,
+    ::testing::MatchResultListener *) const override
   {
-    return CGAL::squared_distance(p, target_) < threshold_squared_;
+    return ateam_geometry::nearEqual(p, target_, threshold_);
   }
 
   void DescribeTo(std::ostream * os) const override
@@ -49,10 +52,10 @@ public:
 
 private:
   const ateam_geometry::Point target_;
-  const double threshold_squared_;
+  const double threshold_;
 };
 
-inline ::testing::Matcher<ateam_geometry::Point> PointIsNear(
+inline ::testing::Matcher<const ateam_geometry::Point &> PointIsNear(
   const ateam_geometry::Point & target,
   double threshold = 0.01)
 {
@@ -64,13 +67,13 @@ class PointsAreNearMatcher : public ::testing::MatcherInterface<std::tuple<ateam
 {
 public:
   explicit PointsAreNearMatcher(double threshold = 0.01)
-  : threshold_squared_(threshold * threshold) {}
+  : threshold_(threshold) {}
 
   bool MatchAndExplain(
     std::tuple<ateam_geometry::Point, ateam_geometry::Point> points,
     ::testing::MatchResultListener *) const override
   {
-    return CGAL::squared_distance(std::get<0>(points), std::get<1>(points)) < threshold_squared_;
+    return ateam_geometry::nearEqual(std::get<0>(points), std::get<1>(points), threshold_);
   }
 
   void DescribeTo(std::ostream * os) const override
@@ -84,7 +87,7 @@ public:
   }
 
 private:
-  const double threshold_squared_;
+  const double threshold_;
 };
 
 inline ::testing::Matcher<std::tuple<ateam_geometry::Point, ateam_geometry::Point>> PointsAreNear(

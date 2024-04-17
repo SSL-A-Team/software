@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,26 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
-#define ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
+#ifndef ATEAM_GEOMETRY__COMPARISONS_HPP_
+#define ATEAM_GEOMETRY__COMPARISONS_HPP_
 
 #include "types.hpp"
+#include "normalize.hpp"
 
 namespace ateam_geometry
 {
 
-/**
- * @brief Factory utility to work around CGAL wanting the squared radius in the circle constructor.
- *
- * @param center Center point of the circle
- * @param radius Radius of the circle
- * @return Circle
- */
-inline Circle makeCircle(Point center, double radius)
+inline bool nearEqual(const Point & a, const Point & b, const double threshold = 1e-3)
 {
-  return ateam_geometry::Circle(center, radius * radius);
+  return CGAL::squared_distance(a, b) < (threshold * threshold);
+}
+
+inline bool nearEqual(const Vector & a, const Vector & b, const double threshold = 1e-3)
+{
+  return std::hypot(a.x() - b.x(), a.y() - b.y()) < threshold;
+}
+
+inline bool nearEqual(const Direction & a, const Direction & b, const double threshold = 1e-3)
+{
+  return nearEqual(normalize(a.vector()), normalize(b.vector()), threshold);
 }
 
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
+#endif  // ATEAM_GEOMETRY__COMPARISONS_HPP_
