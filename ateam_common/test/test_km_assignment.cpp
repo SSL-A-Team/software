@@ -95,6 +95,15 @@ TEST(KmAssignment, non_square_assignment) {
   EXPECT_EQ(out2x3.size(), 3);
   EXPECT_EQ(out2x3.at(0), 1);
   EXPECT_EQ(out2x3.at(1), 0);
+
+  Eigen::Matrix<double, 2, 1> cost2x1{
+    {2.8},
+    {0}
+  };
+  auto out2x1 = km_assignment::km_assignment(cost2x1, km_assignment::AssignmentType::MinCost);
+  EXPECT_EQ(out2x1.size(), 2);
+  EXPECT_EQ(out2x1.at(0), -1);
+  EXPECT_EQ(out2x1.at(1), 0);
 }
 
 TEST(KmAssignment, min_cost_assignment) {
@@ -156,6 +165,57 @@ TEST(KmAssignment, basic_forbidden_assignments) {
     forbidden);
   EXPECT_EQ(out3x3.size(), 3);
   EXPECT_EQ(out3x3.at(0), 1);
+  EXPECT_EQ(out3x3.at(1), 0);
+  EXPECT_EQ(out3x3.at(2), 2);
+}
+
+TEST(KmAssignment, all_forbidden_assignments) {
+  Eigen::Matrix<double, 3, 3> cost3x3{
+    {13, 12, 7},
+    {11, 8, 3},
+    {1, 4, 9}
+  };
+  std::map<int, std::vector<int>> forbidden{{0, std::vector<int>{0}},
+    {1, std::vector<int>{0}},
+    {2, std::vector<int>{0}}};
+  std::vector<int> out3x3 = km_assignment::km_assignment(
+    cost3x3,
+    km_assignment::AssignmentType::MaxCost,
+    forbidden);
+  EXPECT_EQ(out3x3.size(), 3);
+  EXPECT_EQ(out3x3.at(0), 1);
+  EXPECT_EQ(out3x3.at(1), -1);
+  EXPECT_EQ(out3x3.at(2), 2);
+
+  Eigen::Matrix<double, 3, 3> cost3x3{
+    {13, 12, 7},
+    {11, 8, 3},
+    {1, 4, 9}
+  };
+  std::map<int, std::vector<int>> forbidden{{0, std::vector<int>{0, 1, 2}},
+    {1, std::vector<int>{0, 1, 2}},
+    {2, std::vector<int>{0, 1, 2}}};
+  std::vector<int> out3x3 = km_assignment::km_assignment(
+    cost3x3,
+    km_assignment::AssignmentType::MaxCost,
+    forbidden);
+  EXPECT_EQ(out3x3.size(), 3);
+  EXPECT_EQ(out3x3.at(0), -1);
+  EXPECT_EQ(out3x3.at(1), -1);
+  EXPECT_EQ(out3x3.at(2), -1);
+  
+  Eigen::Matrix<double, 3, 3> cost3x3{
+    {13, 12, 7},
+    {11, 8, 3},
+    {1, 4, 9}
+  };
+  std::map<int, std::vector<int>> forbidden{{0, std::vector<int>{0, 1, 2}}};
+  std::vector<int> out3x3 = km_assignment::km_assignment(
+    cost3x3,
+    km_assignment::AssignmentType::MaxCost,
+    forbidden);
+  EXPECT_EQ(out3x3.size(), 3);
+  EXPECT_EQ(out3x3.at(0), -1);
   EXPECT_EQ(out3x3.at(1), 0);
   EXPECT_EQ(out3x3.at(2), 2);
 }
