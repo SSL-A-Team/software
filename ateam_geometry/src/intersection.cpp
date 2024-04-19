@@ -46,7 +46,11 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
 
   const auto descriminant = (r * r * d_r * d_r) - (D * D);
 
-  const auto sqrt_descriminant = std::sqrt(descriminant);
+  /* Very small negative numbers will be treated as tangent intersections
+   * so use max() to prevent NaNs.
+   */
+  const auto sqrt_descriminant = std::sqrt(std::max(descriminant, 0.0));
+
   const auto d_r_sqrd = d_r * d_r;
 
   auto sgn = [](const double x) {return x < 0.0 ? -1.0 : 1.0;};
@@ -118,9 +122,7 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
 
   // Not using Ray::has_on() because it does not account for small floating point mismatch
   auto point_on_ray = [&ray](const auto & p) {
-      if (nearEqual(p, ray.source())) {return true;}
-      const auto direction = (p - ray.source()).direction();
-      return nearEqual(direction, ray.direction());
+      return CGAL::squared_distance(p, ray) < 1e-6;
     };
 
   if (std::holds_alternative<Point>(*arc_intersection)) {
@@ -152,6 +154,39 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
   const Arc & arc,
   const Segment & segment)
 {
+  const auto arc_intersection = ateam_geometry::intersection(arc, segment.supporting_line());
+
+  if (!arc_intersection) {
+    return std::nullopt;
+  }
+
+  // Not using Segment::has_on() because it does not account for small floating point mismatch
+  auto point_on_segment = [&segment](const auto & p) {
+      return CGAL::squared_distance(p, segment) < 1e-6;
+    };
+
+  if (std::holds_alternative<Point>(*arc_intersection)) {
+    const auto & intersection_point = std::get<Point>(*arc_intersection);
+    if (point_on_segment(intersection_point)) {
+      return intersection_point;
+    } else {
+      return std::nullopt;
+    }
+  } else if (std::holds_alternative<std::pair<Point, Point>>(*arc_intersection)) {
+    const auto & intersection_points = std::get<std::pair<Point, Point>>(*arc_intersection);
+    const auto p1_valid = point_on_segment(intersection_points.first);
+    const auto p2_valid = point_on_segment(intersection_points.second);
+    if (p1_valid && p2_valid) {
+      return intersection_points;
+    } else if (p1_valid) {
+      return intersection_points.first;
+    } else if (p2_valid) {
+      return intersection_points.second;
+    } else {
+      return std::nullopt;
+    }
+  }
+
   return std::nullopt;
 }
 

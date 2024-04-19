@@ -138,3 +138,31 @@ TEST(IntersectionTests, ArcToRay)
           PointIsNear(ag::Point(-4.646, 5)),
           PointIsNear(ag::Point(0.646, 5))))));
 }
+
+TEST(IntersectionTests, ArcToSegment)
+{
+  const auto arc =
+    ag::Arc(ag::Point(0, 0), 1, ag::directionFromAngle(M_PI), ag::directionFromAngle(M_PI_2));
+
+  const auto segment_no_intersect = ag::Segment(ag::Point(0, 0), ag::Point(-1, 1));
+  EXPECT_THAT(ag::intersection(arc, segment_no_intersect), Eq(std::nullopt));
+
+  const auto segment_tangent = ag::Segment(ag::Point(0, -std::sqrt(2)), ag::Point(std::sqrt(2), 0));
+  EXPECT_THAT(
+    ag::intersection(arc, segment_tangent),
+    Optional(VariantWith<ag::Point>(PointIsNear(ag::Point(0.707, -0.707)))));
+
+  const auto segment_secant_1_intersect = ag::Segment(ag::Point(0, 0), ag::Point(0, -1));
+  EXPECT_THAT(
+    ag::intersection(arc, segment_secant_1_intersect),
+    Optional(VariantWith<ag::Point>(PointIsNear(ag::Point(0, -1)))));
+
+  const auto segment_secant_2_intersects = ag::Segment(ag::Point(-1, -1), ag::Point(1, 1));
+  EXPECT_THAT(
+    ag::intersection(arc, segment_secant_2_intersects),
+    Optional(
+      VariantWith<PointPair>(
+        Pair(
+          PointIsNear(ag::Point(-0.707, -0.707)),
+          PointIsNear(ag::Point(0.707, 0.707))))));
+}
