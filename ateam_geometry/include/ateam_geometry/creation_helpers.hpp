@@ -21,8 +21,10 @@
 #ifndef ATEAM_GEOMETRY__CREATION_HELPERS_HPP_
 #define ATEAM_GEOMETRY__CREATION_HELPERS_HPP_
 
-#include "types.hpp"
+#include <utility>
+#include "arc.hpp"
 #include "disk.hpp"
+#include "types.hpp"
 
 namespace ateam_geometry
 {
@@ -61,6 +63,23 @@ inline Disk makeDisk(Point center, double radius)
 inline Direction directionFromAngle(double angle)
 {
   return Direction(std::cos(angle), std::sin(angle));
+}
+
+/**
+ * @brief Construct an Arc from three points
+ *
+ * The radius of the arc is defined by the distance between center and start
+ *
+ * @param center Center of the arc
+ * @param start Starting point
+ * @param end Ending point
+ * @return Arc
+ */
+inline Arc arcFromThreePoints(Point center, const Point & start, const Point & end)
+{
+  return Arc(
+    std::move(center), CGAL::approximate_sqrt(CGAL::squared_distance(center, start)),
+    Direction(start - center), Direction(end - center));
 }
 
 }  // namespace ateam_geometry
