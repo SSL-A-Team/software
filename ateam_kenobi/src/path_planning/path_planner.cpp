@@ -124,7 +124,7 @@ void PathPlanner::removeCollidingObstacles(
   );
 
   auto is_obstacle_colliding = [&robot_footprint](const ateam_geometry::AnyShape & obstacle) {
-      return ateam_geometry::do_intersect(robot_footprint, obstacle);
+      return ateam_geometry::doIntersect(robot_footprint, obstacle);
     };
 
   const auto new_end = std::remove_if(obstacles.begin(), obstacles.end(), is_obstacle_colliding);
@@ -158,7 +158,7 @@ bool PathPlanner::isStateValid(
 
   return std::ranges::none_of(
     obstacles, [&robot_footprint](const ateam_geometry::AnyShape & obstacle) {
-      return ateam_geometry::do_intersect(robot_footprint, obstacle);
+      return ateam_geometry::doIntersect(robot_footprint, obstacle);
     });
 }
 
