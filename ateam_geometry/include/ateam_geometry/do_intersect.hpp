@@ -36,37 +36,37 @@ namespace ateam_geometry
  * CGAL's do_intersect function.
  */
 template<typename A, typename B>
-bool do_intersect(const A & a, const B & b)
+bool doIntersect(const A & a, const B & b)
 {
   return CGAL::do_intersect(a, b);
 }
 
 template<typename ObjA>
-bool do_intersect(const ObjA & a, const AnyShape & b)
+bool doIntersect(const ObjA & a, const AnyShape & b)
 {
   return std::visit(
     [&a](const auto & any_shape_val) {
-      return ateam_geometry::do_intersect(a, any_shape_val);
+      return ateam_geometry::doIntersect(a, any_shape_val);
     }, b);
 }
 
 template<>
-bool do_intersect(const AnyShape & a, const AnyShape & b);
+bool doIntersect(const AnyShape & a, const AnyShape & b);
 
 template<>
-bool do_intersect(const Disk & disk_a, const Disk & disk_b);
+bool doIntersect(const Disk & disk_a, const Disk & disk_b);
 
 template<>
-bool do_intersect(const Disk & disk, const Rectangle & rec);
+bool doIntersect(const Disk & disk, const Rectangle & rec);
 
 template<>
-bool do_intersect(const Disk & disk, const Point & point);
+bool doIntersect(const Disk & disk, const Point & point);
 
 template<>
-bool do_intersect(const Disk & disk, const Segment & segment);
+bool doIntersect(const Disk & disk, const Segment & segment);
 
 template<>
-bool do_intersect(const Disk & disk, const Ray & ray);
+bool doIntersect(const Disk & disk, const Ray & ray);
 
 }  // namespace ateam_geometry
 

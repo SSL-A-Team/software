@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ namespace ateam_geometry
  * @param p geometry point object
  * @return Eigen::Vector2d
  */
-inline Eigen::Vector2d PointToEigen(const Point & p)
+inline Eigen::Vector2d pointToEigen(const Point & p)
 {
   return {p.x(), p.y()};
 }
@@ -44,7 +44,7 @@ inline Eigen::Vector2d PointToEigen(const Point & p)
  * @param p Eigen Vector2d object
  * @return Point
  */
-inline Point EigenToPoint(const Eigen::Vector2d & p)
+inline Point eigenToPoint(const Eigen::Vector2d & p)
 {
   return Point(p.x(), p.y());
 }

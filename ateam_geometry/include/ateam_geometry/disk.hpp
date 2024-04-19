@@ -41,12 +41,12 @@ public:
   {
   }
 
-  Circle & AsCircle()
+  Circle & asCircle()
   {
     return *this;
   }
 
-  const Circle & AsCircle() const
+  const Circle & asCircle() const
   {
     return *this;
   }

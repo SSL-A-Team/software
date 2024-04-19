@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,12 @@
 
 #include "any_shape.hpp"
 #include "arc.hpp"
-#include "do_intersect.hpp"
+#include "comparisons.hpp"
+#include "creation_helpers.hpp"
 #include "disk.hpp"
+#include "do_intersect.hpp"
 #include "eigen_conversions.hpp"
 #include "intersection.hpp"
-#include "creation_helpers.hpp"
 #include "nearest_points.hpp"
 #include "normalize.hpp"
 #include "types.hpp"

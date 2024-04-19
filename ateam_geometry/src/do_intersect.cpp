@@ -24,16 +24,16 @@ namespace ateam_geometry
 {
 
 template<>
-bool do_intersect(const AnyShape & a, const AnyShape & b)
+bool doIntersect(const AnyShape & a, const AnyShape & b)
 {
   return std::visit(
     [&b](const auto & any_shape_a_val) {
-      return ateam_geometry::do_intersect(any_shape_a_val, b);
+      return ateam_geometry::doIntersect(any_shape_a_val, b);
     }, a);
 }
 
 template<>
-bool do_intersect(const Disk & disk_a, const Disk & disk_b)
+bool doIntersect(const Disk & disk_a, const Disk & disk_b)
 {
   double sr1 = disk_a.squared_radius();
   double sr2 = disk_b.squared_radius();
@@ -50,7 +50,7 @@ bool do_intersect(const Disk & disk_a, const Disk & disk_b)
 }
 
 template<>
-bool do_intersect(const Disk & disk, const Rectangle & rec)
+bool doIntersect(const Disk & disk, const Rectangle & rec)
 {
   Point center = disk.center();
 
@@ -110,7 +110,7 @@ bool do_intersect(const Disk & disk, const Rectangle & rec)
 }
 
 template<>
-bool do_intersect(const Disk & disk, const Point & point)
+bool doIntersect(const Disk & disk, const Point & point)
 {
   Point center = disk.center();
 
@@ -136,17 +136,17 @@ bool do_intersect(const Disk & disk, const Point & point)
 }
 
 template<>
-bool do_intersect(const Disk & disk, const Segment & segment)
+bool doIntersect(const Disk & disk, const Segment & segment)
 {
   // The CGAL implementation already treats circles as disks in this case.
-  return CGAL::do_intersect(disk.AsCircle(), segment);
+  return CGAL::do_intersect(disk.asCircle(), segment);
 }
 
 template<>
-bool do_intersect(const Disk & disk, const Ray & ray)
+bool doIntersect(const Disk & disk, const Ray & ray)
 {
   // The CGAL implementation already treats circles as disks in this case.
-  return CGAL::do_intersect(disk.AsCircle(), ray);
+  return CGAL::do_intersect(disk.asCircle(), ray);
 }
 
 }  // namespace ateam_geometry

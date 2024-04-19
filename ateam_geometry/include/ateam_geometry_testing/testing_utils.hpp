@@ -27,6 +27,8 @@
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/comparisons.hpp>
 
+// Style deviations in this file to match Google Test styling
+
 class PointIsNearMatcher : public ::testing::MatcherInterface<const ateam_geometry::Point &>
 {
 public:

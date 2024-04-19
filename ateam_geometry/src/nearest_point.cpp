@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,13 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <gtest/gtest.h>
+#include "ateam_geometry/nearest_point.hpp"
 
-#include "ateam_geometry/arc.hpp"
-
-TEST(ArcTests, Test1)
+namespace ateam_geometry
 {
-  ateam_geometry::Arc arc;
-  ateam_geometry::Line line;
-  // const auto intersection = CGAL::intersection(arc, line);
+
+ateam_geometry::Point nearestPointOnSegment(
+  const ateam_geometry::Segment & s,
+  const ateam_geometry::Point & p)
+{
+  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
+  if (s.has_on(orthogonal_projection)) {
+    return orthogonal_projection;
+  }
+  return CGAL::squared_distance(orthogonal_projection, s.source()) <
+         CGAL::squared_distance(orthogonal_projection, s.target()) ?
+         s.source() : s.target();
 }
+
+}  // namespace ateam_geometry

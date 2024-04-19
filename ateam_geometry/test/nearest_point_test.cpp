@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,14 +21,14 @@
 #include <gtest/gtest.h>
 
 #include "ateam_geometry/types.hpp"
-#include "ateam_geometry/nearest_points.hpp"
+#include "ateam_geometry/nearest_point.hpp"
 #include "ateam_geometry_testing/testing_utils.hpp"
 
 TEST(NearestPointOnSegment, PointOffSegment)
 {
   ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
   ateam_geometry::Point p(10, 0);
-  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
+  auto nearest_point = ateam_geometry::nearestPointOnSegment(s, p);
   EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(5, 5)));
 }
 
@@ -36,6 +36,6 @@ TEST(NearestPointOnSegment, PointOnSegment)
 {
   ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
   ateam_geometry::Point p(1, 1);
-  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
+  auto nearest_point = ateam_geometry::nearestPointOnSegment(s, p);
   EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(1, 1)));
 }
