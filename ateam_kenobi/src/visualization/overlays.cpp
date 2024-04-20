@@ -174,6 +174,30 @@ void Overlays::drawRectangle(
   addOverlay(msg);
 }
 
+void Overlays::drawArc(
+  const std::string & name, const ateam_geometry::Arc & arc,
+  const std::string & stroke_color, const uint8_t stroke_width,
+  const uint32_t lifetime)
+{
+  ateam_msgs::msg::Overlay msg;
+  msg.ns = ns_;
+  msg.name = name;
+  msg.visible = true;
+  msg.type = ateam_msgs::msg::Overlay::ARC;
+  msg.command = ateam_msgs::msg::Overlay::REPLACE;
+  msg.position.x = arc.center().x();
+  msg.position.y = arc.center().y();
+  msg.scale.x = 2.0 * arc.radius();
+  msg.scale.y = msg.scale.x;
+  msg.start_angle = std::atan2(arc.start().dy(), arc.start().dx());
+  msg.end_angle = std::atan2(arc.end().dy(), arc.end().dx());
+  msg.stroke_color = stroke_color;
+  msg.stroke_width = stroke_width;
+  msg.lifetime = lifetime;
+  msg.depth = 1;
+  addOverlay(msg);
+}
+
 void Overlays::addOverlay(ateam_msgs::msg::Overlay overlay)
 {
   if (overlay_array_) {
