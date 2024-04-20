@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,24 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <gtest/gtest.h>
+#ifndef ATEAM_GEOMETRY__COMPARISONS_HPP_
+#define ATEAM_GEOMETRY__COMPARISONS_HPP_
 
-#include "ateam_geometry/types.hpp"
-#include "ateam_geometry/nearest_points.hpp"
-#include "ateam_geometry_testing/testing_utils.hpp"
+#include "types.hpp"
+#include "normalize.hpp"
 
-TEST(NearestPointOnSegment, PointOffSegment)
+namespace ateam_geometry
 {
-  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
-  ateam_geometry::Point p(10, 0);
-  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
-  EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(5, 5)));
+
+inline bool nearEqual(const Point & a, const Point & b, const double threshold = 1e-3)
+{
+  return CGAL::squared_distance(a, b) < (threshold * threshold);
 }
 
-TEST(NearestPointOnSegment, PointOnSegment)
+inline bool nearEqual(const Vector & a, const Vector & b, const double threshold = 1e-3)
 {
-  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
-  ateam_geometry::Point p(1, 1);
-  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
-  EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(1, 1)));
+  return std::hypot(a.x() - b.x(), a.y() - b.y()) < threshold;
 }
+
+inline bool nearEqual(const Direction & a, const Direction & b, const double threshold = 1e-3)
+{
+  return nearEqual(normalize(a.vector()), normalize(b.vector()), threshold);
+}
+
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__COMPARISONS_HPP_

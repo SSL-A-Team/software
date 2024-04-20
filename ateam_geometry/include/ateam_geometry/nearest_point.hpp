@@ -18,38 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NORMALIZE_HPP_
-#define ATEAM_GEOMETRY__NORMALIZE_HPP_
+#ifndef ATEAM_GEOMETRY__NEAREST_POINT_HPP_
+#define ATEAM_GEOMETRY__NEAREST_POINT_HPP_
 
-#include <Eigen/Dense>
 #include "ateam_geometry/types.hpp"
-
 
 namespace ateam_geometry
 {
 
-template<typename T>
-inline auto normalize(T const & V)
-{
-  auto const slen = V.squared_length();
-  auto const d = CGAL::approximate_sqrt(slen);
-  return d > 0 ? (V / d) : V;
-}
-
-
-template<typename T, typename U>
-inline double norm(T const & V, U const & C)
-{
-  return CGAL::approximate_sqrt(CGAL::squared_distance(V, C));
-}
-
-template<typename T>
-inline double norm(T const & V)
-{
-  return CGAL::approximate_sqrt(V.squared_length());
-}
+ateam_geometry::Point nearestPointOnSegment(
+  const ateam_geometry::Segment & s,
+  const ateam_geometry::Point & p);
 
 }  // namespace ateam_geometry
 
-
-#endif  // ATEAM_GEOMETRY__NORMALIZE_HPP_
+#endif  // ATEAM_GEOMETRY__NEAREST_POINT_HPP_

@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <limits>
 #include <ateam_common/robot_constants.hpp>
-#include <ateam_geometry/nearest_points.hpp>
+#include <ateam_geometry/nearest_point.hpp>
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/available_robots.hpp"
 
@@ -136,7 +136,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runDefaultBehavior(
     ateam_geometry::Point(-(world.field.field_length / 2) + 0.25, -world.field.goal_width / 2));
 
   easy_move_to_.setTargetPosition(
-    ateam_geometry::NearestPointOnSegment(
+    ateam_geometry::nearestPointOnSegment(
       goalie_line,
       world.ball.pos));
   easy_move_to_.face_point(world.ball.pos);
@@ -191,7 +191,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, co
   }
 
   easy_move_to_.setTargetPosition(
-    ateam_geometry::NearestPointOnSegment(
+    ateam_geometry::nearestPointOnSegment(
       goalie_line,
       shot_point_on_extended_goalie_line));
   easy_move_to_.face_point(world.ball.pos);

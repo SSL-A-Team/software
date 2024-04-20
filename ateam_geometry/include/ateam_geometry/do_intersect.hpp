@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,26 +18,56 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
-#define ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
+#ifndef ATEAM_GEOMETRY__DO_INTERSECT_HPP_
+#define ATEAM_GEOMETRY__DO_INTERSECT_HPP_
 
+#include <CGAL/intersection_2.h>
+#include "any_shape.hpp"
+#include "disk.hpp"
 #include "types.hpp"
 
 namespace ateam_geometry
 {
 
 /**
- * @brief Factory utility to work around CGAL wanting the squared radius in the circle constructor.
+ * @brief Checks if two shapes intersect.
  *
- * @param center Center point of the circle
- * @param radius Radius of the circle
- * @return Circle
+ * Provided as an extension point for adding support for our custom types to
+ * CGAL's do_intersect function.
  */
-inline Circle makeCircle(Point center, double radius)
+template<typename A, typename B>
+bool doIntersect(const A & a, const B & b)
 {
-  return ateam_geometry::Circle(center, radius * radius);
+  return CGAL::do_intersect(a, b);
 }
+
+template<typename ObjA>
+bool doIntersect(const ObjA & a, const AnyShape & b)
+{
+  return std::visit(
+    [&a](const auto & any_shape_val) {
+      return ateam_geometry::doIntersect(a, any_shape_val);
+    }, b);
+}
+
+template<>
+bool doIntersect(const AnyShape & a, const AnyShape & b);
+
+template<>
+bool doIntersect(const Disk & disk_a, const Disk & disk_b);
+
+template<>
+bool doIntersect(const Disk & disk, const Rectangle & rec);
+
+template<>
+bool doIntersect(const Disk & disk, const Point & point);
+
+template<>
+bool doIntersect(const Disk & disk, const Segment & segment);
+
+template<>
+bool doIntersect(const Disk & disk, const Ray & ray);
 
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__MAKE_CIRCLE_HPP_
+#endif  // ATEAM_GEOMETRY__DO_INTERSECT_HPP_

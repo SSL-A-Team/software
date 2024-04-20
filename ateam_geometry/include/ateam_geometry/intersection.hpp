@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,26 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
-#define ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
+#ifndef ATEAM_GEOMETRY__INTERSECTION_HPP_
+#define ATEAM_GEOMETRY__INTERSECTION_HPP_
 
-#include "ateam_geometry/types.hpp"
+#include <CGAL/intersections.h>
+#include <utility>
+#include "types.hpp"
+#include "arc.hpp"
 
 namespace ateam_geometry
 {
 
-inline ateam_geometry::Point NearestPointOnSegment(
-  const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
+template<typename A, typename B>
+typename CGAL::Intersection_traits<Kernel, A, B>::result_type intersection(const A & a, const B & b)
 {
-  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-  if (s.has_on(orthogonal_projection)) {
-    return orthogonal_projection;
-  }
-  return CGAL::squared_distance(orthogonal_projection, s.source()) <
-         CGAL::squared_distance(orthogonal_projection, s.target()) ?
-         s.source() : s.target();
+  return CGAL::intersection(a, b);
 }
+
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Circle & circle,
+  const Line & line);
+
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Arc & arc,
+  const Line & line);
+
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Arc & arc,
+  const Ray & ray);
+
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Arc & arc,
+  const Segment & segment);
 
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
+#endif  // ATEAM_GEOMETRY__INTERSECTION_HPP_
