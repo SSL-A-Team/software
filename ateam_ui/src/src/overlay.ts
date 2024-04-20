@@ -21,6 +21,8 @@ export class Overlay {
     mesh_alpha: Mesh1d[] | null
     text: string | null
     depth: number
+    start_angle: number
+    end_angle: number
 
     lifetime_end: number;
     
@@ -128,6 +130,13 @@ export class Overlay {
             // CUSTOM
             case 7:
                 // TODO: This is probably a very low priority to implement
+                break;
+            // ARC
+            case 8:
+                graphic.beginFill(0, 0);
+                graphic.lineStyle(this.stroke_width, this.stroke_color);
+                graphic.arc(this.position.x, this.position.y, scale*this.scale.x/2, this.start_angle, this.end_angle, true);
+                graphic.endFill();
                 break;
         }
     }       
