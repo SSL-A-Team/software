@@ -22,7 +22,6 @@
 #define SKILLS__GOALIE_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include <ateam_geometry/nearest_points.hpp>
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
 #include "visualization/overlays.hpp"

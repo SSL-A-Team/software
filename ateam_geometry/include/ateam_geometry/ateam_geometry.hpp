@@ -31,7 +31,7 @@
 #include "do_intersect.hpp"
 #include "eigen_conversions.hpp"
 #include "intersection.hpp"
-#include "nearest_points.hpp"
+#include "nearest_point.hpp"
 #include "normalize.hpp"
 #include "types.hpp"
 
