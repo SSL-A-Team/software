@@ -51,7 +51,7 @@ PathPlanner::Path PathPlanner::getPath(
   }
 
   if (options.avoid_ball) {
-    augmented_obstacles.push_back(ateam_geometry::makeDisk(world.ball.pos, 0.04267 / 2));
+    augmented_obstacles.push_back(ateam_geometry::makeDisk(world.ball.pos, kBallRadius));
   }
 
   if (!isStateInBounds(start, world)) {
