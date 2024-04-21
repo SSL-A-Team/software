@@ -29,14 +29,14 @@ message RobotMoveCommand {
 
 // Move robot with wheel velocities
 message MoveWheelVelocity {
-    // Velocity [m/s] of front right wheel
-    required float front_right = 1;
-    // Velocity [m/s] of back right wheel
-    required float back_right = 2;
-    // Velocity [m/s] of back left wheel
-    required float back_left = 3;
     // Velocity [m/s] of front left wheel
-    required float front_left = 4;
+    required float front_left = 1;
+    // Velocity [m/s] of back left wheel
+    required float back_left = 2;
+    // Velocity [m/s] of back right wheel
+    required float back_right = 3;
+    // Velocity [m/s] of front right wheel
+    required float front_right = 4;
 }
 
 // Move robot with local velocity
