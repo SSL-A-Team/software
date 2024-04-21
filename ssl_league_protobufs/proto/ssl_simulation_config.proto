@@ -25,14 +25,14 @@ message RobotLimits {
 // all angles are relative to looking forward,
 // all wheels / angles are clockwise
 message RobotWheelAngles {
-    // Angle front left [rad]
-    required float front_left = 1;
-    // Angle back left [rad]
-    required float back_left = 2;
-    // Angle back right [rad]
-    required float back_right = 3;
     // Angle front right [rad]
-    required float front_right = 4;
+    required float front_right = 1;
+    // Angle back right [rad]
+    required float back_right = 2;
+    // Angle back left [rad]
+    required float back_left = 3;
+    // Angle front left [rad]
+    required float front_left = 4;
 }
 
 // Specs of a robot
