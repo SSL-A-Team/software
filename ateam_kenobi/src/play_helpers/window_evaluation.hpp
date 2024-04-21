@@ -52,6 +52,10 @@ void drawWindows(
   const std::vector<ateam_geometry::Segment> & windows,
   const ateam_geometry::Point & source, visualization::Overlays overlays_);
 
+std::pair<ateam_geometry::Ray, ateam_geometry::Ray> getRobotShadowRays(
+  const Robot & robot,
+  const ateam_geometry::Point & source);
+
 }  // namespace ateam_kenobi::play_helpers::window_evaluation
 
 #endif  // PLAY_HELPERS__WINDOW_EVALUATION_HPP_
