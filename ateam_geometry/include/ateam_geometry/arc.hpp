@@ -72,6 +72,14 @@ public:
     return std::abs(std::atan2(end_.dy(), end_.dx()) - std::atan2(start_.dy(), start_.dx()));
   }
 
+  Point midpoint() const
+  {
+    const auto rotate_angle = angle() / 2.0;
+    CGAL::Aff_transformation_2<Kernel> rotate(CGAL::ROTATION, std::sin(rotate_angle),
+      std::cos(rotate_angle));
+    return center_ + rotate(start_.to_vector());
+  }
+
 private:
   Point center_;
   double radius_;

@@ -133,14 +133,15 @@ std::pair<ateam_geometry::Ray, ateam_geometry::Ray> getRobotShadowRays(
   const Robot & robot,
   const ateam_geometry::Point & source)
 {
-  const auto source_center_vector = robot - source;
+  const auto source_center_vector = robot.pos - source;
   const auto source_center_distance = ateam_geometry::norm(source_center_vector);
   const auto shadow_angle = std::atan(kRobotRadius / source_center_distance);
   const CGAL::Aff_transformation_2<ateam_geometry::Kernel> rotate(CGAL::ROTATION,
     std::sin(shadow_angle), std::cos(shadow_angle));
   const auto source_to_bot_tangent_distance = std::hypot(source_center_distance, kRobotRadius);
-  const auto shadow_vector_1 = ateam_geometry::normalize(rotate(source_center_vector));
-  const auto shadow_vector_2 = ateam_geometry::normalize(rotate.inverse()(source_center_vector));
+  // inverse rotation for first vector so 1->2 moves counterclockwise
+  const auto shadow_vector_1 = ateam_geometry::normalize(rotate.inverse()(source_center_vector));
+  const auto shadow_vector_2 = ateam_geometry::normalize(rotate(source_center_vector));
   const auto shadow_point_1 = source + (shadow_vector_1 * source_to_bot_tangent_distance);
   const auto shadow_point_2 = source + (shadow_vector_2 * source_to_bot_tangent_distance);
   return std::make_pair(

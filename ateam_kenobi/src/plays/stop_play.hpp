@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,12 @@
 #ifndef PLAYS__STOP_PLAY_HPP_
 #define PLAYS__STOP_PLAY_HPP_
 
+#include <vector>
+#include <ateam_geometry/normalize.hpp>
+#include <ateam_common/robot_constants.hpp>
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
 #include "base_play.hpp"
-
-#include <ateam_geometry/normalize.hpp>
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
@@ -41,8 +42,15 @@ public:
     16> runFrame(const World & world) override;
 
 private:
+  static constexpr double kKeepoutRadiusRules = 0.5;
+  static constexpr double kKeepoutRadius = kKeepoutRadiusRules + kRobotRadius;
+
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   int prev_assigned_id_ = -1;
+
+  std::vector<ateam_geometry::Point> getOpenSpots(const World & world);
+
+  void removeArc(std::vector<ateam_geometry::Arc> & openings, const ateam_geometry::Arc & arc);
 };
 }  // namespace ateam_kenobi::plays
 

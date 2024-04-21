@@ -23,6 +23,7 @@
 #define PLAY_HELPERS__WINDOW_EVALUATION_HPP_
 
 #include <optional>
+#include <utility>
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include "types/robot.hpp"
@@ -52,6 +53,15 @@ void drawWindows(
   const std::vector<ateam_geometry::Segment> & windows,
   const ateam_geometry::Point & source, visualization::Overlays overlays_);
 
+/**
+ * @brief Get the rays that define the shadow cast by the robot from the source
+ *
+ * In the returned pair, the second ray is counterclockwise from the first ray about the source
+ *
+ * @param robot
+ * @param source
+ * @return std::pair<ateam_geometry::Ray, ateam_geometry::Ray>
+ */
 std::pair<ateam_geometry::Ray, ateam_geometry::Ray> getRobotShadowRays(
   const Robot & robot,
   const ateam_geometry::Point & source);
