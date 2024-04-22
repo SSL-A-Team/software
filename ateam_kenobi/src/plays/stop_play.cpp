@@ -60,6 +60,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     play_helpers::getAvailableRobots(world), std::back_inserter(
       bots_to_move), bot_too_close);
 
+  getPlayInfo()["num bots to move"] = bots_to_move.size();
+  getPlayInfo()["num spots available"] = spots.size();
+
   const auto assignments = play_helpers::assignRobots(bots_to_move, spots);
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> stop_motion_commands;
@@ -78,6 +81,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     getOverlays().drawCircle(
       "spot" + std::to_string(spot_ind),
       ateam_geometry::makeCircle(spot, kRobotRadius), "blue", "transparent");
+    getPlayInfo()["moving bots"][std::to_string(bot.id)] = "(" + std::to_string(spot.x()) + ", " + std::to_string(spot.y()) + ")";
   }
 
   // Halt all robots that weren't already assigned a motion command
@@ -140,8 +144,14 @@ std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
 
   std::vector<ateam_geometry::Point> spots;
 
+  getPlayInfo()["robot angle"] = robot_sized_angle;
+
+  getPlayInfo()["num openings"] = openings.size();
+
+  auto i = 0;
   for (const auto & opening : openings) {
     const auto num_spots_in_opening = std::floor(opening.angle() / robot_sized_angle);
+    getPlayInfo()["openings sizes"][std::to_string(i++)] = opening.angle();
     if (num_spots_in_opening == 0) {
       // opening too small
       continue;

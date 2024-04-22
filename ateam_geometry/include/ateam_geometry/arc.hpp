@@ -69,6 +69,14 @@ public:
 
   double angle() const
   {
+    const auto start_angle = std::atan2(start_.dy(), start_.dx());
+    const auto end_angle = std::atan2(end_.dy(), end_.dx());
+    if(start_angle > end_angle) {
+      return (2 * M_PI) + (end_angle - start_angle);
+    } else {
+      return end_angle - start_angle;
+    }
+    // This is wrong (doesn't follow ccw rule for arcs, just gives shortest angle)
     return std::abs(std::atan2(end_.dy(), end_.dx()) - std::atan2(start_.dy(), start_.dx()));
   }
 
