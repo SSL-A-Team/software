@@ -135,7 +135,7 @@ export class Overlay {
             case 8:
                 graphic.beginFill(0, 0);
                 graphic.lineStyle(this.stroke_width, this.stroke_color);
-                graphic.arc(this.position.x, this.position.y, scale*this.scale.x/2, this.start_angle, this.end_angle, true);
+                graphic.arc(0, 0, scale*this.scale.x/2, -this.start_angle + renderConfig.angle, -this.end_angle + renderConfig.angle, true);
                 graphic.endFill();
                 break;
         }

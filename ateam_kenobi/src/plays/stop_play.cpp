@@ -60,12 +60,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     play_helpers::getAvailableRobots(world), std::back_inserter(
       bots_to_move), bot_too_close);
 
-  getPlayInfo()["num bots to move"] = bots_to_move.size();
-  getPlayInfo()["num spots available"] = spots.size();
+  std::ranges::transform(
+    bots_to_move, std::back_inserter(getPlayInfo()["bots to move"]),
+    [](const Robot & r) {return r.id;});
 
   const auto assignments = play_helpers::assignRobots(bots_to_move, spots);
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> stop_motion_commands;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
   for (size_t spot_ind = 0; spot_ind < spots.size(); ++spot_ind) {
     const auto & spot = spots[spot_ind];
@@ -77,24 +78,22 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     auto & emt = easy_move_tos_.at(bot.id);
     emt.setTargetPosition(spot);
     emt.face_point(world.ball.pos);
-    stop_motion_commands.at(bot.id) = emt.runFrame(bot, world);
+    motion_commands.at(bot.id) = emt.runFrame(bot, world);
     getOverlays().drawCircle(
       "spot" + std::to_string(spot_ind),
       ateam_geometry::makeCircle(spot, kRobotRadius), "blue", "transparent");
-    getPlayInfo()["moving bots"][std::to_string(bot.id)] = "(" + std::to_string(spot.x()) + ", " + std::to_string(spot.y()) + ")";
   }
 
   // Halt all robots that weren't already assigned a motion command
   std::ranges::replace_if(
-    stop_motion_commands,
+    motion_commands,
     [](const auto & o) {return !o;}, std::make_optional(ateam_msgs::msg::RobotMotionCommand{}));
 
-  // Draw Keepout Circle
   getOverlays().drawCircle(
     "keepout_circle",
     ateam_geometry::makeCircle(world.ball.pos, kKeepoutRadiusRules), "red", "transparent");
 
-  return stop_motion_commands;
+  return motion_commands;
 }
 
 
@@ -136,22 +135,20 @@ std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
       ateam_geometry::Arc(world.ball.pos, kKeepoutRadius, ray_1.direction(), ray_2.direction()));
   }
 
-  // 5% breathing room around robots
-  const auto robot_sized_angle = 4 * std::asin((1.05 * kRobotRadius) / (2 * kKeepoutRadius));
+  // 30% breathing room around robots
+  const auto robot_sized_angle = 4 * std::asin((1.30 * kRobotRadius) / (2 * kKeepoutRadius));
 
   const CGAL::Aff_transformation_2<ateam_geometry::Kernel> rotate_one_robot_size(CGAL::ROTATION,
     std::sin(robot_sized_angle), std::cos(robot_sized_angle));
 
   std::vector<ateam_geometry::Point> spots;
 
-  getPlayInfo()["robot angle"] = robot_sized_angle;
-
-  getPlayInfo()["num openings"] = openings.size();
-
-  auto i = 0;
+  auto ind = 0;
   for (const auto & opening : openings) {
+    getOverlays().drawArc("opening"+std::to_string(ind), opening, ind%2==0 ? "white" : "lightgray");
+    ind++;
+
     const auto num_spots_in_opening = std::floor(opening.angle() / robot_sized_angle);
-    getPlayInfo()["openings sizes"][std::to_string(i++)] = opening.angle();
     if (num_spots_in_opening == 0) {
       // opening too small
       continue;
@@ -179,6 +176,7 @@ void StopPlay::removeArc(
       arc.end().counterclockwise_in_between(opening.start(), opening.end());
     const auto opening_entirely_covered = opening.start().counterclockwise_in_between(
       arc.start(), arc.end()) && opening.end().counterclockwise_in_between(arc.start(), arc.end());
+
     if (start_intersects) {
       if (end_intersects) {
         // split opening

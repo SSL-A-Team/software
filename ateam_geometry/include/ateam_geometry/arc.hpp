@@ -23,6 +23,7 @@
 
 #include <CGAL/Simple_cartesian.h>
 #include "types.hpp"
+#include "normalize.hpp"
 
 namespace ateam_geometry
 {
@@ -76,8 +77,6 @@ public:
     } else {
       return end_angle - start_angle;
     }
-    // This is wrong (doesn't follow ccw rule for arcs, just gives shortest angle)
-    return std::abs(std::atan2(end_.dy(), end_.dx()) - std::atan2(start_.dy(), start_.dx()));
   }
 
   Point midpoint() const
@@ -85,7 +84,7 @@ public:
     const auto rotate_angle = angle() / 2.0;
     CGAL::Aff_transformation_2<Kernel> rotate(CGAL::ROTATION, std::sin(rotate_angle),
       std::cos(rotate_angle));
-    return center_ + rotate(start_.to_vector());
+    return center_ + (radius_ * rotate(start_.to_vector()));
   }
 
 private:
