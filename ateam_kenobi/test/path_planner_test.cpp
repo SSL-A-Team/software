@@ -125,7 +125,7 @@ TEST_F(GetPathTest, PlanWithoutObstacles) {
 TEST_F(GetPathTest, PlanAroundOneObstacle) {
   start = ateam_geometry::Point(0, 0);
   goal = ateam_geometry::Point(2, 2);
-  obstacles.push_back(ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 0.1));
+  obstacles.push_back(ateam_geometry::makeDisk(ateam_geometry::Point(1, 1), 0.1));
   expected_path = {start, ateam_geometry::Point(1.23762, 0.774008), goal};
   runTest();
 }
@@ -134,8 +134,8 @@ TEST_F(GetPathTest, PlanAroundTwoObstacles) {
   start = ateam_geometry::Point(0, 0);
   goal = ateam_geometry::Point(2, 2);
 
-  obstacles.push_back(ateam_geometry::makeCircle(ateam_geometry::Point(1, 1), 0.1));
-  obstacles.push_back(ateam_geometry::makeCircle(ateam_geometry::Point(1.61881, 1.387004), 0.1));
+  obstacles.push_back(ateam_geometry::makeDisk(ateam_geometry::Point(1, 1), 0.1));
+  obstacles.push_back(ateam_geometry::makeDisk(ateam_geometry::Point(1.61881, 1.387004), 0.1));
 
   expected_path = {start, ateam_geometry::Point(1.86984, 1.19029), goal};
   runTest();
@@ -152,7 +152,7 @@ TEST_F(GetPathTest, DisallowPlanningOutOfTheField) {
 TEST_F(GetPathTest, DisallowPlanningIntoObstacle) {
   start = ateam_geometry::Point(0, 0);
   goal = ateam_geometry::Point(1, 1);
-  obstacles.push_back(ateam_geometry::makeCircle(goal, 1));
+  obstacles.push_back(ateam_geometry::makeDisk(goal, 1));
   // Planner returns path to closest valid point to goal along start-goal line
   expected_path = {start, ateam_geometry::Point(0.151472, 0.151472)};
   runTest();
@@ -185,7 +185,7 @@ TEST_F(GetPathTest, AllowIgnoringStartObstacles)
 {
   start = ateam_geometry::Point(0, 0);
   goal = ateam_geometry::Point(1, 1);
-  obstacles.push_back(ateam_geometry::makeCircle(start, 0.5));
+  obstacles.push_back(ateam_geometry::makeDisk(start, 0.5));
   expected_path = {start, goal};
   planner_options.ignore_start_obstacle = true;
   runTest();
@@ -194,7 +194,7 @@ TEST_F(GetPathTest, AllowIgnoringStartObstacles)
 TEST_F(GetPathTest, FailIfNotIgnoringStartObstacles) {
   start = ateam_geometry::Point(0, 0);
   goal = ateam_geometry::Point(1, 1);
-  obstacles.push_back(ateam_geometry::makeCircle(start, 0.5));
+  obstacles.push_back(ateam_geometry::makeDisk(start, 0.5));
   planner_options.ignore_start_obstacle = false;
   runTest();
 }

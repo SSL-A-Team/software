@@ -18,38 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NORMALIZE_HPP_
-#define ATEAM_GEOMETRY__NORMALIZE_HPP_
-
-#include <Eigen/Dense>
-#include "ateam_geometry/types.hpp"
-
+#include "ateam_geometry/nearest_point.hpp"
 
 namespace ateam_geometry
 {
 
-template<typename T>
-inline auto normalize(T const & V)
+ateam_geometry::Point nearestPointOnSegment(
+  const ateam_geometry::Segment & s,
+  const ateam_geometry::Point & p)
 {
-  auto const slen = V.squared_length();
-  auto const d = CGAL::approximate_sqrt(slen);
-  return d > 0 ? (V / d) : V;
-}
-
-
-template<typename T, typename U>
-inline double norm(T const & V, U const & C)
-{
-  return CGAL::approximate_sqrt(CGAL::squared_distance(V, C));
-}
-
-template<typename T>
-inline double norm(T const & V)
-{
-  return CGAL::approximate_sqrt(V.squared_length());
+  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
+  if (s.has_on(orthogonal_projection)) {
+    return orthogonal_projection;
+  }
+  return CGAL::squared_distance(orthogonal_projection, s.source()) <
+         CGAL::squared_distance(orthogonal_projection, s.target()) ?
+         s.source() : s.target();
 }
 
 }  // namespace ateam_geometry
-
-
-#endif  // ATEAM_GEOMETRY__NORMALIZE_HPP_

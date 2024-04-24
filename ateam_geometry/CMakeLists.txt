@@ -13,13 +13,17 @@ set(CGAL_DATA_DIR ".") # Silence CGAL warning since we don't use its data direct
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
 find_package(CGAL REQUIRED)
 
-add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE
+add_library(${PROJECT_NAME} SHARED
+  src/do_intersect.cpp
+  src/intersection.cpp
+  src/nearest_point.cpp
+)
+target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-ament_target_dependencies(${PROJECT_NAME} INTERFACE
+ament_target_dependencies(${PROJECT_NAME} PUBLIC
   Eigen3
   CGAL
 )

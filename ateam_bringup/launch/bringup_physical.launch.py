@@ -28,7 +28,8 @@ from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 
 def remap_indexed_topics(pattern_pairs):
     return [
-        [(pattern_from+str(i), pattern_to+str(i)) for i in range(16)]
+        (pattern_from + str(i), pattern_to + str(i))
+        for i in range(16)
         for pattern_from, pattern_to in pattern_pairs
     ]
 

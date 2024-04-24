@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +23,16 @@
 
 // This is a convenience header for including all ateam_geometry utilities
 
+#include "any_shape.hpp"
+#include "arc.hpp"
+#include "comparisons.hpp"
+#include "creation_helpers.hpp"
+#include "disk.hpp"
+#include "do_intersect.hpp"
 #include "eigen_conversions.hpp"
-#include "make_circle.hpp"
-#include "nearest_points.hpp"
+#include "intersection.hpp"
+#include "nearest_point.hpp"
 #include "normalize.hpp"
 #include "types.hpp"
-#include "variant_do_intersect.hpp"
 
 #endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_

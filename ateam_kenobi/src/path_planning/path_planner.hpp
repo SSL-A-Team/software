@@ -23,6 +23,7 @@
 #define PATH_PLANNING__PATH_PLANNER_HPP_
 
 #include <vector>
+#include <ateam_geometry/any_shape.hpp>
 #include <ateam_geometry/types.hpp>
 #include "types/world.hpp"
 #include "visualization/overlays.hpp"
