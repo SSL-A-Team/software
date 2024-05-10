@@ -84,6 +84,10 @@ Eigen::MatrixXd replace_forbidden_costs_with_zeros(
   const Eigen::MatrixXd & matrix,
   std::map<int, std::vector<int>> forbidden_assignments);
 
+Eigen::MatrixXd replace_forbidden_costs_with_value(
+  const Eigen::MatrixXd & matrix,
+  std::map<int, std::vector<int>> forbidden_assignments,
+  double value);
 /*
 Calculate slack used to update the labeling (weight) of nodes.
 

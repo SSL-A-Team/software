@@ -100,6 +100,20 @@ Eigen::MatrixXd replace_forbidden_costs_with_zeros(
   return new_matrix;
 }
 
+Eigen::MatrixXd replace_forbidden_costs_with_value(
+  const Eigen::MatrixXd & matrix,
+  std::map<int, std::vector<int>> forbidden_assignments,
+  double value)
+{
+  Eigen::MatrixXd new_matrix = matrix;
+  for (auto const & [row, col_vector] : forbidden_assignments) {
+    for (auto col_ind : col_vector) {
+      new_matrix(row, col_ind) = value;
+    }
+  }
+  return new_matrix;
+}
+
 void compute_slack(
   const int x,
   std::vector<double> & slack,
@@ -157,9 +171,11 @@ std::vector<int> km_assignment(
   if (cost.cols() != cost.rows()) {
     cost = make_square_cost_matrix(cost);
   }
-  cost = replace_nan_costs_with_zeros(cost);
+  // To ensure forbidden costs will be chosen last, set their value to below
+  // the minimum scaled value (0)
+  cost = replace_nan_costs_with_value(cost, -1.0);
   if (!forbidden_assignments.empty()) {
-    cost = replace_forbidden_costs_with_zeros(cost, forbidden_assignments);
+    cost = replace_forbidden_costs_with_value(cost, forbidden_assignments, -1.0);
   }
   // Step 1: Create an initial feasible labeling,
   // clear out sets S and T, and reset our slack values.
