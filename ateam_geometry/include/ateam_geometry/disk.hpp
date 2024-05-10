@@ -18,38 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NORMALIZE_HPP_
-#define ATEAM_GEOMETRY__NORMALIZE_HPP_
+#ifndef ATEAM_GEOMETRY__DISK_HPP_
+#define ATEAM_GEOMETRY__DISK_HPP_
 
-#include <Eigen/Dense>
-#include "ateam_geometry/types.hpp"
-
+#include <utility>
+#include "types.hpp"
 
 namespace ateam_geometry
 {
 
-template<typename T>
-inline auto normalize(T const & V)
+/**
+ * @brief A Disk is a circle that includes its internal area.
+ * This is primarily a semantic type for defining custom intersection logic.
+ */
+class Disk : public Circle
 {
-  auto const slen = V.squared_length();
-  auto const d = CGAL::approximate_sqrt(slen);
-  return d > 0 ? (V / d) : V;
-}
+public:
+  using Circle::Circle_2;
 
+  explicit Disk(Circle circle)
+  : Circle(std::move(circle))
+  {
+  }
 
-template<typename T, typename U>
-inline double norm(T const & V, U const & C)
-{
-  return CGAL::approximate_sqrt(CGAL::squared_distance(V, C));
-}
+  Circle & asCircle()
+  {
+    return *this;
+  }
 
-template<typename T>
-inline double norm(T const & V)
-{
-  return CGAL::approximate_sqrt(V.squared_length());
-}
+  const Circle & asCircle() const
+  {
+    return *this;
+  }
+};
 
 }  // namespace ateam_geometry
 
-
-#endif  // ATEAM_GEOMETRY__NORMALIZE_HPP_
+#endif  // ATEAM_GEOMETRY__DISK_HPP_

@@ -21,7 +21,7 @@
 #include "controls_test_play.hpp"
 #include <angles/angles.h>
 #include <ateam_geometry/types.hpp>
-#include <ateam_geometry/make_circle.hpp>
+#include <ateam_geometry/creation_helpers.hpp>
 #include "types/world.hpp"
 #include "play_helpers/available_robots.hpp"
 

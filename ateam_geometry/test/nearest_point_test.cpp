@@ -18,38 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NORMALIZE_HPP_
-#define ATEAM_GEOMETRY__NORMALIZE_HPP_
+#include <gtest/gtest.h>
 
-#include <Eigen/Dense>
 #include "ateam_geometry/types.hpp"
+#include "ateam_geometry/nearest_point.hpp"
+#include "ateam_geometry_testing/testing_utils.hpp"
 
-
-namespace ateam_geometry
+TEST(NearestPointOnSegment, PointOffSegment)
 {
-
-template<typename T>
-inline auto normalize(T const & V)
-{
-  auto const slen = V.squared_length();
-  auto const d = CGAL::approximate_sqrt(slen);
-  return d > 0 ? (V / d) : V;
+  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
+  ateam_geometry::Point p(10, 0);
+  auto nearest_point = ateam_geometry::nearestPointOnSegment(s, p);
+  EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(5, 5)));
 }
 
-
-template<typename T, typename U>
-inline double norm(T const & V, U const & C)
+TEST(NearestPointOnSegment, PointOnSegment)
 {
-  return CGAL::approximate_sqrt(CGAL::squared_distance(V, C));
+  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
+  ateam_geometry::Point p(1, 1);
+  auto nearest_point = ateam_geometry::nearestPointOnSegment(s, p);
+  EXPECT_THAT(nearest_point, PointIsNear(ateam_geometry::Point(1, 1)));
 }
-
-template<typename T>
-inline double norm(T const & V)
-{
-  return CGAL::approximate_sqrt(V.squared_length());
-}
-
-}  // namespace ateam_geometry
-
-
-#endif  // ATEAM_GEOMETRY__NORMALIZE_HPP_
