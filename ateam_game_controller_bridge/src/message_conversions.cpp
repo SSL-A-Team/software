@@ -152,7 +152,7 @@ ssl_league_msgs::msg::GameEventProposalGroup fromProto(const GameEventProposalGr
   std::transform(
     proto_msg.game_events().begin(),
     proto_msg.game_events().end(),
-    std::back_inserter(ros_msg.game_event),
+    std::back_inserter(ros_msg.game_events),
     [](const auto & p) {return fromProto(p);});
   ros_msg.accepted = proto_msg.accepted();
   return ros_msg;
