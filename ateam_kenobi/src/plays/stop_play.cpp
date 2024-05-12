@@ -145,7 +145,9 @@ std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
 
   auto ind = 0;
   for (const auto & opening : openings) {
-    getOverlays().drawArc("opening"+std::to_string(ind), opening, ind%2==0 ? "white" : "lightgray");
+    getOverlays().drawArc(
+      "opening" + std::to_string(
+        ind), opening, ind % 2 == 0 ? "white" : "lightgray");
     ind++;
 
     const auto num_spots_in_opening = std::floor(opening.angle() / robot_sized_angle);
