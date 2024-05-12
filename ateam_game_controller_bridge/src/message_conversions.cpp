@@ -524,7 +524,8 @@ ssl_league_msgs::msg::UnsportingBehaviorMinor fromProto(
   ros_msg.reason = proto_msg.reason();
   return ros_msg;
 }
-ssl_league_msgs::msg::BotDroppedParts fromProto(const GameEvent_BotDroppedParts & proto_msg){
+ssl_league_msgs::msg::BotDroppedParts fromProto(const GameEvent_BotDroppedParts & proto_msg)
+{
   ssl_league_msgs::msg::BotDroppedParts ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   CopyOptional(proto_msg, ros_msg, by_bot);
@@ -532,13 +533,17 @@ ssl_league_msgs::msg::BotDroppedParts fromProto(const GameEvent_BotDroppedParts 
   CopyOptionalStruct(proto_msg, ros_msg, ball_location);
   return ros_msg;
 }
-ssl_league_msgs::msg::ChallengeFlagHandled fromProto(const GameEvent_ChallengeFlagHandled & proto_msg){
+ssl_league_msgs::msg::ChallengeFlagHandled fromProto(
+  const GameEvent_ChallengeFlagHandled & proto_msg)
+{
   ssl_league_msgs::msg::ChallengeFlagHandled ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   ros_msg.accepted = proto_msg.accepted();
   return ros_msg;
 }
-ssl_league_msgs::msg::ExcessiveBotSubstitution fromProto(const GameEvent_ExcessiveBotSubstitution & proto_msg){
+ssl_league_msgs::msg::ExcessiveBotSubstitution fromProto(
+  const GameEvent_ExcessiveBotSubstitution & proto_msg)
+{
   ssl_league_msgs::msg::ExcessiveBotSubstitution ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   return ros_msg;
