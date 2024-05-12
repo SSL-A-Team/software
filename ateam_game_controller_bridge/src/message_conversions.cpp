@@ -54,6 +54,8 @@ geometry_msgs::msg::Point32 fromProto(const Vector3 & proto_msg)
 ssl_league_msgs::msg::Referee fromProto(const Referee & proto_msg)
 {
   ssl_league_msgs::msg::Referee ros_msg;
+  ros_msg.source_identifier = proto_msg.source_identifier();
+  ros_msg.match_type = proto_msg.match_type();
   ros_msg.timestamp = rclcpp::Time(proto_msg.packet_timestamp() * 1000);
   ros_msg.stage = proto_msg.stage();
   ros_msg.stage_time_left = proto_msg.stage_time_left();
@@ -77,6 +79,7 @@ ssl_league_msgs::msg::Referee fromProto(const Referee & proto_msg)
     std::back_inserter(ros_msg.game_event_proposals),
     [](const auto & p) {return fromProto(p);});
   ros_msg.current_action_time_remaining = proto_msg.current_action_time_remaining();
+  ros_msg.status_message = proto_msg.status_message();
   return ros_msg;
 }
 
@@ -99,16 +102,21 @@ ssl_league_msgs::msg::TeamInfo fromProto(const Referee::TeamInfo & proto_msg)
   ros_msg.max_allowed_bots = proto_msg.max_allowed_bots();
   ros_msg.bot_substitution_intent = proto_msg.bot_substitution_intent();
   ros_msg.ball_placement_failures_reached = proto_msg.ball_placement_failures_reached();
+  ros_msg.bot_substitution_allowed = proto_msg.bot_substitution_allowed();
+  ros_msg.bot_substitutions_left = proto_msg.bot_substitutions_left();
+  ros_msg.bot_substitution_time_left = proto_msg.bot_substitution_time_left();
   return ros_msg;
 }
 
 ssl_league_msgs::msg::GameEvent fromProto(const GameEvent & proto_msg)
 {
   ssl_league_msgs::msg::GameEvent ros_msg;
+  ros_msg.id = proto_msg.id();
   ros_msg.type = proto_msg.type();
   std::copy(
     proto_msg.origin().begin(), proto_msg.origin().end(),
     std::back_inserter(ros_msg.origin));
+  ros_msg.created_timestamp = proto_msg.created_timestamp();
   CopyOptionalStruct(proto_msg, ros_msg, ball_left_field_touch_line);
   CopyOptionalStruct(proto_msg, ros_msg, ball_left_field_goal_line);
   CopyOptionalStruct(proto_msg, ros_msg, aimless_kick);
@@ -120,6 +128,7 @@ ssl_league_msgs::msg::GameEvent fromProto(const GameEvent & proto_msg)
   CopyOptionalStruct(proto_msg, ros_msg, bot_pushed_bot);
   CopyOptionalStruct(proto_msg, ros_msg, bot_held_ball_deliberately);
   CopyOptionalStruct(proto_msg, ros_msg, bot_tipped_over);
+  CopyOptionalStruct(proto_msg, ros_msg, bot_dropped_parts);
   CopyOptionalStruct(proto_msg, ros_msg, attacker_touched_ball_in_defense_area);
   CopyOptionalStruct(proto_msg, ros_msg, bot_kicked_ball_too_fast);
   CopyOptionalStruct(proto_msg, ros_msg, bot_crash_unique);
@@ -138,8 +147,10 @@ ssl_league_msgs::msg::GameEvent fromProto(const GameEvent & proto_msg)
   CopyOptionalStruct(proto_msg, ros_msg, multiple_cards);
   CopyOptionalStruct(proto_msg, ros_msg, multiple_fouls);
   CopyOptionalStruct(proto_msg, ros_msg, bot_substitution);
+  CopyOptionalStruct(proto_msg, ros_msg, excessive_bot_substitution);
   CopyOptionalStruct(proto_msg, ros_msg, too_many_robots);
   CopyOptionalStruct(proto_msg, ros_msg, challenge_flag);
+  CopyOptionalStruct(proto_msg, ros_msg, challenge_flag_handled);
   CopyOptionalStruct(proto_msg, ros_msg, emergency_stop);
   CopyOptionalStruct(proto_msg, ros_msg, unsporting_behavior_minor);
   CopyOptionalStruct(proto_msg, ros_msg, unsporting_behavior_major);
@@ -511,6 +522,25 @@ ssl_league_msgs::msg::UnsportingBehaviorMinor fromProto(
   ssl_league_msgs::msg::UnsportingBehaviorMinor ros_msg;
   ros_msg.by_team = fromProto(proto_msg.by_team());
   ros_msg.reason = proto_msg.reason();
+  return ros_msg;
+}
+ssl_league_msgs::msg::BotDroppedParts fromProto(const GameEvent_BotDroppedParts & proto_msg){
+  ssl_league_msgs::msg::BotDroppedParts ros_msg;
+  ros_msg.by_team = fromProto(proto_msg.by_team());
+  CopyOptional(proto_msg, ros_msg, by_bot);
+  CopyOptionalStruct(proto_msg, ros_msg, location);
+  CopyOptionalStruct(proto_msg, ros_msg, ball_location);
+  return ros_msg;
+}
+ssl_league_msgs::msg::ChallengeFlagHandled fromProto(const GameEvent_ChallengeFlagHandled & proto_msg){
+  ssl_league_msgs::msg::ChallengeFlagHandled ros_msg;
+  ros_msg.by_team = fromProto(proto_msg.by_team());
+  ros_msg.accepted = proto_msg.accepted();
+  return ros_msg;
+}
+ssl_league_msgs::msg::ExcessiveBotSubstitution fromProto(const GameEvent_ExcessiveBotSubstitution & proto_msg){
+  ssl_league_msgs::msg::ExcessiveBotSubstitution ros_msg;
+  ros_msg.by_team = fromProto(proto_msg.by_team());
   return ros_msg;
 }
 
