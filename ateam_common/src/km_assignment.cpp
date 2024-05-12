@@ -23,7 +23,6 @@
 #include <cmath>
 #include <vector>
 #include <deque>
-#include <iostream>
 #include "ateam_common/km_assignment.hpp"
 
 namespace ateam_common::km_assignment
@@ -31,10 +30,10 @@ namespace ateam_common::km_assignment
 const float EPSILON = 1e-10;
 
 Eigen::MatrixXd scale_cost_matrix(
-  const Eigen::MatrixXd & matrix, bool is_max_cost)
+  const Eigen::MatrixXd & matrix, AssignmentType max_or_min)
 {
   Eigen::MatrixXd new_matrix = matrix;
-  if (!is_max_cost) {
+  if (max_or_min == AssignmentType::MinCost) {
     new_matrix *= -1;
   }
   // If any of the coefficients are NaN, ensure we ignore them using
@@ -88,6 +87,33 @@ Eigen::MatrixXd replace_nan_costs_with_value(
   return new_matrix;
 }
 
+Eigen::MatrixXd replace_forbidden_costs_with_zeros(
+  const Eigen::MatrixXd & matrix,
+  std::map<int, std::vector<int>> forbidden_assignments)
+{
+  Eigen::MatrixXd new_matrix = matrix;
+  for (auto const & [row, col_vector] : forbidden_assignments) {
+    for (auto col_ind : col_vector) {
+      new_matrix(row, col_ind) = 0;
+    }
+  }
+  return new_matrix;
+}
+
+Eigen::MatrixXd replace_forbidden_costs_with_value(
+  const Eigen::MatrixXd & matrix,
+  std::map<int, std::vector<int>> forbidden_assignments,
+  double value)
+{
+  Eigen::MatrixXd new_matrix = matrix;
+  for (auto const & [row, col_vector] : forbidden_assignments) {
+    for (auto col_ind : col_vector) {
+      new_matrix(row, col_ind) = value;
+    }
+  }
+  return new_matrix;
+}
+
 void compute_slack(
   const int x,
   std::vector<double> & slack,
@@ -113,9 +139,10 @@ value.
   }
 }
 
-std::vector<int> max_cost_assignment(
+std::vector<int> km_assignment(
   const Eigen::MatrixXd & cost_matrix,
-  bool max_cost
+  AssignmentType max_or_min,
+  std::map<int, std::vector<int>> forbidden_assignments
 )
 {
   /*
@@ -140,12 +167,16 @@ std::vector<int> max_cost_assignment(
   // Make sure our matrix fits our algorithms requirements
   // (it is square and non-negative).
   auto cost = cost_matrix;
-  cost = scale_cost_matrix(cost, max_cost);
-  if (cost_matrix.cols() != cost_matrix.rows()) {
-    cost = make_square_cost_matrix(cost_matrix);
+  cost = scale_cost_matrix(cost, max_or_min);
+  if (cost.cols() != cost.rows()) {
+    cost = make_square_cost_matrix(cost);
   }
-  cost = replace_nan_costs_with_zeros(cost);
-
+  // To ensure forbidden costs will be chosen last, set their value to below
+  // the minimum scaled value (0)
+  cost = replace_nan_costs_with_value(cost, -1.0);
+  if (!forbidden_assignments.empty()) {
+    cost = replace_forbidden_costs_with_value(cost, forbidden_assignments, -1.0);
+  }
   // Step 1: Create an initial feasible labeling,
   // clear out sets S and T, and reset our slack values.
 
@@ -324,8 +355,21 @@ std::vector<int> max_cost_assignment(
     }
   }
 
+  // Just in case:
+  // if an X in the forbidden assignments keys, set xy[X] to -1
+  // or if any item in xy = val, set it to -1
+  // to ensure they are not actually assigned.
+  for (const auto & [key, val] : forbidden_assignments) {
+    for (const auto & v : val) {
+      if (xy.at(key) == v) {
+        xy[key] = -1;
+      }
+    }
+  }
+
   // Return our perfect matching
   // based on our feasible labeling
   return xy;
 }
+
 }  // namespace ateam_common::km_assignment
