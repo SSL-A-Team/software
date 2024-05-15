@@ -28,6 +28,20 @@ HaltPlay::HaltPlay()
 {
 }
 
+double HaltPlay::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::Halt:
+    case ateam_common::GameCommand::TimeoutOurs:
+    case ateam_common::GameCommand::TimeoutTheirs:
+    case ateam_common::GameCommand::GoalOurs:
+    case ateam_common::GameCommand::GoalTheirs:
+      return std::numeric_limits<double>::max();
+    default:
+      return std::numeric_limits<double>::lowest();
+  }
+}
+
 void HaltPlay::reset()
 {
 }

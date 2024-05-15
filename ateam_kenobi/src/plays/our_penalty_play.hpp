@@ -35,6 +35,8 @@ class OurPenaltyPlay : public BasePlay
 public:
   OurPenaltyPlay();
 
+  double getScore(const World & world) override;
+
   void reset() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,

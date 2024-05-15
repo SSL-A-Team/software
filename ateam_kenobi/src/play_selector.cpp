@@ -49,23 +49,25 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
 {
   plays::BasePlay * selected_play = halt_play_.get();
 
-  std::vector<std::pair<plays::BasePlay *, double>> play_scores;
+  if(world.referee_info.running_command != ateam_common::GameCommand::Halt) {
+    std::vector<std::pair<plays::BasePlay *, double>> play_scores;
 
-  std::ranges::transform(
-    plays_, std::back_inserter(play_scores), [&world](auto play) {
-      return std::make_pair(play.get(), play->getScore(world));
-    });
+    std::ranges::transform(
+      plays_, std::back_inserter(play_scores), [&world](auto play) {
+        return std::make_pair(play.get(), play->getScore(world));
+      });
 
-  auto nan_aware_less = [](const auto & l, const auto & r) {
-      if (std::isnan(l.second)) {return true;}
-      if (std::isnan(r.second)) {return false;}
-      return l.second < r.second;
-    };
+    auto nan_aware_less = [](const auto & l, const auto & r) {
+        if (std::isnan(l.second)) {return true;}
+        if (std::isnan(r.second)) {return false;}
+        return l.second < r.second;
+      };
 
-  const auto & max_score = *std::ranges::max_element(play_scores, nan_aware_less);
+    const auto & max_score = *std::ranges::max_element(play_scores, nan_aware_less);
 
-  if (!std::isnan(max_score.second)) {
-    selected_play = max_score.first;
+    if (!std::isnan(max_score.second)) {
+      selected_play = max_score.first;
+    }
   }
 
   resetPlayIfNeeded(selected_play);

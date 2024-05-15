@@ -58,6 +58,32 @@ WallPlay::WallPlay()
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
 
+double WallPlay::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::PrepareKickoffTheirs:
+      return std::numeric_limits<double>::max();
+    case ateam_common::GameCommand::DirectFreeTheirs:
+      return world.in_play ? std::numeric_limits<double>::lowest() : std::numeric_limits<double>::
+             max();
+    case ateam_common::GameCommand::NormalStart:
+      {
+        if (world.in_play) {
+          return std::numeric_limits<double>::lowest();
+        }
+        switch (world.referee_info.prev_command) {
+          case ateam_common::GameCommand::PrepareKickoffTheirs:
+          case ateam_common::GameCommand::DirectFreeTheirs:
+            return std::numeric_limits<double>::max();
+          default:
+            return std::numeric_limits<double>::lowest();
+        }
+      }
+    default:
+      return std::numeric_limits<double>::lowest();
+  }
+}
+
 void WallPlay::reset()
 {
   for (auto & move_to : easy_move_tos_) {

@@ -34,6 +34,22 @@ TheirPenaltyPlay::TheirPenaltyPlay()
   goalie_skill_.possesionTolerance() = 0.3;
 }
 
+double TheirPenaltyPlay::getScore(const World & world)
+{
+    if(world.in_play) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const auto & cmd = world.referee_info.running_command;
+  const auto & prev = world.referee_info.prev_command;
+  if (cmd == ateam_common::GameCommand::PreparePenaltyTheirs ||
+    (cmd == ateam_common::GameCommand::NormalStart &&
+    prev == ateam_common::GameCommand::PreparePenaltyTheirs))
+  {
+    return std::numeric_limits<double>::max();
+  }
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
 void TheirPenaltyPlay::reset()
 {
   for (auto & move_to : move_tos_) {

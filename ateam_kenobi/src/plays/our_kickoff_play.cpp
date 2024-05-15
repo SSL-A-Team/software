@@ -34,6 +34,22 @@ OurKickoffPlay::OurKickoffPlay()
 {
 }
 
+double OurKickoffPlay::getScore(const World & world)
+{
+  if(world.in_play) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const auto & cmd = world.referee_info.running_command;
+  const auto & prev = world.referee_info.prev_command;
+  if (cmd == ateam_common::GameCommand::PrepareKickoffOurs ||
+    (cmd == ateam_common::GameCommand::NormalStart &&
+    prev == ateam_common::GameCommand::PrepareKickoffOurs))
+  {
+    return std::numeric_limits<double>::max();
+  }
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
 void OurKickoffPlay::reset()
 {
   goalie_skill_.reset();

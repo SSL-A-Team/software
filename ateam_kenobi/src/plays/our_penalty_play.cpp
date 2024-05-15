@@ -34,6 +34,22 @@ OurPenaltyPlay::OurPenaltyPlay()
   play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
 
+double OurPenaltyPlay::getScore(const World & world)
+{
+  if(world.in_play) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const auto & cmd = world.referee_info.running_command;
+  const auto & prev = world.referee_info.prev_command;
+  if (cmd == ateam_common::GameCommand::PreparePenaltyOurs ||
+    (cmd == ateam_common::GameCommand::NormalStart &&
+    prev == ateam_common::GameCommand::PreparePenaltyOurs))
+  {
+    return std::numeric_limits<double>::max();
+  }
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
 void OurPenaltyPlay::reset()
 {
   for (auto & move_to : move_tos_) {

@@ -41,11 +41,6 @@ public:
 
   virtual ~BasePlay() = default;
 
-  virtual void reset() = 0;
-
-  virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) = 0;
-
   /**
    * @brief Get the play's validity / confidence score
    * 
@@ -53,13 +48,18 @@ public:
    * 
    * The play selector will prefer plays with a higher score.
    * 
-   * If getScore() returns NaN, the play will not be executed even if no other plays are available.
+   * If getScore() returns NaN, the play will never be executed unless specified via play override
    * 
    * @return double 
    */
   virtual double getScore(const World &) {
     return std::numeric_limits<double>::quiet_NaN();
   }
+
+  virtual void reset() = 0;
+
+  virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world) = 0;
 
   const std::string & getName() const
   {
