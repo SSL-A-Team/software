@@ -32,6 +32,7 @@
 #include <ateam_msgs/msg/overlay.hpp>
 #include <ateam_msgs/msg/play_info.hpp>
 #include <ateam_msgs/msg/world.hpp>
+#include <ateam_msgs/srv/set_override_play.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
@@ -100,6 +101,11 @@ public:
       10,
       std::bind(&KenobiNode::field_callback, this, std::placeholders::_1));
 
+    override_service_ = create_service<ateam_msgs::srv::SetOverridePlay>(
+      "~/set_override_play", std::bind(
+        &KenobiNode::set_override_play_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
     timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
 
     RCLCPP_INFO(get_logger(), "Kenobi node ready.");
@@ -121,6 +127,7 @@ private:
     field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
+  rclcpp::Service<ateam_msgs::srv::SetOverridePlay>::SharedPtr override_service_;
 
   ateam_common::GameControllerListener game_controller_listener_;
 
@@ -214,6 +221,20 @@ private:
     field.theirs.goal_posts = {field.theirs.goal_corners[0], field.theirs.goal_corners[1]};
 
     world_.field = field;
+  }
+
+  void set_override_play_callback(
+    const ateam_msgs::srv::SetOverridePlay::Request::SharedPtr request,
+    ateam_msgs::srv::SetOverridePlay::Response::SharedPtr response)
+  {
+    const auto play_names = play_selector_.getPlayNames();
+    if(std::ranges::find(play_names, request->play_name) == play_names.end()) {
+      response->success = false;
+      response->reason = "No such play.";
+      return;
+    }
+    play_selector_.setPlayOverride(request->play_name);
+    response->success = true;
   }
 
   void timer_callback()

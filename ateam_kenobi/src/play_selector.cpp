@@ -47,32 +47,74 @@ PlaySelector::PlaySelector()
 
 plays::BasePlay * PlaySelector::getPlay(const World & world)
 {
-  plays::BasePlay * selected_play = halt_play_.get();
-
+  plays::BasePlay * selected_play = nullptr;
+  
   if(world.referee_info.running_command != ateam_common::GameCommand::Halt) {
-    std::vector<std::pair<plays::BasePlay *, double>> play_scores;
+    selected_play = halt_play_.get();
+  }
+  
+  if(selected_play == nullptr) {
+    selected_play = selectOverridePlay();
+  }
 
-    std::ranges::transform(
-      plays_, std::back_inserter(play_scores), [&world](auto play) {
-        return std::make_pair(play.get(), play->getScore(world));
-      });
+  if(selected_play == nullptr) {
+    selected_play = selectRankedPlay(world);
+  }
 
-    auto nan_aware_less = [](const auto & l, const auto & r) {
-        if (std::isnan(l.second)) {return true;}
-        if (std::isnan(r.second)) {return false;}
-        return l.second < r.second;
-      };
-
-    const auto & max_score = *std::ranges::max_element(play_scores, nan_aware_less);
-
-    if (!std::isnan(max_score.second)) {
-      selected_play = max_score.first;
-    }
+  if(selected_play == nullptr) {
+    selected_play = halt_play_.get();
   }
 
   resetPlayIfNeeded(selected_play);
 
   return selected_play;
+}
+
+std::vector<std::string> PlaySelector::getPlayNames() {
+  std::vector<std::string> names;
+  std::ranges::transform(plays_, std::back_inserter(names), [](const auto p){
+    return p->getName();
+  });
+  return names;
+}
+
+plays::BasePlay * PlaySelector::selectOverridePlay() {
+  if(override_play_name_.empty()) {
+    return nullptr;
+  }
+
+  const auto found_iter = std::ranges::find_if(plays_, [this](const auto & play){
+    return play->getName() == override_play_name_;
+  });
+
+  if(found_iter == plays_.end()) {
+    return nullptr;
+  }
+
+  return found_iter->get();
+}
+
+plays::BasePlay * PlaySelector::selectRankedPlay(const World & world)
+{
+  std::vector<std::pair<plays::BasePlay *, double>> play_scores;
+
+  std::ranges::transform(
+    plays_, std::back_inserter(play_scores), [&world](auto play) {
+      return std::make_pair(play.get(), play->getScore(world));
+    });
+
+  auto nan_aware_less = [](const auto & l, const auto & r) {
+      if (std::isnan(l.second)) {return true;}
+      if (std::isnan(r.second)) {return false;}
+      return l.second < r.second;
+    };
+
+  const auto & max_score = *std::ranges::max_element(play_scores, nan_aware_less);
+
+  if (!std::isnan(max_score.second)) {
+    return max_score.first;
+  }
+  return nullptr;
 }
 
 void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)

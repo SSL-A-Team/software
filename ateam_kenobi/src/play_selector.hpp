@@ -35,10 +35,16 @@ public:
 
   plays::BasePlay * getPlay(const World & world);
 
+  void setPlayOverride(const std::string & play_name) {
+    override_play_name_ = play_name;
+  }
+
+  std::vector<std::string> getPlayNames();
+
 private:
   std::shared_ptr<plays::BasePlay> halt_play_;
   std::vector<std::shared_ptr<plays::BasePlay>> plays_;
-
+  std::string override_play_name_;
   void * prev_play_address_ = nullptr;
 
   template<typename PlayType>
@@ -47,6 +53,10 @@ private:
     plays_.push_back(play);
     return play;
   }
+
+  plays::BasePlay * selectOverridePlay();
+
+  plays::BasePlay * selectRankedPlay(const World & world);
 
   void resetPlayIfNeeded(plays::BasePlay * play);
 };
