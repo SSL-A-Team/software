@@ -113,18 +113,29 @@ plays::BasePlay * PlaySelector::selectRankedPlay(const World & world)
       return std::make_pair(play.get(), play->getScore(world));
     });
 
-  auto nan_aware_less = [](const auto & l, const auto & r) {
+  auto sort_func = [](const auto & l, const auto & r) {
+      // Rank NaN-scored plays low
       if (std::isnan(l.second)) {return true;}
       if (std::isnan(r.second)) {return false;}
+      
+      // Rank disabled plays low
+      if (!l.first->isEnabled()) {return true;}
+      if (!r.first->isEnabled()) {return false;}
+
       return l.second < r.second;
     };
 
-  const auto & max_score = *std::ranges::max_element(play_scores, nan_aware_less);
+  const auto & max_score = *std::ranges::max_element(play_scores, sort_func);
 
-  if (!std::isnan(max_score.second)) {
-    return max_score.first;
+  if(std::isnan(max_score.second)) {
+    return nullptr;
   }
-  return nullptr;
+
+  if(!max_score.first->isEnabled()) {
+    return nullptr;
+  }
+
+  return max_score.first;
 }
 
 void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)
