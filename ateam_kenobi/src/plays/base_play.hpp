@@ -46,6 +46,21 @@ public:
   virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
     const World & world) = 0;
 
+  /**
+   * @brief Get the play's validity / confidence score
+   * 
+   * Plays should override this with logic that checks the game state and returns a number representing if the play should be run or not.
+   * 
+   * The play selector will prefer plays with a higher score.
+   * 
+   * If getScore() returns NaN, the play will not be executed even if no other plays are available.
+   * 
+   * @return double 
+   */
+  virtual double getScore(const World &) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
   const std::string & getName() const
   {
     return play_name_;
