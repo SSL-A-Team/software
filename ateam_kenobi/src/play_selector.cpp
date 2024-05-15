@@ -21,77 +21,51 @@
 
 #include <iostream>
 #include "play_selector.hpp"
+#include "plays/all_plays.hpp"
 #include "ateam_common/game_controller_listener.hpp"
 
 namespace ateam_kenobi
 {
 
+PlaySelector::PlaySelector()
+{
+  using namespace ateam_kenobi::plays;
+  halt_play_ = addPlay<HaltPlay>();
+  addPlay<TestPlay>();
+  addPlay<StopPlay>();
+  addPlay<WallPlay>();
+  addPlay<OurKickoffPlay>();
+  addPlay<TestKickPlay>();
+  addPlay<Basic122>();
+  addPlay<OurPenaltyPlay>();
+  addPlay<TheirPenaltyPlay>();
+  addPlay<ControlsTestPlay>();
+  addPlay<TrianglePassPlay>();
+  addPlay<WaypointsPlay>();
+  addPlay<SpinningAPlay>();
+}
+
 plays::BasePlay * PlaySelector::getPlay(const World & world)
 {
-  ateam_common::GameCommand current_game_command = world.referee_info.running_command;
+  plays::BasePlay * selected_play = halt_play_.get();
 
-  plays::BasePlay * selected_play = &halt_play_;
+  std::vector<std::pair<plays::BasePlay *, double>> play_scores;
 
-  // switch(current_game_command) {
-  //   case ateam_common::GameCommand::Halt:
-  //   case ateam_common::GameCommand::Stop:
-  //     selected_play = &halt_play_;
-  //     break;
-  //   default:
-  //     selected_play = &spinning_a_play_;
-  //     break;
-  // }
+  std::ranges::transform(
+    plays_, std::back_inserter(play_scores), [&world](auto play) {
+      return std::make_pair(play.get(), play->getScore(world));
+    });
 
-  switch (current_game_command) {
-    case ateam_common::GameCommand::Halt:
-    case ateam_common::GameCommand::TimeoutOurs:
-    case ateam_common::GameCommand::TimeoutTheirs:
-    case ateam_common::GameCommand::GoalOurs:
-    case ateam_common::GameCommand::GoalTheirs:
-      selected_play = &halt_play_;
-      break;
-    case ateam_common::GameCommand::Stop:
-      selected_play = &stop_play_;
-      break;
-    case ateam_common::GameCommand::NormalStart:
-      selected_play = pickNormalStartPlay(world);
-      break;
-    case ateam_common::GameCommand::ForceStart:
-      selected_play = &basic_122_play_;
-      break;
-    case ateam_common::GameCommand::PrepareKickoffOurs:
-      selected_play = &our_kickoff_play_;
-      break;
-    case ateam_common::GameCommand::PrepareKickoffTheirs:
-      selected_play = &wall_play_;
-      break;
-    case ateam_common::GameCommand::PreparePenaltyOurs:
-      selected_play = &our_penalty_play_;
-      break;
-    case ateam_common::GameCommand::PreparePenaltyTheirs:
-      selected_play = &their_penalty_play_;
-      break;
-    case ateam_common::GameCommand::DirectFreeOurs:
-    case ateam_common::GameCommand::IndirectFreeOurs:
-      selected_play = &basic_122_play_;
-      break;
-    case ateam_common::GameCommand::DirectFreeTheirs:
-    case ateam_common::GameCommand::IndirectFreeTheirs:
-      if (world.in_play) {
-        selected_play = &basic_122_play_;
-      } else {
-        selected_play = &wall_play_;
-      }
-      break;
-    case ateam_common::GameCommand::BallPlacementOurs:
-    case ateam_common::GameCommand::BallPlacementTheirs:
-      selected_play = &stop_play_;
-      break;
-    default:
-      std::cerr <<
-        "WARNING: Play selector falling through because of unrecognized game command: " <<
-        static_cast<int>(current_game_command) << '\n';
-      break;
+  auto nan_aware_less = [](const auto & l, const auto & r) {
+      if (std::isnan(l.second)) {return true;}
+      if (std::isnan(r.second)) {return false;}
+      return l.second < r.second;
+    };
+
+  const auto & max_score = *std::ranges::max_element(play_scores, nan_aware_less);
+
+  if (!std::isnan(max_score.second)) {
+    selected_play = max_score.first;
   }
 
   resetPlayIfNeeded(selected_play);
@@ -107,35 +81,6 @@ void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)
       play->reset();
     }
     prev_play_address_ = play_address;
-  }
-}
-
-plays::BasePlay * PlaySelector::pickNormalStartPlay(const World & world)
-{
-  if (world.in_play) {
-    return &basic_122_play_;
-  }
-  switch (world.referee_info.prev_command) {
-    case ateam_common::GameCommand::PrepareKickoffOurs:
-      return &our_kickoff_play_;
-    case ateam_common::GameCommand::PrepareKickoffTheirs:
-      return &wall_play_;
-    case ateam_common::GameCommand::IndirectFreeOurs:
-    case ateam_common::GameCommand::DirectFreeOurs:
-      return &basic_122_play_;
-      break;
-    case ateam_common::GameCommand::IndirectFreeTheirs:
-    case ateam_common::GameCommand::DirectFreeTheirs:
-      return &wall_play_;
-      break;
-    case ateam_common::GameCommand::PreparePenaltyOurs:
-      return &our_penalty_play_;
-      break;
-    case ateam_common::GameCommand::PreparePenaltyTheirs:
-      return &their_penalty_play_;
-      break;
-    default:
-      return &basic_122_play_;
   }
 }
 
