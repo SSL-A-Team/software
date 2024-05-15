@@ -41,6 +41,8 @@ public:
 
   std::vector<std::string> getPlayNames();
 
+  plays::BasePlay * getPlayByName(const std::string name);
+
 private:
   std::shared_ptr<plays::BasePlay> halt_play_;
   std::vector<std::shared_ptr<plays::BasePlay>> plays_;

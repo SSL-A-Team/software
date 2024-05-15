@@ -76,10 +76,19 @@ public:
     return play_info_;
   }
 
+  bool isEnabled() const {
+    return enabled_;
+  }
+
+  void setEnabled(bool value) {
+    enabled_ = value;
+  }
+
 protected:
   std::string play_name_;
   visualization::Overlays overlays_;
   nlohmann::json play_info_;
+  bool enabled_ = true;
 };
 
 }  // namespace ateam_kenobi::plays

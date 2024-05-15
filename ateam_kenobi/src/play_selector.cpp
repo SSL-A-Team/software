@@ -78,6 +78,16 @@ std::vector<std::string> PlaySelector::getPlayNames() {
   return names;
 }
 
+plays::BasePlay * PlaySelector::getPlayByName(const std::string name) {
+  const auto found_iter = std::ranges::find_if(plays_, [&name](const auto & play){
+    return play->getName() == name;
+  });
+  if(found_iter == plays_.end()) {
+    return nullptr;
+  }
+  return found_iter->get();
+}
+
 plays::BasePlay * PlaySelector::selectOverridePlay() {
   if(override_play_name_.empty()) {
     return nullptr;
