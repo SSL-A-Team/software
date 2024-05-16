@@ -20,6 +20,7 @@
 
 
 #include "our_penalty_play.hpp"
+#include <limits>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/window_evaluation.hpp"
 
@@ -32,6 +33,22 @@ OurPenaltyPlay::OurPenaltyPlay()
   line_kick_skill_(getOverlays().getChild("line_kick"))
 {
   play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
+}
+
+double OurPenaltyPlay::getScore(const World & world)
+{
+  if (world.in_play) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const auto & cmd = world.referee_info.running_command;
+  const auto & prev = world.referee_info.prev_command;
+  if (cmd == ateam_common::GameCommand::PreparePenaltyOurs ||
+    (cmd == ateam_common::GameCommand::NormalStart &&
+    prev == ateam_common::GameCommand::PreparePenaltyOurs))
+  {
+    return std::numeric_limits<double>::max();
+  }
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 void OurPenaltyPlay::reset()

@@ -1,0 +1,8 @@
+# Request
+string play_name
+bool enabled
+
+---
+# Response
+bool success
+string reason
