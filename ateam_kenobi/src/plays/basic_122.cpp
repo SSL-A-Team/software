@@ -21,6 +21,7 @@
 
 #include "basic_122.hpp"
 #include <algorithm>
+#include <limits>
 #include <vector>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"

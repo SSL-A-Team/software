@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "stop_play.hpp"
+#include <limits>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
 

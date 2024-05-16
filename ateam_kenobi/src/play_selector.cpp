@@ -18,8 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
+#include <algorithm>
 #include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
 #include "play_selector.hpp"
 #include "plays/all_plays.hpp"
 #include "ateam_common/game_controller_listener.hpp"
@@ -29,7 +32,7 @@ namespace ateam_kenobi
 
 PlaySelector::PlaySelector()
 {
-  using namespace ateam_kenobi::plays;
+  using namespace ateam_kenobi::plays;  // NOLINT(build/namespaces)
   halt_play_ = addPlay<HaltPlay>();
   addPlay<TestPlay>();
   addPlay<StopPlay>();
@@ -48,20 +51,20 @@ PlaySelector::PlaySelector()
 plays::BasePlay * PlaySelector::getPlay(const World & world)
 {
   plays::BasePlay * selected_play = nullptr;
-  
-  if(world.referee_info.running_command == ateam_common::GameCommand::Halt) {
+
+  if (world.referee_info.running_command == ateam_common::GameCommand::Halt) {
     selected_play = halt_play_.get();
   }
-  
-  if(selected_play == nullptr) {
+
+  if (selected_play == nullptr) {
     selected_play = selectOverridePlay();
   }
 
-  if(selected_play == nullptr) {
+  if (selected_play == nullptr) {
     selected_play = selectRankedPlay(world);
   }
 
-  if(selected_play == nullptr) {
+  if (selected_play == nullptr) {
     selected_play = halt_play_.get();
   }
 
@@ -70,34 +73,40 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
   return selected_play;
 }
 
-std::vector<std::string> PlaySelector::getPlayNames() {
+std::vector<std::string> PlaySelector::getPlayNames()
+{
   std::vector<std::string> names;
-  std::ranges::transform(plays_, std::back_inserter(names), [](const auto p){
-    return p->getName();
-  });
+  std::ranges::transform(
+    plays_, std::back_inserter(names), [](const auto p) {
+      return p->getName();
+    });
   return names;
 }
 
-plays::BasePlay * PlaySelector::getPlayByName(const std::string name) {
-  const auto found_iter = std::ranges::find_if(plays_, [&name](const auto & play){
-    return play->getName() == name;
-  });
-  if(found_iter == plays_.end()) {
+plays::BasePlay * PlaySelector::getPlayByName(const std::string name)
+{
+  const auto found_iter = std::ranges::find_if(
+    plays_, [&name](const auto & play) {
+      return play->getName() == name;
+    });
+  if (found_iter == plays_.end()) {
     return nullptr;
   }
   return found_iter->get();
 }
 
-plays::BasePlay * PlaySelector::selectOverridePlay() {
-  if(override_play_name_.empty()) {
+plays::BasePlay * PlaySelector::selectOverridePlay()
+{
+  if (override_play_name_.empty()) {
     return nullptr;
   }
 
-  const auto found_iter = std::ranges::find_if(plays_, [this](const auto & play){
-    return play->getName() == override_play_name_;
-  });
+  const auto found_iter = std::ranges::find_if(
+    plays_, [this](const auto & play) {
+      return play->getName() == override_play_name_;
+    });
 
-  if(found_iter == plays_.end()) {
+  if (found_iter == plays_.end()) {
     return nullptr;
   }
 
@@ -117,7 +126,7 @@ plays::BasePlay * PlaySelector::selectRankedPlay(const World & world)
       // Rank NaN-scored plays low
       if (std::isnan(l.second)) {return true;}
       if (std::isnan(r.second)) {return false;}
-      
+
       // Rank disabled plays low
       if (!l.first->isEnabled()) {return true;}
       if (!r.first->isEnabled()) {return false;}
@@ -127,11 +136,11 @@ plays::BasePlay * PlaySelector::selectRankedPlay(const World & world)
 
   const auto & max_score = *std::ranges::max_element(play_scores, sort_func);
 
-  if(std::isnan(max_score.second)) {
+  if (std::isnan(max_score.second)) {
     return nullptr;
   }
 
-  if(!max_score.first->isEnabled()) {
+  if (!max_score.first->isEnabled()) {
     return nullptr;
   }
 

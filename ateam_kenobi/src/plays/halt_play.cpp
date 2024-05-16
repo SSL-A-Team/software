@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "halt_play.hpp"
+#include <limits>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
 namespace ateam_kenobi::plays

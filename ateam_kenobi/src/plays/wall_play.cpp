@@ -18,10 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <CGAL/point_generators_2.h>
 
-#include <ateam_common/robot_constants.hpp>
 #include "wall_play.hpp"
+#include <CGAL/point_generators_2.h>
+#include <limits>
+#include <ateam_common/robot_constants.hpp>
 #include "play_helpers/robot_assignment.hpp"
 #include "types/robot.hpp"
 #include "skills/goalie.hpp"

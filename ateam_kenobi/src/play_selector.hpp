@@ -22,6 +22,9 @@
 #ifndef PLAY_SELECTOR_HPP_
 #define PLAY_SELECTOR_HPP_
 
+#include <memory>
+#include <string>
+#include <vector>
 #include "plays/base_play.hpp"
 #include "types/world.hpp"
 
@@ -35,7 +38,8 @@ public:
 
   plays::BasePlay * getPlay(const World & world);
 
-  void setPlayOverride(const std::string & play_name) {
+  void setPlayOverride(const std::string & play_name)
+  {
     override_play_name_ = play_name;
   }
 
@@ -50,7 +54,8 @@ private:
   void * prev_play_address_ = nullptr;
 
   template<typename PlayType>
-  std::shared_ptr<plays::BasePlay> addPlay() {
+  std::shared_ptr<plays::BasePlay> addPlay()
+  {
     auto play = std::make_shared<PlayType>();
     plays_.push_back(play);
     return play;

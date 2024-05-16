@@ -20,6 +20,7 @@
 
 
 #include "our_penalty_play.hpp"
+#include <limits>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/window_evaluation.hpp"
 
@@ -36,7 +37,7 @@ OurPenaltyPlay::OurPenaltyPlay()
 
 double OurPenaltyPlay::getScore(const World & world)
 {
-  if(world.in_play) {
+  if (world.in_play) {
     return std::numeric_limits<double>::quiet_NaN();
   }
   const auto & cmd = world.referee_info.running_command;

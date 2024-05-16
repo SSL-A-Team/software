@@ -20,6 +20,7 @@
 
 
 #include "our_kickoff_play.hpp"
+#include <limits>
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
 #include "play_helpers/robot_assignment.hpp"
@@ -36,7 +37,7 @@ OurKickoffPlay::OurKickoffPlay()
 
 double OurKickoffPlay::getScore(const World & world)
 {
-  if(world.in_play) {
+  if (world.in_play) {
     return std::numeric_limits<double>::quiet_NaN();
   }
   const auto & cmd = world.referee_info.running_command;

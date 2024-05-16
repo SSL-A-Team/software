@@ -42,7 +42,7 @@ public:
   double getScore(const World & world) override;
 
   void reset() override;
-  
+
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override;
 
