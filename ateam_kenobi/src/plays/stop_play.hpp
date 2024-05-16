@@ -36,6 +36,8 @@ class StopPlay : public BasePlay
 public:
   StopPlay();
 
+  double getScore(const World & world) override;
+
   void reset() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,

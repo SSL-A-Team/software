@@ -23,6 +23,7 @@
 #define PLAYS__BASE_PLAY_HPP_
 
 #include <array>
+#include <limits>
 #include <optional>
 #include <string>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
@@ -40,6 +41,22 @@ public:
   : play_name_(play_name), overlays_(play_name) {}
 
   virtual ~BasePlay() = default;
+
+  /**
+   * @brief Get the play's validity / confidence score
+   *
+   * Plays should override this with logic that checks the game state and returns a number representing if the play should be run or not.
+   *
+   * The play selector will prefer plays with a higher score.
+   *
+   * If getScore() returns NaN, the play will never be executed unless specified via play override
+   *
+   * @return double
+   */
+  virtual double getScore(const World &)
+  {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
 
   virtual void reset() = 0;
 
@@ -61,10 +78,21 @@ public:
     return play_info_;
   }
 
+  bool isEnabled() const
+  {
+    return enabled_;
+  }
+
+  void setEnabled(bool value)
+  {
+    enabled_ = value;
+  }
+
 protected:
   std::string play_name_;
   visualization::Overlays overlays_;
   nlohmann::json play_info_;
+  bool enabled_ = true;
 };
 
 }  // namespace ateam_kenobi::plays

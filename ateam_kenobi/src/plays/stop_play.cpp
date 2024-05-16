@@ -20,6 +20,7 @@
 
 #include "stop_play.hpp"
 #include <ranges>
+#include <limits>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
 #include "play_helpers/window_evaluation.hpp"
@@ -37,6 +38,18 @@ StopPlay::StopPlay()
     move_to.setMaxVelocity(1.0);
   }
   StopPlay::reset();
+}
+
+double StopPlay::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::Stop:
+    case ateam_common::GameCommand::BallPlacementOurs:
+    case ateam_common::GameCommand::BallPlacementTheirs:
+      return std::numeric_limits<double>::max();
+    default:
+      return std::numeric_limits<double>::lowest();
+  }
 }
 
 void StopPlay::reset()
