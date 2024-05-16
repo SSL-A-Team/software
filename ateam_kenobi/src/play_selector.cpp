@@ -49,7 +49,7 @@ plays::BasePlay * PlaySelector::getPlay(const World & world)
 {
   plays::BasePlay * selected_play = nullptr;
   
-  if(world.referee_info.running_command != ateam_common::GameCommand::Halt) {
+  if(world.referee_info.running_command == ateam_common::GameCommand::Halt) {
     selected_play = halt_play_.get();
   }
   
