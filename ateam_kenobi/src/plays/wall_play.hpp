@@ -33,14 +33,16 @@
 
 namespace ateam_kenobi::plays
 {
-inline std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
-  ateam_geometry::Segment & segment, int num_points);
 
 class WallPlay : public BasePlay
 {
 public:
   WallPlay();
+
+  double getScore(const World & world) override;
+
   void reset() override;
+
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override;
 
