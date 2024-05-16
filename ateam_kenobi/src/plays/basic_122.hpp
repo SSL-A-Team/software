@@ -36,6 +36,8 @@ class Basic122 : public BasePlay
 public:
   Basic122();
 
+  double getScore(const World & world) override;
+
   void reset() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(const World & world);

@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "halt_play.hpp"
+#include <limits>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
 namespace ateam_kenobi::plays
@@ -26,6 +27,20 @@ namespace ateam_kenobi::plays
 HaltPlay::HaltPlay()
 : BasePlay("HaltPlay")
 {
+}
+
+double HaltPlay::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::Halt:
+    case ateam_common::GameCommand::TimeoutOurs:
+    case ateam_common::GameCommand::TimeoutTheirs:
+    case ateam_common::GameCommand::GoalOurs:
+    case ateam_common::GameCommand::GoalTheirs:
+      return std::numeric_limits<double>::max();
+    default:
+      return std::numeric_limits<double>::lowest();
+  }
 }
 
 void HaltPlay::reset()

@@ -21,6 +21,7 @@
 
 #include "basic_122.hpp"
 #include <algorithm>
+#include <limits>
 #include <vector>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
@@ -35,6 +36,18 @@ Basic122::Basic122()
   blockers_skill_(getOverlays().getChild("blockers")),
   goalie_skill_(getOverlays().getChild("goalie"))
 {
+}
+
+double Basic122::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::ForceStart:
+    case ateam_common::GameCommand::NormalStart:
+    case ateam_common::GameCommand::DirectFreeOurs:
+      return 0.0;
+    default:
+      return world.in_play ? 0.0 : std::numeric_limits<double>::lowest();
+  }
 }
 
 void Basic122::reset()

@@ -32,6 +32,9 @@
 #include <ateam_msgs/msg/overlay.hpp>
 #include <ateam_msgs/msg/play_info.hpp>
 #include <ateam_msgs/msg/world.hpp>
+#include <ateam_msgs/srv/set_override_play.hpp>
+#include <ateam_msgs/srv/set_play_enabled.hpp>
+#include <ateam_msgs/srv/get_play_names.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
@@ -43,6 +46,7 @@
 #include "in_play_eval.hpp"
 #include "double_touch_eval.hpp"
 #include "motion/world_to_body_vel.hpp"
+#include "plays/halt_play.hpp"
 
 namespace ateam_kenobi
 {
@@ -100,6 +104,21 @@ public:
       10,
       std::bind(&KenobiNode::field_callback, this, std::placeholders::_1));
 
+    override_service_ = create_service<ateam_msgs::srv::SetOverridePlay>(
+      "~/set_override_play", std::bind(
+        &KenobiNode::set_override_play_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
+    play_enabled_service_ = create_service<ateam_msgs::srv::SetPlayEnabled>(
+      "~/set_play_enabled", std::bind(
+        &KenobiNode::set_play_enabled_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
+    play_names_service_ = create_service<ateam_msgs::srv::GetPlayNames>(
+      "~/get_play_names", std::bind(
+        &KenobiNode::get_play_names_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
     timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
 
     RCLCPP_INFO(get_logger(), "Kenobi node ready.");
@@ -121,6 +140,9 @@ private:
     field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
+  rclcpp::Service<ateam_msgs::srv::SetOverridePlay>::SharedPtr override_service_;
+  rclcpp::Service<ateam_msgs::srv::SetPlayEnabled>::SharedPtr play_enabled_service_;
+  rclcpp::Service<ateam_msgs::srv::GetPlayNames>::SharedPtr play_names_service_;
 
   ateam_common::GameControllerListener game_controller_listener_;
 
@@ -214,6 +236,48 @@ private:
     field.theirs.goal_posts = {field.theirs.goal_corners[0], field.theirs.goal_corners[1]};
 
     world_.field = field;
+  }
+
+  void set_override_play_callback(
+    const ateam_msgs::srv::SetOverridePlay::Request::SharedPtr request,
+    ateam_msgs::srv::SetOverridePlay::Response::SharedPtr response)
+  {
+    if (play_selector_.getPlayByName(request->play_name) == nullptr) {
+      response->success = false;
+      response->reason = "No such play.";
+      return;
+    }
+
+    play_selector_.setPlayOverride(request->play_name);
+    response->success = true;
+  }
+
+  void set_play_enabled_callback(
+    const ateam_msgs::srv::SetPlayEnabled::Request::SharedPtr request,
+    ateam_msgs::srv::SetPlayEnabled::Response::SharedPtr response)
+  {
+    auto play = play_selector_.getPlayByName(request->play_name);
+    if (play == nullptr) {
+      response->success = false;
+      response->reason = "No such play.";
+      return;
+    }
+
+    if (!request->enabled && dynamic_cast<plays::HaltPlay *>(play) != nullptr) {
+      response->success = false;
+      response->reason = "You can't disable the Halt play.";
+      return;
+    }
+
+    play->setEnabled(request->enabled);
+    response->success = true;
+  }
+
+  void get_play_names_callback(
+    const ateam_msgs::srv::GetPlayNames::Request::SharedPtr,
+    ateam_msgs::srv::GetPlayNames::Response::SharedPtr response)
+  {
+    response->play_names = play_selector_.getPlayNames();
   }
 
   void timer_callback()

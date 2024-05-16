@@ -18,10 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <CGAL/point_generators_2.h>
 
-#include <ateam_common/robot_constants.hpp>
 #include "wall_play.hpp"
+#include <CGAL/point_generators_2.h>
+#include <limits>
+#include <ateam_common/robot_constants.hpp>
 #include "play_helpers/robot_assignment.hpp"
 #include "types/robot.hpp"
 #include "skills/goalie.hpp"
@@ -56,6 +57,32 @@ WallPlay::WallPlay()
   goalie_skill_(getOverlays().getChild("goalie"))
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
+}
+
+double WallPlay::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::PrepareKickoffTheirs:
+      return std::numeric_limits<double>::max();
+    case ateam_common::GameCommand::DirectFreeTheirs:
+      return world.in_play ? std::numeric_limits<double>::lowest() : std::numeric_limits<double>::
+             max();
+    case ateam_common::GameCommand::NormalStart:
+      {
+        if (world.in_play) {
+          return std::numeric_limits<double>::lowest();
+        }
+        switch (world.referee_info.prev_command) {
+          case ateam_common::GameCommand::PrepareKickoffTheirs:
+          case ateam_common::GameCommand::DirectFreeTheirs:
+            return std::numeric_limits<double>::max();
+          default:
+            return std::numeric_limits<double>::lowest();
+        }
+      }
+    default:
+      return std::numeric_limits<double>::lowest();
+  }
 }
 
 void WallPlay::reset()

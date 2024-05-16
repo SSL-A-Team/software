@@ -22,7 +22,10 @@
 #ifndef PLAY_SELECTOR_HPP_
 #define PLAY_SELECTOR_HPP_
 
-#include "plays/all_plays.hpp"
+#include <memory>
+#include <string>
+#include <vector>
+#include "plays/base_play.hpp"
 #include "types/world.hpp"
 
 namespace ateam_kenobi
@@ -31,30 +34,38 @@ namespace ateam_kenobi
 class PlaySelector
 {
 public:
+  PlaySelector();
+
   plays::BasePlay * getPlay(const World & world);
 
-private:
-  plays::TestPlay test_play_;
-  plays::HaltPlay halt_play_;
-  plays::StopPlay stop_play_;
-  plays::WallPlay wall_play_;
-  plays::OurKickoffPlay our_kickoff_play_;
-  plays::TestKickPlay test_kick_play_;
-  plays::Basic122 basic_122_play_;
-  plays::OurPenaltyPlay our_penalty_play_;
-  plays::TheirPenaltyPlay their_penalty_play_;
-  plays::ControlsTestPlay controls_test_play_;
-  plays::TrianglePassPlay triangle_pass_play_;
-  plays::WaypointsPlay waypoints_play_;
-  plays::SpinningAPlay spinning_a_play_;
+  void setPlayOverride(const std::string & play_name)
+  {
+    override_play_name_ = play_name;
+  }
 
-  ateam_common::GameCommand previous_game_command_ = ateam_common::GameCommand::Halt;
+  std::vector<std::string> getPlayNames();
+
+  plays::BasePlay * getPlayByName(const std::string name);
+
+private:
+  std::shared_ptr<plays::BasePlay> halt_play_;
+  std::vector<std::shared_ptr<plays::BasePlay>> plays_;
+  std::string override_play_name_;
   void * prev_play_address_ = nullptr;
-  std::size_t prev_play_type_index_ = -1;
+
+  template<typename PlayType>
+  std::shared_ptr<plays::BasePlay> addPlay()
+  {
+    auto play = std::make_shared<PlayType>();
+    plays_.push_back(play);
+    return play;
+  }
+
+  plays::BasePlay * selectOverridePlay();
+
+  plays::BasePlay * selectRankedPlay(const World & world);
 
   void resetPlayIfNeeded(plays::BasePlay * play);
-
-  plays::BasePlay * pickNormalStartPlay(const World & world);
 };
 
 }  // namespace ateam_kenobi
