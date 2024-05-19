@@ -34,7 +34,7 @@ class TestKickPlay : public stp::Play
 public:
   TestKickPlay()
   : stp::Play("TestKickPlay"),
-    line_kick_skill_(getOverlays().getChild("line_kick"))
+    line_kick_skill_(createChild<skills::LineKick>("line_kick"))
   {}
 
   void reset() override {}

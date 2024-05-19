@@ -33,7 +33,7 @@ namespace ateam_kenobi::skills
 Goalie::Goalie(stp::Options stp_options)
 : stp::Skill(stp_options),
   easy_move_to_(getOverlays().getChild("EasyMoveTo")),
-  line_kick_(getOverlays().getChild("LineKick"))
+  line_kick_(createChild<skills::LineKick>("LineKick"))
 {
   reset();
 }

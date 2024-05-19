@@ -105,7 +105,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   getPlayInfo()["robot"]["id"] = robot.id;
   getPlayInfo()["robot"]["index"] = index;
   getPlayInfo()["robot"]["goal_hit"] = goal_hit;
-  getPlayInfo()["robot"]["time_at_goal"] = std::chrono::duration_cast<std::chrono::duration<double>>(
+  getPlayInfo()["robot"]["time_at_goal"] =
+    std::chrono::duration_cast<std::chrono::duration<double>>(
     std::chrono::steady_clock::now() - goal_hit_time).count();
   getPlayInfo()["robot"]["target"]["x"] = waypoints[index].position.x();
   getPlayInfo()["robot"]["target"]["y"] = waypoints[index].position.y();

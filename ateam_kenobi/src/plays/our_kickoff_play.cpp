@@ -30,7 +30,7 @@ namespace ateam_kenobi::plays
 {
 OurKickoffPlay::OurKickoffPlay()
 : stp::Play("OurKickoffPlay"),
-  line_kick_skill_(getOverlays().getChild("line_kick")),
+  line_kick_skill_(createChild<skills::LineKick>("line_kick")),
   goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
 }
