@@ -29,7 +29,7 @@ namespace ateam_kenobi::plays
 
 OurPenaltyPlay::OurPenaltyPlay()
 : stp::Play("OurPenaltyPlay"),
-  goalie_skill_(getOverlays().getChild("goalie")),
+  goalie_skill_(createChild<skills::Goalie>("goalie")),
   line_kick_skill_(getOverlays().getChild("line_kick"))
 {
   play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));

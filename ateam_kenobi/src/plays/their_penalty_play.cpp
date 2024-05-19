@@ -29,7 +29,7 @@ namespace ateam_kenobi::plays
 
 TheirPenaltyPlay::TheirPenaltyPlay()
 : stp::Play("TheirPenaltyPlay"),
-  goalie_skill_(getOverlays().getChild("goalie"))
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
   play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
   goalie_skill_.possesionTolerance() = 0.3;

@@ -28,7 +28,7 @@ namespace ateam_kenobi::plays
 {
 TestPlay::TestPlay()
 : stp::Play("TestPlay"),
-  goalie_skill_(getOverlays().getChild("goalie"))
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
