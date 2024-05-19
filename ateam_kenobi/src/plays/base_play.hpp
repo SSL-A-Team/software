@@ -88,7 +88,7 @@ public:
     enabled_ = value;
   }
 
-protected:
+private:
   std::string play_name_;
   visualization::Overlays overlays_;
   nlohmann::json play_info_;

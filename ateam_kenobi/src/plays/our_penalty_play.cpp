@@ -75,7 +75,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   auto kicking_robot = available_robots.front();
   available_robots.erase(available_robots.begin());
 
-  play_info_["Kicker ID"] = kicking_robot.id;
+  getPlayInfo()["Kicker ID"] = kicking_robot.id;
 
   if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
     if (kick_time_ == std::chrono::steady_clock::time_point::max()) {
@@ -89,7 +89,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
     kick_time_ > std::chrono::steady_clock::now())
   {
     // Stage for kick
-    play_info_["State"] = "Preparing";
+    getPlayInfo()["State"] = "Preparing";
     line_kick_skill_.setTargetPoint(chooseKickTarget(world));
     const auto destination = line_kick_skill_.getAssignmentPoint(world);
     auto & move_to = move_tos_[kicking_robot.id];
@@ -99,7 +99,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
     motion_commands[kicking_robot.id] = move_to.runFrame(kicking_robot, world);
   } else {
     // Kick ball
-    play_info_["State"] = "Kicking";
+    getPlayInfo()["State"] = "Kicking";
     motion_commands[kicking_robot.id] = line_kick_skill_.runFrame(world, kicking_robot);
   }
 

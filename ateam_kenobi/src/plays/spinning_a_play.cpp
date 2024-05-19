@@ -70,7 +70,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     emt.setTargetPosition(point);
     emt.face_absolute(-M_PI_2 + angle_);
     motion_commands[robot.id] = emt.runFrame(robot, world);
-    overlays_.drawCircle(
+    getOverlays().drawCircle(
       "dest" + std::to_string(ind),
       ateam_geometry::makeCircle(point, kRobotRadius));
   }
