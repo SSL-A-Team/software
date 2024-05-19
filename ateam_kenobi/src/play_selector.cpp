@@ -48,9 +48,9 @@ PlaySelector::PlaySelector()
   addPlay<SpinningAPlay>();
 }
 
-plays::BasePlay * PlaySelector::getPlay(const World & world)
+stp::Play * PlaySelector::getPlay(const World & world)
 {
-  plays::BasePlay * selected_play = nullptr;
+  stp::Play * selected_play = nullptr;
 
   if (world.referee_info.running_command == ateam_common::GameCommand::Halt) {
     selected_play = halt_play_.get();
@@ -83,7 +83,7 @@ std::vector<std::string> PlaySelector::getPlayNames()
   return names;
 }
 
-plays::BasePlay * PlaySelector::getPlayByName(const std::string name)
+stp::Play * PlaySelector::getPlayByName(const std::string name)
 {
   const auto found_iter = std::ranges::find_if(
     plays_, [&name](const auto & play) {
@@ -95,7 +95,7 @@ plays::BasePlay * PlaySelector::getPlayByName(const std::string name)
   return found_iter->get();
 }
 
-plays::BasePlay * PlaySelector::selectOverridePlay()
+stp::Play * PlaySelector::selectOverridePlay()
 {
   if (override_play_name_.empty()) {
     return nullptr;
@@ -113,9 +113,9 @@ plays::BasePlay * PlaySelector::selectOverridePlay()
   return found_iter->get();
 }
 
-plays::BasePlay * PlaySelector::selectRankedPlay(const World & world)
+stp::Play * PlaySelector::selectRankedPlay(const World & world)
 {
-  std::vector<std::pair<plays::BasePlay *, double>> play_scores;
+  std::vector<std::pair<stp::Play *, double>> play_scores;
 
   std::ranges::transform(
     plays_, std::back_inserter(play_scores), [&world](auto play) {
@@ -147,7 +147,7 @@ plays::BasePlay * PlaySelector::selectRankedPlay(const World & world)
   return max_score.first;
 }
 
-void PlaySelector::resetPlayIfNeeded(plays::BasePlay * play)
+void PlaySelector::resetPlayIfNeeded(stp::Play * play)
 {
   void * play_address = static_cast<void *>(play);
   if (play_address != prev_play_address_) {

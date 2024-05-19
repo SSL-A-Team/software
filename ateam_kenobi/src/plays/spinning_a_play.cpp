@@ -28,7 +28,7 @@ namespace ateam_kenobi::plays
 {
 
 SpinningAPlay::SpinningAPlay()
-: BasePlay("SpinningAPlay")
+: stp::Play("SpinningAPlay")
 {
   base_shape_ = {
     ateam_geometry::Point(0, 0),

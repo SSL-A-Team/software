@@ -28,7 +28,7 @@
 namespace ateam_kenobi::plays
 {
 ControlsTestPlay::ControlsTestPlay()
-: BasePlay("ControlsTestPlay")
+: stp::Play("ControlsTestPlay")
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 

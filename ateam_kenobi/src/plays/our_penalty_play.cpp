@@ -28,7 +28,7 @@ namespace ateam_kenobi::plays
 {
 
 OurPenaltyPlay::OurPenaltyPlay()
-: BasePlay("OurPenaltyPlay"),
+: stp::Play("OurPenaltyPlay"),
   goalie_skill_(getOverlays().getChild("goalie")),
   line_kick_skill_(getOverlays().getChild("line_kick"))
 {

@@ -23,7 +23,7 @@
 #define PLAYS__BASIC_122_HPP_
 
 #include <vector>
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "skills/line_kick.hpp"
 #include "skills/blockers.hpp"
 #include "skills/goalie.hpp"
@@ -31,7 +31,7 @@
 namespace ateam_kenobi::plays
 {
 
-class Basic122 : public BasePlay
+class Basic122 : public stp::Play
 {
 public:
   Basic122();

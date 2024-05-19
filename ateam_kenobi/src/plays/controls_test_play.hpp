@@ -24,13 +24,13 @@
 #include <array>
 #include <vector>
 #include "motion/motion_controller.hpp"
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "ateam_geometry/types.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
-class ControlsTestPlay : public BasePlay
+class ControlsTestPlay : public stp::Play
 {
 public:
   ControlsTestPlay();

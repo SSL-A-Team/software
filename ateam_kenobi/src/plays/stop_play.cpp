@@ -26,7 +26,7 @@
 namespace ateam_kenobi::plays
 {
 StopPlay::StopPlay()
-: BasePlay("StopPlay")
+: stp::Play("StopPlay")
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
   for (auto & move_to : easy_move_tos_) {

@@ -23,14 +23,14 @@
 
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
-#include "base_play.hpp"
+#include "stp/play.hpp"
 
 #include <ateam_geometry/normalize.hpp>
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
-class StopPlay : public BasePlay
+class StopPlay : public stp::Play
 {
 public:
   StopPlay();

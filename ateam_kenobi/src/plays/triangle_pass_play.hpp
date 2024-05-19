@@ -23,14 +23,14 @@
 #define PLAYS__TRIANGLE_PASS_PLAY_HPP_
 
 #include <vector>
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "skills/line_kick.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class TrianglePassPlay : public BasePlay
+class TrianglePassPlay : public stp::Play
 {
 public:
   TrianglePassPlay();

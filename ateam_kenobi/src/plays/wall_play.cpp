@@ -53,7 +53,7 @@ std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
 
 
 WallPlay::WallPlay()
-: BasePlay("WallPlay"),
+: stp::Play("WallPlay"),
   goalie_skill_(getOverlays().getChild("goalie"))
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));

@@ -23,13 +23,13 @@
 #define PLAYS__SPINNING_A_PLAY_HPP_
 
 #include <vector>
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class SpinningAPlay : public BasePlay
+class SpinningAPlay : public stp::Play
 {
 public:
   SpinningAPlay();

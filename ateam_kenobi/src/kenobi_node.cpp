@@ -326,7 +326,7 @@ private:
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(
     const World & world)
   {
-    plays::BasePlay * play = play_selector_.getPlay(world);
+    stp::Play * play = play_selector_.getPlay(world);
     if (play == nullptr) {
       RCLCPP_ERROR(get_logger(), "No play selected!");
       return {};

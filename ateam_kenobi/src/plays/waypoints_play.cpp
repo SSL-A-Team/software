@@ -29,7 +29,7 @@ namespace ateam_kenobi::plays
 {
 
 WaypointsPlay::WaypointsPlay()
-: BasePlay("WaypointsPlay")
+: stp::Play("WaypointsPlay")
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 

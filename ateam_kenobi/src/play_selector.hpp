@@ -25,7 +25,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "plays/base_play.hpp"
+#include "stp/play.hpp"
 #include "types/world.hpp"
 
 namespace ateam_kenobi
@@ -36,7 +36,7 @@ class PlaySelector
 public:
   PlaySelector();
 
-  plays::BasePlay * getPlay(const World & world);
+  stp::Play * getPlay(const World & world);
 
   void setPlayOverride(const std::string & play_name)
   {
@@ -45,27 +45,27 @@ public:
 
   std::vector<std::string> getPlayNames();
 
-  plays::BasePlay * getPlayByName(const std::string name);
+  stp::Play * getPlayByName(const std::string name);
 
 private:
-  std::shared_ptr<plays::BasePlay> halt_play_;
-  std::vector<std::shared_ptr<plays::BasePlay>> plays_;
+  std::shared_ptr<stp::Play> halt_play_;
+  std::vector<std::shared_ptr<stp::Play>> plays_;
   std::string override_play_name_;
   void * prev_play_address_ = nullptr;
 
   template<typename PlayType>
-  std::shared_ptr<plays::BasePlay> addPlay()
+  std::shared_ptr<stp::Play> addPlay()
   {
     auto play = std::make_shared<PlayType>();
     plays_.push_back(play);
     return play;
   }
 
-  plays::BasePlay * selectOverridePlay();
+  stp::Play * selectOverridePlay();
 
-  plays::BasePlay * selectRankedPlay(const World & world);
+  stp::Play * selectRankedPlay(const World & world);
 
-  void resetPlayIfNeeded(plays::BasePlay * play);
+  void resetPlayIfNeeded(stp::Play * play);
 };
 
 }  // namespace ateam_kenobi

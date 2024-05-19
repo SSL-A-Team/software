@@ -22,7 +22,7 @@
 #ifndef PLAYS__OUR_PENALTY_PLAY_HPP_
 #define PLAYS__OUR_PENALTY_PLAY_HPP_
 
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "skills/goalie.hpp"
 #include "skills/line_kick.hpp"
 #include "play_helpers/easy_move_to.hpp"
@@ -30,7 +30,7 @@
 namespace ateam_kenobi::plays
 {
 
-class OurPenaltyPlay : public BasePlay
+class OurPenaltyPlay : public stp::Play
 {
 public:
   OurPenaltyPlay();

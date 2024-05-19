@@ -22,18 +22,18 @@
 #ifndef PLAYS__TEST_KICK_PLAY_HPP_
 #define PLAYS__TEST_KICK_PLAY_HPP_
 
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "skills/line_kick.hpp"
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class TestKickPlay : public BasePlay
+class TestKickPlay : public stp::Play
 {
 public:
   TestKickPlay()
-  : BasePlay("TestKickPlay"),
+  : stp::Play("TestKickPlay"),
     line_kick_skill_(getOverlays().getChild("line_kick"))
   {}
 

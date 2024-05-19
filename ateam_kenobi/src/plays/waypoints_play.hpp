@@ -28,13 +28,13 @@
 #include <vector>
 #include <string>
 #include <ateam_geometry/types.hpp>
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class WaypointsPlay : public BasePlay
+class WaypointsPlay : public stp::Play
 {
 public:
   WaypointsPlay();

@@ -29,7 +29,7 @@ namespace ateam_kenobi::plays
 {
 
 TrianglePassPlay::TrianglePassPlay()
-: BasePlay("TrianglePassPlay"),
+: stp::Play("TrianglePassPlay"),
   line_kick_(getOverlays().getChild("LineKick"))
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
