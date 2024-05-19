@@ -33,7 +33,7 @@ namespace ateam_kenobi::plays
 class OurPenaltyPlay : public stp::Play
 {
 public:
-  OurPenaltyPlay();
+  explicit OurPenaltyPlay(stp::Options stp_options);
 
   double getScore(const World & world) override;
 

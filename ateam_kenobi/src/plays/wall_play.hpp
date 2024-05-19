@@ -37,7 +37,7 @@ namespace ateam_kenobi::plays
 class WallPlay : public stp::Play
 {
 public:
-  WallPlay();
+  explicit WallPlay(stp::Options stp_options);
 
   double getScore(const World & world) override;
 

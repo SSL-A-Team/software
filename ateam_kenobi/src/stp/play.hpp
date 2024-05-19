@@ -36,8 +36,8 @@ namespace ateam_kenobi::stp
 class Play : public Base
 {
 public:
-  explicit Play(std::string name)
-  : Base(name) {}
+  Play(std::string name, Options options)
+  : Base(name, options) {}
 
   virtual ~Play() = default;
 

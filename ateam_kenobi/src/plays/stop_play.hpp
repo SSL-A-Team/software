@@ -33,7 +33,7 @@ namespace ateam_kenobi::plays
 class StopPlay : public stp::Play
 {
 public:
-  StopPlay();
+  explicit StopPlay(stp::Options stp_options);
 
   double getScore(const World & world) override;
 

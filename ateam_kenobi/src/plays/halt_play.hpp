@@ -30,7 +30,7 @@ namespace ateam_kenobi::plays
 class HaltPlay : public stp::Play
 {
 public:
-  HaltPlay();
+  explicit HaltPlay(stp::Options stp_options);
 
   double getScore(const World & world) override;
 

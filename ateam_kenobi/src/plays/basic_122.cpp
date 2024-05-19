@@ -30,8 +30,8 @@
 namespace ateam_kenobi::plays
 {
 
-Basic122::Basic122()
-: stp::Play("Basic122"),
+Basic122::Basic122(stp::Options stp_options)
+: stp::Play("Basic122", stp_options),
   striker_skill_(createChild<skills::LineKick>("striker")),
   blockers_skill_(getOverlays().getChild("blockers")),
   goalie_skill_(createChild<skills::Goalie>("goalie"))

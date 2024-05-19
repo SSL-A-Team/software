@@ -52,6 +52,13 @@ public:
   {
   }
 
+  Base(std::string name, Options options)
+  : name_(name),
+    overlays_(options.overlays),
+    play_info_(options.play_info)
+  {
+  }
+
   virtual ~Base() = default;
 
   template<typename ChildType, typename ... Args>

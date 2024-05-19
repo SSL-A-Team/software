@@ -32,7 +32,7 @@ namespace ateam_kenobi::plays
 class SpinningAPlay : public stp::Play
 {
 public:
-  SpinningAPlay();
+  explicit SpinningAPlay(stp::Options stp_options);
 
   void reset() override;
 

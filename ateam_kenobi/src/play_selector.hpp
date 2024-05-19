@@ -54,9 +54,9 @@ private:
   void * prev_play_address_ = nullptr;
 
   template<typename PlayType>
-  std::shared_ptr<stp::Play> addPlay()
+  std::shared_ptr<stp::Play> addPlay(stp::Options stp_options)
   {
-    auto play = std::make_shared<PlayType>();
+    auto play = std::make_shared<PlayType>(stp_options);
     plays_.push_back(play);
     return play;
   }

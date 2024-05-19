@@ -32,8 +32,8 @@ namespace ateam_kenobi::plays
 class TestKickPlay : public stp::Play
 {
 public:
-  TestKickPlay()
-  : stp::Play("TestKickPlay"),
+  explicit TestKickPlay(stp::Options stp_options)
+  : stp::Play("TestKickPlay", stp_options),
     line_kick_skill_(createChild<skills::LineKick>("line_kick"))
   {}
 

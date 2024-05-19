@@ -28,8 +28,8 @@
 namespace ateam_kenobi::plays
 {
 
-TrianglePassPlay::TrianglePassPlay()
-: stp::Play("TrianglePassPlay"),
+TrianglePassPlay::TrianglePassPlay(stp::Options stp_options)
+: stp::Play("TrianglePassPlay", stp_options),
   line_kick_(createChild<skills::LineKick>("line_kick"))
 {
   play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));

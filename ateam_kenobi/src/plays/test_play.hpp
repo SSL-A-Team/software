@@ -31,7 +31,7 @@ namespace ateam_kenobi::plays
 class TestPlay : public stp::Play
 {
 public:
-  TestPlay();
+  explicit TestPlay(stp::Options stp_options);
 
   void reset() override;
 

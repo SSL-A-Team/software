@@ -33,19 +33,20 @@ namespace ateam_kenobi
 PlaySelector::PlaySelector()
 {
   using namespace ateam_kenobi::plays;  // NOLINT(build/namespaces)
-  halt_play_ = addPlay<HaltPlay>();
-  addPlay<TestPlay>();
-  addPlay<StopPlay>();
-  addPlay<WallPlay>();
-  addPlay<OurKickoffPlay>();
-  addPlay<TestKickPlay>();
-  addPlay<Basic122>();
-  addPlay<OurPenaltyPlay>();
-  addPlay<TheirPenaltyPlay>();
-  addPlay<ControlsTestPlay>();
-  addPlay<TrianglePassPlay>();
-  addPlay<WaypointsPlay>();
-  addPlay<SpinningAPlay>();
+  stp::Options stp_options;
+  halt_play_ = addPlay<HaltPlay>(stp_options);
+  addPlay<TestPlay>(stp_options);
+  addPlay<StopPlay>(stp_options);
+  addPlay<WallPlay>(stp_options);
+  addPlay<OurKickoffPlay>(stp_options);
+  addPlay<TestKickPlay>(stp_options);
+  addPlay<Basic122>(stp_options);
+  addPlay<OurPenaltyPlay>(stp_options);
+  addPlay<TheirPenaltyPlay>(stp_options);
+  addPlay<ControlsTestPlay>(stp_options);
+  addPlay<TrianglePassPlay>(stp_options);
+  addPlay<WaypointsPlay>(stp_options);
+  addPlay<SpinningAPlay>(stp_options);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world)

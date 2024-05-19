@@ -24,8 +24,8 @@
 
 namespace ateam_kenobi::plays
 {
-HaltPlay::HaltPlay()
-: stp::Play("HaltPlay")
+HaltPlay::HaltPlay(stp::Options stp_options)
+: stp::Play("HaltPlay", stp_options)
 {
 }
 
