@@ -78,6 +78,16 @@ public:
     return ChildType(options, std::forward<Args>(args)...);
   }
 
+  template<typename ChildType, typename ... Args>
+  std::array<ChildType, 16> createIndexedChildren(std::string name_prefix, Args &&... args)
+  {
+    std::array<ChildType, 16> children;
+    for (auto ind = 0; ind < 16; ++ind) {
+      children[ind] = createChild<ChildType>(name_prefix + "_" + std::to_string(ind));
+    }
+    return children;
+  }
+
   const std::string & getName() const
   {
     return name_;

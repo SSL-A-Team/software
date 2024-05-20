@@ -25,7 +25,7 @@
 #include <vector>
 #include "stp/play.hpp"
 #include "skills/line_kick.hpp"
-#include "skills/blockers.hpp"
+#include "tactics/blockers.hpp"
 #include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays
@@ -44,7 +44,7 @@ public:
 
 private:
   skills::LineKick striker_skill_;
-  skills::Blockers blockers_skill_;
+  tactics::Blockers blockers_skill_;
   skills::Goalie goalie_skill_;
 
   void runStriker(

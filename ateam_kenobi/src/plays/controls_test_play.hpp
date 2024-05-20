@@ -49,8 +49,6 @@ private:
     double hold_time_sec;
   };
 
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-
   MotionController motion_controller_;
   MotionOptions motion_options_;
 

@@ -29,10 +29,9 @@ namespace ateam_kenobi::plays
 {
 
 WaypointsPlay::WaypointsPlay(stp::Options stp_options)
-: stp::Play("WaypointsPlay", stp_options)
+: stp::Play("WaypointsPlay", stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
-
   addWaypoint(
     5000, {
       {0.00, 0, M_PI},

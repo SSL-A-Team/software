@@ -29,7 +29,7 @@ namespace ateam_kenobi::skills
 
 LineKick::LineKick(stp::Options stp_options)
 : stp::Skill(stp_options),
-  easy_move_to_(getOverlays().getChild("EasyMoveTo"))
+  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
 }
 

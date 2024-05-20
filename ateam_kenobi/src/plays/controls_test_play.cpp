@@ -30,8 +30,6 @@ namespace ateam_kenobi::plays
 ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 : stp::Play("ControlsTestPlay", stp_options)
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
-
   // Turn 180 deg in place
   // waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute,  0.0, 3.0});
   // waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute, M_PI, 3.0});

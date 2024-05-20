@@ -19,23 +19,23 @@
 // THE SOFTWARE.
 
 
-#ifndef SKILLS__BLOCKERS_HPP_
-#define SKILLS__BLOCKERS_HPP_
+#ifndef TACTICS__BLOCKERS_HPP_
+#define TACTICS__BLOCKERS_HPP_
 
 #include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <nlohmann/json.hpp>
-#include "visualization/overlays.hpp"
+#include "stp/tactic.hpp"
 #include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
-namespace ateam_kenobi::skills
+namespace ateam_kenobi::tactics
 {
 
-class Blockers
+class Blockers : public stp::Tactic
 {
 public:
-  explicit Blockers(visualization::Overlays overlays);
+  explicit Blockers(stp::Options stp_options);
 
   void reset();
 
@@ -53,6 +53,6 @@ private:
   ateam_geometry::Point getBlockingPosition(const World & world, const Robot & blockee);
 };
 
-}  // namespace ateam_kenobi::skills
+}  // namespace ateam_kenobi::tactics
 
-#endif  // SKILLS__BLOCKERS_HPP_
+#endif  // TACTICS__BLOCKERS_HPP_

@@ -30,10 +30,9 @@ namespace ateam_kenobi::plays
 
 TrianglePassPlay::TrianglePassPlay(stp::Options stp_options)
 : stp::Play("TrianglePassPlay", stp_options),
-  line_kick_(createChild<skills::LineKick>("line_kick"))
+  line_kick_(createChild<skills::LineKick>("line_kick")),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
-
   positions.emplace_back(0.85, 0);
   const auto angle = angles::from_degrees(120);
   CGAL::Aff_transformation_2<ateam_geometry::Kernel> rotate_transform(CGAL::ROTATION, std::sin(

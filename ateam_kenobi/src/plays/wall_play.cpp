@@ -54,9 +54,9 @@ std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
 
 WallPlay::WallPlay(stp::Options stp_options)
 : stp::Play("WallPlay", stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
   goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
 
 double WallPlay::getScore(const World & world)
