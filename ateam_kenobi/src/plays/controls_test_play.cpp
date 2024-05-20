@@ -28,7 +28,7 @@
 namespace ateam_kenobi::plays
 {
 ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
-: stp::Play("ControlsTestPlay", stp_options)
+: stp::Play(kPlayName, stp_options)
 {
   // Turn 180 deg in place
   // waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute,  0.0, 3.0});

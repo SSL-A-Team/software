@@ -32,6 +32,8 @@ namespace ateam_kenobi::plays
 class SpinningAPlay : public stp::Play
 {
 public:
+  static constexpr const char * kPlayName = "SpinningAPlay";
+
   explicit SpinningAPlay(stp::Options stp_options);
 
   void reset() override;

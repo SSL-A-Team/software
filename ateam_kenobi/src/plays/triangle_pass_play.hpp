@@ -33,6 +33,8 @@ namespace ateam_kenobi::plays
 class TrianglePassPlay : public stp::Play
 {
 public:
+  static constexpr const char * kPlayName = "TrianglePassPlay";
+
   explicit TrianglePassPlay(stp::Options stp_options);
 
   void reset() override;

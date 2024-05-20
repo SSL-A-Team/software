@@ -37,6 +37,8 @@ namespace ateam_kenobi::plays
 class WaypointsPlay : public stp::Play
 {
 public:
+  static constexpr const char * kPlayName = "WaypointsPlay";
+
   explicit WaypointsPlay(stp::Options stp_options);
 
   void reset() override;

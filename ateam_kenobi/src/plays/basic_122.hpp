@@ -34,6 +34,8 @@ namespace ateam_kenobi::plays
 class Basic122 : public stp::Play
 {
 public:
+  static constexpr const char * kPlayName = "Basic122";
+
   explicit Basic122(stp::Options stp_options);
 
   double getScore(const World & world) override;

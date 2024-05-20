@@ -26,7 +26,7 @@
 namespace ateam_kenobi::plays
 {
 StopPlay::StopPlay(stp::Options stp_options)
-: stp::Play("StopPlay", stp_options),
+: stp::Play(kPlayName, stp_options),
   easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
   for (auto & move_to : easy_move_tos_) {

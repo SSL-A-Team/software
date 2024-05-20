@@ -35,19 +35,19 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   using namespace ateam_kenobi::plays;  // NOLINT(build/namespaces)
   stp::Options stp_options;
   stp_options.logger = node.get_logger();
-  halt_play_ = addPlay<HaltPlay>(stp_options, "HaltPlay");
-  addPlay<TestPlay>(stp_options, "TestPlay");
-  addPlay<StopPlay>(stp_options, "StopPlay");
-  addPlay<WallPlay>(stp_options, "WallPlay");
-  addPlay<OurKickoffPlay>(stp_options, "OurKickoffPlay");
-  addPlay<TestKickPlay>(stp_options, "TestKickPlay");
-  addPlay<Basic122>(stp_options, "Basic122");
-  addPlay<OurPenaltyPlay>(stp_options, "OurPenaltyPlay");
-  addPlay<TheirPenaltyPlay>(stp_options, "TheirPenaltyPlay");
-  addPlay<ControlsTestPlay>(stp_options, "ControlsTestPlay");
-  addPlay<TrianglePassPlay>(stp_options, "TrianglePassPlay");
-  addPlay<WaypointsPlay>(stp_options, "WaypointsPlay");
-  addPlay<SpinningAPlay>(stp_options, "SpinningAPlay");
+  halt_play_ = addPlay<HaltPlay>(stp_options);
+  addPlay<TestPlay>(stp_options);
+  addPlay<StopPlay>(stp_options);
+  addPlay<WallPlay>(stp_options);
+  addPlay<OurKickoffPlay>(stp_options);
+  addPlay<TestKickPlay>(stp_options);
+  addPlay<Basic122>(stp_options);
+  addPlay<OurPenaltyPlay>(stp_options);
+  addPlay<TheirPenaltyPlay>(stp_options);
+  addPlay<ControlsTestPlay>(stp_options);
+  addPlay<TrianglePassPlay>(stp_options);
+  addPlay<WaypointsPlay>(stp_options);
+  addPlay<SpinningAPlay>(stp_options);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world)

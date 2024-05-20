@@ -28,7 +28,7 @@ namespace ateam_kenobi::plays
 {
 
 TheirPenaltyPlay::TheirPenaltyPlay(stp::Options stp_options)
-: stp::Play("TheirPenaltyPlay", stp_options),
+: stp::Play(kPlayName, stp_options),
   move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
   goalie_skill_(createChild<skills::Goalie>("goalie"))
 {

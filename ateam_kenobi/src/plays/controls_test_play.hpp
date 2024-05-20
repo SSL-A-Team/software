@@ -33,6 +33,8 @@ namespace ateam_kenobi::plays
 class ControlsTestPlay : public stp::Play
 {
 public:
+  static constexpr const char * kPlayName = "ControlsTestPlay";
+
   explicit ControlsTestPlay(stp::Options stp_options);
 
   void reset() override;

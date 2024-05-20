@@ -33,6 +33,8 @@ namespace ateam_kenobi::plays
 class OurPenaltyPlay : public stp::Play
 {
 public:
+  static constexpr const char * kPlayName = "OurPenaltyPlay";
+
   explicit OurPenaltyPlay(stp::Options stp_options);
 
   double getScore(const World & world) override;

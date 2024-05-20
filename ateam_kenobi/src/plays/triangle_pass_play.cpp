@@ -29,7 +29,7 @@ namespace ateam_kenobi::plays
 {
 
 TrianglePassPlay::TrianglePassPlay(stp::Options stp_options)
-: stp::Play("TrianglePassPlay", stp_options),
+: stp::Play(kPlayName, stp_options),
   line_kick_(createChild<skills::LineKick>("line_kick")),
   easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {

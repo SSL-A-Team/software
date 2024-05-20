@@ -38,6 +38,8 @@ namespace ateam_kenobi::plays
 class OurKickoffPlay : public stp::Play
 {
 public:
+  static constexpr const char * kPlayName = "OurKickoffPlay";
+
   explicit OurKickoffPlay(stp::Options stp_options);
 
   double getScore(const World & world) override;

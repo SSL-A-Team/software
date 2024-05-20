@@ -32,8 +32,10 @@ namespace ateam_kenobi::plays
 class TestKickPlay : public stp::Play
 {
 public:
+  static constexpr const char * kPlayName = "TestKickPlay";
+
   explicit TestKickPlay(stp::Options stp_options)
-  : stp::Play("TestKickPlay", stp_options),
+  : stp::Play(kPlayName, stp_options),
     line_kick_skill_(createChild<skills::LineKick>("line_kick"))
   {}
 
