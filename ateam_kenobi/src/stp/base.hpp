@@ -25,6 +25,7 @@
 #include <string>
 #include <utility>
 #include <nlohmann/json.hpp>
+#include <rclcpp/logger.hpp>
 #include "visualization/overlays.hpp"
 
 namespace ateam_kenobi::stp
@@ -35,27 +36,31 @@ struct Options
   std::string name;
   visualization::Overlays overlays;
   nlohmann::json play_info;
+  rclcpp::Logger logger = rclcpp::get_logger("kenobi_stp_default");
 };
 
 class Base
 {
 public:
   explicit Base(std::string name)
-  : name_(name)
+  : name_(name),
+    logger_(rclcpp::get_logger(name))
   {
   }
 
   explicit Base(Options options)
   : name_(options.name),
     overlays_(options.overlays),
-    play_info_(options.play_info)
+    play_info_(options.play_info),
+    logger_(options.logger)
   {
   }
 
   Base(std::string name, Options options)
   : name_(name),
     overlays_(options.overlays),
-    play_info_(options.play_info)
+    play_info_(options.play_info),
+    logger_(options.logger)
   {
   }
 
@@ -67,7 +72,8 @@ public:
     Options options{
       child_name,
       overlays_.getChild(child_name),
-      play_info_[child_name]
+      play_info_[child_name],
+      logger_.get_child(child_name)
     };
     return ChildType(options, std::forward<Args>(args)...);
   }
@@ -87,10 +93,16 @@ public:
     return play_info_;
   }
 
+  rclcpp::Logger & getLogger()
+  {
+    return logger_;
+  }
+
 private:
   std::string name_;
   visualization::Overlays overlays_;
   nlohmann::json play_info_;
+  rclcpp::Logger logger_;
 };
 
 }  // namespace ateam_kenobi::stp

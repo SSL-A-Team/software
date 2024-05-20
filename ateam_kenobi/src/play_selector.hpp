@@ -25,6 +25,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <rclcpp/rclcpp.hpp>
 #include "stp/play.hpp"
 #include "types/world.hpp"
 
@@ -34,7 +35,7 @@ namespace ateam_kenobi
 class PlaySelector
 {
 public:
-  PlaySelector();
+  explicit PlaySelector(rclcpp::Node & node);
 
   stp::Play * getPlay(const World & world);
 
@@ -54,8 +55,9 @@ private:
   void * prev_play_address_ = nullptr;
 
   template<typename PlayType>
-  std::shared_ptr<stp::Play> addPlay(stp::Options stp_options)
+  std::shared_ptr<stp::Play> addPlay(stp::Options stp_options, const std::string & name)
   {
+    stp_options.logger = stp_options.logger.get_child(name);
     auto play = std::make_shared<PlayType>(stp_options);
     plays_.push_back(play);
     return play;

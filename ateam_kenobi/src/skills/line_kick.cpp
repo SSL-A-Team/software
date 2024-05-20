@@ -54,7 +54,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
     case State::KickBall:
       return runKickBall(world, robot);
     default:
-      std::cerr << "Unhandled state in line kick!\n";
+      RCLCPP_WARN(getLogger(), "Unhandled state in line kick!");
       return ateam_msgs::msg::RobotMotionCommand{};
   }
 }

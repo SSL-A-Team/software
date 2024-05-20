@@ -60,6 +60,7 @@ class KenobiNode : public rclcpp::Node
 public:
   explicit KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("kenobi_node", options),
+    play_selector_(*this),
     game_controller_listener_(*this)
   {
     declare_parameter<bool>("use_world_velocities", false);
