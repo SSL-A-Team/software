@@ -28,7 +28,7 @@ namespace ateam_kenobi::play_helpers
 
 EasyMoveTo::EasyMoveTo(stp::Options stp_options)
 : stp::Base(stp_options),
-  path_planner_(getOverlays().getChild("path_planner"))
+  path_planner_(createChild<path_planning::PathPlanner>("path_planner"))
 {
 }
 
@@ -112,7 +112,7 @@ void EasyMoveTo::no_face()
 void EasyMoveTo::setMaxVelocity(double velocity)
 {
   if (velocity > 3.0) {
-    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX VELOCITY\n";
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX VELOCITY");
     return;
   }
   motion_controller_.v_max = velocity;
@@ -121,7 +121,7 @@ void EasyMoveTo::setMaxVelocity(double velocity)
 void EasyMoveTo::setMaxAngularVelocity(double velocity)
 {
   if (velocity > 6.5) {
-    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX ANGULAR VELOCITY\n";
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX ANGULAR VELOCITY");
     return;
   }
   motion_controller_.t_max = velocity;
