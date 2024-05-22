@@ -60,7 +60,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> stop_motion_commands;
   for (Robot & robot : play_helpers::getAvailableRobots(world)) {
-
     // avoid the ball by 0.7m just to be safe
     double radius = 0.7;
 
@@ -70,8 +69,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
       ateam_geometry::Vector offset_vector = radius * ateam_geometry::normalize(
         robot.pos - world.ball.pos);
 
-        const auto & destination = ateam_geometry::Point(
-          world.ball.pos.x() + offset_vector.x(), world.ball.pos.y() + offset_vector.y());
+      const auto & destination = ateam_geometry::Point(
+        world.ball.pos.x() + offset_vector.x(), world.ball.pos.y() + offset_vector.y());
 
       auto & easy_move_to = easy_move_tos_.at(robot.id);
       easy_move_to.setTargetPosition(destination);

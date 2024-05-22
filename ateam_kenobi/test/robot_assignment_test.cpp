@@ -54,7 +54,8 @@ TEST(RobotAssignmentTest, EmptyGoals)
 TEST(RobotAssignmentTest, OneRobotOneGoal)
 {
   std::vector<Robot> robots {
-    {1, true, true, ateam_geometry::Point(1, 2), 0.0, ateam_geometry::Vector{}, 0.0, false, true, false}
+    {1, true, true, ateam_geometry::Point(1, 2), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(3, 4)
@@ -66,8 +67,10 @@ TEST(RobotAssignmentTest, OneRobotOneGoal)
 TEST(RobotAssignmentTest, TwoRobotsOneGoal)
 {
   std::vector<Robot> robots {
-    {1, true, true, ateam_geometry::Point(1, 2), 0.0, ateam_geometry::Vector{}, 0.0, false, true, false},
-    {2, true, true, ateam_geometry::Point(3, 4), 0.0, ateam_geometry::Vector{}, 0.0, false, true, false}
+    {1, true, true, ateam_geometry::Point(1, 2), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false},
+    {2, true, true, ateam_geometry::Point(3, 4), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(3, 4)
@@ -79,8 +82,10 @@ TEST(RobotAssignmentTest, TwoRobotsOneGoal)
 TEST(RobotAssignmentTest, TwoRobotsTwoGoals)
 {
   std::vector<Robot> robots {
-    {1, true, true, ateam_geometry::Point(1, 2), 0.0, ateam_geometry::Vector{}, 0.0, false, true, false},
-    {2, true, true, ateam_geometry::Point(3, 4), 0.0, ateam_geometry::Vector{}, 0.0, false, true, false}
+    {1, true, true, ateam_geometry::Point(1, 2), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false},
+    {2, true, true, ateam_geometry::Point(3, 4), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(0, 0),
@@ -95,8 +100,10 @@ TEST(RobotAssignmentTest, TwoRobotsTwoGoals)
 TEST(RobotAssignmentTest, TwoRobotsSameDistance)
 {
   std::vector<Robot> robots {
-    {1, true, true, ateam_geometry::Point(0, 1), 0.0, ateam_geometry::Vector{}, 0.0, false, true, false},
-    {2, true, true, ateam_geometry::Point(0, -1), 0.0, ateam_geometry::Vector{}, 0.0, false, true, false}
+    {1, true, true, ateam_geometry::Point(0, 1), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false},
+    {2, true, true, ateam_geometry::Point(0, -1), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(1, 0),
@@ -111,7 +118,8 @@ TEST(RobotAssignmentTest, TwoRobotsSameDistance)
 TEST(RobotAssignmentTest, DisallowAssigningDisallowedRobots)
 {
   std::vector<Robot> robots {
-    {1, true, true, ateam_geometry::Point(0, 0), 0.0, ateam_geometry::Vector{}, 0.0, false, true, false}
+    {1, true, true, ateam_geometry::Point(0, 0), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false}
   };
   std::vector<ateam_geometry::Point> goals = {
     ateam_geometry::Point(0, 0)

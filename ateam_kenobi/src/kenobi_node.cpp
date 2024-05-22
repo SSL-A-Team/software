@@ -168,7 +168,6 @@ private:
       ateam_common::TeamColor::Blue;
     auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
     robot_state_callback(robot_state_array, id, robot_state_msg);
-
   }
 
   // TODO(CAVIDANO): REMOVE THE THEIR ROBOTS HERE THIS SHOULD NOT ASSIGN ANYTHING IN THE NOT CASE

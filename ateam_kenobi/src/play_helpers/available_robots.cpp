@@ -59,4 +59,4 @@ void removeRobotWithId(std::vector<Robot> & robots, int id)
         return robot.id == id;
       }), robots.end());
 }
-} // namespace ateam_kenobi::play_helpers
+}  // namespace ateam_kenobi::play_helpers

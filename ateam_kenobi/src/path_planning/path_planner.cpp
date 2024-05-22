@@ -226,7 +226,6 @@ void PathPlanner::addRobotsToObstacles(
   const ateam_geometry::Point & start_pos,
   std::vector<ateam_geometry::AnyShape> & obstacles)
 {
-
   auto obstacle_from_robot = [](const Robot & robot) {
       return ateam_geometry::AnyShape(
         ateam_geometry::makeDisk(robot.pos, kRobotRadius));
