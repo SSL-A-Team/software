@@ -26,13 +26,12 @@ from launch_ros.actions import Node
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 
 
-def remap_indexed_topics(pattern_from, pattern_to):
-    return list(
-        zip(
-            [pattern_from + str(i) for i in range(16)],
-            [pattern_to + str(i) for i in range(16)],
-        )
-    )
+def remap_indexed_topics(pattern_pairs):
+    return [
+        (pattern_from + str(i), pattern_to + str(i))
+        for i in range(16)
+        for pattern_from, pattern_to in pattern_pairs
+    ]
 
 
 def generate_launch_description():
@@ -48,6 +47,8 @@ def generate_launch_description():
         # DeclareLaunchArgument("gc_interface_address", default_value="10.193.15.132"),
         # DeclareLaunchArgument("gc_server_address", default_value="10.193.12.10"),
         # DeclareLaunchArgument("radio_interface_address", default_value="172.16.1.10"),
+
+        DeclareLaunchArgument("team_name", default_value="A-Team"),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
@@ -78,10 +79,14 @@ def generate_launch_description():
             package="ateam_radio_bridge",
             executable="radio_bridge_node",
             name="radio_bridge",
-            parameters=[{"net_interface_address": LaunchConfiguration("radio_interface_address")}],
-            remappings=remap_indexed_topics("~/robot_motion_commands/robot",
-                                            "/robot_motion_commands/robot") +
-                       remap_indexed_topics("~/robot_feedback/robot",
-                                            "/robot_feedback/robot")
+            parameters=[{
+                "net_interface_address": LaunchConfiguration("radio_interface_address"),
+                "gc_team_name": LaunchConfiguration("team_name")
+            }],
+            respawn=True,
+            remappings=remap_indexed_topics([
+                ("~/robot_motion_commands/robot", "/robot_motion_commands/robot"),
+                ("~/robot_feedback/robot", "/robot_feedback/robot")
+            ])
         )
     ])

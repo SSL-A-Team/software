@@ -35,6 +35,9 @@
 #include "types/models.hpp"
 #include "types/robot.hpp"
 
+namespace ateam_vision_filter
+{
+
 class TransmissionProbabilityGenerator
 {
 public:
@@ -63,5 +66,7 @@ private:
   std::array<std::optional<Robot>, 16> yellow_robots;
   std::optional<Ball> ball;
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // GENERATORS__TRANSMISSION_PROBABILITY_GENERATOR_HPP_

@@ -38,19 +38,24 @@ ateam_msgs::msg::FieldInfo toMsg(const Field & obj)
   auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
       std::transform(
         starting_array.begin(), starting_array.end(), final_array_iter,
-        [&](auto & val)->geometry_msgs::msg::Point {
-          geometry_msgs::msg::Point point;
-          point.x = val.x();
-          point.y = val.y();
-          return point;
+        [&](auto & val)->geometry_msgs::msg::Point32 {
+          return geometry_msgs::build<geometry_msgs::msg::Point32>().x(val.x()).y(val.y()).z(0);
         });
     };
 
-  convert_point_array(obj.field_corners, std::back_inserter(field_msg.field_corners));
-  convert_point_array(obj.ours.goalie_corners, std::back_inserter(field_msg.ours.goal_posts));
-  convert_point_array(obj.ours.goal_posts, std::back_inserter(field_msg.ours.goalie_corners));
-  convert_point_array(obj.theirs.goalie_corners, std::back_inserter(field_msg.theirs.goal_posts));
-  convert_point_array(obj.theirs.goal_posts, std::back_inserter(field_msg.theirs.goalie_corners));
+  convert_point_array(obj.field_corners, std::back_inserter(field_msg.field_corners.points));
+  convert_point_array(
+    obj.ours.defense_area_corners,
+    std::back_inserter(field_msg.ours.goal_corners.points));
+  convert_point_array(
+    obj.ours.goal_corners,
+    std::back_inserter(field_msg.ours.defense_area_corners.points));
+  convert_point_array(
+    obj.theirs.defense_area_corners,
+    std::back_inserter(field_msg.theirs.goal_corners.points));
+  convert_point_array(
+    obj.theirs.goal_corners,
+    std::back_inserter(field_msg.theirs.defense_area_corners.points));
 
   return field_msg;
 }
@@ -105,17 +110,17 @@ ateam_msgs::msg::World toMsg(const World & obj)
 
   world_msg.balls.push_back(toMsg(obj.ball));
 
-  for (const auto & maybe_robot : obj.our_robots) {
-    if (maybe_robot.has_value()) {
-      world_msg.our_robots.push_back(toMsg(maybe_robot.value()));
+  for (const Robot & robot : obj.our_robots) {
+    if (robot.IsAvailable()) {
+      world_msg.our_robots.push_back(toMsg(robot));
     } else {
       world_msg.our_robots.push_back(ateam_msgs::msg::RobotState());
     }
   }
 
-  for (const auto & maybe_robot : obj.their_robots) {
-    if (maybe_robot.has_value()) {
-      world_msg.their_robots.push_back(toMsg(maybe_robot.value()));
+  for (const Robot & robot : obj.their_robots) {
+    if (robot.IsAvailable()) {
+      world_msg.their_robots.push_back(toMsg(robot));
     } else {
       world_msg.their_robots.push_back(ateam_msgs::msg::RobotState());
     }

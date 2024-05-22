@@ -20,19 +20,35 @@
 
 
 #include "their_penalty_play.hpp"
+#include <limits>
 #include "play_helpers/available_robots.hpp"
 #include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::plays
 {
 
-TheirPenaltyPlay::TheirPenaltyPlay(
-  visualization::OverlayPublisher & op,
-  visualization::PlayInfoPublisher & pip)
-: BasePlay(op, pip),
-  goalie_skill_(op, pip)
+TheirPenaltyPlay::TheirPenaltyPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  play_helpers::EasyMoveTo::CreateArray(move_tos_, op);
+  goalie_skill_.possesionTolerance() = 0.3;
+}
+
+double TheirPenaltyPlay::getScore(const World & world)
+{
+  if (world.in_play) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const auto & cmd = world.referee_info.running_command;
+  const auto & prev = world.referee_info.prev_command;
+  if (cmd == ateam_common::GameCommand::PreparePenaltyTheirs ||
+    (cmd == ateam_common::GameCommand::NormalStart &&
+    prev == ateam_common::GameCommand::PreparePenaltyTheirs))
+  {
+    return std::numeric_limits<double>::max();
+  }
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 void TheirPenaltyPlay::reset()
@@ -54,22 +70,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyP
     return {};
   }
 
-  if (world.in_play) {
-    goalie_skill_.runFrame(world, motion_commands);
-  } else {
-    const auto robot_id = world.referee_info.our_goalie_id;
-    const auto & maybe_robot = world.our_robots[robot_id];
-    if (maybe_robot) {
-      const auto & robot = maybe_robot.value();
-      auto & move_to = move_tos_[robot_id];
-      move_to.setTargetPosition(ateam_geometry::Point(-world.field.field_length / 2.0, 0.0));
-      move_to.face_absolute(0.0);
-      path_planning::PlannerOptions options;
-      options.use_default_obstacles = false;
-      move_to.setPlannerOptions(options);
-      motion_commands[robot_id] = move_to.runFrame(robot, world);
-    }
-  }
+  goalie_skill_.runFrame(world, motion_commands);
 
   auto i = 0;
   ateam_geometry::Point pattern_start(kRobotDiameter - (world.field.field_length / 2.0),
@@ -84,7 +85,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyP
     i++;
   }
 
-  play_info_publisher_.send_play_message("Their Penalty Play");
   return motion_commands;
 }
 }  // namespace ateam_kenobi::plays

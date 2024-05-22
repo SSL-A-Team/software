@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,25 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <gtest/gtest.h>
+#ifndef ATEAM_GEOMETRY__INTERSECTION_HPP_
+#define ATEAM_GEOMETRY__INTERSECTION_HPP_
 
-#include "ateam_geometry/types.hpp"
-#include "ateam_geometry/nearest_points.hpp"
+#include <CGAL/intersections.h>
+#include <utility>
+#include "types.hpp"
+#include "arc.hpp"
 
-TEST(NearestPointOnSegment, PointOffSegment)
+namespace ateam_geometry
 {
-  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
-  ateam_geometry::Point p(10, 0);
-  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
-  EXPECT_FLOAT_EQ(nearest_point.x(), 5);
-  EXPECT_FLOAT_EQ(nearest_point.y(), 5);
+
+template<typename A, typename B>
+typename CGAL::Intersection_traits<Kernel, A, B>::result_type intersection(const A & a, const B & b)
+{
+  return CGAL::intersection(a, b);
 }
 
-TEST(NearestPointOnSegment, PointOnSegment)
-{
-  ateam_geometry::Segment s(ateam_geometry::Point(0, 0), ateam_geometry::Point(10, 10));
-  ateam_geometry::Point p(1, 1);
-  auto nearest_point = ateam_geometry::NearestPointOnSegment(s, p);
-  EXPECT_FLOAT_EQ(nearest_point.x(), 1);
-  EXPECT_FLOAT_EQ(nearest_point.y(), 1);
-}
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Circle & circle,
+  const Line & line);
+
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Arc & arc,
+  const Line & line);
+
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Arc & arc,
+  const Ray & ray);
+
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Arc & arc,
+  const Segment & segment);
+
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__INTERSECTION_HPP_

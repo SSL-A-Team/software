@@ -20,19 +20,34 @@
 
 
 #include "basic_122.hpp"
+#include <algorithm>
+#include <limits>
 #include <vector>
 #include "play_helpers/available_robots.hpp"
-#include "robot_assignment.hpp"
+#include "play_helpers/robot_assignment.hpp"
+#include "play_helpers/window_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-Basic122::Basic122(visualization::OverlayPublisher & op, visualization::PlayInfoPublisher & pip)
-: BasePlay(op, pip),
-  striker_skill_(op),
-  blockers_skill_(op),
-  goalie_skill_(op, pip)
+Basic122::Basic122(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  striker_skill_(createChild<skills::LineKick>("striker")),
+  blockers_skill_(createChild<tactics::Blockers>("blockers")),
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
+}
+
+double Basic122::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::ForceStart:
+    case ateam_common::GameCommand::NormalStart:
+    case ateam_common::GameCommand::DirectFreeOurs:
+      return 0.0;
+    default:
+      return world.in_play ? 0.0 : std::numeric_limits<double>::lowest();
+  }
 }
 
 void Basic122::reset()
@@ -51,65 +66,133 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
 
   goalie_skill_.runFrame(world, motion_commands);
 
-  assignAndRunStriker(available_robots, world, motion_commands);
+  std::vector<ateam_geometry::Point> assignment_positions;
+  assignment_positions.push_back(striker_skill_.getAssignmentPoint(world));
 
-  assignAndRunBlockers(available_robots, world, motion_commands);
+  const auto blocker_assignment_positions = blockers_skill_.getAssignmentPoints(world);
+  assignment_positions.insert(
+    assignment_positions.end(),
+    blocker_assignment_positions.begin(), blocker_assignment_positions.end());
 
-  play_info_publisher_.send_play_message("Basic122");
+  std::vector<std::vector<int>> disallowed_ids;
+  if (world.double_touch_forbidden_id_) {
+    std::fill_n(
+      std::back_inserter(disallowed_ids), assignment_positions.size(),
+      std::vector<int>{});
+    disallowed_ids[0].push_back(*world.double_touch_forbidden_id_);
+  }
+
+  const auto assignments = play_helpers::assignRobots(
+    available_robots, assignment_positions,
+    disallowed_ids);
+
+  const auto & striker = assignments[0];
+
+  if (striker) {
+    runStriker(*striker, world, motion_commands[striker->id].emplace());
+  }
+
+  std::vector<Robot> blockers;
+  for (auto ind = 1ul; ind < assignments.size(); ++ind) {
+    if (assignments[ind]) {
+      blockers.push_back(*assignments[ind]);
+    }
+  }
+
+  runBlockers(blockers, world, motion_commands);
 
   return motion_commands;
 }
 
-void Basic122::assignAndRunStriker(
-  std::vector<Robot> & available_robots, const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-  16> & motion_commands)
+void Basic122::runStriker(
+  const Robot & striker_bot, const World & world,
+  ateam_msgs::msg::RobotMotionCommand & motion_command)
 {
-  std::vector<ateam_geometry::Point> assignable_positions;
-  assignable_positions.push_back(striker_skill_.getAssignmentPoint(world));
-  auto assignment_map = robot_assignment::assign(available_robots, assignable_positions);
-  if (assignment_map.empty()) {
-    return;
-  }
-  const auto robot_id = assignment_map.begin()->first;
-  auto maybe_robot = world.our_robots[robot_id];
-  if (!maybe_robot) {
-    return;
-  }
-  striker_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length, 0.0));
-  motion_commands[robot_id] = striker_skill_.runFrame(world, maybe_robot.value());
+  getPlayInfo()["Striker ID"] = striker_bot.id;
 
-  play_helpers::removeRobotWithId(available_robots, robot_id);
+  const auto they_have_possession = doTheyHavePossession(world);
+
+  getPlayInfo()["Possession"] = they_have_possession ? "theirs" : "ours";
+
+  if (they_have_possession) {
+    const auto ball_to_bot_vec = striker_bot.pos - world.ball.pos;
+    const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
+    motion_command.twist.linear.x = vel.x();
+    motion_command.twist.linear.y = vel.y();
+    return;
+  }
+
+  const ateam_geometry::Segment goal_segment(ateam_geometry::Point(
+      world.field.field_length / 2,
+      -world.field.goal_width / 2),
+    ateam_geometry::Point(world.field.field_length / 2, world.field.goal_width / 2));
+  auto robots = play_helpers::getVisibleRobots(world.our_robots);
+  play_helpers::removeRobotWithId(robots, striker_bot.id);
+  std::ranges::copy(play_helpers::getVisibleRobots(world.their_robots), std::back_inserter(robots));
+
+  const auto windows = play_helpers::window_evaluation::getWindows(
+    goal_segment, world.ball.pos,
+    robots);
+  play_helpers::window_evaluation::drawWindows(
+    windows, world.ball.pos, getOverlays().getChild(
+      "Windows"));
+  const auto target_window = play_helpers::window_evaluation::getLargestWindow(windows);
+  ateam_geometry::Point target_point;
+  if (target_window) {
+    target_point = CGAL::midpoint(*target_window);
+  } else {
+    target_point = ateam_geometry::Point(world.field.field_length / 2, 0.0);
+  }
+  striker_skill_.setTargetPoint(target_point);
+  striker_skill_.setKickSpeed(3.0);
+  motion_command = striker_skill_.runFrame(world, striker_bot);
 }
 
-void Basic122::assignAndRunBlockers(
-  std::vector<Robot> & available_robots,
+void Basic122::runBlockers(
+  const std::vector<Robot> & blocker_bots,
   const World & world,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
-  std::vector<ateam_geometry::Point> assignable_positions;
-  auto blockable_robot_assignment_goals = blockers_skill_.getAssignmentPoints(world);
-  std::copy_n(
-    blockable_robot_assignment_goals.begin(), std::min(
-      2ul,
-      blockable_robot_assignment_goals.size()),
-    std::back_inserter(assignable_positions));
-  auto assignment_map = robot_assignment::assign(available_robots, assignable_positions);
-  std::vector<Robot> assigned_robots;
-  for (auto [robot_id, pos_ind] : assignment_map) {
-    auto maybe_robot = world.our_robots[robot_id];
-    if (!maybe_robot) {
-      continue;
-    }
-    const auto & robot = maybe_robot.value();
-    assigned_robots.push_back(robot);
-  }
-  auto skill_commands = blockers_skill_.runFrame(world, assigned_robots);
-  for (auto robot_ind = 0ul; robot_ind < assigned_robots.size(); ++robot_ind) {
-    const auto robot_id = assigned_robots[robot_ind].id;
-    motion_commands[robot_id] = skill_commands[robot_ind];
-    play_helpers::removeRobotWithId(available_robots, robot_id);
+  const auto skill_commands = blockers_skill_.runFrame(world, blocker_bots, &getPlayInfo());
+
+  for (auto robot_ind = 0ul; robot_ind < blocker_bots.size(); ++robot_ind) {
+    motion_commands[blocker_bots[robot_ind].id] = skill_commands[robot_ind];
   }
 }
+
+bool Basic122::doTheyHavePossession(const World & world)
+{
+  auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
+      return CGAL::compare_distance_to_point(world.ball.pos, lhs.pos, rhs.pos) == CGAL::SMALLER;
+    };
+
+  const auto their_robots = play_helpers::getVisibleRobots(world.their_robots);
+  if (their_robots.empty()) {
+    return false;
+  }
+
+  const auto closest_their_robot = *std::ranges::min_element(their_robots, byDistToBall);
+
+  if (CGAL::approximate_sqrt(
+      CGAL::squared_distance(
+        closest_their_robot.pos,
+        world.ball.pos)) > kRobotRadius + 0.15)
+  {
+    return false;
+  }
+
+  const auto our_robots = play_helpers::getVisibleRobots(world.our_robots);
+
+  if (our_robots.empty()) {
+    return true;
+  }
+
+  const auto closest_our_robot = *std::ranges::min_element(our_robots, byDistToBall);
+
+  return CGAL::compare_distance_to_point(
+    world.ball.pos, closest_our_robot.pos,
+    closest_their_robot.pos) == CGAL::LARGER;
+}
+
 }  // namespace ateam_kenobi::plays

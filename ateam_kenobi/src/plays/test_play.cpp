@@ -22,18 +22,15 @@
 #include "ateam_geometry/types.hpp"
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
-#include "robot_assignment.hpp"
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {
-TestPlay::TestPlay(
-  visualization::OverlayPublisher & overlay_publisher,
-  visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher),
-  goalie_skill_(overlay_publisher, play_info_publisher)
+TestPlay::TestPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher);
 }
 
 void TestPlay::reset()
@@ -63,7 +60,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::run
 
   goalie_skill_.runFrame(world, maybe_motion_commands);
 
-  play_info_publisher_.send_play_message("Test Play");
   return maybe_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

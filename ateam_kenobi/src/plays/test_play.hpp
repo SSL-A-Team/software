@@ -23,17 +23,17 @@
 
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays
 {
-class TestPlay : public BasePlay
+class TestPlay : public stp::Play
 {
 public:
-  explicit TestPlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  static constexpr const char * kPlayName = "TestPlay";
+
+  explicit TestPlay(stp::Options stp_options);
 
   void reset() override;
 

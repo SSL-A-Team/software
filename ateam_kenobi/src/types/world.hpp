@@ -41,12 +41,15 @@ struct World
   RefereeInfo referee_info;
 
   Ball ball;
-  std::array<std::optional<Robot>, 16> our_robots;
-  std::array<std::optional<Robot>, 16> their_robots;
+  std::array<Robot, 16> our_robots;
+  std::array<Robot, 16> their_robots;
 
   bool in_play;
   bool our_penalty;
   bool their_penalty;
+
+  // Holds the ID of the robot not allowed to touch the ball, if any
+  std::optional<int> double_touch_forbidden_id_;
 };
 }  // namespace ateam_kenobi
 

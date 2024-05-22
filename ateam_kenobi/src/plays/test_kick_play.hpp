@@ -22,21 +22,21 @@
 #ifndef PLAYS__TEST_KICK_PLAY_HPP_
 #define PLAYS__TEST_KICK_PLAY_HPP_
 
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "skills/pivot_kick.hpp"
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class TestKickPlay : public BasePlay
+class TestKickPlay : public stp::Play
 {
 public:
-  explicit TestKickPlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher)
-  : BasePlay(overlay_publisher, play_info_publisher),
-    pivot_kick_skill_(overlay_publisher)
+  static constexpr const char * kPlayName = "TestKickPlay";
+
+  explicit TestKickPlay(stp::Options stp_options)
+  : stp::Play(kPlayName, stp_options),
+    // pivot_kick_skill_(createChild<skills::LineKick>("line_kick"))
   {}
 
   void reset() override {}
@@ -53,7 +53,6 @@ public:
     // aim for center of opponent goal
     pivot_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
     motion_commands[robot.id] = pivot_kick_skill_.runFrame(world, robot);
-    play_info_publisher_.send_play_message("TestKickPlay");
     return motion_commands;
   }
 

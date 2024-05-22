@@ -27,6 +27,9 @@
 #include <utility>
 #include <vector>
 
+namespace ateam_vision_filter
+{
+
 World::World()
 : model_input_generator(std::make_shared<ModelInputGenerator>()),
   transmission_probability_generator(std::make_shared<TransmissionProbabilityGenerator>()) {}
@@ -228,3 +231,5 @@ ateam_msgs::msg::VisionWorldState World::get_vision_world_state() const
 
   return world_state;
 }
+
+}  // namespace ateam_vision_filter

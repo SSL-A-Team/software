@@ -22,17 +22,22 @@
 #ifndef PLAYS__OUR_PENALTY_PLAY_HPP_
 #define PLAYS__OUR_PENALTY_PLAY_HPP_
 
-#include "base_play.hpp"
+#include "stp/play.hpp"
+#include "skills/goalie.hpp"
 #include "skills/line_kick.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class OurPenaltyPlay : public BasePlay
+class OurPenaltyPlay : public stp::Play
 {
 public:
-  OurPenaltyPlay(visualization::OverlayPublisher & op, visualization::PlayInfoPublisher & pip);
+  static constexpr const char * kPlayName = "OurPenaltyPlay";
+
+  explicit OurPenaltyPlay(stp::Options stp_options);
+
+  double getScore(const World & world) override;
 
   void reset() override;
 
@@ -40,8 +45,12 @@ public:
     16> runFrame(const World & world) override;
 
 private:
+  skills::Goalie goalie_skill_;
   skills::LineKick line_kick_skill_;
   std::array<play_helpers::EasyMoveTo, 16> move_tos_;
+  std::chrono::steady_clock::time_point kick_time_ = std::chrono::steady_clock::time_point::max();
+
+  ateam_geometry::Point chooseKickTarget(const World & world);
 };
 
 }  // namespace ateam_kenobi::plays

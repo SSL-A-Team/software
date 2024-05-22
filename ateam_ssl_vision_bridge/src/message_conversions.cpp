@@ -66,6 +66,7 @@ ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame & 
   ros_msg.frame_number = proto_msg.frame_number();
   ros_msg.t_capture = rclcpp::Time(proto_msg.t_capture() * 1000);
   ros_msg.t_sent = rclcpp::Time(proto_msg.t_sent() * 1000);
+  ros_msg.t_capture_camera = rclcpp::Time(proto_msg.t_capture_camera() * 1000);
   ros_msg.camera_id = proto_msg.camera_id();
   std::transform(
     proto_msg.balls().begin(),
@@ -130,6 +131,15 @@ ssl_league_msgs::msg::VisionGeometryFieldSize fromProto(const SSL_GeometryFieldS
     std::back_inserter(ros_msg.field_arcs),
     [](const auto & p) {return fromProto(p);});
 
+  ros_msg.penalty_area_depth = proto_msg.penalty_area_depth() * mmTom;
+  ros_msg.penalty_area_width = proto_msg.penalty_area_width() * mmTom;
+  ros_msg.center_circle_radius = proto_msg.center_circle_radius() * mmTom;
+  ros_msg.line_thickness = proto_msg.line_thickness() * mmTom;
+  ros_msg.goal_center_to_penalty_mark = proto_msg.goal_center_to_penalty_mark() * mmTom;
+  ros_msg.goal_height = proto_msg.goal_height() * mmTom;
+  ros_msg.ball_radius = proto_msg.ball_radius() * mmTom;
+  ros_msg.max_robot_radius = proto_msg.max_robot_radius() * mmTom;
+
   return ros_msg;
 }
 ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(
@@ -170,8 +180,12 @@ ssl_league_msgs::msg::VisionGeometryData fromProto(const SSL_GeometryData & prot
 ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket & proto_msg)
 {
   ssl_league_msgs::msg::VisionWrapper ros_msg;
-  ros_msg.detection = fromProto(proto_msg.detection());
-  ros_msg.geometry = fromProto(proto_msg.geometry());
+  if (proto_msg.has_detection()) {
+    ros_msg.detection.push_back(fromProto(proto_msg.detection()));
+  }
+  if (proto_msg.has_geometry()) {
+    ros_msg.geometry.push_back(fromProto(proto_msg.geometry()));
+  }
 
   return ros_msg;
 }

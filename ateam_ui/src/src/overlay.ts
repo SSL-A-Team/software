@@ -95,7 +95,7 @@ export class Overlay {
             case 3:
                 graphic.beginFill(this.fill_color);
                 graphic.lineStyle(this.stroke_width, this.stroke_color);
-                graphic.drawEllipse(0, 0, scale*this.scale.x, scale*this.scale.y);
+                graphic.drawEllipse(0, 0, scale*this.scale.x/2, scale*this.scale.y/2);
                 graphic.endFill();
                 break;
             // POLYGON

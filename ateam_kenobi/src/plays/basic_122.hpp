@@ -23,18 +23,22 @@
 #define PLAYS__BASIC_122_HPP_
 
 #include <vector>
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "skills/line_kick.hpp"
-#include "skills/blockers.hpp"
+#include "tactics/blockers.hpp"
 #include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class Basic122 : public BasePlay
+class Basic122 : public stp::Play
 {
 public:
-  Basic122(visualization::OverlayPublisher & op, visualization::PlayInfoPublisher & pip);
+  static constexpr const char * kPlayName = "Basic122";
+
+  explicit Basic122(stp::Options stp_options);
+
+  double getScore(const World & world) override;
 
   void reset() override;
 
@@ -42,18 +46,19 @@ public:
 
 private:
   skills::LineKick striker_skill_;
-  skills::Blockers blockers_skill_;
+  tactics::Blockers blockers_skill_;
   skills::Goalie goalie_skill_;
 
-  void assignAndRunStriker(
-    std::vector<Robot> & available_robots, const World & world,
+  void runStriker(
+    const Robot & striker_bot, const World & world,
+    ateam_msgs::msg::RobotMotionCommand & motion_command);
+
+  void runBlockers(
+    const std::vector<Robot> & blocker_bots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 
-  void assignAndRunBlockers(
-    std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
+  bool doTheyHavePossession(const World & world);
 };
 
 }  // namespace ateam_kenobi::plays

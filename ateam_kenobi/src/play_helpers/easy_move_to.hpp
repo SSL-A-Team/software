@@ -28,35 +28,39 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
-#include "visualization/overlay_publisher.hpp"
+#include "stp/base.hpp"
 #include "types/robot.hpp"
 #include "types/world.hpp"
 
 namespace ateam_kenobi::play_helpers
 {
 
-class EasyMoveTo
+class EasyMoveTo : public stp::Base
 {
 public:
-  static void CreateArray(
-    std::array<EasyMoveTo, 16> & dst,
-    visualization::OverlayPublisher & overlay_publisher);
-
   /**
    * @brief DO NOT USE THIS CONSTRUCTOR IN PLAY CODE
    * This is meant for internal use only.
    */
-  EasyMoveTo() {}
+  EasyMoveTo()
+  : stp::Base(stp::Options{}) {}
 
-  explicit EasyMoveTo(visualization::OverlayPublisher & overlay_publisher);
+  explicit EasyMoveTo(stp::Options stp_options);
+
+  explicit EasyMoveTo(EasyMoveTo && other);
+
+  explicit EasyMoveTo(const EasyMoveTo & other);
 
   EasyMoveTo & operator=(EasyMoveTo && other);
+
+  EasyMoveTo & operator=(const EasyMoveTo & other);
 
   void reset();
 
   void setTargetPosition(ateam_geometry::Point target_position);
 
   void setPlannerOptions(path_planning::PlannerOptions options);
+  void setMotionOptions(MotionOptions options);
 
   void face_point(std::optional<ateam_geometry::Point> point);
   void face_absolute(double angle);
@@ -77,14 +81,11 @@ public:
   }
 
 private:
-  static std::size_t instance_index_;  // used for naming visualizations
-  std::string instance_name_;
   ateam_geometry::Point target_position_;
   path_planning::PlannerOptions planner_options_;
   path_planning::PathPlanner path_planner_;
   MotionController motion_controller_;
   MotionOptions motion_options_;
-  visualization::OverlayPublisher * overlay_publisher_;
 
   path_planning::PathPlanner::Path planPath(
     const Robot & robot, const World & world,

@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,31 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef ATEAM_GEOMETRY__DISK_HPP_
+#define ATEAM_GEOMETRY__DISK_HPP_
 
-#ifndef VISUALIZATION__PLAY_INFO_PUBLISHER_HPP_
-#define VISUALIZATION__PLAY_INFO_PUBLISHER_HPP_
+#include <utility>
+#include "types.hpp"
 
-#include <string>
-#include <rclcpp/node.hpp>
-#include <ateam_msgs/msg/play_info.hpp>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
-
-namespace ateam_kenobi::visualization
+namespace ateam_geometry
 {
 
-class PlayInfoPublisher
+/**
+ * @brief A Disk is a circle that includes its internal area.
+ * This is primarily a semantic type for defining custom intersection logic.
+ */
+class Disk : public Circle
 {
 public:
-  explicit PlayInfoPublisher(rclcpp::Node & node);
-  void send_play_message(const std::string & play_name);
+  using Circle::Circle_2;
 
-  json message;   // json data for a play to fill out. Is sent and then cleared when publishing
+  explicit Disk(Circle circle)
+  : Circle(std::move(circle))
+  {
+  }
 
-private:
-  rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr publisher_;
+  Circle & asCircle()
+  {
+    return *this;
+  }
+
+  const Circle & asCircle() const
+  {
+    return *this;
+  }
 };
-}  // namespace ateam_kenobi::visualization
 
-#endif  // VISUALIZATION__PLAY_INFO_PUBLISHER_HPP_
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__DISK_HPP_

@@ -19,24 +19,39 @@
 // THE SOFTWARE.
 
 #include "stop_play.hpp"
+#include <limits>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include "play_helpers/available_robots.hpp"
 
 
 namespace ateam_kenobi::plays
 {
-StopPlay::StopPlay(
-  visualization::OverlayPublisher & overlay_publisher,
-  visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher)
+StopPlay::StopPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
+  for (auto & move_to : easy_move_tos_) {
+    move_to.setMaxVelocity(1.0);
+  }
   StopPlay::reset();
+}
+
+double StopPlay::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::Stop:
+    case ateam_common::GameCommand::BallPlacementOurs:
+    case ateam_common::GameCommand::BallPlacementTheirs:
+      return std::numeric_limits<double>::max();
+    default:
+      return std::numeric_limits<double>::lowest();
+  }
 }
 
 void StopPlay::reset()
 {
   for (auto & move_to : easy_move_tos_) {
     move_to.reset();
-    move_to.setMaxVelocity(1.0);
   }
 }
 
@@ -44,41 +59,36 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> stop_motion_commands;
-  for (size_t robot_id = 0; robot_id < 16; ++robot_id) {
-    // only going to do 8 robots for now to avoid crowding on one side of the ball
+  for (Robot & robot : play_helpers::getAvailableRobots(world)) {
     // avoid the ball by 0.7m just to be safe
     double radius = 0.7;
-    const auto & maybe_robot = world.our_robots[robot_id];
 
-    if (maybe_robot.has_value()) {
-      // move the robot if its in the danger zone halt if its not
-      if (ateam_geometry::norm(maybe_robot.value().pos, world.ball.pos) < radius) {
-        play_info_publisher_.message["robots"][std::to_string(robot_id)] = "moving";
-        const auto & robot = maybe_robot.value();
-        ateam_geometry::Vector offset_vector = radius * ateam_geometry::normalize(
-          robot.pos - world.ball.pos);
+    // move the robot if its in the danger zone halt if its not
+    if (ateam_geometry::norm(robot.pos, world.ball.pos) < radius) {
+      getPlayInfo()["robots"][std::to_string(robot.id)] = "moving";
+      ateam_geometry::Vector offset_vector = radius * ateam_geometry::normalize(
+        robot.pos - world.ball.pos);
 
-        const auto & destination = ateam_geometry::Point(
-          robot.pos.x() + offset_vector.x(), robot.pos.y() + offset_vector.y());
+      const auto & destination = ateam_geometry::Point(
+        world.ball.pos.x() + offset_vector.x(), world.ball.pos.y() + offset_vector.y());
 
-        auto & easy_move_to = easy_move_tos_.at(robot_id);
-        easy_move_to.setTargetPosition(destination);
-        stop_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
-      } else {
-        play_info_publisher_.message["robots"][std::to_string(robot_id)] = "safe";
-        // literally halt if this one robot is not in the danger zone
-        stop_motion_commands[robot_id] = ateam_msgs::msg::RobotMotionCommand{};
-      }
-      continue;
+      auto & easy_move_to = easy_move_tos_.at(robot.id);
+      easy_move_to.setTargetPosition(destination);
+      stop_motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
+    } else {
+      getPlayInfo()["robots"][std::to_string(robot.id)] = "safe";
+      // literally halt if this one robot is not in the danger zone
+      stop_motion_commands[robot.id] = ateam_msgs::msg::RobotMotionCommand{};
     }
-    stop_motion_commands[robot_id] = std::nullopt;  // already done but just to be explicit
+    continue;
+
+    stop_motion_commands[robot.id] = std::nullopt;  // already done but just to be explicit
   }
   // Draw Keepout Circle
-  overlay_publisher_.drawCircle(
+  getOverlays().drawCircle(
     "keepout_circle",
     ateam_geometry::makeCircle(world.ball.pos, 0.35), "red", "transparent");
 
-  play_info_publisher_.send_play_message("Stop Play");
   return stop_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

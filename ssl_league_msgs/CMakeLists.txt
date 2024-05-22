@@ -56,6 +56,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/game_controller/game_events/AttackerDoubleTouchedBall.msg
   msg/game_controller/game_events/BoundaryCrossing.msg
   msg/game_controller/game_events/MultipleCards.msg
+  msg/game_controller/game_events/BotDroppedParts.msg
+  msg/game_controller/game_events/ChallengeFlagHandled.msg
+  msg/game_controller/game_events/ExcessiveBotSubstitution.msg
 
   msg/vision/VisionDetectionBall.msg
   msg/vision/VisionDetectionRobot.msg

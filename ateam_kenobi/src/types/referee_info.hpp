@@ -22,6 +22,7 @@
 #ifndef TYPES__REFEREE_INFO_HPP_
 #define TYPES__REFEREE_INFO_HPP_
 
+#include <chrono>
 #include <ateam_common/game_controller_listener.hpp>
 
 namespace ateam_kenobi
@@ -33,6 +34,7 @@ struct RefereeInfo
   ateam_common::GameStage current_game_stage;
   ateam_common::GameCommand running_command;
   ateam_common::GameCommand prev_command;
+  std::chrono::system_clock::time_point command_time;
 };
 }  // namespace ateam_kenobi
 

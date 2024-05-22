@@ -29,10 +29,23 @@ namespace ateam_kenobi
 struct Robot
 {
   int id;
+  bool visible = false;
+  bool radio_connected = false;
+
   ateam_geometry::Point pos;
   double theta;
   ateam_geometry::Vector vel;
   double omega;
+
+  bool breakbeam_ball_detected = false;
+
+  bool kicker_available = true;
+  bool chipper_available = false;
+
+  bool IsAvailable() const
+  {
+    return visible && radio_connected;
+  }
 };
 }  // namespace ateam_kenobi
 

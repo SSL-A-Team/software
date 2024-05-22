@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,39 +19,57 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__BASE_PLAY_HPP_
-#define PLAYS__BASE_PLAY_HPP_
+#ifndef PLAYS__WAYPOINTS_PLAY_HPP_
+#define PLAYS__WAYPOINTS_PLAY_HPP_
 
 #include <array>
-#include <optional>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "visualization/overlay_publisher.hpp"
-#include "visualization/play_info_publisher.hpp"
-#include "types/world.hpp"
+#include <chrono>
+#include <tuple>
+#include <vector>
+#include <string>
+#include <ateam_geometry/types.hpp>
+#include "stp/play.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class BasePlay
+class WaypointsPlay : public stp::Play
 {
 public:
-  explicit BasePlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher)
-  : overlay_publisher_(overlay_publisher), play_info_publisher_(play_info_publisher) {}
+  static constexpr const char * kPlayName = "WaypointsPlay";
 
-  virtual ~BasePlay() = default;
+  explicit WaypointsPlay(stp::Options stp_options);
 
-  virtual void reset() = 0;
+  void reset() override;
 
-  virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) = 0;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
 
-protected:
-  visualization::OverlayPublisher & overlay_publisher_;
-  visualization::PlayInfoPublisher & play_info_publisher_;
+private:
+  struct Pose
+  {
+    ateam_geometry::Point position;
+    double heading;
+  };
+
+  struct Waypoint
+  {
+    std::vector<Pose> poses;
+    int64_t duration_ms;
+  };
+
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  std::vector<Waypoint> waypoints_;
+  std::chrono::steady_clock::time_point next_transition_time_ =
+    std::chrono::steady_clock::time_point::max();
+  std::size_t waypoint_index_ = 0;
+
+  void addWaypoint(
+    const int64_t duration_ms, const std::vector<std::tuple<double, double,
+    double>> & poses);
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__BASE_PLAY_HPP_
+#endif  // PLAYS__WAYPOINTS_PLAY_HPP_

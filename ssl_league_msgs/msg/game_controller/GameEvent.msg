@@ -1,5 +1,7 @@
+string id
 uint8 type
 string[] origin
+uint64 created_timestamp
 ssl_league_msgs/BallLeftField[<=1] ball_left_field_touch_line
 ssl_league_msgs/BallLeftField[<=1] ball_left_field_goal_line
 ssl_league_msgs/AimlessKick[<=1] aimless_kick
@@ -11,6 +13,7 @@ ssl_league_msgs/BotDribbledBallTooFar[<=1] bot_dribbled_ball_too_far
 ssl_league_msgs/BotPushedBot[<=1] bot_pushed_bot
 ssl_league_msgs/BotHeldBallDeliberately[<=1] bot_held_ball_deliberately
 ssl_league_msgs/BotTippedOver[<=1] bot_tipped_over
+ssl_league_msgs/BotDroppedParts[<=1] bot_dropped_parts
 ssl_league_msgs/AttackerTouchedBallInDefenseArea[<=1] attacker_touched_ball_in_defense_area
 ssl_league_msgs/BotKickedBallTooFast[<=1] bot_kicked_ball_too_fast
 ssl_league_msgs/BotCrashUnique[<=1] bot_crash_unique
@@ -29,8 +32,10 @@ ssl_league_msgs/PlacementFailed[<=1] placement_failed
 ssl_league_msgs/MultipleCards[<=1] multiple_cards
 ssl_league_msgs/MultipleFouls[<=1] multiple_fouls
 ssl_league_msgs/BotSubstitution[<=1] bot_substitution
+ssl_league_msgs/ExcessiveBotSubstitution[<=1] excessive_bot_substitution
 ssl_league_msgs/TooManyRobots[<=1] too_many_robots
 ssl_league_msgs/ChallengeFlag[<=1] challenge_flag
+ssl_league_msgs/ChallengeFlagHandled[<=1] challenge_flag_handled
 ssl_league_msgs/EmergencyStop[<=1] emergency_stop
 ssl_league_msgs/UnsportingBehaviorMinor[<=1] unsporting_behavior_minor
 ssl_league_msgs/UnsportingBehaviorMajor[<=1] unsporting_behavior_major
@@ -59,6 +64,7 @@ uint8 TYPE_BOT_DRIBBLED_BALL_TOO_FAR = 17
 uint8 TYPE_BOT_PUSHED_BOT = 24
 uint8 TYPE_BOT_HELD_BALL_DELIBERATELY = 26
 uint8 TYPE_BOT_TIPPED_OVER = 27
+uint8 TYPE_BOT_DROPPED_PARTS = 47
 uint8 TYPE_ATTACKER_TOUCHED_BALL_IN_DEFENSE_AREA = 15
 uint8 TYPE_BOT_KICKED_BALL_TOO_FAST = 18
 uint8 TYPE_BOT_CRASH_UNIQUE = 22
@@ -66,6 +72,7 @@ uint8 TYPE_BOT_CRASH_DRAWN = 21
 uint8 TYPE_DEFENDER_TOO_CLOSE_TO_KICK_POINT = 29
 uint8 TYPE_BOT_TOO_FAST_IN_STOP = 28
 uint8 TYPE_BOT_INTERFERED_PLACEMENT = 20
+uint8 TYPE_EXCESSIVE_BOT_SUBSTITUTION = 48
 uint8 TYPE_POSSIBLE_GOAL = 39
 uint8 TYPE_GOAL = 8
 uint8 TYPE_INVALID_GOAL = 42
@@ -79,6 +86,7 @@ uint8 TYPE_MULTIPLE_FOULS = 34
 uint8 TYPE_BOT_SUBSTITUTION = 37
 uint8 TYPE_TOO_MANY_ROBOTS = 38
 uint8 TYPE_CHALLENGE_FLAG = 44
+uint8 TYPE_CHALLENGE_FLAG_HANDLED = 46
 uint8 TYPE_EMERGENCY_STOP = 45
 uint8 TYPE_UNSPORTING_BEHAVIOR_MINOR = 35
 uint8 TYPE_UNSPORTING_BEHAVIOR_MAJOR = 36

@@ -22,10 +22,12 @@
 #ifndef PLAY_SELECTOR_HPP_
 #define PLAY_SELECTOR_HPP_
 
-#include "plays/all_plays.hpp"
+#include <memory>
+#include <string>
+#include <vector>
+#include <rclcpp/rclcpp.hpp>
+#include "stp/play.hpp"
 #include "types/world.hpp"
-#include "visualization/overlay_publisher.hpp"
-#include "visualization/play_info_publisher.hpp"
 
 namespace ateam_kenobi
 {
@@ -33,34 +35,40 @@ namespace ateam_kenobi
 class PlaySelector
 {
 public:
-  explicit PlaySelector(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  explicit PlaySelector(rclcpp::Node & node);
 
-  plays::BasePlay * getPlay(const World & world);
+  stp::Play * getPlay(const World & world);
+
+  void setPlayOverride(const std::string & play_name)
+  {
+    override_play_name_ = play_name;
+  }
+
+  std::vector<std::string> getPlayNames();
+
+  stp::Play * getPlayByName(const std::string name);
 
 private:
-  plays::TestPlay test_play_;
-  plays::HaltPlay halt_play_;
-  plays::StopPlay stop_play_;
-  plays::WallPlay wall_play_;
-  plays::OurKickoffPlay our_kickoff_play_;
-  plays::TestKickPlay test_kick_play_;
-  plays::Basic122 basic_122_play_;
-  plays::OurPenaltyPlay our_penalty_play_;
-  plays::TheirPenaltyPlay their_penalty_play_;
-
-  ateam_common::GameCommand previous_game_command_ = ateam_common::GameCommand::Halt;
+  std::shared_ptr<stp::Play> halt_play_;
+  std::vector<std::shared_ptr<stp::Play>> plays_;
+  std::string override_play_name_;
   void * prev_play_address_ = nullptr;
-  std::size_t prev_play_type_index_ = -1;
 
-  void resetPlayIfNeeded(plays::BasePlay * play);
+  template<typename PlayType>
+  std::shared_ptr<stp::Play> addPlay(stp::Options stp_options)
+  {
+    stp_options.overlays = visualization::Overlays(PlayType::kPlayName);
+    stp_options.logger = stp_options.logger.get_child(PlayType::kPlayName);
+    auto play = std::make_shared<PlayType>(stp_options);
+    plays_.push_back(play);
+    return play;
+  }
 
-  plays::BasePlay * finalizeSelection(
-    plays::BasePlay * play,
-    ateam_common::GameCommand current_game_command);
+  stp::Play * selectOverridePlay();
 
-  plays::BasePlay * pickNormalStartPlay();
+  stp::Play * selectRankedPlay(const World & world);
+
+  void resetPlayIfNeeded(stp::Play * play);
 };
 
 }  // namespace ateam_kenobi
