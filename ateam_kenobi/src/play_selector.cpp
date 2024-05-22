@@ -164,7 +164,7 @@ void PlaySelector::resetPlayIfNeeded(stp::Play * play)
 
 void PlaySelector::fillStateMessage(ateam_msgs::msg::PlaybookState & msg, const World & world)
 {
-  msg.override = override_play_name_;
+  msg.override_name = override_play_name_;
   msg.names.reserve(plays_.size());
   msg.enableds.reserve(plays_.size());
   msg.scores.reserve(plays_.size());
