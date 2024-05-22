@@ -50,7 +50,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<SpinningAPlay>(stp_options);
 }
 
-stp::Play * PlaySelector::getPlay(const World & world)
+stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg)
 {
   stp::Play * selected_play = nullptr;
 
@@ -71,6 +71,8 @@ stp::Play * PlaySelector::getPlay(const World & world)
   }
 
   resetPlayIfNeeded(selected_play);
+
+  fillStateMessage(state_msg, world);
 
   return selected_play;
 }
@@ -157,6 +159,19 @@ void PlaySelector::resetPlayIfNeeded(stp::Play * play)
       play->reset();
     }
     prev_play_address_ = play_address;
+  }
+}
+
+void PlaySelector::fillStateMessage(ateam_msgs::msg::PlaybookState & msg, const World & world)
+{
+  msg.override = override_play_name_;
+  msg.names.reserve(plays_.size());
+  msg.enableds.reserve(plays_.size());
+  msg.scores.reserve(plays_.size());
+  for (const auto & play : plays_) {
+    msg.names.push_back(play->getName());
+    msg.enableds.push_back(play->isEnabled());
+    msg.scores.push_back(play->getScore(world));
   }
 }
 
