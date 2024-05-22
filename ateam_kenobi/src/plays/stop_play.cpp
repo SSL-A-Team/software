@@ -26,10 +26,10 @@
 
 namespace ateam_kenobi::plays
 {
-StopPlay::StopPlay()
-: BasePlay("StopPlay")
+StopPlay::StopPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlays_.getChild("EasyMoveTo"));
   for (auto & move_to : easy_move_tos_) {
     move_to.setMaxVelocity(1.0);
   }

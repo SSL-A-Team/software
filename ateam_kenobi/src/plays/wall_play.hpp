@@ -27,17 +27,19 @@
 
 #include "ateam_geometry/types.hpp"
 #include "types/robot.hpp"
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "play_helpers/easy_move_to.hpp"
 #include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class WallPlay : public BasePlay
+class WallPlay : public stp::Play
 {
 public:
-  WallPlay();
+  static constexpr const char * kPlayName = "WallPlay";
+
+  explicit WallPlay(stp::Options stp_options);
 
   double getScore(const World & world) override;
 

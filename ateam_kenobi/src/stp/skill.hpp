@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,40 +19,23 @@
 // THE SOFTWARE.
 
 
-#ifndef SKILLS__BLOCKERS_HPP_
-#define SKILLS__BLOCKERS_HPP_
+#ifndef STP__SKILL_HPP_
+#define STP__SKILL_HPP_
 
-#include <vector>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <nlohmann/json.hpp>
-#include "visualization/overlays.hpp"
-#include "types/world.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "base.hpp"
 
-namespace ateam_kenobi::skills
+namespace ateam_kenobi::stp
 {
 
-class Blockers
+class Skill : public Base
 {
 public:
-  explicit Blockers(visualization::Overlays overlays);
+  explicit Skill(Options options)
+  : Base(options) {}
 
-  void reset();
-
-  std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
-
-  std::vector<ateam_msgs::msg::RobotMotionCommand> runFrame(
-    const World & world,
-    const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
-
-private:
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-
-  std::vector<Robot> getRankedBlockableRobots(const World & world);
-
-  ateam_geometry::Point getBlockingPosition(const World & world, const Robot & blockee);
+  virtual ~Skill() = default;
 };
 
-}  // namespace ateam_kenobi::skills
+}  // namespace ateam_kenobi::stp
 
-#endif  // SKILLS__BLOCKERS_HPP_
+#endif  // STP__SKILL_HPP_

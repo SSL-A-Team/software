@@ -22,17 +22,19 @@
 #ifndef PLAYS__THEIR_PENALTY_PLAY_HPP_
 #define PLAYS__THEIR_PENALTY_PLAY_HPP_
 
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "play_helpers/easy_move_to.hpp"
 #include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class TheirPenaltyPlay : public BasePlay
+class TheirPenaltyPlay : public stp::Play
 {
 public:
-  TheirPenaltyPlay();
+  static constexpr const char * kPlayName = "TheirPenaltyPlay";
+
+  explicit TheirPenaltyPlay(stp::Options stp_options);
 
   double getScore(const World & world) override;
 

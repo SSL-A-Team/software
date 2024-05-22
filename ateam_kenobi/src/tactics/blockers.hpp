@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2021 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,48 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__CONTROLS_TEST_PLAY_HPP_
-#define PLAYS__CONTROLS_TEST_PLAY_HPP_
 
-#include <array>
+#ifndef TACTICS__BLOCKERS_HPP_
+#define TACTICS__BLOCKERS_HPP_
+
 #include <vector>
-#include "motion/motion_controller.hpp"
-#include "stp/play.hpp"
-#include "ateam_geometry/types.hpp"
+#include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <nlohmann/json.hpp>
+#include "stp/tactic.hpp"
+#include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::tactics
 {
-class ControlsTestPlay : public stp::Play
+
+class Blockers : public stp::Tactic
 {
 public:
-  static constexpr const char * kPlayName = "ControlsTestPlay";
+  explicit Blockers(stp::Options stp_options);
 
-  explicit ControlsTestPlay(stp::Options stp_options);
+  void reset();
 
-  void reset() override;
+  std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
+  std::vector<ateam_msgs::msg::RobotMotionCommand> runFrame(
+    const World & world,
+    const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
 
 private:
-  struct Waypoint
-  {
-    ateam_geometry::Point position;
-    AngleMode angle_mode;
-    double heading;
-    double hold_time_sec;
-  };
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
-  MotionController motion_controller_;
-  MotionOptions motion_options_;
+  std::vector<Robot> getRankedBlockableRobots(const World & world);
 
-  int index = 0;
-  std::vector<Waypoint> waypoints;
-  bool goal_hit;
-  std::chrono::steady_clock::time_point goal_hit_time;
-
-  bool isGoalHit(const Robot & robot);
+  ateam_geometry::Point getBlockingPosition(const World & world, const Robot & blockee);
 };
-}  // namespace ateam_kenobi::plays
-#endif  // PLAYS__CONTROLS_TEST_PLAY_HPP_
+
+}  // namespace ateam_kenobi::tactics
+
+#endif  // TACTICS__BLOCKERS_HPP_

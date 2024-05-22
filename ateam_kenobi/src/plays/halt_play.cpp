@@ -24,8 +24,9 @@
 
 namespace ateam_kenobi::plays
 {
-HaltPlay::HaltPlay()
-: BasePlay("HaltPlay")
+HaltPlay::HaltPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  path_planner_(createChild<path_planning::PathPlanner>("path_planer"))
 {
 }
 

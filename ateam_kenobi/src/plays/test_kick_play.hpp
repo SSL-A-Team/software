@@ -22,19 +22,21 @@
 #ifndef PLAYS__TEST_KICK_PLAY_HPP_
 #define PLAYS__TEST_KICK_PLAY_HPP_
 
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "skills/line_kick.hpp"
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class TestKickPlay : public BasePlay
+class TestKickPlay : public stp::Play
 {
 public:
-  TestKickPlay()
-  : BasePlay("TestKickPlay"),
-    line_kick_skill_(getOverlays().getChild("line_kick"))
+  static constexpr const char * kPlayName = "TestKickPlay";
+
+  explicit TestKickPlay(stp::Options stp_options)
+  : stp::Play(kPlayName, stp_options),
+    line_kick_skill_(createChild<skills::LineKick>("line_kick"))
   {}
 
   void reset() override {}

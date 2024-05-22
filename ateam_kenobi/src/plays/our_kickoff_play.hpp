@@ -24,7 +24,7 @@
 #include <optional>
 #include <vector>
 
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
 #include "ateam_geometry/types.hpp"
@@ -35,10 +35,12 @@
 
 namespace ateam_kenobi::plays
 {
-class OurKickoffPlay : public BasePlay
+class OurKickoffPlay : public stp::Play
 {
 public:
-  OurKickoffPlay();
+  static constexpr const char * kPlayName = "OurKickoffPlay";
+
+  explicit OurKickoffPlay(stp::Options stp_options);
 
   double getScore(const World & world) override;
 
