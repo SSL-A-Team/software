@@ -159,10 +159,9 @@ TEST_F(GetPathTest, DisallowPlanningIntoObstacle) {
 }
 
 TEST_F(GetPathTest, DisallowPlanningIntoFriendlyRobots) {
-  Robot robot;
-  robot.id = 0;
-  robot.pos = ateam_geometry::Point(0, 0);
-  world.our_robots[0] = robot;
+  world.our_robots[0].id = 0;
+  world.our_robots[0].visible = true;
+  world.our_robots[0].pos = ateam_geometry::Point(0, 0);
 
   start = ateam_geometry::Point(2, 2);
   goal = ateam_geometry::Point(0, 0);

@@ -129,10 +129,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     if (!maybe_robot) {
       continue;
     }
+
     const auto & robot = *maybe_robot;
-    const auto & target_position = positions_to_assign[ind];
+
+    if (!robot.IsAvailable()) {
+      continue;
+    }
 
     auto & easy_move_to = easy_move_tos_.at(robot.id);
+
+    const auto & target_position = positions_to_assign.at(ind);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
     getOverlays().drawCircle(
