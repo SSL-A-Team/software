@@ -16,11 +16,11 @@
                     <GameStatusComponent ref="refStatus"/>
                     <FieldComponent ref="mainField" class="ma-2 pa-2"/>
                 </v-col>
-                <v-col class="flex-grow-0 flex-shrink-0 justify-center" style="max-width:15vw; min-width:16em">
+                <v-col class="flex-grow-0 flex-shrink-0 justify-center" style="max-width:15vw; min-width:17em">
                     <v-card>
                         <v-tabs v-model="tab" show-arrows="false">
                             <v-tab value="data_tree">Data Tree</v-tab>
-                            <v-tab value="play_list">Play List</v-tab>
+                            <v-tab value="play_book">Play List</v-tab>
                         </v-tabs>
 
                         <v-card-text>
@@ -29,8 +29,8 @@
                                     <AIComponent ref="AIStatus"/>
                                 </v-window-item>
 
-                                <v-window-item value="play_list">
-                                    <PlayListComponent ref="PlayList"/>
+                                <v-window-item value="play_book">
+                                    <PlaybookComponent ref="Play Book"/>
                                 </v-window-item>
                             </v-window>
                         </v-card-text>
@@ -50,7 +50,7 @@ import StatusComponent from './components/StatusComponent.vue'
 import RefButtonsComponent from './components/RefButtonsComponent.vue'
 import GameStatusComponent from './components/GameStatusComponent.vue'
 import AIComponent from './components/AIComponent.vue'
-import PlayListComponent from './components/PlayListComponent.vue'
+import PlaybookComponent from './components/PlaybookComponent.vue'
 import { provide } from 'vue'
 import { defineComponent, toRaw } from 'vue'
 
@@ -106,7 +106,7 @@ export default {
         RefButtonsComponent,
         GameStatusComponent,
         AIComponent,
-        PlayListComponent
+        PlaybookComponent
     }
 }
 </script>

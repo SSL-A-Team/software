@@ -5,8 +5,9 @@ export class Play {
     score: number;
     enabled: boolean = true; // Ideally we set this up to also get feedback from software about their status
 
-    constructor(name: string, score: number = null) {
+    constructor(name: string, enabled:boolean, score: number = NaN) {
         this.name = name;
+        this.enabled = enabled;
         this.score = score;
     }
 }

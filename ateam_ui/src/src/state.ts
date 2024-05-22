@@ -53,8 +53,8 @@ export class AppState {
 
     controlled_robot: number = null;
 
-    plays: Play[];
-    selected_play: Play = null;
+    plays = {};
+    selected_play_name: string = null;
 
     setGoalie(goalie_id: number) {
         const request = new ROSLIB.ServiceRequest({
@@ -95,22 +95,6 @@ export class AppState {
         this.params["joystick_param"].set(this.controlled_robot);
     }
 
-    getPlayNames() {
-        const state = this; // fix dumb javascript things
-        const request = new ROSLIB.ServiceRequest({});
-
-        this.services["getPlayNames"].callService(request,
-            function(result) {
-                if(result.play_names != undefined && result.play_names.length > 0) {
-                    state.plays = [];
-                    for (const name of result.play_names) {
-                        state.plays.push(new Play(name));
-                    }
-                } else {
-                    console.log("Failed to get play names");
-                }
-            });
-    }
 
     setPlayEnabled(play: Play) {
         const state = this; // fix dumb javascript things
@@ -277,6 +261,30 @@ export class AppState {
         }
     }
 
+    getPlaybookCallback() {
+        const state = this; // fix dumb javascript things
+        return function(msg:any) {
+            state.selected_play_name = msg.override_name;
+            if (msg.names.length > 0) {
+                state.plays = [];
+                for (let i = 0; i < msg.names.length; i++) {
+                    if (msg.names[i] in state.plays) {
+                        state.plays[msg.names[i]].enabled = msg.enableds[i]
+                        state.plays[msg.names[i]].score = msg.scores[i]
+                    } else {
+                        let play = new Play(
+                            msg.names[i],
+                            msg.enableds[i],
+                            msg.scores[i]
+                        )
+
+                        state.plays[play.name] = play;
+                    }
+                }
+            }
+        }
+    }
+
     constructor() {
         this.renderConfig = new RenderConfig();
         this.world = new WorldState();
@@ -385,8 +393,15 @@ export class AppState {
             messageType: 'ateam_msgs/msg/PlayInfo'
         });
 
-        playInfoTopic.subscribe(this.getPlayInfoCallback());
-        this.subscriptions["playInfo"] = playInfoTopic;
+        // Set up play book subscriber
+        let playbookTopic = new ROSLIB.Topic({
+            ros: this.ros,
+            name: '/kenobi_node/playbook_state',
+            messageType: 'ateam_msgs/msg/PlaybookState'
+        });
+
+        playbookTopic.subscribe(this.getPlaybookCallback());
+        this.subscriptions["playbook"] = playbookTopic;
 
         // Set up Goalie Service
         let goalieService = new ROSLIB.Service({
@@ -395,14 +410,6 @@ export class AppState {
             serviceType: 'ateam_msgs/srv/SetDesiredKeeper'
         })
         this.services["setGoalie"] = goalieService;
-
-        // Set up get play names Service
-        let getPlayNamesService = new ROSLIB.Service({
-            ros: this.ros,
-            name: '/kenobi_node/get_play_names',
-            serviceType: 'ateam_msgs/srv/GetPlayNames'
-        })
-        this.services["getPlayNames"] = getPlayNamesService;
 
         // Set up set play enabled Service
         let setPlayEnabledService = new ROSLIB.Service({
