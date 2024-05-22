@@ -6,6 +6,7 @@ import { Referee } from "@/referee"
 import { Ball } from "@/ball"
 import { Field, FieldDimensions, FieldSidedInfo } from "@/field"
 import { AIState } from "@/AI"
+import { Play } from "@/play"
 
 export class RenderConfig {
     angle: number = 0; // Rotation applied to the rendered field
@@ -52,7 +53,10 @@ export class AppState {
 
     controlled_robot: number = null;
 
-    setGoalie(goalie_id) {
+    plays: Play[];
+    selected_play: Play = null;
+
+    setGoalie(goalie_id: number) {
         const request = new ROSLIB.ServiceRequest({
             desired_keeper: goalie_id
         });
@@ -89,6 +93,52 @@ export class AppState {
             this.controlled_robot = id;
         }
         this.params["joystick_param"].set(this.controlled_robot);
+    }
+
+    getPlayNames() {
+        const state = this; // fix dumb javascript things
+        const request = new ROSLIB.ServiceRequest({});
+
+        this.services["getPlayNames"].callService(request,
+            function(result) {
+                if(result.play_names != undefined && result.play_names.length > 0) {
+                    state.plays = [];
+                    for (const name of result.play_names) {
+                        state.plays.push(new Play(name));
+                    }
+                } else {
+                    console.log("Failed to get play names");
+                }
+            });
+    }
+
+    setPlayEnabled(play: Play) {
+        const state = this; // fix dumb javascript things
+        const request = new ROSLIB.ServiceRequest({
+            play_name: play.name,
+            enabled: play.enabled
+        });
+
+        this.services["setPlayEnabled"].callService(request,
+            function(result) {
+                if(!result.success) {
+                    console.log("Failed to enable/disable ", play.name, ": ", result.reason);
+                }
+            });
+    }
+
+    setOverridePlay(play_name: string) {
+        const state = this; // fix dumb javascript things
+        const request = new ROSLIB.ServiceRequest({
+            play_name: play_name
+        });
+
+        this.services["setOverridePlay"].callService(request,
+            function(result) {
+                if(!result.success) {
+                    console.log("Failed to set override play to ", play_name, ": ", result.reason);
+                }
+            });
     }
 
     getTeamNameCallback() {
@@ -345,6 +395,30 @@ export class AppState {
             serviceType: 'ateam_msgs/srv/SetDesiredKeeper'
         })
         this.services["setGoalie"] = goalieService;
+
+        // Set up get play names Service
+        let getPlayNamesService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/kenobi_node/get_play_names',
+            serviceType: 'ateam_msgs/srv/GetPlayNames'
+        })
+        this.services["getPlayNames"] = getPlayNamesService;
+
+        // Set up set play enabled Service
+        let setPlayEnabledService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/kenobi_node/set_play_enabled',
+            serviceType: 'ateam_msgs/srv/SetPlayEnabled'
+        })
+        this.services["setPlayEnabled"] = setPlayEnabledService;
+
+        // Set up set override play Service
+        let setOverridePlayService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/kenobi_node/set_override_play',
+            serviceType: 'ateam_msgs/srv/SetOverridePlay'
+        })
+        this.services["setOverridePlay"] = setOverridePlayService;
 
         let teamNameParam = new ROSLIB.Param({
             ros: this.ros,

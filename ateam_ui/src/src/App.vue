@@ -16,8 +16,25 @@
                     <GameStatusComponent ref="refStatus"/>
                     <FieldComponent ref="mainField" class="ma-2 pa-2"/>
                 </v-col>
-                <v-col class="flex-grow-0 flex-shrink-0" style="max-width:15vw">
-                    <AIComponent ref="AIStatus"/>
+                <v-col class="flex-grow-0 flex-shrink-0 justify-center" style="max-width:15vw; min-width:16em">
+                    <v-card>
+                        <v-tabs v-model="tab" show-arrows="false">
+                            <v-tab value="data_tree">Data Tree</v-tab>
+                            <v-tab value="play_list">Play List</v-tab>
+                        </v-tabs>
+
+                        <v-card-text>
+                            <v-window v-model="tab">
+                                <v-window-item value="data_tree">
+                                    <AIComponent ref="AIStatus"/>
+                                </v-window-item>
+
+                                <v-window-item value="play_list">
+                                    <PlayListComponent ref="PlayList"/>
+                                </v-window-item>
+                            </v-window>
+                        </v-card-text>
+                    </v-card>
                 </v-col>
             </v-row>
             </v-container>
@@ -33,6 +50,7 @@ import StatusComponent from './components/StatusComponent.vue'
 import RefButtonsComponent from './components/RefButtonsComponent.vue'
 import GameStatusComponent from './components/GameStatusComponent.vue'
 import AIComponent from './components/AIComponent.vue'
+import PlayListComponent from './components/PlayListComponent.vue'
 import { provide } from 'vue'
 import { defineComponent, toRaw } from 'vue'
 
@@ -48,7 +66,8 @@ export default {
                 angle: 0,
                 scale: 75, // Pixels per meter (in the rendering canvas)
                 factor: 1 // Field Scaling Factor (applied to the canvas when it's added to the UI)
-            }
+            },
+            tab: null
         }
     },
     provide() { 
@@ -86,7 +105,8 @@ export default {
         StatusComponent,
         RefButtonsComponent,
         GameStatusComponent,
-        AIComponent
+        AIComponent,
+        PlayListComponent
     }
 }
 </script>

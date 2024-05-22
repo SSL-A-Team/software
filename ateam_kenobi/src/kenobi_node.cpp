@@ -242,7 +242,7 @@ private:
     const ateam_msgs::srv::SetOverridePlay::Request::SharedPtr request,
     ateam_msgs::srv::SetOverridePlay::Response::SharedPtr response)
   {
-    if (play_selector_.getPlayByName(request->play_name) == nullptr) {
+    if (!request->play_name.empty() && play_selector_.getPlayByName(request->play_name) == nullptr) {
       response->success = false;
       response->reason = "No such play.";
       return;
