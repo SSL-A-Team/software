@@ -30,8 +30,8 @@
 namespace ateam_kenobi::path_planning
 {
 
-PathPlanner::PathPlanner(visualization::Overlays overlays)
-: overlays_(overlays)
+PathPlanner::PathPlanner(stp::Options stp_options)
+: stp::Base(stp_options)
 {
 }
 
@@ -84,7 +84,7 @@ PathPlanner::Path PathPlanner::getPath(
     const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(
       std::chrono::steady_clock::now() - start_time).count();
     if (elapsed_time > options.search_time_limit) {
-      std::cerr << "Path planning timed out.\n";
+      RCLCPP_WARN(getLogger(), "Path planning timed out.");
       trimPathAfterCollision(path, world, augmented_obstacles, options);
       break;
     }
@@ -226,18 +226,22 @@ void PathPlanner::addRobotsToObstacles(
   const ateam_geometry::Point & start_pos,
   std::vector<ateam_geometry::AnyShape> & obstacles)
 {
-  auto obstacle_from_robot = [](const std::optional<Robot> & robot) {
+  auto obstacle_from_robot = [](const Robot & robot) {
       return ateam_geometry::AnyShape(
-        ateam_geometry::makeDisk(robot.value().pos, kRobotRadius));
+        ateam_geometry::makeDisk(robot.pos, kRobotRadius));
     };
 
-  auto not_current_robot = [&start_pos](const std::optional<Robot> & robot) {
+  auto not_current_robot = [&start_pos](const Robot & robot) {
       // Assume any robot close enough to the start pos is the robot trying to navigate
-      return (robot.value().pos - start_pos).squared_length() > std::pow(kRobotRadius, 2);
+      return (robot.pos - start_pos).squared_length() > std::pow(kRobotRadius, 2);
+    };
+
+  auto robot_is_visible = [](const Robot & robot) {
+      return robot.visible;
     };
 
   auto our_robot_obstacles = world.our_robots |
-    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
+    std::views::filter(robot_is_visible) |
     std::views::filter(not_current_robot) |
     std::views::transform(obstacle_from_robot);
   obstacles.insert(
@@ -246,7 +250,7 @@ void PathPlanner::addRobotsToObstacles(
     our_robot_obstacles.end());
 
   auto their_robot_obstacles = world.their_robots |
-    std::views::filter(std::mem_fn(&std::optional<Robot>::has_value)) |
+    std::views::filter(robot_is_visible) |
     std::views::transform(obstacle_from_robot);
   obstacles.insert(
     obstacles.end(),
@@ -400,17 +404,19 @@ void PathPlanner::drawObstacles(const std::vector<ateam_geometry::AnyShape> & ob
       const auto color = "FF00007F";
       using ShapeT = std::decay_t<decltype(shape)>;
       if constexpr (std::is_same_v<ShapeT, ateam_geometry::Point>) {
-        overlays_.drawCircle(name, ateam_geometry::makeCircle(shape, 2.5), color, color);
+        getOverlays().drawCircle(name, ateam_geometry::makeCircle(shape, 2.5), color, color);
       } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Segment>) {
-        overlays_.drawLine(name, {shape.source(), shape.target()}, color);
+        getOverlays().drawLine(name, {shape.source(), shape.target()}, color);
       } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Ray>) {
-        overlays_.drawLine(name, {shape.source(), shape.point(10)}, color);
+        getOverlays().drawLine(name, {shape.source(), shape.point(10)}, color);
       } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Rectangle>) {
-        overlays_.drawRectangle(name, shape, color, color);
+        getOverlays().drawRectangle(name, shape, color, color);
       } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Circle>) {
-        overlays_.drawCircle(name, shape, color, color);
+        getOverlays().drawCircle(name, shape, color, color);
       } else {
-        std::cerr << "Shape to draw not recognized!\n";
+        RCLCPP_WARN(
+          getLogger(), "Unsupported shape type in drawObstacles: %s ",
+          typeid(shape).name());
       }
       obstacle_ind++;
     };

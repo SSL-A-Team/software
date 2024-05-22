@@ -29,10 +29,10 @@
 
 namespace ateam_kenobi::plays
 {
-StopPlay::StopPlay()
-: BasePlay("StopPlay")
+StopPlay::StopPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlays_.getChild("EasyMoveTo"));
   for (auto & move_to : easy_move_tos_) {
     // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
     move_to.setMaxVelocity(1.0);
@@ -132,16 +132,15 @@ std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
         0.0), ateam_geometry::directionFromAngle(1.99 * M_PI))
   };
 
-  for (const auto & maybe_bot : world.their_robots) {
-    if (!maybe_bot) {
+  for (const auto & robot : world.their_robots) {
+    if (!robot.IsAvailable()) {
       continue;
     }
-    const auto & bot = *maybe_bot;
-    if (ateam_geometry::norm(bot.pos - world.ball.pos) > consideration_radius) {
+    if (ateam_geometry::norm(robot.pos - world.ball.pos) > consideration_radius) {
       continue;
     }
     const auto [ray_1, ray_2] = play_helpers::window_evaluation::getRobotShadowRays(
-      bot,
+      robot,
       world.ball.pos);
     removeArc(
       openings,

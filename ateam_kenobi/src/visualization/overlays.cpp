@@ -41,12 +41,18 @@ Overlays Overlays::getChild(std::string name)
 
 const ateam_msgs::msg::OverlayArray & Overlays::getMsg() const
 {
+  if (!overlay_array_) {
+    throw std::runtime_error(
+            "Cannot call getMsg() on a default-intializated instance of Overlays.");
+  }
   return *overlay_array_;
 }
 
 void Overlays::clear()
 {
-  overlay_array_->overlays.clear();
+  if (overlay_array_) {
+    overlay_array_->overlays.clear();
+  }
 }
 
 void Overlays::drawLine(
