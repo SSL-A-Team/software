@@ -20,6 +20,7 @@
 
 
 #include "available_robots.hpp"
+#include <ranges>
 
 namespace ateam_kenobi::play_helpers
 {
@@ -27,22 +28,20 @@ namespace ateam_kenobi::play_helpers
 std::vector<Robot> getAvailableRobots(const World & world)
 {
   std::vector<Robot> available_robots;
-  for (const auto & robot : world.our_robots) {
-    if (robot.IsAvailable()) {
-      available_robots.push_back(robot);
-    }
-  }
+  std::ranges::copy_if(
+    world.our_robots, std::back_inserter(available_robots), [](const auto & r) {
+      return r.IsAvailable();
+    });
   return available_robots;
 }
 
 std::vector<Robot> getVisibleRobots(const std::array<Robot, 16> & robots)
 {
   std::vector<Robot> visible_robots;
-  for (const auto & robot : robots) {
-    if (robot.visible) {
-      visible_robots.push_back(robot);
-    }
-  }
+  std::ranges::copy_if(
+    robots, std::back_inserter(visible_robots), [](const auto & r) {
+      return r.visible;
+    });
   return visible_robots;
 }
 

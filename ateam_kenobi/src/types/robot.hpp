@@ -39,8 +39,6 @@ struct Robot
 
   bool breakbeam_ball_detected = false;
 
-  // I don't know if these are actually in the radio packet
-  // but might as well handle them now
   bool kicker_available = true;
   bool chipper_available = false;
 
