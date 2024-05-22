@@ -60,6 +60,7 @@ class KenobiNode : public rclcpp::Node
 public:
   explicit KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("kenobi_node", options),
+    play_selector_(*this),
     game_controller_listener_(*this)
   {
     declare_parameter<bool>("use_world_velocities", false);
@@ -326,7 +327,7 @@ private:
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(
     const World & world)
   {
-    plays::BasePlay * play = play_selector_.getPlay(world);
+    stp::Play * play = play_selector_.getPlay(world);
     if (play == nullptr) {
       RCLCPP_ERROR(get_logger(), "No play selected!");
       return {};

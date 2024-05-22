@@ -25,12 +25,13 @@
 #include <ateam_geometry/ateam_geometry.hpp>
 #include <ateam_common/robot_constants.hpp>
 
-namespace ateam_kenobi::skills
+namespace ateam_kenobi::tactics
 {
 
-Blockers::Blockers(visualization::Overlays overlays)
+Blockers::Blockers(stp::Options stp_options)
+: stp::Tactic(stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlays.getChild("EasyMoveTo"));
 }
 
 void Blockers::reset()
@@ -107,4 +108,4 @@ ateam_geometry::Point Blockers::getBlockingPosition(const World & world, const R
   return blockee.pos +
          ((kRobotDiameter * 2.5) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
 }
-}  // namespace ateam_kenobi::skills
+}  // namespace ateam_kenobi::tactics

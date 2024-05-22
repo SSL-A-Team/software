@@ -27,9 +27,9 @@
 namespace ateam_kenobi::skills
 {
 
-LineKick::LineKick(visualization::Overlays overlays)
-: overlays_(overlays),
-  easy_move_to_(overlays.getChild("EasyMoveTo"))
+LineKick::LineKick(stp::Options stp_options)
+: stp::Skill(stp_options),
+  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
 }
 
@@ -42,7 +42,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
 {
   const auto pre_kick_position = getPreKickPosition(world);
 
-  overlays_.drawLine("kick_line", {pre_kick_position, target_point_}, "#FFFF007F");
+  getOverlays().drawLine("kick_line", {pre_kick_position, target_point_}, "#FFFF007F");
 
   chooseState(world, robot);
 
@@ -54,7 +54,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
     case State::KickBall:
       return runKickBall(world, robot);
     default:
-      std::cerr << "Unhandled state in line kick!\n";
+      RCLCPP_WARN(getLogger(), "Unhandled state in line kick!");
       return ateam_msgs::msg::RobotMotionCommand{};
   }
 }

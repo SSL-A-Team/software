@@ -30,10 +30,10 @@
 namespace ateam_kenobi::skills
 {
 
-Goalie::Goalie(visualization::Overlays overlays)
-: overlays_(overlays),
-  easy_move_to_(overlays.getChild("EasyMoveTo")),
-  line_kick_(overlays.getChild("LineKick"))
+Goalie::Goalie(stp::Options stp_options)
+: stp::Skill(stp_options),
+  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo")),
+  line_kick_(createChild<skills::LineKick>("LineKick"))
 {
   reset();
 }
@@ -242,7 +242,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
     target_seg, world.ball.pos,
     robots);
   play_helpers::window_evaluation::drawWindows(
-    windows, world.ball.pos, overlays_.getChild(
+    windows, world.ball.pos, getOverlays().getChild(
       "windows"));
   const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
 

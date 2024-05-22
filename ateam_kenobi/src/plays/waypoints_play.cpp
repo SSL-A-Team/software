@@ -28,11 +28,10 @@
 namespace ateam_kenobi::plays
 {
 
-WaypointsPlay::WaypointsPlay()
-: BasePlay("WaypointsPlay")
+WaypointsPlay::WaypointsPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
-
   addWaypoint(
     5000, {
       {0.00, 0, M_PI},
@@ -77,7 +76,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WaypointsPlay
     waypoint_index_ %= waypoints_.size();
     next_transition_time_ = now +
       std::chrono::milliseconds(waypoints_[waypoint_index_].duration_ms);
-    std::cerr << "waypoint index = " << waypoint_index_ << '\n';
+    RCLCPP_INFO_STREAM(getLogger(), "waypoint index = " << waypoint_index_);
   }
 
   const auto & waypoint = waypoints_[waypoint_index_];

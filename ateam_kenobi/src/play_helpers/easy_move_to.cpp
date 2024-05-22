@@ -26,30 +26,47 @@
 namespace ateam_kenobi::play_helpers
 {
 
-void EasyMoveTo::CreateArray(
-  std::array<EasyMoveTo, 16> & dst,
-  visualization::Overlays overlays)
-{
-  std::generate(
-    dst.begin(), dst.end(), [&overlays, ind = 0]() mutable {
-      return EasyMoveTo(overlays.getChild(std::to_string(ind++)));
-    });
-}
-
-EasyMoveTo::EasyMoveTo(visualization::Overlays overlays)
-: path_planner_(overlays.getChild("path_planner")),
-  overlays_(overlays)
+EasyMoveTo::EasyMoveTo(stp::Options stp_options)
+: stp::Base(stp_options),
+  path_planner_(createChild<path_planning::PathPlanner>("path_planner"))
 {
 }
 
-
-EasyMoveTo & EasyMoveTo::operator=(EasyMoveTo && other)
+EasyMoveTo::EasyMoveTo(EasyMoveTo && other)
+: stp::Base(other)
 {
   target_position_ = other.target_position_;
   planner_options_ = other.planner_options_;
   path_planner_ = other.path_planner_;
   motion_controller_ = other.motion_controller_;
-  overlays_ = other.overlays_;
+}
+
+EasyMoveTo::EasyMoveTo(const EasyMoveTo & other)
+: stp::Base(other)
+{
+  target_position_ = other.target_position_;
+  planner_options_ = other.planner_options_;
+  path_planner_ = other.path_planner_;
+  motion_controller_ = other.motion_controller_;
+}
+
+EasyMoveTo & EasyMoveTo::operator=(EasyMoveTo && other)
+{
+  stp::Base::operator=(other);
+  target_position_ = other.target_position_;
+  planner_options_ = other.planner_options_;
+  path_planner_ = other.path_planner_;
+  motion_controller_ = other.motion_controller_;
+  return *this;
+}
+
+EasyMoveTo & EasyMoveTo::operator=(const EasyMoveTo & other)
+{
+  stp::Base::operator=(other);
+  target_position_ = other.target_position_;
+  planner_options_ = other.planner_options_;
+  path_planner_ = other.path_planner_;
+  motion_controller_ = other.motion_controller_;
   return *this;
 }
 
@@ -95,7 +112,7 @@ void EasyMoveTo::no_face()
 void EasyMoveTo::setMaxVelocity(double velocity)
 {
   if (velocity > 3.0) {
-    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX VELOCITY\n";
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX VELOCITY");
     return;
   }
   motion_controller_.v_max = velocity;
@@ -104,7 +121,7 @@ void EasyMoveTo::setMaxVelocity(double velocity)
 void EasyMoveTo::setMaxAngularVelocity(double velocity)
 {
   if (velocity > 6.5) {
-    std::cerr << "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX ANGULAR VELOCITY\n";
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX ANGULAR VELOCITY");
     return;
   }
   motion_controller_.t_max = velocity;
@@ -145,11 +162,11 @@ void EasyMoveTo::drawTrajectoryOverlay(
       robot.pos,
       target_position_
     };
-    overlays_.drawLine("path", points, "red");
+    getOverlays().drawLine("path", points, "red");
   } else {
-    overlays_.drawLine("path", path, "purple");
+    getOverlays().drawLine("path", path, "purple");
     if (CGAL::squared_distance(path.back(), target_position_) > kRobotRadius * kRobotRadius) {
-      overlays_.drawLine("afterpath", {path.back(), target_position_}, "red");
+      getOverlays().drawLine("afterpath", {path.back(), target_position_}, "red");
     }
   }
 }
