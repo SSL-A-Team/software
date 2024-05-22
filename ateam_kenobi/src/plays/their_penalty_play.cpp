@@ -27,11 +27,11 @@
 namespace ateam_kenobi::plays
 {
 
-TheirPenaltyPlay::TheirPenaltyPlay()
-: BasePlay("TheirPenaltyPlay"),
-  goalie_skill_(getOverlays().getChild("goalie"))
+TheirPenaltyPlay::TheirPenaltyPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
   goalie_skill_.possesionTolerance() = 0.3;
 }
 
