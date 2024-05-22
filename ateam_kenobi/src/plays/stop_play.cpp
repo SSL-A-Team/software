@@ -23,6 +23,7 @@
 #include <limits>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
+#include <ateam_geometry/normalize.hpp>
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"

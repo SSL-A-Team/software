@@ -22,13 +22,10 @@
 #define PLAYS__STOP_PLAY_HPP_
 
 #include <vector>
-#include <ateam_geometry/normalize.hpp>
 #include <ateam_common/robot_constants.hpp>
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
 #include "stp/play.hpp"
-
-#include <ateam_geometry/normalize.hpp>
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
