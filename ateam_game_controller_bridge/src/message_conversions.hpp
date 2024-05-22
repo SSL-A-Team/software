@@ -100,6 +100,11 @@ ssl_league_msgs::msg::UnsportingBehaviorMajor fromProto(
   const GameEvent_UnsportingBehaviorMajor & proto_msg);
 ssl_league_msgs::msg::UnsportingBehaviorMinor fromProto(
   const GameEvent_UnsportingBehaviorMinor & proto_msg);
+ssl_league_msgs::msg::BotDroppedParts fromProto(const GameEvent_BotDroppedParts & proto_msg);
+ssl_league_msgs::msg::ChallengeFlagHandled fromProto(
+  const GameEvent_ChallengeFlagHandled & proto_msg);
+ssl_league_msgs::msg::ExcessiveBotSubstitution fromProto(
+  const GameEvent_ExcessiveBotSubstitution & proto_msg);
 
 }  // namespace ateam_game_controller_bridge::message_conversions
 
