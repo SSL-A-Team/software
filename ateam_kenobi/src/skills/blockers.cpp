@@ -28,10 +28,9 @@
 namespace ateam_kenobi::skills
 {
 
-Blockers::Blockers(visualization::OverlayPublisher & overlay_publisher)
-: overlay_publisher_(overlay_publisher)
+Blockers::Blockers(visualization::Overlays overlays)
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlay_publisher_);
+  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlays.getChild("EasyMoveTo"));
 }
 
 void Blockers::reset()
@@ -54,7 +53,7 @@ std::vector<ateam_geometry::Point> Blockers::getAssignmentPoints(const World & w
 
 std::vector<ateam_msgs::msg::RobotMotionCommand> Blockers::runFrame(
   const World & world,
-  const std::vector<Robot> & robots)
+  const std::vector<Robot> & robots, nlohmann::json * play_info)
 {
   const auto blockable_robots = getRankedBlockableRobots(world);
   std::vector<ateam_geometry::Point> positions;
@@ -74,8 +73,12 @@ std::vector<ateam_msgs::msg::RobotMotionCommand> Blockers::runFrame(
     const auto robot_id = robot.id;
     auto & move_to = easy_move_tos_[robot_id];
     move_to.setTargetPosition(position);
-    move_to.face_travel();
+    move_to.face_point(world.ball.pos);
     motion_commands.push_back(move_to.runFrame(robot, world));
+    if (play_info) {
+      (*play_info)["Blockers"][std::to_string(robot.id)]["Blocking"] =
+        blockable_robots[robot_index].id;
+    }
   }
 
   return motion_commands;
@@ -102,6 +105,6 @@ std::vector<Robot> Blockers::getRankedBlockableRobots(const World & world)
 ateam_geometry::Point Blockers::getBlockingPosition(const World & world, const Robot & blockee)
 {
   return blockee.pos +
-         ((kRobotDiameter + 0.1) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
+         ((kRobotDiameter * 2.5) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
 }
 }  // namespace ateam_kenobi::skills

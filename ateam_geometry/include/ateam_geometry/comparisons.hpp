@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,27 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef ATEAM_GEOMETRY__COMPARISONS_HPP_
+#define ATEAM_GEOMETRY__COMPARISONS_HPP_
 
-#include "play_info_publisher.hpp"
-#include <string>
+#include "types.hpp"
+#include "normalize.hpp"
 
-namespace ateam_kenobi::visualization
+namespace ateam_geometry
 {
-PlayInfoPublisher::PlayInfoPublisher(rclcpp::Node & node)
-: publisher_(node.create_publisher<ateam_msgs::msg::PlayInfo>(
-      "/play_info",
-      rclcpp::SystemDefaultsQoS()))
+
+inline bool nearEqual(const Point & a, const Point & b, const double threshold = 1e-3)
 {
+  return CGAL::squared_distance(a, b) < (threshold * threshold);
 }
 
-void PlayInfoPublisher::send_play_message(
-  const std::string & play_name
-)
+inline bool nearEqual(const Vector & a, const Vector & b, const double threshold = 1e-3)
 {
-  ateam_msgs::msg::PlayInfo msg;
-  msg.name = play_name;
-  msg.description = this->message.dump();
-  publisher_->publish(msg);
-  this->message.clear();
+  return std::hypot(a.x() - b.x(), a.y() - b.y()) < threshold;
 }
-}  // namespace ateam_kenobi::visualization
+
+inline bool nearEqual(const Direction & a, const Direction & b, const double threshold = 1e-3)
+{
+  return nearEqual(normalize(a.vector()), normalize(b.vector()), threshold);
+}
+
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__COMPARISONS_HPP_

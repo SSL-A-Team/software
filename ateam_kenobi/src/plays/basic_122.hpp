@@ -34,7 +34,9 @@ namespace ateam_kenobi::plays
 class Basic122 : public BasePlay
 {
 public:
-  Basic122(visualization::OverlayPublisher & op, visualization::PlayInfoPublisher & pip);
+  Basic122();
+
+  double getScore(const World & world) override;
 
   void reset() override;
 
@@ -45,15 +47,16 @@ private:
   skills::Blockers blockers_skill_;
   skills::Goalie goalie_skill_;
 
-  void assignAndRunStriker(
-    std::vector<Robot> & available_robots, const World & world,
+  void runStriker(
+    const Robot & striker_bot, const World & world,
+    ateam_msgs::msg::RobotMotionCommand & motion_command);
+
+  void runBlockers(
+    const std::vector<Robot> & blocker_bots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 
-  void assignAndRunBlockers(
-    std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
+  bool doTheyHavePossession(const World & world);
 };
 
 }  // namespace ateam_kenobi::plays

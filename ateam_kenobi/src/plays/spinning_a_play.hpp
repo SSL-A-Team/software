@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,26 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
-#define ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
 
-#include "ateam_geometry/types.hpp"
+#ifndef PLAYS__SPINNING_A_PLAY_HPP_
+#define PLAYS__SPINNING_A_PLAY_HPP_
 
-namespace ateam_geometry
+#include <vector>
+#include "base_play.hpp"
+#include "play_helpers/easy_move_to.hpp"
+
+namespace ateam_kenobi::plays
 {
 
-inline ateam_geometry::Point NearestPointOnSegment(
-  const ateam_geometry::Segment & s, const ateam_geometry::Point & p)
+class SpinningAPlay : public BasePlay
 {
-  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-  if (s.has_on(orthogonal_projection)) {
-    return orthogonal_projection;
-  }
-  return CGAL::squared_distance(orthogonal_projection, s.source()) <
-         CGAL::squared_distance(orthogonal_projection, s.target()) ?
-         s.source() : s.target();
-}
+public:
+  SpinningAPlay();
 
-}  // namespace ateam_geometry
+  void reset() override;
 
-#endif  // ATEAM_GEOMETRY__NEAREST_POINTS_HPP_
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  const double kAngleSpeed = 0.01;
+  const double kNumRotations = 5;
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  std::vector<ateam_geometry::Point> base_shape_;
+  double angle_;
+};
+
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__SPINNING_A_PLAY_HPP_

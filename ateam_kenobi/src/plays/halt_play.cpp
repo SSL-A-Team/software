@@ -19,15 +19,28 @@
 // THE SOFTWARE.
 
 #include "halt_play.hpp"
+#include <limits>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
 namespace ateam_kenobi::plays
 {
-HaltPlay::HaltPlay(
-  visualization::OverlayPublisher & overlay_publisher,
-  visualization::PlayInfoPublisher & play_info_publisher)
-: BasePlay(overlay_publisher, play_info_publisher)
+HaltPlay::HaltPlay()
+: BasePlay("HaltPlay")
 {
+}
+
+double HaltPlay::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::Halt:
+    case ateam_common::GameCommand::TimeoutOurs:
+    case ateam_common::GameCommand::TimeoutTheirs:
+    case ateam_common::GameCommand::GoalOurs:
+    case ateam_common::GameCommand::GoalTheirs:
+      return std::numeric_limits<double>::max();
+    default:
+      return std::numeric_limits<double>::lowest();
+  }
 }
 
 void HaltPlay::reset()
@@ -35,14 +48,13 @@ void HaltPlay::reset()
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> HaltPlay::runFrame(
-  const World & world)
+  const World &)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> halt_motion_commands;
   for (size_t i = 0; i < 16; ++i) {
     halt_motion_commands[i] = ateam_msgs::msg::RobotMotionCommand{};
   }
 
-  play_info_publisher_.send_play_message("Halt Play");
   return halt_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

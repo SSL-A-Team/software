@@ -23,6 +23,9 @@
 
 #include <Eigen/Dense>
 
+namespace ateam_vision_filter
+{
+
 class Ball
 {
 public:
@@ -40,5 +43,7 @@ public:
     velocity(from_state.block(2, 0, 2, 1)),
     acceleration(from_state.block(4, 0, 2, 1)) {}
 };
+
+}  // namespace ateam_vision_filter
 
 #endif  // TYPES__BALL_HPP_

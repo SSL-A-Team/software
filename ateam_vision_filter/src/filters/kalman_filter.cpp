@@ -22,6 +22,9 @@
 
 #include <angles/angles.h>
 
+namespace ateam_vision_filter
+{
+
 void KalmanFilter::set_initial_x_hat(const Eigen::VectorXd & x_hat)
 {
   this->x_hat = x_hat;
@@ -112,3 +115,5 @@ Eigen::VectorXd KalmanFilter::get_potential_measurement_error(const Eigen::Vecto
 {
   return z - H * F * x_hat;
 }
+
+}  // namespace ateam_vision_filter

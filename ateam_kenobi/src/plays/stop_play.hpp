@@ -33,9 +33,9 @@ namespace ateam_kenobi::plays
 class StopPlay : public BasePlay
 {
 public:
-  explicit StopPlay(
-    visualization::OverlayPublisher & overlay_publisher,
-    visualization::PlayInfoPublisher & play_info_publisher);
+  StopPlay();
+
+  double getScore(const World & world) override;
 
   void reset() override;
 

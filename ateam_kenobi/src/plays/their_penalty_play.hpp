@@ -32,7 +32,9 @@ namespace ateam_kenobi::plays
 class TheirPenaltyPlay : public BasePlay
 {
 public:
-  TheirPenaltyPlay(visualization::OverlayPublisher & op, visualization::PlayInfoPublisher & pip);
+  TheirPenaltyPlay();
+
+  double getScore(const World & world) override;
 
   void reset() override;
 

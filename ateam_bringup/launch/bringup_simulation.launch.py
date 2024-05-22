@@ -31,6 +31,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         DeclareLaunchArgument("start_sim", default_value="True"),
         DeclareLaunchArgument("start_gc", default_value="True"),
+        DeclareLaunchArgument("start_ui", default_value="True"),
         DeclareLaunchArgument("headless_sim", default_value="True"),
         DeclareLaunchArgument("sim_radio_ip", default_value="127.0.0.1"),
         DeclareLaunchArgument("team_name", default_value="A-Team"),
@@ -77,7 +78,8 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution("ateam_bringup",
-                                              "ui.launch.xml"))
+                                              "ui.launch.xml")),
+            condition=IfCondition(LaunchConfiguration("start_ui"))
         ),
 
         Node(

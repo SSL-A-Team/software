@@ -24,7 +24,8 @@
 
 #include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "visualization/overlay_publisher.hpp"
+#include <nlohmann/json.hpp>
+#include "visualization/overlays.hpp"
 #include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
@@ -34,7 +35,7 @@ namespace ateam_kenobi::skills
 class Blockers
 {
 public:
-  explicit Blockers(visualization::OverlayPublisher & overlay_publisher);
+  explicit Blockers(visualization::Overlays overlays);
 
   void reset();
 
@@ -42,10 +43,9 @@ public:
 
   std::vector<ateam_msgs::msg::RobotMotionCommand> runFrame(
     const World & world,
-    const std::vector<Robot> & robots);
+    const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
 
 private:
-  visualization::OverlayPublisher & overlay_publisher_;
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
   std::vector<Robot> getRankedBlockableRobots(const World & world);
