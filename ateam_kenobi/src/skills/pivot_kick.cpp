@@ -28,9 +28,9 @@
 namespace ateam_kenobi::skills
 {
 
-PivotKick::PivotKick(visualization::OverlayPublisher & overlay_publisher)
-: overlay_publisher_(overlay_publisher),
-  easy_move_to_(overlay_publisher_)
+PivotKick::PivotKick(stp::Options stp_options)
+: stp::Skill(stp_options),
+  easy_move_to_(createChild<play_helpers::EasyMoveTo>("easy_move_to"))
 {
 }
 
@@ -41,26 +41,14 @@ ateam_geometry::Point PivotKick::getAssignmentPoint(const World & world)
 
 ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, const Robot & robot)
 {
-  overlay_publisher_.drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
+  getOverlays().drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
 
-  float hysteresis = 1.0;
-  // Make it harder to accidentally leave kick state
-  if (prev_state_ != State::Capture) {
-    hysteresis = 2.0;
-  }
-
-  const auto robot_to_ball = world.ball.pos - robot.pos;
-  const auto distance_to_ball = ateam_geometry::norm(robot.pos, world.ball.pos);
-  const auto robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
-  // need to be able to detect breakbeam from kenobi
-
-  bool breakbeam = distance_to_ball < (kRobotRadius * hysteresis) && angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) < 0.1 * hysteresis;
-  if (!breakbeam) {
+  if (!robot.breakbeam_ball_detected) {
     if (prev_state_ != State::Capture) {
       easy_move_to_.reset();
       prev_state_ = State::Capture;
     }
-    std::cerr << "capturing" << std::endl;
+    RCLCPP_INFO(getLogger(), "Capturing...");
     return capture(world, robot);
   }
 
@@ -71,8 +59,8 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
       easy_move_to_.reset();
       prev_state_ = State::Pivot;
     }
-    std::cerr << "pivoting" << std::endl;
-    return pivot(world, robot);
+    RCLCPP_INFO(getLogger(), "Pivoting...");
+    return pivot(robot);
   }
 
   if (prev_state_ != State::KickBall) {
@@ -80,7 +68,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
     prev_state_ = State::KickBall;
   }
 
-   std::cerr << "kicking" << std::endl;
+  RCLCPP_INFO(getLogger(), "Kicking...");
   return kickBall(world, robot);
 }
 
@@ -88,20 +76,19 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::capture(
   const World & world,
   const Robot & robot)
 {
-
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   planner_options.use_default_obstacles = true;
 
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(world.ball.pos);
-  
+
 
   const auto distance_to_ball = ateam_geometry::norm(robot.pos, world.ball.pos);
   if (distance_to_ball > 0.5) {
     easy_move_to_.face_travel();
 
-    // TODO: figure out a better way to reset max velocity
+    // TODO(chachmu): figure out a better way to reset max velocity
     easy_move_to_.setMaxVelocity(2.0);
   } else {
     double velocity = (distance_to_ball * 0.5) + 0.1;
@@ -114,9 +101,8 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::capture(
   return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand PivotKick::pivot(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand PivotKick::pivot(const Robot & robot)
 {
-
   /*
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
@@ -124,12 +110,12 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::pivot(const World & world, const 
   */
 
   ateam_msgs::msg::RobotMotionCommand command;
-  command.twist.angular.z = 1.5; // turn at 1.5 rad/s
+  command.twist.angular.z = 1.5;  // turn at 1.5 rad/s
 
   // rotate in a circle with diameter 0.0427 + 0.18 = 0.2227
   // circumference of 0.6996 meters in a full rotation.
   // Calculate m/rev * rev/s to get linear m/s
-  double velocity = 0.6996 * (command.twist.angular.z / (2*M_PI));
+  double velocity = 0.6996 * (command.twist.angular.z / (2 * M_PI));
 
   command.twist.linear.x = std::sin(robot.theta) * velocity;
   command.twist.linear.y = -std::cos(robot.theta) * velocity;

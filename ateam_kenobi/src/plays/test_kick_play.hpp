@@ -24,6 +24,7 @@
 
 #include "stp/play.hpp"
 #include "skills/pivot_kick.hpp"
+#include "skills/line_kick.hpp"
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
@@ -36,7 +37,8 @@ public:
 
   explicit TestKickPlay(stp::Options stp_options)
   : stp::Play(kPlayName, stp_options),
-    // pivot_kick_skill_(createChild<skills::LineKick>("line_kick"))
+    pivot_kick_skill_(createChild<skills::PivotKick>("pivot_kick")),
+    line_kick_skill_(createChild<skills::LineKick>("line_kick"))
   {}
 
   void reset() override {}
@@ -50,14 +52,24 @@ public:
       return {};
     }
     const auto robot = robots.front();
+
     // aim for center of opponent goal
-    pivot_kick_skill_.setTargetPoint(ateam_geometry::Point(world.field.field_length / 2.0, 0.0));
-    motion_commands[robot.id] = pivot_kick_skill_.runFrame(world, robot);
+    const ateam_geometry::Point target(world.field.field_length / 2.0, 0.0);
+
+    line_kick_skill_.setTargetPoint(target);
+    pivot_kick_skill_.setTargetPoint(target);
+
+    motion_commands[robot.id] =
+      use_pivot_kick ? pivot_kick_skill_.runFrame(world, robot) : line_kick_skill_.runFrame(
+      world,
+      robot);
     return motion_commands;
   }
 
 private:
+  bool use_pivot_kick = true;  // TODO(barulicm) Make this a parameter
   skills::PivotKick pivot_kick_skill_;
+  skills::LineKick line_kick_skill_;
 };
 
 }  // namespace ateam_kenobi::plays

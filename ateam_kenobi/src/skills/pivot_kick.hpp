@@ -24,17 +24,17 @@
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
-#include "visualization/overlay_publisher.hpp"
+#include "stp/skill.hpp"
 #include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::skills
 {
 
-class PivotKick
+class PivotKick : public stp::Skill
 {
 public:
-  explicit PivotKick(visualization::OverlayPublisher & overlay_publisher);
+  explicit PivotKick(stp::Options stp_options);
 
   void setTargetPoint(ateam_geometry::Point point)
   {
@@ -47,7 +47,6 @@ public:
 
 private:
   const double kPreKickOffset = kRobotRadius + 0.1;
-  visualization::OverlayPublisher & overlay_publisher_;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 
@@ -61,7 +60,7 @@ private:
 
   ateam_msgs::msg::RobotMotionCommand capture(const World & world, const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand pivot(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand pivot(const Robot & robot);
 
   ateam_msgs::msg::RobotMotionCommand kickBall(const World & world, const Robot & robot);
 };
