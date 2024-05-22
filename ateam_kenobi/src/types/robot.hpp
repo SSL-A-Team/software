@@ -44,7 +44,10 @@ struct Robot
   bool kicker_available = true;
   bool chipper_available = false;
 
-  bool is_valid() const {return visible && radio_connected;}
+  bool IsAvailable() const
+  {
+    return visible && radio_connected;
+  }
 };
 }  // namespace ateam_kenobi
 

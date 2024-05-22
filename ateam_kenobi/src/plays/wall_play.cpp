@@ -132,7 +132,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
 
     const auto & robot = *maybe_robot;
 
-    if (!robot.is_valid()) {
+    if (!robot.IsAvailable()) {
       continue;
     }
 

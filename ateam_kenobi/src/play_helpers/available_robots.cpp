@@ -28,7 +28,7 @@ std::vector<Robot> getAvailableRobots(const World & world)
 {
   std::vector<Robot> available_robots;
   for (const auto & robot : world.our_robots) {
-    if (robot.is_valid()) {
+    if (robot.IsAvailable()) {
       available_robots.push_back(robot);
     }
   }

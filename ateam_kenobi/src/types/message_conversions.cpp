@@ -111,7 +111,7 @@ ateam_msgs::msg::World toMsg(const World & obj)
   world_msg.balls.push_back(toMsg(obj.ball));
 
   for (const Robot & robot : obj.our_robots) {
-    if (robot.is_valid()) {
+    if (robot.IsAvailable()) {
       world_msg.our_robots.push_back(toMsg(robot));
     } else {
       world_msg.our_robots.push_back(ateam_msgs::msg::RobotState());
@@ -119,7 +119,7 @@ ateam_msgs::msg::World toMsg(const World & obj)
   }
 
   for (const Robot & robot : obj.their_robots) {
-    if (robot.is_valid()) {
+    if (robot.IsAvailable()) {
       world_msg.their_robots.push_back(toMsg(robot));
     } else {
       world_msg.their_robots.push_back(ateam_msgs::msg::RobotState());

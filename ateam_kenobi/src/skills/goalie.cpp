@@ -54,7 +54,7 @@ void Goalie::runFrame(
 {
   const auto robot_id = world.referee_info.our_goalie_id;
   const auto & robot = world.our_robots.at(robot_id);
-  if (robot.is_valid()) {
+  if (robot.IsAvailable()) {
     // Assigned robot is not visible
     return;
   }
@@ -81,7 +81,7 @@ bool Goalie::doesOpponentHavePossesion(const World & world)
   std::transform(
     world.their_robots.begin(), world.their_robots.end(), distances.begin(),
     [&ball_pos](const auto & robot) {
-      if (!robot.is_valid()) {
+      if (!robot.IsAvailable()) {
         return std::numeric_limits<double>::infinity();
       }
       return CGAL::approximate_sqrt(CGAL::squared_distance(ball_pos, robot.pos));
@@ -148,7 +148,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, co
   std::transform(
     world.their_robots.begin(), world.their_robots.end(), distances.begin(),
     [&ball_pos](const auto & robot) {
-      if (!robot.is_valid()) {
+      if (!robot.IsAvailable()) {
         return std::numeric_limits<double>::infinity();
       }
       return CGAL::approximate_sqrt(CGAL::squared_distance(ball_pos, robot.pos));
