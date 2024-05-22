@@ -19,40 +19,52 @@
 // THE SOFTWARE.
 
 
-#ifndef SKILLS__BLOCKERS_HPP_
-#define SKILLS__BLOCKERS_HPP_
+#ifndef SKILLS__PIVOT_KICK_HPP_
+#define SKILLS__PIVOT_KICK_HPP_
 
-#include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <nlohmann/json.hpp>
-#include "visualization/overlays.hpp"
+#include <ateam_common/robot_constants.hpp>
+#include "stp/skill.hpp"
 #include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::skills
 {
 
-class Blockers
+class PivotKick : public stp::Skill
 {
 public:
-  explicit Blockers(visualization::Overlays overlays);
+  explicit PivotKick(stp::Options stp_options);
 
-  void reset();
+  void setTargetPoint(ateam_geometry::Point point)
+  {
+    target_point_ = point;
+  }
 
-  std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
+  ateam_geometry::Point getAssignmentPoint(const World & world);
 
-  std::vector<ateam_msgs::msg::RobotMotionCommand> runFrame(
-    const World & world,
-    const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
+  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
 private:
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  const double kPreKickOffset = kRobotRadius + 0.1;
+  ateam_geometry::Point target_point_;
+  play_helpers::EasyMoveTo easy_move_to_;
 
-  std::vector<Robot> getRankedBlockableRobots(const World & world);
+  enum class State
+  {
+    Capture,
+    Pivot,
+    KickBall
+  };
+  State prev_state_ = State::Capture;
 
-  ateam_geometry::Point getBlockingPosition(const World & world, const Robot & blockee);
+  ateam_msgs::msg::RobotMotionCommand capture(const World & world, const Robot & robot);
+
+  ateam_msgs::msg::RobotMotionCommand pivot(const Robot & robot);
+
+  ateam_msgs::msg::RobotMotionCommand kickBall(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills
 
-#endif  // SKILLS__BLOCKERS_HPP_
+#endif  // SKILLS__PIVOT_KICK_HPP_

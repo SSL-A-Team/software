@@ -18,48 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__CONTROLS_TEST_PLAY_HPP_
-#define PLAYS__CONTROLS_TEST_PLAY_HPP_
 
-#include <array>
-#include <vector>
-#include "motion/motion_controller.hpp"
-#include "stp/play.hpp"
-#include "ateam_geometry/types.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#ifndef STP__SKILL_HPP_
+#define STP__SKILL_HPP_
 
-namespace ateam_kenobi::plays
+#include "base.hpp"
+
+namespace ateam_kenobi::stp
 {
-class ControlsTestPlay : public stp::Play
+
+class Skill : public Base
 {
 public:
-  static constexpr const char * kPlayName = "ControlsTestPlay";
+  explicit Skill(Options options)
+  : Base(options) {}
 
-  explicit ControlsTestPlay(stp::Options stp_options);
-
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
-
-private:
-  struct Waypoint
-  {
-    ateam_geometry::Point position;
-    AngleMode angle_mode;
-    double heading;
-    double hold_time_sec;
-  };
-
-  MotionController motion_controller_;
-  MotionOptions motion_options_;
-
-  int index = 0;
-  std::vector<Waypoint> waypoints;
-  bool goal_hit;
-  std::chrono::steady_clock::time_point goal_hit_time;
-
-  bool isGoalHit(const Robot & robot);
+  virtual ~Skill() = default;
 };
-}  // namespace ateam_kenobi::plays
-#endif  // PLAYS__CONTROLS_TEST_PLAY_HPP_
+
+}  // namespace ateam_kenobi::stp
+
+#endif  // STP__SKILL_HPP_

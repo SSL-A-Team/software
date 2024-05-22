@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,28 +19,27 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__BASE_PLAY_HPP_
-#define PLAYS__BASE_PLAY_HPP_
+#ifndef STP__PLAY_HPP_
+#define STP__PLAY_HPP_
 
 #include <array>
 #include <limits>
 #include <optional>
 #include <string>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "visualization/overlays.hpp"
-#include <nlohmann/json.hpp>
+#include "base.hpp"
 #include "types/world.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::stp
 {
 
-class BasePlay
+class Play : public Base
 {
 public:
-  explicit BasePlay(std::string play_name)
-  : play_name_(play_name), overlays_(play_name) {}
+  Play(std::string name, Options options)
+  : Base(name, options) {}
 
-  virtual ~BasePlay() = default;
+  virtual ~Play() = default;
 
   /**
    * @brief Get the play's validity / confidence score
@@ -63,21 +62,6 @@ public:
   virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
     const World & world) = 0;
 
-  const std::string & getName() const
-  {
-    return play_name_;
-  }
-
-  visualization::Overlays & getOverlays()
-  {
-    return overlays_;
-  }
-
-  nlohmann::json & getPlayInfo()
-  {
-    return play_info_;
-  }
-
   bool isEnabled() const
   {
     return enabled_;
@@ -88,13 +72,10 @@ public:
     enabled_ = value;
   }
 
-protected:
-  std::string play_name_;
-  visualization::Overlays overlays_;
-  nlohmann::json play_info_;
+private:
   bool enabled_ = true;
 };
 
-}  // namespace ateam_kenobi::plays
+}  // namespace ateam_kenobi::stp
 
-#endif  // PLAYS__BASE_PLAY_HPP_
+#endif  // STP__PLAY_HPP_

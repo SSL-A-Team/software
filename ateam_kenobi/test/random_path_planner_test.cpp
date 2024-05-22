@@ -179,8 +179,8 @@ int main(int argc, char ** argv)
   // TODO(barulicm) change these fields when the field geometry fix lands
   world.field.goal_width = 2;
   world.field.goal_depth = 1;
-  world.their_robots[0] = ateam_kenobi::Robot{};
-  world.their_robots[0]->id = 0;
+  world.their_robots[0].visible = true;
+  world.their_robots[0].id = 0;
 
   PathPlanner path_planner;
 
@@ -190,7 +190,7 @@ int main(int argc, char ** argv)
     const ateam_geometry::Point start(randNum(), randNum());
     const ateam_geometry::Point goal(randNum(), randNum());
     world.ball.pos = ateam_geometry::Point(randNum(), randNum());
-    world.their_robots[0]->pos = ateam_geometry::Point(randNum(), randNum());
+    world.their_robots[0].pos = ateam_geometry::Point(randNum(), randNum());
 
     const auto path = path_planner.getPath(start, goal, world, {}, planner_options);
 
@@ -199,7 +199,7 @@ int main(int argc, char ** argv)
       std::cout << "start = " << start << '\n';
       std::cout << "goal = " << goal << '\n';
       std::cout << "ball = " << world.ball.pos << '\n';
-      std::cout << "opponent = " << world.their_robots[0]->pos << '\n';
+      std::cout << "opponent = " << world.their_robots[0].pos << '\n';
 
       std::cout << "path =";
       for (const auto & p : path) {
@@ -207,7 +207,7 @@ int main(int argc, char ** argv)
       }
 
       if (render_scenario) {
-        renderSecenario(start, goal, world.ball.pos, world.their_robots[0]->pos, path);
+        renderSecenario(start, goal, world.ball.pos, world.their_robots[0].pos, path);
       }
 
       break;

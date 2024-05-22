@@ -27,6 +27,7 @@
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
+#include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/overlay.hpp>
@@ -60,6 +61,7 @@ class KenobiNode : public rclcpp::Node
 public:
   explicit KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("kenobi_node", options),
+    play_selector_(*this),
     game_controller_listener_(*this)
   {
     declare_parameter<bool>("use_world_velocities", false);
@@ -84,6 +86,13 @@ public:
       Topics::kYellowTeamRobotPrefix,
       10,
       &KenobiNode::yellow_robot_state_callback,
+      this);
+
+    create_indexed_subscribers<ateam_msgs::msg::RobotFeedback>(
+      robot_feedback_subscriptions_,
+      Topics::kRobotFeedbackPrefix,
+      10,
+      &KenobiNode::robot_feedback_callback,
       this);
 
     create_indexed_publishers<ateam_msgs::msg::RobotMotionCommand>(
@@ -136,6 +145,8 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotFeedback>::SharedPtr,
+    16> robot_feedback_subscriptions_;
   rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr
     field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
@@ -173,26 +184,34 @@ private:
   }
 
   void robot_state_callback(
-    std::array<std::optional<Robot>, 16> & robot_states,
+    std::array<Robot, 16> & robot_states,
     std::size_t id,
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg)
   {
-    if (!robot_state_msg->visible) {
-      robot_states.at(id).reset();
-      return;
+    robot_states.at(id).visible = robot_state_msg->visible;
+    if (robot_state_msg->visible) {
+      robot_states.at(id).pos = ateam_geometry::Point(
+        robot_state_msg->pose.position.x,
+        robot_state_msg->pose.position.y);
+      tf2::Quaternion tf2_quat;
+      tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
+      robot_states.at(id).theta = tf2::getYaw(tf2_quat);
+      robot_states.at(id).vel = ateam_geometry::Vector(
+        robot_state_msg->twist.linear.x,
+        robot_state_msg->twist.linear.y);
+      robot_states.at(id).omega = robot_state_msg->twist.angular.z;
+      robot_states.at(id).id = id;
     }
-    robot_states.at(id) = Robot();
-    robot_states.at(id).value().pos = ateam_geometry::Point(
-      robot_state_msg->pose.position.x,
-      robot_state_msg->pose.position.y);
-    tf2::Quaternion tf2_quat;
-    tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
-    robot_states.at(id).value().theta = tf2::getYaw(tf2_quat);
-    robot_states.at(id).value().vel = ateam_geometry::Vector(
-      robot_state_msg->twist.linear.x,
-      robot_state_msg->twist.linear.y);
-    robot_states.at(id).value().omega = robot_state_msg->twist.angular.z;
-    robot_states.at(id).value().id = id;
+  }
+
+  void robot_feedback_callback(
+    const ateam_msgs::msg::RobotFeedback::SharedPtr robot_feedback_msg,
+    int id)
+  {
+    world_.our_robots.at(id).radio_connected = robot_feedback_msg->radio_connected;
+    world_.our_robots.at(id).breakbeam_ball_detected = robot_feedback_msg->breakbeam_ball_detected;
+    world_.our_robots.at(id).kicker_available = robot_feedback_msg->kicker_available;
+    world_.our_robots.at(id).chipper_available = robot_feedback_msg->chipper_available;
   }
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
@@ -326,7 +345,7 @@ private:
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(
     const World & world)
   {
-    plays::BasePlay * play = play_selector_.getPlay(world);
+    stp::Play * play = play_selector_.getPlay(world);
     if (play == nullptr) {
       RCLCPP_ERROR(get_logger(), "No play selected!");
       return {};
