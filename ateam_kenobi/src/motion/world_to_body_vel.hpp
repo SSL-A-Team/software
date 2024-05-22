@@ -49,7 +49,7 @@ inline void ConvertWorldVelsToBodyVels(
   for (auto i = 0u; i < 16; ++i) {
     auto & maybe_command = commands.at(i);
     const auto & robot = robots.at(i);
-    if (maybe_command && robot.IsAvailable()) {
+    if (maybe_command && robot.visible) {
       ConvertWorldVelsToBodyVels(maybe_command.value(), robot);
     }
   }
