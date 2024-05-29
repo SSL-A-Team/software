@@ -393,6 +393,9 @@ export class AppState {
             messageType: 'ateam_msgs/msg/PlayInfo'
         });
 
+        playInfoTopic.subscribe(this.getPlayInfoCallback());
+        this.subscriptions["playInfo"] = playInfoTopic;
+
         // Set up play book subscriber
         let playbookTopic = new ROSLIB.Topic({
             ros: this.ros,
