@@ -369,6 +369,9 @@ std::vector<int> km_assignment(
 
   // Return our perfect matching
   // based on our feasible labeling
+  if (xy.size() > cost.rows()){
+    xy.resize(cost.rows());
+  }
   return xy;
 }
 

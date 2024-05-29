@@ -92,7 +92,7 @@ TEST(KmAssignment, non_square_assignment) {
     {10, 1, 5},
   };
   auto out2x3 = km_assignment::km_assignment(cost2x3);
-  EXPECT_EQ(out2x3.size(), 3);
+  EXPECT_EQ(out2x3.size(), 2);
   EXPECT_EQ(out2x3.at(0), 1);
   EXPECT_EQ(out2x3.at(1), 0);
 
