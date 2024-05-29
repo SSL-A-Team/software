@@ -87,8 +87,8 @@ export default {
         },
         setListSelectedPlay() {
             if (this.state.selected_play_name == "") {
-                this.selected_play = [];
-            } else{
+                this.selectedPlay = [];
+            } else {
                 this.selectedPlay = [this.state.selected_play_name];
             }
         }
