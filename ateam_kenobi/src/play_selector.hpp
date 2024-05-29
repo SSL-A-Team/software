@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <rclcpp/rclcpp.hpp>
+#include <ateam_msgs/msg/playbook_state.hpp>
 #include "stp/play.hpp"
 #include "types/world.hpp"
 
@@ -37,7 +38,7 @@ class PlaySelector
 public:
   explicit PlaySelector(rclcpp::Node & node);
 
-  stp::Play * getPlay(const World & world);
+  stp::Play * getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg);
 
   void setPlayOverride(const std::string & play_name)
   {
@@ -69,6 +70,8 @@ private:
   stp::Play * selectRankedPlay(const World & world);
 
   void resetPlayIfNeeded(stp::Play * play);
+
+  void fillStateMessage(ateam_msgs::msg::PlaybookState & msg, const World & world);
 };
 
 }  // namespace ateam_kenobi
