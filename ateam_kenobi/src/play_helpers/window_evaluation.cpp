@@ -63,12 +63,7 @@ std::optional<ateam_geometry::Segment> projectRobotShadowOntoLine(
   const ateam_geometry::Point & source,
   const ateam_geometry::Line & line)
 {
-  const auto robot_vec = robot.pos - source;
-  const auto perp_vec = robot_vec.perpendicular(CGAL::CLOCKWISE);
-  const auto p1 = robot.pos + (kRobotRadius * perp_vec);
-  const auto p2 = robot.pos + (-kRobotRadius * perp_vec);
-  const ateam_geometry::Ray ray1(p1, p1 - source);
-  const ateam_geometry::Ray ray2(p2, p2 - source);
+  const auto [ray1, ray2] = getRobotShadowRays(robot, source);
   const auto maybe_intersect1 = CGAL::intersection(ray1, line);
   const auto maybe_intersect2 = CGAL::intersection(ray2, line);
   if (!maybe_intersect1 || !maybe_intersect2) {
@@ -132,6 +127,26 @@ void drawWindows(
     overlays_.drawPolygon("Window" + std::to_string(i), window_triangle, "00000000", "0000FF7F");
     ++i;
   }
+}
+
+std::pair<ateam_geometry::Ray, ateam_geometry::Ray> getRobotShadowRays(
+  const Robot & robot,
+  const ateam_geometry::Point & source)
+{
+  const auto source_center_vector = robot.pos - source;
+  const auto source_center_distance = ateam_geometry::norm(source_center_vector);
+  const auto shadow_angle = std::atan(kRobotRadius / source_center_distance);
+  const CGAL::Aff_transformation_2<ateam_geometry::Kernel> rotate(CGAL::ROTATION,
+    std::sin(shadow_angle), std::cos(shadow_angle));
+  const auto source_to_bot_tangent_distance = std::hypot(source_center_distance, kRobotRadius);
+  // inverse rotation for first vector so 1->2 moves counterclockwise
+  const auto shadow_vector_1 = ateam_geometry::normalize(rotate.inverse()(source_center_vector));
+  const auto shadow_vector_2 = ateam_geometry::normalize(rotate(source_center_vector));
+  const auto shadow_point_1 = source + (shadow_vector_1 * source_to_bot_tangent_distance);
+  const auto shadow_point_2 = source + (shadow_vector_2 * source_to_bot_tangent_distance);
+  return std::make_pair(
+    ateam_geometry::Ray(shadow_point_1, shadow_vector_1),
+    ateam_geometry::Ray(shadow_point_2, shadow_vector_2));
 }
 
 }  // namespace ateam_kenobi::play_helpers::window_evaluation

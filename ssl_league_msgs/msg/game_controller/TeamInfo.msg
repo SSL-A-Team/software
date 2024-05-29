@@ -12,3 +12,6 @@ bool can_place_ball
 uint32 max_allowed_bots
 bool bot_substitution_intent
 bool ball_placement_failures_reached
+bool bot_substitution_allowed
+uint32 bot_substitutions_left
+uint32 bot_substitution_time_left

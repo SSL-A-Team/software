@@ -20,18 +20,35 @@
 
 
 #include "their_penalty_play.hpp"
+#include <limits>
 #include "play_helpers/available_robots.hpp"
 #include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::plays
 {
 
-TheirPenaltyPlay::TheirPenaltyPlay()
-: BasePlay("TheirPenaltyPlay"),
-  goalie_skill_(getOverlays().getChild("goalie"))
+TheirPenaltyPlay::TheirPenaltyPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  play_helpers::EasyMoveTo::CreateArray(move_tos_, getOverlays().getChild("EasyMoveTo"));
   goalie_skill_.possesionTolerance() = 0.3;
+}
+
+double TheirPenaltyPlay::getScore(const World & world)
+{
+  if (world.in_play) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const auto & cmd = world.referee_info.running_command;
+  const auto & prev = world.referee_info.prev_command;
+  if (cmd == ateam_common::GameCommand::PreparePenaltyTheirs ||
+    (cmd == ateam_common::GameCommand::NormalStart &&
+    prev == ateam_common::GameCommand::PreparePenaltyTheirs))
+  {
+    return std::numeric_limits<double>::max();
+  }
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 void TheirPenaltyPlay::reset()

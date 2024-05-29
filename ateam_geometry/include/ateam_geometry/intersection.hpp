@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,55 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef ATEAM_GEOMETRY__INTERSECTION_HPP_
+#define ATEAM_GEOMETRY__INTERSECTION_HPP_
 
-#ifndef PLAYS__BASE_PLAY_HPP_
-#define PLAYS__BASE_PLAY_HPP_
+#include <CGAL/intersections.h>
+#include <utility>
+#include "types.hpp"
+#include "arc.hpp"
 
-#include <array>
-#include <optional>
-#include <string>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "visualization/overlays.hpp"
-#include <nlohmann/json.hpp>
-#include "types/world.hpp"
-
-namespace ateam_kenobi::plays
+namespace ateam_geometry
 {
 
-class BasePlay
+template<typename A, typename B>
+typename CGAL::Intersection_traits<Kernel, A, B>::result_type intersection(const A & a, const B & b)
 {
-public:
-  explicit BasePlay(std::string play_name)
-  : play_name_(play_name), overlays_(play_name) {}
+  return CGAL::intersection(a, b);
+}
 
-  virtual ~BasePlay() = default;
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Circle & circle,
+  const Line & line);
 
-  virtual void reset() = 0;
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Arc & arc,
+  const Line & line);
 
-  virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) = 0;
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Arc & arc,
+  const Ray & ray);
 
-  const std::string & getName() const
-  {
-    return play_name_;
-  }
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Arc & arc,
+  const Segment & segment);
 
-  visualization::Overlays & getOverlays()
-  {
-    return overlays_;
-  }
+}  // namespace ateam_geometry
 
-  nlohmann::json & getPlayInfo()
-  {
-    return play_info_;
-  }
-
-protected:
-  std::string play_name_;
-  visualization::Overlays overlays_;
-  nlohmann::json play_info_;
-};
-
-}  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__BASE_PLAY_HPP_
+#endif  // ATEAM_GEOMETRY__INTERSECTION_HPP_

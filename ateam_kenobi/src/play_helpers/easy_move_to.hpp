@@ -28,29 +28,32 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
-#include "visualization/overlays.hpp"
+#include "stp/base.hpp"
 #include "types/robot.hpp"
 #include "types/world.hpp"
 
 namespace ateam_kenobi::play_helpers
 {
 
-class EasyMoveTo
+class EasyMoveTo : public stp::Base
 {
 public:
-  static void CreateArray(
-    std::array<EasyMoveTo, 16> & dst,
-    visualization::Overlays overlays);
-
   /**
    * @brief DO NOT USE THIS CONSTRUCTOR IN PLAY CODE
    * This is meant for internal use only.
    */
-  EasyMoveTo() {}
+  EasyMoveTo()
+  : stp::Base(stp::Options{}) {}
 
-  explicit EasyMoveTo(visualization::Overlays overlays);
+  explicit EasyMoveTo(stp::Options stp_options);
+
+  explicit EasyMoveTo(EasyMoveTo && other);
+
+  explicit EasyMoveTo(const EasyMoveTo & other);
 
   EasyMoveTo & operator=(EasyMoveTo && other);
+
+  EasyMoveTo & operator=(const EasyMoveTo & other);
 
   void reset();
 
@@ -83,7 +86,6 @@ private:
   path_planning::PathPlanner path_planner_;
   MotionController motion_controller_;
   MotionOptions motion_options_;
-  visualization::Overlays overlays_;
 
   path_planning::PathPlanner::Path planPath(
     const Robot & robot, const World & world,

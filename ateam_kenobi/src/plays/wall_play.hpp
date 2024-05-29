@@ -27,20 +27,24 @@
 
 #include "ateam_geometry/types.hpp"
 #include "types/robot.hpp"
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "play_helpers/easy_move_to.hpp"
 #include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays
 {
-inline std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
-  ateam_geometry::Segment & segment, int num_points);
 
-class WallPlay : public BasePlay
+class WallPlay : public stp::Play
 {
 public:
-  WallPlay();
+  static constexpr const char * kPlayName = "WallPlay";
+
+  explicit WallPlay(stp::Options stp_options);
+
+  double getScore(const World & world) override;
+
   void reset() override;
+
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override;
 

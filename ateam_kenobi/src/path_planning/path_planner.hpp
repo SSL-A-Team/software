@@ -23,9 +23,10 @@
 #define PATH_PLANNING__PATH_PLANNER_HPP_
 
 #include <vector>
+#include <ateam_geometry/any_shape.hpp>
 #include <ateam_geometry/types.hpp>
 #include "types/world.hpp"
-#include "visualization/overlays.hpp"
+#include "stp/base.hpp"
 
 namespace ateam_kenobi::path_planning
 {
@@ -62,13 +63,13 @@ struct PlannerOptions
   bool draw_obstacles = false;
 };
 
-class PathPlanner
+class PathPlanner : public stp::Base
 {
 public:
   using Position = ateam_geometry::Point;
   using Path = std::vector<Position>;
 
-  explicit PathPlanner(visualization::Overlays overlays = {});
+  explicit PathPlanner(stp::Options stp_options = {});
 
   Path getPath(
     const Position & start, const Position & goal, const World & world,

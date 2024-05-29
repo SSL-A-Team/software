@@ -21,17 +21,15 @@
 #include "controls_test_play.hpp"
 #include <angles/angles.h>
 #include <ateam_geometry/types.hpp>
-#include <ateam_geometry/make_circle.hpp>
+#include <ateam_geometry/creation_helpers.hpp>
 #include "types/world.hpp"
 #include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {
-ControlsTestPlay::ControlsTestPlay()
-: BasePlay("ControlsTestPlay")
+ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options)
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, overlays_.getChild("EasyMoveTo"));
-
   // Turn 180 deg in place
   // waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute,  0.0, 3.0});
   // waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute, M_PI, 3.0});
@@ -100,26 +98,27 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   maybe_motion_commands[robot.id] = motion_controller_.get_command(robot, current_time);
 
   const std::vector<ateam_geometry::Point> viz_path = {robot.pos, waypoints[index].position};
-  overlays_.drawLine("controls_test_path", viz_path, "purple");
+  getOverlays().drawLine("controls_test_path", viz_path, "purple");
 
-  play_info_["robot"]["id"] = robot.id;
-  play_info_["robot"]["index"] = index;
-  play_info_["robot"]["goal_hit"] = goal_hit;
-  play_info_["robot"]["time_at_goal"] = std::chrono::duration_cast<std::chrono::duration<double>>(
+  getPlayInfo()["robot"]["id"] = robot.id;
+  getPlayInfo()["robot"]["index"] = index;
+  getPlayInfo()["robot"]["goal_hit"] = goal_hit;
+  getPlayInfo()["robot"]["time_at_goal"] =
+    std::chrono::duration_cast<std::chrono::duration<double>>(
     std::chrono::steady_clock::now() - goal_hit_time).count();
-  play_info_["robot"]["target"]["x"] = waypoints[index].position.x();
-  play_info_["robot"]["target"]["y"] = waypoints[index].position.y();
-  play_info_["robot"]["target"]["angle_mode"] = waypoints[index].angle_mode;
-  play_info_["robot"]["target"]["theta"] = waypoints[index].heading;
-  play_info_["robot"]["pos"]["x"] = robot.pos.x();
-  play_info_["robot"]["pos"]["y"] = robot.pos.y();
-  play_info_["robot"]["pos"]["t"] = robot.theta;
-  play_info_["robot"]["vel"]["x"] = robot.vel.x();
-  play_info_["robot"]["vel"]["y"] = robot.vel.y();
-  play_info_["robot"]["vel"]["t"] = robot.omega;
+  getPlayInfo()["robot"]["target"]["x"] = waypoints[index].position.x();
+  getPlayInfo()["robot"]["target"]["y"] = waypoints[index].position.y();
+  getPlayInfo()["robot"]["target"]["angle_mode"] = waypoints[index].angle_mode;
+  getPlayInfo()["robot"]["target"]["theta"] = waypoints[index].heading;
+  getPlayInfo()["robot"]["pos"]["x"] = robot.pos.x();
+  getPlayInfo()["robot"]["pos"]["y"] = robot.pos.y();
+  getPlayInfo()["robot"]["pos"]["t"] = robot.theta;
+  getPlayInfo()["robot"]["vel"]["x"] = robot.vel.x();
+  getPlayInfo()["robot"]["vel"]["y"] = robot.vel.y();
+  getPlayInfo()["robot"]["vel"]["t"] = robot.omega;
 
   for (std::size_t i = 0; i < waypoints.size(); i++) {
-    overlays_.drawCircle(
+    getOverlays().drawCircle(
       "controls_test_point" + std::to_string(i),
       ateam_geometry::makeCircle(waypoints[i].position, .05),
       "blue",

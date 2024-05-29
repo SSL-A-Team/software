@@ -22,18 +22,17 @@
 #define SKILLS__GOALIE_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include <ateam_geometry/nearest_points.hpp>
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
-#include "visualization/overlays.hpp"
+#include "stp/skill.hpp"
 #include "line_kick.hpp"
 
 namespace ateam_kenobi::skills
 {
-class Goalie
+class Goalie : public stp::Skill
 {
 public:
-  explicit Goalie(visualization::Overlays overlays);
+  explicit Goalie(stp::Options stp_options);
 
   void reset();
 
@@ -47,7 +46,6 @@ public:
   }
 
 private:
-  visualization::Overlays overlays_;
   play_helpers::EasyMoveTo easy_move_to_;
   LineKick line_kick_;
   double possesion_threshold_ = 0.03;

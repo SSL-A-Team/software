@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,29 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__NORMAL_PLAY_HPP_
-#define PLAYS__NORMAL_PLAY_HPP_
+#ifndef ATEAM_GEOMETRY__DISK_HPP_
+#define ATEAM_GEOMETRY__DISK_HPP_
 
-#include "path_planning/path_planner.hpp"
-#include "motion/motion_controller.hpp"
-#include "base_play.hpp"
+#include <utility>
+#include "types.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_geometry
 {
-class NormalPlay : public BasePlay
+
+/**
+ * @brief A Disk is a circle that includes its internal area.
+ * This is primarily a semantic type for defining custom intersection logic.
+ */
+class Disk : public Circle
 {
 public:
-  NormalPlay();
+  using Circle::Circle_2;
 
-  void reset() override;
+  explicit Disk(Circle circle)
+  : Circle(std::move(circle))
+  {
+  }
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
+  Circle & asCircle()
+  {
+    return *this;
+  }
 
-private:
-  path_planning::PathPlanner path_planner_;
-  std::array<MotionController, 16> motion_controllers_;
-  int prev_assigned_id_ = -1;
+  const Circle & asCircle() const
+  {
+    return *this;
+  }
 };
-}  // namespace ateam_kenobi::plays
-#endif  // PLAYS__NORMAL_PLAY_HPP_
+
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__DISK_HPP_

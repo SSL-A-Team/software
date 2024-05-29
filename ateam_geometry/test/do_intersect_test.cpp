@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,98 +21,98 @@
 #include <gtest/gtest.h>
 
 #include "ateam_geometry/types.hpp"
-#include "ateam_geometry/variant_do_intersect.hpp"
+#include "ateam_geometry/do_intersect.hpp"
 
-TEST(VariantDoIntersect, CircleToPoint)
+TEST(DoIntersectTests, DiskToVariantPoint)
 {
-  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::Disk a(ateam_geometry::Point(0, 0), 1);
   ateam_geometry::AnyShape b = ateam_geometry::Point(0.5, 0.5);
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
 
   b = ateam_geometry::Point(1.5, 1.5);
-  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_FALSE(ateam_geometry::doIntersect(a, b));
 }
 
-TEST(VariantDoIntersect, CircleToCircle)
+TEST(DoIntersectTests, DiskToVariantDisk)
 {
-  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
-  ateam_geometry::AnyShape b = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 0.5);
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  ateam_geometry::Disk a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::AnyShape b = ateam_geometry::Disk(ateam_geometry::Point(0, 0), 0.5);
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
 
-  a = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
-  b = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1.5);
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  a = ateam_geometry::Disk(ateam_geometry::Point(0, 0), 1);
+  b = ateam_geometry::Disk(ateam_geometry::Point(0, 0), 1.5);
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
 
-  a = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
-  b = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  a = ateam_geometry::Disk(ateam_geometry::Point(0, 0), 1);
+  b = ateam_geometry::Disk(ateam_geometry::Point(0, 0), 1);
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
 
-  a = ateam_geometry::Circle(ateam_geometry::Point(0, 0), 1);
-  b = ateam_geometry::Circle(ateam_geometry::Point(3, 3), 1);
-  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+  a = ateam_geometry::Disk(ateam_geometry::Point(0, 0), 1);
+  b = ateam_geometry::Disk(ateam_geometry::Point(3, 3), 1);
+  EXPECT_FALSE(ateam_geometry::doIntersect(a, b));
 }
 
-TEST(VariantDoIntersect, CircleToSegment)
+TEST(DoIntersectTests, DiskToVariantSegment)
 {
-  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::Disk a(ateam_geometry::Point(0, 0), 1);
   ateam_geometry::AnyShape b = ateam_geometry::Segment(
     ateam_geometry::Point(0, 0),
     ateam_geometry::Point(0.5, 0)
   );
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
 
   b = ateam_geometry::Segment(
     ateam_geometry::Point(2, 0),
     ateam_geometry::Point(0, 0)
   );
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
 
   b = ateam_geometry::Segment(
     ateam_geometry::Point(2, 0),
     ateam_geometry::Point(2, 2.5)
   );
-  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_FALSE(ateam_geometry::doIntersect(a, b));
 }
 
-TEST(VariantDoIntersect, CircleToRectangle)
+TEST(DoIntersectTests, DiskToVariantRectangle)
 {
-  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::Disk a(ateam_geometry::Point(0, 0), 1);
   ateam_geometry::AnyShape b = ateam_geometry::Rectangle(
     ateam_geometry::Point(0, 0),
     ateam_geometry::Point(1, 2)
   );
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
 
   b = ateam_geometry::Rectangle(
     ateam_geometry::Point(-1, -1),
     ateam_geometry::Point(1, 1)
   );
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
 
   b = ateam_geometry::Rectangle(
     ateam_geometry::Point(-2, -2),
     ateam_geometry::Point(-1.5, -1.5)
   );
-  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_FALSE(ateam_geometry::doIntersect(a, b));
 }
 
-TEST(VariantDoIntersect, CircleToRay)
+TEST(DoIntersectTests, DiskToVariantRay)
 {
-  ateam_geometry::Circle a(ateam_geometry::Point(0, 0), 1);
+  ateam_geometry::Disk a(ateam_geometry::Point(0, 0), 1);
   ateam_geometry::AnyShape b = ateam_geometry::Ray(
     ateam_geometry::Point(0, 0),
     ateam_geometry::Point(1, 2)
   );
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
   b = ateam_geometry::Ray(
     ateam_geometry::Point(-2, -2),
     ateam_geometry::Point(1, 1)
   );
-  EXPECT_TRUE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_TRUE(ateam_geometry::doIntersect(a, b));
 
   b = ateam_geometry::Ray(
     ateam_geometry::Point(-2, -2),
     ateam_geometry::Point(-3, -3)
   );
-  EXPECT_FALSE(ateam_geometry::variantDoIntersect(a, b));
+  EXPECT_FALSE(ateam_geometry::doIntersect(a, b));
 }

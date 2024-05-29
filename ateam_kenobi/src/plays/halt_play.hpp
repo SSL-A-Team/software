@@ -23,14 +23,18 @@
 
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
-#include "base_play.hpp"
+#include "stp/play.hpp"
 
 namespace ateam_kenobi::plays
 {
-class HaltPlay : public BasePlay
+class HaltPlay : public stp::Play
 {
 public:
-  HaltPlay();
+  static constexpr const char * kPlayName = "HaltPlay";
+
+  explicit HaltPlay(stp::Options stp_options);
+
+  double getScore(const World & world) override;
 
   void reset() override;
 
