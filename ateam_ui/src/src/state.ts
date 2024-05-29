@@ -55,6 +55,7 @@ export class AppState {
 
     plays = {};
     selected_play_name: string = null;
+    override_play_in_progress: string = null;
 
     setGoalie(goalie_id: number) {
         const request = new ROSLIB.ServiceRequest({
@@ -117,8 +118,10 @@ export class AppState {
             play_name: play_name
         });
 
+        state.override_play_in_progress = play_name;
         this.services["setOverridePlay"].callService(request,
             function(result) {
+                state.override_play_in_progress = null;
                 if(!result.success) {
                     console.log("Failed to set override play to ", play_name, ": ", result.reason);
                 }
@@ -264,7 +267,16 @@ export class AppState {
     getPlaybookCallback() {
         const state = this; // fix dumb javascript things
         return function(msg:any) {
-            state.selected_play_name = msg.override_name;
+
+            // Handle the transition time between overriding the play and
+            // it showing up in the kenobi message
+            if (state.override_play_in_progress == null) {
+                state.selected_play_name = msg.override_name;
+            } else {
+                state.selected_play_name = state.override_play_in_progress;
+            }
+
+
             if (msg.names.length > 0) {
                 state.plays = [];
                 for (let i = 0; i < msg.names.length; i++) {
