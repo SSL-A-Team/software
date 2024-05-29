@@ -413,6 +413,8 @@ void PathPlanner::drawObstacles(const std::vector<ateam_geometry::AnyShape> & ob
         getOverlays().drawRectangle(name, shape, color, color);
       } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Circle>) {
         getOverlays().drawCircle(name, shape, color, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Disk>) {
+        getOverlays().drawCircle(name, shape.asCircle(), color, color);
       } else {
         RCLCPP_WARN(
           getLogger(), "Unsupported shape type in drawObstacles: %s ",

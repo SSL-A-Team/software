@@ -369,6 +369,7 @@ std::vector<int> km_assignment(
 
   // Return our perfect matching
   // based on our feasible labeling
+  xy.resize(cost_matrix.rows());
   return xy;
 }
 
