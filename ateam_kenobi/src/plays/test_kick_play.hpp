@@ -39,7 +39,9 @@ public:
   : stp::Play(kPlayName, stp_options),
     pivot_kick_skill_(createChild<skills::PivotKick>("pivot_kick")),
     line_kick_skill_(createChild<skills::LineKick>("line_kick"))
-  {}
+  {
+    getParamInterface().declareParameter(kUsePivotKickParam, true);
+  }
 
   void reset() override {}
 
@@ -59,6 +61,8 @@ public:
     line_kick_skill_.setTargetPoint(target);
     pivot_kick_skill_.setTargetPoint(target);
 
+    const auto use_pivot_kick = getParamInterface().getParameter<bool>(kUsePivotKickParam);
+
     motion_commands[robot.id] =
       use_pivot_kick ? pivot_kick_skill_.runFrame(world, robot) : line_kick_skill_.runFrame(
       world,
@@ -67,7 +71,7 @@ public:
   }
 
 private:
-  bool use_pivot_kick = true;  // TODO(barulicm) Make this a parameter
+  char const * const kUsePivotKickParam = "use_pivot_kick";
   skills::PivotKick pivot_kick_skill_;
   skills::LineKick line_kick_skill_;
 };

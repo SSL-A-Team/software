@@ -35,6 +35,9 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   using namespace ateam_kenobi::plays;  // NOLINT(build/namespaces)
   stp::Options stp_options;
   stp_options.logger = node.get_logger();
+  stp_options.parameter_interface = stp::ParameterInterface(
+    "stp_parameters",
+    node.get_node_parameters_interface());
   halt_play_ = addPlay<HaltPlay>(stp_options);
   addPlay<TestPlay>(stp_options);
   addPlay<StopPlay>(stp_options);
