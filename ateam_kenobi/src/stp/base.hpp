@@ -27,6 +27,7 @@
 #include <nlohmann/json.hpp>
 #include <rclcpp/logger.hpp>
 #include "visualization/overlays.hpp"
+#include "parameter_interface.hpp"
 
 namespace ateam_kenobi::stp
 {
@@ -37,6 +38,7 @@ struct Options
   visualization::Overlays overlays;
   nlohmann::json play_info;
   rclcpp::Logger logger = rclcpp::get_logger("kenobi_stp_default");
+  ParameterInterface parameter_interface;
 };
 
 class Base
@@ -52,7 +54,8 @@ public:
   : name_(options.name),
     overlays_(options.overlays),
     play_info_(options.play_info),
-    logger_(options.logger)
+    logger_(options.logger),
+    parameter_interface_(options.parameter_interface)
   {
   }
 
@@ -60,7 +63,8 @@ public:
   : name_(name),
     overlays_(options.overlays),
     play_info_(options.play_info),
-    logger_(options.logger)
+    logger_(options.logger),
+    parameter_interface_(options.parameter_interface)
   {
   }
 
@@ -73,7 +77,8 @@ public:
       child_name,
       overlays_.getChild(child_name),
       play_info_[child_name],
-      logger_.get_child(child_name)
+      logger_.get_child(child_name),
+      parameter_interface_.getChild(child_name)
     };
     return ChildType(options, std::forward<Args>(args)...);
   }
@@ -108,11 +113,17 @@ public:
     return logger_;
   }
 
+  ParameterInterface & getParamInterface()
+  {
+    return parameter_interface_;
+  }
+
 private:
   std::string name_;
   visualization::Overlays overlays_;
   nlohmann::json play_info_;
   rclcpp::Logger logger_;
+  ParameterInterface parameter_interface_;
 };
 
 }  // namespace ateam_kenobi::stp

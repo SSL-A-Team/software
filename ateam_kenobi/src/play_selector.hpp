@@ -60,6 +60,7 @@ private:
   {
     stp_options.overlays = visualization::Overlays(PlayType::kPlayName);
     stp_options.logger = stp_options.logger.get_child(PlayType::kPlayName);
+    stp_options.parameter_interface = stp_options.parameter_interface.getChild(PlayType::kPlayName);
     auto play = std::make_shared<PlayType>(stp_options);
     plays_.push_back(play);
     return play;
