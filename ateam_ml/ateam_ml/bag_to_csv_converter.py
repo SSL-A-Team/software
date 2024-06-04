@@ -47,7 +47,6 @@ class BagToCSVConverter(Node):
         # IMPORTANT this does require you have built the messages for any topic in the bag file
         # Rolling ros2 has updates which store the defs in the rosbag files but we are on humble so...
 
-
         all_topics_count = 0
         # for every topic we pulled out of the meta data we start a csv file for it. If
         for topic_name, msg_type in topics_table.items():
@@ -71,7 +70,7 @@ class BagToCSVConverter(Node):
 
                     msg = deserialize_message(s_msg, msg_type)
                     flat_fields = flatdict.FlatDict(message_to_ordereddict(msg), delimiter='.').keys()
-                    header = ','.join(["timestamp"] + list(flat_fields))
+                    header = ','.join(["bag_timestamp"] + list(flat_fields))
                     output_csv.write(header + "\n")
 
                     if (self.message_allowed(msg)):

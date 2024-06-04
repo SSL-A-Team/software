@@ -38,7 +38,7 @@ ateam_msgs::msg::BallState toMsg(const std::optional<Ball> & maybe_ball)
   ball_state_msg.visible = maybe_ball.has_value();
   if (maybe_ball.has_value()) {
     auto obj = maybe_ball.value();
-
+    ball_state_msg.timestamp = ateam_common::node_handle::now();
     ball_state_msg.pose.position.x = obj.position.x();
     ball_state_msg.pose.position.y = obj.position.y();
     ball_state_msg.twist.linear.x = obj.velocity.x();

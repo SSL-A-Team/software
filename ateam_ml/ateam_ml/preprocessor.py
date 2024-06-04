@@ -20,12 +20,13 @@ class Preprocessor():
             epilog='Text at the bottom of help')
 
         parser.add_argument('csv_dir')
-        parser.add_argument('output_csv_filepath')
+        parser.add_argument('output_path', default='', type=str, help='')
+        parser.add_argument('topic_count_min', default='', type=str, help='')
+        parser.add_argument('timestamp_topic', default='timestamp', type=str, help='')
 
         args = parser.parse_args()
 
-        # I dont know why I didnt just do a glob of the *.csvs on path...
-
+        # TODO dont make assumption the file name is the topic name
         mainframe = pd.DataFrame()
         topic_csvs = glob.glob(args.csv_dir + "/*.csv")
         # excluded_topic_list = ['client_count', 'vision_messages', 'uiclient_count', 'rosout', 'vision_messages', 'ui_connected_clients.csv', 'parameter_events']
@@ -33,7 +34,6 @@ class Preprocessor():
         for csv in topic_csvs:
             topic = os.path.splitext(os.path.basename(csv))[0]
             print(topic)
-            # dataframe = pd.read_csv(csv)
             dataframe = pd.DataFrame()
 
             for chunk in pd.read_csv(csv, chunksize=100000, low_memory=False):
