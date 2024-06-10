@@ -43,10 +43,7 @@
 
 <script lang="ts">
 import { ref, inject } from "vue";
-import { AIState } from "@/AI";
 import { Play } from "@/play";
-import { Referee, GameStage, GameCommand} from "@/referee";
-import AIRecursiveComponent from "./AIRecursiveComponent.vue";
 
 export default {
     inject: ['state'],
