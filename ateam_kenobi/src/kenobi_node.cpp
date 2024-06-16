@@ -35,7 +35,7 @@
 #include <ateam_msgs/msg/world.hpp>
 #include <ateam_msgs/srv/set_override_play.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
-#include <ateam_msgs/srv/get_play_names.hpp>
+#include <ateam_msgs/msg/playbook_state.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
@@ -123,10 +123,9 @@ public:
         &KenobiNode::set_play_enabled_callback, this, std::placeholders::_1,
         std::placeholders::_2));
 
-    play_names_service_ = create_service<ateam_msgs::srv::GetPlayNames>(
-      "~/get_play_names", std::bind(
-        &KenobiNode::get_play_names_callback, this, std::placeholders::_1,
-        std::placeholders::_2));
+    playbook_state_publisher_ = create_publisher<ateam_msgs::msg::PlaybookState>(
+      "~/playbook_state",
+      rclcpp::SystemDefaultsQoS());
 
     timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
 
@@ -153,7 +152,7 @@ private:
     16> robot_commands_publishers_;
   rclcpp::Service<ateam_msgs::srv::SetOverridePlay>::SharedPtr override_service_;
   rclcpp::Service<ateam_msgs::srv::SetPlayEnabled>::SharedPtr play_enabled_service_;
-  rclcpp::Service<ateam_msgs::srv::GetPlayNames>::SharedPtr play_names_service_;
+  rclcpp::Publisher<ateam_msgs::msg::PlaybookState>::SharedPtr playbook_state_publisher_;
 
   ateam_common::GameControllerListener game_controller_listener_;
 
@@ -261,7 +260,9 @@ private:
     const ateam_msgs::srv::SetOverridePlay::Request::SharedPtr request,
     ateam_msgs::srv::SetOverridePlay::Response::SharedPtr response)
   {
-    if (play_selector_.getPlayByName(request->play_name) == nullptr) {
+    if (!request->play_name.empty() &&
+      play_selector_.getPlayByName(request->play_name) == nullptr)
+    {
       response->success = false;
       response->reason = "No such play.";
       return;
@@ -290,13 +291,6 @@ private:
 
     play->setEnabled(request->enabled);
     response->success = true;
-  }
-
-  void get_play_names_callback(
-    const ateam_msgs::srv::GetPlayNames::Request::SharedPtr,
-    ateam_msgs::srv::GetPlayNames::Response::SharedPtr response)
-  {
-    response->play_names = play_selector_.getPlayNames();
   }
 
   void timer_callback()
@@ -345,7 +339,10 @@ private:
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(
     const World & world)
   {
-    stp::Play * play = play_selector_.getPlay(world);
+    ateam_msgs::msg::PlaybookState playbook_state;
+    stp::Play * play = play_selector_.getPlay(world, playbook_state);
+    playbook_state_publisher_->publish(playbook_state);
+
     if (play == nullptr) {
       RCLCPP_ERROR(get_logger(), "No play selected!");
       return {};

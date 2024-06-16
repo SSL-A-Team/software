@@ -96,6 +96,15 @@ TEST(KmAssignment, non_square_assignment) {
   EXPECT_EQ(out2x3.at(0), 1);
   EXPECT_EQ(out2x3.at(1), 0);
 
+  Eigen::Matrix<double, 2, 5> cost2x5{
+    {1, 10, 5, 2, 3},
+    {10, 1, 5, 2, 3},
+  };
+  auto out2x5 = km_assignment::km_assignment(cost2x3);
+  EXPECT_EQ(out2x5.size(), 2);
+  EXPECT_EQ(out2x5.at(0), 1);
+  EXPECT_EQ(out2x5.at(1), 0);
+
   Eigen::Matrix<double, 2, 1> cost2x1{
     {2.8},
     {0}

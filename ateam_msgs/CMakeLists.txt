@@ -34,10 +34,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/FieldInfo.msg
   msg/FieldSidedInfo.msg
 
+  msg/PlaybookState.msg
   msg/PlayInfo.msg
 
   srv/GetFirmwareParameter.srv
-  srv/GetPlayNames.srv
   srv/ReconnectTeamClient.srv
   srv/SetDesiredKeeper.srv
   srv/SetFirmwareParameter.srv
