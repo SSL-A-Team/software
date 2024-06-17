@@ -23,6 +23,7 @@
 #define PLAY_HELPERS__AVAILABLE_ROBOTS_HPP_
 
 #include <vector>
+#include <ateam_geometry/types.hpp>
 #include "types/robot.hpp"
 #include "types/world.hpp"
 
@@ -36,6 +37,12 @@ std::vector<Robot> getVisibleRobots(const std::array<Robot, 16> & robots);
 void removeGoalie(std::vector<Robot> & robots, const World & world);
 
 void removeRobotWithId(std::vector<Robot> & robots, int id);
+
+/**
+ * @brief Get the closest robot to the target point.
+ * @note Assumes @c robots is not empty.
+ */
+Robot getClosestRobot(const std::vector<Robot> & robots, const ateam_geometry::Point & target);
 
 }  // namespace ateam_kenobi::play_helpers
 
