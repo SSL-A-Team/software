@@ -7,6 +7,7 @@ import { Ball } from "@/ball"
 import { Field, FieldDimensions, FieldSidedInfo } from "@/field"
 import { AIState } from "@/AI"
 import { Play } from "@/play"
+import { Param } from "@/param"
 
 export class RenderConfig {
     angle: number = 0; // Rotation applied to the rendered field
@@ -56,6 +57,55 @@ export class AppState {
     plays = {};
     selected_play_name: string = null;
     override_play_in_progress: string = null;
+
+    getSTPParams() {
+        const state = this; // fix dumb javascript things
+
+        this.ros.getParams(function(param_list) {
+            for (let name of param_list) {
+                // Check if the parameter is an stp param
+                if (name.includes("/kenobi_node:stp_parameters")) {
+
+                    const substrings = name.split(".");
+
+                    // /kenobi_node:stp_parameters.TestKickPlay.use_pivot_kick
+                    // Make sure param has play name and stp param name
+                    if (substrings.length < 3) {
+                        continue;
+                    }
+
+                    // Expected format is: "/kenobi_node:stp_parameters.PlayName.ParamName"
+                    const play_name = substrings[1];
+                    const stp_param_name = substrings[2];
+
+                    // Check if we already have play
+                    if (!(play_name in state.plays)) {
+                        // I think its better to ignore unkown plays
+                        // Then try to create them here
+                        continue;
+                    }
+
+                    // Create param if it doesn't already exist
+                    if (!(stp_param_name in state.plays[play_name].params)) {
+                        let ros_param = new ROSLIB.Param({
+                            ros : state.ros,
+                            name : name
+                        });
+
+                        // Not sure if we really need a list of these
+                        // but I've been keeping track of all the other
+                        // ROS objects so ¯\_(ツ)_/¯
+                        state.params.push(ros_param);
+
+                        state.plays[play_name].params[stp_param_name] = new Param(
+                            stp_param_name,
+                            ros_param
+                        );
+                    }
+                }
+            }
+        });
+    }
 
     setGoalie(goalie_id: number) {
         const request = new ROSLIB.ServiceRequest({
@@ -280,21 +330,17 @@ export class AppState {
                 state.selected_play_name = state.override_play_in_progress;
             }
 
-
             if (msg.names.length > 0) {
-                state.plays = [];
                 for (let i = 0; i < msg.names.length; i++) {
                     if (msg.names[i] in state.plays) {
                         state.plays[msg.names[i]].enabled = msg.enableds[i]
                         state.plays[msg.names[i]].score = msg.scores[i]
                     } else {
-                        let play = new Play(
+                        state.plays[msg.names[i]] = new Play(
                             msg.names[i],
                             msg.enableds[i],
                             msg.scores[i]
-                        )
-
-                        state.plays[play.name] = play;
+                        );
                     }
                 }
             }
