@@ -16,31 +16,30 @@ public:
 
   void reset();
 
-  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world);
+  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
+
+  ateam_geometry::Point getAssignmentPoint() {
+    return target_;
+  }
 
   void setTarget(ateam_geometry::Point target) {
     target_ = target;
   }
 
-  void setRobotID(int id) {
-    assigned_bot_id_ = id;
-  }
-
-  const std::optional<int> & getRobotID() const {
-    return assigned_bot_id_;
+  bool isDone() {
+    return done_;
   }
 
 private:
-  // If left unassigned, the closest non-goalie robot to target will be used.
-  std::optional<int> assigned_bot_id_;
   ateam_geometry::Point target_;
   play_helpers::EasyMoveTo easy_move_to_;
+  bool done_ = false;
 
   bool isBallFast(const World & world);
-  bool isBallClose(const World & world);
+  bool isBallClose(const World & world, const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand runPrePass(const World & world);
-  ateam_msgs::msg::RobotMotionCommand runPass(const World & world);
+  ateam_msgs::msg::RobotMotionCommand runPrePass(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runPass(const World & world, const Robot & robot);
   ateam_msgs::msg::RobotMotionCommand runPostPass();
 };
 

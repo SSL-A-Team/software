@@ -24,9 +24,8 @@
 
 #include <vector>
 #include "stp/play.hpp"
-#include "skills/line_kick.hpp"
-#include "skills/pass_receiver.hpp"
 #include "play_helpers/easy_move_to.hpp"
+#include "tactics/pass.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -45,30 +44,28 @@ public:
 
 private:
   static constexpr double kKickSpeed = 3.0;
-  skills::LineKick line_kick_;
-  skills::PassReceiver pass_receiver_;
+  tactics::Pass pass_tactic_;
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   std::vector<ateam_geometry::Point> positions;
   std::size_t kick_target_ind_ = 0;
-  double ball_vel_avg_ = 0.0;
-  bool latch_receive_ = false;
-  int last_kicked_id_ = 0;
 
   enum class State
   {
     Setup,
-    Kicking,
-    Receiving,
+    Passing,
     BackOff
   } state_ = State::Setup;
 
   bool isReady(const World & world);
 
   void runSetup(
+    const std::vector<Robot> & robots,
     const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
-  void runKicking(
-    const std::vector<Robot> & available_robots, const World & world,
+
+  void runPassing(
+    const std::vector<Robot> & robots,
+    const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 

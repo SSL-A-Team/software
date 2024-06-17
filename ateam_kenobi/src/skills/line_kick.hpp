@@ -36,6 +36,10 @@ class LineKick : public stp::Skill
 public:
   explicit LineKick(stp::Options stp_options);
 
+  void reset() {
+    state_ = State::MoveBehindBall;
+  }
+
   void setTargetPoint(ateam_geometry::Point point)
   {
     target_point_ = point;
@@ -60,7 +64,8 @@ private:
   {
     MoveBehindBall,
     FaceBall,
-    KickBall
+    KickBall,
+    Done
   };
   State state_ = State::MoveBehindBall;
 

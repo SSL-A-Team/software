@@ -53,6 +53,8 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
       return runFaceBall(world, robot);
     case State::KickBall:
       return runKickBall(world, robot);
+    case State::Done:
+      return ateam_msgs::msg::RobotMotionCommand{};
     default:
       RCLCPP_WARN(getLogger(), "Unhandled state in line kick!");
       return ateam_msgs::msg::RobotMotionCommand{};
@@ -85,8 +87,11 @@ void LineKick::chooseState(const World & world, const Robot & robot)
       if (!isRobotBehindBall(world, robot, 3.0)) {
         state_ = State::MoveBehindBall;
       } else if (isBallMoving(world)) {
-        state_ = State::MoveBehindBall;
+        state_ = State::Done;
       }
+      break;
+    case State::Done:
+      // Done is only exitted by resetting.
       break;
   }
 }
