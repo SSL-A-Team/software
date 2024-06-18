@@ -7,20 +7,20 @@ export class Overlay {
     id: string
     ns: string
     name: string
-    visible: boolean
+    visible: boolean = true
     type: number
     command: number
     position: Point
     scale: Point
-    stroke_color: string
-    fill_color: string
-    stroke_width: number
+    stroke_color: string = "black"
+    fill_color: string = "black"
+    stroke_width: number = 20
     lifetime: number
     points: Point[] | null
     mesh: Mesh1d[] | null
     mesh_alpha: Mesh1d[] | null
     text: string | null
-    depth: number
+    depth: number = 0
     start_angle: number
     end_angle: number
 
@@ -38,7 +38,7 @@ export class Overlay {
         }
     }
 
-    update(overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig) {
+    update(overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig): boolean {
         let container = underlay;
         if (this.depth == 0) {
             container = overlay;
@@ -53,12 +53,17 @@ export class Overlay {
             graphic.clear();
             if (!this.lifetime_end || Date.now() < this.lifetime_end) {
                 this.draw(graphic, renderConfig);
+                return false;
+            } else {
+                container.removeChild(graphic);
+                return true;
             }
         } else {
             graphic = new PIXI.Graphics();
             graphic.name = this.id;
             this.draw(graphic, renderConfig);
             container.addChild(graphic);
+            return false;
         }
     }
 
@@ -114,14 +119,27 @@ export class Overlay {
                 break;
             // TEXT
             case 5:
+                // TEXT IS WEIRD IN PIXI
+                // The text is rendered as a new object and added
+                // as a child to the graphics object
+
                 const text = new PIXI.Text(this.text, {
                     fontSize: this.stroke_width,
                     fill: this.fill_color
                 });
+                text.name = "text"
+
                 text.anchor.set(0.5, 0.5);
                 text.rotation = -renderConfig.angle; // offset the rotation of the canvas so the text always appears right side up
 
-                graphic.addChild(text);
+                let graphicChild = graphic.getChildByName("text");
+
+                if (graphicChild) {
+                    graphicChild = text;
+                } else {
+                    graphic.addChild(text);
+                }
+
                 break;
             // MESH
             case 6:
