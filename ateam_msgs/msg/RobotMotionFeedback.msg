@@ -1,7 +1,7 @@
 uint8 FRONT_LEFT_MOTOR = 0
-uint8 FRONT_RIGHT_MOTOR = 1
+uint8 BACK_LEFT_MOTOR = 1
 uint8 BACK_RIGHT_MOTOR = 2
-uint8 BACK_LEFT_MOTOR = 3
+uint8 FRONT_RIGHT_MOTOR = 3
 
 ateam_msgs/RobotMotorFeedback[4] motors
 
