@@ -23,6 +23,7 @@
                             <div>{{ name }}</div>
                             <v-spacer class="pr-3"/>
                             <div>{{ this.displayScore(play.score) }}</div>
+                            <v-icon v-if="this.isScoreInf(play.score)" icon="mdi-infinity" class="mx-0 pl-1 justify-center" size="small"/>
                         </v-row>
                     </v-container>
                 </v-list-item>
@@ -47,6 +48,7 @@ import { AIState } from "@/AI";
 import { Play } from "@/play";
 import { Referee, GameStage, GameCommand} from "@/referee";
 import AIRecursiveComponent from "./AIRecursiveComponent.vue";
+import '@mdi/font/css/materialdesignicons.css'
 
 export default {
     inject: ['state'],
@@ -76,13 +78,20 @@ export default {
                 return "NaN";
             } else if (score == Number.MAX_VALUE) {
                 // Infinity symbol
-                return "\u221E";
+                return "";
             } else if (score == -Number.MAX_VALUE) {
                 // Negative Infinity symbol
-                return "-\u221E";
+                return "-";
             } else {
                 // Round to 2 decimal places
                 return score.toFixed(2);
+            }
+        },
+        isScoreInf(score: number){
+            if (score == Number.MAX_VALUE || score == -Number.MAX_VALUE) {
+                return true
+            } else {
+                return false
             }
         },
         setListSelectedPlay() {
