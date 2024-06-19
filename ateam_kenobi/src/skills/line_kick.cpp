@@ -147,7 +147,7 @@ bool LineKick::isRobotFacingBall(const Robot & robot)
 
 bool LineKick::isBallMoving(const World & world)
 {
-  return ateam_geometry::norm(world.ball.vel) > 0.5;
+  return ateam_geometry::norm(world.ball.vel) > 0.1 * kick_speed_;
 }
 
 ateam_msgs::msg::RobotMotionCommand LineKick::runMoveBehindBall(

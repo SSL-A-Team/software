@@ -54,6 +54,10 @@ public:
 
   ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
+  bool isDone() {
+    return state_ == State::Done;
+  }
+
 private:
   const double kPreKickOffset = kRobotRadius + kBallRadius + 0.07;
   ateam_geometry::Point target_point_;

@@ -38,7 +38,7 @@ bool PassReceiver::isBallFast(const World & world)
 
 bool PassReceiver::isBallClose(const World & world, const Robot & robot)
 {
-  return ateam_geometry::norm(world.ball.pos - robot.pos) < 0.11;
+  return ateam_geometry::norm(world.ball.pos - robot.pos) < 0.13;
 }
 
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(const World & world, const Robot & robot)
@@ -68,7 +68,6 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(const World & world
 
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, const Robot & robot)
 {
-  assert(assigned_bot_id_);
   const ateam_geometry::Ray ball_ray(world.ball.pos, world.ball.vel);
   const auto destination = ball_ray.supporting_line().projection(robot.pos);
   easy_move_to_.setTargetPosition(destination);

@@ -28,7 +28,9 @@ Pass::Pass(stp::Options stp_options)
 : stp::Tactic(stp_options),
   receiver_(createChild<skills::PassReceiver>("receiver")),
   kick_(createChild<skills::LineKick>("kicker"))
-{}
+{
+  kick_.setKickSpeed(speed_);
+}
 
 void Pass::reset()
 {
@@ -53,7 +55,10 @@ void Pass::runFrame(
 {
   receiver_command = receiver_.runFrame(world, receiver_bot);
 
-  kick_.setKickSpeed(speed_);
+  if(kick_.isDone() && !receiver_.isDone() && ateam_geometry::norm(world.ball.vel) < 0.01) {
+    kick_.reset();
+  }
+
   kicker_command = kick_.runFrame(world, kicker_bot);
 }
 
