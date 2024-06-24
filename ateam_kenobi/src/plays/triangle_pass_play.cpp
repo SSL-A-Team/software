@@ -21,6 +21,7 @@
 
 #include "triangle_pass_play.hpp"
 #include <angles/angles.h>
+#include <algorithm>
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include "play_helpers/available_robots.hpp"
@@ -65,7 +66,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TrianglePassP
     return maybe_motion_commands;
   }
 
-  if(available_robots.size() > 3) {
+  if (available_robots.size() > 3) {
     available_robots.erase(available_robots.begin() + 3, available_robots.end());
   }
 
@@ -148,7 +149,7 @@ void TrianglePassPlay::runPassing(
 
   const auto idler_index = (kick_target_ind_ + 1) % robots.size();
   const auto & idler_bot = robots[idler_index];
-  
+
   const auto & kicker_bot = robots[(kick_target_ind_ + 2) % robots.size()];
 
   getPlayInfo()["Kicker"] = std::to_string(kicker_bot.id);

@@ -36,7 +36,8 @@ class LineKick : public stp::Skill
 public:
   explicit LineKick(stp::Options stp_options);
 
-  void reset() {
+  void reset()
+  {
     state_ = State::MoveBehindBall;
   }
 
@@ -54,7 +55,8 @@ public:
 
   ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
-  bool isDone() {
+  bool isDone()
+  {
     return state_ == State::Done;
   }
 

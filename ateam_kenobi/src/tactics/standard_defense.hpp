@@ -21,6 +21,7 @@
 #ifndef TACTICS__STANDARD_DEFENSE_HPP_
 #define TACTICS__STANDARD_DEFENSE_HPP_
 
+#include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "types/world.hpp"
 #include "types/robot.hpp"
@@ -54,9 +55,8 @@ public:
 private:
   skills::Goalie goalie_;
   tactics::Defenders defenders_;
-
 };
 
-} // namespace ateam_kenobi::tactics
+}  // namespace ateam_kenobi::tactics
 
 #endif  // TACTICS__STANDARD_DEFENSE_HPP_

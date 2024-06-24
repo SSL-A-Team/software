@@ -63,9 +63,8 @@ private:
   std::vector<ateam_geometry::Segment> getDefenseSegments(const World & world);
 
   void drawDefenseSegments(const World & world);
-
 };
 
-} // namespace ateam_kenobi::tactics
+}  // namespace ateam_kenobi::tactics
 
 #endif  // TACTICS__DEFENDERS_HPP_

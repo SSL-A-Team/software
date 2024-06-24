@@ -55,7 +55,7 @@ void Pass::runFrame(
 {
   receiver_command = receiver_.runFrame(world, receiver_bot);
 
-  if(kick_.isDone() && !receiver_.isDone() && ateam_geometry::norm(world.ball.vel) < 0.01) {
+  if (kick_.isDone() && !receiver_.isDone() && ateam_geometry::norm(world.ball.vel) < 0.01) {
     kick_.reset();
   }
 

@@ -20,6 +20,7 @@
 
 
 #include "blockers.hpp"
+#include <algorithm>
 #include <vector>
 #include "play_helpers/available_robots.hpp"
 #include <ateam_geometry/ateam_geometry.hpp>
@@ -49,7 +50,7 @@ std::vector<ateam_geometry::Point> Blockers::getAssignmentPoints(const World & w
     blockable_robots, std::back_inserter(positions), [this, &world](const Robot & robot) {
       return getBlockingPosition(world, robot);
     });
-  if(positions.size() > max_blocker_count_) {
+  if (positions.size() > max_blocker_count_) {
     positions.erase(positions.begin() + max_blocker_count_, positions.end());
   }
   return positions;

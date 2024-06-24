@@ -20,10 +20,11 @@
 
 
 #include "basic_122.hpp"
+#include <ranges>
 #include <algorithm>
 #include <limits>
 #include <vector>
-#include <ranges>
+#include <string>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
 #include "play_helpers/window_evaluation.hpp"
@@ -94,7 +95,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
     disallowed_ids);
 
   std::string ass_logs;
-  for(const auto & ass : assignments) {
+  for (const auto & ass : assignments) {
     ass_logs += ass ? "true " : "false ";
   }
   // RCLCPP_INFO(getLogger(), ass_logs.c_str());
@@ -142,7 +143,7 @@ void Basic122::runStriker(
   const Robot & striker_bot, const World & world,
   ateam_msgs::msg::RobotMotionCommand & motion_command)
 {
-  if(striker_skill_.isDone()) {
+  if (striker_skill_.isDone()) {
     striker_skill_.reset();
   }
 

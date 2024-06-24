@@ -1,3 +1,23 @@
+// Copyright 2024 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 #include "pass_receiver.hpp"
 #include "play_helpers/available_robots.hpp"
 
@@ -17,7 +37,7 @@ void PassReceiver::reset()
 
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runFrame(const World & world, const Robot & robot)
 {
-  if(done_) {
+  if (done_) {
     return runPostPass();
   }
   const ateam_geometry::Vector text_pos_offset(0.5, 0);
@@ -41,7 +61,9 @@ bool PassReceiver::isBallClose(const World & world, const Robot & robot)
   return ateam_geometry::norm(world.ball.pos - robot.pos) < 0.13;
 }
 
-ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(
+  const World & world,
+  const Robot & robot)
 {
   ateam_geometry::Point destination = target_;
 
@@ -61,7 +83,7 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(const World & world
   easy_move_to_.face_point(world.ball.pos);
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
-  planner_options.use_default_obstacles = false;  //TODO(barulicm) Marietta field only?
+  planner_options.use_default_obstacles = false;  // TODO(barulicm) Marietta field only?
   easy_move_to_.setPlannerOptions(planner_options);
   return easy_move_to_.runFrame(robot, world);
 }
@@ -74,7 +96,7 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
   easy_move_to_.face_point(world.ball.pos);
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
-  planner_options.use_default_obstacles = false;  //TODO(barulicm) Marietta field only?
+  planner_options.use_default_obstacles = false;  // TODO(barulicm) Marietta field only?
   easy_move_to_.setPlannerOptions(planner_options);
   ateam_msgs::msg::RobotMotionCommand motion_command;
   motion_command = easy_move_to_.runFrame(robot, world);

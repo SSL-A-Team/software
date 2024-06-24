@@ -21,6 +21,7 @@
 
 #include "available_robots.hpp"
 #include <ranges>
+#include <algorithm>
 #include <ateam_geometry/normalize.hpp>
 
 namespace ateam_kenobi::play_helpers
@@ -64,9 +65,10 @@ Robot getClosestRobot(const std::vector<Robot> & robots, const ateam_geometry::P
 {
   assert(!robots.empty());
   std::vector<double> distances;
-  std::ranges::transform(robots, std::back_inserter(distances), [&target](const Robot & r){
-    return ateam_geometry::norm(r.pos - target);
-  });
+  std::ranges::transform(
+    robots, std::back_inserter(distances), [&target](const Robot & r) {
+      return ateam_geometry::norm(r.pos - target);
+    });
   const auto min_dist_iter = std::ranges::min_element(distances);
   const auto min_index = std::distance(distances.begin(), min_dist_iter);
   return robots[min_index];

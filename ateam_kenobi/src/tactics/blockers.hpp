@@ -45,11 +45,13 @@ public:
     const World & world,
     const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
 
-  int getMaxBlockerCount() const {
+  int getMaxBlockerCount() const
+  {
     return max_blocker_count_;
   }
 
-  void setMaxBlockerCount(int num) {
+  void setMaxBlockerCount(int num)
+  {
     max_blocker_count_ = num;
   }
 

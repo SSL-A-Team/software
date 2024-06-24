@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "defenders.hpp"
+#include <algorithm>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 #include "play_helpers/available_robots.hpp"
@@ -131,7 +132,7 @@ ateam_geometry::Point Defenders::getPassBlockPoint(const World & world)
       continue;
     }
     const auto * intersection_point = boost::get<ateam_geometry::Point>(&*intersection);
-    if(!intersection_point) {
+    if (!intersection_point) {
       continue;
     }
     block_point = *intersection_point;
@@ -146,14 +147,17 @@ ateam_geometry::Point Defenders::getAdjacentBlockPoint(
   const ateam_geometry::Point & other_block_point)
 {
   const auto defense_segments = getDefenseSegments(world);
-  
+
   auto by_dist = [other_block_point](const auto & a, const auto & b) {
-    return CGAL::squared_distance(a, other_block_point) < CGAL::squared_distance(b, other_block_point);
-  };
+      return CGAL::squared_distance(a, other_block_point) < CGAL::squared_distance(
+        b,
+        other_block_point);
+    };
 
   auto closest_seg = *std::ranges::min_element(defense_segments, by_dist);
 
-  return other_block_point + (ateam_geometry::normalize(closest_seg.to_vector()) * (kRobotDiameter + 0.05));
+  return other_block_point +
+         (ateam_geometry::normalize(closest_seg.to_vector()) * (kRobotDiameter + 0.05));
 }
 
 
@@ -203,4 +207,4 @@ void Defenders::drawDefenseSegments(const World & world)
   }
 }
 
-} // namespace ateam_kenobi::tactics
+}  // namespace ateam_kenobi::tactics

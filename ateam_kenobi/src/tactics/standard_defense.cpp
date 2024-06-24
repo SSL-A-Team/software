@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "standard_defense.hpp"
+#include <vector>
 
 namespace ateam_kenobi::tactics
 {
@@ -49,4 +50,4 @@ void StandardDefense::runFrame(
   defenders_.runFrame(world, defender_bots, motion_commands);
 }
 
-} // namespace ateam_kenobi::tactics
+}  // namespace ateam_kenobi::tactics
