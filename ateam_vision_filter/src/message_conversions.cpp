@@ -22,6 +22,8 @@
 
 #include <tf2/utils.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -163,6 +165,28 @@ ateam_msgs::msg::FieldInfo fromMsg(
   left_side_info.defense_area_corners.points = getPointsFromLines(
     ros_msg.field_lines,
     {"LeftFieldLeftPenaltyStretch", "LeftFieldRightPenaltyStretch"});
+
+  // If defense area depth is not set from proto, calculate it from points
+  if (field_info.defense_area_depth == 0.0) {
+    float max_x = -std::numeric_limits<float>::infinity();
+    float min_x = std::numeric_limits<float>::infinity();
+    for (const auto & point : left_side_info.defense_area_corners.points) {
+      max_x = std::max(max_x, point.x);
+      min_x = std::min(min_x, point.x);
+    }
+    field_info.defense_area_depth = max_x - min_x;
+  }
+
+  // If defense area width is not set from proto, calculate it from points
+  if (field_info.defense_area_width == 0.0) {
+    float max_y = -std::numeric_limits<float>::infinity();
+    float min_y = std::numeric_limits<float>::infinity();
+    for (const auto & point : left_side_info.defense_area_corners.points) {
+      max_y = std::max(max_y, point.y);
+      min_y = std::min(min_y, point.y);
+    }
+    field_info.defense_area_width = max_y - min_y;
+  }
 
   ateam_msgs::msg::FieldSidedInfo right_side_info;
   right_side_info.goal_corners.points = {
