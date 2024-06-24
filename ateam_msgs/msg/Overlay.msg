@@ -39,6 +39,7 @@ geometry_msgs/Point scale
 
 # Colors are specified using "#RRGGBBAA" hexadecimal RGBA format. The # is required
 string stroke_color
+# Fill color is used for text color when using the TEXT type
 string fill_color
 
 # Also used as font size when using the TEXT type
