@@ -68,7 +68,7 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
-    std::ranges::fill(command_timestamps_, std::chrono::steady_clock::time_point::max());
+    std::ranges::fill(command_timestamps_, std::chrono::steady_clock::now());
     zero_command_timer_ =
       create_wall_timer(
       std::chrono::milliseconds(
