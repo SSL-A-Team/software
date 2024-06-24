@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,51 +18,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef TACTICS__STANDARD_DEFENSE_HPP_
+#define TACTICS__STANDARD_DEFENSE_HPP_
 
-#ifndef TACTICS__BLOCKERS_HPP_
-#define TACTICS__BLOCKERS_HPP_
-
-#include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <nlohmann/json.hpp>
-#include "stp/tactic.hpp"
 #include "types/world.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "types/robot.hpp"
+#include "stp/tactic.hpp"
+#include "defenders.hpp"
+#include "skills/goalie.hpp"
 
 namespace ateam_kenobi::tactics
 {
 
-class Blockers : public stp::Tactic
+class StandardDefense : public stp::Tactic
 {
 public:
-  explicit Blockers(stp::Options stp_options);
+  explicit StandardDefense(stp::Options stp_options);
 
   void reset();
 
+  /**
+   * @note Goalie not included in assignment points b/c it is assigned by ID
+   */
   std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
 
-  std::vector<ateam_msgs::msg::RobotMotionCommand> runFrame(
+  /**
+   * @note Goalie not included in defender bots. It is chosen by ID.
+   */
+  void runFrame(
     const World & world,
-    const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
-
-  int getMaxBlockerCount() const {
-    return max_blocker_count_;
-  }
-
-  void setMaxBlockerCount(int num) {
-    max_blocker_count_ = num;
-  }
+    const std::vector<Robot> & defender_bots,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
 
 private:
-  std::size_t max_blocker_count_ = 2;
+  skills::Goalie goalie_;
+  tactics::Defenders defenders_;
 
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-
-  std::vector<Robot> getRankedBlockableRobots(const World & world);
-
-  ateam_geometry::Point getBlockingPosition(const World & world, const Robot & blockee);
 };
 
-}  // namespace ateam_kenobi::tactics
+} // namespace ateam_kenobi::tactics
 
-#endif  // TACTICS__BLOCKERS_HPP_
+#endif  // TACTICS__STANDARD_DEFENSE_HPP_

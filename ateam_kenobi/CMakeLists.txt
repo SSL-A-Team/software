@@ -46,7 +46,9 @@ add_library(kenobi_node_component SHARED
   src/skills/pass_receiver.cpp
   src/skills/pivot_kick.cpp
   src/tactics/blockers.cpp
+  src/tactics/defenders.cpp
   src/tactics/pass.cpp
+  src/tactics/standard_defense.cpp
 )
 target_include_directories(kenobi_node_component PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
