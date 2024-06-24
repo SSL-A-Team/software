@@ -130,6 +130,8 @@ ateam_msgs::msg::FieldInfo fromMsg(
   field_info.goal_width = ros_msg.goal_width;
   field_info.goal_depth = ros_msg.goal_depth;
   field_info.boundary_width = ros_msg.boundary_width;
+  field_info.defense_area_width = ros_msg.penalty_area_width;
+  field_info.defense_area_depth = ros_msg.penalty_area_depth;
 
   field_info.field_corners.points = getPointsFromLines(
     ros_msg.field_lines,

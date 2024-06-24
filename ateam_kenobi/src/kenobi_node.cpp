@@ -225,13 +225,14 @@ private:
 
   void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
   {
-    // TODO(Collin) move this to message conversions to live with its sibiling
     Field field;
     field.field_length = field_msg->field_length;
     field.field_width = field_msg->field_width;
     field.goal_width = field_msg->goal_width;
     field.goal_depth = field_msg->goal_depth;
     field.boundary_width = field_msg->boundary_width;
+    field.defense_area_depth = field_msg->defense_area_depth;
+    field.defense_area_width = field_msg->defense_area_width;
 
     auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
         std::transform(
