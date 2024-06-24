@@ -54,8 +54,8 @@ void Goalie::runFrame(
 {
   const auto robot_id = world.referee_info.our_goalie_id;
   const auto & robot = world.our_robots.at(robot_id);
-  if (robot.IsAvailable()) {
-    // Assigned robot is not visible
+  if (!robot.IsAvailable()) {
+    // Assigned robot is not available
     return;
   }
 
