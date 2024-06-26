@@ -75,7 +75,11 @@ std::vector<ateam_geometry::Point> Defenders::getDefenderPoints(const World & wo
   ateam_geometry::Point second_position;
   if (visible_oponent_robots.size() > 1) {
     second_position = getPassBlockPoint(world);
-  } else {
+  }
+
+  if (second_position == ateam_geometry::Point(0, 0) ||
+    CGAL::squared_distance(second_position, first_position) < kRobotDiameter * kRobotDiameter)
+  {
     second_position = getAdjacentBlockPoint(world, first_position);
   }
   return {first_position, second_position};
