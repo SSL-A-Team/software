@@ -72,7 +72,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   play_helpers::GroupAssignmentSet groups;
 
   std::vector<int> disallowed_kickers;
-  if(world.double_touch_forbidden_id_) {
+  if (world.double_touch_forbidden_id_) {
     disallowed_kickers.push_back(*world.double_touch_forbidden_id_);
   }
   groups.AddPosition("kicker", kicker_point_, disallowed_kickers);
@@ -88,7 +88,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     runKicker(world, *maybe_kicker, maybe_motion_commands);
   }
 
-  defense_.runFrame(world, assignments.GetGroupFilledAssignments("defenders"), maybe_motion_commands);
+  defense_.runFrame(
+    world, assignments.GetGroupFilledAssignments("defenders"),
+    maybe_motion_commands);
 
   runSupportBots(world, assignments.GetGroupAssignments("supports"), maybe_motion_commands);
 
