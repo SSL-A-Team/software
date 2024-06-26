@@ -123,8 +123,10 @@ void Basic122::runStriker(
   if (they_have_possession) {
     const auto ball_to_bot_vec = striker_bot.pos - world.ball.pos;
     const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
-    motion_command.twist.linear.x = vel.x();
-    motion_command.twist.linear.y = vel.y();
+    if(ateam_geometry::norm(ball_to_bot_vec) < kRobotDiameter) {
+      motion_command.twist.linear.x = vel.x();
+      motion_command.twist.linear.y = vel.y();
+    }
     return;
   }
 
