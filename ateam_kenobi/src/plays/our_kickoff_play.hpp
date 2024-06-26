@@ -30,7 +30,7 @@
 #include "ateam_geometry/types.hpp"
 #include "ateam_common/game_controller_listener.hpp"
 #include "types/robot.hpp"
-#include "skills/goalie.hpp"
+#include "tactics/standard_defense.hpp"
 #include "skills/line_kick.hpp"
 
 namespace ateam_kenobi::plays
@@ -53,7 +53,7 @@ public:
 
 private:
   skills::LineKick line_kick_skill_;
-  skills::Goalie goalie_skill_;
+  tactics::StandardDefense defense_;
 
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 

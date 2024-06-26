@@ -186,7 +186,7 @@ std::vector<Robot> GroupAssignmentResult::GetGroupFilledAssignments(const std::s
   std::vector<Robot> robots;
   for (auto iter = start_iter; iter != end_iter; iter++) {
     if (iter->has_value()) {
-      iter->value().id;
+      robots.push_back(iter->value());
     }
   }
   return robots;

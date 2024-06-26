@@ -31,7 +31,7 @@ namespace ateam_kenobi::plays
 OurKickoffPlay::OurKickoffPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   line_kick_skill_(createChild<skills::LineKick>("line_kick")),
-  goalie_skill_(createChild<skills::Goalie>("goalie"))
+  defense_(createChild<tactics::StandardDefense>("defense"))
 {
 }
 
@@ -53,7 +53,8 @@ double OurKickoffPlay::getScore(const World & world)
 
 void OurKickoffPlay::reset()
 {
-  goalie_skill_.reset();
+  line_kick_skill_.reset();
+  defense_.reset();
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPlay::runFrame(
@@ -63,37 +64,33 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   std::vector<Robot> current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
-  goalie_skill_.runFrame(world, maybe_motion_commands);
-
   support_positions_ = {
     ateam_geometry::Point(-0.3, world.field.field_width / 3),
-    ateam_geometry::Point(-0.3, -world.field.field_width / 3),
-    ateam_geometry::Point(-world.field.field_length / 4, world.field.field_width * 0.375),
-    ateam_geometry::Point(-world.field.field_length / 4, -world.field.field_width * 0.375)
+    ateam_geometry::Point(-0.3, -world.field.field_width / 3)
   };
 
-  std::vector<ateam_geometry::Point> assignment_points;
-  assignment_points.push_back(kicker_point_);
-  assignment_points.insert(
-    assignment_points.end(), support_positions_.begin(),
-    support_positions_.end());
+  play_helpers::GroupAssignmentSet groups;
 
-  std::vector<std::vector<int>> disallowed_ids(assignment_points.size(), std::vector<int>{});
-  if (world.double_touch_forbidden_id_) {
-    disallowed_ids[0] = {*world.double_touch_forbidden_id_};
+  std::vector<int> disallowed_kickers;
+  if(world.double_touch_forbidden_id_) {
+    disallowed_kickers.push_back(*world.double_touch_forbidden_id_);
+  }
+  groups.AddPosition("kicker", kicker_point_, disallowed_kickers);
+
+  groups.AddGroup("defenders", defense_.getAssignmentPoints(world));
+
+  groups.AddGroup("supports", support_positions_);
+
+  const auto assignments = play_helpers::assignGroups(current_available_robots, groups);
+
+  const auto maybe_kicker = assignments.GetPositionAssignment("kicker");
+  if (maybe_kicker) {
+    runKicker(world, *maybe_kicker, maybe_motion_commands);
   }
 
-  const auto assignments = play_helpers::assignRobots(
-    current_available_robots, assignment_points,
-    disallowed_ids);
+  defense_.runFrame(world, assignments.GetGroupFilledAssignments("defenders"), maybe_motion_commands);
 
-
-  if (assignments[0].has_value()) {
-    runKicker(world, *assignments[0], maybe_motion_commands);
-  }
-
-  std::vector<std::optional<Robot>> support_bots(assignments.begin() + 1, assignments.end());
-  runSupportBots(world, support_bots, maybe_motion_commands);
+  runSupportBots(world, assignments.GetGroupAssignments("supports"), maybe_motion_commands);
 
   return maybe_motion_commands;
 }
