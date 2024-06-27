@@ -28,7 +28,6 @@
 #include <iostream>
 #include <limits>
 
-#include "ateam_common/assignment.hpp"
 #include "ateam_common/km_assignment.hpp"
 
 namespace ateam_vision_filter
@@ -66,7 +65,7 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
 
   std::vector<int> tracks_to_measurements = ateam_common::km_assignment::km_assignment(
     costs,
-    ateam_common::km_assignment::AssignmentType::MinCost, 
+    ateam_common::km_assignment::AssignmentType::MinCost,
     forbidden);
   std::vector<bool> used_measurements(measurements.size(), false);
 
