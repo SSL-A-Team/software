@@ -134,7 +134,7 @@ TEST(KalmanFilter, getPotentialMeasurementError_ShouldReturnDistanceFromXHat_Whe
   kf.set_Q(Eigen::Matrix2d::Identity());
   kf.set_R(Eigen::Matrix2d::Identity());
 
-  Eigen::Vector2d potential_measurement{11.0, 2.0};
+  Eigen::Vector2d potential_measurement{1.0, 2.0};
   Eigen::VectorXd measurement_error = kf.get_potential_measurement_error(potential_measurement);
 
   EXPECT_NEAR(measurement_error.x(), (potential_measurement - x_hat_init).x(), 1e-4);

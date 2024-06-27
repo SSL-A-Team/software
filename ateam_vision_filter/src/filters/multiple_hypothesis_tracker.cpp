@@ -62,10 +62,12 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
     }
   }
 
-  std::vector<int> tracks_to_measurements = ateam_common::km_assignment::max_cost_assignment(
+  std::map<int, std::vector<int>> forbidden;
+
+  std::vector<int> tracks_to_measurements = ateam_common::km_assignment::km_assignment(
     costs,
-    false);
-  // std::unordered_map assignment = ateam_common::assignment::optimize_assignment(costs);
+    ateam_common::km_assignment::AssignmentType::MinCost, 
+    forbidden);
   std::vector<bool> used_measurements(measurements.size(), false);
 
   // iterate over assigned measurement track pairs and update the track
@@ -100,7 +102,7 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
 
 void MultipleHypothesisTracker::predict()
 {
-  life_cycle_management();
+  remove_expired_tracks();
 
   for (auto & track : tracks) {
     track.predict();
@@ -133,7 +135,7 @@ ateam_msgs::msg::VisionMHTState MultipleHypothesisTracker::get_vision_mht_state(
   return mht_state;
 }
 
-void MultipleHypothesisTracker::life_cycle_management()
+void MultipleHypothesisTracker::remove_expired_tracks()
 {
   // Anything that hasn't been updated regularly should be removed
   tracks.erase(
