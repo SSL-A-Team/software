@@ -27,32 +27,32 @@
 namespace ateam_kenobi::skills
 {
 
-LineKick::LineKick(stp::Options stp_options)
-: stp::Skill(stp_options),
+LineKick::LineKick(stp::Options stp_options, KickSkill::WaitType wait_type)
+: KickSkill(stp_options, wait_type),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
 }
 
-ateam_geometry::Point LineKick::getAssignmentPoint(const World & world)
+ateam_geometry::Point LineKick::GetAssignmentPoint(const World & world)
 {
-  return getPreKickPosition(world);
+  return GetPreKickPosition(world);
 }
 
-ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand LineKick::RunFrame(const World & world, const Robot & robot)
 {
-  const auto pre_kick_position = getPreKickPosition(world);
+  const auto pre_kick_position = GetPreKickPosition(world);
 
   getOverlays().drawLine("kick_line", {pre_kick_position, target_point_}, "#FFFF007F");
 
-  chooseState(world, robot);
+  ChooseState(world, robot);
 
   switch (state_) {
     case State::MoveBehindBall:
-      return runMoveBehindBall(world, robot);
+      return RunMoveBehindBall(world, robot);
     case State::FaceBall:
-      return runFaceBall(world, robot);
+      return RunFaceBall(world, robot);
     case State::KickBall:
-      return runKickBall(world, robot);
+      return RunKickBall(world, robot);
     case State::Done:
       return ateam_msgs::msg::RobotMotionCommand{};
     default:
@@ -61,32 +61,34 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, cons
   }
 }
 
-ateam_geometry::Point LineKick::getPreKickPosition(const World & world)
+ateam_geometry::Point LineKick::GetPreKickPosition(const World & world)
 {
   return world.ball.pos + (kPreKickOffset * ateam_geometry::normalize(
            world.ball.pos - target_point_));
 }
 
 
-void LineKick::chooseState(const World & world, const Robot & robot)
+void LineKick::ChooseState(const World & world, const Robot & robot)
 {
   switch (state_) {
     case State::MoveBehindBall:
-      if (isRobotBehindBall(world, robot, 1.0) && isRobotSettled(world, robot)) {
+      if (IsRobotBehindBall(world, robot, 1.0) && IsRobotSettled(world, robot)) {
         state_ = State::FaceBall;
       }
       break;
     case State::FaceBall:
-      if (!isRobotBehindBall(world, robot, 3.0)) {
+      if (!IsRobotBehindBall(world, robot, 3.0)) {
         state_ = State::MoveBehindBall;
-      } else if (isRobotFacingBall(robot)) {
+      } else if (IsRobotFacingBall(robot) && IsAllowedToKick()) {
         state_ = State::KickBall;
       }
       break;
     case State::KickBall:
-      if (!isRobotBehindBall(world, robot, 3.0)) {
+      if (!IsAllowedToKick()) {
+        state_ = State::FaceBall;
+      } else if (!IsRobotBehindBall(world, robot, 3.0)) {
         state_ = State::MoveBehindBall;
-      } else if (isBallMoving(world)) {
+      } else if (IsBallMoving(world)) {
         state_ = State::Done;
       }
       break;
@@ -97,7 +99,7 @@ void LineKick::chooseState(const World & world, const Robot & robot)
 }
 
 
-bool LineKick::isRobotBehindBall(const World & world, const Robot & robot, double hysteresis)
+bool LineKick::IsRobotBehindBall(const World & world, const Robot & robot, double hysteresis)
 {
   const auto ball_to_target = target_point_ - world.ball.pos;
 
@@ -119,7 +121,7 @@ bool LineKick::isRobotBehindBall(const World & world, const Robot & robot, doubl
   return proj_dist_is_good && perp_dist_is_good;
 }
 
-bool LineKick::isRobotSettled(const World & world, const Robot & robot)
+bool LineKick::IsRobotSettled(const World & world, const Robot & robot)
 {
   const auto ball_to_target = target_point_ - world.ball.pos;
   const auto robot_vel_proj_mag = (ball_to_target * robot.vel) /
@@ -135,7 +137,7 @@ bool LineKick::isRobotSettled(const World & world, const Robot & robot)
   return robot_vel_is_good;
 }
 
-bool LineKick::isRobotFacingBall(const Robot & robot)
+bool LineKick::IsRobotFacingBall(const Robot & robot)
 {
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
@@ -145,12 +147,12 @@ bool LineKick::isRobotFacingBall(const Robot & robot)
       robot_to_target_angle)) < 0.05;
 }
 
-bool LineKick::isBallMoving(const World & world)
+bool LineKick::IsBallMoving(const World & world)
 {
-  return ateam_geometry::norm(world.ball.vel) > 0.1 * kick_speed_;
+  return ateam_geometry::norm(world.ball.vel) > 0.1 * GetKickSpeed();
 }
 
-ateam_msgs::msg::RobotMotionCommand LineKick::runMoveBehindBall(
+ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   const World & world,
   const Robot & robot)
 {
@@ -163,18 +165,18 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runMoveBehindBall(
   planner_options.footprint_inflation = 0.04;
   planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
-  easy_move_to_.setTargetPosition(getPreKickPosition(world));
+  easy_move_to_.setTargetPosition(GetPreKickPosition(world));
   return easy_move_to_.runFrame(robot, world);
 }
 
-ateam_msgs::msg::RobotMotionCommand LineKick::runFaceBall(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
 {
   easy_move_to_.setTargetPosition(robot.pos);
   easy_move_to_.face_point(target_point_);
   return easy_move_to_.runFrame(robot, world);
 }
 
-ateam_msgs::msg::RobotMotionCommand LineKick::runKickBall(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, const Robot & robot)
 {
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
@@ -194,7 +196,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runKickBall(const World & world, c
   command.twist.linear.x = std::cos(robot.theta) * velocity;
   command.twist.linear.y = std::sin(robot.theta) * velocity;
   command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
-  command.kick_speed = kick_speed_;
+  command.kick_speed = GetKickSpeed();
 
   return command;
 }

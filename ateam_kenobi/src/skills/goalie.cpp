@@ -255,9 +255,9 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
     target_point = world.ball.pos + (kick_vector * 3);
   }
 
-  line_kick_.setTargetPoint(target_point);
+  line_kick_.SetTargetPoint(target_point);
 
-  return line_kick_.runFrame(world, goalie);
+  return line_kick_.RunFrame(world, goalie);
 }
 
 }  // namespace ateam_kenobi::skills

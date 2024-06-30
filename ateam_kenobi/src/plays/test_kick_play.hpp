@@ -58,13 +58,13 @@ public:
     // aim for center of opponent goal
     const ateam_geometry::Point target(world.field.field_length / 2.0, 0.0);
 
-    line_kick_skill_.setTargetPoint(target);
-    pivot_kick_skill_.setTargetPoint(target);
+    line_kick_skill_.SetTargetPoint(target);
+    pivot_kick_skill_.SetTargetPoint(target);
 
     const auto use_pivot_kick = getParamInterface().getParameter<bool>(kUsePivotKickParam);
 
     motion_commands[robot.id] =
-      use_pivot_kick ? pivot_kick_skill_.runFrame(world, robot) : line_kick_skill_.runFrame(
+      use_pivot_kick ? pivot_kick_skill_.RunFrame(world, robot) : line_kick_skill_.RunFrame(
       world,
       robot);
     return motion_commands;

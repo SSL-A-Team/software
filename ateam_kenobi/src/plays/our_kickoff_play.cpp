@@ -53,7 +53,7 @@ double OurKickoffPlay::getScore(const World & world)
 
 void OurKickoffPlay::reset()
 {
-  line_kick_skill_.reset();
+  line_kick_skill_.Reset();
   defense_.reset();
 }
 
@@ -115,10 +115,10 @@ void OurKickoffPlay::runKicker(
     getPlayInfo()["State"] = "Preparing";
     getPlayInfo()["Kicker Id"] = kicker.id;
   } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
-    line_kick_skill_.setTargetPoint(
+    line_kick_skill_.SetTargetPoint(
       ateam_geometry::Point(-0.3, world.field.field_width / 3));
-    line_kick_skill_.setKickSpeed(3.0);
-    motion_commands.at(kicker.id) = line_kick_skill_.runFrame(world, kicker);
+    line_kick_skill_.SetKickSpeed(3.0);
+    motion_commands.at(kicker.id) = line_kick_skill_.RunFrame(world, kicker);
 
     getPlayInfo()["State"] = "Kicking";
   }

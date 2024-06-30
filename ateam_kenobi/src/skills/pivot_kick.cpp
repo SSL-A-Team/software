@@ -28,18 +28,18 @@
 namespace ateam_kenobi::skills
 {
 
-PivotKick::PivotKick(stp::Options stp_options)
-: stp::Skill(stp_options),
+PivotKick::PivotKick(stp::Options stp_options, KickSkill::WaitType wait_type)
+: KickSkill(stp_options, wait_type),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("easy_move_to"))
 {
 }
 
-ateam_geometry::Point PivotKick::getAssignmentPoint(const World & world)
+ateam_geometry::Point PivotKick::GetAssignmentPoint(const World & world)
 {
   return world.ball.pos;
 }
 
-ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, const Robot & robot)
 {
   getOverlays().drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
 
@@ -49,7 +49,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
       prev_state_ = State::Capture;
     }
     RCLCPP_INFO(getLogger(), "Capturing...");
-    return capture(world, robot);
+    return Capture(world, robot);
   }
 
   const auto robot_to_target = target_point_ - robot.pos;
@@ -60,7 +60,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
       prev_state_ = State::Pivot;
     }
     RCLCPP_INFO(getLogger(), "Pivoting...");
-    return pivot(robot);
+    return Pivot(robot);
   }
 
   if (prev_state_ != State::KickBall) {
@@ -69,10 +69,10 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
   }
 
   RCLCPP_INFO(getLogger(), "Kicking...");
-  return kickBall(world, robot);
+  return KickBall(world, robot);
 }
 
-ateam_msgs::msg::RobotMotionCommand PivotKick::capture(
+ateam_msgs::msg::RobotMotionCommand PivotKick::Capture(
   const World & world,
   const Robot & robot)
 {
@@ -101,7 +101,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::capture(
   return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand PivotKick::pivot(const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 {
   /*
   const auto robot_to_target = target_point_ - robot.pos;
@@ -123,7 +123,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::pivot(const Robot & robot)
   return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand PivotKick::kickBall(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand PivotKick::KickBall(const World & world, const Robot & robot)
 {
   easy_move_to_.setTargetPosition(robot.pos);
   easy_move_to_.face_point(target_point_);
@@ -135,7 +135,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::kickBall(const World & world, con
   auto command = easy_move_to_.runFrame(robot, world);
   command.dribbler_speed = 500;
   command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
-  command.kick_speed = 5.0;
+  command.kick_speed = IsAllowedToKick() ? GetKickSpeed() : 0.0;
   return command;
 }
 }  // namespace ateam_kenobi::skills

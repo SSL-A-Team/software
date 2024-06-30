@@ -72,7 +72,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
   if (world.double_touch_forbidden_id_) {
     disallowed_strikers.push_back(*world.double_touch_forbidden_id_);
   }
-  groups.AddPosition("striker", striker_skill_.getAssignmentPoint(world), disallowed_strikers);
+  groups.AddPosition("striker", striker_skill_.GetAssignmentPoint(world), disallowed_strikers);
 
   groups.AddGroup("defenders", defense_.getAssignmentPoints(world));
 
@@ -112,8 +112,8 @@ void Basic122::runStriker(
   const Robot & striker_bot, const World & world,
   ateam_msgs::msg::RobotMotionCommand & motion_command)
 {
-  if (striker_skill_.isDone()) {
-    striker_skill_.reset();
+  if (striker_skill_.IsDone()) {
+    striker_skill_.Reset();
   }
 
   const auto they_have_possession = doTheyHavePossession(world);
@@ -151,9 +151,9 @@ void Basic122::runStriker(
   } else {
     target_point = ateam_geometry::Point(world.field.field_length / 2, 0.0);
   }
-  striker_skill_.setTargetPoint(target_point);
-  striker_skill_.setKickSpeed(3.0);
-  motion_command = striker_skill_.runFrame(world, striker_bot);
+  striker_skill_.SetTargetPoint(target_point);
+  striker_skill_.SetKickSpeed(3.0);
+  motion_command = striker_skill_.RunFrame(world, striker_bot);
 }
 
 void Basic122::runBlockers(

@@ -24,26 +24,28 @@
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
-#include "stp/skill.hpp"
+#include "kick_skill.hpp"
 #include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::skills
 {
 
-class PivotKick : public stp::Skill
+class PivotKick : public KickSkill
 {
 public:
-  explicit PivotKick(stp::Options stp_options);
+  explicit PivotKick(
+    stp::Options stp_options,
+    KickSkill::WaitType wait_type = KickSkill::WaitType::KickWhenReady);
 
-  void setTargetPoint(ateam_geometry::Point point)
+  void SetTargetPoint(ateam_geometry::Point point)
   {
     target_point_ = point;
   }
 
-  ateam_geometry::Point getAssignmentPoint(const World & world);
+  ateam_geometry::Point GetAssignmentPoint(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
 
 private:
   const double kPreKickOffset = kRobotRadius + 0.1;
@@ -58,11 +60,11 @@ private:
   };
   State prev_state_ = State::Capture;
 
-  ateam_msgs::msg::RobotMotionCommand capture(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand Capture(const World & world, const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand pivot(const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand Pivot(const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand kickBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand KickBall(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills

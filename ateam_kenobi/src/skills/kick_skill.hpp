@@ -18,57 +18,58 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef SKILLS__KICK_SKILL_HPP_
+#define SKILLS__KICK_SKILL_HPP_
 
-#ifndef TACTICS__PASS_HPP_
-#define TACTICS__PASS_HPP_
+#include "stp/skill.hpp"
 
-#include <ateam_geometry/types.hpp>
-#include "stp/tactic.hpp"
-#include "types/world.hpp"
-#include "skills/line_kick.hpp"
-#include "skills/pass_receiver.hpp"
-
-namespace ateam_kenobi::tactics
+namespace ateam_kenobi::skills
 {
 
-class Pass : public stp::Tactic
+class KickSkill : public stp::Skill
 {
 public:
-  explicit Pass(stp::Options stp_options);
-
-  void reset();
-
-  ateam_geometry::Point getKickerAssignmentPoint(const World & world);
-
-  ateam_geometry::Point getReceiverAssignmentPoint();
-
-  void runFrame(
-    const World & world, const Robot & kicker_bot, const Robot & receiver_bot,
-    ateam_msgs::msg::RobotMotionCommand & kicker_command,
-    ateam_msgs::msg::RobotMotionCommand & receiver_command);
-
-  bool isDone();
-
-  void setTarget(ateam_geometry::Point target)
+  /**
+   * Controls whether the skill kicks automatically when it's ready or waits for
+   * @c AllowKicking to be called.
+   */
+  enum class WaitType
   {
-    target_ = target;
-    receiver_.setTarget(target);
-    kick_.SetTargetPoint(target);
-  }
+    KickWhenReady,
+    WaitToKick
+  };
 
-  void setKickSpeed(double speed)
-  {
-    speed_ = speed;
-  }
+  explicit KickSkill(stp::Options stp_options, WaitType wait_type = WaitType::KickWhenReady);
+
+  virtual ~KickSkill() = default;
+
+  virtual void Reset();
+
+  /**
+   * Allows the skill to kick at its discretion.
+   * @note Only applies when wait type is @c WaitToKick
+   */
+  void AllowKicking();
+
+  /**
+   * Prevents the skill from kicking until @c AllowKicking is called.
+   * @note Only applies when wait type is @c WaitToKick
+   */
+  void DisallowKicking();
+
+  void SetKickSpeed(double speed);
+
+  double GetKickSpeed() const;
+
+protected:
+  bool IsAllowedToKick() const;
 
 private:
-  const double kReceiverPositionThreshold = 0.1;
-  double speed_ = 3.0;
-  ateam_geometry::Point target_;
-  skills::PassReceiver receiver_;
-  skills::LineKick kick_;
+  WaitType wait_type_ = WaitType::KickWhenReady;
+  bool kicking_allowed_ = true;
+  double kick_speed_ = 5.0;
 };
 
-}  // namespace ateam_kenobi::tactics
+}  // namespace ateam_kenobi::skills
 
-#endif  // TACTICS__PASS_HPP_
+#endif  // SKILLS__KICK_SKILL_HPP_

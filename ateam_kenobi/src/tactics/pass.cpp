@@ -27,20 +27,20 @@ namespace ateam_kenobi::tactics
 Pass::Pass(stp::Options stp_options)
 : stp::Tactic(stp_options),
   receiver_(createChild<skills::PassReceiver>("receiver")),
-  kick_(createChild<skills::LineKick>("kicker"))
+  kick_(createChild<skills::LineKick>("kicker", skills::KickSkill::WaitType::WaitToKick))
 {
-  kick_.setKickSpeed(speed_);
+  kick_.SetKickSpeed(speed_);
 }
 
 void Pass::reset()
 {
   receiver_.reset();
-  kick_.reset();
+  kick_.Reset();
 }
 
 ateam_geometry::Point Pass::getKickerAssignmentPoint(const World & world)
 {
-  return kick_.getAssignmentPoint(world);
+  return kick_.GetAssignmentPoint(world);
 }
 
 ateam_geometry::Point Pass::getReceiverAssignmentPoint()
@@ -55,11 +55,17 @@ void Pass::runFrame(
 {
   receiver_command = receiver_.runFrame(world, receiver_bot);
 
-  if (kick_.isDone() && !receiver_.isDone() && ateam_geometry::norm(world.ball.vel) < 0.01) {
-    kick_.reset();
+  if (kick_.IsDone() && !receiver_.isDone() && ateam_geometry::norm(world.ball.vel) < 0.01) {
+    kick_.Reset();
   }
 
-  kicker_command = kick_.runFrame(world, kicker_bot);
+  if (ateam_geometry::norm(receiver_bot.pos, target_) <= kReceiverPositionThreshold) {
+    kick_.AllowKicking();
+  } else {
+    kick_.DisallowKicking();
+  }
+
+  kicker_command = kick_.RunFrame(world, kicker_bot);
 }
 
 bool Pass::isDone()

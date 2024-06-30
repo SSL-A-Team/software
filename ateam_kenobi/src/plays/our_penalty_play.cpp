@@ -90,8 +90,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   {
     // Stage for kick
     getPlayInfo()["State"] = "Preparing";
-    line_kick_skill_.setTargetPoint(chooseKickTarget(world));
-    const auto destination = line_kick_skill_.getAssignmentPoint(world);
+    line_kick_skill_.SetTargetPoint(chooseKickTarget(world));
+    const auto destination = line_kick_skill_.GetAssignmentPoint(world);
     auto & move_to = move_tos_[kicking_robot.id];
     move_to.setTargetPosition(destination);
     move_to.face_point(world.ball.pos);
@@ -100,7 +100,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   } else {
     // Kick ball
     getPlayInfo()["State"] = "Kicking";
-    motion_commands[kicking_robot.id] = line_kick_skill_.runFrame(world, kicking_robot);
+    motion_commands[kicking_robot.id] = line_kick_skill_.RunFrame(world, kicking_robot);
   }
 
   ateam_geometry::Point pattern_point(kRobotDiameter - (world.field.field_length / 2.0),
