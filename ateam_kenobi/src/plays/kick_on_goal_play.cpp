@@ -19,6 +19,8 @@
 // THE SOFTWARE.
 
 #include "kick_on_goal_play.hpp"
+#include "play_helpers/available_robots.hpp"
+#include "play_helpers/robot_assignment.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -31,23 +33,47 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
   setEnabled(false);  // TODO(barulicm) remove when ready
 }
 
-double KickOnGoalPlay::getScore(const World & world) {
-  // TODO(barulicm) estimate likelihood of shot success and / or just do it based on how far down the field we are
+double KickOnGoalPlay::getScore(const World & world)
+{
+  /* TODO(barulicm) estimate likelihood of shot success and / or just do it based on how far down
+   * the field we are
+   */
   (void)world;
   return 0.0;
 }
 
-void KickOnGoalPlay::reset() {
+void KickOnGoalPlay::reset()
+{
   defense_.reset();
   striker_.Reset();
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPlay::runFrame(
-  const World & world) {
-    (void)world;
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  const World & world)
+{
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
-    return motion_commands;
+  auto available_robots = play_helpers::getAvailableRobots(world);
+  play_helpers::removeGoalie(available_robots, world);
+
+  const ateam_geometry::Point opp_goal_center{world.field.field_length/2.0, 0};
+  striker_.SetTargetPoint(opp_goal_center);
+
+  play_helpers::GroupAssignmentSet groups;
+  groups.AddGroup("defense", defense_.getAssignmentPoints(world));
+  groups.AddPosition("striker", striker_.GetAssignmentPoint(world));
+
+  auto assignments = play_helpers::assignGroups(available_robots, groups);
+
+  defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
+
+  const auto maybe_striker_bot = assignments.GetPositionAssignment("striker");
+  if (maybe_striker_bot) {
+    const auto & striker_bot = *maybe_striker_bot;
+    motion_commands[striker_bot.id] = striker_.RunFrame(world, striker_bot);
   }
+
+  return motion_commands;
+}
 
 }  // namespace ateam_kenobi::plays

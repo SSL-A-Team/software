@@ -45,7 +45,6 @@ public:
 private:
   tactics::StandardDefense defense_;
   skills::LineKick striker_;
-
 };
 
 }  // namespace ateam_kenobi::plays
