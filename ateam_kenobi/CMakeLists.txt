@@ -24,6 +24,7 @@ add_library(kenobi_node_component SHARED
   src/path_planning/path_planner.cpp
   src/plays/test_play.cpp
   src/plays/halt_play.cpp
+  src/plays/kick_on_goal_play.cpp
   src/plays/stop_play.cpp
   src/plays/our_kickoff_play.cpp
   src/plays/wall_play.cpp

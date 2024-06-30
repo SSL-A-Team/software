@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,24 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
-#ifndef PLAYS__ALL_PLAYS_HPP_
-#define PLAYS__ALL_PLAYS_HPP_
-
-#include "test_play.hpp"
-#include "halt_play.hpp"
 #include "kick_on_goal_play.hpp"
-#include "stop_play.hpp"
-#include "wall_play.hpp"
-#include "our_kickoff_play.hpp"
-#include "test_kick_play.hpp"
-#include "basic_122.hpp"
-#include "our_penalty_play.hpp"
-#include "their_kickoff_play.hpp"
-#include "their_penalty_play.hpp"
-#include "controls_test_play.hpp"
-#include "triangle_pass_play.hpp"
-#include "waypoints_play.hpp"
-#include "spinning_a_play.hpp"
 
-#endif  // PLAYS__ALL_PLAYS_HPP_
+namespace ateam_kenobi::plays
+{
+
+KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  defense_(createChild<tactics::StandardDefense>("defense")),
+  striker_(createChild<skills::LineKick>("striker"))
+{
+  setEnabled(false);  // TODO(barulicm) remove when ready
+}
+
+double KickOnGoalPlay::getScore(const World & world) {
+  // TODO(barulicm) estimate likelihood of shot success and / or just do it based on how far down the field we are
+  (void)world;
+  return 0.0;
+}
+
+void KickOnGoalPlay::reset() {
+  defense_.reset();
+  striker_.Reset();
+}
+
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPlay::runFrame(
+  const World & world) {
+    (void)world;
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+
+    return motion_commands;
+  }
+
+}  // namespace ateam_kenobi::plays

@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,24 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#define PLAYS__KICK_ON_GOAL_PLAY_HPP_
 
-#ifndef PLAYS__ALL_PLAYS_HPP_
-#define PLAYS__ALL_PLAYS_HPP_
+#include "stp/play.hpp"
+#include "tactics/standard_defense.hpp"
+#include "skills/line_kick.hpp"
 
-#include "test_play.hpp"
-#include "halt_play.hpp"
-#include "kick_on_goal_play.hpp"
-#include "stop_play.hpp"
-#include "wall_play.hpp"
-#include "our_kickoff_play.hpp"
-#include "test_kick_play.hpp"
-#include "basic_122.hpp"
-#include "our_penalty_play.hpp"
-#include "their_kickoff_play.hpp"
-#include "their_penalty_play.hpp"
-#include "controls_test_play.hpp"
-#include "triangle_pass_play.hpp"
-#include "waypoints_play.hpp"
-#include "spinning_a_play.hpp"
+namespace ateam_kenobi::plays
+{
 
-#endif  // PLAYS__ALL_PLAYS_HPP_
+class KickOnGoalPlay : public stp::Play
+{
+public:
+  static constexpr const char * kPlayName = "KickOnGoalPlay";
+
+  explicit KickOnGoalPlay(stp::Options stp_options);
+
+  double getScore(const World & world) override;
+
+  void reset() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world) override;
+
+private:
+  tactics::StandardDefense defense_;
+  skills::LineKick striker_;
+
+};
+
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__KICK_ON_GOAL_PLAY_HPP_
