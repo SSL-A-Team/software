@@ -46,6 +46,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<TestKickPlay>(stp_options);
   addPlay<Basic122>(stp_options);
   addPlay<OurPenaltyPlay>(stp_options);
+  addPlay<TheirKickoffPlay>(stp_options);
   addPlay<TheirPenaltyPlay>(stp_options);
   addPlay<ControlsTestPlay>(stp_options);
   addPlay<TrianglePassPlay>(stp_options);

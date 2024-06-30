@@ -30,6 +30,7 @@
 #include "test_kick_play.hpp"
 #include "basic_122.hpp"
 #include "our_penalty_play.hpp"
+#include "their_kickoff_play.hpp"
 #include "their_penalty_play.hpp"
 #include "controls_test_play.hpp"
 #include "triangle_pass_play.hpp"
