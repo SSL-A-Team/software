@@ -41,6 +41,9 @@ class SSLVisionBridgeNode : public rclcpp::Node
 public:
   explicit SSLVisionBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ssl_vision_bridge", options),
+    vision_publisher_(create_publisher<ssl_league_msgs::msg::VisionWrapper>(
+        std::string(Topics::
+        kVisionMessages), rclcpp::SystemDefaultsQoS())),
     multicast_receiver_(
       declare_parameter<std::string>("ssl_vision_ip", "224.5.23.2"),
       declare_parameter<int>("ssl_vision_port", 10020),
@@ -48,9 +51,6 @@ public:
       declare_parameter<std::string>("net_interface_address", "10.191.12.33"))
   {
     SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
-    vision_publisher_ = create_publisher<ssl_league_msgs::msg::VisionWrapper>(
-      std::string(Topics::kVisionMessages),
-      rclcpp::SystemDefaultsQoS());
   }
 
 private:
