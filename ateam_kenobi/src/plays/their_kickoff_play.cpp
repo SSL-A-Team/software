@@ -20,6 +20,9 @@
 
 #include "their_kickoff_play.hpp"
 #include <ranges>
+#include <algorithm>
+#include <limits>
+#include <vector>
 #include <ateam_geometry/intersection.hpp>
 #include "play_helpers/robot_assignment.hpp"
 #include "play_helpers/available_robots.hpp"
@@ -33,7 +36,8 @@ TheirKickoffPlay::TheirKickoffPlay(stp::Options stp_options)
   defense_(createChild<tactics::StandardDefense>("defense"))
 {}
 
-double TheirKickoffPlay::getScore(const World & world) {
+double TheirKickoffPlay::getScore(const World & world)
+{
   if (world.in_play) {
     return std::numeric_limits<double>::quiet_NaN();
   }
@@ -107,9 +111,9 @@ std::vector<ateam_geometry::Point> TheirKickoffPlay::getOffensePoints(const Worl
   const auto closest_neg_opponent_iter = std::min_element(opponents.begin(), neg_part_end, by_x);
   const auto closest_pos_opponent_iter = std::min_element(neg_part_end, pos_part_end, by_x);
 
-  const ateam_geometry::Point goal_center{-world.field.field_length/2.0, 0.0};
+  const ateam_geometry::Point goal_center{-world.field.field_length / 2.0, 0.0};
 
-  const ateam_geometry::Point neg_fallback{x, -world.field.field_width/4.0};
+  const ateam_geometry::Point neg_fallback{x, -world.field.field_width / 4.0};
   if (closest_neg_opponent_iter != neg_part_end) {
     const auto opponent_pos = closest_neg_opponent_iter->pos;
     points.push_back(getOffensePointToBlockTarget(world, opponent_pos, x, neg_fallback));
@@ -118,7 +122,7 @@ std::vector<ateam_geometry::Point> TheirKickoffPlay::getOffensePoints(const Worl
     points.push_back(neg_fallback);
   }
 
-  const ateam_geometry::Point pos_fallback{x, world.field.field_width/4.0};
+  const ateam_geometry::Point pos_fallback{x, world.field.field_width / 4.0};
   if (closest_pos_opponent_iter != pos_part_end) {
     const auto opponent_pos = closest_pos_opponent_iter->pos;
     points.push_back(getOffensePointToBlockTarget(world, opponent_pos, x, pos_fallback));

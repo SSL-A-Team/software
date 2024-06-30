@@ -22,6 +22,7 @@
 #define PLAYS__THEIR_KICKOFF_PLAY_HPP_
 
 #include <array>
+#include <vector>
 #include "stp/play.hpp"
 #include "play_helpers/easy_move_to.hpp"
 #include "tactics/standard_defense.hpp"
