@@ -79,7 +79,7 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
     }
 
     used_measurements.at(measurement_index) = true;
-    
+
     const auto & measurement = measurements.at(measurement_index);
 
     auto & track = tracks.at(i);

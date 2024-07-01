@@ -74,7 +74,7 @@ void KalmanFilter::predict(const Eigen::VectorXd & u)
 void KalmanFilter::update(const Eigen::VectorXd & z)
 {
   Eigen::VectorXd z_hat = H * x_hat;
-  Eigen::VectorXd residual = z - z_hat; 
+  Eigen::VectorXd residual = z - z_hat;
 
   // Account for angle differences not respecting normal math due to this -PI/PI
   for (int i = 0; i < AngleMask.rows(); i++) {
