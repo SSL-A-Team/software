@@ -48,6 +48,7 @@
 #include "double_touch_eval.hpp"
 #include "motion/world_to_body_vel.hpp"
 #include "plays/halt_play.hpp"
+#include "defense_area_enforcement.hpp"
 
 namespace ateam_kenobi
 {
@@ -329,6 +330,8 @@ private:
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 
     auto motion_commands = runPlayFrame(world_);
+
+    defense_area_enforcement::EnforceDefenseAreaKeepout(world_, motion_commands);
 
     if (!get_parameter("use_world_velocities").as_bool()) {
       motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);
