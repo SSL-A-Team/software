@@ -178,6 +178,10 @@ export class AppState {
 	    return function(msg:any) {
             for (const overlay of msg.overlays) {
                 let id = overlay.ns+"/"+overlay.name;
+
+                // Overlays will now be deleted in the update function if
+                // the lifetime expires without having been updated
+                // to prevent potential future memory leaks
                 switch(overlay.command) {
                     // REPLACE
                     case 0:
