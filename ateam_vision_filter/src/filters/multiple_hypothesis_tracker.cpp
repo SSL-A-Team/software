@@ -74,15 +74,15 @@ void MultipleHypothesisTracker::update(const std::vector<Eigen::VectorXd> & meas
     // Assigned edge
     const auto measurement_index = tracks_to_measurements[i];
 
-    if (tracks_to_measurements[i] == -1) {
+    if (measurement_index == -1) {
       continue;
     }
 
-    used_measurements.at(i) = true;
+    used_measurements.at(measurement_index) = true;
+    
     const auto & measurement = measurements.at(measurement_index);
 
     auto & track = tracks.at(i);
-
     // Only add the measurement if they're within some range of the track
     // since measurements aren't super consistent
     // TODO(Christian): Do we need to reenable this if statement
