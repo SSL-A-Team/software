@@ -288,6 +288,24 @@ void PathPlanner::addDefaultObstacles(
         world.field.theirs.defense_area_corners.begin(),
         world.field.theirs.defense_area_corners.end())
   ));
+
+
+  const auto half_goal_width = world.field.goal_width / 2.0;
+  const auto half_field_length = world.field.field_length / 2.0;
+  const auto boundary_width = world.field.boundary_width;
+
+  // our goal, extended to wall
+  obstacles.push_back(
+    ateam_geometry::Rectangle(
+      ateam_geometry::Point(-half_field_length, -half_goal_width),
+      ateam_geometry::Point(-(half_field_length + boundary_width), half_goal_width)));
+
+  // their goal, extended to wall
+  obstacles.push_back(
+    ateam_geometry::Rectangle(
+      ateam_geometry::Point(half_field_length, -half_goal_width),
+      ateam_geometry::Point((half_field_length + boundary_width), half_goal_width)));
+
 }
 
 void PathPlanner::removeSkippablePoints(
