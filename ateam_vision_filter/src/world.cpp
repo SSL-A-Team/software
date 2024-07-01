@@ -44,6 +44,7 @@ void World::update_camera(const CameraID & cameraID, const CameraMeasurement & m
 }
 void World::predict()
 {
+  // First, we predict all the things
   for (auto & camera_pair : cameras) {
     camera_pair.second.predict();
   }

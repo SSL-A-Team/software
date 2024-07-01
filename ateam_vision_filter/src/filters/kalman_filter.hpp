@@ -52,6 +52,7 @@ public:
 private:
   Eigen::MatrixXd AngleMask;
   Eigen::MatrixXd F;
+  // In many formulations, this is also represented as G
   Eigen::MatrixXd B;
   Eigen::MatrixXd H;
   Eigen::MatrixXd Q;

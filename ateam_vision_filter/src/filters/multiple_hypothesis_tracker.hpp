@@ -57,7 +57,7 @@ public:
   ateam_msgs::msg::VisionMHTState get_vision_mht_state() const;
 
 private:
-  void life_cycle_management();
+  void remove_expired_tracks();
 
   InteractingMultipleModelFilter base_track;
 

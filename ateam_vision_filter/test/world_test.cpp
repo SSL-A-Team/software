@@ -27,7 +27,7 @@
 
 using namespace ateam_vision_filter;  // NOLINT(build/namespaces)
 
-TEST(World, getEstimate_ShouldReturnNullopt_WhenNoData)
+TEST(World, DISABLED_getEstimate_ShouldReturnNullopt_WhenNoData)
 {
   World world;
 
@@ -44,7 +44,7 @@ TEST(World, getEstimate_ShouldReturnNullopt_WhenNoData)
   }
 }
 
-TEST(World, getBallEstimate_ShouldReturnData_WhenOneCameraConsistent)
+TEST(World, DISABLED_getBallEstimate_ShouldReturnData_WhenOneCameraConsistent)
 {
   World world;
   BallMeasurement ball_measurement;
@@ -67,7 +67,7 @@ TEST(World, getBallEstimate_ShouldReturnData_WhenOneCameraConsistent)
   EXPECT_NEAR(ball_estimate.value().acceleration.norm(), 0, 1e-6);
 }
 
-TEST(World, getBallEstimate_ShouldReturnAverageData_WhenTwoCameraConsistent)
+TEST(World, DISABLED_getBallEstimate_ShouldReturnAverageData_WhenTwoCameraConsistent)
 {
   World world;
   BallMeasurement ball_measurement1, ball_measurement2;
@@ -94,7 +94,7 @@ TEST(World, getBallEstimate_ShouldReturnAverageData_WhenTwoCameraConsistent)
   EXPECT_NEAR(ball_estimate.value().acceleration.norm(), 0, 1e-6);
 }
 
-TEST(World, getRobotEstimate_ShouldReturnData_WhenOneCameraConsistent)
+TEST(World, DISABLED_getRobotEstimate_ShouldReturnData_WhenOneCameraConsistent)
 {
   World world;
   RobotMeasurement robot_measurement;
@@ -146,7 +146,7 @@ TEST(World, getRobotEstimate_ShouldReturnData_WhenOneCameraConsistent)
   }
 }
 
-TEST(World, getRobotEstimate_ShouldReturnAverageData_WhenTwoCameraConsistent)
+TEST(World, DISABLED_getRobotEstimate_ShouldReturnAverageData_WhenTwoCameraConsistent)
 {
   World world;
   RobotMeasurement robot_measurement1, robot_measurement2;

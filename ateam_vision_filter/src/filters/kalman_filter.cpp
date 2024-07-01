@@ -74,19 +74,19 @@ void KalmanFilter::predict(const Eigen::VectorXd & u)
 void KalmanFilter::update(const Eigen::VectorXd & z)
 {
   Eigen::VectorXd z_hat = H * x_hat;
-  Eigen::VectorXd y = z - H * x_hat;
+  Eigen::VectorXd residual = z - z_hat;
 
   // Account for angle differences not respecting normal math due to this -PI/PI
   for (int i = 0; i < AngleMask.rows(); i++) {
     if (AngleMask(i) == 1) {
       double masked_angle = angles::normalize_angle(z(i));
-      y(i) = angles::shortest_angular_distance((H * x_hat)(i), masked_angle);
+      residual(i) = angles::shortest_angular_distance((H * x_hat)(i), masked_angle);
     }
   }
 
   Eigen::MatrixXd S = H * P * H.transpose() + R;
   Eigen::MatrixXd K = P * H.transpose() * S.inverse();
-  x_hat = x_hat + K * y;
+  x_hat = x_hat + K * residual;
   Eigen::MatrixXd I = Eigen::MatrixXd::Identity(P.rows(), P.cols());
   P = (I - K * H) * P * (I - K * H).transpose() + K * R * K.transpose();
 }
