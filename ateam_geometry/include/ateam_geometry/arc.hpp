@@ -23,6 +23,7 @@
 
 #include <CGAL/Simple_cartesian.h>
 #include "types.hpp"
+#include "normalize.hpp"
 
 namespace ateam_geometry
 {
@@ -69,7 +70,21 @@ public:
 
   double angle() const
   {
-    return std::abs(std::atan2(end_.dy(), end_.dx()) - std::atan2(start_.dy(), start_.dx()));
+    const auto start_angle = std::atan2(start_.dy(), start_.dx());
+    const auto end_angle = std::atan2(end_.dy(), end_.dx());
+    if (start_angle > end_angle) {
+      return (2 * M_PI) + (end_angle - start_angle);
+    } else {
+      return end_angle - start_angle;
+    }
+  }
+
+  Point midpoint() const
+  {
+    const auto rotate_angle = angle() / 2.0;
+    CGAL::Aff_transformation_2<Kernel> rotate(CGAL::ROTATION, std::sin(rotate_angle),
+      std::cos(rotate_angle));
+    return center_ + (radius_ * rotate(start_.to_vector()));
   }
 
 private:

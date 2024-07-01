@@ -27,11 +27,15 @@
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
+#include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/overlay.hpp>
 #include <ateam_msgs/msg/play_info.hpp>
 #include <ateam_msgs/msg/world.hpp>
+#include <ateam_msgs/srv/set_override_play.hpp>
+#include <ateam_msgs/srv/set_play_enabled.hpp>
+#include <ateam_msgs/msg/playbook_state.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
@@ -43,6 +47,7 @@
 #include "in_play_eval.hpp"
 #include "double_touch_eval.hpp"
 #include "motion/world_to_body_vel.hpp"
+#include "plays/halt_play.hpp"
 
 namespace ateam_kenobi
 {
@@ -56,6 +61,7 @@ class KenobiNode : public rclcpp::Node
 public:
   explicit KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("kenobi_node", options),
+    play_selector_(*this),
     game_controller_listener_(*this)
   {
     declare_parameter<bool>("use_world_velocities", false);
@@ -82,6 +88,13 @@ public:
       &KenobiNode::yellow_robot_state_callback,
       this);
 
+    create_indexed_subscribers<ateam_msgs::msg::RobotFeedback>(
+      robot_feedback_subscriptions_,
+      Topics::kRobotFeedbackPrefix,
+      10,
+      &KenobiNode::robot_feedback_callback,
+      this);
+
     create_indexed_publishers<ateam_msgs::msg::RobotMotionCommand>(
       robot_commands_publishers_, Topics::kRobotMotionCommandPrefix,
       rclcpp::SystemDefaultsQoS(), this);
@@ -100,6 +113,20 @@ public:
       10,
       std::bind(&KenobiNode::field_callback, this, std::placeholders::_1));
 
+    override_service_ = create_service<ateam_msgs::srv::SetOverridePlay>(
+      "~/set_override_play", std::bind(
+        &KenobiNode::set_override_play_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
+    play_enabled_service_ = create_service<ateam_msgs::srv::SetPlayEnabled>(
+      "~/set_play_enabled", std::bind(
+        &KenobiNode::set_play_enabled_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
+    playbook_state_publisher_ = create_publisher<ateam_msgs::msg::PlaybookState>(
+      "~/playbook_state",
+      rclcpp::SystemDefaultsQoS());
+
     timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
 
     RCLCPP_INFO(get_logger(), "Kenobi node ready.");
@@ -117,10 +144,15 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotFeedback>::SharedPtr,
+    16> robot_feedback_subscriptions_;
   rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr
     field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
+  rclcpp::Service<ateam_msgs::srv::SetOverridePlay>::SharedPtr override_service_;
+  rclcpp::Service<ateam_msgs::srv::SetPlayEnabled>::SharedPtr play_enabled_service_;
+  rclcpp::Publisher<ateam_msgs::msg::PlaybookState>::SharedPtr playbook_state_publisher_;
 
   ateam_common::GameControllerListener game_controller_listener_;
 
@@ -151,26 +183,34 @@ private:
   }
 
   void robot_state_callback(
-    std::array<std::optional<Robot>, 16> & robot_states,
+    std::array<Robot, 16> & robot_states,
     std::size_t id,
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg)
   {
-    if (!robot_state_msg->visible) {
-      robot_states.at(id).reset();
-      return;
+    robot_states.at(id).visible = robot_state_msg->visible;
+    if (robot_state_msg->visible) {
+      robot_states.at(id).pos = ateam_geometry::Point(
+        robot_state_msg->pose.position.x,
+        robot_state_msg->pose.position.y);
+      tf2::Quaternion tf2_quat;
+      tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
+      robot_states.at(id).theta = tf2::getYaw(tf2_quat);
+      robot_states.at(id).vel = ateam_geometry::Vector(
+        robot_state_msg->twist.linear.x,
+        robot_state_msg->twist.linear.y);
+      robot_states.at(id).omega = robot_state_msg->twist.angular.z;
+      robot_states.at(id).id = id;
     }
-    robot_states.at(id) = Robot();
-    robot_states.at(id).value().pos = ateam_geometry::Point(
-      robot_state_msg->pose.position.x,
-      robot_state_msg->pose.position.y);
-    tf2::Quaternion tf2_quat;
-    tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
-    robot_states.at(id).value().theta = tf2::getYaw(tf2_quat);
-    robot_states.at(id).value().vel = ateam_geometry::Vector(
-      robot_state_msg->twist.linear.x,
-      robot_state_msg->twist.linear.y);
-    robot_states.at(id).value().omega = robot_state_msg->twist.angular.z;
-    robot_states.at(id).value().id = id;
+  }
+
+  void robot_feedback_callback(
+    const ateam_msgs::msg::RobotFeedback::SharedPtr robot_feedback_msg,
+    int id)
+  {
+    world_.our_robots.at(id).radio_connected = robot_feedback_msg->radio_connected;
+    world_.our_robots.at(id).breakbeam_ball_detected = robot_feedback_msg->breakbeam_ball_detected;
+    world_.our_robots.at(id).kicker_available = robot_feedback_msg->kicker_available;
+    world_.our_robots.at(id).chipper_available = robot_feedback_msg->chipper_available;
   }
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
@@ -214,6 +254,43 @@ private:
     field.theirs.goal_posts = {field.theirs.goal_corners[0], field.theirs.goal_corners[1]};
 
     world_.field = field;
+  }
+
+  void set_override_play_callback(
+    const ateam_msgs::srv::SetOverridePlay::Request::SharedPtr request,
+    ateam_msgs::srv::SetOverridePlay::Response::SharedPtr response)
+  {
+    if (!request->play_name.empty() &&
+      play_selector_.getPlayByName(request->play_name) == nullptr)
+    {
+      response->success = false;
+      response->reason = "No such play.";
+      return;
+    }
+
+    play_selector_.setPlayOverride(request->play_name);
+    response->success = true;
+  }
+
+  void set_play_enabled_callback(
+    const ateam_msgs::srv::SetPlayEnabled::Request::SharedPtr request,
+    ateam_msgs::srv::SetPlayEnabled::Response::SharedPtr response)
+  {
+    auto play = play_selector_.getPlayByName(request->play_name);
+    if (play == nullptr) {
+      response->success = false;
+      response->reason = "No such play.";
+      return;
+    }
+
+    if (!request->enabled && dynamic_cast<plays::HaltPlay *>(play) != nullptr) {
+      response->success = false;
+      response->reason = "You can't disable the Halt play.";
+      return;
+    }
+
+    play->setEnabled(request->enabled);
+    response->success = true;
   }
 
   void timer_callback()
@@ -262,7 +339,10 @@ private:
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runPlayFrame(
     const World & world)
   {
-    plays::BasePlay * play = play_selector_.getPlay(world);
+    ateam_msgs::msg::PlaybookState playbook_state;
+    stp::Play * play = play_selector_.getPlay(world, playbook_state);
+    playbook_state_publisher_->publish(playbook_state);
+
     if (play == nullptr) {
       RCLCPP_ERROR(get_logger(), "No play selected!");
       return {};

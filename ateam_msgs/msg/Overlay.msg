@@ -9,6 +9,7 @@ uint8 POLYGON=4
 uint8 TEXT=5
 uint8 MESH=6
 uint8 CUSTOM=7
+uint8 ARC=8
 
 # Type of Command
 uint8 REPLACE=0 # Replaces overlay with matching name or creates it if none exist
@@ -38,6 +39,7 @@ geometry_msgs/Point scale
 
 # Colors are specified using "#RRGGBBAA" hexadecimal RGBA format. The # is required
 string stroke_color
+# Fill color is used for text color when using the TEXT type
 string fill_color
 
 # Also used as font size when using the TEXT type
@@ -58,3 +60,7 @@ string text
 
 # 0 is background, upwards
 uint32 depth
+
+# arc angles
+float64 start_angle
+float64 end_angle

@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,29 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__NORMAL_PLAY_HPP_
-#define PLAYS__NORMAL_PLAY_HPP_
 
-#include "path_planning/path_planner.hpp"
-#include "motion/motion_controller.hpp"
-#include "base_play.hpp"
+#ifndef STP__SKILL_HPP_
+#define STP__SKILL_HPP_
 
-namespace ateam_kenobi::plays
+#include "base.hpp"
+
+namespace ateam_kenobi::stp
 {
-class NormalPlay : public BasePlay
+
+class Skill : public Base
 {
 public:
-  NormalPlay();
+  explicit Skill(Options options)
+  : Base(options) {}
 
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
-
-private:
-  path_planning::PathPlanner path_planner_;
-  std::array<MotionController, 16> motion_controllers_;
-  int prev_assigned_id_ = -1;
+  virtual ~Skill() = default;
 };
-}  // namespace ateam_kenobi::plays
-#endif  // PLAYS__NORMAL_PLAY_HPP_
+
+}  // namespace ateam_kenobi::stp
+
+#endif  // STP__SKILL_HPP_

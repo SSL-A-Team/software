@@ -44,13 +44,13 @@ inline void ConvertWorldVelsToBodyVels(
 
 inline void ConvertWorldVelsToBodyVels(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & commands,
-  const std::array<std::optional<Robot>, 16> & robots)
+  const std::array<Robot, 16> & robots)
 {
   for (auto i = 0u; i < 16; ++i) {
     auto & maybe_command = commands.at(i);
-    const auto & maybe_robot = robots.at(i);
-    if (maybe_command && maybe_robot) {
-      ConvertWorldVelsToBodyVels(maybe_command.value(), maybe_robot.value());
+    const auto & robot = robots.at(i);
+    if (maybe_command && robot.visible) {
+      ConvertWorldVelsToBodyVels(maybe_command.value(), robot);
     }
   }
 }

@@ -26,11 +26,11 @@
 
 namespace ateam_kenobi::plays
 {
-TestPlay::TestPlay()
-: BasePlay("TestPlay"),
-  goalie_skill_(getOverlays().getChild("goalie"))
+TestPlay::TestPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
 }
 
 void TestPlay::reset()

@@ -24,16 +24,18 @@
 #include <array>
 #include <vector>
 #include "motion/motion_controller.hpp"
-#include "base_play.hpp"
+#include "stp/play.hpp"
 #include "ateam_geometry/types.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
-class ControlsTestPlay : public BasePlay
+class ControlsTestPlay : public stp::Play
 {
 public:
-  ControlsTestPlay();
+  static constexpr const char * kPlayName = "ControlsTestPlay";
+
+  explicit ControlsTestPlay(stp::Options stp_options);
 
   void reset() override;
 
@@ -48,8 +50,6 @@ private:
     double heading;
     double hold_time_sec;
   };
-
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
   MotionController motion_controller_;
   MotionOptions motion_options_;

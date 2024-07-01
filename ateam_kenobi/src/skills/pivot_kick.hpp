@@ -19,54 +19,52 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__BASE_PLAY_HPP_
-#define PLAYS__BASE_PLAY_HPP_
+#ifndef SKILLS__PIVOT_KICK_HPP_
+#define SKILLS__PIVOT_KICK_HPP_
 
-#include <array>
-#include <optional>
-#include <string>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "visualization/overlays.hpp"
-#include <nlohmann/json.hpp>
+#include <ateam_common/robot_constants.hpp>
+#include "stp/skill.hpp"
 #include "types/world.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::skills
 {
 
-class BasePlay
+class PivotKick : public stp::Skill
 {
 public:
-  explicit BasePlay(std::string play_name)
-  : play_name_(play_name), overlays_(play_name) {}
+  explicit PivotKick(stp::Options stp_options);
 
-  virtual ~BasePlay() = default;
-
-  virtual void reset() = 0;
-
-  virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) = 0;
-
-  const std::string & getName() const
+  void setTargetPoint(ateam_geometry::Point point)
   {
-    return play_name_;
+    target_point_ = point;
   }
 
-  visualization::Overlays & getOverlays()
-  {
-    return overlays_;
-  }
+  ateam_geometry::Point getAssignmentPoint(const World & world);
 
-  nlohmann::json & getPlayInfo()
-  {
-    return play_info_;
-  }
+  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
-protected:
-  std::string play_name_;
-  visualization::Overlays overlays_;
-  nlohmann::json play_info_;
+private:
+  const double kPreKickOffset = kRobotRadius + 0.1;
+  ateam_geometry::Point target_point_;
+  play_helpers::EasyMoveTo easy_move_to_;
+
+  enum class State
+  {
+    Capture,
+    Pivot,
+    KickBall
+  };
+  State prev_state_ = State::Capture;
+
+  ateam_msgs::msg::RobotMotionCommand capture(const World & world, const Robot & robot);
+
+  ateam_msgs::msg::RobotMotionCommand pivot(const Robot & robot);
+
+  ateam_msgs::msg::RobotMotionCommand kickBall(const World & world, const Robot & robot);
 };
 
-}  // namespace ateam_kenobi::plays
+}  // namespace ateam_kenobi::skills
 
-#endif  // PLAYS__BASE_PLAY_HPP_
+#endif  // SKILLS__PIVOT_KICK_HPP_
