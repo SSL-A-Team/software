@@ -305,7 +305,6 @@ void PathPlanner::addDefaultObstacles(
     ateam_geometry::Rectangle(
       ateam_geometry::Point(half_field_length, -half_goal_width),
       ateam_geometry::Point((half_field_length + boundary_width), half_goal_width)));
-
 }
 
 void PathPlanner::removeSkippablePoints(

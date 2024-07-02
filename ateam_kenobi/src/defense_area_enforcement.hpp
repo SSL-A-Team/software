@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_KENOBI__DEFENSE_AREA_ENFORCEMENT_HPP_
-#define ATEAM_KENOBI__DEFENSE_AREA_ENFORCEMENT_HPP_
+#ifndef DEFENSE_AREA_ENFORCEMENT_HPP_
+#define DEFENSE_AREA_ENFORCEMENT_HPP_
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "types/world.hpp"
@@ -43,7 +43,7 @@ bool WouldVelocityCauseCollision(
   const World & world, const int robot_id,
   const ateam_msgs::msg::RobotMotionCommand & motion_command);
 
-}  // namespace ateam_kenobi
+}  // namespace ateam_kenobi::defense_area_enforcement
 
 
-#endif  // ATEAM_KENOBI__DEFENSE_AREA_ENFORCEMENT_HPP_
+#endif  // DEFENSE_AREA_ENFORCEMENT_HPP_

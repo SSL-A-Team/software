@@ -81,4 +81,4 @@ bool WouldVelocityCauseCollision(
          ateam_geometry::doIntersect(robot_footprint, their_defense_area);
 }
 
-}  // namespace ateam_kenobi
+}  // namespace ateam_kenobi::defense_area_enforcement
