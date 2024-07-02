@@ -109,12 +109,6 @@ private:
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
 
-  void addRobotsToObstacles(
-    const World & world, const ateam_geometry::Point & start_pos,
-    std::vector<ateam_geometry::AnyShape> & obstacles);
-
-  void addDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles);
-
   void removeSkippablePoints(
     Path & path, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,

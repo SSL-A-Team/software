@@ -80,7 +80,13 @@ public:
     return target_position_;
   }
 
+  void SetEnableEscapeVelocities(bool enabled)
+  {
+    enable_escape_velocities_ = enabled;
+  }
+
 private:
+  bool enable_escape_velocities_ = true;
   ateam_geometry::Point target_position_;
   path_planning::PlannerOptions planner_options_;
   path_planning::PathPlanner path_planner_;
@@ -95,6 +101,11 @@ private:
     const path_planning::PathPlanner::Path & path, const Robot & robot, const World & world);
 
   void drawTrajectoryOverlay(const path_planning::PathPlanner::Path & path, const Robot & robot);
+
+  std::optional<ateam_msgs::msg::RobotMotionCommand> generateEscapeVelocity(
+    const World & world,
+    const Robot & robot,
+    std::vector<ateam_geometry::AnyShape> obstacles);
 };
 
 }  // namespace ateam_kenobi::play_helpers
