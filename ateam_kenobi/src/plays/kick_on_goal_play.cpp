@@ -19,8 +19,10 @@
 // THE SOFTWARE.
 
 #include "kick_on_goal_play.hpp"
+#include <limits>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
+#include "play_helpers/window_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -35,11 +37,28 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
 
 double KickOnGoalPlay::getScore(const World & world)
 {
-  /* TODO(barulicm) estimate likelihood of shot success and / or just do it based on how far down
-   * the field we are
-   */
-  (void)world;
-  return 0.0;
+  if (world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
+    world.referee_info.running_command != ateam_common::GameCommand::ForceStart)
+  {
+    return -std::numeric_limits<double>::infinity();
+  }
+
+  const ateam_geometry::Segment their_goal_segment{
+    ateam_geometry::Point{-world.field.goal_width / 2.0, world.field.field_length / 2.0},
+    ateam_geometry::Point{world.field.goal_width / 2.0, world.field.field_length / 2.0}
+  };
+
+  const auto windows = play_helpers::window_evaluation::getWindows(
+    their_goal_segment,
+    world.ball.pos, play_helpers::getVisibleRobots(world.their_robots));
+  const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
+  if (!largest_window) {
+    return 0.0;
+  }
+
+  const auto ratio = largest_window->squared_length() / their_goal_segment.squared_length();
+
+  return ratio * std::numeric_limits<double>::max();
 }
 
 void KickOnGoalPlay::reset()
@@ -56,7 +75,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
-  const ateam_geometry::Point opp_goal_center{world.field.field_length/2.0, 0};
+  const ateam_geometry::Point opp_goal_center{world.field.field_length / 2.0, 0};
   striker_.SetTargetPoint(opp_goal_center);
 
   play_helpers::GroupAssignmentSet groups;
