@@ -18,6 +18,7 @@ find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
 
 add_library(kenobi_node_component SHARED
+  src/defense_area_enforcement.cpp
   src/in_play_eval.cpp
   src/kenobi_node.cpp
   src/play_selector.cpp

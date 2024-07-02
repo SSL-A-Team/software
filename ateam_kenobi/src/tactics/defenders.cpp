@@ -59,7 +59,6 @@ void Defenders::runFrame(
     emt.face_point(world.ball.pos);
     path_planning::PlannerOptions planner_options;
     planner_options.avoid_ball = false;
-    planner_options.draw_obstacles = true;
     planner_options.footprint_inflation = 0.03;
     emt.setPlannerOptions(planner_options);
     motion_commands[robot.id] = emt.runFrame(robot, world);
