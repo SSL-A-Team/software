@@ -36,6 +36,7 @@ Goalie::Goalie(stp::Options stp_options)
   line_kick_(createChild<skills::LineKick>("LineKick"))
 {
   reset();
+  line_kick_.SetUseDefaultObstacles(false);
 }
 
 void Goalie::reset()
@@ -253,6 +254,10 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
     const ateam_geometry::Point goal_center(-world.field.field_length / 2, 0);
     const auto kick_vector = world.ball.pos - goal_center;
     target_point = world.ball.pos + (kick_vector * 3);
+  }
+
+  if(line_kick_.IsDone()) {
+    line_kick_.Reset();
   }
 
   line_kick_.SetTargetPoint(target_point);

@@ -84,6 +84,11 @@ void EasyMoveTo::setTargetPosition(ateam_geometry::Point target_position)
   target_position_ = target_position;
 }
 
+const path_planning::PlannerOptions & EasyMoveTo::getPlannerOptions() const
+{
+  return planner_options_;
+}
+
 void EasyMoveTo::setPlannerOptions(path_planning::PlannerOptions options)
 {
   planner_options_ = options;

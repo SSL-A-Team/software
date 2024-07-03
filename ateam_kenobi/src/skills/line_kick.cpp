@@ -161,7 +161,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
-  path_planning::PlannerOptions planner_options;
+  path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.footprint_inflation = 0.04;
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(GetPreKickPosition(world));
@@ -177,10 +177,9 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunFaceBall(const World & world, c
 
 ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, const Robot & robot)
 {
-  path_planning::PlannerOptions planner_options;
+  path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.avoid_ball = false;
   planner_options.footprint_inflation = 0.0;
-  planner_options.use_default_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
 
   // Handle robot angle

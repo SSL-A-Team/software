@@ -59,6 +59,7 @@ public:
 
   void setTargetPosition(ateam_geometry::Point target_position);
 
+  const path_planning::PlannerOptions & getPlannerOptions() const;
   void setPlannerOptions(path_planning::PlannerOptions options);
   void setMotionOptions(MotionOptions options);
 

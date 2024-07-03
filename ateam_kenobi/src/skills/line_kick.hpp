@@ -58,6 +58,16 @@ public:
     return state_ == State::Done;
   }
 
+  /**
+   * @brief Set the default obstacles planner option on the internal EasyMoveTo
+   */
+  void SetUseDefaultObstacles(bool use_obstacles)
+  {
+    path_planning::PlannerOptions options = easy_move_to_.getPlannerOptions();
+    options.use_default_obstacles = use_obstacles;
+    easy_move_to_.setPlannerOptions(options);
+  }
+
 private:
   const double kPreKickOffset = kRobotRadius + kBallRadius + 0.07;
   ateam_geometry::Point target_point_;
