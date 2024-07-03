@@ -42,6 +42,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<TestPlay>(stp_options);
   addPlay<StopPlay>(stp_options);
   addPlay<WallPlay>(stp_options);
+  addPlay<KickOnGoalPlay>(stp_options);
   addPlay<OurKickoffPlay>(stp_options);
   addPlay<TestKickPlay>(stp_options);
   addPlay<Basic122>(stp_options);

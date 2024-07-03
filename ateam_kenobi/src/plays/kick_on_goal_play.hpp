@@ -18,32 +18,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DEFENSE_AREA_ENFORCEMENT_HPP_
-#define DEFENSE_AREA_ENFORCEMENT_HPP_
+#ifndef PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#define PLAYS__KICK_ON_GOAL_PLAY_HPP_
 
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "types/world.hpp"
+#include "stp/play.hpp"
+#include "tactics/standard_defense.hpp"
+#include "skills/line_kick.hpp"
+#include "skills/lane_idler.hpp"
 
-namespace ateam_kenobi::defense_area_enforcement
+namespace ateam_kenobi::plays
 {
 
-/**
- * @brief Prevents sending motion commands that would encroach on defense areaas
- *
- * Any velocity command that would lead to a collision with a defense area will be set to zero.
- *
- * @note Goalie is ommitted from enforcement.
- */
-void EnforceDefenseAreaKeepout(
-  const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-  16> & motion_commands);
+class KickOnGoalPlay : public stp::Play
+{
+public:
+  static constexpr const char * kPlayName = "KickOnGoalPlay";
 
-bool WouldVelocityCauseCollision(
-  const World & world, const int robot_id,
-  const ateam_msgs::msg::RobotMotionCommand & motion_command);
+  explicit KickOnGoalPlay(stp::Options stp_options);
 
-}  // namespace ateam_kenobi::defense_area_enforcement
+  double getScore(const World & world) override;
 
+  void reset() override;
 
-#endif  // DEFENSE_AREA_ENFORCEMENT_HPP_
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world) override;
+
+private:
+  tactics::StandardDefense defense_;
+  skills::LineKick striker_;
+  skills::LaneIdler lane_idler_a_;
+  skills::LaneIdler lane_idler_b_;
+};
+
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__KICK_ON_GOAL_PLAY_HPP_
