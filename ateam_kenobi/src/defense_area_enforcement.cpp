@@ -79,11 +79,11 @@ bool WouldVelocityCauseCollision(
 
   const ateam_geometry::Disk robot_footprint = ateam_geometry::makeDisk(new_position, kRobotRadius);
 
-  if(ateam_geometry::doIntersect(robot_footprint, our_defense_area)) {
+  if (ateam_geometry::doIntersect(robot_footprint, our_defense_area)) {
     return !IsRobotEscapingDefenseArea(robot.pos, new_position, our_defense_area);
   }
 
-  if(ateam_geometry::doIntersect(robot_footprint, their_defense_area)) {
+  if (ateam_geometry::doIntersect(robot_footprint, their_defense_area)) {
     return !IsRobotEscapingDefenseArea(robot.pos, new_position, their_defense_area);
   }
 
