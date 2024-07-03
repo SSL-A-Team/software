@@ -73,12 +73,31 @@ bool WouldVelocityCauseCollision(
 
   const ateam_geometry::Vector displacement = velocity * delta_t;
 
-  const ateam_geometry::Point new_position = world.our_robots[robot_id].pos + displacement;
+  const auto & robot = world.our_robots[robot_id];
+
+  const ateam_geometry::Point new_position = robot.pos + displacement;
 
   const ateam_geometry::Disk robot_footprint = ateam_geometry::makeDisk(new_position, kRobotRadius);
 
-  return ateam_geometry::doIntersect(robot_footprint, our_defense_area) ||
-         ateam_geometry::doIntersect(robot_footprint, their_defense_area);
+  if(ateam_geometry::doIntersect(robot_footprint, our_defense_area)) {
+    return !IsRobotEscapingDefenseArea(robot.pos, new_position, our_defense_area);
+  }
+
+  if(ateam_geometry::doIntersect(robot_footprint, their_defense_area)) {
+    return !IsRobotEscapingDefenseArea(robot.pos, new_position, their_defense_area);
+  }
+
+  return false;
+}
+
+bool IsRobotEscapingDefenseArea(
+  const ateam_geometry::Point & position,
+  const ateam_geometry::Point & new_position,
+  const ateam_geometry::Rectangle & defense_area)
+{
+  const auto area_center = CGAL::midpoint(defense_area.min(), defense_area.max());
+
+  return CGAL::compare_distance_to_point(area_center, position, new_position) == CGAL::SMALLER;
 }
 
 }  // namespace ateam_kenobi::defense_area_enforcement

@@ -43,6 +43,11 @@ bool WouldVelocityCauseCollision(
   const World & world, const int robot_id,
   const ateam_msgs::msg::RobotMotionCommand & motion_command);
 
+bool IsRobotEscapingDefenseArea(
+  const ateam_geometry::Point & position,
+  const ateam_geometry::Point & new_position,
+  const ateam_geometry::Rectangle & defense_area);
+
 }  // namespace ateam_kenobi::defense_area_enforcement
 
 
