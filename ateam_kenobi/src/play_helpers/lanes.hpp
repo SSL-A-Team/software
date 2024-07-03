@@ -18,32 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DEFENSE_AREA_ENFORCEMENT_HPP_
-#define DEFENSE_AREA_ENFORCEMENT_HPP_
+#ifndef PLAY_HELPERS__LANES_HPP_
+#define PLAY_HELPERS__LANES_HPP_
 
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_geometry/types.hpp>
 #include "types/world.hpp"
 
-namespace ateam_kenobi::defense_area_enforcement
+namespace ateam_kenobi::play_helpers::lanes
 {
 
-/**
- * @brief Prevents sending motion commands that would encroach on defense areaas
- *
- * Any velocity command that would lead to a collision with a defense area will be set to zero.
- *
- * @note Goalie is ommitted from enforcement.
- */
-void EnforceDefenseAreaKeepout(
-  const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-  16> & motion_commands);
+enum class Lane
+{
+  Left,
+  Center,
+  Right,
+  LeftOffense,
+  CenterOffense,
+  RightOffense,
+  LeftDefense,
+  CenterDefense,
+  RightDefense
+};
 
-bool WouldVelocityCauseCollision(
-  const World & world, const int robot_id,
-  const ateam_msgs::msg::RobotMotionCommand & motion_command);
+ateam_geometry::Segment GetLaneLongitudinalMidSegment(const World & world, const Lane & lane);
 
-}  // namespace ateam_kenobi::defense_area_enforcement
+ateam_geometry::Rectangle GetLaneBounds(const World & world, const Lane & lane);
 
+bool IsBallInLane(const World & world, const Lane & lane);
 
-#endif  // DEFENSE_AREA_ENFORCEMENT_HPP_
+}  // namespace ateam_kenobi::play_helpers::lanes
+
+#endif  // PLAY_HELPERS__LANES_HPP_

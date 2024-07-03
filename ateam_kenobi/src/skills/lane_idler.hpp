@@ -18,32 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DEFENSE_AREA_ENFORCEMENT_HPP_
-#define DEFENSE_AREA_ENFORCEMENT_HPP_
+#ifndef SKILLS__LANE_IDLER_HPP_
+#define SKILLS__LANE_IDLER_HPP_
 
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "types/world.hpp"
+#include "stp/skill.hpp"
+#include "play_helpers/easy_move_to.hpp"
+#include "play_helpers/lanes.hpp"
 
-namespace ateam_kenobi::defense_area_enforcement
+namespace ateam_kenobi::skills
 {
 
-/**
- * @brief Prevents sending motion commands that would encroach on defense areaas
- *
- * Any velocity command that would lead to a collision with a defense area will be set to zero.
- *
- * @note Goalie is ommitted from enforcement.
- */
-void EnforceDefenseAreaKeepout(
-  const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-  16> & motion_commands);
+class LaneIdler : public stp::Skill
+{
+public:
+  explicit LaneIdler(stp::Options stp_options);
 
-bool WouldVelocityCauseCollision(
-  const World & world, const int robot_id,
-  const ateam_msgs::msg::RobotMotionCommand & motion_command);
+  void Reset();
 
-}  // namespace ateam_kenobi::defense_area_enforcement
+  ateam_geometry::Point GetAssignmentPoint(const World & world);
+
+  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+
+  void SetLane(play_helpers::lanes::Lane lane)
+  {
+    lane_ = lane;
+  }
+
+private:
+  play_helpers::lanes::Lane lane_ = play_helpers::lanes::Lane::Center;
+  play_helpers::EasyMoveTo easy_move_to_;
+
+  ateam_geometry::Point GetIdlingPosition(const World & world);
+};
+
+}  // namespace ateam_kenobi::skills
 
 
-#endif  // DEFENSE_AREA_ENFORCEMENT_HPP_
+#endif  // SKILLS__LANE_IDLER_HPP_

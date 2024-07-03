@@ -30,7 +30,9 @@ namespace ateam_kenobi::plays
 KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   defense_(createChild<tactics::StandardDefense>("defense")),
-  striker_(createChild<skills::LineKick>("striker"))
+  striker_(createChild<skills::LineKick>("striker")),
+  lane_idler_a_(createChild<skills::LaneIdler>("lane_idler_a")),
+  lane_idler_b_(createChild<skills::LaneIdler>("lane_idler_b"))
 {
   setEnabled(false);  // TODO(barulicm) remove when ready
 }
@@ -78,19 +80,42 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
   const ateam_geometry::Point opp_goal_center{world.field.field_length / 2.0, 0};
   striker_.SetTargetPoint(opp_goal_center);
 
+  if (play_helpers::lanes::IsBallInLane(world, play_helpers::lanes::Lane::LeftOffense)) {
+    lane_idler_a_.SetLane(play_helpers::lanes::Lane::CenterOffense);
+    lane_idler_b_.SetLane(play_helpers::lanes::Lane::RightOffense);
+  } else if (play_helpers::lanes::IsBallInLane(world, play_helpers::lanes::Lane::CenterOffense)) {
+    lane_idler_a_.SetLane(play_helpers::lanes::Lane::LeftOffense);
+    lane_idler_b_.SetLane(play_helpers::lanes::Lane::RightOffense);
+  } else if (play_helpers::lanes::IsBallInLane(world, play_helpers::lanes::Lane::RightOffense)) {
+    lane_idler_a_.SetLane(play_helpers::lanes::Lane::LeftOffense);
+    lane_idler_b_.SetLane(play_helpers::lanes::Lane::CenterOffense);
+  }
+
   play_helpers::GroupAssignmentSet groups;
   groups.AddGroup("defense", defense_.getAssignmentPoints(world));
   groups.AddPosition("striker", striker_.GetAssignmentPoint(world));
+  groups.AddPosition("lane_idler_a", lane_idler_a_.GetAssignmentPoint(world));
+  groups.AddPosition("lane_idler_b", lane_idler_b_.GetAssignmentPoint(world));
 
   auto assignments = play_helpers::assignGroups(available_robots, groups);
 
   defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
 
-  const auto maybe_striker_bot = assignments.GetPositionAssignment("striker");
-  if (maybe_striker_bot) {
-    const auto & striker_bot = *maybe_striker_bot;
-    motion_commands[striker_bot.id] = striker_.RunFrame(world, striker_bot);
-  }
+
+  assignments.RunPositionIfAssigned(
+    "striker", [this, &world, &motion_commands](const Robot & robot) {
+      motion_commands[robot.id] = striker_.RunFrame(world, robot);
+    });
+
+  assignments.RunPositionIfAssigned(
+    "lane_idler_a", [this, &world, &motion_commands](const Robot & robot) {
+      motion_commands[robot.id] = lane_idler_a_.RunFrame(world, robot);
+    });
+
+  assignments.RunPositionIfAssigned(
+    "lane_idler_b", [this, &world, &motion_commands](const Robot & robot) {
+      motion_commands[robot.id] = lane_idler_b_.RunFrame(world, robot);
+    });
 
   return motion_commands;
 }

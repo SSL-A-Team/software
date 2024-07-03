@@ -95,6 +95,16 @@ public:
 
   std::vector<Robot> GetGroupFilledAssignments(const std::string & name) const;
 
+  template<typename PositionFunc>
+  void RunPositionIfAssigned(const std::string & name, PositionFunc func)
+  {
+    const auto & maybe_robot = GetPositionAssignment(name);
+    if (!maybe_robot) {
+      return;
+    }
+    func(*maybe_robot);
+  }
+
 private:
   std::vector<GroupRecord> records_;
   std::vector<std::optional<Robot>> assignments_;
