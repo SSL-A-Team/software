@@ -256,7 +256,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
     target_point = world.ball.pos + (kick_vector * 3);
   }
 
-  if(line_kick_.IsDone()) {
+  if (line_kick_.IsDone()) {
     line_kick_.Reset();
   }
 
