@@ -41,15 +41,15 @@ StopPlay::StopPlay(stp::Options stp_options)
   StopPlay::reset();
 }
 
-double StopPlay::getScore(const World & world)
+stp::PlayScore StopPlay::getScore(const World & world)
 {
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::Stop:
     case ateam_common::GameCommand::BallPlacementOurs:
     case ateam_common::GameCommand::BallPlacementTheirs:
-      return std::numeric_limits<double>::max();
+      return stp::PlayScore::Max();
     default:
-      return std::numeric_limits<double>::lowest();
+      return stp::PlayScore::Min();
   }
 }
 
