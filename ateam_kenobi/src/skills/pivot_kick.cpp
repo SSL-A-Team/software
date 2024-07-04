@@ -43,7 +43,25 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::runFrame(const World & world, con
 {
   getOverlays().drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
 
-  if (!robot.breakbeam_ball_detected) {
+  bool breakbeam_ball_detected = robot.breakbeam_ball_detected;
+
+  // I guess we could make a param in kenobi node that causes it to automatically
+  // calculate simulated breakbeam for each bot when it is populating the robot objects
+  bool use_sim_breakbeam = true;
+  if (use_sim_breakbeam) {
+    float hysteresis = 1.0;
+    if (prev_state_ != State::Capture) {
+      hysteresis = 2.0;
+    }
+
+    const auto robot_to_ball = world.ball.pos - robot.pos;
+    const auto distance_to_ball = ateam_geometry::norm(robot.pos, world.ball.pos);
+    const auto robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
+    breakbeam_ball_detected = distance_to_ball < (0.08+kBallRadius) * hysteresis
+      && angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) < 0.15 * hysteresis;
+  }
+
+  if (!breakbeam_ball_detected) {
     if (prev_state_ != State::Capture) {
       easy_move_to_.reset();
       prev_state_ = State::Capture;
