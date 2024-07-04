@@ -38,6 +38,12 @@ public:
     stp::Options stp_options,
     KickSkill::WaitType wait_type = KickSkill::WaitType::KickWhenReady);
 
+  void Reset() override
+  {
+    KickSkill::Reset();
+    prev_state_ = State::Capture;
+  }
+
   void SetTargetPoint(ateam_geometry::Point point)
   {
     target_point_ = point;

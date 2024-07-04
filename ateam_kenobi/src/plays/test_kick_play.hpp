@@ -43,7 +43,10 @@ public:
     getParamInterface().declareParameter(kUsePivotKickParam, true);
   }
 
-  void reset() override {}
+  void reset() override {
+    line_kick_skill_.Reset();
+    pivot_kick_skill_.Reset();
+  }
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override

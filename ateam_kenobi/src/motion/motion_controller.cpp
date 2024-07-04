@@ -180,7 +180,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   // TODO(anon): handle pid gains better
-  this->x_controller.initPid(2.5, 0.0, 0.0, 0.3, -0.3, true);
+  this->x_controller.initPid(2.5, 0, 0.0, 0.3, -0.3, true);
   this->y_controller.initPid(1.0, 1000, 0.0, 0.15, -0.15, true);
   this->t_controller.initPid(2.8, 5.0, 0.0, 0.5, -0.5, true);
 

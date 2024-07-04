@@ -47,7 +47,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
 
   // I guess we could make a param in kenobi node that causes it to automatically
   // calculate simulated breakbeam for each bot when it is populating the robot objects
-  bool use_sim_breakbeam = true;
+  bool use_sim_breakbeam = false;
   if (use_sim_breakbeam) {
     float hysteresis = 1.0;
     if (prev_state_ != State::Capture) {
@@ -121,16 +121,17 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Capture(
 
 ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 {
-  /*
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
-  angles::shortest_angular_distance(robot.theta, robot_to_target_angle);
-  */
+  const bool positive_angle = angles::shortest_angular_distance(robot.theta, robot_to_target_angle) >= 0;
 
   ateam_msgs::msg::RobotMotionCommand command;
   command.twist.angular.z = 1.5;  // turn at 1.5 rad/s
+  if (!positive_angle) {
+    command.twist.angular.z *= -1;
+  }
 
-  // rotate in a circle with diameter 0.0427 + 0.18 = 0.2227
+  // rotate in a circle with diameter 0.0427 + 0.18 = 0.2227 (This might be tunable to use 8cm for real robots)
   // circumference of 0.6996 meters in a full rotation.
   // Calculate m/rev * rev/s to get linear m/s
   double velocity = 0.6996 * (command.twist.angular.z / (2 * M_PI));
