@@ -73,6 +73,58 @@ stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::Playbook
     selected_play = halt_play_.get();
   }
 
+  // switch (current_game_command) {
+  //   case ateam_common::GameCommand::Halt:
+  //   case ateam_common::GameCommand::TimeoutOurs:
+  //   case ateam_common::GameCommand::TimeoutTheirs:
+  //   case ateam_common::GameCommand::GoalOurs:
+  //   case ateam_common::GameCommand::GoalTheirs:
+  //     selected_play = &halt_play_;
+  //     break;
+  //   case ateam_common::GameCommand::Stop:
+  //     selected_play = &stop_play_;
+  //     break;
+  //   case ateam_common::GameCommand::NormalStart:
+  //     selected_play = pickNormalStartPlay(world);
+  //     break;
+  //   case ateam_common::GameCommand::ForceStart:
+  //     selected_play = &basic_122_play_;
+  //     break;
+  //   case ateam_common::GameCommand::PrepareKickoffOurs:
+  //     selected_play = &our_kickoff_play_;
+  //     break;
+  //   case ateam_common::GameCommand::PrepareKickoffTheirs:
+  //     selected_play = &wall_play_;
+  //     break;
+  //   case ateam_common::GameCommand::PreparePenaltyOurs:
+  //     selected_play = &our_penalty_play_;
+  //     break;
+  //   case ateam_common::GameCommand::PreparePenaltyTheirs:
+  //     selected_play = &their_penalty_play_;
+  //     break;
+  //   case ateam_common::GameCommand::DirectFreeOurs:
+  //   case ateam_common::GameCommand::IndirectFreeOurs:
+  //     selected_play = &basic_122_play_;
+  //     break;
+  //   case ateam_common::GameCommand::DirectFreeTheirs:
+  //   case ateam_common::GameCommand::IndirectFreeTheirs:
+  //     if (world.in_play) {
+  //       selected_play = &basic_122_play_;
+  //     } else {
+  //       selected_play = &wall_play_;
+  //     }
+  //     break;
+  //   case ateam_common::GameCommand::BallPlacementOurs:
+  //   case ateam_common::GameCommand::BallPlacementTheirs:
+  //     selected_play = &stop_play_;
+  //     break;
+  //   default:
+  //     std::cerr <<
+  //       "WARNING: Play selector falling through because of unrecognized game command: " <<
+  //       static_cast<int>(current_game_command) << '\n';
+  //     break;
+  // }
+
   resetPlayIfNeeded(selected_play);
 
   fillStateMessage(state_msg, world);
