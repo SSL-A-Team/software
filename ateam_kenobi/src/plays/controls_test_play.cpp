@@ -98,7 +98,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 
   MotionOptions motion_options;
   motion_options.completion_threshold = position_threshold;
-  maybe_motion_commands[robot.id] = motion_controller_.get_command(robot, current_time, motion_options);
+  maybe_motion_commands[robot.id] = motion_controller_.get_command(
+    robot, current_time,
+    motion_options);
 
   const std::vector<ateam_geometry::Point> viz_path = {robot.pos, waypoints[index].position};
   getOverlays().drawLine("controls_test_path", viz_path, "purple");
@@ -133,7 +135,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 
 bool ControlsTestPlay::isGoalHit(const Robot & robot)
 {
-  const bool position_goal_hit = ateam_geometry::norm(waypoints[index].position - robot.pos) < position_threshold;
+  const bool position_goal_hit = ateam_geometry::norm(waypoints[index].position - robot.pos) <
+    position_threshold;
   const bool heading_goal_hit = [&]() {
       if (waypoints[index].angle_mode == AngleMode::face_absolute) {
         return std::abs(
