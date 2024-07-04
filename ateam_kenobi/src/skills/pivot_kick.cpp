@@ -43,25 +43,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
 {
   getOverlays().drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
 
-  bool breakbeam_ball_detected = robot.breakbeam_ball_detected;
-
-  // I guess we could make a param in kenobi node that causes it to automatically
-  // calculate simulated breakbeam for each bot when it is populating the robot objects
-  bool use_sim_breakbeam = false;
-  if (use_sim_breakbeam) {
-    float hysteresis = 1.0;
-    if (prev_state_ != State::Capture) {
-      hysteresis = 2.0;
-    }
-
-    const auto robot_to_ball = world.ball.pos - robot.pos;
-    const auto distance_to_ball = ateam_geometry::norm(robot.pos, world.ball.pos);
-    const auto robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
-    breakbeam_ball_detected = distance_to_ball < (0.08+kBallRadius) * hysteresis
-      && angles::shortest_angular_distance(robot.theta, robot_to_ball_angle) < 0.15 * hysteresis;
-  }
-
-  if (!breakbeam_ball_detected) {
+  if (!robot.breakbeam_ball_detected) {
     if (prev_state_ != State::Capture) {
       easy_move_to_.reset();
       prev_state_ = State::Capture;
@@ -123,7 +105,8 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 {
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
-  const bool positive_angle = angles::shortest_angular_distance(robot.theta, robot_to_target_angle) >= 0;
+  const bool positive_angle =
+    angles::shortest_angular_distance(robot.theta, robot_to_target_angle) >= 0;
 
   ateam_msgs::msg::RobotMotionCommand command;
   command.twist.angular.z = 1.5;  // turn at 1.5 rad/s
@@ -131,9 +114,11 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
     command.twist.angular.z *= -1;
   }
 
-  // rotate in a circle with diameter 0.0427 + 0.18 = 0.2227 (This might be tunable to use 8cm for real robots)
-  // circumference of 0.6996 meters in a full rotation.
-  // Calculate m/rev * rev/s to get linear m/s
+  /* rotate in a circle with diameter 0.0427 + 0.18 = 0.2227 (This might be tunable to use 8cm for
+   * real robots)
+   * circumference of 0.6996 meters in a full rotation.
+   * Calculate m/rev * rev/s to get linear m/s
+   */
   double velocity = 0.6996 * (command.twist.angular.z / (2 * M_PI));
 
   command.twist.linear.x = std::sin(robot.theta) * velocity;

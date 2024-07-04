@@ -46,6 +46,7 @@
 #include "play_selector.hpp"
 #include "in_play_eval.hpp"
 #include "double_touch_eval.hpp"
+#include "ballsense_emulator.hpp"
 #include "motion/world_to_body_vel.hpp"
 #include "plays/halt_play.hpp"
 #include "defense_area_enforcement.hpp"
@@ -66,6 +67,7 @@ public:
     game_controller_listener_(*this)
   {
     declare_parameter<bool>("use_world_velocities", false);
+    declare_parameter<bool>("use_emulated_ballsense", false);
 
     overlay_publisher_ = create_publisher<ateam_msgs::msg::OverlayArray>(
       "/overlays",
@@ -138,6 +140,7 @@ private:
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
+  BallSenseEmulator ballsense_emulator_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
@@ -314,6 +317,9 @@ private:
     }
     in_play_eval_.Update(world_);
     double_touch_eval_.update(world_);
+    if (get_parameter("use_emulated_ballsense").as_bool()) {
+      ballsense_emulator_.Update(world_);
+    }
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
       auto & clk = *this->get_clock();
       RCLCPP_WARN_THROTTLE(

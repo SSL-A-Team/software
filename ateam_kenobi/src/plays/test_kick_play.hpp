@@ -43,7 +43,8 @@ public:
     getParamInterface().declareParameter(kUsePivotKickParam, true);
   }
 
-  void reset() override {
+  void reset() override
+  {
     line_kick_skill_.Reset();
     pivot_kick_skill_.Reset();
   }
