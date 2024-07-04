@@ -37,12 +37,12 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
   setEnabled(false);  // TODO(barulicm) remove when ready
 }
 
-double KickOnGoalPlay::getScore(const World & world)
+stp::PlayScore KickOnGoalPlay::getScore(const World & world)
 {
   if (world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart)
   {
-    return -std::numeric_limits<double>::infinity();
+    return stp::PlayScore::NegativeInfinity();
   }
 
   const ateam_geometry::Segment their_goal_segment{
@@ -60,7 +60,7 @@ double KickOnGoalPlay::getScore(const World & world)
 
   const auto ratio = largest_window->squared_length() / their_goal_segment.squared_length();
 
-  return ratio * std::numeric_limits<double>::max();
+  return ratio * stp::PlayScore::Max();
 }
 
 void KickOnGoalPlay::reset()

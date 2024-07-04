@@ -40,7 +40,7 @@ Basic122::Basic122(stp::Options stp_options)
 {
 }
 
-double Basic122::getScore(const World & world)
+stp::PlayScore Basic122::getScore(const World & world)
 {
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::ForceStart:
@@ -48,7 +48,7 @@ double Basic122::getScore(const World & world)
     case ateam_common::GameCommand::DirectFreeOurs:
       return 0.0;
     default:
-      return world.in_play ? 0.0 : std::numeric_limits<double>::lowest();
+      return world.in_play ? stp::PlayScore(0.0) : stp::PlayScore::Min();
   }
 }
 

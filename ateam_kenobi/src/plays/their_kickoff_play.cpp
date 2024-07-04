@@ -36,10 +36,10 @@ TheirKickoffPlay::TheirKickoffPlay(stp::Options stp_options)
   defense_(createChild<tactics::StandardDefense>("defense"))
 {}
 
-double TheirKickoffPlay::getScore(const World & world)
+stp::PlayScore TheirKickoffPlay::getScore(const World & world)
 {
   if (world.in_play) {
-    return std::numeric_limits<double>::quiet_NaN();
+    return stp::PlayScore::NaN();
   }
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
@@ -47,9 +47,9 @@ double TheirKickoffPlay::getScore(const World & world)
     (cmd == ateam_common::GameCommand::NormalStart &&
     prev == ateam_common::GameCommand::PrepareKickoffTheirs))
   {
-    return std::numeric_limits<double>::max();
+    return stp::PlayScore::Max();
   }
-  return std::numeric_limits<double>::quiet_NaN();
+  return stp::PlayScore::NaN();
 }
 
 void TheirKickoffPlay::reset()

@@ -42,7 +42,7 @@ public:
 
   explicit OurKickoffPlay(stp::Options stp_options);
 
-  double getScore(const World & world) override;
+  stp::PlayScore getScore(const World & world) override;
 
   void reset() override;
 
