@@ -36,13 +36,13 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 
   // Drive in square
   waypoints = {
-    {ateam_geometry::Point(-1.5, -1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(-1.5, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(0.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(0.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.2, -1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.2, 1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(0.3, 1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(0.3, -1.0), AngleMode::face_absolute, 0.0, 3.0},
   };
 
-  motion_controller_.v_max = 2;
+  motion_controller_.v_max = 2.0;
   motion_controller_.t_max = 18;
 }
 
@@ -95,7 +95,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   }
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
-  maybe_motion_commands[robot.id] = motion_controller_.get_command(robot, current_time);
+
+  MotionOptions motion_options;
+  motion_options.completion_threshold = position_threshold;
+  maybe_motion_commands[robot.id] = motion_controller_.get_command(robot, current_time, motion_options);
 
   const std::vector<ateam_geometry::Point> viz_path = {robot.pos, waypoints[index].position};
   getOverlays().drawLine("controls_test_path", viz_path, "purple");
@@ -130,13 +133,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 
 bool ControlsTestPlay::isGoalHit(const Robot & robot)
 {
-  const bool position_goal_hit = ateam_geometry::norm(waypoints[index].position - robot.pos) < 0.05;
+  const bool position_goal_hit = ateam_geometry::norm(waypoints[index].position - robot.pos) < position_threshold;
   const bool heading_goal_hit = [&]() {
       if (waypoints[index].angle_mode == AngleMode::face_absolute) {
         return std::abs(
           angles::shortest_angular_distance(
             waypoints[index].heading,
-            robot.theta)) < angles::from_degrees(5);
+            robot.theta)) < angles::from_degrees(angle_threshold);
       } else {
         return true;
       }

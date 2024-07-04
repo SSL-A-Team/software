@@ -101,7 +101,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
 
   double dt = current_time - this->prev_time;
-  uint64_t dt_nano = dt * 1000000;  // convert to nanoseconds
+  uint64_t dt_nano = dt * 1e9;  // convert to nanoseconds
 
   // TODO(anon): figure out what point on the trajectory to use as the target
   uint64_t index;
@@ -180,9 +180,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   // TODO(anon): handle pid gains better
-  this->x_controller.initPid(2.7, 0.0, 0.0, 0, 0);
-  this->y_controller.initPid(2.7, 0.0, 0.0, 0, 0);
-  this->t_controller.initPid(5.0, 0.5, 0, 0, 0);
+  this->x_controller.initPid(2.5, 0.0, 0.0, 0.3, -0.3, true);
+  this->y_controller.initPid(1.0, 1000, 0.0, 0.15, -0.15, true);
+  this->t_controller.initPid(2.8, 5.0, 0.0, 0.5, -0.5, true);
 
   this->progress = 0;
   this->total_dist = 0;

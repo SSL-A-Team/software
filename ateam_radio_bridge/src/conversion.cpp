@@ -103,9 +103,9 @@ ateam_msgs::msg::RobotMotionFeedback Convert(const ControlDebugTelemetry & contr
   ateam_msgs::msg::RobotMotionFeedback robot_motion_feedback;
 
   robot_motion_feedback.motors[robot_motion_feedback.FRONT_LEFT_MOTOR] = Convert(control_debug_telemetry.motor_fl);
-  robot_motion_feedback.motors[robot_motion_feedback.FRONT_RIGHT_MOTOR] = Convert(control_debug_telemetry.motor_fr);
-  robot_motion_feedback.motors[robot_motion_feedback.BACK_RIGHT_MOTOR] = Convert(control_debug_telemetry.motor_br);
   robot_motion_feedback.motors[robot_motion_feedback.BACK_LEFT_MOTOR] = Convert(control_debug_telemetry.motor_bl);
+  robot_motion_feedback.motors[robot_motion_feedback.BACK_RIGHT_MOTOR] = Convert(control_debug_telemetry.motor_br);
+  robot_motion_feedback.motors[robot_motion_feedback.FRONT_RIGHT_MOTOR] = Convert(control_debug_telemetry.motor_fr);
 
   robot_motion_feedback.imu.orientation_covariance[0] = -1.0;  // ROS2 docs say if a sensor doesn't provide a data point, then set element '0' of it's covariance to -1
   robot_motion_feedback.imu.angular_velocity = ConvertFloatArrayToVec3(control_debug_telemetry.imu_gyro);
