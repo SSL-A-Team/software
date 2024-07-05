@@ -72,7 +72,7 @@ def generate_launch_description():
                 "ssl_vision_interface_address": "",
                 "ssl_vision_port": "10020",
                 "team_name": LaunchConfiguration("team_name"),
-                "use_emulated_ballsense": True
+                "use_emulated_ballsense": "True"
             }.items()
         ),
 
