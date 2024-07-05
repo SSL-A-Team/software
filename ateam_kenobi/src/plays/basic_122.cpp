@@ -42,13 +42,14 @@ Basic122::Basic122(stp::Options stp_options)
 
 stp::PlayScore Basic122::getScore(const World & world)
 {
+  const auto default_score = 25.0;  // arbitrary score with room for other plays to be better
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::ForceStart:
     case ateam_common::GameCommand::NormalStart:
     case ateam_common::GameCommand::DirectFreeOurs:
-      return 0.0;
+      return default_score;
     default:
-      return world.in_play ? stp::PlayScore(0.0) : stp::PlayScore::Min();
+      return world.in_play ? stp::PlayScore(default_score) : stp::PlayScore::Min();
   }
 }
 

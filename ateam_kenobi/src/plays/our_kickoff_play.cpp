@@ -21,6 +21,7 @@
 
 #include "our_kickoff_play.hpp"
 #include <limits>
+#include <random>
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
 #include "play_helpers/robot_assignment.hpp"
@@ -53,6 +54,7 @@ stp::PlayScore OurKickoffPlay::getScore(const World & world)
 
 void OurKickoffPlay::reset()
 {
+  kick_target_.reset();
   line_kick_skill_.Reset();
   defense_.reset();
 }
@@ -68,6 +70,12 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     ateam_geometry::Point(-0.3, world.field.field_width / 3),
     ateam_geometry::Point(-0.3, -world.field.field_width / 3)
   };
+
+  if (!kick_target_) {
+    static std::default_random_engine rand_eng(std::random_device{}());
+    std::uniform_int_distribution<int> distribution(0, support_positions_.size());
+    kick_target_ = support_positions_[distribution(rand_eng)];
+  }
 
   play_helpers::GroupAssignmentSet groups;
 
@@ -115,8 +123,7 @@ void OurKickoffPlay::runKicker(
     getPlayInfo()["State"] = "Preparing";
     getPlayInfo()["Kicker Id"] = kicker.id;
   } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
-    line_kick_skill_.SetTargetPoint(
-      ateam_geometry::Point(-0.3, world.field.field_width / 3));
+    line_kick_skill_.SetTargetPoint(*kick_target_);
     line_kick_skill_.SetKickSpeed(3.0);
     motion_commands.at(kicker.id) = line_kick_skill_.RunFrame(world, kicker);
 

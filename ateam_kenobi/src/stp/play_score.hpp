@@ -63,12 +63,12 @@ public:
 
   static PlayScore Infinity()
   {
-    return std::numeric_limits<double>::infinity();
+    return kInfinity;
   }
 
   static PlayScore NegativeInfinity()
   {
-    return -std::numeric_limits<double>::infinity();
+    return -kInfinity;
   }
 
   static PlayScore NaN()
@@ -91,8 +91,9 @@ public:
 private:
   static constexpr double kMaxAllowed = 100.0;
   static constexpr double kMinAllowed = 0.0;
+  static constexpr double kInfinity = std::numeric_limits<double>::infinity();
 
-  double value_ = NegativeInfinity();
+  double value_ = kInfinity;
 };
 
 }  // namespace ateam_kenobi::stp

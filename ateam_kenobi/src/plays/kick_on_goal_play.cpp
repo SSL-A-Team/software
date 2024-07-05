@@ -40,9 +40,14 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
 stp::PlayScore KickOnGoalPlay::getScore(const World & world)
 {
   if (world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::ForceStart)
+    world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
+    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
   {
     return stp::PlayScore::NegativeInfinity();
+  }
+
+  if (world.ball.pos.x() < 0.0) {
+    return stp::PlayScore::Min();
   }
 
   const ateam_geometry::Segment their_goal_segment{
@@ -50,12 +55,23 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
     ateam_geometry::Point{world.field.goal_width / 2.0, world.field.field_length / 2.0}
   };
 
+  const ateam_geometry::Vector ball_goal_vector(
+    world.ball.pos,
+    CGAL::midpoint(their_goal_segment));
+
+  const auto shot_angle = ateam_geometry::ShortestAngleBetween(
+    their_goal_segment.to_vector(), ball_goal_vector);
+
+  if (shot_angle < 30 || shot_angle > 150) {
+    return stp::PlayScore::Min();
+  }
+
   const auto windows = play_helpers::window_evaluation::getWindows(
     their_goal_segment,
     world.ball.pos, play_helpers::getVisibleRobots(world.their_robots));
   const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
   if (!largest_window) {
-    return 0.0;
+    return stp::PlayScore::Min();
   }
 
   const auto ratio = largest_window->squared_length() / their_goal_segment.squared_length();

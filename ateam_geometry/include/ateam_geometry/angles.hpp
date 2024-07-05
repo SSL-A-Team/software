@@ -18,22 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
-#define ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+#ifndef ATEAM_GEOMETRY__ANGLES_HPP_
+#define ATEAM_GEOMETRY__ANGLES_HPP_
 
-// This is a convenience header for including all ateam_geometry utilities
-
-#include "angles.hpp"
-#include "any_shape.hpp"
-#include "arc.hpp"
-#include "comparisons.hpp"
-#include "creation_helpers.hpp"
-#include "disk.hpp"
-#include "do_intersect.hpp"
-#include "eigen_conversions.hpp"
-#include "intersection.hpp"
-#include "nearest_point.hpp"
-#include "normalize.hpp"
+#include <angles/angles.h>
 #include "types.hpp"
 
-#endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+namespace ateam_geometry
+{
+
+inline double ToHeading(const ateam_geometry::Direction & direction)
+{
+  return std::atan2(direction.dy(), direction.dx());
+}
+
+inline double ToHeading(const ateam_geometry::Vector & vector)
+{
+  return ToHeading(vector.direction());
+}
+
+inline double ShortestAngleBetween(
+  const ateam_geometry::Direction & source,
+  const ateam_geometry::Direction & target)
+{
+  return angles::shortest_angular_distance(ToHeading(source), ToHeading(target));
+}
+
+inline double ShortestAngleBetween(
+  const ateam_geometry::Vector & source,
+  const ateam_geometry::Vector & target)
+{
+  return ShortestAngleBetween(source.direction(), target.direction());
+}
+
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__ANGLES_HPP_
