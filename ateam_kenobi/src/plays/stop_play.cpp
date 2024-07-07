@@ -45,8 +45,6 @@ stp::PlayScore StopPlay::getScore(const World & world)
 {
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::Stop:
-    case ateam_common::GameCommand::BallPlacementOurs:
-    case ateam_common::GameCommand::BallPlacementTheirs:
       return stp::PlayScore::Max();
     default:
       return stp::PlayScore::Min();
