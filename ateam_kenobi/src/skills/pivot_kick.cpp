@@ -48,7 +48,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
       easy_move_to_.reset();
       prev_state_ = State::Capture;
     }
-    RCLCPP_INFO(getLogger(), "Capturing...");
+    //RCLCPP_INFO(getLogger(), "Capturing...");
     return Capture(world, robot);
   }
 
@@ -59,7 +59,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
       easy_move_to_.reset();
       prev_state_ = State::Pivot;
     }
-    RCLCPP_INFO(getLogger(), "Pivoting...");
+    //RCLCPP_INFO(getLogger(), "Pivoting...");
     return Pivot(robot);
   }
 
@@ -68,7 +68,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
     prev_state_ = State::KickBall;
   }
 
-  RCLCPP_INFO(getLogger(), "Kicking...");
+  //RCLCPP_INFO(getLogger(), "Kicking...");
   return KickBall(world, robot);
 }
 
@@ -97,7 +97,11 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Capture(
   }
 
   auto command = easy_move_to_.runFrame(robot, world);
-  command.dribbler_speed = 200;
+
+  if (distance_to_ball < 0.25) {
+    command.dribbler_speed = 200;
+  }
+
   return command;
 }
 
@@ -119,7 +123,9 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
    * circumference of 0.6996 meters in a full rotation.
    * Calculate m/rev * rev/s to get linear m/s
    */
-  double velocity = 0.6996 * (command.twist.angular.z / (2 * M_PI));
+  double diameter = kBallDiameter + kRobotDiameter;
+  double circumference = M_PI * diameter;
+  double velocity = circumference * (command.twist.angular.z / (2 * M_PI));
 
   command.twist.linear.x = std::sin(robot.theta) * velocity;
   command.twist.linear.y = -std::cos(robot.theta) * velocity;
@@ -137,9 +143,13 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::KickBall(const World & world, con
   planner_options.use_default_obstacles = false;
   easy_move_to_.setPlannerOptions(planner_options);
   auto command = easy_move_to_.runFrame(robot, world);
-  command.dribbler_speed = 500;
-  command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
-  command.kick_speed = IsAllowedToKick() ? GetKickSpeed() : 0.0;
+  command.dribbler_speed = 200;
+
+  if (IsAllowedToKick()) {
+    command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
+    command.kick_speed = GetKickSpeed();
+  }
+
   return command;
 }
 }  // namespace ateam_kenobi::skills
