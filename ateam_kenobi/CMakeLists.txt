@@ -54,6 +54,7 @@ add_library(kenobi_node_component SHARED
   src/skills/pivot_kick.cpp
   src/tactics/blockers.cpp
   src/tactics/defenders.cpp
+  src/tactics/pass_to_segment.cpp
   src/tactics/pass.cpp
   src/tactics/standard_defense.cpp
 )
