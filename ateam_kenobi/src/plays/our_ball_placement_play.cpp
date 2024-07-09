@@ -50,7 +50,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
   switch (state_) {
     case State::Passing:
       if (pass_tactic_.isDone()
-            || ball_dist < 1.0 
+            || (ball_dist < 1.0 && ball_speed < 0.05)
             || available_robots.size() < 2) {
         state_ = State::Placing;
         break;
