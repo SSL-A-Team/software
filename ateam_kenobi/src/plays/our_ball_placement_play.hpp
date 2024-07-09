@@ -32,7 +32,7 @@ namespace ateam_kenobi::plays
 class OurBallPlacementPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "BallPlacementPlay";
+  static constexpr const char * kPlayName = "OurBallPlacementPlay";
 
   explicit OurBallPlacementPlay(stp::Options stp_options);
 

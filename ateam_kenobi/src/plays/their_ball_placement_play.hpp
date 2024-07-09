@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,26 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__THEIR_BALL_PLACEMENT_PLAY_HPP_
+#define PLAYS__THEIR_BALL_PLACEMENT_PLAY_HPP_
 
-#ifndef PLAYS__ALL_PLAYS_HPP_
-#define PLAYS__ALL_PLAYS_HPP_
+#include "stp/play.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
-#include "test_play.hpp"
-#include "halt_play.hpp"
-#include "kick_on_goal_play.hpp"
-#include "our_ball_placement_play.hpp"
-#include "their_ball_placement_play.hpp"
-#include "stop_play.hpp"
-#include "wall_play.hpp"
-#include "our_kickoff_play.hpp"
-#include "test_kick_play.hpp"
-#include "basic_122.hpp"
-#include "our_penalty_play.hpp"
-#include "their_kickoff_play.hpp"
-#include "their_penalty_play.hpp"
-#include "controls_test_play.hpp"
-#include "triangle_pass_play.hpp"
-#include "waypoints_play.hpp"
-#include "spinning_a_play.hpp"
+namespace ateam_kenobi::plays
+{
 
-#endif  // PLAYS__ALL_PLAYS_HPP_
+class TheirBallPlacementPlay : public stp::Play
+{
+public:
+  static constexpr const char * kPlayName = "TheirBallPlacementPlay";
+
+  explicit TheirBallPlacementPlay(stp::Options stp_options);
+
+  stp::PlayScore getScore(const World & world) override;
+
+
+  void reset() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+};
+
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__THEIR_BALL_PLACEMENT__PLAY_HPP_

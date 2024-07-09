@@ -193,7 +193,8 @@ void OurBallPlacementPlay::runDone(
 
   auto & emt = easy_move_tos_[place_robot.id];
 
-  // have to be at least 0.5 away for a force start
+  // TODO: check next ref command to know if we need 0.5 for force start or
+  // 0.05 for our free kick
   emt.setTargetPosition(world.ball.pos + (0.5 * ateam_geometry::normalize(ball_to_robot)));
   emt.face_point(world.ball.pos);
   path_planning::PlannerOptions planner_options;
