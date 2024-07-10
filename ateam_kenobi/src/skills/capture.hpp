@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,63 +19,56 @@
 // THE SOFTWARE.
 
 
-#ifndef SKILLS__PIVOT_KICK_HPP_
-#define SKILLS__PIVOT_KICK_HPP_
+#ifndef SKILLS__CAPTURE_HPP_
+#define SKILLS__CAPTURE_HPP_
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <ateam_common/robot_constants.hpp>
-#include "kick_skill.hpp"
-#include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
-#include "skills/capture.hpp"
+#include <ateam_common/robot_constants.hpp>
+#include "stp/skill.hpp"
+#include "types/world.hpp"
+
 
 namespace ateam_kenobi::skills
 {
 
-class PivotKick : public KickSkill
+class Capture : public stp::Skill
 {
 public:
-  explicit PivotKick(
-    stp::Options stp_options,
-    KickSkill::WaitType wait_type = KickSkill::WaitType::KickWhenReady);
+  explicit Capture(stp::Options stp_options);
 
-  void Reset() override
+  void Reset();
+
+  ateam_geometry::Point getAssignmentPoint(const World & world)
   {
-    KickSkill::Reset();
-    capture_.Reset();
-    prev_state_ = State::Capture;
+    return world.ball.pos;
   }
 
-  void SetTargetPoint(ateam_geometry::Point point)
+  bool isDone()
   {
-    target_point_ = point;
+    return done_;
   }
 
-  ateam_geometry::Point GetAssignmentPoint(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
 private:
-  const double kPreKickOffset = kRobotRadius + 0.1;
-  ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
-  skills::Capture capture_;
+  bool done_ = false;
 
   enum class State
   {
-    Capture,
-    Pivot,
-    KickBall
+    MoveToBall,
+    Capture
   };
-  State prev_state_ = State::Capture;
+  State state_ = State::MoveToBall;
 
-  ateam_msgs::msg::RobotMotionCommand Capture(const World & world, const Robot & robot);
+  void chooseState(const World & world, const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand Pivot(const Robot & robot);
-
-  ateam_msgs::msg::RobotMotionCommand KickBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runMoveToBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runCapture(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills
 
-#endif  // SKILLS__PIVOT_KICK_HPP_
+#endif  // SKILLS__CAPTURE_HPP_

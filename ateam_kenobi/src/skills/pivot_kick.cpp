@@ -30,7 +30,9 @@ namespace ateam_kenobi::skills
 
 PivotKick::PivotKick(stp::Options stp_options, KickSkill::WaitType wait_type)
 : KickSkill(stp_options, wait_type),
-  easy_move_to_(createChild<play_helpers::EasyMoveTo>("easy_move_to"))
+  easy_move_to_(createChild<play_helpers::EasyMoveTo>("easy_move_to")),
+  capture_(createChild<skills::Capture>("Capture"))
+
 {
 }
 
@@ -76,33 +78,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Capture(
   const World & world,
   const Robot & robot)
 {
-  path_planning::PlannerOptions planner_options;
-  planner_options.avoid_ball = false;
-  planner_options.use_default_obstacles = true;
-
-  easy_move_to_.setPlannerOptions(planner_options);
-  easy_move_to_.setTargetPosition(world.ball.pos);
-
-
-  const auto distance_to_ball = ateam_geometry::norm(robot.pos, world.ball.pos);
-  if (distance_to_ball > 0.5) {
-    easy_move_to_.face_travel();
-
-    // TODO(chachmu): figure out a better way to reset max velocity
-    easy_move_to_.setMaxVelocity(2.0);
-  } else {
-    double velocity = (distance_to_ball * 0.5) + 0.1;
-    easy_move_to_.setMaxVelocity(velocity);
-    easy_move_to_.face_point(world.ball.pos);
-  }
-
-  auto command = easy_move_to_.runFrame(robot, world);
-
-  if (distance_to_ball < 0.25) {
-    command.dribbler_speed = 200;
-  }
-
-  return command;
+  return capture_.runFrame(world, robot);
 }
 
 ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
