@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,63 +19,69 @@
 // THE SOFTWARE.
 
 
-#ifndef SKILLS__PIVOT_KICK_HPP_
-#define SKILLS__PIVOT_KICK_HPP_
+#ifndef SKILLS__DRIBBLE_HPP_
+#define SKILLS__DRIBBLE_HPP_
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <ateam_common/robot_constants.hpp>
-#include "kick_skill.hpp"
-#include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
-#include "skills/capture.hpp"
+#include <ateam_common/robot_constants.hpp>
+#include "stp/skill.hpp"
+#include "types/world.hpp"
+
 
 namespace ateam_kenobi::skills
 {
 
-class PivotKick : public KickSkill
+class Dribble : public stp::Skill
 {
 public:
-  explicit PivotKick(
-    stp::Options stp_options,
-    KickSkill::WaitType wait_type = KickSkill::WaitType::KickWhenReady);
+  explicit Dribble(stp::Options stp_options);
 
-  void Reset() override
+  void reset();
+
+  ateam_geometry::Point getAssignmentPoint(const World & world)
   {
-    KickSkill::Reset();
-    capture_.Reset();
-    prev_state_ = State::Capture;
+    return getStartPosition(world);
   }
 
-  void SetTargetPoint(ateam_geometry::Point point)
+  void setTarget(ateam_geometry::Point target)
   {
-    target_point_ = point;
+    target_ = target;
   }
 
-  ateam_geometry::Point GetAssignmentPoint(const World & world);
+  bool isDone()
+  {
+    return done_;
+  }
 
-  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+
+  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
 private:
-  const double kPreKickOffset = kRobotRadius + 0.1;
-  ateam_geometry::Point target_point_;
+  const double kOffset = kRobotRadius + kBallRadius + 0.07;
+  ateam_geometry::Point target_;
   play_helpers::EasyMoveTo easy_move_to_;
-  skills::Capture capture_;
+  bool done_ = false;
 
   enum class State
   {
-    Capture,
-    Pivot,
-    KickBall
+    MoveBehindBall,
+    Dribble
   };
-  State prev_state_ = State::Capture;
+  State state_ = State::MoveBehindBall;
 
-  ateam_msgs::msg::RobotMotionCommand Capture(const World & world, const Robot & robot);
+  ateam_geometry::Point getStartPosition(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand Pivot(const Robot & robot);
+  void chooseState(const World & world, const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand KickBall(const World & world, const Robot & robot);
+  bool isRobotBehindBall(const World & world, const Robot & robot, double hysteresis);
+  bool isRobotSettled(const World & world, const Robot & robot);
+  bool robotHasBall(const World & world, const Robot & robot);
+
+  ateam_msgs::msg::RobotMotionCommand runMoveBehindBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runDribble(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills
 
-#endif  // SKILLS__PIVOT_KICK_HPP_
+#endif  // SKILLS__DRIBBLE_HPP_

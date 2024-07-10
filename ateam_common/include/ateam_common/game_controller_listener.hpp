@@ -27,6 +27,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
 #include <ateam_common/topic_names.hpp>
+#include <geometry_msgs/msg/point32.hpp>
+
 
 namespace ateam_common
 {
@@ -159,6 +161,11 @@ public:
     return their_goalie_id_;
   }
 
+  const geometry_msgs::msg::Point32 & GetDesignatedPosition() const
+  {
+    return designated_position_;
+  }
+
   const ssl_league_msgs::msg::Referee & GetLatestRefereeMessage() const
   {
     return referee_msg_;
@@ -173,6 +180,7 @@ private:
   GameCommand prev_game_command_{GameCommand::Halt};
   std::optional<uint32_t> our_goalie_id_ {};
   std::optional<uint32_t> their_goalie_id_ {};
+  geometry_msgs::msg::Point32 designated_position_;
   ssl_league_msgs::msg::Referee referee_msg_;
 
   ColorCallback color_callback_;

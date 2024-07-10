@@ -18,22 +18,57 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_geometry/nearest_point.hpp"
 
-namespace ateam_geometry
+#ifndef SKILLS__CAPTURE_HPP_
+#define SKILLS__CAPTURE_HPP_
+
+#include <ateam_msgs/msg/robot_motion_command.hpp>
+#include "play_helpers/easy_move_to.hpp"
+#include <ateam_common/robot_constants.hpp>
+#include "stp/skill.hpp"
+#include "types/world.hpp"
+
+
+namespace ateam_kenobi::skills
 {
 
-ateam_geometry::Point nearestPointOnSegment(
-  const ateam_geometry::Segment & s,
-  const ateam_geometry::Point & p)
+class Capture : public stp::Skill
 {
-  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-  if (s.collinear_has_on(orthogonal_projection)) {
-    return orthogonal_projection;
+public:
+  explicit Capture(stp::Options stp_options);
+
+  void Reset();
+
+  ateam_geometry::Point getAssignmentPoint(const World & world)
+  {
+    return world.ball.pos;
   }
-  return CGAL::squared_distance(orthogonal_projection, s.source()) <
-         CGAL::squared_distance(orthogonal_projection, s.target()) ?
-         s.source() : s.target();
-}
 
-}  // namespace ateam_geometry
+  bool isDone()
+  {
+    return done_;
+  }
+
+
+  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
+
+private:
+  play_helpers::EasyMoveTo easy_move_to_;
+  bool done_ = false;
+
+  enum class State
+  {
+    MoveToBall,
+    Capture
+  };
+  State state_ = State::MoveToBall;
+
+  void chooseState(const World & world, const Robot & robot);
+
+  ateam_msgs::msg::RobotMotionCommand runMoveToBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runCapture(const World & world, const Robot & robot);
+};
+
+}  // namespace ateam_kenobi::skills
+
+#endif  // SKILLS__CAPTURE_HPP_

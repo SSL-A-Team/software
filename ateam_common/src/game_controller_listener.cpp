@@ -114,6 +114,8 @@ void GameControllerListener::RefereeMessageCallback(
     game_command_ = new_game_command;
   }
 
+  designated_position_ = msg->designated_position;
+
   if (team_color_ != TeamColor::Unknown) {
     our_goalie_id_ = team_color_ == TeamColor::Blue ? msg->blue.goalkeeper : msg->yellow.goalkeeper;
     their_goalie_id_ = team_color_ ==

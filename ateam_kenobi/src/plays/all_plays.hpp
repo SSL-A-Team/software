@@ -25,6 +25,8 @@
 #include "test_play.hpp"
 #include "halt_play.hpp"
 #include "kick_on_goal_play.hpp"
+#include "our_ball_placement_play.hpp"
+#include "their_ball_placement_play.hpp"
 #include "stop_play.hpp"
 #include "wall_play.hpp"
 #include "our_kickoff_play.hpp"

@@ -18,22 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_geometry/nearest_point.hpp"
+#ifndef PLAYS__THEIR_BALL_PLACEMENT_PLAY_HPP_
+#define PLAYS__THEIR_BALL_PLACEMENT_PLAY_HPP_
 
-namespace ateam_geometry
+#include "stp/play.hpp"
+#include "play_helpers/easy_move_to.hpp"
+
+namespace ateam_kenobi::plays
 {
 
-ateam_geometry::Point nearestPointOnSegment(
-  const ateam_geometry::Segment & s,
-  const ateam_geometry::Point & p)
+class TheirBallPlacementPlay : public stp::Play
 {
-  ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-  if (s.collinear_has_on(orthogonal_projection)) {
-    return orthogonal_projection;
-  }
-  return CGAL::squared_distance(orthogonal_projection, s.source()) <
-         CGAL::squared_distance(orthogonal_projection, s.target()) ?
-         s.source() : s.target();
-}
+public:
+  static constexpr const char * kPlayName = "TheirBallPlacementPlay";
 
-}  // namespace ateam_geometry
+  explicit TheirBallPlacementPlay(stp::Options stp_options);
+
+  stp::PlayScore getScore(const World & world) override;
+
+
+  void reset() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+};
+
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__THEIR_BALL_PLACEMENT__PLAY_HPP_
