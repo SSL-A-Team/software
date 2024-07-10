@@ -134,11 +134,10 @@ ateam_geometry::Point Defenders::getPassBlockPoint(const World & world)
     if (!intersection) {
       continue;
     }
-    const auto * intersection_point = boost::get<ateam_geometry::Point>(&*intersection);
-    if (!intersection_point) {
+    if (!std::holds_alternative<ateam_geometry::Point>(*intersection)) {
       continue;
     }
-    block_point = *intersection_point;
+    block_point = std::get<ateam_geometry::Point>(*intersection);
     break;
   }
 

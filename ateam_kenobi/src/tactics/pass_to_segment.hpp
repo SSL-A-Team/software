@@ -27,7 +27,7 @@
 
 namespace ateam_kenobi::tactics
 {
-  
+
 class PassToSegment : public stp::Tactic
 {
 public:
@@ -44,7 +44,8 @@ public:
     ateam_msgs::msg::RobotMotionCommand & kicker_command,
     ateam_msgs::msg::RobotMotionCommand & receiver_command);
 
-  bool isDone() {
+  bool isDone()
+  {
     return pass_tactic_.isDone();
   }
 

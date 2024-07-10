@@ -47,22 +47,25 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
   }
 
   if (world.ball.pos.x() < 0.0) {
+    RCLCPP_INFO(getLogger(), "Min by ball X");
     return stp::PlayScore::Min();
   }
 
   const ateam_geometry::Segment their_goal_segment{
-    ateam_geometry::Point{-world.field.goal_width / 2.0, world.field.field_length / 2.0},
-    ateam_geometry::Point{world.field.goal_width / 2.0, world.field.field_length / 2.0}
+    ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width / 2.0},
+    ateam_geometry::Point{world.field.field_length / 2.0, world.field.goal_width / 2.0, }
   };
 
   const ateam_geometry::Vector ball_goal_vector(
     world.ball.pos,
     CGAL::midpoint(their_goal_segment));
 
-  const auto shot_angle = ateam_geometry::ShortestAngleBetween(
-    their_goal_segment.to_vector(), ball_goal_vector);
+  const auto shot_angle = std::abs(
+    ateam_geometry::ShortestAngleBetween(
+      their_goal_segment.to_vector(), ball_goal_vector));
 
-  if (shot_angle < 30 || shot_angle > 150) {
+  if (shot_angle < 0.52 /*30 deg*/ || shot_angle > 2.61 /*150 deg*/) {
+    RCLCPP_INFO(getLogger(), "Min by shot angle: %f", shot_angle);
     return stp::PlayScore::Min();
   }
 
@@ -71,6 +74,7 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
     world.ball.pos, play_helpers::getVisibleRobots(world.their_robots));
   const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
   if (!largest_window) {
+    RCLCPP_INFO(getLogger(), "Min by no shot");
     return stp::PlayScore::Min();
   }
 
@@ -93,8 +97,22 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
-  const ateam_geometry::Point opp_goal_center{world.field.field_length / 2.0, 0};
-  striker_.SetTargetPoint(opp_goal_center);
+
+  const ateam_geometry::Segment their_goal_segment{
+    ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width / 2.0},
+    ateam_geometry::Point{world.field.field_length / 2.0, world.field.goal_width / 2.0, }
+  };
+  const auto windows = play_helpers::window_evaluation::getWindows(
+    their_goal_segment,
+    world.ball.pos, play_helpers::getVisibleRobots(world.their_robots));
+  play_helpers::window_evaluation::drawWindows(windows, world.ball.pos, getOverlays());
+  const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
+  if (largest_window) {
+    striker_.SetTargetPoint(CGAL::midpoint(*largest_window));
+  } else {
+    const ateam_geometry::Point opp_goal_center{world.field.field_length / 2.0, 0};
+    striker_.SetTargetPoint(opp_goal_center);
+  }
 
   if (play_helpers::lanes::IsBallInLane(world, play_helpers::lanes::Lane::LeftOffense)) {
     lane_idler_a_.SetLane(play_helpers::lanes::Lane::CenterOffense);

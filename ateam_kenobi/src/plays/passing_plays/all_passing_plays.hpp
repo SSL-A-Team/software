@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,26 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
+#define PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
 
-#ifndef PLAYS__ALL_PLAYS_HPP_
-#define PLAYS__ALL_PLAYS_HPP_
+#include "pass_to_segment_play.hpp"
+#include "segment_passing_target_funcs.hpp"
 
-#include "test_play.hpp"
-#include "halt_play.hpp"
-#include "kick_on_goal_play.hpp"
-#include "stop_play.hpp"
-#include "wall_play.hpp"
-#include "our_kickoff_play.hpp"
-#include "test_kick_play.hpp"
-#include "basic_122.hpp"
-#include "our_penalty_play.hpp"
-#include "test_window_eval.hpp"
-#include "their_kickoff_play.hpp"
-#include "their_penalty_play.hpp"
-#include "controls_test_play.hpp"
-#include "triangle_pass_play.hpp"
-#include "waypoints_play.hpp"
-#include "spinning_a_play.hpp"
-#include "passing_plays/all_passing_plays.hpp"
-
-#endif  // PLAYS__ALL_PLAYS_HPP_
+#endif  // PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
