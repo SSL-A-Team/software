@@ -42,10 +42,28 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
 
   placement_point = world.referee_info.designated_position;
 
-  const auto ball_dist = ateam_geometry::norm(placement_point - world.ball.pos);
+  const auto point_to_ball = world.ball.pos - placement_point;
+  const auto angle = std::atan2(point_to_ball.y(), point_to_ball.x());
+
+  const auto ball_dist = ateam_geometry::norm(point_to_ball);
   const auto ball_speed = ateam_geometry::norm(world.ball.vel);
 
-  getOverlays().drawCircle("placement_pos", ateam_geometry::makeCircle(placement_point, 0.15), "red");
+
+  ateam_geometry::Polygon polygon_points;
+  polygon_points.push_back(placement_point
+    + 0.5 * ateam_geometry::Vector(std::cos(angle + M_PI/2), std::sin(angle + M_PI/2)));
+  polygon_points.push_back(placement_point
+    + 0.5 * ateam_geometry::Vector(std::cos(angle - M_PI/2), std::sin(angle - M_PI/2)));
+  polygon_points.push_back(world.ball.pos
+    + 0.5 * ateam_geometry::Vector(std::cos(angle - M_PI/2), std::sin(angle - M_PI/2)));
+  polygon_points.push_back(world.ball.pos
+    + 0.5 * ateam_geometry::Vector(std::cos(angle + M_PI/2), std::sin(angle + M_PI/2)));
+
+  getOverlays().drawCircle("placement_avoid_point", ateam_geometry::makeCircle(placement_point, 0.5), "red", "00000000");
+  getOverlays().drawCircle("placement_avoid_ball", ateam_geometry::makeCircle(world.ball.pos, 0.5), "red", "00000000");
+  getOverlays().drawPolygon("placement_avoid_zone", polygon_points, "red", "00000000");
+
+  getOverlays().drawCircle("placement_pos", ateam_geometry::makeCircle(placement_point, 0.15), "green");
 
   switch (state_) {
     case State::Passing:
@@ -78,7 +96,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
       getPlayInfo()["State"] = "Done";
   }
 
-  // TODO: Get the other robots actually out of the way. Maybe just line up on the opposite side of the field
   for (auto ind = 0ul; ind < available_robots.size(); ++ind) {
     const auto & robot = available_robots[ind];
     auto & motion_command = maybe_motion_commands[robot.id];
@@ -86,19 +103,29 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
     if (!motion_command) {
       auto & emt = easy_move_tos_[robot.id];
 
-      const auto ball_to_robot = robot.pos - world.ball.pos;
-      const auto placement_to_robot = robot.pos - placement_point;
-      if (ateam_geometry::norm(ball_to_robot) < 0.6) {
-        emt.setTargetPosition(world.ball.pos + 0.7*ateam_geometry::normalize(ball_to_robot));
-      } else if ((ateam_geometry::norm(placement_to_robot) < 0.6)){
-         emt.setTargetPosition(placement_point + 0.7*ateam_geometry::normalize(placement_to_robot));
+      const auto placement_segment = ateam_geometry::Segment(placement_point, world.ball.pos);
+      const auto nearest_point = ateam_geometry::nearestPointOnSegment(placement_segment, robot.pos);
+
+      ateam_geometry::Point target_position = robot.pos;
+      if (ateam_geometry::norm(robot.pos - nearest_point) < 0.6 + kRobotRadius) {
+        target_position = nearest_point
+          + 0.7 * ateam_geometry::Vector(std::cos(angle + M_PI/2), std::sin(angle + M_PI/2));
+
+        const auto alternate_position = nearest_point
+          + 0.7 * ateam_geometry::Vector(std::cos(angle - M_PI/2), std::sin(angle - M_PI/2));
+
+        if (ateam_geometry::norm(target_position - robot.pos) > ateam_geometry::norm(alternate_position - robot.pos)) {
+          target_position = alternate_position;
+        }
+
+        getPlayInfo()["Robots"][std::to_string(robot.id)] = "MOVING";
       } else {
-        emt.setTargetPosition(robot.pos);
+        getPlayInfo()["Robots"][std::to_string(robot.id)] = "-";
       }
 
+      emt.setTargetPosition(target_position);
       emt.face_point(world.ball.pos);
       maybe_motion_commands[robot.id] = emt.runFrame(robot, world);
-      getPlayInfo()["Robots"][std::to_string(robot.id)] = "-";
     }
   }
 
