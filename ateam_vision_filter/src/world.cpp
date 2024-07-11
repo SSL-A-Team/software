@@ -68,7 +68,21 @@ std::optional<Ball> World::get_ball_estimate()
     std::optional<BallWithScore> possible_ball_with_score =
       camera_pair.second.get_ball_estimate_with_score();
 
+
     if (possible_ball_with_score.has_value()) {
+      // TODO: update this with data from the param properly
+      int ignore_half = 0;
+      if (ignore_half > 0) {
+        if (possible_ball_with_score.value().first.x() > 0) {
+          continue;
+        }
+      }
+      if (ignore_half < 0) {
+        if (possible_ball_with_sore.value().first.x() < 0) {
+          continue;
+        }
+      }
+
       balls_with_scores.emplace_back(possible_ball_with_score.value());
     }
   }
@@ -109,6 +123,20 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
 
     for (size_t yellow_id = 0; yellow_id < 16; yellow_id++) {
       if (possible_yellow_robots_with_score.at(yellow_id).has_value()) {
+
+        // TODO: update this with data from the param properly
+        int ignore_half = 0;
+        if (ignore_half > 0) {
+          if (possible_yellow_robots_with_score.at(yellow_id).value().first.x() > 0) {
+            continue;
+          }
+        }
+        if (ignore_half < 0) {
+          if (possible_yellow_robots_with_score.at(yellow_id).value().first.x() < 0) {
+            continue;
+          }
+        }
+
         yellow_robots_with_scores.at(yellow_id).emplace_back(
           possible_yellow_robots_with_score.at(yellow_id).value());
       }
@@ -171,6 +199,19 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
 
     for (size_t blue_id = 0; blue_id < 16; blue_id++) {
       if (possible_blue_robots_with_score.at(blue_id).has_value()) {
+
+        // TODO: update this with data from the param properly
+        int ignore_half = 0;
+        if (ignore_half > 0) {
+          if (possible_blue_robots_with_score.at(blue_id).value().first.x() > 0) {
+            continue;
+          }
+        if (ignore_half < 0) {
+          if (possible_blue_robots_with_score.at(blue_id).value().first.x() < 0) {
+            continue;
+          }
+        }
+
         blue_robots_with_scores.at(blue_id).emplace_back(
           possible_blue_robots_with_score.at(blue_id).value());
       }
