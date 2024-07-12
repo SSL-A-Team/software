@@ -32,7 +32,6 @@ PivotKick::PivotKick(stp::Options stp_options, KickSkill::WaitType wait_type)
 : KickSkill(stp_options, wait_type),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("easy_move_to")),
   capture_(createChild<skills::Capture>("Capture"))
-
 {
 }
 

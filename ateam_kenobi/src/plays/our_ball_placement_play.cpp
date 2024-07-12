@@ -16,8 +16,7 @@ OurBallPlacementPlay::OurBallPlacementPlay(stp::Options stp_options)
 stp::PlayScore OurBallPlacementPlay::getScore(const World & world)
 {
   const auto & cmd = world.referee_info.running_command;
-  if (cmd == ateam_common::GameCommand::BallPlacementOurs)
-  {
+  if (cmd == ateam_common::GameCommand::BallPlacementOurs) {
     return stp::PlayScore::Max();
   }
   return stp::PlayScore::NaN();
@@ -50,26 +49,42 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
 
 
   ateam_geometry::Polygon polygon_points;
-  polygon_points.push_back(placement_point
-    + 0.5 * ateam_geometry::Vector(std::cos(angle + M_PI/2), std::sin(angle + M_PI/2)));
-  polygon_points.push_back(placement_point
-    + 0.5 * ateam_geometry::Vector(std::cos(angle - M_PI/2), std::sin(angle - M_PI/2)));
-  polygon_points.push_back(world.ball.pos
-    + 0.5 * ateam_geometry::Vector(std::cos(angle - M_PI/2), std::sin(angle - M_PI/2)));
-  polygon_points.push_back(world.ball.pos
-    + 0.5 * ateam_geometry::Vector(std::cos(angle + M_PI/2), std::sin(angle + M_PI/2)));
+  polygon_points.push_back(
+    placement_point +
+    0.5 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2)));
+  polygon_points.push_back(
+    placement_point +
+    0.5 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2)));
+  polygon_points.push_back(
+    world.ball.pos +
+    0.5 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2)));
+  polygon_points.push_back(
+    world.ball.pos +
+    0.5 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2)));
 
-  getOverlays().drawCircle("placement_avoid_point", ateam_geometry::makeCircle(placement_point, 0.5), "red", "00000000");
-  getOverlays().drawCircle("placement_avoid_ball", ateam_geometry::makeCircle(world.ball.pos, 0.5), "red", "00000000");
+  getOverlays().drawCircle(
+    "placement_avoid_point", ateam_geometry::makeCircle(
+      placement_point,
+      0.5), "red",
+    "00000000");
+  getOverlays().drawCircle(
+    "placement_avoid_ball", ateam_geometry::makeCircle(
+      world.ball.pos,
+      0.5), "red",
+    "00000000");
   getOverlays().drawPolygon("placement_avoid_zone", polygon_points, "red", "00000000");
 
-  getOverlays().drawCircle("placement_pos", ateam_geometry::makeCircle(placement_point, 0.15), "green");
+  getOverlays().drawCircle(
+    "placement_pos", ateam_geometry::makeCircle(
+      placement_point,
+      0.15), "green");
 
   switch (state_) {
     case State::Passing:
-      if (pass_tactic_.isDone()
-            || (ball_dist < 1.0 && ball_speed < 0.05)
-            || available_robots.size() < 2) {
+      if (pass_tactic_.isDone() ||
+        (ball_dist < 1.0 && ball_speed < 0.05) ||
+        available_robots.size() < 2)
+      {
         state_ = State::Placing;
         break;
       }
@@ -81,7 +96,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
       if (ball_dist < 0.05 && ball_speed < 0.1) {
         state_ = State::Done;
 
-      // Can try to pass if the ball is far away and we have enough robots
+        // Can try to pass if the ball is far away and we have enough robots
       } else if (ball_dist > 1.0 && available_robots.size() >= 2) {
         state_ = State::Passing;
       }
@@ -104,17 +119,20 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
       auto & emt = easy_move_tos_[robot.id];
 
       const auto placement_segment = ateam_geometry::Segment(placement_point, world.ball.pos);
-      const auto nearest_point = ateam_geometry::nearestPointOnSegment(placement_segment, robot.pos);
+      const auto nearest_point =
+        ateam_geometry::nearestPointOnSegment(placement_segment, robot.pos);
 
       ateam_geometry::Point target_position = robot.pos;
       if (ateam_geometry::norm(robot.pos - nearest_point) < 0.6 + kRobotRadius) {
-        target_position = nearest_point
-          + 0.7 * ateam_geometry::Vector(std::cos(angle + M_PI/2), std::sin(angle + M_PI/2));
+        target_position = nearest_point +
+          0.7 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2));
 
-        const auto alternate_position = nearest_point
-          + 0.7 * ateam_geometry::Vector(std::cos(angle - M_PI/2), std::sin(angle - M_PI/2));
+        const auto alternate_position = nearest_point +
+          0.7 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2));
 
-        if (ateam_geometry::norm(target_position - robot.pos) > ateam_geometry::norm(alternate_position - robot.pos)) {
+        if (ateam_geometry::norm(target_position - robot.pos) >
+          ateam_geometry::norm(alternate_position - robot.pos))
+        {
           target_position = alternate_position;
         }
 
@@ -142,7 +160,9 @@ void OurBallPlacementPlay::runPassing(
     };
 
   auto byDistToPlacement = [&world](const Robot & lhs, const Robot & rhs) {
-      return CGAL::compare_distance_to_point(world.referee_info.designated_position, lhs.pos, rhs.pos) == CGAL::SMALLER;
+      return CGAL::compare_distance_to_point(
+        world.referee_info.designated_position, lhs.pos,
+        rhs.pos) == CGAL::SMALLER;
     };
 
   const auto receiver_robot_iter = std::min_element(
@@ -170,9 +190,12 @@ void OurBallPlacementPlay::runPassing(
 
   // Offset the robot receiving the pass so the ball is on the placement point
   const auto ball_to_placement = placement_point - world.ball.pos;
-  pass_tactic_.setTarget(placement_point + (kRobotRadius * ateam_geometry::normalize(ball_to_placement)));
+  pass_tactic_.setTarget(
+    placement_point +
+    (kRobotRadius * ateam_geometry::normalize(ball_to_placement)));
 
-  auto & kicker_command = *(motion_commands[kicker_robot.id] = ateam_msgs::msg::RobotMotionCommand{});
+  auto & kicker_command =
+    *(motion_commands[kicker_robot.id] = ateam_msgs::msg::RobotMotionCommand{});
   auto & receiver_command =
     *(motion_commands[receiver_robot.id] = ateam_msgs::msg::RobotMotionCommand{});
 
@@ -196,7 +219,7 @@ void OurBallPlacementPlay::runPlacing(
   getPlayInfo()["Assignments"]["Placer"] = place_robot.id;
 
   dribble_.setTarget(placement_point);
-  motion_commands[place_robot.id] = dribble_.runFrame(world, place_robot); 
+  motion_commands[place_robot.id] = dribble_.runFrame(world, place_robot);
 }
 
 void OurBallPlacementPlay::runDone(

@@ -14,8 +14,7 @@ TheirBallPlacementPlay::TheirBallPlacementPlay(stp::Options stp_options)
 stp::PlayScore TheirBallPlacementPlay::getScore(const World & world)
 {
   const auto & cmd = world.referee_info.running_command;
-  if (cmd == ateam_common::GameCommand::BallPlacementTheirs)
-  {
+  if (cmd == ateam_common::GameCommand::BallPlacementTheirs) {
     return stp::PlayScore::Max();
   }
   return stp::PlayScore::NaN();
@@ -41,17 +40,27 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlac
   const auto angle = std::atan2(point_to_ball.y(), point_to_ball.x());
 
   ateam_geometry::Polygon polygon_points;
-  polygon_points.push_back(placement_point
-    + 0.5 * ateam_geometry::Vector(std::cos(angle + M_PI/2), std::sin(angle + M_PI/2)));
-  polygon_points.push_back(placement_point
-    + 0.5 * ateam_geometry::Vector(std::cos(angle - M_PI/2), std::sin(angle - M_PI/2)));
-  polygon_points.push_back(world.ball.pos
-    + 0.5 * ateam_geometry::Vector(std::cos(angle - M_PI/2), std::sin(angle - M_PI/2)));
-  polygon_points.push_back(world.ball.pos
-    + 0.5 * ateam_geometry::Vector(std::cos(angle + M_PI/2), std::sin(angle + M_PI/2)));
+  polygon_points.push_back(
+    placement_point +
+    0.5 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2)));
+  polygon_points.push_back(
+    placement_point +
+    0.5 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2)));
+  polygon_points.push_back(
+    world.ball.pos +
+    0.5 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2)));
+  polygon_points.push_back(
+    world.ball.pos +
+    0.5 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2)));
 
-  getOverlays().drawCircle("placement_avoid_point", ateam_geometry::makeCircle(placement_point, 0.5), "red", "red");
-  getOverlays().drawCircle("placement_avoid_ball", ateam_geometry::makeCircle(world.ball.pos, 0.5), "red", "red");
+  getOverlays().drawCircle(
+    "placement_avoid_point", ateam_geometry::makeCircle(
+      placement_point,
+      0.5), "red", "red");
+  getOverlays().drawCircle(
+    "placement_avoid_ball", ateam_geometry::makeCircle(
+      world.ball.pos,
+      0.5), "red", "red");
   getOverlays().drawPolygon("placement_avoid_zone", polygon_points, "red", "red");
 
   // TODO: Get the other robots actually out of the way. Maybe just line up on the opposite side of the field
@@ -64,14 +73,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlac
 
     ateam_geometry::Point target_position = robot.pos;
     if (ateam_geometry::norm(robot.pos - nearest_point) < 0.6 + kRobotRadius) {
-      target_position = nearest_point
-        + 0.7 * ateam_geometry::Vector(std::cos(angle + M_PI/2), std::sin(angle + M_PI/2));
+      target_position = nearest_point +
+        0.7 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2));
 
-      const auto alternate_position = nearest_point
-        + 0.7 * ateam_geometry::Vector(std::cos(angle - M_PI/2), std::sin(angle - M_PI/2));
+      const auto alternate_position = nearest_point +
+        0.7 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2));
 
-      
-      if (ateam_geometry::norm(target_position - robot.pos) > ateam_geometry::norm(alternate_position - robot.pos)) {
+
+      if (ateam_geometry::norm(target_position - robot.pos) >
+        ateam_geometry::norm(alternate_position - robot.pos))
+      {
         target_position = alternate_position;
       }
 
@@ -83,7 +94,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlac
     emt.setTargetPosition(target_position);
     emt.face_point(world.ball.pos);
     maybe_motion_commands[robot.id] = emt.runFrame(robot, world);
-    
+
   }
 
   return maybe_motion_commands;
