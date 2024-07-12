@@ -18,54 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TACTICS__PASS_TO_SEGMENT_HPP_
-#define TACTICS__PASS_TO_SEGMENT_HPP_
+#ifndef ATEAM_GEOMETRY__ORIENTATION_HPP_
+#define ATEAM_GEOMETRY__ORIENTATION_HPP_
 
-#include <ateam_geometry/types.hpp>
-#include "stp/tactic.hpp"
-#include "pass.hpp"
+#include "ateam_geometry/types.hpp"
 
-namespace ateam_kenobi::tactics
+
+namespace ateam_geometry
 {
 
-class PassToSegment : public stp::Tactic
+enum class Orientation
 {
-public:
-  explicit PassToSegment(stp::Options stp_options);
-
-  void reset();
-
-  ateam_geometry::Point getKickerAssignmentPoint(const World & world);
-
-  ateam_geometry::Point getReceiverAssignmentPoint(const World & world);
-
-  void runFrame(
-    const World & world, const Robot & kicker_bot, const Robot & receiver_bot,
-    ateam_msgs::msg::RobotMotionCommand & kicker_command,
-    ateam_msgs::msg::RobotMotionCommand & receiver_command);
-
-  bool isDone()
-  {
-    return pass_tactic_.isDone();
-  }
-
-  void setTarget(ateam_geometry::Segment target)
-  {
-    target_ = target;
-  }
-
-  void setKickSpeed(double speed)
-  {
-    pass_tactic_.setKickSpeed(speed);
-  }
-
-private:
-  ateam_geometry::Segment target_;
-  Pass pass_tactic_;
-
-  ateam_geometry::Point getTargetPointOnSegment(const World & world);
+  Colinear,
+  Clockwise,
+  Counterclockwise
 };
 
-}  // namespace ateam_kenobi::tactics
+/**
+ * @brief Determines the orientation of the points in order A->B->C
+ * @note Based on https://www.geeksforgeeks.org/orientation-3-ordered-points/
+ */
+inline Orientation orientation(const Point & a, const Point & b, const Point & c)
+{
+  const auto slope_diff = (b.y() - a.y()) * (c.x() - b.x()) - (b.x() - a.x()) * (c.y() - b.y());
+  if (std::abs(slope_diff) < 1e-12) {
+    return Orientation::Colinear;
+  }
+  return slope_diff > 0 ? Orientation::Clockwise : Orientation::Counterclockwise;
+}
 
-#endif  // TACTICS__PASS_TO_SEGMENT_HPP_
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__ORIENTATION_HPP_

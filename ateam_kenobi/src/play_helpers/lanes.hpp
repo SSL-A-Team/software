@@ -44,6 +44,8 @@ ateam_geometry::Segment GetLaneLongitudinalMidSegment(const World & world, const
 
 ateam_geometry::Rectangle GetLaneBounds(const World & world, const Lane & lane);
 
+bool IsPointInLane(const World & world, const ateam_geometry::Point & point, const Lane & lane);
+
 bool IsBallInLane(const World & world, const Lane & lane);
 
 }  // namespace ateam_kenobi::play_helpers::lanes

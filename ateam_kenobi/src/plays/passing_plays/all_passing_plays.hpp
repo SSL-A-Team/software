@@ -18,11 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
-#define ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
+#ifndef PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
+#define PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
 
-#include "point_is_near.hpp"
-#include "points_are_near.hpp"
-#include "segment_is_near.hpp"
+#include "pass_to_segment_play.hpp"
+#include "segment_passing_target_funcs.hpp"
 
-#endif  // ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
+#endif  // PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_

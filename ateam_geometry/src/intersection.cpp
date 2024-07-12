@@ -20,6 +20,7 @@
 
 #include "ateam_geometry/intersection.hpp"
 #include "ateam_geometry/comparisons.hpp"
+#include "ateam_geometry/orientation.hpp"
 
 namespace ateam_geometry
 {
@@ -187,6 +188,74 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
     }
   }
 
+  return std::nullopt;
+}
+
+std::optional<std::variant<Point, Segment>> intersection(const Segment & a, const Segment & b)
+{
+  const auto o1 = orientation(a.source(), a.target(), b.source());
+  const auto o2 = orientation(a.source(), a.target(), b.target());
+  const auto o3 = orientation(b.source(), b.target(), a.source());
+  const auto o4 = orientation(b.source(), b.target(), a.target());
+
+  std::cout << "o1: " << static_cast<int>(o1) << "\n";
+  std::cout << "o2: " << static_cast<int>(o2) << "\n";
+  std::cout << "o3: " << static_cast<int>(o3) << "\n";
+  std::cout << "o4: " << static_cast<int>(o4) << "\n";
+
+  if (o1 != o2 && o3 != o4) {
+    // segments intersect at a single point
+    const auto maybe_intersection = CGAL::intersection(a.supporting_line(), b.supporting_line());
+    if (!maybe_intersection) {
+      throw std::runtime_error("Broken CGAL assumptions. Segment-Segment intersection assert A.");
+    }
+    const auto intersection_point = boost::get<Point>(&*maybe_intersection);
+    if (!intersection_point) {
+      throw std::runtime_error("Broken CGAL assumptions. Segment-Segment intersection assert B.");
+    }
+    std::cout << "Segments intersect at a point\n";
+    return *intersection_point;
+  }
+
+  if (o1 == Orientation::Colinear && o2 == Orientation::Colinear) {
+    // segments are colinear
+    struct PointWithSegmentIndex
+    {
+      Point point;
+      int segment_index;
+      bool operator<(const PointWithSegmentIndex & other) const
+      {
+        if (std::abs(point.x() - other.point.x()) < 1e-12) {
+          return point.y() < other.point.y();
+        }
+        return point.x() < other.point.x();
+      }
+    };
+    std::vector<PointWithSegmentIndex> points = {
+      {a.source(), 0},
+      {a.target(), 0},
+      {b.source(), 1},
+      {b.target(), 1}
+    };
+    std::sort(points.begin(), points.end());
+
+    for (const auto & p : points) {
+      std::cout << p.segment_index << ": " << std::setprecision(12) << p.point.x() << ", " <<
+        std::setprecision(12) << p.point.y() << "\n";
+    }
+
+    if (points[0].segment_index == points[1].segment_index) {
+      // Colinear segments do not overlap
+      std::cout << "Colinear segments do not overlap.\n";
+      return std::nullopt;
+    }
+
+    std::cout << "Colinear segments do overlap.\n";
+    return Segment{points[1].point, points[2].point};
+  }
+
+  // No intersection
+  std::cout << "no intersection\n";
   return std::nullopt;
 }
 

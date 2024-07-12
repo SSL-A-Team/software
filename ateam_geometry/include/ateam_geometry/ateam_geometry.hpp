@@ -34,6 +34,7 @@
 #include "intersection.hpp"
 #include "nearest_point.hpp"
 #include "normalize.hpp"
+#include "orientation.hpp"
 #include "types.hpp"
 
 #endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_

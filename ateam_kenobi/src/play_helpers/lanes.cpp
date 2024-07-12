@@ -31,8 +31,8 @@ ateam_geometry::Segment GetLaneLongitudinalMidSegment(const World & world, const
   switch (lane) {
     case Lane::Left:
       return ateam_geometry::Segment{
-        ateam_geometry::Point{-half_field_length, -two_sixths_field_width},
-        ateam_geometry::Point{half_field_length, -two_sixths_field_width}
+        ateam_geometry::Point{-half_field_length, two_sixths_field_width},
+        ateam_geometry::Point{half_field_length, two_sixths_field_width}
       };
     case Lane::Center:
       return ateam_geometry::Segment{
@@ -41,13 +41,13 @@ ateam_geometry::Segment GetLaneLongitudinalMidSegment(const World & world, const
       };
     case Lane::Right:
       return ateam_geometry::Segment{
-        ateam_geometry::Point{-half_field_length, two_sixths_field_width},
-        ateam_geometry::Point{half_field_length, two_sixths_field_width}
+        ateam_geometry::Point{-half_field_length, -two_sixths_field_width},
+        ateam_geometry::Point{half_field_length, -two_sixths_field_width}
       };
     case Lane::LeftOffense:
       return ateam_geometry::Segment{
-        ateam_geometry::Point{0.0, -two_sixths_field_width},
-        ateam_geometry::Point{half_field_length, -two_sixths_field_width}
+        ateam_geometry::Point{0.0, two_sixths_field_width},
+        ateam_geometry::Point{half_field_length, two_sixths_field_width}
       };
     case Lane::CenterOffense:
       return ateam_geometry::Segment{
@@ -56,13 +56,13 @@ ateam_geometry::Segment GetLaneLongitudinalMidSegment(const World & world, const
       };
     case Lane::RightOffense:
       return ateam_geometry::Segment{
-        ateam_geometry::Point{0.0, two_sixths_field_width},
-        ateam_geometry::Point{half_field_length, two_sixths_field_width}
+        ateam_geometry::Point{0.0, -two_sixths_field_width},
+        ateam_geometry::Point{half_field_length, -two_sixths_field_width}
       };
     case Lane::LeftDefense:
       return ateam_geometry::Segment{
-        ateam_geometry::Point{-half_field_length, -two_sixths_field_width},
-        ateam_geometry::Point{0.0, -two_sixths_field_width}
+        ateam_geometry::Point{-half_field_length, two_sixths_field_width},
+        ateam_geometry::Point{0.0, two_sixths_field_width}
       };
     case Lane::CenterDefense:
       return ateam_geometry::Segment{
@@ -71,8 +71,8 @@ ateam_geometry::Segment GetLaneLongitudinalMidSegment(const World & world, const
       };
     case Lane::RightDefense:
       return ateam_geometry::Segment{
-        ateam_geometry::Point{-half_field_length, two_sixths_field_width},
-        ateam_geometry::Point{0.0, two_sixths_field_width}
+        ateam_geometry::Point{-half_field_length, -two_sixths_field_width},
+        ateam_geometry::Point{0.0, -two_sixths_field_width}
       };
     default:
       throw std::runtime_error("Unrecognize lane value.");
@@ -87,58 +87,63 @@ ateam_geometry::Rectangle GetLaneBounds(const World & world, const Lane & lane)
   switch (lane) {
     case Lane::Left:
       return ateam_geometry::Rectangle{
-        ateam_geometry::Point{-half_field_length, -half_field_width},
-        ateam_geometry::Point{half_field_length, -sixth_field_width}
+        ateam_geometry::Point{-half_field_length, half_field_width},
+        ateam_geometry::Point{half_field_length, sixth_field_width}
       };
     case Lane::Center:
       return ateam_geometry::Rectangle{
-        ateam_geometry::Point{-half_field_length, -sixth_field_width},
-        ateam_geometry::Point{half_field_length, sixth_field_width}
+        ateam_geometry::Point{-half_field_length, sixth_field_width},
+        ateam_geometry::Point{half_field_length, -sixth_field_width}
       };
     case Lane::Right:
       return ateam_geometry::Rectangle{
-        ateam_geometry::Point{-half_field_length, sixth_field_width},
-        ateam_geometry::Point{half_field_length, half_field_width}
+        ateam_geometry::Point{-half_field_length, -sixth_field_width},
+        ateam_geometry::Point{half_field_length, -half_field_width}
       };
     case Lane::LeftOffense:
       return ateam_geometry::Rectangle{
-        ateam_geometry::Point{0.0, -half_field_width},
-        ateam_geometry::Point{half_field_length, -sixth_field_width}
+        ateam_geometry::Point{0.0, half_field_width},
+        ateam_geometry::Point{half_field_length, sixth_field_width}
       };
     case Lane::CenterOffense:
       return ateam_geometry::Rectangle{
-        ateam_geometry::Point{0.0, -sixth_field_width},
-        ateam_geometry::Point{half_field_length, sixth_field_width}
+        ateam_geometry::Point{0.0, sixth_field_width},
+        ateam_geometry::Point{half_field_length, -sixth_field_width}
       };
     case Lane::RightOffense:
       return ateam_geometry::Rectangle{
-        ateam_geometry::Point{0.0, sixth_field_width},
-        ateam_geometry::Point{half_field_length, half_field_width}
+        ateam_geometry::Point{0.0, -sixth_field_width},
+        ateam_geometry::Point{half_field_length, -half_field_width}
       };
     case Lane::LeftDefense:
       return ateam_geometry::Rectangle{
-        ateam_geometry::Point{-half_field_length, -half_field_width},
-        ateam_geometry::Point{0.0, -sixth_field_width}
+        ateam_geometry::Point{-half_field_length, half_field_width},
+        ateam_geometry::Point{0.0, sixth_field_width}
       };
     case Lane::CenterDefense:
       return ateam_geometry::Rectangle{
-        ateam_geometry::Point{-half_field_length, -sixth_field_width},
-        ateam_geometry::Point{0.0, sixth_field_width}
+        ateam_geometry::Point{-half_field_length, sixth_field_width},
+        ateam_geometry::Point{0.0, -sixth_field_width}
       };
     case Lane::RightDefense:
       return ateam_geometry::Rectangle{
-        ateam_geometry::Point{-half_field_length, sixth_field_width},
-        ateam_geometry::Point{0.0, half_field_width}
+        ateam_geometry::Point{-half_field_length, -sixth_field_width},
+        ateam_geometry::Point{0.0, -half_field_width}
       };
     default:
       throw std::runtime_error("Unrecognize lane value.");
   }
 }
 
-bool IsBallInLane(const World & world, const Lane & lane)
+bool IsPointInLane(const World & world, const ateam_geometry::Point & point, const Lane & lane)
 {
   const auto rectangle = GetLaneBounds(world, lane);
-  return ateam_geometry::doIntersect(world.ball.pos, rectangle);
+  return ateam_geometry::doIntersect(point, rectangle);
+}
+
+bool IsBallInLane(const World & world, const Lane & lane)
+{
+  return IsPointInLane(world, world.ball.pos, lane);
 }
 
 }  // namespace ateam_kenobi::play_helpers::lanes

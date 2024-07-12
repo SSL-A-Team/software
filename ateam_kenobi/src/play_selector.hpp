@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_msgs/msg/playbook_state.hpp>
@@ -58,10 +59,19 @@ private:
   template<typename PlayType>
   std::shared_ptr<stp::Play> addPlay(stp::Options stp_options)
   {
-    stp_options.overlays = visualization::Overlays(PlayType::kPlayName);
-    stp_options.logger = stp_options.logger.get_child(PlayType::kPlayName);
-    stp_options.parameter_interface = stp_options.parameter_interface.getChild(PlayType::kPlayName);
-    auto play = std::make_shared<PlayType>(stp_options);
+    return addPlay<PlayType>(PlayType::kPlayName, stp_options);
+  }
+
+  template<typename PlayType, typename ... Args>
+  std::shared_ptr<stp::Play> addPlay(
+    const std::string & name, stp::Options stp_options,
+    Args &&... args)
+  {
+    stp_options.name = name;
+    stp_options.overlays = visualization::Overlays(name);
+    stp_options.logger = stp_options.logger.get_child(name);
+    stp_options.parameter_interface = stp_options.parameter_interface.getChild(name);
+    auto play = std::make_shared<PlayType>(stp_options, std::forward<Args>(args)...);
     plays_.push_back(play);
     return play;
   }

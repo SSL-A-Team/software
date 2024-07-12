@@ -151,13 +151,11 @@ ateam_geometry::Point TheirKickoffPlay::getOffensePointToBlockTarget(
     return fallback;
   }
 
-  const auto intersection = boost::get<ateam_geometry::Point>(&*maybe_intersection);
-
-  if (intersection == nullptr) {
+  if (!std::holds_alternative<ateam_geometry::Point>(*maybe_intersection)) {
     return fallback;
   }
 
-  return *intersection;
+  return std::get<ateam_geometry::Point>(*maybe_intersection);
 }
 
 void TheirKickoffPlay::runOffense(

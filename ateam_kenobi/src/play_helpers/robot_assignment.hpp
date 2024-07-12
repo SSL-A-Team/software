@@ -96,7 +96,7 @@ public:
   std::vector<Robot> GetGroupFilledAssignments(const std::string & name) const;
 
   template<typename PositionFunc>
-  void RunPositionIfAssigned(const std::string & name, PositionFunc func)
+  void RunPositionIfAssigned(const std::string & name, PositionFunc func) const
   {
     const auto & maybe_robot = GetPositionAssignment(name);
     if (!maybe_robot) {

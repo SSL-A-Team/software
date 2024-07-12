@@ -219,12 +219,14 @@ private:
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
   {
-    world_.ball.pos = ateam_geometry::Point(
-      ball_state_msg->pose.position.x,
-      ball_state_msg->pose.position.y);
-    world_.ball.vel = ateam_geometry::Vector(
-      ball_state_msg->twist.linear.x,
-      ball_state_msg->twist.linear.y);
+    if(ball_state_msg->visible) {
+      world_.ball.pos = ateam_geometry::Point(
+        ball_state_msg->pose.position.x,
+        ball_state_msg->pose.position.y);
+      world_.ball.vel = ateam_geometry::Vector(
+        ball_state_msg->twist.linear.x,
+        ball_state_msg->twist.linear.y);
+    }
   }
 
   void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)

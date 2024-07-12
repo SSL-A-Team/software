@@ -49,12 +49,31 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<TestKickPlay>(stp_options);
   addPlay<Basic122>(stp_options);
   addPlay<OurPenaltyPlay>(stp_options);
+  addPlay<TestWindowEvalPlay>(stp_options);
   addPlay<TheirKickoffPlay>(stp_options);
   addPlay<TheirPenaltyPlay>(stp_options);
   addPlay<ControlsTestPlay>(stp_options);
   addPlay<TrianglePassPlay>(stp_options);
   addPlay<WaypointsPlay>(stp_options);
   addPlay<SpinningAPlay>(stp_options);
+  addPlay<PassToSegmentPlay>(
+    "PassLeftForwardPlay", stp_options,
+    segment_passing_target_funcs::LeftForwardPassTarget);
+  addPlay<PassToSegmentPlay>(
+    "PassCenterForwardPlay", stp_options,
+    segment_passing_target_funcs::CenterForwardPassTarget);
+  addPlay<PassToSegmentPlay>(
+    "PassRightForwardPlay", stp_options,
+    segment_passing_target_funcs::RightForwardPassTarget);
+  addPlay<PassToSegmentPlay>(
+    "PassLeftBackwardPlay", stp_options,
+    segment_passing_target_funcs::LeftBackwardPassTarget);
+  addPlay<PassToSegmentPlay>(
+    "PassCenterBackwardPlay", stp_options,
+    segment_passing_target_funcs::CenterBackwardPassTarget);
+  addPlay<PassToSegmentPlay>(
+    "PassRightBackwardPlay", stp_options,
+    segment_passing_target_funcs::RightBackwardPassTarget);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg)
