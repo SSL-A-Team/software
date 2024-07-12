@@ -1,5 +1,27 @@
+// Copyright 2024 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+
 #include "our_ball_placement_play.hpp"
 #include <angles/angles.h>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include "play_helpers/available_robots.hpp"
 
@@ -207,7 +229,6 @@ void OurBallPlacementPlay::runPlacing(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
-
   auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
       return CGAL::compare_distance_to_point(world.ball.pos, lhs.pos, rhs.pos) == CGAL::SMALLER;
     };
@@ -227,7 +248,7 @@ void OurBallPlacementPlay::runDone(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
-  // TODO: Might need to add a delay for this so the dribbler slows down
+  // TODO(chachmu): Might need to add a delay for this so the dribbler slows down
 
   auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
       return CGAL::compare_distance_to_point(world.ball.pos, lhs.pos, rhs.pos) == CGAL::SMALLER;
@@ -243,7 +264,7 @@ void OurBallPlacementPlay::runDone(
 
   auto & emt = easy_move_tos_[place_robot.id];
 
-  // TODO: check next ref command to know if we need 0.5 for force start or
+  // TODO(chachmu): check next ref command to know if we need 0.5 for force start or
   // 0.05 for our free kick
   emt.setTargetPosition(world.ball.pos + (0.5 * ateam_geometry::normalize(ball_to_robot)));
   emt.face_point(world.ball.pos);

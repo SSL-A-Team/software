@@ -36,7 +36,7 @@ PassToSegmentPlay::PassToSegmentPlay(
   pass_tactic_(createChild<tactics::PassToSegment>("pass")),
   idler_skill_(createChild<skills::LaneIdler>("idler"))
 {
-  setEnabled(false); // TODO(mbarulic) remove when ready
+  setEnabled(false);  // TODO(mbarulic) remove when ready
 }
 
 stp::PlayScore PassToSegmentPlay::getScore(const World & world)

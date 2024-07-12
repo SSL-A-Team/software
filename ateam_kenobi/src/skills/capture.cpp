@@ -41,7 +41,6 @@ void Capture::Reset()
 
 ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const Robot & robot)
 {
-
   chooseState(world, robot);
 
   switch (state_) {
@@ -86,12 +85,14 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
 
 ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, const Robot & robot)
 {
-  // TODO: Should we filter this over a few frames to make sure we have the ball settled?
+  // TODO(chachmu): Should we filter this over a few frames to make sure we have the ball settled?
   if (robot.breakbeam_ball_detected) {
     done_ = true;
   }
 
-  // TODO: If we disable default obstacles do we need to check if the target is off the field?
+  /* TODO(chachmu): If we disable default obstacles do we need to check if the target is off the
+   * field?
+   */
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   planner_options.draw_obstacles = true;

@@ -1,3 +1,24 @@
+// Copyright 2024 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+
 #include "their_ball_placement_play.hpp"
 #include <angles/angles.h>
 #include <ateam_common/robot_constants.hpp>
@@ -63,7 +84,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlac
       0.5), "red", "red");
   getOverlays().drawPolygon("placement_avoid_zone", polygon_points, "red", "red");
 
-  // TODO: Get the other robots actually out of the way. Maybe just line up on the opposite side of the field
   for (auto ind = 0ul; ind < available_robots.size(); ++ind) {
     const auto & robot = available_robots[ind];
     auto & emt = easy_move_tos_[robot.id];
@@ -94,7 +114,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlac
     emt.setTargetPosition(target_position);
     emt.face_point(world.ball.pos);
     maybe_motion_commands[robot.id] = emt.runFrame(robot, world);
-
   }
 
   return maybe_motion_commands;

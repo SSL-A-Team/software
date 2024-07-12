@@ -49,7 +49,6 @@ std::optional<ateam_geometry::Point> Intercept::calculateInterceptPoint(
   const World & world,
   const Robot & robot)
 {
-
   const double vb = ateam_geometry::norm(world.ball.vel);
   // max robot velocity (slightly decreased to give robot time to prepare)
   const double vr = 1.8;
@@ -93,7 +92,6 @@ std::optional<ateam_geometry::Point> Intercept::calculateInterceptPoint(
 
 ateam_msgs::msg::RobotMotionCommand Intercept::runFrame(const World & world, const Robot & robot)
 {
-
   chooseState(world, robot);
 
   switch (state_) {
@@ -110,7 +108,7 @@ ateam_msgs::msg::RobotMotionCommand Intercept::runFrame(const World & world, con
 void Intercept::chooseState(const World & world, const Robot & robot)
 {
   if (ateam_geometry::norm(world.ball.pos - robot.pos) < 0.2) {
-    state_ = State::Intercept;extra leeway for robot to these times
+    state_ = State::Intercept;
   } else {
     state_ = State::MoveToBall;
   }
@@ -140,12 +138,14 @@ ateam_msgs::msg::RobotMotionCommand Intercept::runIntercept(
   const World & world,
   const Robot & robot)
 {
-  // TODO: Should we filter this over a few frames to make sure we have the ball settled?
+  // TODO(chachmu): Should we filter this over a few frames to make sure we have the ball settled?
   if (robot.breakbeam_ball_detected) {
     done_ = true;
   }
 
-  // TODO: If we disable default obstacles do we need to check if the target is off the field?
+  /* TODO(chachmu): If we disable default obstacles do we need to check if the target is off the
+   * field?
+   */
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   planner_options.draw_obstacles = true;

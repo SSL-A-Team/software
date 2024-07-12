@@ -157,7 +157,9 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
 
 ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, const Robot & robot)
 {
-  // TODO: If we disable default obstacles do we need to check if the target is off the field?
+  /* TODO(chachmu): If we disable default obstacles do we need to check if the target is off the
+   * field?
+   */
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   planner_options.footprint_inflation = 0.0;
