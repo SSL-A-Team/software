@@ -39,14 +39,15 @@ void AddDefaultObstacles(const World & world, std::vector<ateam_geometry::AnySha
 {
   const auto half_field_length = world.field.field_length / 2.0;
   const auto half_defense_area_width = world.field.defense_area_width / 2.0;
-  const auto wall_x = half_field_length + world.field.boundary_width;
+  const auto back_x = half_field_length + ( 2 * world.field.boundary_width) +
+    world.field.defense_area_depth;
   const auto defense_area_front_x = half_field_length - world.field.defense_area_depth;
 
   // Our defense area, extended to wall
   obstacles.push_back(
     ateam_geometry::Rectangle{
       ateam_geometry::Point{
-        -wall_x,
+        -back_x,
         -half_defense_area_width
       },
       ateam_geometry::Point{
@@ -60,7 +61,7 @@ void AddDefaultObstacles(const World & world, std::vector<ateam_geometry::AnySha
   obstacles.push_back(
     ateam_geometry::Rectangle{
       ateam_geometry::Point{
-        wall_x,
+        back_x,
         -half_defense_area_width
       },
       ateam_geometry::Point{

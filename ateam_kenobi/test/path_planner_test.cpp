@@ -51,11 +51,13 @@ protected:
     world = {};
     world.field.field_length = 9;
     world.field.field_width = 6;
-    world.field.boundary_width = 0.01;
+    world.field.boundary_width = 0.3;
     world.field.goal_width = 1;
     world.field.goal_depth = 0.1;
     const auto defense_area_width = 2.0;
     const auto defense_area_depth = 1.0;
+    world.field.defense_area_width = defense_area_width;
+    world.field.defense_area_depth = defense_area_depth;
     const auto half_field_length = world.field.field_length / 2.0;
     world.field.ours.defense_area_corners = {
       ateam_geometry::Point(half_field_length, -defense_area_width / 2.0),
@@ -145,7 +147,7 @@ TEST_F(GetPathTest, DisallowPlanningOutOfTheField) {
   start = ateam_geometry::Point(0, 0);
   goal = ateam_geometry::Point(10, 10);
   // Planner returns path to closest valid point to goal along start-goal line
-  expected_path = {start, ateam_geometry::Point(2.89358, 2.89358)};
+  expected_path = {start, ateam_geometry::Point(3.17642, 3.17642)};
   runTest();
 }
 
