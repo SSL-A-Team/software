@@ -37,48 +37,38 @@ std::vector<ateam_geometry::AnyShape> GetDefaultObstacles(const World & world)
 
 void AddDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles)
 {
-  /* top_Vertex_2 breaks ties by largest X value and bottom_vertex_2 breaks ties by smallest X
- * value. Assuming the defense areas are axis-aligned rectangles (which should be a safe
- * assumption), these two functions give us the opposite corner vertexes we need to build a
- * Rectangle object.
- */
-
-  // our goalie box
-  obstacles.push_back(
-    ateam_geometry::Rectangle(
-      *CGAL::top_vertex_2(
-        world.field.ours.defense_area_corners.begin(),
-        world.field.ours.defense_area_corners.end()),
-      *CGAL::bottom_vertex_2(
-        world.field.ours.defense_area_corners.begin(),
-        world.field.ours.defense_area_corners.end())
-  ));
-  // their goalie box
-  obstacles.push_back(
-    ateam_geometry::Rectangle(
-      *CGAL::top_vertex_2(
-        world.field.theirs.defense_area_corners.begin(),
-        world.field.theirs.defense_area_corners.end()),
-      *CGAL::bottom_vertex_2(
-        world.field.theirs.defense_area_corners.begin(),
-        world.field.theirs.defense_area_corners.end())
-  ));
-
-  const auto half_goal_width = world.field.goal_width / 2.0;
   const auto half_field_length = world.field.field_length / 2.0;
-  const auto boundary_width = world.field.boundary_width;
+  const auto half_defense_area_width = world.field.defense_area_width / 2.0;
+  const auto wall_x = half_field_length + world.field.boundary_width;
+  const auto defense_area_front_x = half_field_length - world.field.defense_area_depth;
 
-  // our goal, extended to wall
+  // Our defense area, extended to wall
   obstacles.push_back(
-    ateam_geometry::Rectangle(
-      ateam_geometry::Point(-half_field_length, -half_goal_width),
-      ateam_geometry::Point(-(half_field_length + boundary_width), half_goal_width)));
+    ateam_geometry::Rectangle{
+      ateam_geometry::Point{
+        -wall_x,
+        -half_defense_area_width
+      },
+      ateam_geometry::Point{
+        -defense_area_front_x,
+        half_defense_area_width
+      }
+    }
+  );
 
-  // their goal, extended to wall
+  // Their defense area, extended to wall
   obstacles.push_back(
-    ateam_geometry::Rectangle(
-      ateam_geometry::Point(half_field_length, -half_goal_width),
-      ateam_geometry::Point((half_field_length + boundary_width), half_goal_width)));
+    ateam_geometry::Rectangle{
+      ateam_geometry::Point{
+        wall_x,
+        -half_defense_area_width
+      },
+      ateam_geometry::Point{
+        defense_area_front_x,
+        half_defense_area_width
+      }
+    }
+  );
 }
 
 void AddRobotObstacles(
