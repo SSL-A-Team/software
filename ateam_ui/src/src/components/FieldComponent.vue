@@ -51,7 +51,7 @@ export default {
     watch: {
         getFieldDimensions: {
             handler() {
-                this.state.world.field.drawFieldLines(this.pixi.stage.getChildByName("fieldLines"), this.state);
+                this.state.world.field.drawFieldLines(this.pixi.stage.getChildAt(0).getChildByName("fieldLines"), this.state);
             },
             deep: true
         }

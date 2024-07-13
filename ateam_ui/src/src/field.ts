@@ -156,8 +156,7 @@ export class Field {
     }
 
     update(app: PIXI.Application, state: AppState) {
-        // TODO: figure out how to trigger field dimension update
-        // drawFieldLines(app.stage.getChildByName("fieldLines");
+
         const viewport = app.stage.getChildByName("viewport") as Viewport;
 
         // this also seems like an inefficient way to do this
