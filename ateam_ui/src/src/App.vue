@@ -8,7 +8,7 @@
             <v-row class="flex-nowrap">
                 <v-col v-if="!this.state.comp" class="flex-grow-0 flex-shrink-0">
                     <RefButtonsComponent/>
-                    <FieldHalfComponent/>
+                    <FieldSideComponent/>
                 </v-col>
                 <v-col class="flex-grow-0 flex-shrink-0">
                     <StatusComponent ref="robotStatus"/>
@@ -52,7 +52,7 @@ import RefButtonsComponent from './components/RefButtonsComponent.vue'
 import GameStatusComponent from './components/GameStatusComponent.vue'
 import AIComponent from './components/AIComponent.vue'
 import PlaybookComponent from './components/PlaybookComponent.vue'
-import FieldHalfComponent from './components/FieldHalfComponent.vue'
+import FieldSideComponent from './components/FieldSideComponent.vue'
 import { provide } from 'vue'
 import { defineComponent, toRaw } from 'vue'
 
@@ -109,7 +109,7 @@ export default {
         GameStatusComponent,
         AIComponent,
         PlaybookComponent,
-        FieldHalfComponent
+        FieldSideComponent
     }
 }
 </script>

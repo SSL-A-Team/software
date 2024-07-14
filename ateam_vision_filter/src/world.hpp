@@ -57,7 +57,7 @@ public:
   /**
    * Step forward the world physics models one time step
    */
-  void predict();
+  void predict(const int ignore_side);
 
   /**
    * @return The best possible estimate for the ball (if one exists)
@@ -83,6 +83,7 @@ private:
   std::shared_ptr<ModelInputGenerator> model_input_generator;
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;
   std::map<CameraID, Camera> cameras;
+  int ignore_side_ = 0;
 };
 
 }  // namespace ateam_vision_filter

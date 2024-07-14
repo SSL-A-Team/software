@@ -15,6 +15,9 @@
   <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True">
     <param name="gc_team_name" value="$(var team_name)"/>
   </node>
+  <node name="field_manager" pkg="ateam_field_manager" exec="ateam_field_manager_node" respawn="True">
+    <param name="gc_team_name" value="$(var team_name)"/>
+  </node>
   <node name="kenobi_node" pkg="ateam_kenobi" exec="ateam_kenobi_node" respawn="True">
     <param name="use_world_velocities" value="$(var use_world_velocities)"/>
     <param name="use_emulated_ballsense" value="$(var use_emulated_ballsense)"/>

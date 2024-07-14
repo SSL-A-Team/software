@@ -71,15 +71,17 @@ public:
       std::string(Topics::kVisionState),
       rclcpp::SystemDefaultsQoS());
 
-    field_publisher_ = create_publisher<ateam_msgs::msg::FieldInfo>(
-      std::string(Topics::kField),
-      rclcpp::SystemDefaultsQoS());
-
     ssl_vision_subscription_ =
       create_subscription<ssl_league_msgs::msg::VisionWrapper>(
       std::string(Topics::kVisionMessages),
       10,
       std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
+
+    field_subscription_ =
+      create_subscription<ateam_msgs::msg::FieldInfo>(
+      std::string(Topics::kField),
+      10,
+      std::bind(&VisionFilterNode::field_callback, this, std::placeholders::_1));
   }
 
   void vision_callback(
@@ -95,10 +97,16 @@ public:
         world_.update_camera(camera_id, camera_measurement);
       }
     }
+  }
 
-    if (!vision_wrapper_msg->geometry.empty()) {
-      field_publisher_->publish(
-        message_conversions::fromMsg(vision_wrapper_msg->geometry.front(), team_side));
+  void field_callback(
+    const ateam_msgs::msg::FieldInfo::SharedPtr field_info_msg)
+  {
+    const auto team_side = game_controller_listener_.GetTeamSide();
+    if (team_side == ateam_common::TeamSide::PositiveHalf) {
+      ignore_side_ = -field_info_msg->ignore_side;
+    } else {
+      ignore_side_ = field_info_msg->ignore_side;
     }
   }
 
@@ -107,7 +115,7 @@ public:
     const std::lock_guard<std::mutex> lock(world_mutex_);
     vision_state_publisher_->publish(world_.get_vision_world_state());
 
-    world_.predict();
+    world_.predict(ignore_side_);
 
     std::optional<Ball> maybe_ball = world_.get_ball_estimate();
     ball_publisher_->publish(message_conversions::toMsg(maybe_ball));
@@ -132,13 +140,16 @@ private:
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::VisionWorldState>::SharedPtr vision_state_publisher_;
-  rclcpp::Publisher<ateam_msgs::msg::FieldInfo>::SharedPtr field_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
+  rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr field_subscription_;
+
+  // We might be able to get rid of this since the field manager is handling some of it now
   ateam_common::GameControllerListener game_controller_listener_;
 
   std::mutex world_mutex_;
   World world_;
+  int ignore_side_;
 
   // std::mutex field_mutex_;
   // ateam_msgs::msg::FieldInfo field_msg_;

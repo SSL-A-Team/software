@@ -8,5 +8,6 @@ float32 defense_area_depth
 geometry_msgs/Point32 center_circle
 float32 center_circle_radius
 geometry_msgs/Polygon field_corners
+int32 ignore_side
 FieldSidedInfo ours
 FieldSidedInfo theirs

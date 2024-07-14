@@ -7,6 +7,7 @@ import { Ball } from "@/ball"
 import { Field, FieldDimensions, FieldSidedInfo } from "@/field"
 import { AIState } from "@/AI"
 import { Play } from "@/play"
+import { exportDefaultSpecifier } from "@babel/types"
 
 export class RenderConfig {
     angle: number = 0; // Rotation applied to the rendered field
@@ -21,6 +22,7 @@ export class WorldState {
     field: Field;
     referee: Referee;
     ai: AIState;
+    ignore_side: number;
 
     constructor() {
         this.team_name = "A-Team";
@@ -34,6 +36,8 @@ export class WorldState {
 
         this.referee = new Referee();
         this.ai = new AIState();
+
+        this.ignore_side = 0;
     }
 }
 
@@ -56,6 +60,8 @@ export class AppState {
     plays = {};
     selected_play_name: string = null;
     override_play_in_progress: string = null;
+
+    hovered_field_ignore_side: number = 0;
 
     setGoalie(goalie_id: number) {
         const request = new ROSLIB.ServiceRequest({
@@ -124,6 +130,27 @@ export class AppState {
                 state.override_play_in_progress = null;
                 if(!result.success) {
                     console.log("Failed to set override play to ", play_name, ": ", result.reason);
+                }
+            });
+    }
+
+    setIgnoreFieldSide(ignore_side: number) {
+        const state = this; // fix dumb javascript things
+
+        let int_side = 0;
+        if (ignore_side > 0) {
+            int_side = 1;
+        } else if (ignore_side < 0) {
+            int_side = -1;
+        }
+        const request = new ROSLIB.ServiceRequest({
+            ignore_side: int_side
+        });
+
+        this.services["setIgnoreFieldSide"].callService(request,
+            function(result) {
+                if(!result.success) {
+                    console.log("Failed to set ignore side: ", result.reason);
                 }
             });
     }
@@ -240,6 +267,8 @@ export class AppState {
                 state.world.field.fieldDimensions.goalDepth = goal_dims[0];
                 state.world.field.fieldDimensions.goalWidth = goal_dims[1];
             }
+
+            state.world.ignore_side = msg.ignore_side;
         }
     }
 
@@ -250,6 +279,9 @@ export class AppState {
             for (const member of Object.getOwnPropertyNames(state.world.referee)) {
                 state.world.referee[member] = msg[member];
             }
+
+            state.world.teams[TeamColor.Blue].defending = msg.blue_team_on_positive_half ? 1 : -1;
+            state.world.teams[TeamColor.Yellow].defending = msg.blue_team_on_positive_half ? -1 : 1;
 
             // TODO: probably pull this from the ros network instead
             if (state.world.referee.blue.name == state.world.team_name) {
@@ -459,5 +491,13 @@ export class AppState {
             name: "/joystick_control_node:robot_id"
         });
         this.params["joystick_param"] = joystickParam;
+
+        // Set up set ignore field side service
+        let setIgnoreFieldSideService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/field_manager/set_ignore_field_side',
+            serviceType: 'ateam_msgs/srv/SetIgnoreFieldSide'
+        })
+        this.services["setIgnoreFieldSide"] = setIgnoreFieldSideService;
     }
 }

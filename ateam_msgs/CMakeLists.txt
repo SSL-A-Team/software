@@ -45,6 +45,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   srv/SetPlayEnabled.srv
   srv/SetTeamAdvantageChoice.srv
   srv/SubstituteBot.srv
+  srv/SetIgnoreFieldSide.srv
 
   DEPENDENCIES
   builtin_interfaces

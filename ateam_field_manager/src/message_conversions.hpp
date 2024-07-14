@@ -18,41 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
-#ifndef TYPES__WORLD_HPP_
-#define TYPES__WORLD_HPP_
+#ifndef MESSAGE_CONVERSIONS_HPP_
+#define MESSAGE_CONVERSIONS_HPP_
 
 #include <optional>
-#include <array>
-#include <chrono>
+#include <string>
+#include <vector>
+#include <ateam_msgs/msg/field_info.hpp>
+#include <ateam_msgs/msg/field_sided_info.hpp>
+#include <ateam_common/game_controller_listener.hpp>
+#include <ssl_league_msgs/msg/vision_detection_ball.hpp>
+#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
+#include <ssl_league_msgs/msg/vision_detection_frame.hpp>
+#include <ssl_league_msgs/msg/vision_wrapper.hpp>
 
-#include "types/ball.hpp"
-#include "types/field.hpp"
-#include "types/referee_info.hpp"
-#include "types/robot.hpp"
-
-namespace ateam_kenobi
+namespace ateam_field_manager::message_conversions
 {
-struct World
-{
-  std::chrono::steady_clock::time_point current_time;
 
-  Field field;
-  RefereeInfo referee_info;
+ateam_msgs::msg::FieldInfo fromMsg(
+  const ssl_league_msgs::msg::VisionGeometryData & ros_msg,
+  const ateam_common::TeamSide & team_side,
+  const int ignore_side);
+void invertFieldInfo(ateam_msgs::msg::FieldInfo & info);
+std::vector<geometry_msgs::msg::Point32> getPointsFromLines(
+  const std::vector<ssl_league_msgs::msg::VisionFieldLineSegment> & lines,
+  const std::vector<std::string> & line_names);
 
-  Ball ball;
-  std::array<Robot, 16> our_robots;
-  std::array<Robot, 16> their_robots;
+}  // namespace ateam_field_manager::message_conversions
 
-  bool in_play;
-  bool our_penalty;
-  bool their_penalty;
-
-  int ignore_side = 0;
-
-  // Holds the ID of the robot not allowed to touch the ball, if any
-  std::optional<int> double_touch_forbidden_id_;
-};
-}  // namespace ateam_kenobi
-
-#endif  // TYPES__WORLD_HPP_
+#endif  // MESSAGE_CONVERSIONS_HPP_

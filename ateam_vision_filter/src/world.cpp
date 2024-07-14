@@ -42,8 +42,10 @@ void World::update_camera(const CameraID & cameraID, const CameraMeasurement & m
   // Update the specific camera
   cameras.at(cameraID).update(measurement);
 }
-void World::predict()
+void World::predict(const int ignore_side)
 {
+  ignore_side_ = ignore_side;
+
   // First, we predict all the things
   for (auto & camera_pair : cameras) {
     camera_pair.second.predict();
@@ -70,15 +72,13 @@ std::optional<Ball> World::get_ball_estimate()
 
 
     if (possible_ball_with_score.has_value()) {
-      // TODO: update this with data from the param properly
-      int ignore_half = 0;
-      if (ignore_half > 0) {
-        if (possible_ball_with_score.value().first.x() > 0) {
+      if (ignore_side_ > 0) {
+        if (possible_ball_with_score.value().first.position.x() > 0) {
           continue;
         }
       }
-      if (ignore_half < 0) {
-        if (possible_ball_with_sore.value().first.x() < 0) {
+      if (ignore_side_ < 0) {
+        if (possible_ball_with_score.value().first.position.x() < 0) {
           continue;
         }
       }
@@ -123,16 +123,13 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
 
     for (size_t yellow_id = 0; yellow_id < 16; yellow_id++) {
       if (possible_yellow_robots_with_score.at(yellow_id).has_value()) {
-
-        // TODO: update this with data from the param properly
-        int ignore_half = 0;
-        if (ignore_half > 0) {
-          if (possible_yellow_robots_with_score.at(yellow_id).value().first.x() > 0) {
+        if (ignore_side_ > 0) {
+          if (possible_yellow_robots_with_score.at(yellow_id).value().first.position.x() > 0) {
             continue;
           }
         }
-        if (ignore_half < 0) {
-          if (possible_yellow_robots_with_score.at(yellow_id).value().first.x() < 0) {
+        if (ignore_side_ < 0) {
+          if (possible_yellow_robots_with_score.at(yellow_id).value().first.position.x() < 0) {
             continue;
           }
         }
@@ -199,15 +196,13 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
 
     for (size_t blue_id = 0; blue_id < 16; blue_id++) {
       if (possible_blue_robots_with_score.at(blue_id).has_value()) {
-
-        // TODO: update this with data from the param properly
-        int ignore_half = 0;
-        if (ignore_half > 0) {
-          if (possible_blue_robots_with_score.at(blue_id).value().first.x() > 0) {
+        if (ignore_side_ > 0) {
+          if (possible_blue_robots_with_score.at(blue_id).value().first.position.x() > 0) {
             continue;
           }
-        if (ignore_half < 0) {
-          if (possible_blue_robots_with_score.at(blue_id).value().first.x() < 0) {
+        }
+        if (ignore_side_ < 0) {
+          if (possible_blue_robots_with_score.at(blue_id).value().first.position.x() < 0) {
             continue;
           }
         }

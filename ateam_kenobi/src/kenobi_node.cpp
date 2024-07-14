@@ -261,6 +261,11 @@ private:
     field.theirs.goal_posts = {field.theirs.goal_corners[0], field.theirs.goal_corners[1]};
 
     world_.field = field;
+    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
+      world_.ignore_side = -field_msg->ignore_side;
+    } else {
+      world_.ignore_side = field_msg->ignore_side;
+    }
   }
 
   void set_override_play_callback(

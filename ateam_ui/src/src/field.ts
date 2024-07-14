@@ -40,6 +40,44 @@ export class Field {
         this.overlays = [];
     }
 
+    drawSideIgnoreOverlay(sideIgnoreOverlay: PIXI.Container, state: AppState) {
+        const scale = state.renderConfig.scale;
+
+        let ignoreOverlay = sideIgnoreOverlay.getChildByName("ignoreOverlay") as PIXI.Graphics;
+        if (!ignoreOverlay) {
+            ignoreOverlay = new PIXI.Graphics;
+            ignoreOverlay.name = "ignoreOverlay";
+            ignoreOverlay.visible = false;
+            sideIgnoreOverlay.addChild(ignoreOverlay);
+        }
+
+        ignoreOverlay.clear();
+        ignoreOverlay.beginFill("#3b3b3bFF");
+        ignoreOverlay.drawRect(0,
+                      -scale * (this.fieldDimensions.width/2 + this.fieldDimensions.border),
+                      scale * (this.fieldDimensions.length/2 + this.fieldDimensions.border),
+                      scale * (this.fieldDimensions.width + 2*this.fieldDimensions.border),
+                     );
+
+
+        let hoverOverlay = sideIgnoreOverlay.getChildByName("hoverOverlay") as PIXI.Graphics;
+        if (!hoverOverlay) {
+            hoverOverlay = new PIXI.Graphics;
+            hoverOverlay.name = "hoverOverlay";
+            hoverOverlay.visible = false;
+            sideIgnoreOverlay.addChild(hoverOverlay);
+        }
+
+        hoverOverlay.clear();
+        hoverOverlay.beginFill("#3b3b3bBF");
+        hoverOverlay.drawRect(0,
+                      -scale * (this.fieldDimensions.width/2 + this.fieldDimensions.border),
+                      scale * (this.fieldDimensions.length/2 + this.fieldDimensions.border),
+                      scale * (this.fieldDimensions.width + 2*this.fieldDimensions.border),
+                     );
+
+    }
+
     drawFieldLines(fieldLines: PIXI.Graphics, state: AppState) {
         const scale = state.renderConfig.scale;
 
@@ -89,6 +127,7 @@ export class Field {
     }
 
     initializePixi(app: PIXI.Application, state: AppState) {
+        console.log("initializing pixi")
 
 
         // Set origin to center of field
@@ -136,8 +175,14 @@ export class Field {
         const overlay = new PIXI.Container();
         overlay.name = "overlay";
 
+        const sideIgnoreOverlay = new PIXI.Container();
+        sideIgnoreOverlay.name = "sideIgnoreOverlay";
+
         // Field Lines
         this.drawFieldLines(fieldLines, state);
+
+        // Rectangle that covers the ignored side of the field
+        this.drawSideIgnoreOverlay(sideIgnoreOverlay, state);
 
         // Robots
         // surely there is a more elegant way to do this
@@ -153,6 +198,7 @@ export class Field {
         viewport.addChild(robots);
         viewport.addChild(ball);
         viewport.addChild(overlay);
+        viewport.addChild(sideIgnoreOverlay);
     }
 
     update(app: PIXI.Application, state: AppState) {
@@ -176,6 +222,7 @@ export class Field {
                 delete this.overlays[id];
             }
         }
+
     }
 }
 
