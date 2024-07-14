@@ -1,6 +1,6 @@
 <template>
     <v-container class="d-flex flex-column">
-        <b>Field side</b>
+        <b>Field Side</b>
         <div
             @mouseover="handleHover(-1)"
             @mouseleave="handleHover(0)"
