@@ -78,7 +78,6 @@ ateam_msgs::msg::RefereeInfo toMsg(const RefereeInfo & obj)
 }
 
 
-
 ateam_msgs::msg::BallState toMsg(const Ball & obj)
 {
   ateam_msgs::msg::BallState ball_state_msg;

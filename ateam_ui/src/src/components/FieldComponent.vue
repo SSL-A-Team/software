@@ -1,10 +1,10 @@
 <template>
-    <canvas ref="canvas" style="width:100%; height:auto; display:block;"/>
+    <canvas ref="canvas" style="width:100%; height:auto; display:block;" />
 </template>
 
 
 <script lang="ts">
-import { ref, inject } from 'vue';
+import { shallowRef, ref, inject } from 'vue';
 import * as PIXI from 'pixi.js';
 
 export default {
@@ -19,20 +19,19 @@ export default {
         // TODO: Make this properly resize itself
         const width = 1876;
         const height = 1456;
-        this.pixi = new PIXI.Application({
+        let pixi = new PIXI.Application({
             width: width,
             height: height,
             background: 'green',
             antialias: true,
             view: this.$refs.canvas
         });
-
+        this.pixi = shallowRef(pixi);
         this.state.world.field.initializePixi(this.pixi, this.state);
 
         // TODO: clean this up
         this.pixi.stage.eventMode = 'static';
-        this.pixi.stage.hitArea = new PIXI.Rectangle(-width/2, -height/2, width, height);
-        this.pixi.stage.on("pointerdown", this.onClick);
+
     },
     methods: {
         update: function() {
@@ -52,7 +51,7 @@ export default {
     watch: {
         getFieldDimensions: {
             handler() {
-                this.state.world.field.drawFieldLines(this.pixi.stage.getChildByName("fieldLines"), this.state);
+                this.state.world.field.drawFieldLines(this.pixi.stage.getChildAt(0).getChildByName("fieldLines"), this.state);
             },
             deep: true
         }

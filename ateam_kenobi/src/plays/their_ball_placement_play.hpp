@@ -48,4 +48,4 @@ private:
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__THEIR_BALL_PLACEMENT__PLAY_HPP_
+#endif  // PLAYS__THEIR_BALL_PLACEMENT_PLAY_HPP_

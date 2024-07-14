@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef SKILLS__DRIBBLE_HPP_
-#define SKILLS__DRIBBLE_HPP_
+#ifndef SKILLS__INTERCEPT_HPP_
+#define SKILLS__INTERCEPT_HPP_
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "play_helpers/easy_move_to.hpp"
@@ -32,21 +32,16 @@
 namespace ateam_kenobi::skills
 {
 
-class Dribble : public stp::Skill
+class Intercept : public stp::Skill
 {
 public:
-  explicit Dribble(stp::Options stp_options);
+  explicit Intercept(stp::Options stp_options);
 
-  void reset();
+  void Reset();
 
   ateam_geometry::Point getAssignmentPoint(const World & world)
   {
-    return getStartPosition(world);
-  }
-
-  void setTarget(ateam_geometry::Point target)
-  {
-    target_ = target;
+    return calculateEstimateInterceptPointnt(world);
   }
 
   bool isDone()
@@ -58,30 +53,27 @@ public:
   ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
 private:
-  const double kOffset = kRobotRadius + kBallRadius + 0.07;
-  ateam_geometry::Point target_;
   play_helpers::EasyMoveTo easy_move_to_;
   bool done_ = false;
 
   enum class State
   {
-    MoveBehindBall,
-    Dribble
+    MoveToBall,
+    Intercept
   };
-  State state_ = State::MoveBehindBall;
-
-  ateam_geometry::Point getStartPosition(const World & world);
+  State state_ = State::MoveToBall;
 
   void chooseState(const World & world, const Robot & robot);
 
-  bool isRobotBehindBall(const World & world, const Robot & robot, double hysteresis);
-  bool isRobotSettled(const World & world, const Robot & robot);
-  bool robotHasBall(const World & world, const Robot & robot);
+  ateam_geometry::Point calculateEstimateInterceptPoint(const World & world);
+  std::optional<ateam_geometry::Point> calculateInterceptPoint(
+    const World & world,
+    const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand runMoveBehindBall(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand runDribble(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runMoveToBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runIntercept(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills
 
-#endif  // SKILLS__DRIBBLE_HPP_
+#endif  // SKILLS__INTERCEPT_HPP_

@@ -21,6 +21,7 @@
 #ifndef PLAYS__OUR_BALL_PLACEMENT_PLAY_HPP_
 #define PLAYS__OUR_BALL_PLACEMENT_PLAY_HPP_
 
+#include <vector>
 #include "stp/play.hpp"
 #include "tactics/pass.hpp"
 #include "skills/dribble.hpp"
@@ -72,9 +73,8 @@ private:
     const std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
-
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__OUR_BALL_PLACEMENT__PLAY_HPP_
+#endif  // PLAYS__OUR_BALL_PLACEMENT_PLAY_HPP_

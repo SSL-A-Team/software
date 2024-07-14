@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 
-#include "capture.hpp"
+#include "intercept.hpp"
 #include <angles/angles.h>
 #include <vector>
 #include <ateam_geometry/normalize.hpp>
@@ -28,42 +28,93 @@
 namespace ateam_kenobi::skills
 {
 
-Capture::Capture(stp::Options stp_options)
+Intercept::Intercept(stp::Options stp_options)
 : stp::Skill(stp_options),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {}
 
-void Capture::Reset()
+void Intercept::Reset()
 {
   done_ = false;
   easy_move_to_.reset();
 }
 
-ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const Robot & robot)
+void Intercept::calculateEstimateInterceptPoint(const World & world)
+{
+  float seconds_into_future = 2.0;
+  return world.ball.pos + (seconds_into_future * world.ball.vel);
+}
+
+std::optional<ateam_geometry::Point> Intercept::calculateInterceptPoint(
+  const World & world,
+  const Robot & robot)
+{
+  const double vb = ateam_geometry::norm(world.ball.vel);
+  // max robot velocity (slightly decreased to give robot time to prepare)
+  const double vr = 1.8;
+
+  const auto robot_to_ball = world.ball.pos - robot.pos;
+
+  // robot distance to ball along travel line
+  const double d = (world.ball.vel * robot_to_ball) /
+    ateam_geometry::norm(world.ball.vel);
+  const auto robot_proj_ball = world.ball.vel * robot_proj_dist_to_ball /
+    ateam_geometry::norm(world.ball.vel);
+  const auto robot_perp_ball = robot_to_ball - robot_proj_ball;
+
+  // robot distance tangent to the ball travel line
+  const double h = ateam_geometry::norm(robot_perp_ball);
+
+  double internal_root = (d * d * vr * vr) + (h * h * vr * vr) - (h * h * vb * vb);
+
+  // imaginary result means we will never catch the ball
+  if (internal_root < 0) {
+    return std::nullopt;
+  }
+
+  // Time to intercept moving towards the ball
+  double t = (d * vb - sqrt(interal_root)) / (vb * vb - r * r);
+
+  // TODO(chachmu): add better checks to see if these times are possible to
+  // respond to
+  if (t > 0.0) {
+    return world.ball.pos + (t * world.ball.vel);
+  }
+
+  // Time to intercept moving away from the ball
+  t = (d * vb - sqrt(interal_root)) / (vb * vb - r * r);
+  if (t > 0.0) {
+    return world.ball.pos + (t * world.ball.vel);
+  }
+
+  return std::nullopt;
+}
+
+ateam_msgs::msg::RobotMotionCommand Intercept::runFrame(const World & world, const Robot & robot)
 {
   chooseState(world, robot);
 
   switch (state_) {
     case State::MoveToBall:
       return runMoveToBall(world, robot);
-    case State::Capture:
-      return runCapture(world, robot);
+    case State::Intercept:
+      return runIntercept(world, robot);
     default:
-      std::cerr << "Unhandled state in Capture!\n";
+      std::cerr << "Unhandled state in Intercept!\n";
       return ateam_msgs::msg::RobotMotionCommand{};
   }
 }
 
-void Capture::chooseState(const World & world, const Robot & robot)
+void Intercept::chooseState(const World & world, const Robot & robot)
 {
   if (ateam_geometry::norm(world.ball.pos - robot.pos) < 0.2) {
-    state_ = State::Capture;
+    state_ = State::Intercept;
   } else {
     state_ = State::MoveToBall;
   }
 }
 
-ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
+ateam_msgs::msg::RobotMotionCommand Intercept::runMoveToBall(
   const World & world,
   const Robot & robot)
 {
@@ -83,7 +134,9 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
   return easy_move_to_.runFrame(robot, world);
 }
 
-ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand Intercept::runIntercept(
+  const World & world,
+  const Robot & robot)
 {
   // TODO(chachmu): Should we filter this over a few frames to make sure we have the ball settled?
   if (robot.breakbeam_ball_detected) {
@@ -104,7 +157,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.dribbler_speed = 200;
+  command.dribbler_speed = 50;
 
   return command;
 }

@@ -32,7 +32,6 @@ PivotKick::PivotKick(stp::Options stp_options, KickSkill::WaitType wait_type)
 : KickSkill(stp_options, wait_type),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("easy_move_to")),
   capture_(createChild<skills::Capture>("Capture"))
-
 {
 }
 
@@ -50,7 +49,6 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
       easy_move_to_.reset();
       prev_state_ = State::Capture;
     }
-    //RCLCPP_INFO(getLogger(), "Capturing...");
     return Capture(world, robot);
   }
 
@@ -61,7 +59,6 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
       easy_move_to_.reset();
       prev_state_ = State::Pivot;
     }
-    //RCLCPP_INFO(getLogger(), "Pivoting...");
     return Pivot(robot);
   }
 
@@ -70,7 +67,6 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
     prev_state_ = State::KickBall;
   }
 
-  //RCLCPP_INFO(getLogger(), "Kicking...");
   return KickBall(world, robot);
 }
 

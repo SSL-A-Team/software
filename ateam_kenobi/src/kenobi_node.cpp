@@ -219,7 +219,7 @@ private:
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
   {
-    if(ball_state_msg->visible) {
+    if (ball_state_msg->visible) {
       world_.ball.pos = ateam_geometry::Point(
         ball_state_msg->pose.position.x,
         ball_state_msg->pose.position.y);
@@ -313,9 +313,13 @@ private:
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
 
     if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
-      world_.referee_info.designated_position = ateam_geometry::Point(-game_controller_listener_.GetDesignatedPosition().x, -game_controller_listener_.GetDesignatedPosition().y);
+      world_.referee_info.designated_position = ateam_geometry::Point(
+        -game_controller_listener_.GetDesignatedPosition().x,
+        -game_controller_listener_.GetDesignatedPosition().y);
     } else {
-     world_.referee_info.designated_position = ateam_geometry::Point(game_controller_listener_.GetDesignatedPosition().x, game_controller_listener_.GetDesignatedPosition().y); 
+      world_.referee_info.designated_position = ateam_geometry::Point(
+        game_controller_listener_.GetDesignatedPosition().x,
+        game_controller_listener_.GetDesignatedPosition().y);
     }
 
     if (game_controller_listener_.GetOurGoalieID().has_value()) {

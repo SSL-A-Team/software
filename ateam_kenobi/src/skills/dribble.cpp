@@ -75,7 +75,7 @@ void Dribble::chooseState(const World & world, const Robot & robot)
       break;
     case State::Dribble:
       // Can eventually replace this with breakbeam
-      if(!robotHasBall(world, robot)) {
+      if (!robotHasBall(world, robot)) {
         state_ = State::MoveBehindBall;
       }
       break;
@@ -98,7 +98,8 @@ bool Dribble::isRobotBehindBall(const World & world, const Robot & robot, double
   const auto robot_perp_ball = robot_to_ball - robot_proj_ball;
   const auto robot_perp_dist_to_ball = ateam_geometry::norm(robot_perp_ball);
 
-  const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis && robot_proj_dist_to_ball < 0.22;
+  const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis &&
+    robot_proj_dist_to_ball < 0.22;
   const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.007 * hysteresis;
 
   return proj_dist_is_good && perp_dist_is_good;
@@ -156,7 +157,9 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
 
 ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, const Robot & robot)
 {
-  // TODO: If we disable default obstacles do we need to check if the target is off the field?
+  /* TODO(chachmu): If we disable default obstacles do we need to check if the target is off the
+   * field?
+   */
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   planner_options.footprint_inflation = 0.0;
@@ -169,7 +172,9 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, con
 
   // Offset the robot position so the ball is on the target point
   const auto robot_to_target = target_ - robot.pos;
-  easy_move_to_.setTargetPosition(target_ + (kRobotRadius * ateam_geometry::normalize(robot_to_target)));
+  easy_move_to_.setTargetPosition(
+    target_ +
+    (kRobotRadius * ateam_geometry::normalize(robot_to_target)));
   auto command = easy_move_to_.runFrame(robot, world);
 
   command.dribbler_speed = 50;
