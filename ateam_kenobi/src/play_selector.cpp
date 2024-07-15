@@ -56,24 +56,24 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<TrianglePassPlay>(stp_options);
   addPlay<WaypointsPlay>(stp_options);
   addPlay<SpinningAPlay>(stp_options);
-  addPlay<PassToSegmentPlay>(
-    "PassLeftForwardPlay", stp_options,
-    segment_passing_target_funcs::LeftForwardPassTarget);
-  addPlay<PassToSegmentPlay>(
-    "PassCenterForwardPlay", stp_options,
-    segment_passing_target_funcs::CenterForwardPassTarget);
-  addPlay<PassToSegmentPlay>(
-    "PassRightForwardPlay", stp_options,
-    segment_passing_target_funcs::RightForwardPassTarget);
-  addPlay<PassToSegmentPlay>(
-    "PassLeftBackwardPlay", stp_options,
-    segment_passing_target_funcs::LeftBackwardPassTarget);
-  addPlay<PassToSegmentPlay>(
-    "PassCenterBackwardPlay", stp_options,
-    segment_passing_target_funcs::CenterBackwardPassTarget);
-  addPlay<PassToSegmentPlay>(
-    "PassRightBackwardPlay", stp_options,
-    segment_passing_target_funcs::RightBackwardPassTarget);
+  addPlay<PassToLanePlay>(
+    "PassLeftForwardPlay", stp_options, play_helpers::lanes::Lane::Left,
+    PassToLanePlay::PassDirection::Forward);
+  addPlay<PassToLanePlay>(
+    "PassCenterForwardPlay", stp_options, play_helpers::lanes::Lane::Center,
+    PassToLanePlay::PassDirection::Forward);
+  addPlay<PassToLanePlay>(
+    "PassRightForwardPlay", stp_options, play_helpers::lanes::Lane::Right,
+    PassToLanePlay::PassDirection::Forward);
+  addPlay<PassToLanePlay>(
+    "PassLeftBackwardPlay", stp_options, play_helpers::lanes::Lane::Left,
+    PassToLanePlay::PassDirection::Backward);
+  addPlay<PassToLanePlay>(
+    "PassCenterBackwardPlay", stp_options, play_helpers::lanes::Lane::Center,
+    PassToLanePlay::PassDirection::Backward);
+  addPlay<PassToLanePlay>(
+    "PassRightBackwardPlay", stp_options, play_helpers::lanes::Lane::Right,
+    PassToLanePlay::PassDirection::Backward);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg)

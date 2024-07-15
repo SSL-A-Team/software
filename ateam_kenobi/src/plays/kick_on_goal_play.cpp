@@ -47,7 +47,6 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
   }
 
   if (world.ball.pos.x() < 0.0) {
-    RCLCPP_INFO(getLogger(), "Min by ball X");
     return stp::PlayScore::Min();
   }
 
@@ -65,7 +64,6 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
       their_goal_segment.to_vector(), ball_goal_vector));
 
   if (shot_angle < 0.52 /*30 deg*/ || shot_angle > 2.61 /*150 deg*/) {
-    RCLCPP_INFO(getLogger(), "Min by shot angle: %f", shot_angle);
     return stp::PlayScore::Min();
   }
 
@@ -74,7 +72,6 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
     world.ball.pos, play_helpers::getVisibleRobots(world.their_robots));
   const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
   if (!largest_window) {
-    RCLCPP_INFO(getLogger(), "Min by no shot");
     return stp::PlayScore::Min();
   }
 

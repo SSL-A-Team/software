@@ -18,11 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
-#define PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
+#ifndef PLAYS__PASSING_PLAYS__PASS_TO_LANE_PLAY_HPP_
+#define PLAYS__PASSING_PLAYS__PASS_TO_LANE_PLAY_HPP_
 
-#include "pass_to_lane_play.hpp"
+#include <ateam_geometry/types.hpp>
 #include "pass_to_segment_play.hpp"
-#include "segment_passing_target_funcs.hpp"
+#include "play_helpers/lanes.hpp"
 
-#endif  // PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
+namespace ateam_kenobi::plays
+{
+
+class PassToLanePlay : public PassToSegmentPlay
+{
+public:
+  enum class PassDirection
+  {
+    Forward,
+    Backward
+  };
+
+  PassToLanePlay(stp::Options stp_options, play_helpers::lanes::Lane lane, PassDirection direction);
+
+  stp::PlayScore getScore(const World & world) override;
+
+private:
+  play_helpers::lanes::Lane lane_;
+  PassDirection direction_;
+
+  ateam_geometry::Segment getTargetSegment(const World & world);
+
+};
+
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__PASSING_PLAYS__PASS_TO_LANE_PLAY_HPP_

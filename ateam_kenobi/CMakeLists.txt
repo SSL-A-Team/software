@@ -24,6 +24,7 @@ add_library(kenobi_node_component SHARED
   src/play_selector.cpp
   src/path_planning/obstacles.cpp
   src/path_planning/path_planner.cpp
+  src/plays/passing_plays/pass_to_lane_play.cpp
   src/plays/passing_plays/pass_to_segment_play.cpp
   src/plays/test_play.cpp
   src/plays/halt_play.cpp
