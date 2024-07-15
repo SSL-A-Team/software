@@ -63,10 +63,12 @@ public:
 
 private:
   const double kReceiverPositionThreshold = 0.1;
-  double speed_ = 3.0;
+  std::optional<double> speed_;
   ateam_geometry::Point target_;
   skills::PassReceiver receiver_;
   skills::LineKick kick_;
+
+  double calculateDefaultKickSpeed(const World & world);
 };
 
 }  // namespace ateam_kenobi::tactics
