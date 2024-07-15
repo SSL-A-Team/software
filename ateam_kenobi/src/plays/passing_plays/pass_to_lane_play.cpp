@@ -20,6 +20,7 @@
 
 #include "pass_to_lane_play.hpp"
 #include <algorithm>
+#include <limits>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/shot_evaluation.hpp"
@@ -77,19 +78,22 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
 ateam_geometry::Segment PassToLanePlay::getTargetSegment(const World & world)
 {
   const auto lane_segment = play_helpers::lanes::GetLaneLongitudinalMidSegment(world, lane_);
-  const auto ball_x = world.ball.pos.x();
+  const auto max_center_x = (world.field.field_length / 2.0) - world.field.defense_area_depth;
+  const auto max_x = lane_ ==
+    play_helpers::lanes::Lane::Center ? max_center_x : std::numeric_limits<double>::infinity();
+  const auto ball_x = std::min(world.ball.pos.x(), max_x);
   if (direction_ == PassDirection::Forward) {
     return ateam_geometry::Segment{
-      ateam_geometry::Point{lane_segment.source().x() < ball_x ? ball_x : lane_segment.source().x(),
+      ateam_geometry::Point{std::clamp(lane_segment.source().x(), ball_x, max_x),
         lane_segment.source().y()},
-      ateam_geometry::Point{lane_segment.target().x() < ball_x ? ball_x : lane_segment.target().x(),
+      ateam_geometry::Point{std::clamp(lane_segment.target().x(), ball_x, max_x),
         lane_segment.target().y()}
     };
   } else {
     return ateam_geometry::Segment{
-      ateam_geometry::Point{lane_segment.source().x() > ball_x ? ball_x : lane_segment.source().x(),
+      ateam_geometry::Point{std::min(lane_segment.source().x(), ball_x),
         lane_segment.source().y()},
-      ateam_geometry::Point{lane_segment.target().x() > ball_x ? ball_x : lane_segment.target().x(),
+      ateam_geometry::Point{std::min(lane_segment.target().x(), ball_x),
         lane_segment.target().y()}
     };
   }
