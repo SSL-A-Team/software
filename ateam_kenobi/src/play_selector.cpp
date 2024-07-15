@@ -148,8 +148,11 @@ stp::Play * PlaySelector::selectRankedPlay(const World & world)
   std::vector<std::pair<stp::Play *, double>> play_scores;
 
   std::ranges::transform(
-    plays_, std::back_inserter(play_scores), [&world](auto play) {
-      return std::make_pair(play.get(), play->getScore(world));
+    plays_, std::back_inserter(play_scores), [this, &world](auto play) {
+      void * play_address = static_cast<void *>(play.get());
+      // 5% bonus to previous play as hysteresis
+      double score_multiplier = (play_address == prev_play_address_) ? 1.05 : 1.0;
+      return std::make_pair(play.get(), score_multiplier * play->getScore(world));
     });
 
   auto sort_func = [](const auto & l, const auto & r) {
