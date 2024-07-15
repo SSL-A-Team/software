@@ -46,7 +46,6 @@ private:
   PassDirection direction_;
 
   ateam_geometry::Segment getTargetSegment(const World & world);
-
 };
 
 }  // namespace ateam_kenobi::plays

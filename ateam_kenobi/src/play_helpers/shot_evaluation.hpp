@@ -29,7 +29,7 @@ namespace ateam_kenobi::play_helpers
 {
 
 double GetShotSuccessChance(const World & world, const ateam_geometry::Point & shot_point);
-  
+
 }  // namespace ateam_kenobi::play_helpers
 
 #endif  // PLAY_HELPERS__SHOT_EVALUATION_HPP_

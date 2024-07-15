@@ -28,7 +28,7 @@ namespace ateam_kenobi::play_helpers
 
 double GetShotSuccessChance(const World & world, const ateam_geometry::Point & shot_point)
 {
-const ateam_geometry::Segment their_goal_segment{
+  const ateam_geometry::Segment their_goal_segment{
     ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width / 2.0},
     ateam_geometry::Point{world.field.field_length / 2.0, world.field.goal_width / 2.0, }
   };
@@ -53,12 +53,15 @@ const ateam_geometry::Segment their_goal_segment{
     return 0.0;
   }
 
-  const auto shot_width_ratio = largest_window->squared_length() / their_goal_segment.squared_length();
+  const auto shot_width_ratio = largest_window->squared_length() /
+    their_goal_segment.squared_length();
 
-  const auto distance_to_goal = CGAL::approximate_sqrt(CGAL::squared_distance(shot_point, goal_midpoint));
+  const auto distance_to_goal =
+    CGAL::approximate_sqrt(CGAL::squared_distance(shot_point, goal_midpoint));
 
   const auto distance_threshold = 2.0;
-  const auto shot_distance_factor = distance_to_goal < distance_threshold ? 1.0 : distance_threshold / distance_to_goal;
+  const auto shot_distance_factor = distance_to_goal <
+    distance_threshold ? 1.0 : distance_threshold / distance_to_goal;
   return 100.0 * shot_width_ratio * shot_distance_factor;
 }
 

@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -152,7 +153,7 @@ stp::Play * PlaySelector::selectRankedPlay(const World & world)
       void * play_address = static_cast<void *>(play.get());
       // 5% bonus to previous play as hysteresis
       double score_multiplier = (play_address == prev_play_address_) ? 1.05 : 1.0;
-      if(!play->isEnabled()) {
+      if (!play->isEnabled()) {
         return std::make_pair(play.get(), std::numeric_limits<double>::quiet_NaN());
       }
       return std::make_pair(play.get(), score_multiplier * play->getScore(world));

@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "pass_to_segment_play.hpp"
+#include <algorithm>
 #include <vector>
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/available_robots.hpp"

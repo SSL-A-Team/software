@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "pass_to_lane_play.hpp"
+#include <algorithm>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/shot_evaluation.hpp"
@@ -33,7 +34,6 @@ PassToLanePlay::PassToLanePlay(
   lane_(lane),
   direction_(direction)
 {
-
 }
 
 stp::PlayScore PassToLanePlay::getScore(const World & world)
