@@ -23,6 +23,7 @@
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
 #include "play_helpers/window_evaluation.hpp"
+#include "play_helpers/shot_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -50,34 +51,7 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
     return stp::PlayScore::Min();
   }
 
-  const ateam_geometry::Segment their_goal_segment{
-    ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width / 2.0},
-    ateam_geometry::Point{world.field.field_length / 2.0, world.field.goal_width / 2.0, }
-  };
-
-  const ateam_geometry::Vector ball_goal_vector(
-    world.ball.pos,
-    CGAL::midpoint(their_goal_segment));
-
-  const auto shot_angle = std::abs(
-    ateam_geometry::ShortestAngleBetween(
-      their_goal_segment.to_vector(), ball_goal_vector));
-
-  if (shot_angle < 0.52 /*30 deg*/ || shot_angle > 2.61 /*150 deg*/) {
-    return stp::PlayScore::Min();
-  }
-
-  const auto windows = play_helpers::window_evaluation::getWindows(
-    their_goal_segment,
-    world.ball.pos, play_helpers::getVisibleRobots(world.their_robots));
-  const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
-  if (!largest_window) {
-    return stp::PlayScore::Min();
-  }
-
-  const auto ratio = largest_window->squared_length() / their_goal_segment.squared_length();
-
-  return ratio * stp::PlayScore::Max();
+  return play_helpers::GetShotSuccessChance(world, world.ball.pos);
 }
 
 void KickOnGoalPlay::reset()

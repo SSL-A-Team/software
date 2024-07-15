@@ -21,6 +21,7 @@
 #include "pass_to_lane_play.hpp"
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/window_evaluation.hpp"
+#include "play_helpers/shot_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -59,30 +60,11 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
     return stp::PlayScore::Min();
   }
   const auto target_point = CGAL::midpoint(*largest_window);
-  const ateam_geometry::Segment goal_segment{
-    ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width / 2.0},
-    ateam_geometry::Point{world.field.field_length / 2.0, world.field.goal_width / 2.0}
-  };
-  const auto secondary_windows = play_helpers::window_evaluation::getWindows(
-    goal_segment,
-    target_point,
-    visible_opponents);
-  const auto largest_secondary_window = play_helpers::window_evaluation::getLargestWindow(
-    secondary_windows);
 
-
-  play_helpers::window_evaluation::drawWindows(
-    windows, world.ball.pos,
-    getOverlays().getChild("primary windows"));
-  play_helpers::window_evaluation::drawWindows(
-    secondary_windows, target_point,
-    getOverlays().getChild("secondary windows"));
+  const auto goal_chance = play_helpers::GetShotSuccessChance(world, target_point);
 
   // Even if there is no window now, things might change, so assume a non-zero success chance
-  const double goal_chance_multiplier =
-    largest_secondary_window ?
-    (largest_secondary_window->squared_length() / goal_segment.squared_length()) :
-    0.2;
+  const double goal_chance_multiplier = std::max(goal_chance / 100.0, 0.2);
 
   // Arbitrary value that would give us plenty of room to catch a pass
   const auto ideal_target_length = kRobotDiameter * 5;
