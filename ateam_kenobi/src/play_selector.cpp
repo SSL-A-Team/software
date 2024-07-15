@@ -152,6 +152,9 @@ stp::Play * PlaySelector::selectRankedPlay(const World & world)
       void * play_address = static_cast<void *>(play.get());
       // 5% bonus to previous play as hysteresis
       double score_multiplier = (play_address == prev_play_address_) ? 1.05 : 1.0;
+      if(!play->isEnabled()) {
+        return std::make_pair(play.get(), std::numeric_limits<double>::quiet_NaN());
+      }
       return std::make_pair(play.get(), score_multiplier * play->getScore(world));
     });
 
@@ -159,10 +162,6 @@ stp::Play * PlaySelector::selectRankedPlay(const World & world)
       // Rank NaN-scored plays low
       if (std::isnan(l.second)) {return true;}
       if (std::isnan(r.second)) {return false;}
-
-      // Rank disabled plays low
-      if (!l.first->isEnabled()) {return true;}
-      if (!r.first->isEnabled()) {return false;}
 
       return l.second < r.second;
     };
