@@ -72,11 +72,12 @@ std::vector<ateam_geometry::Point> Defenders::getDefenderPoints(const World & wo
   const auto first_position = getBallBlockPoint(world);
   const auto visible_oponent_robots = play_helpers::getVisibleRobots(world.their_robots);
   ateam_geometry::Point second_position;
-  if (visible_oponent_robots.size() > 1) {
+  const auto min_opponent_bots = 2;
+  if (visible_oponent_robots.size() >= min_opponent_bots) {
     second_position = getPassBlockPoint(world);
   }
 
-  if (second_position == ateam_geometry::Point(0, 0) ||
+  if (visible_oponent_robots.size() < min_opponent_bots ||
     CGAL::squared_distance(second_position, first_position) < kRobotDiameter * kRobotDiameter)
   {
     second_position = getAdjacentBlockPoint(world, first_position);
