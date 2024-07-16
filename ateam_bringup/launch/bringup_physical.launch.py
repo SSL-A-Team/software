@@ -19,9 +19,10 @@
 # THE SOFTWARE.
 
 import launch
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
 from launch_ros.actions import Node
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 
@@ -44,11 +45,24 @@ def generate_launch_description():
 
         # Competition IPs
         DeclareLaunchArgument("vision_interface_address", default_value="10.193.15.132"),
-        DeclareLaunchArgument("gc_interface_address", default_value="10.193.15.132"),
-        DeclareLaunchArgument("gc_server_address", default_value="10.193.12.10"),
         DeclareLaunchArgument("radio_interface_address", default_value="172.16.1.10"),
-
         DeclareLaunchArgument("team_name", default_value="A-Team"),
+        DeclareLaunchArgument("use_local_gc", default_value="False"),
+
+        GroupAction(
+            condition=IfCondition(LaunchConfiguration("use_local_gc")),
+            scoped=False,
+            actions=[
+                DeclareLaunchArgument("gc_interface_address", default_value=""),
+                DeclareLaunchArgument("gc_server_address", default_value="127.0.0.1"),
+            ]),
+        GroupAction(
+            condition=UnlessCondition(LaunchConfiguration("use_local_gc")),
+            scoped=False,
+            actions=[
+                DeclareLaunchArgument("gc_interface_address", default_value="10.193.15.132"),
+                DeclareLaunchArgument("gc_server_address", default_value="10.193.12.10"),
+            ]),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
