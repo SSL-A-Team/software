@@ -20,10 +20,12 @@
 
 #include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
 #include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
+#include <ssl_league_protobufs/ssl_simulation_control.pb.h>
 
 #include <array>
 #include <string>
 #include <functional>
+#include <stdexcept>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
@@ -34,6 +36,7 @@
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/srv/send_simulator_control_packet.hpp>
 
 #include "message_conversions.hpp"
 
@@ -49,6 +52,7 @@ public:
       std::bind_front(&SSLSimulationRadioBridgeNode::team_color_change_callback, this))
   {
     declare_parameter("ssl_sim_radio_ip", "127.0.0.1");
+    declare_parameter("ssl_sim_control_port", 10300);
     declare_parameter("ssl_sim_blue_port", 10301);
     declare_parameter("ssl_sim_yellow_port", 10302);
 
@@ -68,6 +72,12 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
+    send_simulator_control_service_ = create_service<ateam_msgs::srv::SendSimulatorControlPacket>(
+      "~/send_simulator_control_packet",
+      std::bind(
+        &SSLSimulationRadioBridgeNode::handle_send_simulator_control, this, std::placeholders::_1,
+        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+
     std::ranges::fill(command_timestamps_, std::chrono::steady_clock::now());
     zero_command_timer_ =
       create_wall_timer(
@@ -76,6 +86,44 @@ public:
           "command_timeout_ms",
           100)),
       std::bind(&SSLSimulationRadioBridgeNode::zero_command_timer_callback, this));
+
+
+    udp_sim_control_ = std::make_unique<ateam_common::BiDirectionalUDP>(
+      get_parameter(
+        "ssl_sim_radio_ip").as_string(), get_parameter("ssl_sim_control_port").as_int(),
+      [](const uint8_t *, size_t) {}
+    );
+  }
+
+  void handle_send_simulator_control(
+    ateam_msgs::srv::SendSimulatorControlPacket::Request::SharedPtr request,
+    ateam_msgs::srv::SendSimulatorControlPacket::Response::SharedPtr response)
+  {
+    if (!udp_sim_control_) {
+      response->reason = "Simulation Radio Bridge UDP port not connect";
+      return;
+    }
+
+    SimulatorCommand simulator_command;
+    SimulatorControl * proto_simulator_control = simulator_command.mutable_control();
+
+    try {
+      *proto_simulator_control = message_conversions::fromMsg(request->simulator_control);
+    } catch (const std::invalid_argument & e) {
+      response->reason = e.what();
+    }
+
+    std::vector<uint8_t> buffer;
+    buffer.resize(simulator_command.ByteSizeLong());
+    if (simulator_command.SerializeToArray(buffer.data(), buffer.size())) {
+      udp_sim_control_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
+
+      response->success = true;
+    } else {
+      response->reason = "Failed to serialize protobuf packet";
+    }
+
+    return;
   }
 
   void team_color_change_callback(const ateam_common::TeamColor color)
@@ -90,11 +138,11 @@ public:
         break;
       case ateam_common::TeamColor::Unknown:
         RCLCPP_WARN(get_logger(), "Unknown team color. Robot radio connection disabled.");
-        udp_.reset();
+        udp_robot_control_.reset();
         return;
     }
     RCLCPP_INFO(get_logger(), "Changing radio port to %d", port);
-    udp_ = std::make_unique<ateam_common::BiDirectionalUDP>(
+    udp_robot_control_ = std::make_unique<ateam_common::BiDirectionalUDP>(
       get_parameter(
         "ssl_sim_radio_ip").as_string(), port,
       std::bind_front(&SSLSimulationRadioBridgeNode::feedback_callback, this));
@@ -102,14 +150,14 @@ public:
 
   void send_command(const ateam_msgs::msg::RobotMotionCommand & msg, const int robot_id)
   {
-    if (!udp_) {
+    if (!udp_robot_control_) {
       return;
     }
     RobotControl robots_control = message_conversions::fromMsg(msg, robot_id);
     std::vector<uint8_t> buffer;
     buffer.resize(robots_control.ByteSizeLong());
     if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
-      udp_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
+      udp_robot_control_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
     }
   }
 
@@ -163,10 +211,13 @@ public:
 
 private:
   ateam_common::GameControllerListener gc_listener_;
-  std::unique_ptr<ateam_common::BiDirectionalUDP> udp_;
+  std::unique_ptr<ateam_common::BiDirectionalUDP> udp_robot_control_;
+  std::unique_ptr<ateam_common::BiDirectionalUDP> udp_sim_control_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
+  rclcpp::Service<ateam_msgs::srv::SendSimulatorControlPacket>::SharedPtr
+    send_simulator_control_service_;
   rclcpp::TimerBase::SharedPtr zero_command_timer_;
   std::array<std::chrono::steady_clock::time_point, 16> command_timestamps_;
 };
