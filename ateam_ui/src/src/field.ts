@@ -40,15 +40,15 @@ export class Field {
         this.overlays = [];
     }
 
-    drawSideIgnoreOverlay(sideIgnoreOverlay: PIXI.Container, state: AppState) {
+    drawSideIgnoreOverlay(fieldUI: PIXI.Container, state: AppState) {
         const scale = state.renderConfig.scale;
 
-        let ignoreOverlay = sideIgnoreOverlay.getChildByName("ignoreOverlay") as PIXI.Graphics;
+        let ignoreOverlay = fieldUI.getChildByName("ignoreOverlay") as PIXI.Graphics;
         if (!ignoreOverlay) {
             ignoreOverlay = new PIXI.Graphics;
             ignoreOverlay.name = "ignoreOverlay";
             ignoreOverlay.visible = false;
-            sideIgnoreOverlay.addChild(ignoreOverlay);
+            fieldUI.addChild(ignoreOverlay);
         }
 
         ignoreOverlay.clear();
@@ -60,12 +60,12 @@ export class Field {
                      );
 
 
-        let hoverOverlay = sideIgnoreOverlay.getChildByName("hoverOverlay") as PIXI.Graphics;
+        let hoverOverlay = fieldUI.getChildByName("hoverOverlay") as PIXI.Graphics;
         if (!hoverOverlay) {
             hoverOverlay = new PIXI.Graphics;
             hoverOverlay.name = "hoverOverlay";
             hoverOverlay.visible = false;
-            sideIgnoreOverlay.addChild(hoverOverlay);
+            fieldUI.addChild(hoverOverlay);
         }
 
         hoverOverlay.clear();
@@ -127,15 +127,6 @@ export class Field {
     }
 
     initializePixi(app: PIXI.Application, state: AppState) {
-        console.log("initializing pixi")
-
-
-        // Set origin to center of field
-        /*
-        const offsetX = app.screen.width / 2;
-        const offsetY = app.screen.height / 2;
-        app.stage.position.set(offsetX, offsetY);
-        */
 
         // create viewport
         const viewport = new Viewport({
@@ -144,6 +135,8 @@ export class Field {
             worldWidth: 1876,
             worldHeight: 1456,
             passiveWheel: false,
+            stopPropagation: true,
+            disableOnContextMenu: true,
 
             events: app.renderer.events // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
         })
@@ -157,9 +150,16 @@ export class Field {
 
         // activate plugins
         viewport
-            .drag()
+            .drag({
+                mouseButtons: "left"
+            })
             .pinch()
             .wheel()
+
+        const ballVelLine = new PIXI.Graphics;
+        ballVelLine.name = "ballVelLine";
+        app.stage.addChild(ballVelLine);
+
 
         const fieldLines = new PIXI.Graphics();
         fieldLines.name = "fieldLines";
@@ -175,14 +175,14 @@ export class Field {
         const overlay = new PIXI.Container();
         overlay.name = "overlay";
 
-        const sideIgnoreOverlay = new PIXI.Container();
-        sideIgnoreOverlay.name = "sideIgnoreOverlay";
+        const fieldUI = new PIXI.Container();
+        fieldUI.name = "fieldUI";
 
         // Field Lines
         this.drawFieldLines(fieldLines, state);
 
         // Rectangle that covers the ignored side of the field
-        this.drawSideIgnoreOverlay(sideIgnoreOverlay, state);
+        this.drawSideIgnoreOverlay(fieldUI, state);
 
         // Robots
         // surely there is a more elegant way to do this
@@ -198,7 +198,7 @@ export class Field {
         viewport.addChild(robots);
         viewport.addChild(ball);
         viewport.addChild(overlay);
-        viewport.addChild(sideIgnoreOverlay);
+        viewport.addChild(fieldUI);
     }
 
     update(app: PIXI.Application, state: AppState) {
@@ -209,8 +209,10 @@ export class Field {
         const robotArray = Object.entries(state.world.teams).map(i => { return i[1].robots }).flat()
         const robots = viewport.getChildByName("robots").children;
         for (var i = 0; i < robotArray.length; i++) {
-            const robot = robots[i] as PIXI.Container;
-            robotArray[i].update(robot, state.renderConfig);
+            if (i != state.draggedRobot) {
+                const robot = robots[i] as PIXI.Container;
+                robotArray[i].update(robot, state.renderConfig);
+            }
         }
 
         state.world.ball.update(viewport.getChildByName("ball").children[0] as PIXI.Container, state.renderConfig);

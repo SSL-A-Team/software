@@ -62,6 +62,7 @@ export class AppState {
     override_play_in_progress: string = null;
 
     hovered_field_ignore_side: number = 0;
+    draggedRobot: number = null;
 
     setGoalie(goalie_id: number) {
         const request = new ROSLIB.ServiceRequest({
@@ -151,6 +152,22 @@ export class AppState {
             function(result) {
                 if(!result.success) {
                     console.log("Failed to set ignore side: ", result.reason);
+                }
+            });
+    }
+
+    // TODO(chachmu): break this out into better functions for different things
+    sendSimulatorControlPacket(simulator_control_packet) {
+        const state = this; // fix dumb javascript things
+
+        const request = new ROSLIB.ServiceRequest({
+            simulator_control: simulator_control_packet
+        });
+
+        this.services["sendSimulatorControlPacket"].callService(request,
+            function(result) {
+                if(!result.success) {
+                    console.log("Failed to send simulator packet: ", result.reason);
                 }
             });
     }
@@ -499,5 +516,13 @@ export class AppState {
             serviceType: 'ateam_msgs/srv/SetIgnoreFieldSide'
         })
         this.services["setIgnoreFieldSide"] = setIgnoreFieldSideService;
+
+        // Set up set ignore field side service
+        let sendSimulatorControlPacketService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/radio_bridge/send_simulator_control_packet',
+            serviceType: 'ateam_msgs/srv/SendSimulatorControlPacket'
+        })
+        this.services["sendSimulatorControlPacket"] = sendSimulatorControlPacketService;
     }
 }
