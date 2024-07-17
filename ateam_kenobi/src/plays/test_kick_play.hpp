@@ -71,6 +71,8 @@ public:
       use_pivot_kick ? pivot_kick_skill_.RunFrame(world, robot) : line_kick_skill_.RunFrame(
       world,
       robot);
+
+    getPlayInfo()["line kick"] = line_kick_skill_.getPlayInfo();
     return motion_commands;
   }
 
