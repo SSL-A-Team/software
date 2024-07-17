@@ -20,6 +20,7 @@
 
 
 #include "pass.hpp"
+#include <algorithm>
 
 namespace ateam_kenobi::tactics
 {
