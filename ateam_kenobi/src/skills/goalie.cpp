@@ -26,6 +26,7 @@
 #include <ateam_geometry/nearest_point.hpp>
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/available_robots.hpp"
+#include "play_helpers/possession.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -77,18 +78,7 @@ void Goalie::runFrame(
 
 bool Goalie::doesOpponentHavePossesion(const World & world)
 {
-  const auto & ball_pos = world.ball.pos;
-  std::array<double, 16> distances;
-  std::transform(
-    world.their_robots.begin(), world.their_robots.end(), distances.begin(),
-    [&ball_pos](const auto & robot) {
-      if (!robot.IsAvailable()) {
-        return std::numeric_limits<double>::infinity();
-      }
-      return CGAL::approximate_sqrt(CGAL::squared_distance(ball_pos, robot.pos));
-    });
-  const auto min_distance = *std::min_element(distances.begin(), distances.end());
-  return min_distance < kRobotRadius + possesion_threshold_;
+  return play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs;
 }
 
 bool Goalie::isBallHeadedTowardsGoal(const World & world)

@@ -32,7 +32,6 @@ TheirPenaltyPlay::TheirPenaltyPlay(stp::Options stp_options)
   move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
   goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  goalie_skill_.possesionTolerance() = 0.3;
 }
 
 stp::PlayScore TheirPenaltyPlay::getScore(const World & world)
