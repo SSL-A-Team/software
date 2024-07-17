@@ -48,10 +48,13 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunFrame(const World & world, cons
 
   switch (state_) {
     case State::MoveBehindBall:
+      getPlayInfo()["state"] = "Move Behind Ball";
       return RunMoveBehindBall(world, robot);
     case State::FaceBall:
+    getPlayInfo()["state"] = "Face Ball";
       return RunFaceBall(world, robot);
     case State::KickBall:
+    getPlayInfo()["state"] = "Kick Ball";
       return RunKickBall(world, robot);
     case State::Done:
       return ateam_msgs::msg::RobotMotionCommand{};
@@ -70,6 +73,9 @@ ateam_geometry::Point LineKick::GetPreKickPosition(const World & world)
 
 void LineKick::ChooseState(const World & world, const Robot & robot)
 {
+  getPlayInfo()["IsRobotBehindBall"] = IsRobotBehindBall(world, robot, 1.0);
+  getPlayInfo()["IsRobotSettled"] = IsRobotSettled(world, robot);
+  getPlayInfo()["IsRobotFacingBall"] = IsRobotFacingBall(robot);
   switch (state_) {
     case State::MoveBehindBall:
       if (IsRobotBehindBall(world, robot, 1.0) && IsRobotSettled(world, robot)) {
@@ -116,7 +122,7 @@ bool LineKick::IsRobotBehindBall(const World & world, const Robot & robot, doubl
 
   const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis &&
     robot_proj_dist_to_ball < 0.22;
-  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.01 * hysteresis;
+  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.007 * hysteresis;
 
   return proj_dist_is_good && perp_dist_is_good;
 }
@@ -133,7 +139,7 @@ bool LineKick::IsRobotSettled(const World & world, const Robot & robot)
   const auto robot_vel_perp = robot.vel - robot_vel_proj;
   const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
 
-  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.2;
+  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.3;
   return robot_vel_is_good;
 }
 
@@ -144,7 +150,7 @@ bool LineKick::IsRobotFacingBall(const Robot & robot)
   return std::abs(
     angles::shortest_angular_distance(
       robot.theta,
-      robot_to_target_angle)) < 0.07;
+      robot_to_target_angle)) < 0.1;
 }
 
 bool LineKick::IsBallMoving(const World & world)
