@@ -138,7 +138,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runDefaultBehavior(
     ateam_geometry::nearestPointOnSegment(
       goalie_line,
       world.ball.pos));
-  easy_move_to_.face_point(world.ball.pos);
+  easy_move_to_.face_absolute(M_PI_2);
   return easy_move_to_.runFrame(goalie, world);
 }
 
@@ -193,7 +193,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, co
     ateam_geometry::nearestPointOnSegment(
       goalie_line,
       shot_point_on_extended_goalie_line));
-  easy_move_to_.face_point(world.ball.pos);
+  easy_move_to_.face_absolute(M_PI_2);
 
   return easy_move_to_.runFrame(goalie, world);
 }
@@ -223,7 +223,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(const World & world, co
   }
 
   easy_move_to_.setTargetPosition(target_point);
-  easy_move_to_.face_point(world.ball.pos);
+  easy_move_to_.face_absolute(M_PI_2);
 
   return easy_move_to_.runFrame(goalie, world);
 }
