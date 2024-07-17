@@ -198,11 +198,6 @@ std::optional<std::variant<Point, Segment>> intersection(const Segment & a, cons
   const auto o3 = orientation(b.source(), b.target(), a.source());
   const auto o4 = orientation(b.source(), b.target(), a.target());
 
-  std::cout << "o1: " << static_cast<int>(o1) << "\n";
-  std::cout << "o2: " << static_cast<int>(o2) << "\n";
-  std::cout << "o3: " << static_cast<int>(o3) << "\n";
-  std::cout << "o4: " << static_cast<int>(o4) << "\n";
-
   if (o1 != o2 && o3 != o4) {
     // segments intersect at a single point
     const auto maybe_intersection = CGAL::intersection(a.supporting_line(), b.supporting_line());
@@ -213,7 +208,6 @@ std::optional<std::variant<Point, Segment>> intersection(const Segment & a, cons
     if (!intersection_point) {
       throw std::runtime_error("Broken CGAL assumptions. Segment-Segment intersection assert B.");
     }
-    std::cout << "Segments intersect at a point\n";
     return *intersection_point;
   }
 
@@ -239,23 +233,15 @@ std::optional<std::variant<Point, Segment>> intersection(const Segment & a, cons
     };
     std::sort(points.begin(), points.end());
 
-    for (const auto & p : points) {
-      std::cout << p.segment_index << ": " << std::setprecision(12) << p.point.x() << ", " <<
-        std::setprecision(12) << p.point.y() << "\n";
-    }
-
     if (points[0].segment_index == points[1].segment_index) {
       // Colinear segments do not overlap
-      std::cout << "Colinear segments do not overlap.\n";
       return std::nullopt;
     }
 
-    std::cout << "Colinear segments do overlap.\n";
     return Segment{points[1].point, points[2].point};
   }
 
   // No intersection
-  std::cout << "no intersection\n";
   return std::nullopt;
 }
 
