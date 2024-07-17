@@ -48,6 +48,7 @@ void World::predict(const int ignore_side)
 
   // First, we predict all the things
   for (auto & camera_pair : cameras) {
+    camera_pair.second.set_ignored_half(ignore_side);
     camera_pair.second.predict();
   }
 
@@ -72,17 +73,6 @@ std::optional<Ball> World::get_ball_estimate()
 
 
     if (possible_ball_with_score.has_value()) {
-      if (ignore_side_ > 0) {
-        if (possible_ball_with_score.value().first.position.x() > 0) {
-          continue;
-        }
-      }
-      if (ignore_side_ < 0) {
-        if (possible_ball_with_score.value().first.position.x() < 0) {
-          continue;
-        }
-      }
-
       balls_with_scores.emplace_back(possible_ball_with_score.value());
     }
   }
@@ -123,16 +113,6 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
 
     for (size_t yellow_id = 0; yellow_id < 16; yellow_id++) {
       if (possible_yellow_robots_with_score.at(yellow_id).has_value()) {
-        if (ignore_side_ > 0) {
-          if (possible_yellow_robots_with_score.at(yellow_id).value().first.position.x() > 0) {
-            continue;
-          }
-        }
-        if (ignore_side_ < 0) {
-          if (possible_yellow_robots_with_score.at(yellow_id).value().first.position.x() < 0) {
-            continue;
-          }
-        }
 
         yellow_robots_with_scores.at(yellow_id).emplace_back(
           possible_yellow_robots_with_score.at(yellow_id).value());
@@ -196,16 +176,6 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
 
     for (size_t blue_id = 0; blue_id < 16; blue_id++) {
       if (possible_blue_robots_with_score.at(blue_id).has_value()) {
-        if (ignore_side_ > 0) {
-          if (possible_blue_robots_with_score.at(blue_id).value().first.position.x() > 0) {
-            continue;
-          }
-        }
-        if (ignore_side_ < 0) {
-          if (possible_blue_robots_with_score.at(blue_id).value().first.position.x() < 0) {
-            continue;
-          }
-        }
 
         blue_robots_with_scores.at(blue_id).emplace_back(
           possible_blue_robots_with_score.at(blue_id).value());

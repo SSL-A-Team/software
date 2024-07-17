@@ -80,6 +80,12 @@ public:
    */
   ateam_msgs::msg::VisionCameraState get_vision_camera_state() const;
 
+  void set_ignored_half(int ignored_half) {
+    ignore_half_ = ignored_half;
+  }
+
+  void removeMeasurementsOnIngoredHalf(std::vector<Eigen::VectorXd> & measurements);
+
 private:
   void setup_ball_interacting_multiple_model_filter(
     std::shared_ptr<ModelInputGenerator> model_input_generator,
@@ -100,6 +106,7 @@ private:
   std::array<MultipleHypothesisTracker, 16> yellow_team;
   std::array<MultipleHypothesisTracker, 16> blue_team;
   MultipleHypothesisTracker ball;
+  int ignore_half_ = 0;
 };
 
 }  // namespace ateam_vision_filter
