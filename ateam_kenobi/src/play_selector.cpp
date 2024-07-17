@@ -54,6 +54,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<TheirKickoffPlay>(stp_options);
   addPlay<TheirPenaltyPlay>(stp_options);
   addPlay<ControlsTestPlay>(stp_options);
+  addPlay<DefensePlay>(stp_options);
   addPlay<TrianglePassPlay>(stp_options);
   addPlay<WaypointsPlay>(stp_options);
   addPlay<SpinningAPlay>(stp_options);

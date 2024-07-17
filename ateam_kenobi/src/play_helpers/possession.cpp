@@ -29,7 +29,7 @@ namespace ateam_kenobi::play_helpers
 
 PossessionResult WhoHasPossession(const World & world)
 {
-  const auto possession_threshold = 0.03;
+  const auto possession_threshold = 0.03 + kRobotRadius;
   const auto possession_threhold_sq = possession_threshold * possession_threshold;
   const auto & ball_pos = world.ball.pos;
 

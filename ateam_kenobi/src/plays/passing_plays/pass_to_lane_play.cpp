@@ -24,6 +24,7 @@
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/shot_evaluation.hpp"
+#include "play_helpers/possession.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -45,6 +46,10 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
     world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
   {
     return stp::PlayScore::NaN();
+  }
+
+  if(play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
+    return stp::PlayScore::Min();
   }
 
   if (play_helpers::lanes::IsBallInLane(world, lane_)) {
