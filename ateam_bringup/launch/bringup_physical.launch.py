@@ -53,8 +53,8 @@ def generate_launch_description():
             condition=IfCondition(LaunchConfiguration("use_local_gc")),
             scoped=False,
             actions=[
-                DeclareLaunchArgument("gc_interface_address", default_value=""),
-                DeclareLaunchArgument("gc_server_address", default_value="127.0.0.1"),
+                DeclareLaunchArgument("gc_interface_address", default_value="172.17.0.1"),
+                DeclareLaunchArgument("gc_server_address", default_value="172.17.0.2"),
             ]),
         GroupAction(
             condition=UnlessCondition(LaunchConfiguration("use_local_gc")),
