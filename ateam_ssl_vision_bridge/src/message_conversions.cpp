@@ -29,13 +29,14 @@
 namespace ateam_ssl_vision_bridge::message_conversions
 {
 
-constexpr double mmTom = 1.0e-3;
+constexpr float mmTom = 1.0e-3f;
+constexpr int secToNanosec = 1e9;
 
 ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall & proto_msg)
 {
   ssl_league_msgs::msg::VisionDetectionBall ros_msg;
   ros_msg.confidence = proto_msg.confidence();
-  ros_msg.area = proto_msg.area() * mmTom * mmTom;
+  ros_msg.area = proto_msg.area();  // assuming this is in pixels, not verified
   ros_msg.pos.x = proto_msg.x() * mmTom;
   ros_msg.pos.y = proto_msg.y() * mmTom;
   ros_msg.pos.z = proto_msg.z() * mmTom;
@@ -64,9 +65,9 @@ ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame & 
 {
   ssl_league_msgs::msg::VisionDetectionFrame ros_msg;
   ros_msg.frame_number = proto_msg.frame_number();
-  ros_msg.t_capture = rclcpp::Time(proto_msg.t_capture() * 1000);
-  ros_msg.t_sent = rclcpp::Time(proto_msg.t_sent() * 1000);
-  ros_msg.t_capture_camera = rclcpp::Time(proto_msg.t_capture_camera() * 1000);
+  ros_msg.t_capture = rclcpp::Time(static_cast<int64_t>(proto_msg.t_capture() * secToNanosec));
+  ros_msg.t_sent = rclcpp::Time(static_cast<int64_t>(proto_msg.t_sent() * secToNanosec));
+  ros_msg.t_capture_camera = rclcpp::Time(static_cast<int64_t>(proto_msg.t_capture_camera() * secToNanosec));
   ros_msg.camera_id = proto_msg.camera_id();
   std::transform(
     proto_msg.balls().begin(),
