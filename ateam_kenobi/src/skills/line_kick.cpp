@@ -116,7 +116,7 @@ bool LineKick::IsRobotBehindBall(const World & world, const Robot & robot, doubl
 
   const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis &&
     robot_proj_dist_to_ball < 0.22;
-  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.007 * hysteresis;
+  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.01 * hysteresis;
 
   return proj_dist_is_good && perp_dist_is_good;
 }
@@ -144,7 +144,7 @@ bool LineKick::IsRobotFacingBall(const Robot & robot)
   return std::abs(
     angles::shortest_angular_distance(
       robot.theta,
-      robot_to_target_angle)) < 0.05;
+      robot_to_target_angle)) < 0.07;
 }
 
 bool LineKick::IsBallMoving(const World & world)

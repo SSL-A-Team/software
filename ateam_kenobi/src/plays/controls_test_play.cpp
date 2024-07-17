@@ -31,19 +31,19 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options)
 {
   // Turn 180 deg in place
-  // waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute,  0.0, 3.0});
-  // waypoints.push_back({ateam_geometry::Point(-1.5,0.0), AngleMode::face_absolute, M_PI, 3.0});
+  // waypoints.push_back({ateam_geometry::Point(-1.0,0.5), AngleMode::face_absolute,  -M_PI/2, 3.0});
+  // waypoints.push_back({ateam_geometry::Point(-1.0,0.5), AngleMode::face_absolute, M_PI/2, 3.0});
 
   // Drive in square
   waypoints = {
-    {ateam_geometry::Point(-1.2, -1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(-1.2, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(0.3, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(0.3, -1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-2.3, -1.0), AngleMode::face_travel, 0.0, 3.0},
+    {ateam_geometry::Point(-2.3, 1.0), AngleMode::face_travel, 0.0, 3.0},
+    {ateam_geometry::Point(-0.3, 1.0), AngleMode::face_travel, 0.0, 3.0},
+    {ateam_geometry::Point(-0.3, -1.0), AngleMode::face_travel, 0.0, 3.0},
   };
 
   motion_controller_.v_max = 2.0;
-  motion_controller_.t_max = 18;
+  motion_controller_.t_max = 20.0;
 }
 
 void ControlsTestPlay::reset()

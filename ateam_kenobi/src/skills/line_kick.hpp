@@ -69,7 +69,7 @@ public:
   }
 
 private:
-  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.07;
+  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.08;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 

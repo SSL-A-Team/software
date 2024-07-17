@@ -40,7 +40,7 @@ public:
     pivot_kick_skill_(createChild<skills::PivotKick>("pivot_kick")),
     line_kick_skill_(createChild<skills::LineKick>("line_kick"))
   {
-    getParamInterface().declareParameter(kUsePivotKickParam, true);
+    getParamInterface().declareParameter(kUsePivotKickParam, false);
   }
 
   void reset() override
@@ -60,7 +60,7 @@ public:
     const auto robot = robots.front();
 
     // aim for center of opponent goal
-    const ateam_geometry::Point target(world.field.field_length / 2.0, 0.0);
+    const ateam_geometry::Point target(-world.field.field_length / 2.0, 0.0);
 
     line_kick_skill_.SetTargetPoint(target);
     pivot_kick_skill_.SetTargetPoint(target);
