@@ -134,8 +134,11 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     auto vel_vector = ateam_geometry::Vector(x_command, y_command);
 
     // clamp to max velocity
+    double min_vel = 0.3;
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
+    } else if (ateam_geometry::norm(vel_vector) < min_vel) {
+      vel_vector = min_vel * ateam_geometry::normalize(vel_vector);
     }
 
     motion_command.twist.linear.x = vel_vector.x();
@@ -180,9 +183,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   // TODO(anon): handle pid gains better
-  this->x_controller.initPid(2.5, 0, 0.0, 0.3, -0.3, true);
-  this->y_controller.initPid(1.0, 1000, 0.0, 0.15, -0.15, true);
-  this->t_controller.initPid(2.8, 5.0, 0.0, 0.5, -0.5, true);
+  this->x_controller.initPid(2.8, 0.0, 0.0, 0.3, -0.3, true);
+  this->y_controller.initPid(2.8, 0.0, 0.0, 0.15, -0.15, true);
+  this->t_controller.initPid(4.0, 0.0, 0.0, 0.5, -0.5, true);
 
   this->progress = 0;
   this->total_dist = 0;
