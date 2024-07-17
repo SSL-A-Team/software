@@ -144,10 +144,10 @@ bool PathPlanner::isStateInBounds(const ateam_geometry::Point & state, const Wor
   if (world.ignore_side > 0) {
     pathable_region = ateam_geometry::Rectangle(
       ateam_geometry::Point(-x_bound, -y_bound),
-      ateam_geometry::Point(0, 0));
+      ateam_geometry::Point(0, y_bound));
   } else if (world.ignore_side < 0) {
     pathable_region = ateam_geometry::Rectangle(
-      ateam_geometry::Point(0, 0),
+      ateam_geometry::Point(0, y_bound),
       ateam_geometry::Point(x_bound, y_bound));
   }
 
