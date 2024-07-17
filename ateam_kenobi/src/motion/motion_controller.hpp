@@ -92,7 +92,9 @@ public:
 
 // Velocity limits
   double v_max = 2;
-  double t_max = 2;
+  double t_max = 10;
+
+  double pid_reset_threshold = 0.1;
 
   double face_angle = 0;
   std::optional<ateam_geometry::Point> face_towards;
@@ -102,7 +104,9 @@ private:
   std::vector<ateam_geometry::Point> trajectory;
   AngleMode angle_mode = AngleMode::face_travel;  // This mode should have the best performance
 
-  int prev_point;  // last point used in the trajectory
+  int prev_index;  // last point used in the trajectory
+  ateam_geometry::Point prev_point;
+  double prev_angle;
   double progress;
   double total_dist;
 
