@@ -90,6 +90,15 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     auto & emt = easy_move_tos_.at(bot.id);
     emt.setTargetPosition(spot);
     emt.face_point(world.ball.pos);
+    if(bot.id == world.referee_info.our_goalie_id) {
+      auto planner_options = emt.getPlannerOptions();
+      planner_options.use_default_obstacles = false;
+      emt.setPlannerOptions(planner_options);
+    } else {
+      auto planner_options = emt.getPlannerOptions();
+      planner_options.use_default_obstacles = true;
+      emt.setPlannerOptions(planner_options);
+    }
     motion_commands.at(bot.id) = emt.runFrame(bot, world);
     getOverlays().drawCircle(
       "spot" + std::to_string(spot_ind),
