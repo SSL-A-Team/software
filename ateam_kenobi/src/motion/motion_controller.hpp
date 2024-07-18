@@ -73,10 +73,11 @@ public:
   void face_travel();
   void no_face();
 
+  double calculate_trapezoidal_velocity(const ateam_kenobi::Robot& robot, double dt);
 
   // Generate a robot motion command to follow a trajectory
   ateam_msgs::msg::RobotMotionCommand get_command(
-    ateam_kenobi::Robot robot, double current_time,
+    const ateam_kenobi::Robot& robot, double current_time,
     const MotionOptions & options = MotionOptions());
 
   // Reset the PID controllers and remove previous time to recalculate dt
@@ -90,9 +91,21 @@ public:
   void set_y_pid_gains(double p, double i, double d);
   void set_t_pid_gains(double p, double i, double d);
 
+// Controls Modifiers
 // Velocity limits
   double v_max = 2;
   double t_max = 10;
+
+  std::vector<double> pid_gains = {1.0, 1.0, 1.0};
+
+  bool enable_min_speed_boost = false;
+  bool smooth_position_target = false;
+  bool enable_acceleration_limits = false;
+  bool enable_trapezoidal = true;
+
+  std::vector<double> body_accel_limits = {7.0, 5.0,  36.0};
+  std::vector<double> body_decel_limits = {7.0, 5.0, 36.0};
+  ateam_geometry::Vector prev_vel;
 
   double pid_reset_threshold = 0.1;
 

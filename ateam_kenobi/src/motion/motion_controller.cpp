@@ -87,8 +87,46 @@ void MotionController::set_trajectory(const std::vector<ateam_geometry::Point> &
   this->total_dist = 0;
 }
 
+double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robot& robot, double dt) {
+  double accel_limit = 5.0;
+  double decel_limit = 0.1;
+
+  double vel = ateam_geometry::norm(robot.vel);
+  //double vel = ateam_geometry::norm(this->prev_vel);
+  double dist_to_stop = (vel*vel) / (2 * decel_limit);
+
+  // Cruise
+  double trapezoidal_vel = this->v_max;
+
+  // Decelerate to a stop
+  if (dist_to_stop >= ateam_geometry::norm(trajectory.back() - robot.pos)) {
+    if (robot.id == 0) {
+      // std::cerr << "DECEL" << std::endl;
+    }
+
+    trapezoidal_vel = vel - decel_limit * dt;
+    
+  // Accelerate to speed
+  } else if (vel < this->v_max) {
+    if (robot.id == 0) {
+      // std::cerr << "ACCEL" << std::endl;
+    }
+
+    trapezoidal_vel = vel + (accel_limit * dt);
+    if (trapezoidal_vel < 0.1) {
+      trapezoidal_vel = 0.1;
+    }
+  } else {
+    if (robot.id == 0) {
+      // std::cerr << "CRUISE" << std::endl;
+    }
+  }
+
+  return std::clamp(trapezoidal_vel, 0.0, this->v_max);
+}
+
 ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
-  ateam_kenobi::Robot robot,
+  const ateam_kenobi::Robot& robot,
   double current_time,
   const MotionOptions & options)
 {
@@ -111,7 +149,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   for (index = this->prev_index; index < this->trajectory.size() - 1; index++) {
     double dist = sqrt(CGAL::squared_distance(robot.pos, this->trajectory[index]));
 
-    if (dist > this->v_max * dt) {
+    if (dist > this->v_max / this->pid_gains[0]) {
       break;
     }
   }
@@ -119,6 +157,30 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   // maybe do some sort of interpolation between points
 
   ateam_geometry::Point target = this->trajectory[index];
+
+  /*
+  if (smooth_position_target) {
+    //double target_dist = this->v_max / this->pid_gains[0];
+
+    double acc = 3.0; // m/s
+    double target_dist = (ateam_geometry::norm(robot.vel) + (acc * dt)) / this->pid_gains[0];
+
+    if (target_dist < 0.1) {
+      target_dist = 0.1;
+    }
+
+    //double target_dist = ateam_geometry::norm(robot.vel) / this->pid_gains[0];
+    auto target_vec = (target - robot.pos);
+
+    if (target_dist < ateam_geometry::norm(target_vec)) {
+      target = robot.pos + (target_dist * (target_vec / ateam_geometry::norm(target_vec)));
+    }
+
+    if (robot.id == 0) {
+      std::cerr << "orig: " << ateam_geometry::norm(target_vec) << ", new: " << ateam_geometry::norm(target - robot.pos) << ", target dist: " << target_dist << std::endl;
+    }
+  }
+  */
 
   /*
   if (abs(target.x() - prev_point.x()) < pid_reset_threshold) {
@@ -129,6 +191,25 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
   */
 
+
+  if (enable_trapezoidal) {
+    double target_dist = calculate_trapezoidal_velocity(robot, dt);
+    if (robot.id == 0) {
+    }
+    auto target_vec = (target - robot.pos);
+
+    target = robot.pos + (target_dist * (target_vec / ateam_geometry::norm(target_vec)));
+
+    /*
+    if (target_dist < ateam_geometry::norm(target_vec)) {
+      std::cerr << "APPLYING target velocity: " << target_dist << std::endl;
+      target = robot.pos + (target_dist * (target_vec / ateam_geometry::norm(target_vec)));
+    } else {
+      std::cerr << "not applying" << std::endl;
+    }
+    */
+  }
+
   prev_point = target;
 
   double dist = sqrt(CGAL::squared_distance(robot.pos, target));
@@ -137,28 +218,49 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   double x_error = target.x() - robot.pos.x();
   double y_error = target.y() - robot.pos.y();
 
-  double body_x_error = cos(robot.theta) * x_error - sin(robot.theta) * y_error;
-  double body_y_error = sin(robot.theta) * x_error + cos(robot.theta) * y_error;
 
   if (!trajectory_complete) {
+    if (robot.id == 0) {
+      std::cerr << "distance to target: " << dist << std::endl;
+    }
+    if (enable_trapezoidal) {
+      double target_dist = calculate_trapezoidal_velocity(robot, dt);
+      if (robot.id == 0) {
+      }
+      auto target_vec = (target - robot.pos);
+
+      target = robot.pos + (target_dist * (target_vec / ateam_geometry::norm(target_vec)));
+      x_error = target.x() - robot.pos.x();
+      y_error = target.y() - robot.pos.y();
+
+      /*
+      if (target_dist < ateam_geometry::norm(target_vec)) {
+        std::cerr << "APPLYING target velocity: " << target_dist << std::endl;
+        target = robot.pos + (target_dist * (target_vec / ateam_geometry::norm(target_vec)));
+      } else {
+        std::cerr << "not applying" << std::endl;
+      }
+      */
+    }
+
+    double body_x_error = cos(robot.theta) * x_error - sin(robot.theta) * y_error;
+    double body_y_error = sin(robot.theta) * x_error + cos(robot.theta) * y_error;
+
     // Calculate translational movement commands
     double x_command = this->x_controller.computeCommand(body_x_error, dt_nano);
     double y_command = this->y_controller.computeCommand(body_y_error, dt_nano);
-
-    // Robot has minimum speed it can move
-    // Also, moving in both the x and y direcions
-    // at the same time make minimum required speed
-    // be higher.
     
-    const float min_x = 0.2;
-    const float min_y = 0.35;
-    if (abs(x_command) < min_x && abs(y_command) < min_y) {
-      if (body_x_error > sqrt(options.completion_threshold)) {
-        x_command = (x_command > 0) ? min_x : -min_x;
-        y_command = 0;
-      } else if (body_y_error > sqrt(options.completion_threshold)){
-        y_command = (y_command > 0) ? min_y : -min_y;
-        x_command = 0;
+    if (enable_min_speed_boost) {
+      const float min_x = 0.2;
+      const float min_y = 0.35;
+      if (abs(x_command) < min_x && abs(y_command) < min_y) {
+        if (body_x_error > sqrt(options.completion_threshold)) {
+          x_command = (x_command > 0) ? min_x : -min_x;
+          y_command = 0;
+        } else if (body_y_error > sqrt(options.completion_threshold)){
+          y_command = (y_command > 0) ? min_y : -min_y;
+          x_command = 0;
+        }
       }
     }
 
@@ -170,6 +272,20 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
     }
+
+    /*
+    // clamp acceleration
+    if (this->enable_acceleration_limits) {
+      auto acc_vector = ateam_geometry::Vector(vel_vector - this->prev_vel);
+      double acc_limit = 0.3 * dt;
+      if (ateam_geometry::norm(acc_vector) > acc_limit) {
+        acc_vector = acc_limit * ateam_geometry::normalize(acc_vector);
+        vel_vector = this->prev_vel + acc_vector;
+      }
+    }
+    */
+
+    this->prev_vel = vel_vector;
 
     motion_command.twist.linear.x = vel_vector.x();
     motion_command.twist.linear.y = vel_vector.y();
@@ -220,9 +336,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   // TODO(anon): handle pid gains better
-  this->x_controller.initPid(3.0, 0.0, 0.0, 0.3, -0.3, true);
-  this->y_controller.initPid(1.5, 0.0, 0.0, 0.3, -0.3, true);
-  this->t_controller.initPid(2.0, 0.0, 0.0, 0.5, -0.5, true);
+  this->x_controller.initPid(this->pid_gains[0], 0.0, 0.0, 0.3, -0.3, true);
+  this->y_controller.initPid(this->pid_gains[1], 0.0, 0.0, 0.3, -0.3, true);
+  this->t_controller.initPid(this->pid_gains[2], 0.0, 0.0, 0.5, -0.5, true);
 
   this->progress = 0;
   this->total_dist = 0;
