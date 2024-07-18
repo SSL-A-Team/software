@@ -63,7 +63,7 @@ ateam_geometry::Point LaneIdler::GetIdlingPosition(const World & world)
     return CGAL::midpoint(lane_segment);
   }
 
-  return CGAL::midpoint(*largest_window);
+  return ateam_geometry::nearestPointOnSegment(*largest_window, world.ball.pos);
 }
 
 }  // namespace ateam_kenobi::skills

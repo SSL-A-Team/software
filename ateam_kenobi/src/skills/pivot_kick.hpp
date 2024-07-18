@@ -44,6 +44,7 @@ public:
     KickSkill::Reset();
     capture_.Reset();
     prev_state_ = State::Capture;
+    done_ = false;
   }
 
   void SetTargetPoint(ateam_geometry::Point point)
