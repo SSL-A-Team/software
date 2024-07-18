@@ -34,6 +34,7 @@
 #include "basic_122.hpp"
 #include "our_penalty_play.hpp"
 #include "test_window_eval.hpp"
+#include "their_free_kick_play.hpp"
 #include "their_kickoff_play.hpp"
 #include "their_penalty_play.hpp"
 #include "controls_test_play.hpp"
