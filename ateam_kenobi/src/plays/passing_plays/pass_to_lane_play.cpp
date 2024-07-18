@@ -48,6 +48,10 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
     return stp::PlayScore::NaN();
   }
 
+  if(getCompletionState() == stp::PlayCompletionState::Busy) {
+    return cached_score_;
+  }
+
   if(play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore::Min();
   }
@@ -77,7 +81,8 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
   const auto pass_chance_multiplier =
     std::clamp(
     largest_window->squared_length() / (ideal_target_length * ideal_target_length), 0.0, 1.0);
-  return pass_chance_multiplier * goal_chance_multiplier * stp::PlayScore::Max();
+  cached_score_ = pass_chance_multiplier * goal_chance_multiplier * stp::PlayScore::Max();
+  return cached_score_;
 }
 
 ateam_geometry::Segment PassToLanePlay::getTargetSegment(const World & world)

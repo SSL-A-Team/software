@@ -51,6 +51,8 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
+  stp::PlayCompletionState getCompletionState() override;
+
   void reset() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
@@ -61,6 +63,7 @@ private:
   tactics::StandardDefense defense_tactic_;
   tactics::PassToSegment pass_tactic_;
   skills::LaneIdler idler_skill_;
+  bool started_ = false;
 
   play_helpers::lanes::Lane getIdleLane(
     const World & world,

@@ -44,6 +44,7 @@ public:
 private:
   play_helpers::lanes::Lane lane_;
   PassDirection direction_;
+  stp::PlayScore cached_score_;
 
   ateam_geometry::Segment getTargetSegment(const World & world);
 };

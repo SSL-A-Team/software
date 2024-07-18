@@ -33,6 +33,12 @@
 namespace ateam_kenobi::stp
 {
 
+enum class PlayCompletionState {
+  NotApplicable,
+  Done,
+  Busy
+};
+
 class Play : public Base
 {
 public:
@@ -55,6 +61,15 @@ public:
   virtual PlayScore getScore(const World &)
   {
     return PlayScore::NaN();
+  }
+
+  /**
+   * @brief Returns the completion state of the robot
+   * 
+   * Should only be used by plays when interrupting them would be bad (ie. passing)
+   */
+  virtual PlayCompletionState getCompletionState() {
+    return PlayCompletionState::NotApplicable;
   }
 
   virtual void reset() = 0;

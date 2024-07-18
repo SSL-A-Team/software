@@ -76,11 +76,22 @@ stp::PlayScore PassToSegmentPlay::getScore(const World & world)
   return pass_chance_multiplier * goal_chance_multiplier * stp::PlayScore::Max();
 }
 
+stp::PlayCompletionState PassToSegmentPlay::getCompletionState() {
+  if(!started_) {
+    return stp::PlayCompletionState::NotApplicable;
+  }
+  if(!pass_tactic_.isDone()) {
+    return stp::PlayCompletionState::Busy;
+  }
+  return stp::PlayCompletionState::Done;
+}
+
 void PassToSegmentPlay::reset()
 {
   defense_tactic_.reset();
   pass_tactic_.reset();
   idler_skill_.Reset();
+  started_ = false;
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegmentPlay::runFrame(
@@ -124,6 +135,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
       *(motion_commands[maybe_kicker->id] = ateam_msgs::msg::RobotMotionCommand{});
     auto & receiver_command =
       *(motion_commands[maybe_receiver->id] = ateam_msgs::msg::RobotMotionCommand{});
+
+    if(CGAL::squared_distance(world.ball.pos, maybe_kicker->pos) < 0.5) {
+      started_ = true;
+    }
 
     pass_tactic_.runFrame(world, *maybe_kicker, *maybe_receiver, kicker_command, receiver_command);
   }
