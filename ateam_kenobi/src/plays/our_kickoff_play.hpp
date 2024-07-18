@@ -21,16 +21,10 @@
 #ifndef PLAYS__OUR_KICKOFF_PLAY_HPP_
 #define PLAYS__OUR_KICKOFF_PLAY_HPP_
 
-#include <optional>
-#include <vector>
 #include "stp/play.hpp"
-#include "path_planning/path_planner.hpp"
-#include "motion/motion_controller.hpp"
-#include "ateam_geometry/types.hpp"
-#include "ateam_common/game_controller_listener.hpp"
-#include "types/robot.hpp"
 #include "tactics/standard_defense.hpp"
-#include "skills/line_kick.hpp"
+#include "tactics/multi_move_to.hpp"
+#include "tactics/pass.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -43,6 +37,8 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
+  stp::PlayCompletionState getCompletionState() override;
+
   void reset() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
@@ -51,23 +47,15 @@ public:
   void set_kickoff_ready();
 
 private:
-  skills::LineKick line_kick_skill_;
   tactics::StandardDefense defense_;
+  tactics::MultiMoveTo multi_move_to_;
+  tactics::Pass pass_;
+  ateam_common::GameCommand prev_frame_game_command_;
 
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  bool pass_direction_chosen_ = false;
 
-  const ateam_geometry::Point kicker_point_ = ateam_geometry::Point(-0.25, 0);
-  std::optional<ateam_geometry::Point> kick_target_;
-
-  std::vector<ateam_geometry::Point> support_positions_;
-
-  void runKicker(
-    const World & world, const Robot & kicker,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
-
-  void runSupportBots(
-    const World & world, const std::vector<std::optional<Robot>> & support_bots,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+  // if false, pass right
+  bool pass_left_ = false;
 };
 }  // namespace ateam_kenobi::plays
 

@@ -31,32 +31,54 @@ namespace ateam_kenobi::plays
 {
 OurKickoffPlay::OurKickoffPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  line_kick_skill_(createChild<skills::LineKick>("line_kick")),
-  defense_(createChild<tactics::StandardDefense>("defense"))
+  defense_(createChild<tactics::StandardDefense>("defense")),
+  multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_To")),
+  pass_(createChild<tactics::Pass>("pass"))
 {
 }
 
 stp::PlayScore OurKickoffPlay::getScore(const World & world)
 {
-  if (world.in_play) {
-    return stp::PlayScore::NaN();
-  }
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
-  if (cmd == ateam_common::GameCommand::PrepareKickoffOurs ||
-    (cmd == ateam_common::GameCommand::NormalStart &&
-    prev == ateam_common::GameCommand::PrepareKickoffOurs))
-  {
-    return stp::PlayScore::Max();
+
+  stp::PlayScore score;
+  if (cmd == ateam_common::GameCommand::NormalStart) {
+    if (prev_frame_game_command_ == ateam_common::GameCommand::PrepareKickoffOurs) {
+      // First frame of normal start, I should be considered
+      score = 75.0;
+    } else if (prev == ateam_common::GameCommand::PrepareKickoffOurs) {
+      // already running normal start
+      if (pass_.isDone()) {
+        score = stp::PlayScore::Min();
+      } else {
+        // arbitrary value to compare against KickoffOnGoalPlay
+        score = 75.0;
+      }
+    }
+  } else {
+    score = stp::PlayScore::NaN();
   }
-  return stp::PlayScore::NaN();
+
+  prev_frame_game_command_ = cmd;
+
+  return score;
+}
+
+stp::PlayCompletionState OurKickoffPlay::getCompletionState()
+{
+  if (pass_.isDone()) {
+    return stp::PlayCompletionState::Done;
+  }
+  return stp::PlayCompletionState::Busy;
 }
 
 void OurKickoffPlay::reset()
 {
-  kick_target_.reset();
-  line_kick_skill_.Reset();
   defense_.reset();
+  multi_move_to_.Reset();
+  pass_.reset();
+  pass_direction_chosen_ = false;
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPlay::runFrame(
@@ -66,16 +88,23 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   std::vector<Robot> current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
-  support_positions_ = {
-    ateam_geometry::Point(-0.3, world.field.field_width / 3),
-    ateam_geometry::Point(-0.3, -world.field.field_width / 3)
-  };
-
-  if (!kick_target_) {
+  if (!pass_direction_chosen_) {
     static std::default_random_engine rand_eng(std::random_device{}());
-    std::uniform_int_distribution<int> distribution(0, support_positions_.size());
-    kick_target_ = support_positions_[distribution(rand_eng)];
+    std::uniform_int_distribution<int> distribution(0, 1);
+    pass_left_ = distribution(rand_eng);
+    pass_direction_chosen_ = true;
   }
+
+  multi_move_to_.SetTargetPoints(
+    {
+      ateam_geometry::Point(-0.3, (pass_left_ ? -1.0 : 1.0) * world.field.field_width / 3)
+    });
+  multi_move_to_.SetFacePoint(world.ball.pos);
+
+  pass_.setTarget(
+    ateam_geometry::Point(
+      -0.3,
+      (pass_left_ ? 1.0 : -1.0) * world.field.field_width / 3));
 
   play_helpers::GroupAssignmentSet groups;
 
@@ -83,78 +112,36 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   if (world.double_touch_forbidden_id_) {
     disallowed_kickers.push_back(*world.double_touch_forbidden_id_);
   }
-  groups.AddPosition("kicker", kicker_point_, disallowed_kickers);
+  groups.AddPosition("kicker", pass_.getKickerAssignmentPoint(world), disallowed_kickers);
+  groups.AddPosition("receiver", pass_.getReceiverAssignmentPoint());
 
   groups.AddGroup("defenders", defense_.getAssignmentPoints(world));
 
-  groups.AddGroup("supports", support_positions_);
+  groups.AddGroup("supports", multi_move_to_.GetAssignmentPoints());
 
   const auto assignments = play_helpers::assignGroups(current_available_robots, groups);
 
   const auto maybe_kicker = assignments.GetPositionAssignment("kicker");
-  if (maybe_kicker) {
-    runKicker(world, *maybe_kicker, maybe_motion_commands);
+  const auto maybe_receiver = assignments.GetPositionAssignment("receiver");
+  if (maybe_kicker && maybe_receiver) {
+    const auto & kicker = *maybe_kicker;
+    const auto & receiver = *maybe_receiver;
+    auto & kicker_command =
+      *(maybe_motion_commands[kicker.id] = ateam_msgs::msg::RobotMotionCommand{});
+    auto & receiver_command =
+      *(maybe_motion_commands[receiver.id] = ateam_msgs::msg::RobotMotionCommand{});
+    pass_.runFrame(world, kicker, receiver, kicker_command, receiver_command);
   }
 
   defense_.runFrame(
     world, assignments.GetGroupFilledAssignments("defenders"),
     maybe_motion_commands);
 
-  runSupportBots(world, assignments.GetGroupAssignments("supports"), maybe_motion_commands);
+  multi_move_to_.RunFrame(
+    world, assignments.GetGroupAssignments("supports"),
+    maybe_motion_commands);
 
   return maybe_motion_commands;
-}
-
-void OurKickoffPlay::runKicker(
-  const World & world, const Robot & kicker,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
-{
-  if (world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffOurs) {
-    auto viz_circle = ateam_geometry::makeCircle(kicker_point_, kRobotRadius);
-    getOverlays().drawCircle(
-      "destination_" + std::to_string(
-        kicker.id), viz_circle, "blue", "transparent");
-
-    auto & easy_move_to = easy_move_tos_.at(kicker.id);
-    easy_move_to.setTargetPosition(kicker_point_);
-    easy_move_to.face_point(world.ball.pos);
-    motion_commands.at(kicker.id) = easy_move_to.runFrame(kicker, world);
-
-    getPlayInfo()["State"] = "Preparing";
-    getPlayInfo()["Kicker Id"] = kicker.id;
-  } else if (world.referee_info.running_command == ateam_common::GameCommand::NormalStart) {
-    line_kick_skill_.SetTargetPoint(*kick_target_);
-    line_kick_skill_.SetKickSpeed(3.0);
-    motion_commands.at(kicker.id) = line_kick_skill_.RunFrame(world, kicker);
-
-    getPlayInfo()["State"] = "Kicking";
-  }
-}
-
-void OurKickoffPlay::runSupportBots(
-  const World & world, const std::vector<std::optional<Robot>> & support_bots,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
-{
-  for (auto ind = 0ul; ind < support_bots.size(); ++ind) {
-    const auto & maybe_robot = support_bots[ind];
-    if (!maybe_robot) {
-      continue;
-    }
-    const auto & robot = *maybe_robot;
-    const auto & target_position = support_positions_[ind];
-
-    auto & easy_move_to = easy_move_tos_.at(robot.id);
-
-    auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
-    getOverlays().drawCircle(
-      "destination_" + std::to_string(
-        robot.id), viz_circle, "blue", "transparent");
-
-    easy_move_to.setTargetPosition(target_position);
-    easy_move_to.face_point(world.ball.pos);
-
-    motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
-  }
 }
 
 }  // namespace ateam_kenobi::plays

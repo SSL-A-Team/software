@@ -29,10 +29,12 @@ add_library(kenobi_node_component SHARED
   src/plays/test_play.cpp
   src/plays/halt_play.cpp
   src/plays/kick_on_goal_play.cpp
+  src/plays/kickoff_on_goal.cpp
   src/plays/stop_play.cpp
   src/plays/our_ball_placement_play.cpp
   src/plays/their_ball_placement_play.cpp
   src/plays/our_kickoff_play.cpp
+  src/plays/our_kickoff_prep_play.cpp
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
   src/plays/our_penalty_play.cpp
@@ -64,6 +66,7 @@ add_library(kenobi_node_component SHARED
   src/skills/capture.cpp
   src/tactics/blockers.cpp
   src/tactics/defenders.cpp
+  src/tactics/multi_move_to.cpp
   src/tactics/pass_to_segment.cpp
   src/tactics/pass.cpp
   src/tactics/standard_defense.cpp
