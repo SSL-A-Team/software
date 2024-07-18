@@ -55,11 +55,27 @@ public:
 
   ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
 
+  bool IsDone() const {
+    return done_;
+  }
+
+  /**
+   * @brief Set the default obstacles planner option on the internal EasyMoveTo
+   */
+  void SetUseDefaultObstacles(bool use_obstacles)
+  {
+    path_planning::PlannerOptions options = easy_move_to_.getPlannerOptions();
+    options.use_default_obstacles = use_obstacles;
+    easy_move_to_.setPlannerOptions(options);
+    capture_.SetUseDefaultObstacles(use_obstacles);
+  }
+
 private:
   const double kPreKickOffset = kRobotRadius + 0.1;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
   skills::Capture capture_;
+  bool done_ = false;
 
   enum class State
   {

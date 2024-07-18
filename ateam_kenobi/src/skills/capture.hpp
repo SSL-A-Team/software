@@ -52,6 +52,16 @@ public:
 
   ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
 
+  /**
+ * @brief Set the default obstacles planner option on the internal EasyMoveTo
+ */
+  void SetUseDefaultObstacles(bool use_obstacles)
+  {
+    path_planning::PlannerOptions options = easy_move_to_.getPlannerOptions();
+    options.use_default_obstacles = use_obstacles;
+    easy_move_to_.setPlannerOptions(options);
+  }
+
 private:
   play_helpers::EasyMoveTo easy_move_to_;
   bool done_ = false;

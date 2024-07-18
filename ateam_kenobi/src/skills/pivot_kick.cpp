@@ -44,6 +44,10 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
 {
   getOverlays().drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
 
+  if(done_) {
+    return ateam_msgs::msg::RobotMotionCommand{};
+  }
+
   if (!robot.breakbeam_ball_detected) {
     if (prev_state_ != State::Capture) {
       easy_move_to_.reset();
@@ -65,6 +69,11 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
   if (prev_state_ != State::KickBall) {
     easy_move_to_.reset();
     prev_state_ = State::KickBall;
+  }
+
+  if (ateam_geometry::norm(world.ball.vel) > 0.1 * GetKickSpeed()) {
+    done_ = true;
+    return ateam_msgs::msg::RobotMotionCommand{};
   }
 
   return KickBall(world, robot);

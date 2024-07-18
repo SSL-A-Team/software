@@ -25,7 +25,7 @@
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
 #include "stp/skill.hpp"
-#include "line_kick.hpp"
+#include "pivot_kick.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -42,7 +42,7 @@ public:
 
 private:
   play_helpers::EasyMoveTo easy_move_to_;
-  LineKick line_kick_;
+  PivotKick kick_;
 
   bool doesOpponentHavePossesion(const World & world);
   bool isBallHeadedTowardsGoal(const World & world);

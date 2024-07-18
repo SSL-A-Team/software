@@ -34,10 +34,10 @@ namespace ateam_kenobi::skills
 Goalie::Goalie(stp::Options stp_options)
 : stp::Skill(stp_options),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo")),
-  line_kick_(createChild<skills::LineKick>("LineKick"))
+  kick_(createChild<skills::PivotKick>("Kick"))
 {
   reset();
-  line_kick_.SetUseDefaultObstacles(false);
+  kick_.SetUseDefaultObstacles(false);
 }
 
 void Goalie::reset()
@@ -246,13 +246,13 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
     target_point = world.ball.pos + (kick_vector * 3);
   }
 
-  if (line_kick_.IsDone()) {
-    line_kick_.Reset();
+  if (kick_.IsDone()) {
+    kick_.Reset();
   }
 
-  line_kick_.SetTargetPoint(target_point);
+  kick_.SetTargetPoint(target_point);
 
-  return line_kick_.RunFrame(world, goalie);
+  return kick_.RunFrame(world, goalie);
 }
 
 }  // namespace ateam_kenobi::skills
