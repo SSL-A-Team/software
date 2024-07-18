@@ -36,6 +36,7 @@ Capture::Capture(stp::Options stp_options)
 void Capture::Reset()
 {
   done_ = false;
+  ball_detected_filter_ = 0;
   easy_move_to_.reset();
 }
 
@@ -56,7 +57,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const
 
 void Capture::chooseState(const World & world, const Robot & robot)
 {
-  if (ateam_geometry::norm(world.ball.pos - robot.pos) < 0.2) {
+  if (ateam_geometry::norm(world.ball.pos - robot.pos) < 0.4) {
     state_ = State::Capture;
   } else {
     state_ = State::MoveToBall;
@@ -74,11 +75,11 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.avoid_ball = false;
-  planner_options.draw_obstacles = true;
 
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(world.ball.pos);
-  easy_move_to_.setMaxVelocity(1.5);
+
+  easy_move_to_.setMaxVelocity(2.0);
 
   return easy_move_to_.runFrame(robot, world);
 }
@@ -87,7 +88,15 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
 {
   // TODO(chachmu): Should we filter this over a few frames to make sure we have the ball settled?
   if (robot.breakbeam_ball_detected) {
-    done_ = true;
+    ball_detected_filter_ += 1;
+    if (ball_detected_filter_ >= 8) {
+      done_ = true;
+    }
+  } else {
+    ball_detected_filter_ -= 2;
+    if (ball_detected_filter_ < 0) {
+      ball_detected_filter_ = 0;
+    }
   }
 
   /* TODO(chachmu): If we disable default obstacles do we need to check if the target is off the
@@ -98,7 +107,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
 
-  easy_move_to_.setMaxVelocity(0.3);
+  easy_move_to_.setMaxVelocity(0.4);
   easy_move_to_.face_point(world.ball.pos);
 
   easy_move_to_.setTargetPosition(world.ball.pos);

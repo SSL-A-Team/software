@@ -65,6 +65,7 @@ public:
 private:
   play_helpers::EasyMoveTo easy_move_to_;
   bool done_ = false;
+  int ball_detected_filter_ = 0;
 
   enum class State
   {
