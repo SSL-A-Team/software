@@ -28,7 +28,7 @@ namespace ateam_kenobi::tactics
 Pass::Pass(stp::Options stp_options)
 : stp::Tactic(stp_options),
   receiver_(createChild<skills::PassReceiver>("receiver")),
-  kick_(createChild<skills::LineKick>("kicker", skills::KickSkill::WaitType::WaitToKick))
+  kick_(createChild<skills::PivotKick>("kicker", skills::KickSkill::WaitType::WaitToKick))
 {
 }
 
