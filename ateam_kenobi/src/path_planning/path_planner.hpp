@@ -83,8 +83,6 @@ private:
     std::vector<ateam_geometry::AnyShape> & obstacles,
     const ateam_geometry::Point & point, const PlannerOptions & options);
 
-  bool isStateInBounds(const ateam_geometry::Point & state, const World & world);
-
   bool isStateValid(
     const ateam_geometry::Point & state,
     const World & world,

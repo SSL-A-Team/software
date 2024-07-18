@@ -56,7 +56,7 @@ PathPlanner::Path PathPlanner::getPath(
     augmented_obstacles.push_back(ateam_geometry::makeDisk(world.ball.pos, kBallRadius));
   }
 
-  if (!isStateInBounds(start, world)) {
+  if (!IsPointInBounds(start, world)) {
     return {};
   }
 
@@ -134,33 +134,13 @@ void PathPlanner::removeCollidingObstacles(
   obstacles.erase(new_end, obstacles.end());
 }
 
-bool PathPlanner::isStateInBounds(const ateam_geometry::Point & state, const World & world)
-{
-  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - kRobotRadius;
-  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - kRobotRadius;
-  ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
-    ateam_geometry::Point(x_bound, y_bound));
-
-  if (world.ignore_side > 0) {
-    pathable_region = ateam_geometry::Rectangle(
-      ateam_geometry::Point(-x_bound, -y_bound),
-      ateam_geometry::Point(0, y_bound));
-  } else if (world.ignore_side < 0) {
-    pathable_region = ateam_geometry::Rectangle(
-      ateam_geometry::Point(0, y_bound),
-      ateam_geometry::Point(x_bound, y_bound));
-  }
-
-  return CGAL::do_intersect(state, pathable_region);
-}
-
 bool PathPlanner::isStateValid(
   const ateam_geometry::Point & state,
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
-  if (!isStateInBounds(state, world)) {
+  if (!IsPointInBounds(state, world)) {
     return false;
   }
 

@@ -153,4 +153,25 @@ std::optional<ateam_geometry::AnyShape> GetCollidingObstacle(
   return *found_iter;
 }
 
+
+bool IsPointInBounds(const ateam_geometry::Point & state, const World & world)
+{
+  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - kRobotRadius;
+  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - kRobotRadius;
+  ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
+    ateam_geometry::Point(x_bound, y_bound));
+
+  if (world.ignore_side > 0) {
+    pathable_region = ateam_geometry::Rectangle(
+      ateam_geometry::Point(-x_bound, -y_bound),
+      ateam_geometry::Point(0, y_bound));
+  } else if (world.ignore_side < 0) {
+    pathable_region = ateam_geometry::Rectangle(
+      ateam_geometry::Point(0, y_bound),
+      ateam_geometry::Point(x_bound, y_bound));
+  }
+
+  return CGAL::do_intersect(state, pathable_region);
+}
+
 }  // namespace ateam_kenobi::path_planning

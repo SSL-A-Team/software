@@ -27,6 +27,7 @@
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
+#include "path_planning/obstacles.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -78,6 +79,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
 
   const auto assignments = play_helpers::assignRobots(bots_to_move, spots);
 
+  const auto added_obstacles = getAddedObstacles(world);
+
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
   for (size_t spot_ind = 0; spot_ind < spots.size(); ++spot_ind) {
@@ -90,7 +93,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
     auto & emt = easy_move_tos_.at(bot.id);
     emt.setTargetPosition(spot);
     emt.face_point(world.ball.pos);
-    if(bot.id == world.referee_info.our_goalie_id) {
+    if (bot.id == world.referee_info.our_goalie_id) {
       auto planner_options = emt.getPlannerOptions();
       planner_options.use_default_obstacles = false;
       emt.setPlannerOptions(planner_options);
@@ -99,7 +102,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
       planner_options.use_default_obstacles = true;
       emt.setPlannerOptions(planner_options);
     }
-    motion_commands.at(bot.id) = emt.runFrame(bot, world);
+    motion_commands.at(bot.id) = emt.runFrame(bot, world, added_obstacles);
     getOverlays().drawCircle(
       "spot" + std::to_string(spot_ind),
       ateam_geometry::makeCircle(spot, kRobotRadius), "blue", "transparent");
@@ -183,6 +186,13 @@ std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
       start = end;
     }
   }
+
+  spots.erase(
+    std::remove_if(
+      spots.begin(), spots.end(), [this, &world](const auto & p) {
+        return (!path_planning::IsPointInBounds(p, world)) || isPointInOrBehindGoal(p, world);
+      }), spots.end());
+
   return spots;
 }
 
@@ -220,5 +230,37 @@ void StopPlay::removeArc(
       i--;
     }
   }
+}
+
+bool StopPlay::isPointInOrBehindGoal(const ateam_geometry::Point & point, const World & world)
+{
+  const auto half_goal_width = world.field.goal_width / 2.0;
+  const auto half_field_length = world.field.field_length / 2.0;
+  const ateam_geometry::Rectangle bad_area{
+    ateam_geometry::Point{-half_field_length, -half_goal_width},
+    ateam_geometry::Point{-(half_field_length + world.field.boundary_width), half_goal_width}
+  };
+  return CGAL::do_intersect(bad_area, point);
+}
+
+std::vector<ateam_geometry::AnyShape> StopPlay::getAddedObstacles(const World & world)
+{
+  std::vector<ateam_geometry::AnyShape> obstacles;
+
+  const auto half_field_length = world.field.field_length/2.0;
+  const auto half_goal_width = world.field.goal_width / 2.0;
+  const auto goal_thickness = 0.1;  // arbitrarily large
+
+  obstacles.push_back(ateam_geometry::Rectangle{
+    ateam_geometry::Point{-half_field_length, -half_goal_width},
+    ateam_geometry::Point{-(half_field_length+world.field.goal_depth), -(half_goal_width+goal_thickness)}
+  });
+
+  obstacles.push_back(ateam_geometry::Rectangle{
+    ateam_geometry::Point{-half_field_length, half_goal_width},
+    ateam_geometry::Point{-(half_field_length+world.field.goal_depth), half_goal_width+goal_thickness}
+  });
+
+  return obstacles;
 }
 }  // namespace ateam_kenobi::plays

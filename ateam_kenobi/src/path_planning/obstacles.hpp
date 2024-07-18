@@ -52,6 +52,8 @@ std::optional<ateam_geometry::AnyShape> GetCollidingObstacle(
   const ateam_geometry::AnyShape & footprint,
   const std::vector<ateam_geometry::AnyShape> & obstacles);
 
+bool IsPointInBounds(const ateam_geometry::Point & state, const World & world);
+
 }  // namespace ateam_kenobi::path_planning
 
 #endif  // PATH_PLANNING__OBSTACLES_HPP_

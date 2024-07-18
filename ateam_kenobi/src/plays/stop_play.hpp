@@ -54,6 +54,10 @@ private:
   std::vector<ateam_geometry::Point> getOpenSpots(const World & world);
 
   void removeArc(std::vector<ateam_geometry::Arc> & openings, const ateam_geometry::Arc & arc);
+
+  bool isPointInOrBehindGoal(const ateam_geometry::Point & point, const World & world);
+
+  std::vector<ateam_geometry::AnyShape> getAddedObstacles(const World & world);
 };
 }  // namespace ateam_kenobi::plays
 
