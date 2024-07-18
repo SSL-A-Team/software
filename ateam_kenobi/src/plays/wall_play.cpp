@@ -59,26 +59,9 @@ WallPlay::WallPlay(stp::Options stp_options)
 {
 }
 
-stp::PlayScore WallPlay::getScore(const World & world)
+stp::PlayScore WallPlay::getScore(const World &)
 {
-  switch (world.referee_info.running_command) {
-    case ateam_common::GameCommand::DirectFreeTheirs:
-      return world.in_play ? stp::PlayScore::Min() : stp::PlayScore::Max();
-    case ateam_common::GameCommand::NormalStart:
-      {
-        if (world.in_play) {
-          return stp::PlayScore::Min();
-        }
-        switch (world.referee_info.prev_command) {
-          case ateam_common::GameCommand::DirectFreeTheirs:
-            return stp::PlayScore::Max();
-          default:
-            return stp::PlayScore::Min();
-        }
-      }
-    default:
-      return stp::PlayScore::Min();
-  }
+  return stp::PlayScore::Min();
 }
 
 void WallPlay::reset()
