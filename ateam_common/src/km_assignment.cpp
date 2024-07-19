@@ -23,6 +23,8 @@
 #include <cmath>
 #include <vector>
 #include <deque>
+#include <set>
+#include <iostream>
 #include "ateam_common/km_assignment.hpp"
 
 namespace ateam_common::km_assignment
@@ -139,6 +141,48 @@ value.
   }
 }
 
+std::vector<int> assignment_with_priorities(
+  const Eigen::MatrixXd & cost_matrix,
+  AssignmentType max_or_min,
+  std::map<int, std::vector<int>> forbidden_assignments,
+  std::map<int, int> priorities
+)
+{
+  std::vector<int> final_assignments;
+  final_assignments.reserve(static_cast<int>(cost_matrix.rows()));
+  // Do assignment for each of the priority levels
+  auto priority_groups = std::map<int, std::vector<int>>();
+
+  for (auto const & [robot, level] : priorities) {
+    priority_groups[level].push_back(robot);
+  }
+  // We assume lower value == higher priority
+  for (auto const & [priority, group] : priority_groups) {
+    std::map<int, std::vector<int>> group_forbidden_assignments;
+    Eigen::MatrixXd group_costs = Eigen::MatrixXd::Constant(group.size(), group.size(), 0);
+    // Group index to full index
+    auto group_idx_to_full_idx = std::map<int, int>();
+
+    for (size_t i = 0; i < group.size(); ++i) {
+      auto robot_id = group[i];
+      if (forbidden_assignments.contains(robot_id)) {
+        group_forbidden_assignments[robot_id] = forbidden_assignments[robot_id];
+      }
+      group_costs.row(i) = cost_matrix.row(robot_id);
+      group_idx_to_full_idx[i] = robot_id;
+    }
+
+    auto group_assignments = km_assignment(
+      group_costs, max_or_min, group_forbidden_assignments);
+
+    for (size_t i = 0; i < group.size(); ++i) {
+      final_assignments[group_idx_to_full_idx[i]] = group_assignments[i];
+    }
+  }
+
+  return final_assignments;
+}
+
 std::vector<int> km_assignment(
   const Eigen::MatrixXd & cost_matrix,
   AssignmentType max_or_min,
@@ -166,27 +210,34 @@ std::vector<int> km_assignment(
 
   // Make sure our matrix fits our algorithms requirements
   // (it is square and non-negative).
+
   auto cost = cost_matrix;
-  cost = scale_cost_matrix(cost, max_or_min);
-  if (cost.cols() != cost.rows()) {
-    cost = make_square_cost_matrix(cost);
+  // Create empty row/col for root node
+  Eigen::MatrixXd cost_with_root = Eigen::MatrixXd::Constant(cost.rows() + 1, cost.cols() + 1, 0);
+  cost_with_root.block(1, 1, cost.rows(), cost.cols()) = cost;
+
+  cost_with_root = scale_cost_matrix(cost_with_root, max_or_min);
+  if (cost_with_root.cols() != cost_with_root.rows()) {
+    cost_with_root = make_square_cost_matrix(cost_with_root);
   }
-  // To ensure forbidden costs will be chosen last, set their value to below
+
+  // To ensure forbidden cost_with_roots will be chosen last, set their value to below
   // the minimum scaled value (0)
-  cost = replace_nan_costs_with_value(cost, -1.0);
+  cost_with_root = replace_nan_costs_with_value(cost_with_root, -1.0);
   if (!forbidden_assignments.empty()) {
-    cost = replace_forbidden_costs_with_value(cost, forbidden_assignments, -1.0);
+    cost_with_root = replace_forbidden_costs_with_value(
+      cost_with_root, forbidden_assignments, -1.0);
   }
   // Step 1: Create an initial feasible labeling,
   // clear out sets S and T, and reset our slack values.
 
   // Size of each set of nodes in the bipartite graph
-  size_t cost_size = static_cast<size_t>(cost.cols());
+  size_t cost_size = static_cast<size_t>(cost_with_root.cols());
 
   // Initial labeling.
   // We set all ly = 0, all lx to their max value.
   Eigen::VectorXd ly = Eigen::VectorXd().setConstant(cost_size, 0);
-  Eigen::VectorXd lx = cost.rowwise().maxCoeff();
+  Eigen::VectorXd lx = cost_with_root.rowwise().maxCoeff();
 
   // Boolean indicator for whether node is a member of set S or T
   // S includes only nodes in X, T only nodes in Y
@@ -208,9 +259,9 @@ std::vector<int> km_assignment(
   */
   // Edges of X to Y
   std::vector<int> xy(cost_size, -1);
+
   // Edges of Y to X
   std::vector<int> yx(cost_size, -1);
-
   // Now grow the match set by picking edges from the equality subgraph until
   // we have a complete matching.
 
@@ -243,7 +294,7 @@ std::vector<int> km_assignment(
         S[x] = true;
 
         // Compute slack in preparation for step 3
-        compute_slack(x, slack, slackx, cost, lx, ly);
+        compute_slack(x, slack, slackx, cost_with_root, lx, ly);
         break;
       }
     }
@@ -259,7 +310,7 @@ std::vector<int> km_assignment(
         free_xs.pop_front();
         for (size_t y = 0; y < cost_size; ++y) {
           // Need to replace with within an epsilon
-          if (std::abs(cost(x, y) - (lx[x] + ly[y])) < EPSILON && !T[y]) {
+          if (std::abs(cost_with_root(x, y) - (lx[x] + ly[y])) < EPSILON && !T[y]) {
             // if vertex y isn't matched with anything
             // then we have an augmenting path
             if (yx[y] == -1) {
@@ -277,7 +328,7 @@ std::vector<int> km_assignment(
 
             aug_path[yx[y]] = x;
             S[yx[y]] = true;
-            compute_slack(yx[y], slack, slackx, cost, lx, ly);
+            compute_slack(yx[y], slack, slackx, cost_with_root, lx, ly);
           }
         }
       }
@@ -328,7 +379,7 @@ std::vector<int> km_assignment(
 
               aug_path[yx[y]] = slackx[y];
               S[yx[y]] = true;
-              compute_slack(yx[y], slack, slackx, cost, lx, ly);
+              compute_slack(yx[y], slack, slackx, cost_with_root, lx, ly);
             }
           }
         }
@@ -347,10 +398,10 @@ std::vector<int> km_assignment(
     }
   }
 
-  for (size_t x = 0; x < cost.rows(); ++x) {
+  for (size_t x = 0; x < cost_with_root.rows(); ++x) {
     // If we assign an x a y that did not exist in the original,
     // (or vice versa) set it to not assigned (-1)
-    if (xy[x] >= static_cast<int>(cost_matrix.cols())) {
+    if (xy[x] >= static_cast<int>(cost_with_root.cols())) {
       xy[x] = -1;
     }
   }
@@ -369,7 +420,19 @@ std::vector<int> km_assignment(
 
   // Return our perfect matching
   // based on our feasible labeling
-  xy.resize(cost_matrix.rows());
+  xy.resize(cost_with_root.rows());
+
+  // Remove our false root node
+  xy.erase(xy.begin());
+  for (int i = 0; i < xy.size() ; ++i) {
+    if (xy[i] != -1) {
+      xy[i] -= 1;
+    }
+  }
+
+  for (auto node : xy){
+    std::cout << "value is now " << node << std::endl;
+  }
   return xy;
 }
 

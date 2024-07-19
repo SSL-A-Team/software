@@ -105,6 +105,13 @@ void compute_slack(
   const Eigen::VectorXd & ly
 );
 
+std::vector<int> assignment_with_priorities(
+  const Eigen::MatrixXd & cost_matrix,
+  AssignmentType max_or_min,
+  std::map<int, std::vector<int>> forbidden_assignments,
+  std::map<int, int> priorities
+);
+
 /*
   Find the maximum cost assignment of a bipartite graph (i.e. robots and field positions)
   using the Hungarian (Kuhn-Munkres) Maximum Matching Algorithm.
