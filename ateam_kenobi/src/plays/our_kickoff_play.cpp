@@ -42,6 +42,12 @@ stp::PlayScore OurKickoffPlay::getScore(const World & world)
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
 
+  auto available_robots = play_helpers::getAvailableRobots(world);
+  play_helpers::removeGoalie(available_robots, world);
+  if (available_robots.size() < 2) {
+    return stp::PlayScore::NaN();
+  }
+
   stp::PlayScore score;
   if (cmd == ateam_common::GameCommand::NormalStart) {
     if (prev_frame_game_command_ == ateam_common::GameCommand::PrepareKickoffOurs) {
@@ -50,6 +56,9 @@ stp::PlayScore OurKickoffPlay::getScore(const World & world)
     } else if (prev == ateam_common::GameCommand::PrepareKickoffOurs) {
       // already running normal start
       if (pass_.isDone()) {
+        score = stp::PlayScore::Min();
+      } else if(world.in_play && ateam_geometry::norm(world.ball.vel) < 0.01) {
+        // prevent stallouts if the pass doesn't complete.
         score = stp::PlayScore::Min();
       } else {
         // arbitrary value to compare against KickoffOnGoalPlay
@@ -115,9 +124,15 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   groups.AddPosition("kicker", pass_.getKickerAssignmentPoint(world), disallowed_kickers);
   groups.AddPosition("receiver", pass_.getReceiverAssignmentPoint());
 
-  groups.AddGroup("defenders", defense_.getAssignmentPoints(world));
+  const auto enough_bots_for_defense = current_available_robots.size() >= 3;
+  if (enough_bots_for_defense) {
+    groups.AddGroup("defenders", defense_.getAssignmentPoints(world));
+  }
 
-  groups.AddGroup("supports", multi_move_to_.GetAssignmentPoints());
+  const auto enough_bots_for_supports = current_available_robots.size() >= 5;
+  if (enough_bots_for_supports) {
+    groups.AddGroup("supports", multi_move_to_.GetAssignmentPoints());
+  }
 
   const auto assignments = play_helpers::assignGroups(current_available_robots, groups);
 
@@ -131,15 +146,21 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     auto & receiver_command =
       *(maybe_motion_commands[receiver.id] = ateam_msgs::msg::RobotMotionCommand{});
     pass_.runFrame(world, kicker, receiver, kicker_command, receiver_command);
+  } else {
+    std::cerr << "Kicker " << (maybe_kicker ? "assigned" : "NO") << ". Receiver " << (maybe_receiver ? "assigned" : "NO") << ".\n";
   }
 
-  defense_.runFrame(
-    world, assignments.GetGroupFilledAssignments("defenders"),
-    maybe_motion_commands);
+  if (enough_bots_for_defense) {
+    defense_.runFrame(
+      world, assignments.GetGroupFilledAssignments("defenders"),
+      maybe_motion_commands);
+  }
 
-  multi_move_to_.RunFrame(
-    world, assignments.GetGroupAssignments("supports"),
-    maybe_motion_commands);
+  if (enough_bots_for_supports) {
+    multi_move_to_.RunFrame(
+      world, assignments.GetGroupAssignments("supports"),
+      maybe_motion_commands);
+  }
 
   return maybe_motion_commands;
 }

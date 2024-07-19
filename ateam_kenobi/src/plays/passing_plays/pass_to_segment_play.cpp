@@ -76,11 +76,12 @@ stp::PlayScore PassToSegmentPlay::getScore(const World & world)
   return pass_chance_multiplier * goal_chance_multiplier * stp::PlayScore::Max();
 }
 
-stp::PlayCompletionState PassToSegmentPlay::getCompletionState() {
-  if(!started_) {
+stp::PlayCompletionState PassToSegmentPlay::getCompletionState()
+{
+  if (!started_) {
     return stp::PlayCompletionState::NotApplicable;
   }
-  if(!pass_tactic_.isDone()) {
+  if (!pass_tactic_.isDone()) {
     return stp::PlayCompletionState::Busy;
   }
   return stp::PlayCompletionState::Done;
@@ -111,22 +112,30 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
     pass_tactic_.reset();
   }
 
-  play_helpers::GroupAssignmentSet groups;
-
-  groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
-
-  groups.AddPosition("kicker", pass_tactic_.getKickerAssignmentPoint(world));
-  groups.AddPosition("receiver", pass_tactic_.getReceiverAssignmentPoint(world));
-  groups.AddPosition("idler", idler_skill_.GetAssignmentPoint(world));
-
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
+  play_helpers::GroupAssignmentSet groups;
+
+
+  groups.AddPosition("kicker", pass_tactic_.getKickerAssignmentPoint(world));
+  groups.AddPosition("receiver", pass_tactic_.getReceiverAssignmentPoint(world));
+  const auto enough_bots_for_defense = available_robots.size() >= 3;
+  if (enough_bots_for_defense) {
+    groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
+  }
+  const auto enough_bots_for_idler = available_robots.size() >= 5;
+  if (enough_bots_for_idler) {
+    groups.AddPosition("idler", idler_skill_.GetAssignmentPoint(world));
+  }
+
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  defense_tactic_.runFrame(
-    world, assignments.GetGroupFilledAssignments("defense"),
-    motion_commands);
+  if (enough_bots_for_defense) {
+    defense_tactic_.runFrame(
+      world, assignments.GetGroupFilledAssignments("defense"),
+      motion_commands);
+  }
 
   const auto maybe_kicker = assignments.GetPositionAssignment("kicker");
   const auto maybe_receiver = assignments.GetPositionAssignment("receiver");
@@ -136,17 +145,19 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
     auto & receiver_command =
       *(motion_commands[maybe_receiver->id] = ateam_msgs::msg::RobotMotionCommand{});
 
-    if(CGAL::squared_distance(world.ball.pos, maybe_kicker->pos) < 0.5) {
+    if (CGAL::squared_distance(world.ball.pos, maybe_kicker->pos) < 0.5) {
       started_ = true;
     }
 
     pass_tactic_.runFrame(world, *maybe_kicker, *maybe_receiver, kicker_command, receiver_command);
   }
 
-  assignments.RunPositionIfAssigned(
-    "idler", [this, &world, &motion_commands](const Robot & robot) {
-      motion_commands[robot.id] = idler_skill_.RunFrame(world, robot);
-    });
+  if (enough_bots_for_idler) {
+    assignments.RunPositionIfAssigned(
+      "idler", [this, &world, &motion_commands](const Robot & robot) {
+        motion_commands[robot.id] = idler_skill_.RunFrame(world, robot);
+      });
+  }
 
   return motion_commands;
 }

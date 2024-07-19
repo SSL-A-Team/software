@@ -54,20 +54,29 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPre
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
-  multi_move_to_.SetTargetPoints(
-    {
-      ateam_geometry::Point{-0.25, 0},
-      ateam_geometry::Point(-0.3, world.field.field_width / 3),
-      ateam_geometry::Point(-0.3, -world.field.field_width / 3)
-    });
+  std::vector<ateam_geometry::Point> move_to_targets = {
+    ateam_geometry::Point{-0.25, 0}
+  };
+
+  if (available_robots.size() >= 4) {
+    move_to_targets.push_back(ateam_geometry::Point(-0.3, world.field.field_width / 3));
+    move_to_targets.push_back(ateam_geometry::Point(-0.3, -world.field.field_width / 3));
+  }
+
+  multi_move_to_.SetTargetPoints(move_to_targets);
   multi_move_to_.SetFaceAbsolue(0.0);
 
   play_helpers::GroupAssignmentSet groups;
-  groups.AddGroup("defense", defense_.getAssignmentPoints(world));
   groups.AddGroup("movers", multi_move_to_.GetAssignmentPoints());
+  const auto enough_bots_for_defense = available_robots.size() >= 2;
+  if (enough_bots_for_defense) {
+    groups.AddGroup("defense", defense_.getAssignmentPoints(world));
+  }
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
+  if (enough_bots_for_defense) {
+    defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
+  }
   multi_move_to_.RunFrame(world, assignments.GetGroupAssignments("movers"), motion_commands);
 
   return motion_commands;

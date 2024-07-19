@@ -40,7 +40,8 @@ stp::PlayScore KickoffOnGoalPlay::getScore(const World & world)
   }
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
-  if (cmd == ateam_common::GameCommand::NormalStart && prev == ateam_common::GameCommand::PrepareKickoffOurs)
+  if (cmd == ateam_common::GameCommand::NormalStart &&
+    prev == ateam_common::GameCommand::PrepareKickoffOurs)
   {
     const auto largest_window = getLargestWindowOnGoal(world);
     if (!largest_window) {
@@ -74,27 +75,40 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffOnGoal
     kick_.SetTargetPoint(ateam_geometry::Point{world.field.field_length / 2.0, 0.0});
   }
 
-  multi_move_to_.SetTargetPoints({
-    ateam_geometry::Point(-0.3, world.field.field_width / 3),
-    ateam_geometry::Point(-0.3, -world.field.field_width / 3)
-  });
+  multi_move_to_.SetTargetPoints(
+    {
+      ateam_geometry::Point(-0.3, world.field.field_width / 3),
+      ateam_geometry::Point(-0.3, -world.field.field_width / 3)
+    });
   multi_move_to_.SetFacePoint(world.ball.pos);
 
   play_helpers::GroupAssignmentSet groups;
-  groups.AddGroup("defense", defense_.getAssignmentPoints(world));
   groups.AddPosition("kicker", kick_.GetAssignmentPoint(world));
-  groups.AddGroup("supports", multi_move_to_.GetAssignmentPoints());
+
+  const auto enough_bots_for_defense = available_robots.size() >= 2;
+  if (enough_bots_for_defense) {
+    groups.AddGroup("defense", defense_.getAssignmentPoints(world));
+  }
+
+  const auto enough_bots_for_supports = available_robots.size() >= 4;
+  if (enough_bots_for_supports) {
+    groups.AddGroup("supports", multi_move_to_.GetAssignmentPoints());
+  }
 
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
-
-  defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
 
   assignments.RunPositionIfAssigned(
     "kicker", [this, &motion_commands, &world](const Robot & robot) {
       motion_commands[robot.id] = kick_.RunFrame(world, robot);
     });
 
-  multi_move_to_.RunFrame(world, assignments.GetGroupAssignments("supports"), motion_commands);
+  if (enough_bots_for_defense) {
+    defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
+  }
+
+  if (enough_bots_for_supports) {
+    multi_move_to_.RunFrame(world, assignments.GetGroupAssignments("supports"), motion_commands);
+  }
 
   return motion_commands;
 }

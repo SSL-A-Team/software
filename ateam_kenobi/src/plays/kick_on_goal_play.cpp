@@ -97,30 +97,39 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
   }
 
   play_helpers::GroupAssignmentSet groups;
-  groups.AddGroup("defense", defense_.getAssignmentPoints(world));
   groups.AddPosition("striker", striker_.GetAssignmentPoint(world));
-  groups.AddPosition("lane_idler_a", lane_idler_a_.GetAssignmentPoint(world));
-  groups.AddPosition("lane_idler_b", lane_idler_b_.GetAssignmentPoint(world));
+  const auto enough_bots_for_defense = available_robots.size() >= 2;
+  if (enough_bots_for_defense) {
+    groups.AddGroup("defense", defense_.getAssignmentPoints(world));
+  }
+  const auto enough_bots_for_idlers = available_robots.size() >= 4;
+  if (enough_bots_for_idlers) {
+    groups.AddPosition("lane_idler_a", lane_idler_a_.GetAssignmentPoint(world));
+    groups.AddPosition("lane_idler_b", lane_idler_b_.GetAssignmentPoint(world));
+  }
 
   auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
-
+  if (enough_bots_for_defense) {
+    defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
+  }
 
   assignments.RunPositionIfAssigned(
     "striker", [this, &world, &motion_commands](const Robot & robot) {
       motion_commands[robot.id] = striker_.RunFrame(world, robot);
     });
 
-  assignments.RunPositionIfAssigned(
-    "lane_idler_a", [this, &world, &motion_commands](const Robot & robot) {
-      motion_commands[robot.id] = lane_idler_a_.RunFrame(world, robot);
-    });
+  if (enough_bots_for_idlers) {
+    assignments.RunPositionIfAssigned(
+      "lane_idler_a", [this, &world, &motion_commands](const Robot & robot) {
+        motion_commands[robot.id] = lane_idler_a_.RunFrame(world, robot);
+      });
 
-  assignments.RunPositionIfAssigned(
-    "lane_idler_b", [this, &world, &motion_commands](const Robot & robot) {
-      motion_commands[robot.id] = lane_idler_b_.RunFrame(world, robot);
-    });
+    assignments.RunPositionIfAssigned(
+      "lane_idler_b", [this, &world, &motion_commands](const Robot & robot) {
+        motion_commands[robot.id] = lane_idler_b_.RunFrame(world, robot);
+      });
+  }
 
   return motion_commands;
 }
