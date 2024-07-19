@@ -51,10 +51,10 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunFrame(const World & world, cons
       getPlayInfo()["state"] = "Move Behind Ball";
       return RunMoveBehindBall(world, robot);
     case State::FaceBall:
-    getPlayInfo()["state"] = "Face Ball";
+      getPlayInfo()["state"] = "Face Ball";
       return RunFaceBall(world, robot);
     case State::KickBall:
-    getPlayInfo()["state"] = "Kick Ball";
+      getPlayInfo()["state"] = "Kick Ball";
       return RunKickBall(world, robot);
     case State::Done:
       return ateam_msgs::msg::RobotMotionCommand{};
@@ -139,7 +139,7 @@ bool LineKick::IsRobotSettled(const World & world, const Robot & robot)
   const auto robot_vel_perp = robot.vel - robot_vel_proj;
   const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
 
-  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.3;
+  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.35;
   return robot_vel_is_good;
 }
 
@@ -170,9 +170,43 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.footprint_inflation = 0.04;
 
+  planner_options.draw_obstacles = true;
+
+  // Add additional obstacles to better avoid ball
+  const auto ball_to_target = target_point_ - world.ball.pos;
+  const auto angle = std::atan2(ball_to_target.y(), ball_to_target.x());
+  std::vector<ateam_geometry::AnyShape> obstacles;
+
+  // Front Obstacle
+  obstacles.push_back(
+    ateam_geometry::makeDisk(
+      world.ball.pos + kBallDiameter * ateam_geometry::Vector(
+        std::cos(angle / 2),
+        std::sin(angle / 2)),
+      kBallRadius
+  ));
+
+  // Left Obstacle
+  obstacles.push_back(
+    ateam_geometry::makeDisk(
+      world.ball.pos + kBallDiameter * ateam_geometry::Vector(
+        std::cos(angle + M_PI / 2),
+        std::sin(angle + M_PI / 2)),
+      kBallRadius
+  ));
+
+  // Right Obstacle
+  obstacles.push_back(
+    ateam_geometry::makeDisk(
+      world.ball.pos + kBallDiameter * ateam_geometry::Vector(
+        std::cos(angle - M_PI / 2),
+        std::sin(angle - M_PI / 2)),
+      kBallRadius
+  ));
+
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(GetPreKickPosition(world));
-  return easy_move_to_.runFrame(robot, world);
+  return easy_move_to_.runFrame(robot, world, obstacles);
 }
 
 ateam_msgs::msg::RobotMotionCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
