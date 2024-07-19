@@ -61,6 +61,7 @@ private:
   const double kOffset = kRobotRadius + kBallRadius + 0.07;
   ateam_geometry::Point target_;
   play_helpers::EasyMoveTo easy_move_to_;
+  int ball_detected_filter_ = 0;
   bool done_ = false;
 
   enum class State
@@ -76,7 +77,7 @@ private:
 
   bool isRobotBehindBall(const World & world, const Robot & robot, double hysteresis);
   bool isRobotSettled(const World & world, const Robot & robot);
-  bool robotHasBall(const World & world, const Robot & robot);
+  bool robotHasBall(const Robot & robot);
 
   ateam_msgs::msg::RobotMotionCommand runMoveBehindBall(const World & world, const Robot & robot);
   ateam_msgs::msg::RobotMotionCommand runDribble(const World & world, const Robot & robot);
