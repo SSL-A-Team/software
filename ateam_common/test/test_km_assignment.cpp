@@ -219,6 +219,22 @@ TEST(KmAssignment, all_forbidden_assignments) {
   EXPECT_EQ(out_row.at(2), 2);
 }
 
+TEST(KmAssignment, forbidden_ordering) {
+  Eigen::Matrix<double, 2, 2> cost2x2{
+    {11.5, 11},
+    {11.5, 11}
+  };
+
+  std::map<int, std::vector<int>> forbidden = {{1, std::vector<int>{1}}};
+  std::vector<int> out_row = km_assignment::km_assignment(
+    cost2x2,
+    km_assignment::AssignmentType::MaxCost,
+    forbidden);
+  EXPECT_EQ(out_row.size(), 2);
+  EXPECT_EQ(out_row.at(0), 1);
+  EXPECT_EQ(out_row.at(1), 0);
+}
+
 TEST(KmAssignment, two_priority_groups) {
   Eigen::Matrix<double, 4, 4> cost4x4{
     {13, 12, 7, 1},
