@@ -102,6 +102,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
   const auto target = target_func_(world);
 
   getOverlays().drawLine("target", {target.source(), target.target()}, "grey");
+  getOverlays().drawRectangle("left_lane", play_helpers::lanes::GetLaneBounds(world, play_helpers::lanes::Lane::Left), "aqua", "transparent");
+  getOverlays().drawRectangle("center_lane", play_helpers::lanes::GetLaneBounds(world, play_helpers::lanes::Lane::Center), "aqua", "transparent");
+  getOverlays().drawRectangle("right_lane", play_helpers::lanes::GetLaneBounds(world, play_helpers::lanes::Lane::Right), "aqua", "transparent");
 
   pass_tactic_.setTarget(target);
 

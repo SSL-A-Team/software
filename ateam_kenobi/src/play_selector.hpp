@@ -51,6 +51,7 @@ public:
   stp::Play * getPlayByName(const std::string name);
 
 private:
+  rclcpp::Logger ros_logger_;
   std::shared_ptr<stp::Play> halt_play_;
   std::vector<std::shared_ptr<stp::Play>> plays_;
   std::string override_play_name_;
@@ -78,11 +79,11 @@ private:
 
   stp::Play * selectOverridePlay();
 
-  stp::Play * selectRankedPlay(const World & world);
+  stp::Play * selectRankedPlay(const World & world, std::vector<double> & scores_out);
 
   void resetPlayIfNeeded(stp::Play * play);
 
-  void fillStateMessage(ateam_msgs::msg::PlaybookState & msg, const World & world);
+  void fillStateMessage(ateam_msgs::msg::PlaybookState & msg, std::vector<double> & scores, const stp::Play * selected_play);
 };
 
 }  // namespace ateam_kenobi

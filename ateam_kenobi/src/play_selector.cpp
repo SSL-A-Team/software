@@ -32,6 +32,7 @@ namespace ateam_kenobi
 {
 
 PlaySelector::PlaySelector(rclcpp::Node & node)
+: ros_logger_(node.get_logger().get_child("PlaySelector"))
 {
   using namespace ateam_kenobi::plays;  // NOLINT(build/namespaces)
   stp::Options stp_options;
@@ -85,6 +86,8 @@ stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::Playbook
 {
   stp::Play * selected_play = nullptr;
 
+  std::vector<double> scores;
+
   if (world.referee_info.running_command == ateam_common::GameCommand::Halt) {
     selected_play = halt_play_.get();
   }
@@ -94,7 +97,7 @@ stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::Playbook
   }
 
   if (selected_play == nullptr) {
-    selected_play = selectRankedPlay(world);
+    selected_play = selectRankedPlay(world, scores);
   }
 
   if (selected_play == nullptr) {
@@ -103,7 +106,7 @@ stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::Playbook
 
   resetPlayIfNeeded(selected_play);
 
-  fillStateMessage(state_msg, world);
+  fillStateMessage(state_msg, scores, selected_play);
 
   return selected_play;
 }
@@ -148,7 +151,9 @@ stp::Play * PlaySelector::selectOverridePlay()
   return found_iter->get();
 }
 
-stp::Play * PlaySelector::selectRankedPlay(const World & world)
+stp::Play * PlaySelector::selectRankedPlay(
+  const World & world,
+  std::vector<double> & scores_out)
 {
   std::vector<std::pair<stp::Play *, double>> play_scores;
 
@@ -160,8 +165,8 @@ stp::Play * PlaySelector::selectRankedPlay(const World & world)
         // 5% bonus to previous play as hysteresis
         score_multiplier = 1.05;
         if (play->getCompletionState() == stp::PlayCompletionState::Busy) {
-          // +20% if previous play should not be interrupted
-          score_multiplier += 0.2;
+          // +90% if previous play should not be interrupted
+          score_multiplier += 0.9;
         }
       }
       if (!play->isEnabled()) {
@@ -179,6 +184,11 @@ stp::Play * PlaySelector::selectRankedPlay(const World & world)
     };
 
   const auto & max_score = *std::ranges::max_element(play_scores, sort_func);
+
+  std::transform(
+    play_scores.begin(), play_scores.end(), std::back_inserter(scores_out), [](const auto & p) {
+      return p.second;
+    });
 
   if (std::isnan(max_score.second)) {
     return nullptr;
@@ -202,16 +212,46 @@ void PlaySelector::resetPlayIfNeeded(stp::Play * play)
   }
 }
 
-void PlaySelector::fillStateMessage(ateam_msgs::msg::PlaybookState & msg, const World & world)
+void PlaySelector::fillStateMessage(
+  ateam_msgs::msg::PlaybookState & msg,
+  std::vector<double> & scores,
+  const stp::Play * selected_play)
 {
+  if (scores.empty()) {
+    std::fill_n(
+      std::back_inserter(scores), plays_.size(),
+      std::numeric_limits<double>::quiet_NaN());
+  }
+  if (scores.size() != plays_.size()) {
+    RCLCPP_WARN(
+      ros_logger_, "fillStateMessage(): scores.size() != plays_.size(). buffering with NaN");
+    std::fill_n(
+      std::back_inserter(scores), plays_.size() - scores.size(),
+      std::numeric_limits<double>::quiet_NaN());
+
+  }
   msg.override_name = override_play_name_;
+  msg.running_play_name = selected_play->getName();
+
+  const auto found_iter = std::find_if(
+    plays_.begin(), plays_.end(), [selected_play](const std::shared_ptr<stp::Play> play)-> bool {
+      return play.get() == selected_play;
+    });
+  if (found_iter != plays_.end()) {
+    msg.running_play_index = std::distance(plays_.begin(), found_iter);
+  } else {
+    msg.running_play_index = -1;
+  }
+
   msg.names.reserve(plays_.size());
   msg.enableds.reserve(plays_.size());
   msg.scores.reserve(plays_.size());
+  auto ind = 0ul;
   for (const auto & play : plays_) {
     msg.names.push_back(play->getName());
     msg.enableds.push_back(play->isEnabled());
-    msg.scores.push_back(play->getScore(world));
+    msg.scores.push_back(scores[ind]);
+    ind++;
   }
 }
 
