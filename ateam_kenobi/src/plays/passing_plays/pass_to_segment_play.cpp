@@ -119,7 +119,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
 
   groups.AddPosition("kicker", pass_tactic_.getKickerAssignmentPoint(world));
   groups.AddPosition("receiver", pass_tactic_.getReceiverAssignmentPoint(world));
-  const auto enough_bots_for_defense = available_robots.size() >= 3;
+  const auto enough_bots_for_defense = available_robots.size() >= 4;
   if (enough_bots_for_defense) {
     groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
   }

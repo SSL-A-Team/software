@@ -97,11 +97,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
 
   play_helpers::GroupAssignmentSet groups;
   groups.AddPosition("striker", striker_.GetAssignmentPoint(world));
-  const auto enough_bots_for_defense = available_robots.size() >= 2;
+  const auto enough_bots_for_defense = available_robots.size() >= 3;
   if (enough_bots_for_defense) {
     groups.AddGroup("defense", defense_.getAssignmentPoints(world));
   }
-  const auto enough_bots_for_idlers = available_robots.size() >= 4;
+  const auto enough_bots_for_idlers = available_robots.size() >= 5;
   if (enough_bots_for_idlers) {
     groups.AddPosition("lane_idler_a", lane_idler_a_.GetAssignmentPoint(world));
     groups.AddPosition("lane_idler_b", lane_idler_b_.GetAssignmentPoint(world));

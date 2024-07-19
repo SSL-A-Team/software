@@ -124,7 +124,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   groups.AddPosition("kicker", pass_.getKickerAssignmentPoint(world), disallowed_kickers);
   groups.AddPosition("receiver", pass_.getReceiverAssignmentPoint());
 
-  const auto enough_bots_for_defense = current_available_robots.size() >= 3;
+  const auto enough_bots_for_defense = current_available_robots.size() >= 4;
   if (enough_bots_for_defense) {
     groups.AddGroup("defenders", defense_.getAssignmentPoints(world));
   }
