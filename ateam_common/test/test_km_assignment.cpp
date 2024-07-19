@@ -218,3 +218,90 @@ TEST(KmAssignment, all_forbidden_assignments) {
   EXPECT_EQ(out_row.at(1), 0);
   EXPECT_EQ(out_row.at(2), 2);
 }
+
+TEST(KmAssignment, two_priority_groups) {
+  Eigen::Matrix<double, 4, 4> cost4x4{
+    {13, 12, 7, 1},
+    {11, 8, 3, 16},
+    {1, 4, 9, 16},
+    {1, 2, 10, 3}
+  };
+  std::map<int, int> priorities;
+  std::map<int, std::vector<int>> forbidden;
+  priorities[0] = 0;
+  priorities[1] = 1;
+  priorities[2] = 0;
+  priorities[3] = 1;
+
+  auto assigned = km_assignment::assignment_with_priorities(
+    cost4x4,
+    km_assignment::AssignmentType::MaxCost,
+    forbidden,
+    priorities
+  );
+  EXPECT_EQ(assigned.size(), 4);
+  // Top priorities
+  EXPECT_EQ(assigned.at(0), 0);
+  EXPECT_EQ(assigned.at(2), 3);
+  // 2nd priority
+  EXPECT_EQ(assigned.at(1), 1);
+  EXPECT_EQ(assigned.at(3), 2);
+}
+
+TEST(KmAssignment, three_priority_groups) {
+  Eigen::Matrix<double, 4, 4> cost4x4{
+    {13, 12, 7, 1},
+    {11, 8, 3, 16},
+    {1, 4, 9, 16},
+    {1, 2, 10, 16}
+  };
+
+  std::map<int, int> priorities;
+  std::map<int, std::vector<int>> forbidden;
+  priorities[0] = 0;
+  priorities[1] = 1;
+  priorities[2] = 0;
+  priorities[3] = 2;
+
+  auto assigned = km_assignment::assignment_with_priorities(
+    cost4x4,
+    km_assignment::AssignmentType::MaxCost,
+    forbidden,
+    priorities
+  );
+
+  EXPECT_EQ(assigned.size(), 4);
+  EXPECT_EQ(assigned.at(0), 0);
+  EXPECT_EQ(assigned.at(2), 3);
+  EXPECT_EQ(assigned.at(1), 1);
+  EXPECT_EQ(assigned.at(3), 2);
+}
+
+TEST(KmAssignment, four_priority_groups) {
+  Eigen::Matrix<double, 4, 4> cost4x4{
+    {1, 2, 3, 4},
+    {1, 2, 3, 4},
+    {1, 2, 3, 4},
+    {1, 2, 3, 4},
+  };
+
+  std::map<int, int> priorities;
+  std::map<int, std::vector<int>> forbidden;
+  priorities[0] = 0;
+  priorities[1] = 1;
+  priorities[2] = 2;
+  priorities[3] = 3;
+
+  auto assigned = km_assignment::assignment_with_priorities(
+    cost4x4,
+    km_assignment::AssignmentType::MaxCost,
+    forbidden,
+    priorities
+  );
+
+  EXPECT_EQ(assigned.size(), 4);
+  EXPECT_EQ(assigned.at(0), 3);
+  EXPECT_EQ(assigned.at(1), 2);
+  EXPECT_EQ(assigned.at(2), 1);
+  EXPECT_EQ(assigned.at(3), 0);
+}

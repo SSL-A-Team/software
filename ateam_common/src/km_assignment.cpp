@@ -149,7 +149,9 @@ std::vector<int> assignment_with_priorities(
 )
 {
   std::vector<int> final_assignments;
-  final_assignments.reserve(static_cast<int>(cost_matrix.rows()));
+  for (size_t i = 0; i < cost_matrix.rows(); ++i) {
+    final_assignments.push_back(-1);
+  }
   // Do assignment for each of the priority levels
   auto priority_groups = std::map<int, std::vector<int>>();
 
@@ -159,14 +161,14 @@ std::vector<int> assignment_with_priorities(
   // We assume lower value == higher priority
   for (auto const & [priority, group] : priority_groups) {
     std::map<int, std::vector<int>> group_forbidden_assignments;
-    Eigen::MatrixXd group_costs = Eigen::MatrixXd::Constant(group.size(), group.size(), 0);
+    Eigen::MatrixXd group_costs = Eigen::MatrixXd::Constant(group.size(), cost_matrix.rows(), 0);
     // Group index to full index
     auto group_idx_to_full_idx = std::map<int, int>();
 
     for (size_t i = 0; i < group.size(); ++i) {
       auto robot_id = group[i];
-      if (forbidden_assignments.contains(robot_id)) {
-        group_forbidden_assignments[robot_id] = forbidden_assignments[robot_id];
+      if (forbidden_assignments.find(robot_id) != forbidden_assignments.end()) {
+        group_forbidden_assignments[i] = forbidden_assignments[robot_id];
       }
       group_costs.row(i) = cost_matrix.row(robot_id);
       group_idx_to_full_idx[i] = robot_id;
@@ -177,6 +179,21 @@ std::vector<int> assignment_with_priorities(
 
     for (size_t i = 0; i < group.size(); ++i) {
       final_assignments[group_idx_to_full_idx[i]] = group_assignments[i];
+    }
+    // Add already assigned values to forbidden for all other groups
+    for (auto const & [other_priority, other_group] : priority_groups) {
+      if (group < other_group) {
+        std::vector<int> new_forbidden;
+        for (auto assignment : group_assignments) {
+          new_forbidden.push_back(assignment);
+        }
+        for (auto robot : other_group) {
+          forbidden_assignments[robot].insert(
+            forbidden_assignments[robot].end(),
+            new_forbidden.begin(),
+            new_forbidden.end());
+        }
+      }
     }
   }
 
