@@ -26,6 +26,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <ateam_geometry/ateam_geometry.hpp>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
@@ -68,6 +69,15 @@ ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot)
       tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
     robot_state_msg.twist.angular.z = obj.omega;
     robot_state_msg.accel.angular.z = obj.alpha;
+
+    ateam_geometry::Vector velocity(robot_state_msg.twist.linear.x, robot_state_msg.twist.linear.y);
+    CGAL::Aff_transformation_2<ateam_geometry::Kernel> transformation(CGAL::ROTATION,
+      std::sin(-obj.theta), std::cos(-obj.theta));
+    const auto velocity_trans = velocity.transform(transformation);
+    robot_state_msg.twist_body.linear.x = velocity_trans.x();
+    robot_state_msg.twist_body.linear.y = velocity_trans.y();
+    robot_state_msg.twist_body.angular.z = robot_state_msg.twist.angular.z;
+
   }
 
   return robot_state_msg;

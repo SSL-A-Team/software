@@ -20,6 +20,7 @@
 
 #include "pass_receiver.hpp"
 #include "play_helpers/available_robots.hpp"
+#include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::skills
 {
@@ -53,12 +54,12 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runFrame(const World & world, 
 
 bool PassReceiver::isBallFast(const World & world)
 {
-  return ateam_geometry::norm(world.ball.vel) > 0.2;
+  return ateam_geometry::norm(world.ball.vel) > 0.1;
 }
 
 bool PassReceiver::isBallClose(const World & world, const Robot & robot)
 {
-  return ateam_geometry::norm(world.ball.pos - robot.pos) < 0.13;
+  return ateam_geometry::norm(world.ball.pos - robot.pos) < kRobotRadius + kBallRadius + .05;
 }
 
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(
@@ -104,7 +105,7 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
   const auto dist_to_ball = ateam_geometry::norm(robot.pos - world.ball.pos);
   if (dist_to_ball < 0.5) {
     ateam_geometry::Vector robot_vel(motion_command.twist.linear.x, motion_command.twist.linear.y);
-    robot_vel += ateam_geometry::normalize(world.ball.vel) * 0.35;
+    robot_vel += ateam_geometry::normalize(world.ball.vel) * 0.6;
     motion_command.twist.linear.x = robot_vel.x();
     motion_command.twist.linear.y = robot_vel.y();
   }

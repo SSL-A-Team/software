@@ -134,7 +134,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     auto vel_vector = ateam_geometry::Vector(x_command, y_command);
 
     // clamp to max velocity
-    double min_vel = 0.3;
+    double min_vel = 0.35;
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
     } else if (ateam_geometry::norm(vel_vector) < min_vel) {
@@ -171,6 +171,17 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   if (this->angle_mode != AngleMode::no_face) {
     double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
     double t_command = this->t_controller.computeCommand(t_error, dt_nano);
+
+    if (trajectory_complete) {
+      double theta_min = 0.35;
+      if (abs(t_command) < theta_min) {
+        if (t_command > 0) {
+          t_command = std::clamp(t_command, theta_min, this->t_max);
+        } else {
+          t_command = std::clamp(t_command, -theta_min, -this->t_max);
+        }
+      }
+    }
     motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
   }
 
@@ -183,9 +194,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   // TODO(anon): handle pid gains better
-  this->x_controller.initPid(2.8, 0.0, 0.0, 0.3, -0.3, true);
-  this->y_controller.initPid(2.8, 0.0, 0.0, 0.15, -0.15, true);
-  this->t_controller.initPid(4.0, 0.0, 0.0, 0.5, -0.5, true);
+  this->x_controller.initPid(2.8, 0.0, 0.0002, 0.3, -0.3, true);
+  this->y_controller.initPid(2.8, 0.0, 0.0002, 0.15, -0.15, true);
+  this->t_controller.initPid(2.5, 0.0, 0.0, 0.5, -0.5, true);
 
   this->progress = 0;
   this->total_dist = 0;

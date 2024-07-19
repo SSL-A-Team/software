@@ -57,7 +57,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const
 
 void Capture::chooseState(const World & world, const Robot & robot)
 {
-  if (ateam_geometry::norm(world.ball.pos - robot.pos) < 0.4) {
+  if (ateam_geometry::norm(world.ball.pos - robot.pos) < 0.7) {
     state_ = State::Capture;
   } else {
     state_ = State::MoveToBall;

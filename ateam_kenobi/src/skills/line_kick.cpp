@@ -83,7 +83,7 @@ void LineKick::ChooseState(const World & world, const Robot & robot)
       }
       break;
     case State::FaceBall:
-      if (!IsRobotBehindBall(world, robot, 3.0)) {
+      if (!IsRobotBehindBall(world, robot, 3.5)) {
         state_ = State::MoveBehindBall;
       } else if (IsRobotFacingBall(robot) && IsAllowedToKick()) {
         state_ = State::KickBall;
@@ -92,7 +92,7 @@ void LineKick::ChooseState(const World & world, const Robot & robot)
     case State::KickBall:
       if (!IsAllowedToKick()) {
         state_ = State::FaceBall;
-      } else if (!IsRobotBehindBall(world, robot, 3.0)) {
+      } else if (!IsRobotBehindBall(world, robot, 3.5)) {
         state_ = State::MoveBehindBall;
       } else if (IsBallMoving(world)) {
         state_ = State::Done;
@@ -150,7 +150,7 @@ bool LineKick::IsRobotFacingBall(const Robot & robot)
   return std::abs(
     angles::shortest_angular_distance(
       robot.theta,
-      robot_to_target_angle)) < 0.1;
+      robot_to_target_angle)) < 0.05;
 }
 
 bool LineKick::IsBallMoving(const World & world)
@@ -169,6 +169,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.footprint_inflation = 0.04;
+
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(GetPreKickPosition(world));
   return easy_move_to_.runFrame(robot, world);
@@ -195,7 +196,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, c
   auto command = easy_move_to_.runFrame(robot, world);
 
   // Override the velocity to move directly into the ball
-  double velocity = 0.4;
+  double velocity = 0.5;
   command.twist.linear.x = std::cos(robot.theta) * velocity;
   command.twist.linear.y = std::sin(robot.theta) * velocity;
   command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
