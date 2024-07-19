@@ -35,7 +35,6 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
   lane_idler_a_(createChild<skills::LaneIdler>("lane_idler_a")),
   lane_idler_b_(createChild<skills::LaneIdler>("lane_idler_b"))
 {
-  setEnabled(false);  // TODO(barulicm) remove when ready
 }
 
 stp::PlayScore KickOnGoalPlay::getScore(const World & world)

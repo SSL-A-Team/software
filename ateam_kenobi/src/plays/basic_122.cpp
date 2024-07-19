@@ -38,6 +38,7 @@ Basic122::Basic122(stp::Options stp_options)
   blockers_skill_(createChild<tactics::Blockers>("blockers")),
   defense_(createChild<tactics::StandardDefense>("defense"))
 {
+  setEnabled(false);
 }
 
 stp::PlayScore Basic122::getScore(const World & world)
