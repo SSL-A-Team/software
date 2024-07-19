@@ -56,13 +56,13 @@ PathPlanner::Path PathPlanner::getPath(
     augmented_obstacles.push_back(ateam_geometry::makeDisk(world.ball.pos, kBallRadius));
   }
 
-  if (!IsPointInBounds(start, world)) {
+  if (!IsPointInBounds(start, world, false)) {
     return {};
   }
 
   if (options.ignore_start_obstacle) {
     removeCollidingObstacles(augmented_obstacles, start, options);
-  } else if (!isStateValid(start, world, augmented_obstacles, options)) {
+  } else if (!isStateValid(start, world, augmented_obstacles, options, false)) {
     return {};
   }
 
@@ -138,9 +138,9 @@ bool PathPlanner::isStateValid(
   const ateam_geometry::Point & state,
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
-  const PlannerOptions & options)
+  const PlannerOptions & options, const bool offset_field_bounds)
 {
-  if (!IsPointInBounds(state, world)) {
+  if (!IsPointInBounds(state, world, offset_field_bounds)) {
     return false;
   }
 
