@@ -46,7 +46,9 @@ public:
 
   void SetTargetPoint(ateam_geometry::Point point)
   {
-    target_point_ = point;
+    if (state_ != State::KickBall && state_ != State::FaceBall) {
+      target_point_ = point;
+    }
   }
 
   ateam_geometry::Point GetAssignmentPoint(const World & world);
@@ -69,7 +71,7 @@ public:
   }
 
 private:
-  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.08;
+  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.06;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 

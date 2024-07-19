@@ -184,7 +184,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, con
     (kRobotRadius * ateam_geometry::normalize(robot_to_target)));
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.dribbler_speed = 300;
+  command.dribbler_speed = 600;
 
   return command;
 }
