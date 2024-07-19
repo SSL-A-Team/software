@@ -90,7 +90,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
 
 std::vector<ateam_geometry::Point> TheirFreeKickPlay::getBlockerPoints(const World & world)
 {
-  const auto arc_radius = 0.75;
+  const auto arc_radius = 1.0;
+  getOverlays().drawCircle("target", ateam_geometry::makeCircle(world.ball.pos, arc_radius), "blue", "transparent");
   const auto inter_robot_angle = angles::from_degrees(30);
   const auto our_goal_center = ateam_geometry::Point{-world.field.field_length / 2.0, 0.0};
   const auto ball_goal_vec = our_goal_center - world.ball.pos;
@@ -109,8 +110,9 @@ void TheirFreeKickPlay::runBlockers(
   const std::vector<ateam_geometry::Point> & points,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
 {
-  // See rules section 5.3.3 for Free Kick rules
-  const auto keepout_obstacle = ateam_geometry::makeDisk(world.ball.pos, 0.5);
+  // See rules section 5.3.3 for Free Kick rules, with extra
+  const auto keepout_obstacle = ateam_geometry::makeDisk(world.ball.pos, 0.7);
+  getOverlays().drawCircle("keepout", keepout_obstacle, "red", "transparent");
   std::vector<ateam_geometry::AnyShape> obstacles = {keepout_obstacle};
   for (auto i = 0ul; i < std::min(robots.size(), points.size()); ++i) {
     const auto & robot = robots[i];

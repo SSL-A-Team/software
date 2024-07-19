@@ -139,7 +139,7 @@ bool LineKick::IsRobotSettled(const World & world, const Robot & robot)
   const auto robot_vel_perp = robot.vel - robot_vel_proj;
   const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
 
-  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.35;
+  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.2;
   return robot_vel_is_good;
 }
 
@@ -230,7 +230,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, c
   auto command = easy_move_to_.runFrame(robot, world);
 
   // Override the velocity to move directly into the ball
-  double velocity = 0.5;
+  double velocity = 0.35;
   command.twist.linear.x = std::cos(robot.theta) * velocity;
   command.twist.linear.y = std::sin(robot.theta) * velocity;
   command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;

@@ -46,7 +46,7 @@ public:
 
 private:
   static constexpr double kKeepoutRadiusRules = 0.5;
-  static constexpr double kKeepoutRadius = kKeepoutRadiusRules + kRobotRadius;
+  static constexpr double kKeepoutRadius = kKeepoutRadiusRules + kRobotRadius + 0.2;
 
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   int prev_assigned_id_ = -1;
