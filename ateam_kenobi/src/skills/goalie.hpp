@@ -71,6 +71,8 @@ private:
    * @return ateam_msgs::msg::RobotMotionCommand
    */
   ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie);
+
+  std::vector<ateam_geometry::AnyShape> getCustomObstacles(const World & world);
 };
 
 }  // namespace ateam_kenobi::skills

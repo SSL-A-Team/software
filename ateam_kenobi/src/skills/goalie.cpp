@@ -129,7 +129,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runDefaultBehavior(
       goalie_line,
       world.ball.pos));
   easy_move_to_.face_absolute(M_PI_2);
-  return easy_move_to_.runFrame(goalie, world);
+  return easy_move_to_.runFrame(goalie, world, getCustomObstacles(world));
 }
 
 ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, const Robot & goalie)
@@ -185,7 +185,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, co
       shot_point_on_extended_goalie_line));
   easy_move_to_.face_absolute(M_PI_2);
 
-  return easy_move_to_.runFrame(goalie, world);
+  return easy_move_to_.runFrame(goalie, world, getCustomObstacles(world));
 }
 
 ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(const World & world, const Robot & goalie)
@@ -215,7 +215,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(const World & world, co
   easy_move_to_.setTargetPosition(target_point);
   easy_move_to_.face_absolute(M_PI_2);
 
-  return easy_move_to_.runFrame(goalie, world);
+  return easy_move_to_.runFrame(goalie, world, getCustomObstacles(world));
 }
 
 ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, const Robot & goalie)
@@ -253,6 +253,31 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
   kick_.SetTargetPoint(target_point);
 
   return kick_.RunFrame(world, goalie);
+}
+
+
+std::vector<ateam_geometry::AnyShape> Goalie::getCustomObstacles(const World & world)
+{
+  std::vector<ateam_geometry::AnyShape> obstacles;
+
+  const auto half_field_length = world.field.field_length / 2.0;
+  const auto half_goal_width = world.field.goal_width / 2.0;
+  const auto goal_thickness = 0.1;  // arbitrarily large
+
+  obstacles.push_back(
+    ateam_geometry::Rectangle{
+      ateam_geometry::Point{-half_field_length, -half_goal_width},
+      ateam_geometry::Point{-(half_field_length + world.field.goal_depth),
+        -(half_goal_width + goal_thickness)}
+    });
+
+  obstacles.push_back(
+    ateam_geometry::Rectangle{
+      ateam_geometry::Point{-half_field_length, half_goal_width},
+      ateam_geometry::Point{-(half_field_length + world.field.goal_depth), half_goal_width + goal_thickness}
+    });
+
+  return obstacles;
 }
 
 }  // namespace ateam_kenobi::skills
