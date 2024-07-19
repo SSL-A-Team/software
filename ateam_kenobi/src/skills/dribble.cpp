@@ -36,6 +36,7 @@ Dribble::Dribble(stp::Options stp_options)
 void Dribble::reset()
 {
   done_ = false;
+  ball_detected_filter_ = 0;
   easy_move_to_.reset();
 }
 
@@ -75,7 +76,7 @@ void Dribble::chooseState(const World & world, const Robot & robot)
       break;
     case State::Dribble:
       // Can eventually replace this with breakbeam
-      if (!robotHasBall(world, robot)) {
+      if (!isRobotBehindBall(world, robot, 3.0) && !robotHasBall(robot)) {
         state_ = State::MoveBehindBall;
       }
       break;
@@ -117,24 +118,25 @@ bool Dribble::isRobotSettled(const World & world, const Robot & robot)
   const auto robot_vel_perp = robot.vel - robot_vel_proj;
   const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
 
-  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.2;
+  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.35;
   return robot_vel_is_good;
 }
 
-bool Dribble::robotHasBall(const World & world, const Robot & robot)
+bool Dribble::robotHasBall(const Robot & robot)
 {
-  const auto robot_to_target = target_ - robot.pos;
-  const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
+  if (robot.breakbeam_ball_detected) {
+    ball_detected_filter_ += 1;
+    if (ball_detected_filter_ >= 8) {
+      return true;
+    }
+  } else {
+    ball_detected_filter_ -= 2;
+    if (ball_detected_filter_ < 0) {
+      ball_detected_filter_ = 0;
+    }
+  }
 
-  const auto robot_to_ball = world.ball.pos - robot.pos;
-
-  const bool robot_touching_ball = ateam_geometry::norm(robot_to_ball) < kRobotRadius + 0.08;
-  const bool mouth_facing_ball = std::abs(
-    angles::shortest_angular_distance(
-      robot.theta,
-      robot_to_target_angle)) < 0.2;
-
-  return robot_touching_ball && mouth_facing_ball;
+  return false;
 }
 
 ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
@@ -152,7 +154,12 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(getStartPosition(world));
   easy_move_to_.setMaxVelocity(1.5);
-  return easy_move_to_.runFrame(robot, world);
+
+  auto command = easy_move_to_.runFrame(robot, world);
+  if (ateam_geometry::norm(robot.pos - world.ball.pos) < 0.5) {
+      command.dribbler_speed = 300;
+  }
+  return command;
 }
 
 ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, const Robot & robot)
@@ -167,7 +174,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, con
   planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
 
-  easy_move_to_.setMaxVelocity(0.3);
+  easy_move_to_.setMaxVelocity(0.5);
   easy_move_to_.face_point(target_);
 
   // Offset the robot position so the ball is on the target point
@@ -177,7 +184,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, con
     (kRobotRadius * ateam_geometry::normalize(robot_to_target)));
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.dribbler_speed = 50;
+  command.dribbler_speed = 300;
 
   return command;
 }
