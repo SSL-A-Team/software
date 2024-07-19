@@ -53,13 +53,28 @@ void Pass::runFrame(
   ateam_msgs::msg::RobotMotionCommand & kicker_command,
   ateam_msgs::msg::RobotMotionCommand & receiver_command)
 {
+  if (ateam_geometry::norm(world.ball.vel) < 0.01) {
+    receiver_.setTarget(target_);
+    kick_.SetTargetPoint(target_);
+  }
+
   receiver_command = receiver_.runFrame(world, receiver_bot);
 
-  if (kick_.IsDone() && !receiver_.isDone() && ateam_geometry::norm(world.ball.vel) < 0.01) {
+  const bool is_stalled = kick_.IsDone() && !receiver_.isDone() && ateam_geometry::norm(
+    world.ball.vel) < 0.01;
+
+  const bool is_in_receiver_territory =
+    std::sqrt(CGAL::squared_distance(world.ball.pos, receiver_bot.pos)) < 1.0;
+
+  if (is_stalled && !is_in_receiver_territory) {
     kick_.Reset();
   }
 
-  if (ateam_geometry::norm(receiver_bot.pos, target_) <= kReceiverPositionThreshold) {
+  auto receiver_threshold = kReceiverPositionThreshold;
+  if(std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) > 3.0) {
+    receiver_threshold = 5.0;
+  }
+  if (ateam_geometry::norm(receiver_bot.pos, target_) <= receiver_threshold) {
     kick_.AllowKicking();
   } else {
     kick_.DisallowKicking();
@@ -70,7 +85,9 @@ void Pass::runFrame(
   } else {
     kick_.SetKickSpeed(calculateDefaultKickSpeed(world));
   }
-  kicker_command = kick_.RunFrame(world, kicker_bot);
+  if (!is_in_receiver_territory) {
+    kicker_command = kick_.RunFrame(world, kicker_bot);
+  }
 }
 
 bool Pass::isDone()

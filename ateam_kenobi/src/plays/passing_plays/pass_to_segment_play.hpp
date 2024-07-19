@@ -63,6 +63,7 @@ private:
   tactics::StandardDefense defense_tactic_;
   tactics::PassToSegment pass_tactic_;
   skills::LaneIdler idler_skill_;
+  ateam_geometry::Segment cached_target_;
   bool started_ = false;
 
   play_helpers::lanes::Lane getIdleLane(
