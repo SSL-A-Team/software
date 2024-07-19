@@ -37,6 +37,12 @@ std::vector<ateam_geometry::AnyShape> GetDefaultObstacles(const World & world)
 
 void AddDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles)
 {
+  if (world.referee_info.running_command == ateam_common::GameCommand::BallPlacementOurs ||
+    world.referee_info.running_command == ateam_common::GameCommand::BallPlacementTheirs)
+  {
+    return;
+  }
+
   const auto half_field_length = world.field.field_length / 2.0;
   const auto half_defense_area_width = world.field.defense_area_width / 2.0;
   const auto back_x = half_field_length + ( 2 * world.field.boundary_width) +

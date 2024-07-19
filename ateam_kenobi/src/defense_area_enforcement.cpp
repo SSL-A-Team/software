@@ -29,6 +29,9 @@ void EnforceDefenseAreaKeepout(
   const World & world,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
 {
+  if (IsDefenseAreaNavigationAllowed(world.referee_info.running_command)) {
+    return;
+  }
   for (auto robot_id = 0ul; robot_id < motion_commands.size(); ++robot_id) {
     if (robot_id == static_cast<std::size_t>(world.referee_info.our_goalie_id)) {
       continue;
@@ -98,6 +101,13 @@ bool IsRobotEscapingDefenseArea(
   const auto area_center = CGAL::midpoint(defense_area.min(), defense_area.max());
 
   return CGAL::compare_distance_to_point(area_center, position, new_position) == CGAL::SMALLER;
+}
+
+
+bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command)
+{
+  return command == ateam_common::GameCommand::BallPlacementOurs ||
+         command == ateam_common::GameCommand::BallPlacementTheirs;
 }
 
 }  // namespace ateam_kenobi::defense_area_enforcement
