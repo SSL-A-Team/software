@@ -43,6 +43,7 @@ add_library(kenobi_node_component SHARED
   src/plays/their_penalty_play.cpp
   src/plays/controls_test_play.cpp
   src/plays/defense_play.cpp
+  src/plays/extract_play.cpp
   src/plays/triangle_pass_play.cpp
   src/plays/waypoints_play.cpp
   src/plays/spinning_a_play.cpp
@@ -63,6 +64,7 @@ add_library(kenobi_node_component SHARED
   src/skills/pass_receiver.cpp
   src/skills/pivot_kick.cpp
   src/skills/dribble.cpp
+  src/skills/extract.cpp
   src/skills/capture.cpp
   src/tactics/blockers.cpp
   src/tactics/defenders.cpp
