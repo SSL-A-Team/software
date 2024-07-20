@@ -31,6 +31,7 @@ LineKick::LineKick(stp::Options stp_options, KickSkill::WaitType wait_type)
 : KickSkill(stp_options, wait_type),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
+  this->cowabunga = false;
 }
 
 ateam_geometry::Point LineKick::GetAssignmentPoint(const World & world)
@@ -122,7 +123,8 @@ bool LineKick::IsRobotBehindBall(const World & world, const Robot & robot, doubl
 
   const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis &&
     robot_proj_dist_to_ball < 0.22;
-  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.007 * hysteresis;
+  const auto perp_dist_is_good = robot_perp_dist_to_ball <
+    robot_perp_dist_to_ball_threshold * hysteresis;
 
   return proj_dist_is_good && perp_dist_is_good;
 }
@@ -150,7 +152,7 @@ bool LineKick::IsRobotFacingBall(const Robot & robot)
   return std::abs(
     angles::shortest_angular_distance(
       robot.theta,
-      robot_to_target_angle)) < 0.05;
+      robot_to_target_angle)) < angle_threshold;
 }
 
 bool LineKick::IsBallMoving(const World & world)
@@ -204,16 +206,51 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
       kBallRadius
   ));
 
+  easy_move_to_.setMaxVelocity(move_to_ball_velocity);
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(GetPreKickPosition(world));
-  return easy_move_to_.runFrame(robot, world, obstacles);
+
+  auto command = easy_move_to_.runFrame(robot, world, obstacles);
+
+  // Cowabunga it is
+  if (this->cowabunga) {
+    // We are stuck due to a path planner failure or something
+    if (command.twist.linear.x == 0 && command.twist.linear.y == 0 &&
+      command.twist.angular.z == 0)
+    {
+
+      // We are lined up enough to try to kick
+      if (IsRobotBehindBall(world, robot, 3.5)) {
+        state_ = State::KickBall;
+      }
+      // We are at least sort of already lined up behind the ball
+      // try to scoot around/along the obstacle
+      else if (IsRobotBehindBall(world, robot, 4.5)) {
+
+        planner_options.footprint_inflation = -0.1;
+        planner_options.draw_obstacles = false;
+
+        easy_move_to_.setMaxVelocity(0.5);
+        easy_move_to_.setPlannerOptions(planner_options);
+
+        // Hope you don't have any i term in the controller :/
+        command = easy_move_to_.runFrame(robot, world);
+      }
+    }
+  }
+
+  return command;
 }
 
 ateam_msgs::msg::RobotMotionCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
 {
   easy_move_to_.setTargetPosition(robot.pos);
   easy_move_to_.face_point(target_point_);
-  return easy_move_to_.runFrame(robot, world);
+
+  auto command = easy_move_to_.runFrame(robot, world);
+  command.twist.linear.x = 0;
+  command.twist.linear.y = 0;
+  return command;
 }
 
 ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, const Robot & robot)
@@ -230,9 +267,8 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, c
   auto command = easy_move_to_.runFrame(robot, world);
 
   // Override the velocity to move directly into the ball
-  double velocity = 0.35;
-  command.twist.linear.x = std::cos(robot.theta) * velocity;
-  command.twist.linear.y = std::sin(robot.theta) * velocity;
+  command.twist.linear.x = std::cos(robot.theta) * kick_drive_velocity;
+  command.twist.linear.y = std::sin(robot.theta) * kick_drive_velocity;
   command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
   command.kick_speed = GetKickSpeed();
 
