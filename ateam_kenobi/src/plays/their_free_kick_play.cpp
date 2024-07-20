@@ -92,7 +92,7 @@ std::vector<ateam_geometry::Point> TheirFreeKickPlay::getBlockerPoints(const Wor
 {
   const auto arc_radius = 1.0;
   getOverlays().drawCircle("target", ateam_geometry::makeCircle(world.ball.pos, arc_radius), "blue", "transparent");
-  const auto inter_robot_angle = angles::from_degrees(30);
+  const auto inter_robot_angle = angles::from_degrees(15);
   const auto our_goal_center = ateam_geometry::Point{-world.field.field_length / 2.0, 0.0};
   const auto ball_goal_vec = our_goal_center - world.ball.pos;
   const auto offset_vec = ateam_geometry::normalize(ball_goal_vec) * arc_radius;

@@ -27,13 +27,15 @@ namespace ateam_kenobi::skills
 
 PassReceiver::PassReceiver(stp::Options stp_options)
 : stp::Skill(stp_options),
-  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
+  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo")),
+  capture_(createChild<skills::Capture>("capture"))
 {}
 
 void PassReceiver::reset()
 {
   done_ = false;
   easy_move_to_.reset();
+  capture_.Reset();
 }
 
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runFrame(const World & world, const Robot & robot)
@@ -47,6 +49,8 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runFrame(const World & world, 
   } else if (isBallClose(world, robot)) {
     done_ = true;
     return runPostPass();
+  } else if (isBallStalledAndReachable(world, robot)) {
+    return capture_.runFrame(world, robot);
   } else {
     return runPrePass(world, robot);
   }
@@ -59,7 +63,15 @@ bool PassReceiver::isBallFast(const World & world)
 
 bool PassReceiver::isBallClose(const World & world, const Robot & robot)
 {
-  return ateam_geometry::norm(world.ball.pos - robot.pos) < kRobotRadius + kBallRadius + .05;
+  const auto ball_close_to_bot = ateam_geometry::norm(world.ball.pos - robot.pos) < (kRobotRadius + kBallRadius + .05);
+  const auto bot_close_to_target = ateam_geometry::norm(robot.pos - target_) < 1.0;
+  return ball_close_to_bot && bot_close_to_target;
+}
+
+bool PassReceiver::isBallStalledAndReachable(const World & world, const Robot & robot)
+{
+  return ateam_geometry::norm(world.ball.vel) < 0.01 &&
+         std::sqrt(CGAL::squared_distance(world.ball.pos, robot.pos)) < 1.0;
 }
 
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(

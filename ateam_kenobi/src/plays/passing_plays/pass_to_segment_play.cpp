@@ -92,6 +92,7 @@ void PassToSegmentPlay::reset()
   pass_tactic_.reset();
   idler_skill_.Reset();
   started_ = false;
+  cached_target_ = ateam_geometry::Segment{};
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegmentPlay::runFrame(
@@ -99,20 +100,33 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
-  const auto target = target_func_(world);
+  ateam_geometry::Segment target = cached_target_;
+
+  if (!started_) {
+    target = target_func_(world);
+    cached_target_ = target;
+  }
 
   getOverlays().drawLine("target", {target.source(), target.target()}, "grey");
-  getOverlays().drawRectangle("left_lane", play_helpers::lanes::GetLaneBounds(world, play_helpers::lanes::Lane::Left), "aqua", "transparent");
-  getOverlays().drawRectangle("center_lane", play_helpers::lanes::GetLaneBounds(world, play_helpers::lanes::Lane::Center), "aqua", "transparent");
-  getOverlays().drawRectangle("right_lane", play_helpers::lanes::GetLaneBounds(world, play_helpers::lanes::Lane::Right), "aqua", "transparent");
+  getOverlays().drawRectangle(
+    "left_lane",
+    play_helpers::lanes::GetLaneBounds(
+      world,
+      play_helpers::lanes::Lane::Left), "aqua", "transparent");
+  getOverlays().drawRectangle(
+    "center_lane",
+    play_helpers::lanes::GetLaneBounds(
+      world,
+      play_helpers::lanes::Lane::Center), "aqua", "transparent");
+  getOverlays().drawRectangle(
+    "right_lane",
+    play_helpers::lanes::GetLaneBounds(
+      world,
+      play_helpers::lanes::Lane::Right), "aqua", "transparent");
 
   pass_tactic_.setTarget(target);
 
   idler_skill_.SetLane(getIdleLane(world, target));
-
-  if (pass_tactic_.isDone()) {
-    pass_tactic_.reset();
-  }
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
