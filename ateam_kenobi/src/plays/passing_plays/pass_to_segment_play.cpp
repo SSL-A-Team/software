@@ -133,8 +133,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
 
   play_helpers::GroupAssignmentSet groups;
 
-
-  groups.AddPosition("kicker", pass_tactic_.getKickerAssignmentPoint(world));
+  std::vector<int> disallowed_strikers;
+  if (world.double_touch_forbidden_id_) {
+    disallowed_strikers.push_back(*world.double_touch_forbidden_id_);
+  }
+  groups.AddPosition("kicker", pass_tactic_.getKickerAssignmentPoint(world), disallowed_strikers);
   groups.AddPosition("receiver", pass_tactic_.getReceiverAssignmentPoint(world));
   const auto enough_bots_for_defense = available_robots.size() >= 4;
   if (enough_bots_for_defense) {
@@ -164,6 +167,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
     if (CGAL::squared_distance(world.ball.pos, maybe_kicker->pos) < 0.5) {
       started_ = true;
     }
+
+    getPlayInfo()["kicker"] = maybe_kicker->id;
+    getPlayInfo()["receiver"] = maybe_receiver->id;
 
     pass_tactic_.runFrame(world, *maybe_kicker, *maybe_receiver, kicker_command, receiver_command);
   }

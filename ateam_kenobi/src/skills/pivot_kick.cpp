@@ -114,7 +114,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 
   command.twist.linear.x = std::sin(robot.theta) * velocity;
   command.twist.linear.y = -std::cos(robot.theta) * velocity;
-  command.dribbler_speed = 200;
+  command.dribbler_speed = 300;
   return command;
 }
 
@@ -128,7 +128,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::KickBall(const World & world, con
   planner_options.use_default_obstacles = false;
   easy_move_to_.setPlannerOptions(planner_options);
   auto command = easy_move_to_.runFrame(robot, world);
-  command.dribbler_speed = 600;
+  command.dribbler_speed = 300;
 
   if (IsAllowedToKick()) {
     command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;

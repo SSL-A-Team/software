@@ -115,7 +115,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
       break;
     case State::Placing:
       // Ball must be placed in a 0.15m radius
-      if (ball_dist < 0.05 && ball_speed < 0.1) {
+      if (ball_dist < 0.13 && ball_speed < 0.08) {
         state_ = State::Done;
 
         // Can try to pass if the ball is far away and we have enough robots
@@ -241,6 +241,8 @@ void OurBallPlacementPlay::runPlacing(
 
   dribble_.setTarget(placement_point);
   motion_commands[place_robot.id] = dribble_.runFrame(world, place_robot);
+  getPlayInfo()["Dribbler"] = dribble_.getPlayInfo();
+
 }
 
 void OurBallPlacementPlay::runDone(

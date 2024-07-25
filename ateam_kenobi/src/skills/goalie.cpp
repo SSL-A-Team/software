@@ -120,9 +120,13 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runDefaultBehavior(
   const World & world,
   const Robot & goalie)
 {
+  auto goal_line_offset = 0.25;
+  if(world.referee_info.running_command == ateam_common::GameCommand::PreparePenaltyTheirs || (world.referee_info.running_command == ateam_common::GameCommand::NormalStart && world.referee_info.prev_command == ateam_common::GameCommand::PreparePenaltyTheirs)) {
+    goal_line_offset = kRobotRadius - 0.03;
+  }
   const ateam_geometry::Segment goalie_line(
-    ateam_geometry::Point(-(world.field.field_length / 2) + 0.25, world.field.goal_width / 2),
-    ateam_geometry::Point(-(world.field.field_length / 2) + 0.25, -world.field.goal_width / 2));
+    ateam_geometry::Point(-(world.field.field_length / 2) + goal_line_offset, world.field.goal_width / 2),
+    ateam_geometry::Point(-(world.field.field_length / 2) + goal_line_offset, -world.field.goal_width / 2));
 
   easy_move_to_.setTargetPosition(
     ateam_geometry::nearestPointOnSegment(

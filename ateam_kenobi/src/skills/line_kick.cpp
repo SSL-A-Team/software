@@ -84,7 +84,7 @@ void LineKick::ChooseState(const World & world, const Robot & robot)
       }
       break;
     case State::FaceBall:
-      if (!IsRobotBehindBall(world, robot, 3.5)) {
+      if (!IsRobotBehindBall(world, robot, 3.8)) {
         state_ = State::MoveBehindBall;
       } else if (IsRobotFacingBall(robot) && IsAllowedToKick()) {
         state_ = State::KickBall;
@@ -93,7 +93,7 @@ void LineKick::ChooseState(const World & world, const Robot & robot)
     case State::KickBall:
       if (!IsAllowedToKick()) {
         state_ = State::FaceBall;
-      } else if (!IsRobotBehindBall(world, robot, 3.5)) {
+      } else if (!IsRobotBehindBall(world, robot, 3.8)) {
         state_ = State::MoveBehindBall;
       } else if (IsBallMoving(world)) {
         state_ = State::Done;
@@ -125,6 +125,11 @@ bool LineKick::IsRobotBehindBall(const World & world, const Robot & robot, doubl
     robot_proj_dist_to_ball < 0.22;
   const auto perp_dist_is_good = robot_perp_dist_to_ball <
     robot_perp_dist_to_ball_threshold * hysteresis;
+
+  getPlayInfo()["IsRobotBehindBall_Perp"] = robot_perp_dist_to_ball;
+  getPlayInfo()["IsRobotBehindBall_Proj"] = robot_proj_dist_to_ball;
+
+
 
   return proj_dist_is_good && perp_dist_is_good;
 }
@@ -185,7 +190,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
       world.ball.pos + kBallDiameter * ateam_geometry::Vector(
         std::cos(angle / 2),
         std::sin(angle / 2)),
-      kBallRadius
+      kBallRadius * 1.5
   ));
 
   // Left Obstacle
@@ -194,7 +199,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
       world.ball.pos + kBallDiameter * ateam_geometry::Vector(
         std::cos(angle + M_PI / 2),
         std::sin(angle + M_PI / 2)),
-      kBallRadius
+      kBallRadius * 1.5
   ));
 
   // Right Obstacle
@@ -203,7 +208,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
       world.ball.pos + kBallDiameter * ateam_geometry::Vector(
         std::cos(angle - M_PI / 2),
         std::sin(angle - M_PI / 2)),
-      kBallRadius
+      kBallRadius * 1.5
   ));
 
   easy_move_to_.setMaxVelocity(move_to_ball_velocity);
@@ -215,27 +220,44 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   // Cowabunga it is
   if (this->cowabunga) {
     // We are stuck due to a path planner failure or something
-    if (command.twist.linear.x == 0 && command.twist.linear.y == 0 &&
-      command.twist.angular.z == 0)
+    if (command.twist.linear.x == 0 && command.twist.linear.y == 0)
     {
+      getPlayInfo()["Cowabunga Mode"] = "Active";
+
 
       // We are lined up enough to try to kick
       if (IsRobotBehindBall(world, robot, 3.5)) {
+        getPlayInfo()["Cowabunga Mode State"] = "Kick the Ball";
         state_ = State::KickBall;
       }
       // We are at least sort of already lined up behind the ball
       // try to scoot around/along the obstacle
-      else if (IsRobotBehindBall(world, robot, 4.5)) {
+      else if (IsRobotBehindBall(world, robot, 5.0)) {
+        getPlayInfo()["Cowabunga Mode State"] = "Scoot Around";
+
+        // planner_options.avoid_ball = false;
+        // planner_options.footprint_inflation = -0.1;
+        // planner_options.draw_obstacles = false;
+
+        // easy_move_to_.setMaxVelocity(0.5);
+        // easy_move_to_.setPlannerOptions(planner_options);
+
+        // command = easy_move_to_.runFrame(robot, world);
+
+        // Where we're going we don't need plans
+        command.twist.linear.x = std::cos(robot.theta) * 0.5;
+        command.twist.linear.y = std::sin(robot.theta) * 0.5;
+      } else if (ateam_geometry::norm(robot.pos - world.ball.pos) < 1.0) {
+        getPlayInfo()["Cowabunga Mode State"] = "Get Closer";
 
         planner_options.footprint_inflation = -0.1;
-        planner_options.draw_obstacles = false;
-
-        easy_move_to_.setMaxVelocity(0.5);
         easy_move_to_.setPlannerOptions(planner_options);
+        easy_move_to_.setMaxVelocity(1.0);
 
-        // Hope you don't have any i term in the controller :/
         command = easy_move_to_.runFrame(robot, world);
       }
+        getPlayInfo()["dist to ball"] = ateam_geometry::norm(robot.pos - world.ball.pos);
+
     }
   }
 

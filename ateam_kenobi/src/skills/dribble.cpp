@@ -50,8 +50,10 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runFrame(const World & world, const
 
   switch (state_) {
     case State::MoveBehindBall:
+      getPlayInfo()["State"] = "Move Behind Ball";
       return runMoveBehindBall(world, robot);
     case State::Dribble:
+      getPlayInfo()["State"] = "Dribble to Point";
       return runDribble(world, robot);
     default:
       std::cerr << "Unhandled state in dribble!\n";
@@ -76,7 +78,7 @@ void Dribble::chooseState(const World & world, const Robot & robot)
       break;
     case State::Dribble:
       // Can eventually replace this with breakbeam
-      if (!isRobotBehindBall(world, robot, 3.0) && !robotHasBall(robot)) {
+      if (!robotHasBall(robot) && !isRobotBehindBall(world, robot, 3.8)) {
         state_ = State::MoveBehindBall;
       }
       break;
@@ -124,18 +126,24 @@ bool Dribble::isRobotSettled(const World & world, const Robot & robot)
 
 bool Dribble::robotHasBall(const Robot & robot)
 {
+  getPlayInfo()["Filter Value"] = ball_detected_filter_;
   if (robot.breakbeam_ball_detected) {
-    ball_detected_filter_ += 1;
-    if (ball_detected_filter_ >= 8) {
+    ball_detected_filter_ += 3;
+    if (ball_detected_filter_ >= 25) {
+      if (ball_detected_filter_ >= 50) {
+        ball_detected_filter_ = 50  ;
+      }
+      getPlayInfo()["Robot Has Ball"] = "True";
       return true;
     }
   } else {
-    ball_detected_filter_ -= 2;
+    ball_detected_filter_ -= 1;
     if (ball_detected_filter_ < 0) {
       ball_detected_filter_ = 0;
     }
   }
 
+  getPlayInfo()["Robot Has Ball"] = "False";
   return false;
 }
 
@@ -157,7 +165,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
 
   auto command = easy_move_to_.runFrame(robot, world);
   if (ateam_geometry::norm(robot.pos - world.ball.pos) < 0.5) {
-      command.dribbler_speed = 300;
+      command.dribbler_speed = 130;
   }
   return command;
 }
@@ -174,7 +182,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, con
   planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
 
-  easy_move_to_.setMaxVelocity(0.5);
+  easy_move_to_.setMaxVelocity(0.35);
   easy_move_to_.face_point(target_);
 
   // Offset the robot position so the ball is on the target point
@@ -184,7 +192,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, con
     (kRobotRadius * ateam_geometry::normalize(robot_to_target)));
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.dribbler_speed = 600;
+  command.dribbler_speed = 130;
 
   return command;
 }

@@ -77,7 +77,7 @@ ateam_msgs::msg::RobotMotionCommand Extract::RunFrame(const World & world, const
   easy_move_to_.face_point(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
   if(robot.breakbeam_ball_detected) {
-    command.dribbler_speed = 600;
+    command.dribbler_speed = 300;
   }
   return command;
 }

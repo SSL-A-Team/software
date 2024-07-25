@@ -36,10 +36,14 @@ void Pass::reset()
 {
   receiver_.reset();
   kick_.Reset();
+  kicker_id_ = -1;
 }
 
 ateam_geometry::Point Pass::getKickerAssignmentPoint(const World & world)
 {
+  if(kicker_id_ != -1 && world.our_robots[kicker_id_].IsAvailable()) {
+    return world.our_robots[kicker_id_].pos;
+  }
   return kick_.GetAssignmentPoint(world);
 }
 
@@ -53,6 +57,8 @@ void Pass::runFrame(
   ateam_msgs::msg::RobotMotionCommand & kicker_command,
   ateam_msgs::msg::RobotMotionCommand & receiver_command)
 {
+  kicker_id_ = kicker_bot.id;
+
   if (ateam_geometry::norm(world.ball.vel) < 0.01) {
     receiver_.setTarget(target_);
     kick_.SetTargetPoint(target_);
@@ -61,7 +67,7 @@ void Pass::runFrame(
   receiver_command = receiver_.runFrame(world, receiver_bot);
 
   const bool is_stalled = kick_.IsDone() && !receiver_.isDone() && ateam_geometry::norm(
-    world.ball.vel) < 0.01;
+    world.ball.vel) < 0.02;
 
   const bool is_in_receiver_territory =
     std::sqrt(CGAL::squared_distance(world.ball.pos, receiver_bot.pos)) < 1.0;

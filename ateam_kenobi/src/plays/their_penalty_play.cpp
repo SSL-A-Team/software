@@ -65,10 +65,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyP
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
-  if (available_robots.empty()) {
-    return {};
-  }
-
   goalie_skill_.runFrame(world, motion_commands);
 
   auto i = 0;

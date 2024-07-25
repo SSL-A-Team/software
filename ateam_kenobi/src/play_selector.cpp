@@ -173,7 +173,9 @@ stp::Play * PlaySelector::selectRankedPlay(
       if (!play->isEnabled()) {
         return std::make_pair(play.get(), std::numeric_limits<double>::quiet_NaN());
       }
-      return std::make_pair(play.get(), score_multiplier * play->getScore(world));
+      return std::make_pair(
+        play.get(),
+        std::clamp(score_multiplier * play->getScore(world), 0.0, 100.0));
     });
 
   auto sort_func = [](const auto & l, const auto & r) {

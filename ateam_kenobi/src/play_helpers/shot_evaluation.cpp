@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "shot_evaluation.hpp"
+#include <angles/angles.h>
 #include <ateam_geometry/angles.hpp>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/window_evaluation.hpp"
@@ -41,7 +42,7 @@ double GetShotSuccessChance(const World & world, const ateam_geometry::Point & s
     ateam_geometry::ShortestAngleBetween(
       their_goal_segment.to_vector(), ball_goal_vector));
 
-  if (shot_angle < 0.52 /*30 deg*/ || shot_angle > 2.61 /*150 deg*/) {
+  if (shot_angle < angles::from_degrees(15) || shot_angle > angles::from_degrees(165)) {
     return 0.0;
   }
 

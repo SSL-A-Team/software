@@ -65,6 +65,7 @@ private:
   ateam_geometry::Point target_;
   skills::PassReceiver receiver_;
   skills::LineKick kick_;
+  int kicker_id_ = -1;
 
   double calculateDefaultKickSpeed(const World & world);
 };

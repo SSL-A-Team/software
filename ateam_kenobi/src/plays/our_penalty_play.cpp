@@ -37,9 +37,9 @@ OurPenaltyPlay::OurPenaltyPlay(stp::Options stp_options)
 
 stp::PlayScore OurPenaltyPlay::getScore(const World & world)
 {
-  if (world.in_play) {
-    return stp::PlayScore::NaN();
-  }
+  // if (world.in_play) {
+  //   return stp::PlayScore::NaN();
+  // }
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
   if (cmd == ateam_common::GameCommand::PreparePenaltyOurs ||
@@ -100,6 +100,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   } else {
     // Kick ball
     getPlayInfo()["State"] = "Kicking";
+    if (line_kick_skill_.IsDone()) {
+      line_kick_skill_.Reset();
+    }
     motion_commands[kicking_robot.id] = line_kick_skill_.RunFrame(world, kicking_robot);
   }
 

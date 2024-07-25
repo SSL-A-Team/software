@@ -96,7 +96,6 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(
   easy_move_to_.face_point(world.ball.pos);
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
-  planner_options.use_default_obstacles = false;  // TODO(barulicm) Marietta field only?
   easy_move_to_.setPlannerOptions(planner_options);
   return easy_move_to_.runFrame(robot, world);
 }
@@ -109,11 +108,10 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
   easy_move_to_.face_point(world.ball.pos);
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
-  planner_options.use_default_obstacles = false;  // TODO(barulicm) Marietta field only?
   easy_move_to_.setPlannerOptions(planner_options);
   ateam_msgs::msg::RobotMotionCommand motion_command;
   motion_command = easy_move_to_.runFrame(robot, world);
-  motion_command.dribbler_speed = 200;
+  motion_command.dribbler_speed = 300;
   const auto dist_to_ball = ateam_geometry::norm(robot.pos - world.ball.pos);
   if (dist_to_ball < 0.5) {
     ateam_geometry::Vector robot_vel(motion_command.twist.linear.x, motion_command.twist.linear.y);

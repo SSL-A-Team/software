@@ -113,7 +113,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.dribbler_speed = 600;
+  command.dribbler_speed = 300;
 
   return command;
 }

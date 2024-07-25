@@ -70,9 +70,9 @@ public:
     easy_move_to_.setPlannerOptions(options);
   }
 
-  double move_to_ball_velocity = 2.0;
-  double robot_perp_dist_to_ball_threshold = 0.007;
-  double angle_threshold = 0.05;
+  double move_to_ball_velocity = 1.8;
+  double robot_perp_dist_to_ball_threshold = 0.008;
+  double angle_threshold = 0.1;
   double kick_drive_velocity = 0.4;
 
   // Allow the robot to push up against obstacles / other robots (slowly)
