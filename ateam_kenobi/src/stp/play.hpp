@@ -33,7 +33,8 @@
 namespace ateam_kenobi::stp
 {
 
-enum class PlayCompletionState {
+enum class PlayCompletionState
+{
   NotApplicable,
   Done,
   Busy
@@ -65,10 +66,11 @@ public:
 
   /**
    * @brief Returns the completion state of the robot
-   * 
+   *
    * Should only be used by plays when interrupting them would be bad (ie. passing)
    */
-  virtual PlayCompletionState getCompletionState() {
+  virtual PlayCompletionState getCompletionState()
+  {
     return PlayCompletionState::NotApplicable;
   }
 

@@ -45,7 +45,6 @@ public:
 private:
   tactics::StandardDefense defense_;
   tactics::MultiMoveTo multi_move_to_;
-
 };
 
 }  // namespace ateam_kenobi::plays

@@ -77,7 +77,6 @@ ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot)
     robot_state_msg.twist_body.linear.x = velocity_trans.x();
     robot_state_msg.twist_body.linear.y = velocity_trans.y();
     robot_state_msg.twist_body.angular.z = robot_state_msg.twist.angular.z;
-
   }
 
   return robot_state_msg;

@@ -63,7 +63,8 @@ bool PassReceiver::isBallFast(const World & world)
 
 bool PassReceiver::isBallClose(const World & world, const Robot & robot)
 {
-  const auto ball_close_to_bot = ateam_geometry::norm(world.ball.pos - robot.pos) < (kRobotRadius + kBallRadius + .05);
+  const auto ball_close_to_bot = ateam_geometry::norm(world.ball.pos - robot.pos) <
+    (kRobotRadius + kBallRadius + .05);
   const auto bot_close_to_target = ateam_geometry::norm(robot.pos - target_) < 1.0;
   return ball_close_to_bot && bot_close_to_target;
 }

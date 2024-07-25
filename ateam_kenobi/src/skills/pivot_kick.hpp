@@ -56,7 +56,8 @@ public:
 
   ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
 
-  bool IsDone() const {
+  bool IsDone() const
+  {
     return done_;
   }
 

@@ -80,7 +80,8 @@ public:
    */
   ateam_msgs::msg::VisionCameraState get_vision_camera_state() const;
 
-  void set_ignored_half(int ignored_half) {
+  void set_ignored_half(int ignored_half)
+  {
     ignore_half_ = ignored_half;
   }
 

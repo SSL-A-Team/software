@@ -19,8 +19,9 @@
 // THE SOFTWARE.
 
 #include "possession.hpp"
-#include <limits>
 #include <ranges>
+#include <algorithm>
+#include <limits>
 #include <ateam_common/robot_constants.hpp>
 #include "types/robot.hpp"
 

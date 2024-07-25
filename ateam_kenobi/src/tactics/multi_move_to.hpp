@@ -18,9 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TACTICS__MULTI_IDLE_HPP_
-#define TACTICS__MULTI_IDLE_HPP_
+#ifndef TACTICS__MULTI_MOVE_TO_HPP_
+#define TACTICS__MULTI_MOVE_TO_HPP_
 
+#include <vector>
 #include "stp/tactic.hpp"
 #include "play_helpers/easy_move_to.hpp"
 #include "motion/motion_controller.hpp"
@@ -93,4 +94,4 @@ private:
 
 }  // namespace ateam_kenobi::tactics
 
-#endif  // TACTICS__MULTI_IDLE_HPP_
+#endif  // TACTICS__MULTI_MOVE_TO_HPP_

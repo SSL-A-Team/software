@@ -31,8 +31,10 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options)
 {
   // Turn 180 deg in place
-  // waypoints.push_back({ateam_geometry::Point(-1.0,0.5), AngleMode::face_absolute,  -M_PI/2, 3.0});
-  // waypoints.push_back({ateam_geometry::Point(-1.0,0.5), AngleMode::face_absolute, M_PI/2, 3.0});
+  // waypoints = {
+  //   {ateam_geometry::Point(-1.0,0.5), AngleMode::face_absolute,  -M_PI/2, 3.0},
+  //   {ateam_geometry::Point(-1.0,0.5), AngleMode::face_absolute, M_PI/2, 3.0}
+  // };
 
   // Drive in square
   waypoints = {

@@ -54,7 +54,7 @@ RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int ro
     case ateam_msgs::msg::RobotMotionCommand::KICK_NOW:
     case ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH:
     case ateam_msgs::msg::RobotMotionCommand::KICK_ON_CAPTURE:
-      proto_robot_command->set_kick_speed(ros_msg.kick_speed);
+      proto_robot_command->set_kick_speed(ros_msg.kick_speed * 3.0);
       break;
   }
 

@@ -113,7 +113,6 @@ std::array<std::optional<Robot>, 16> World::get_yellow_robots_estimate()
 
     for (size_t yellow_id = 0; yellow_id < 16; yellow_id++) {
       if (possible_yellow_robots_with_score.at(yellow_id).has_value()) {
-
         yellow_robots_with_scores.at(yellow_id).emplace_back(
           possible_yellow_robots_with_score.at(yellow_id).value());
       }
@@ -176,7 +175,6 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
 
     for (size_t blue_id = 0; blue_id < 16; blue_id++) {
       if (possible_blue_robots_with_score.at(blue_id).has_value()) {
-
         blue_robots_with_scores.at(blue_id).emplace_back(
           possible_blue_robots_with_score.at(blue_id).value());
       }

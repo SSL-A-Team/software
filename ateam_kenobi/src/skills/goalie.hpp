@@ -21,6 +21,7 @@
 #ifndef SKILLS__GOALIE_HPP_
 #define SKILLS__GOALIE_HPP_
 
+#include <vector>
 #include <ateam_geometry/types.hpp>
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"

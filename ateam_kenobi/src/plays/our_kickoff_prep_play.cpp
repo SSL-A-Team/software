@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "our_kickoff_prep_play.hpp"
+#include <vector>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
 

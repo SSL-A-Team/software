@@ -27,7 +27,7 @@
 
 namespace ateam_kenobi::plays
 {
-  
+
 class DefensePlay : public stp::Play
 {
 public:
@@ -45,7 +45,6 @@ public:
 private:
   tactics::StandardDefense defense_tactic_;
   tactics::Blockers blockers_;
-
 };
 
 }  // namespace ateam_kenobi::plays

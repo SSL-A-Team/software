@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "multi_move_to.hpp"
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::tactics

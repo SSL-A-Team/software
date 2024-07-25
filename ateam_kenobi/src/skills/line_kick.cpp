@@ -130,7 +130,6 @@ bool LineKick::IsRobotBehindBall(const World & world, const Robot & robot, doubl
   getPlayInfo()["IsRobotBehindBall_Proj"] = robot_proj_dist_to_ball;
 
 
-
   return proj_dist_is_good && perp_dist_is_good;
 }
 
@@ -220,8 +219,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   // Cowabunga it is
   if (this->cowabunga) {
     // We are stuck due to a path planner failure or something
-    if (command.twist.linear.x == 0 && command.twist.linear.y == 0)
-    {
+    if (command.twist.linear.x == 0 && command.twist.linear.y == 0) {
       getPlayInfo()["Cowabunga Mode"] = "Active";
 
 
@@ -256,8 +254,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
 
         command = easy_move_to_.runFrame(robot, world);
       }
-        getPlayInfo()["dist to ball"] = ateam_geometry::norm(robot.pos - world.ball.pos);
-
+      getPlayInfo()["dist to ball"] = ateam_geometry::norm(robot.pos - world.ball.pos);
     }
   }
 

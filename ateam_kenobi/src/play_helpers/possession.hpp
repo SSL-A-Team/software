@@ -26,7 +26,8 @@
 namespace ateam_kenobi::play_helpers
 {
 
-enum class PossessionResult {
+enum class PossessionResult
+{
   Ours,
   Theirs,
   Neither

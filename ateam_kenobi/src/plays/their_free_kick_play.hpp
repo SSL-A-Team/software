@@ -21,6 +21,7 @@
 #ifndef PLAYS__THEIR_FREE_KICK_PLAY_HPP_
 #define PLAYS__THEIR_FREE_KICK_PLAY_HPP_
 
+#include <vector>
 #include "stp/play.hpp"
 #include "play_helpers/easy_move_to.hpp"
 #include "tactics/standard_defense.hpp"
@@ -49,7 +50,8 @@ private:
   std::vector<ateam_geometry::Point> getBlockerPoints(const World & world);
 
   void runBlockers(
-    const World & world, const std::vector<Robot> & robots, const std::vector<ateam_geometry::Point> & points,
+    const World & world, const std::vector<Robot> & robots,
+    const std::vector<ateam_geometry::Point> & points,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 };

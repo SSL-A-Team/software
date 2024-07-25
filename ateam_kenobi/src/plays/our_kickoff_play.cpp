@@ -22,6 +22,7 @@
 #include "our_kickoff_play.hpp"
 #include <limits>
 #include <random>
+#include <vector>
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
 #include "play_helpers/robot_assignment.hpp"
@@ -57,7 +58,7 @@ stp::PlayScore OurKickoffPlay::getScore(const World & world)
       // already running normal start
       if (pass_.isDone()) {
         score = stp::PlayScore::Min();
-      } else if(world.in_play && ateam_geometry::norm(world.ball.vel) < 0.01) {
+      } else if (world.in_play && ateam_geometry::norm(world.ball.vel) < 0.01) {
         // prevent stallouts if the pass doesn't complete.
         score = stp::PlayScore::Min();
       } else {
@@ -146,8 +147,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
     auto & receiver_command =
       *(maybe_motion_commands[receiver.id] = ateam_msgs::msg::RobotMotionCommand{});
     pass_.runFrame(world, kicker, receiver, kicker_command, receiver_command);
-  } else {
-    std::cerr << "Kicker " << (maybe_kicker ? "assigned" : "NO") << ". Receiver " << (maybe_receiver ? "assigned" : "NO") << ".\n";
   }
 
   if (enough_bots_for_defense) {

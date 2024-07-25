@@ -41,7 +41,7 @@ void Pass::reset()
 
 ateam_geometry::Point Pass::getKickerAssignmentPoint(const World & world)
 {
-  if(kicker_id_ != -1 && world.our_robots[kicker_id_].IsAvailable()) {
+  if (kicker_id_ != -1 && world.our_robots[kicker_id_].IsAvailable()) {
     return world.our_robots[kicker_id_].pos;
   }
   return kick_.GetAssignmentPoint(world);
@@ -77,7 +77,7 @@ void Pass::runFrame(
   }
 
   auto receiver_threshold = kReceiverPositionThreshold;
-  if(std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) > 3.0) {
+  if (std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) > 3.0) {
     receiver_threshold = 5.0;
   }
   if (ateam_geometry::norm(receiver_bot.pos, target_) <= receiver_threshold) {

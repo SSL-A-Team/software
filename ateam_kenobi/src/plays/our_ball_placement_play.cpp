@@ -242,7 +242,6 @@ void OurBallPlacementPlay::runPlacing(
   dribble_.setTarget(placement_point);
   motion_commands[place_robot.id] = dribble_.runFrame(world, place_robot);
   getPlayInfo()["Dribbler"] = dribble_.getPlayInfo();
-
 }
 
 void OurBallPlacementPlay::runDone(

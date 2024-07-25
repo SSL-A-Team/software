@@ -231,7 +231,6 @@ void PlaySelector::fillStateMessage(
     std::fill_n(
       std::back_inserter(scores), plays_.size() - scores.size(),
       std::numeric_limits<double>::quiet_NaN());
-
   }
   msg.override_name = override_play_name_;
   msg.running_play_name = selected_play->getName();

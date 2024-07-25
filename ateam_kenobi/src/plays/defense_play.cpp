@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "defense_play.hpp"
+#include <vector>
 #include "play_helpers/possession.hpp"
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
@@ -71,10 +72,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefensePlay::
   groups.AddGroup("blockers", blockers_.getAssignmentPoints(world));
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  defense_tactic_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
+  defense_tactic_.runFrame(
+    world, assignments.GetGroupFilledAssignments("defense"),
+    motion_commands);
 
   std::vector<Robot> blockers = assignments.GetGroupFilledAssignments("blockers");
-  const auto blocker_commands = blockers_.runFrame(world, assignments.GetGroupFilledAssignments("blockers"));
+  const auto blocker_commands =
+    blockers_.runFrame(world, assignments.GetGroupFilledAssignments("blockers"));
   for (auto robot_ind = 0ul; robot_ind < blockers.size(); ++robot_ind) {
     motion_commands[blockers[robot_ind].id] = blocker_commands[robot_ind];
   }

@@ -48,11 +48,11 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
     return stp::PlayScore::NaN();
   }
 
-  if(getCompletionState() == stp::PlayCompletionState::Busy) {
+  if (getCompletionState() == stp::PlayCompletionState::Busy) {
     return cached_score_;
   }
 
-  if(play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
+  if (play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore::Min();
   }
 

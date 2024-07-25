@@ -54,10 +54,12 @@ std::optional<ateam_geometry::AnyShape> GetCollidingObstacle(
 
 /**
  * @brief Checks if the given point is within the bounds of the field.
- * 
+ *
  * @param apply_offset If true, offset the field bounds inward by approximately one robot radius
  */
-bool IsPointInBounds(const ateam_geometry::Point & state, const World & world, const bool apply_offset = true);
+bool IsPointInBounds(
+  const ateam_geometry::Point & state, const World & world,
+  const bool apply_offset = true);
 
 }  // namespace ateam_kenobi::path_planning
 

@@ -45,7 +45,7 @@ stp::PlayScore ExtractPlay::getScore(const World & world)
     return stp::PlayScore::NegativeInfinity();
   }
 
-  if(play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
+  if (play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore(100);  // arbitrary, high score to encourage being more aggressive
   }
 

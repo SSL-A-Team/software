@@ -54,7 +54,6 @@ void Camera::update(const CameraMeasurement & camera_measurement)
       removeMeasurementsOnIngoredHalf(vectored_measurements);
       if (!vectored_measurements.empty()) {
         yellow_team.at(robot_id).update(vectored_measurements);
-
       }
     }
 

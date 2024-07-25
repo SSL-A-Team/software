@@ -247,19 +247,22 @@ std::vector<ateam_geometry::AnyShape> StopPlay::getAddedObstacles(const World & 
 {
   std::vector<ateam_geometry::AnyShape> obstacles;
 
-  const auto half_field_length = world.field.field_length/2.0;
+  const auto half_field_length = world.field.field_length / 2.0;
   const auto half_goal_width = world.field.goal_width / 2.0;
   const auto goal_thickness = 0.1;  // arbitrarily large
 
-  obstacles.push_back(ateam_geometry::Rectangle{
-    ateam_geometry::Point{-half_field_length, -half_goal_width},
-    ateam_geometry::Point{-(half_field_length+world.field.goal_depth), -(half_goal_width+goal_thickness)}
-  });
+  obstacles.push_back(
+    ateam_geometry::Rectangle{
+      ateam_geometry::Point{-half_field_length, -half_goal_width},
+      ateam_geometry::Point{-(half_field_length + world.field.goal_depth),
+        -(half_goal_width + goal_thickness)}
+    });
 
-  obstacles.push_back(ateam_geometry::Rectangle{
-    ateam_geometry::Point{-half_field_length, half_goal_width},
-    ateam_geometry::Point{-(half_field_length+world.field.goal_depth), half_goal_width+goal_thickness}
-  });
+  obstacles.push_back(
+    ateam_geometry::Rectangle{
+      ateam_geometry::Point{-half_field_length, half_goal_width},
+      ateam_geometry::Point{-(half_field_length + world.field.goal_depth), half_goal_width + goal_thickness}
+    });
 
   return obstacles;
 }

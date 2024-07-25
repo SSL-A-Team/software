@@ -50,7 +50,6 @@ void PassToSegment::runFrame(
   ateam_msgs::msg::RobotMotionCommand & kicker_command,
   ateam_msgs::msg::RobotMotionCommand & receiver_command)
 {
-
   if (ateam_geometry::norm(world.ball.vel) < 0.01) {
     pass_tactic_.setTarget(getTargetPointOnSegment(world));
   }

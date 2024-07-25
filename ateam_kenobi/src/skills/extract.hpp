@@ -46,11 +46,9 @@ private:
   play_helpers::EasyMoveTo easy_move_to_;
   int ballsense_count_ = 0;
   std::optional<std::chrono::steady_clock::time_point> rip_start_time_;
-  
-
 };
 
-}  // namespace ateam_kenobi::skill
+}  // namespace ateam_kenobi::skills
 
 
 #endif  // SKILLS__EXTRACT_HPP_

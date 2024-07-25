@@ -131,7 +131,7 @@ bool Dribble::robotHasBall(const Robot & robot)
     ball_detected_filter_ += 3;
     if (ball_detected_filter_ >= 25) {
       if (ball_detected_filter_ >= 50) {
-        ball_detected_filter_ = 50  ;
+        ball_detected_filter_ = 50;
       }
       getPlayInfo()["Robot Has Ball"] = "True";
       return true;
@@ -165,7 +165,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
 
   auto command = easy_move_to_.runFrame(robot, world);
   if (ateam_geometry::norm(robot.pos - world.ball.pos) < 0.5) {
-      command.dribbler_speed = 130;
+    command.dribbler_speed = 130;
   }
   return command;
 }

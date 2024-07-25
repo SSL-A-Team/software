@@ -83,7 +83,9 @@ private:
 
   void resetPlayIfNeeded(stp::Play * play);
 
-  void fillStateMessage(ateam_msgs::msg::PlaybookState & msg, std::vector<double> & scores, const stp::Play * selected_play);
+  void fillStateMessage(
+    ateam_msgs::msg::PlaybookState & msg, std::vector<double> & scores,
+    const stp::Play * selected_play);
 };
 
 }  // namespace ateam_kenobi

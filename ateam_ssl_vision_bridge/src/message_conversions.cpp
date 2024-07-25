@@ -67,7 +67,8 @@ ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame & 
   ros_msg.frame_number = proto_msg.frame_number();
   ros_msg.t_capture = rclcpp::Time(static_cast<int64_t>(proto_msg.t_capture() * secToNanosec));
   ros_msg.t_sent = rclcpp::Time(static_cast<int64_t>(proto_msg.t_sent() * secToNanosec));
-  ros_msg.t_capture_camera = rclcpp::Time(static_cast<int64_t>(proto_msg.t_capture_camera() * secToNanosec));
+  ros_msg.t_capture_camera =
+    rclcpp::Time(static_cast<int64_t>(proto_msg.t_capture_camera() * secToNanosec));
   ros_msg.camera_id = proto_msg.camera_id();
   std::transform(
     proto_msg.balls().begin(),

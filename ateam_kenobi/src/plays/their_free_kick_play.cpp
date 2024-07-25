@@ -20,6 +20,8 @@
 
 #include "their_free_kick_play.hpp"
 #include <angles/angles.h>
+#include <algorithm>
+#include <vector>
 #include "play_helpers/robot_assignment.hpp"
 #include "play_helpers/available_robots.hpp"
 
@@ -91,7 +93,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
 std::vector<ateam_geometry::Point> TheirFreeKickPlay::getBlockerPoints(const World & world)
 {
   const auto arc_radius = 1.0;
-  getOverlays().drawCircle("target", ateam_geometry::makeCircle(world.ball.pos, arc_radius), "blue", "transparent");
+  getOverlays().drawCircle(
+    "target", ateam_geometry::makeCircle(
+      world.ball.pos,
+      arc_radius), "blue", "transparent");
   const auto inter_robot_angle = angles::from_degrees(15);
   const auto our_goal_center = ateam_geometry::Point{-world.field.field_length / 2.0, 0.0};
   const auto ball_goal_vec = our_goal_center - world.ball.pos;
