@@ -1,0 +1,6 @@
+# Request
+ssl_league_msgs/SimulatorControl simulator_control
+---
+# Response
+bool success
+string reason
