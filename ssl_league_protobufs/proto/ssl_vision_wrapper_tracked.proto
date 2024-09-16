@@ -1,7 +1,4 @@
 syntax = "proto2";
-
-option go_package = "github.com/RoboCup-SSL/ssl-game-controller/internal/app/tracker";
-
 import "ssl_vision_detection_tracked.proto";
 
 // A wrapper packet containing meta data of the source

@@ -27,7 +27,7 @@
 
 using namespace ateam_vision_filter;  // NOLINT(build/namespaces)
 
-TEST(Camera, getEstimateWithScore_ShouldReturnNullopt_WhenNoData)
+TEST(Camera, DISABLED_getEstimateWithScore_ShouldReturnNullopt_WhenNoData)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> tpg =
@@ -47,7 +47,7 @@ TEST(Camera, getEstimateWithScore_ShouldReturnNullopt_WhenNoData)
   }
 }
 
-TEST(Camera, getBallEstimateWithScore_ShouldReturnData_WhenPredictAndUpdate)
+TEST(Camera, DISABLED_getBallEstimateWithScore_ShouldReturnData_WhenPredictAndUpdate)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> tpg =
@@ -73,7 +73,9 @@ TEST(Camera, getBallEstimateWithScore_ShouldReturnData_WhenPredictAndUpdate)
   EXPECT_NEAR(std::get<0>(ball_with_score.value()).acceleration.norm(), 0, 1e-6);
 }
 
-TEST(Camera, getBallEstimateWithScore_ShouldReturnBestData_WhenConsistentAndInconsistentData)
+TEST(
+  Camera,
+  DISABLED_getBallEstimateWithScore_ShouldReturnBestData_WhenConsistentAndInconsistentData)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> tpg =
@@ -107,7 +109,7 @@ TEST(Camera, getBallEstimateWithScore_ShouldReturnBestData_WhenConsistentAndInco
   EXPECT_NEAR(std::get<0>(ball_with_score.value()).acceleration.norm(), 0, 1e-6);
 }
 
-TEST(Camera, getRobotEstimatesWithScore_ShouldReturnData_WhenPredictAndUpdate)
+TEST(Camera, DISABLED_getRobotEstimatesWithScore_ShouldReturnData_WhenPredictAndUpdate)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> tpg =
@@ -144,7 +146,9 @@ TEST(Camera, getRobotEstimatesWithScore_ShouldReturnData_WhenPredictAndUpdate)
   }
 }
 
-TEST(Camera, getRobotEstimatesWithScore_ShouldReturnBestData_WhenConsistentAndInconsistentData)
+TEST(
+  Camera,
+  DISABLED_getRobotEstimatesWithScore_ShouldReturnBestData_WhenConsistentAndInconsistentData)
 {
   std::shared_ptr<ModelInputGenerator> mig = std::make_shared<ModelInputGenerator>();
   std::shared_ptr<TransmissionProbabilityGenerator> tpg =

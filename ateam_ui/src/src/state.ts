@@ -6,6 +6,7 @@ import { Referee } from "@/referee"
 import { Ball } from "@/ball"
 import { Field, FieldDimensions, FieldSidedInfo } from "@/field"
 import { AIState } from "@/AI"
+import { Play } from "@/play"
 
 export class RenderConfig {
     angle: number = 0; // Rotation applied to the rendered field
@@ -52,7 +53,11 @@ export class AppState {
 
     controlled_robot: number = null;
 
-    setGoalie(goalie_id) {
+    plays = {};
+    selected_play_name: string = null;
+    override_play_in_progress: string = null;
+
+    setGoalie(goalie_id: number) {
         const request = new ROSLIB.ServiceRequest({
             desired_keeper: goalie_id
         });
@@ -89,6 +94,38 @@ export class AppState {
             this.controlled_robot = id;
         }
         this.params["joystick_param"].set(this.controlled_robot);
+    }
+
+
+    setPlayEnabled(play: Play) {
+        const state = this; // fix dumb javascript things
+        const request = new ROSLIB.ServiceRequest({
+            play_name: play.name,
+            enabled: play.enabled
+        });
+
+        this.services["setPlayEnabled"].callService(request,
+            function(result) {
+                if(!result.success) {
+                    console.log("Failed to enable/disable ", play.name, ": ", result.reason);
+                }
+            });
+    }
+
+    setOverridePlay(play_name: string) {
+        const state = this; // fix dumb javascript things
+        const request = new ROSLIB.ServiceRequest({
+            play_name: play_name
+        });
+
+        state.override_play_in_progress = play_name;
+        this.services["setOverridePlay"].callService(request,
+            function(result) {
+                state.override_play_in_progress = null;
+                if(!result.success) {
+                    console.log("Failed to set override play to ", play_name, ": ", result.reason);
+                }
+            });
     }
 
     getTeamNameCallback() {
@@ -141,6 +178,10 @@ export class AppState {
 	    return function(msg:any) {
             for (const overlay of msg.overlays) {
                 let id = overlay.ns+"/"+overlay.name;
+
+                // Overlays will now be deleted in the update function if
+                // the lifetime expires without having been updated
+                // to prevent potential future memory leaks
                 switch(overlay.command) {
                     // REPLACE
                     case 0:
@@ -224,6 +265,39 @@ export class AppState {
 	    return function(msg:any) {
                 state.world.ai.name = msg.name;
                 state.world.ai.description = msg.description;
+        }
+    }
+
+    getPlaybookCallback() {
+        const state = this; // fix dumb javascript things
+        return function(msg:any) {
+
+            // Handle the transition time between overriding the play and
+            // it showing up in the kenobi message
+            if (state.override_play_in_progress == null) {
+                state.selected_play_name = msg.override_name;
+            } else {
+                state.selected_play_name = state.override_play_in_progress;
+            }
+
+
+            if (msg.names.length > 0) {
+                state.plays = [];
+                for (let i = 0; i < msg.names.length; i++) {
+                    if (msg.names[i] in state.plays) {
+                        state.plays[msg.names[i]].enabled = msg.enableds[i]
+                        state.plays[msg.names[i]].score = msg.scores[i]
+                    } else {
+                        let play = new Play(
+                            msg.names[i],
+                            msg.enableds[i],
+                            msg.scores[i]
+                        )
+
+                        state.plays[play.name] = play;
+                    }
+                }
+            }
         }
     }
 
@@ -338,6 +412,16 @@ export class AppState {
         playInfoTopic.subscribe(this.getPlayInfoCallback());
         this.subscriptions["playInfo"] = playInfoTopic;
 
+        // Set up play book subscriber
+        let playbookTopic = new ROSLIB.Topic({
+            ros: this.ros,
+            name: '/kenobi_node/playbook_state',
+            messageType: 'ateam_msgs/msg/PlaybookState'
+        });
+
+        playbookTopic.subscribe(this.getPlaybookCallback());
+        this.subscriptions["playbook"] = playbookTopic;
+
         // Set up Goalie Service
         let goalieService = new ROSLIB.Service({
             ros: this.ros,
@@ -345,6 +429,22 @@ export class AppState {
             serviceType: 'ateam_msgs/srv/SetDesiredKeeper'
         })
         this.services["setGoalie"] = goalieService;
+
+        // Set up set play enabled Service
+        let setPlayEnabledService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/kenobi_node/set_play_enabled',
+            serviceType: 'ateam_msgs/srv/SetPlayEnabled'
+        })
+        this.services["setPlayEnabled"] = setPlayEnabledService;
+
+        // Set up set override play Service
+        let setOverridePlayService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/kenobi_node/set_override_play',
+            serviceType: 'ateam_msgs/srv/SetOverridePlay'
+        })
+        this.services["setOverridePlay"] = setOverridePlayService;
 
         let teamNameParam = new ROSLIB.Param({
             ros: this.ros,

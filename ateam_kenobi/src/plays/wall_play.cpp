@@ -18,10 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <CGAL/point_generators_2.h>
 
-#include <ateam_common/robot_constants.hpp>
 #include "wall_play.hpp"
+#include <CGAL/point_generators_2.h>
+#include <limits>
+#include <ateam_common/robot_constants.hpp>
 #include "play_helpers/robot_assignment.hpp"
 #include "types/robot.hpp"
 #include "skills/goalie.hpp"
@@ -51,11 +52,37 @@ std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
 }
 
 
-WallPlay::WallPlay()
-: BasePlay("WallPlay"),
-  goalie_skill_(getOverlays().getChild("goalie"))
+WallPlay::WallPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  play_helpers::EasyMoveTo::CreateArray(easy_move_tos_, getOverlays().getChild("EasyMoveTo"));
+}
+
+double WallPlay::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::PrepareKickoffTheirs:
+      return std::numeric_limits<double>::max();
+    case ateam_common::GameCommand::DirectFreeTheirs:
+      return world.in_play ? std::numeric_limits<double>::lowest() : std::numeric_limits<double>::
+             max();
+    case ateam_common::GameCommand::NormalStart:
+      {
+        if (world.in_play) {
+          return std::numeric_limits<double>::lowest();
+        }
+        switch (world.referee_info.prev_command) {
+          case ateam_common::GameCommand::PrepareKickoffTheirs:
+          case ateam_common::GameCommand::DirectFreeTheirs:
+            return std::numeric_limits<double>::max();
+          default:
+            return std::numeric_limits<double>::lowest();
+        }
+      }
+    default:
+      return std::numeric_limits<double>::lowest();
+  }
 }
 
 void WallPlay::reset()
@@ -102,10 +129,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     if (!maybe_robot) {
       continue;
     }
+
     const auto & robot = *maybe_robot;
-    const auto & target_position = positions_to_assign[ind];
+
+    if (!robot.IsAvailable()) {
+      continue;
+    }
 
     auto & easy_move_to = easy_move_tos_.at(robot.id);
+
+    const auto & target_position = positions_to_assign.at(ind);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
     getOverlays().drawCircle(

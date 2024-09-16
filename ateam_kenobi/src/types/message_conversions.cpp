@@ -110,17 +110,17 @@ ateam_msgs::msg::World toMsg(const World & obj)
 
   world_msg.balls.push_back(toMsg(obj.ball));
 
-  for (const auto & maybe_robot : obj.our_robots) {
-    if (maybe_robot.has_value()) {
-      world_msg.our_robots.push_back(toMsg(maybe_robot.value()));
+  for (const Robot & robot : obj.our_robots) {
+    if (robot.IsAvailable()) {
+      world_msg.our_robots.push_back(toMsg(robot));
     } else {
       world_msg.our_robots.push_back(ateam_msgs::msg::RobotState());
     }
   }
 
-  for (const auto & maybe_robot : obj.their_robots) {
-    if (maybe_robot.has_value()) {
-      world_msg.their_robots.push_back(toMsg(maybe_robot.value()));
+  for (const Robot & robot : obj.their_robots) {
+    if (robot.IsAvailable()) {
+      world_msg.their_robots.push_back(toMsg(robot));
     } else {
       world_msg.their_robots.push_back(ateam_msgs::msg::RobotState());
     }

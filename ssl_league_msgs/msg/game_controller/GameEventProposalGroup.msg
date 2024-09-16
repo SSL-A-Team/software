@@ -1,2 +1,2 @@
-ssl_league_msgs/GameEvent[] game_event
+ssl_league_msgs/GameEvent[] game_events
 bool accepted

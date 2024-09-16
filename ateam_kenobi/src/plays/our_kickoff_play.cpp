@@ -20,6 +20,7 @@
 
 
 #include "our_kickoff_play.hpp"
+#include <limits>
 #include "types/world.hpp"
 #include "skills/goalie.hpp"
 #include "play_helpers/robot_assignment.hpp"
@@ -27,11 +28,27 @@
 
 namespace ateam_kenobi::plays
 {
-OurKickoffPlay::OurKickoffPlay()
-: BasePlay("OurKickoffPlay"),
-  line_kick_skill_(getOverlays().getChild("line_kick")),
-  goalie_skill_(getOverlays().getChild("goalie"))
+OurKickoffPlay::OurKickoffPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  line_kick_skill_(createChild<skills::LineKick>("line_kick")),
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
+}
+
+double OurKickoffPlay::getScore(const World & world)
+{
+  if (world.in_play) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const auto & cmd = world.referee_info.running_command;
+  const auto & prev = world.referee_info.prev_command;
+  if (cmd == ateam_common::GameCommand::PrepareKickoffOurs ||
+    (cmd == ateam_common::GameCommand::NormalStart &&
+    prev == ateam_common::GameCommand::PrepareKickoffOurs))
+  {
+    return std::numeric_limits<double>::max();
+  }
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 void OurKickoffPlay::reset()

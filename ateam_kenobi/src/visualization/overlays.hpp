@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 #include <ateam_msgs/msg/overlay_array.hpp>
+#include <ateam_geometry/arc.hpp>
 #include <ateam_geometry/types.hpp>
 
 namespace ateam_kenobi::visualization
@@ -69,6 +70,11 @@ public:
     const std::string & name, const ateam_geometry::Rectangle & rectangle,
     const std::string & stroke_color = "white", const std::string & fill_color = "#FFFFFF7F",
     const uint8_t stroke_width = 5, const uint32_t lifetime = kDefaultLifetime);
+
+  void drawArc(
+    const std::string & name, const ateam_geometry::Arc & arc,
+    const std::string & stroke_color = "white", const uint8_t stroke_width = 5,
+    const uint32_t lifetime = 100);
 
 private:
   static const uint32_t kDefaultLifetime = 200;

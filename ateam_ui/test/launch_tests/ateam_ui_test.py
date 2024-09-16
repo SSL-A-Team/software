@@ -112,4 +112,4 @@ class TestUI(unittest.TestCase):
                 self.assertIn(topic, subscriptions)
 
         # Check subscription to /overlay
-        self.assertIn(("/overlay", ['ateam_msgs/msg/Overlay']), subscriptions)
+        self.assertIn(("/overlays", ['ateam_msgs/msg/OverlayArray']), subscriptions)

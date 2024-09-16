@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,40 +19,63 @@
 // THE SOFTWARE.
 
 
-#ifndef SKILLS__BLOCKERS_HPP_
-#define SKILLS__BLOCKERS_HPP_
+#ifndef STP__PLAY_HPP_
+#define STP__PLAY_HPP_
 
-#include <vector>
+#include <array>
+#include <limits>
+#include <optional>
+#include <string>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <nlohmann/json.hpp>
-#include "visualization/overlays.hpp"
+#include "base.hpp"
 #include "types/world.hpp"
-#include "play_helpers/easy_move_to.hpp"
 
-namespace ateam_kenobi::skills
+namespace ateam_kenobi::stp
 {
 
-class Blockers
+class Play : public Base
 {
 public:
-  explicit Blockers(visualization::Overlays overlays);
+  Play(std::string name, Options options)
+  : Base(name, options) {}
 
-  void reset();
+  virtual ~Play() = default;
 
-  std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
+  /**
+   * @brief Get the play's validity / confidence score
+   *
+   * Plays should override this with logic that checks the game state and returns a number representing if the play should be run or not.
+   *
+   * The play selector will prefer plays with a higher score.
+   *
+   * If getScore() returns NaN, the play will never be executed unless specified via play override
+   *
+   * @return double
+   */
+  virtual double getScore(const World &)
+  {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
 
-  std::vector<ateam_msgs::msg::RobotMotionCommand> runFrame(
-    const World & world,
-    const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
+  virtual void reset() = 0;
+
+  virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world) = 0;
+
+  bool isEnabled() const
+  {
+    return enabled_;
+  }
+
+  void setEnabled(bool value)
+  {
+    enabled_ = value;
+  }
 
 private:
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-
-  std::vector<Robot> getRankedBlockableRobots(const World & world);
-
-  ateam_geometry::Point getBlockingPosition(const World & world, const Robot & blockee);
+  bool enabled_ = true;
 };
 
-}  // namespace ateam_kenobi::skills
+}  // namespace ateam_kenobi::stp
 
-#endif  // SKILLS__BLOCKERS_HPP_
+#endif  // STP__PLAY_HPP_
