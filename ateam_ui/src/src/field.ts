@@ -143,7 +143,11 @@ export class Field {
         state.world.ball.update(app.stage.getChildByName("ball").children[0] as PIXI.Container, state.renderConfig);
 
         for (const id in this.overlays) {
-            this.overlays[id].update(app.stage.getChildByName("overlay"), app.stage.getChildByName("underlay"), state.renderConfig);
+            const should_delete = this.overlays[id].update(app.stage.getChildByName("overlay"), app.stage.getChildByName("underlay"), state.renderConfig);
+
+            if (should_delete) {
+                delete this.overlays[id];
+            }
         }
     }
 }

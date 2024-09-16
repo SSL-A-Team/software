@@ -21,6 +21,7 @@
 
 #include "basic_122.hpp"
 #include <algorithm>
+#include <limits>
 #include <vector>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
@@ -29,12 +30,24 @@
 namespace ateam_kenobi::plays
 {
 
-Basic122::Basic122()
-: BasePlay("Basic122"),
-  striker_skill_(getOverlays().getChild("striker")),
-  blockers_skill_(getOverlays().getChild("blockers")),
-  goalie_skill_(getOverlays().getChild("goalie"))
+Basic122::Basic122(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
+  striker_skill_(createChild<skills::LineKick>("striker")),
+  blockers_skill_(createChild<tactics::Blockers>("blockers")),
+  goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
+}
+
+double Basic122::getScore(const World & world)
+{
+  switch (world.referee_info.running_command) {
+    case ateam_common::GameCommand::ForceStart:
+    case ateam_common::GameCommand::NormalStart:
+    case ateam_common::GameCommand::DirectFreeOurs:
+      return 0.0;
+    default:
+      return world.in_play ? 0.0 : std::numeric_limits<double>::lowest();
+  }
 }
 
 void Basic122::reset()
@@ -95,11 +108,11 @@ void Basic122::runStriker(
   const Robot & striker_bot, const World & world,
   ateam_msgs::msg::RobotMotionCommand & motion_command)
 {
-  play_info_["Striker ID"] = striker_bot.id;
+  getPlayInfo()["Striker ID"] = striker_bot.id;
 
   const auto they_have_possession = doTheyHavePossession(world);
 
-  play_info_["Possession"] = they_have_possession ? "theirs" : "ours";
+  getPlayInfo()["Possession"] = they_have_possession ? "theirs" : "ours";
 
   if (they_have_possession) {
     const auto ball_to_bot_vec = striker_bot.pos - world.ball.pos;
@@ -121,7 +134,7 @@ void Basic122::runStriker(
     goal_segment, world.ball.pos,
     robots);
   play_helpers::window_evaluation::drawWindows(
-    windows, world.ball.pos, overlays_.getChild(
+    windows, world.ball.pos, getOverlays().getChild(
       "Windows"));
   const auto target_window = play_helpers::window_evaluation::getLargestWindow(windows);
   ateam_geometry::Point target_point;
@@ -141,7 +154,7 @@ void Basic122::runBlockers(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
-  const auto skill_commands = blockers_skill_.runFrame(world, blocker_bots, &play_info_);
+  const auto skill_commands = blockers_skill_.runFrame(world, blocker_bots, &getPlayInfo());
 
   for (auto robot_ind = 0ul; robot_ind < blocker_bots.size(); ++robot_ind) {
     motion_commands[blocker_bots[robot_ind].id] = skill_commands[robot_ind];

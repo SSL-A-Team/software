@@ -20,32 +20,32 @@
 
 
 #include "available_robots.hpp"
+#include <ranges>
 
 namespace ateam_kenobi::play_helpers
 {
 
 std::vector<Robot> getAvailableRobots(const World & world)
 {
-  return getVisibleRobots(world.our_robots);
-}
-
-std::vector<Robot> getVisibleRobots(const std::array<std::optional<Robot>, 16> & robots)
-{
   std::vector<Robot> available_robots;
-  for (const auto & maybe_robot : robots) {
-    if (maybe_robot) {
-      available_robots.push_back(maybe_robot.value());
-    }
-  }
+  std::ranges::copy_if(
+    world.our_robots, std::back_inserter(available_robots), [](const auto & r) {
+      return r.IsAvailable();
+    });
   return available_robots;
 }
 
-void removeGoalie(std::vector<Robot> & robots, const World & world)
+std::vector<Robot> getVisibleRobots(const std::array<Robot, 16> & robots)
 {
-  return removeRobotWithId(robots, world.referee_info.our_goalie_id);
+  std::vector<Robot> visible_robots;
+  std::ranges::copy_if(
+    robots, std::back_inserter(visible_robots), [](const auto & r) {
+      return r.visible;
+    });
+  return visible_robots;
 }
 
-void removeGoalie(std::array<std::optional<Robot>, 16> & robots, const World & world)
+void removeGoalie(std::vector<Robot> & robots, const World & world)
 {
   return removeRobotWithId(robots, world.referee_info.our_goalie_id);
 }
@@ -57,10 +57,5 @@ void removeRobotWithId(std::vector<Robot> & robots, int id)
       robots.begin(), robots.end(), [&id](const Robot & robot) {
         return robot.id == id;
       }), robots.end());
-}
-
-void removeRobotWithId(std::array<std::optional<Robot>, 16> & robots, int id)
-{
-  robots.at(id).reset();
 }
 }  // namespace ateam_kenobi::play_helpers

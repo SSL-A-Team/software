@@ -23,6 +23,8 @@
 
 #include <algorithm>
 #include <limits>
+#include <map>
+#include <ateam_common/km_assignment.hpp>
 
 namespace ateam_kenobi::play_helpers
 {
@@ -41,34 +43,44 @@ std::vector<std::optional<Robot>> assignRobots(
   }
 
   Eigen::MatrixXd costs = Eigen::MatrixXd::Constant(
-    positions.size(),
-    available_robots.size(), std::numeric_limits<double>::max());
-  for (size_t i = 0; i < positions.size(); i++) {
-    for (size_t j = 0; j < available_robots.size(); j++) {
-      costs(i, j) = sqrt(CGAL::squared_distance(available_robots.at(j).pos, positions.at(i)));
-      if (!disallowed_robot_ids.empty()) {
-        const auto is_disallowed =
-          std::ranges::find(
-          disallowed_robot_ids[i],
-          available_robots[j].id) != disallowed_robot_ids[i].end();
-        if (is_disallowed) {
-          costs(i, j) = std::numeric_limits<double>::max();
-        }
-      }
+    available_robots.size(),
+    positions.size(), std::numeric_limits<double>::max());
+  for (size_t i = 0; i < available_robots.size(); i++) {
+    for (size_t j = 0; j < positions.size(); j++) {
+      costs(i, j) = sqrt(CGAL::squared_distance(positions.at(j), available_robots.at(i).pos));
     }
   }
 
-  const auto num_assignments = std::min(available_robots.size(), positions.size());
+  std::map<int, std::vector<int>> forbidden;
 
-  for (auto row = 0ul; row < num_assignments; ++row) {
-    Eigen::MatrixXd::Index min_index;
-    if (costs.row(row).minCoeff(&min_index) == std::numeric_limits<double>::max()) {
-      // Don't assign 'infinite' cost robots.
-      // Should only be hit if no bots are available.
-      continue;
+  for (auto disallowed_task = 0ul; disallowed_task < disallowed_robot_ids.size();
+    ++disallowed_task)
+  {
+    const auto & ids = disallowed_robot_ids[disallowed_task];
+    for (auto id_ind = 0ul; id_ind < ids.size(); ++id_ind) {
+      const auto robot_iter =
+        std::ranges::find_if(
+        available_robots, [target_id = ids[id_ind]](const Robot & r) {
+          return r.id == target_id;
+        });
+      if (robot_iter == available_robots.end()) {
+        continue;
+      }
+      const auto robot_ind = std::distance(available_robots.begin(), robot_iter);
+      forbidden[robot_ind].push_back(disallowed_task);
     }
-    assignments[row] = available_robots[min_index];
-    costs.col(min_index).fill(std::numeric_limits<double>::max());
+  }
+
+  const auto assigned_tasks = ateam_common::km_assignment::km_assignment(
+    costs,
+    ateam_common::km_assignment::AssignmentType::MinCost,
+    forbidden);
+
+  for (auto robot_ind = 0ul; robot_ind < assigned_tasks.size(); ++robot_ind) {
+    const auto task_ind = assigned_tasks[robot_ind];
+    if (task_ind >= 0) {
+      assignments.at(task_ind) = available_robots[robot_ind];
+    }
   }
 
   return assignments;
