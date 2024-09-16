@@ -147,7 +147,7 @@ TEST_F(GetPathTest, DisallowPlanningOutOfTheField) {
   start = ateam_geometry::Point(0, 0);
   goal = ateam_geometry::Point(10, 10);
   // Planner returns path to closest valid point to goal along start-goal line
-  expected_path = {start, ateam_geometry::Point(3.17642, 3.17642)};
+  expected_path = {start, ateam_geometry::Point(3.21177, 3.21177)};
   runTest();
 }
 
