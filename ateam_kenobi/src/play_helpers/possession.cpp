@@ -53,13 +53,14 @@ PossessionResult WhoHasPossession(const World & world)
     closest_their_bot_sq_distance = std::min(closest_their_bot_sq_distance, distance);
   }
 
-  if (closest_our_bot_sq_distance < closest_their_bot_sq_distance &&
-    closest_our_bot_sq_distance < possession_threhold_sq)
-  {
+  const auto we_are_closer = closest_our_bot_sq_distance < closest_their_bot_sq_distance;
+  const auto they_are_closer = closest_our_bot_sq_distance > closest_their_bot_sq_distance;
+  const auto we_are_close_enough = closest_our_bot_sq_distance < possession_threhold_sq;
+  const auto they_are_close_enough = closest_their_bot_sq_distance < possession_threhold_sq;
+
+  if (we_are_closer && we_are_close_enough) {
     return PossessionResult::Ours;
-  } else if (closest_our_bot_sq_distance > closest_their_bot_sq_distance &&
-    closest_their_bot_sq_distance < possession_threhold_sq)
-  {
+  } else if (they_are_closer && they_are_close_enough) {
     return PossessionResult::Theirs;
   } else {
     return PossessionResult::Neither;

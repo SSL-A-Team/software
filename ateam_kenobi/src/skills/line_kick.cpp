@@ -230,7 +230,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
       }
       // We are at least sort of already lined up behind the ball
       // try to scoot around/along the obstacle
-      else if (IsRobotBehindBall(world, robot, 5.0)) {
+      else if (IsRobotBehindBall(world, robot, 5.0)) {  // NOLINT
         getPlayInfo()["Cowabunga Mode State"] = "Scoot Around";
 
         // planner_options.avoid_ball = false;

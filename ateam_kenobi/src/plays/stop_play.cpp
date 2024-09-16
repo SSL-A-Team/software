@@ -251,17 +251,19 @@ std::vector<ateam_geometry::AnyShape> StopPlay::getAddedObstacles(const World & 
   const auto half_goal_width = world.field.goal_width / 2.0;
   const auto goal_thickness = 0.1;  // arbitrarily large
 
+  const auto goal_backwall_x = half_field_length + world.field.goal_depth;
+  const auto goal_sidewall_outer_y = half_goal_width + goal_thickness;
+
   obstacles.push_back(
     ateam_geometry::Rectangle{
       ateam_geometry::Point{-half_field_length, -half_goal_width},
-      ateam_geometry::Point{-(half_field_length + world.field.goal_depth),
-        -(half_goal_width + goal_thickness)}
+      ateam_geometry::Point{-goal_backwall_x, -goal_sidewall_outer_y}
     });
 
   obstacles.push_back(
     ateam_geometry::Rectangle{
       ateam_geometry::Point{-half_field_length, half_goal_width},
-      ateam_geometry::Point{-(half_field_length + world.field.goal_depth), half_goal_width + goal_thickness}
+      ateam_geometry::Point{-goal_backwall_x, goal_sidewall_outer_y}
     });
 
   return obstacles;
