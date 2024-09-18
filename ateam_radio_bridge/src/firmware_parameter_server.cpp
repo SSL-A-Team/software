@@ -73,7 +73,7 @@ void FirmwareParameterServer::GetFirmwareParameterCallback(const ateam_msgs::srv
     connections_[robot_id]->send(
       reinterpret_cast<const uint8_t *>(&command_packet),
       GetPacketSize(command_packet.command_code));
-    if(!response_cv_.wait_for(lock, std::chrono::milliseconds(100), [this]{ return response_ready_.load(); })) {
+    if(!response_cv_.wait_for(lock, std::chrono::milliseconds(300), [this]{ return response_ready_.load(); })) {
       response->success = false;
       response->reason = "Timed out waiting for reply.";
       return;

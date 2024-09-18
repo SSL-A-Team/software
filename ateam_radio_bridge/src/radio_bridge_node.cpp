@@ -171,6 +171,7 @@ private:
       if ((std::chrono::steady_clock::now() - motion_command_timestamps_[id]) >
         command_timeout_threshold_)
       {
+        RCLCPP_WARN(get_logger(), "Robot %d command timed out. Sending zeros.", id);
         motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
         motion_commands_[id].kick = ateam_msgs::msg::RobotMotionCommand::KICK_DISABLE;
       }
