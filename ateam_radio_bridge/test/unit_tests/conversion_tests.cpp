@@ -135,17 +135,17 @@ TEST(ConvertControlDebugTelemetry, PacketConversions) {
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_LEFT_MOTOR].velocity, 3.12);
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_LEFT_MOTOR].torque, 2.0);
 
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].setpoint, 3.14);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].velocity, 3.14);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].torque, 3.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].setpoint, 3.14);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].velocity, 3.14);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].torque, 3.0);
 
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_RIGHT_MOTOR].setpoint, 3.14);
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_RIGHT_MOTOR].velocity, 3.15);
   EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_RIGHT_MOTOR].torque, 2.0);
 
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].setpoint, 3.14);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].velocity, 3.20);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].torque, 1.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].setpoint, 3.14);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].velocity, 3.20);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].torque, 1.0);
 
   EXPECT_FLOAT_EQ(motion_feedback_msg.imu.orientation_covariance[0], -1.0);
 
@@ -174,12 +174,12 @@ TEST(ConvertControlDebugTelemetry, PacketConversions) {
   EXPECT_FLOAT_EQ(motion_feedback_msg.body_velocity_control_variable.angular.z, 7.0);
 
   EXPECT_FLOAT_EQ(motion_feedback_msg.wheel_velocity_control_variable[motion_feedback_msg.FRONT_LEFT_MOTOR], 4.0);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.wheel_velocity_control_variable[motion_feedback_msg.FRONT_RIGHT_MOTOR], 5.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.wheel_velocity_control_variable[motion_feedback_msg.BACK_LEFT_MOTOR], 5.0);
   EXPECT_FLOAT_EQ(motion_feedback_msg.wheel_velocity_control_variable[motion_feedback_msg.BACK_RIGHT_MOTOR], 6.0);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.wheel_velocity_control_variable[motion_feedback_msg.BACK_LEFT_MOTOR], 7.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.wheel_velocity_control_variable[motion_feedback_msg.FRONT_RIGHT_MOTOR], 7.0);
 
   EXPECT_FLOAT_EQ(motion_feedback_msg.clamped_wheel_velocity_control_variable[motion_feedback_msg.FRONT_LEFT_MOTOR], 1.0);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.clamped_wheel_velocity_control_variable[motion_feedback_msg.FRONT_RIGHT_MOTOR], 2.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.clamped_wheel_velocity_control_variable[motion_feedback_msg.BACK_LEFT_MOTOR], 2.0);
   EXPECT_FLOAT_EQ(motion_feedback_msg.clamped_wheel_velocity_control_variable[motion_feedback_msg.BACK_RIGHT_MOTOR], 3.0);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.clamped_wheel_velocity_control_variable[motion_feedback_msg.BACK_LEFT_MOTOR], 4.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.clamped_wheel_velocity_control_variable[motion_feedback_msg.FRONT_RIGHT_MOTOR], 4.0);
 }
