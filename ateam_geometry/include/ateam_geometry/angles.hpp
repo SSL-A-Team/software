@@ -18,11 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
-#define ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
+#ifndef ATEAM_GEOMETRY__ANGLES_HPP_
+#define ATEAM_GEOMETRY__ANGLES_HPP_
 
-#include "point_is_near.hpp"
-#include "points_are_near.hpp"
-#include "segment_is_near.hpp"
+#include <angles/angles.h>
+#include "types.hpp"
 
-#endif  // ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
+namespace ateam_geometry
+{
+
+inline double ToHeading(const ateam_geometry::Direction & direction)
+{
+  return std::atan2(direction.dy(), direction.dx());
+}
+
+inline double ToHeading(const ateam_geometry::Vector & vector)
+{
+  return ToHeading(vector.direction());
+}
+
+inline double ShortestAngleBetween(
+  const ateam_geometry::Direction & source,
+  const ateam_geometry::Direction & target)
+{
+  return angles::shortest_angular_distance(ToHeading(source), ToHeading(target));
+}
+
+inline double ShortestAngleBetween(
+  const ateam_geometry::Vector & source,
+  const ateam_geometry::Vector & target)
+{
+  return ShortestAngleBetween(source.direction(), target.direction());
+}
+
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__ANGLES_HPP_

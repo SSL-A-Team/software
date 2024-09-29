@@ -22,6 +22,7 @@
 #define ATEAM_GEOMETRY__TYPES_HPP_
 
 #include <CGAL/Simple_cartesian.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/point_generators_2.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>

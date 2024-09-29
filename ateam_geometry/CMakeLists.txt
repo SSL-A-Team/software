@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(angles REQUIRED)
 
 set(CGAL_DATA_DIR ".") # Silence CGAL warning since we don't use its data directory
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
@@ -24,6 +25,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
+  angles
   Eigen3
   CGAL
 )

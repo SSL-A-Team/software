@@ -18,11 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
-#define ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
+#ifndef ATEAM_GEOMETRY__ORIENTATION_HPP_
+#define ATEAM_GEOMETRY__ORIENTATION_HPP_
 
-#include "point_is_near.hpp"
-#include "points_are_near.hpp"
-#include "segment_is_near.hpp"
+#include "ateam_geometry/types.hpp"
 
-#endif  // ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
+
+namespace ateam_geometry
+{
+
+enum class Orientation
+{
+  Colinear,
+  Clockwise,
+  Counterclockwise
+};
+
+/**
+ * @brief Determines the orientation of the points in order A->B->C
+ * @note Based on https://www.geeksforgeeks.org/orientation-3-ordered-points/
+ */
+inline Orientation orientation(const Point & a, const Point & b, const Point & c)
+{
+  const auto slope_diff = (b.y() - a.y()) * (c.x() - b.x()) - (b.x() - a.x()) * (c.y() - b.y());
+  if (std::abs(slope_diff) < 1e-12) {
+    return Orientation::Colinear;
+  }
+  return slope_diff > 0 ? Orientation::Clockwise : Orientation::Counterclockwise;
+}
+
+}  // namespace ateam_geometry
+
+#endif  // ATEAM_GEOMETRY__ORIENTATION_HPP_
