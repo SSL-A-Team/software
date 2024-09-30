@@ -1,2 +1,2 @@
 ssl_league_msgs/Team by_team
-geometry_msgs/Point32[<=1] location
+geometry_msgs/Point32[] location

@@ -1,1 +1,1 @@
-float32[<=1] time_taken
+float32[] time_taken
