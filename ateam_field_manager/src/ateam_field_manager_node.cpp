@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -64,7 +64,6 @@ public:
       std::bind(
         &FieldManagerNode::handle_set_ignore_field_side, this, std::placeholders::_1,
         std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
-
   }
 
   void vision_callback(
@@ -105,6 +104,6 @@ private:
 
   int ignore_side_ = 0;
 };
-}  // namespace ateam_vision_filter
+}  // namespace ateam_field_manager
 
 RCLCPP_COMPONENTS_REGISTER_NODE(ateam_field_manager::FieldManagerNode)

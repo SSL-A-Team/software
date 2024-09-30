@@ -24,6 +24,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <geometry_msgs/msg/point32.hpp>
 
 namespace ateam_field_manager::message_conversions
 {

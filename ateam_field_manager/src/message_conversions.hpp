@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,9 @@ ateam_msgs::msg::FieldInfo fromMsg(
   const ssl_league_msgs::msg::VisionGeometryData & ros_msg,
   const ateam_common::TeamSide & team_side,
   const int ignore_side);
+
 void invertFieldInfo(ateam_msgs::msg::FieldInfo & info);
+
 std::vector<geometry_msgs::msg::Point32> getPointsFromLines(
   const std::vector<ssl_league_msgs::msg::VisionFieldLineSegment> & lines,
   const std::vector<std::string> & line_names);
