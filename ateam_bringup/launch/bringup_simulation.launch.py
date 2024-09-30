@@ -58,8 +58,8 @@ def generate_launch_description():
                 PackageLaunchFileSubstitution("ateam_bringup",
                                               "game_controller_nodes.launch.xml")),
             launch_arguments={
-                "net_interface_address": "",
-                "gc_ip_address": "127.0.0.1",
+                "net_interface_address": "172.17.0.1",
+                "gc_ip_address": "172.17.0.2",
                 "team_name": LaunchConfiguration("team_name")
             }.items()
         ),
@@ -71,7 +71,8 @@ def generate_launch_description():
             launch_arguments={
                 "ssl_vision_interface_address": "",
                 "ssl_vision_port": "10020",
-                "team_name": LaunchConfiguration("team_name")
+                "team_name": LaunchConfiguration("team_name"),
+                "use_emulated_ballsense": "True"
             }.items()
         ),
 
