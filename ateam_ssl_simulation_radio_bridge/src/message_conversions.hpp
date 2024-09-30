@@ -23,6 +23,9 @@
 
 #include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
 #include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
+#include <ssl_league_protobufs/ssl_simulation_control.pb.h>
+
+#include <ssl_league_msgs/msg/simulator_control.hpp>
 
 #include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
@@ -33,6 +36,8 @@ namespace ateam_ssl_simulation_radio_bridge::message_conversions
 ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg);
 
 RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id);
+
+SimulatorControl fromMsg(const ssl_league_msgs::msg::SimulatorControl & ros_msg);
 
 }  // namespace ateam_ssl_simulation_radio_bridge::message_conversions
 
