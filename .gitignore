@@ -1,2 +1,6 @@
 # Python
 *.py[cod]
+
+# VS Code settings
+.vscode
+
