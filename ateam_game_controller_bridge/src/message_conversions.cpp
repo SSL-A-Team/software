@@ -64,8 +64,8 @@ ssl_league_msgs::msg::Referee fromProto(const Referee & proto_msg)
   ros_msg.command_timestamp = rclcpp::Time(proto_msg.command_timestamp() * 1000);
   ros_msg.yellow = fromProto(proto_msg.yellow());
   ros_msg.blue = fromProto(proto_msg.blue());
-  ros_msg.designated_position.x = proto_msg.designated_position().x();
-  ros_msg.designated_position.y = proto_msg.designated_position().y();
+  ros_msg.designated_position.x = proto_msg.designated_position().x() / 1000.0;
+  ros_msg.designated_position.y = proto_msg.designated_position().y() / 1000.0;
   ros_msg.blue_team_on_positive_half = proto_msg.blue_team_on_positive_half();
   ros_msg.next_command = proto_msg.next_command();
   std::transform(
