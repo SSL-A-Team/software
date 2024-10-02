@@ -3,8 +3,11 @@ float32 field_width
 float32 goal_width
 float32 goal_depth
 float32 boundary_width
+float32 defense_area_width
+float32 defense_area_depth
 geometry_msgs/Point32 center_circle
 float32 center_circle_radius
 geometry_msgs/Polygon field_corners
+int32 ignore_side
 FieldSidedInfo ours
 FieldSidedInfo theirs

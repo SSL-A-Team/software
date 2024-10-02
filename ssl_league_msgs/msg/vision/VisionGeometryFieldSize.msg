@@ -5,11 +5,11 @@ float32 goal_depth
 float32 boundary_width
 ssl_league_msgs/VisionFieldLineSegment[] field_lines
 ssl_league_msgs/VisionFieldCircularArc[] field_arcs
-int32 penalty_area_depth
-int32 penalty_area_width
-int32 center_circle_radius
-int32 line_thickness
-int32 goal_center_to_penalty_mark
-int32 goal_height
+float32 penalty_area_depth
+float32 penalty_area_width
+float32 center_circle_radius
+float32 line_thickness
+float32 goal_center_to_penalty_mark
+float32 goal_height
 float32 ball_radius
 float32 max_robot_radius

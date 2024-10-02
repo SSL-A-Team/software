@@ -1,0 +1,6 @@
+# Request
+int32 ignore_side
+---
+# Response
+bool success
+string reason
