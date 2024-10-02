@@ -73,6 +73,8 @@ public:
     // controls the size of steps when changing dribbler speed
     declare_parameter<double>("dribbler_speed_step", 10.0);
 
+    declare_parameter<double>("kick_speed", 5.0);
+
     CreatePublisher(declare_parameter<int>("robot_id", 0));
     parameter_callback_handle_ =
       add_on_set_parameters_callback(
@@ -132,7 +134,7 @@ private:
     const auto kick_button = get_parameter("mapping.kick").as_int();
     if (joy_message->buttons[kick_button]) {
       command_message.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
-      command_message.kick_speed = 5.0;
+      command_message.kick_speed = get_parameter("kick_speed").as_double();
     }
 
     const auto dribbler_inc_button = get_parameter("mapping.dribbler.increment").as_int();
