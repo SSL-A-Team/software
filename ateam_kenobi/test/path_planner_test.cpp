@@ -107,7 +107,8 @@ protected:
   {
     const auto path = getPath();
     expectExecutionTimeWithinLimits();
-    EXPECT_THAT(path, testing::Pointwise(PointsAreNear(), expected_path));
+    const auto millimeter = 1e-3;
+    EXPECT_THAT(path, testing::Pointwise(PointsAreNear(millimeter), expected_path));
     if (::testing::Test::HasFailure()) {
       printPath(path);
     }

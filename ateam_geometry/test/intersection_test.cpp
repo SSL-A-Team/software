@@ -72,8 +72,8 @@ TEST(IntersectionTests, CircleToLine)
     Optional(
       VariantWith<PointPair>(
         Pair(
-          PointIsNear(ag::Point(-0.642, 0.858)),
-          PointIsNear(ag::Point(2.142, 3.642))))));
+          PointIsNear(ag::Point(-0.6419409, 0.8580589)),
+          PointIsNear(ag::Point(2.1419411, 3.6419411))))));
 
   const auto line_secant_2 = ag::Line(ag::Point(0, 2), ag::Point(1, 2));
   EXPECT_THAT(
@@ -107,8 +107,8 @@ TEST(IntersectionTests, ArcToLine)
     Optional(
       VariantWith<PointPair>(
         Pair(
-          PointIsNear(ag::Point(5.161, 8.741)),
-          PointIsNear(ag::Point(9.301, 14.951))))));
+          PointIsNear(ag::Point(5.1609809, 8.7414714)),
+          PointIsNear(ag::Point(9.3005575, 14.9508363))))));
 }
 
 TEST(IntersectionTests, ArcToRay)
@@ -127,7 +127,7 @@ TEST(IntersectionTests, ArcToRay)
   const auto ray_secant_1_intersect = ag::Ray(ag::Point(0, 1), ag::Point(-2, 4));
   EXPECT_THAT(
     ag::intersection(arc, ray_secant_1_intersect),
-    Optional(VariantWith<ag::Point>(PointIsNear(ag::Point(-3.209, 5.813)))));
+    Optional(VariantWith<ag::Point>(PointIsNear(ag::Point(-3.208678, 5.813017)))));
 
   const auto ray_secant_2_intersects = ag::Ray(ag::Point(-10, 5), ag::Point(0, 5));
   EXPECT_THAT(
@@ -135,8 +135,8 @@ TEST(IntersectionTests, ArcToRay)
     Optional(
       VariantWith<PointPair>(
         Pair(
-          PointIsNear(ag::Point(-4.646, 5)),
-          PointIsNear(ag::Point(0.646, 5))))));
+          PointIsNear(ag::Point(-4.645751, 5)),
+          PointIsNear(ag::Point(0.6457513, 5))))));
 }
 
 TEST(IntersectionTests, ArcToSegment)
@@ -150,7 +150,7 @@ TEST(IntersectionTests, ArcToSegment)
   const auto segment_tangent = ag::Segment(ag::Point(0, -std::sqrt(2)), ag::Point(std::sqrt(2), 0));
   EXPECT_THAT(
     ag::intersection(arc, segment_tangent),
-    Optional(VariantWith<ag::Point>(PointIsNear(ag::Point(0.707, -0.707)))));
+    Optional(VariantWith<ag::Point>(PointIsNear(ag::Point(0.707107, -0.707107)))));
 
   const auto segment_secant_1_intersect = ag::Segment(ag::Point(0, 0), ag::Point(0, -1));
   EXPECT_THAT(
@@ -163,8 +163,8 @@ TEST(IntersectionTests, ArcToSegment)
     Optional(
       VariantWith<PointPair>(
         Pair(
-          PointIsNear(ag::Point(-0.707, -0.707)),
-          PointIsNear(ag::Point(0.707, 0.707))))));
+          PointIsNear(ag::Point(-0.707107, -0.707107)),
+          PointIsNear(ag::Point(0.707107, 0.707107))))));
 }
 
 TEST(IntersectionTests, SegmentToSegmentNoIntersection)
