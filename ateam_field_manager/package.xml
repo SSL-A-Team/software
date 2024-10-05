@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ateam_ssl_simulation_radio_bridge</name>
+  <name>ateam_field_manager</name>
   <version>0.0.0</version>
-  <description>Bridges robot commands in ROS to the SSL simulation input stream.</description>
-  <maintainer email="fcdneiger@gmail.com">Joseph Neiger</maintainer>
+  <description>Calculates field dimensions and manages extra features</description>
+  <maintainer email="mwoodward@gatech.edu">Matthew Woodward</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -12,13 +12,13 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>ateam_common</depend>
+  <depend>ateam_geometry</depend>
   <depend>ateam_msgs</depend>
-  <depend>tf2</depend>
-  <depend>tf2_geometry_msgs</depend>
-  <depend>ssl_league_protobufs</depend>
+  <depend>ssl_league_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -1,2 +1,2 @@
-geometry_msgs/Point32[<=1] location
-float32[<=1] time
+geometry_msgs/Point32[] location
+float32[] time

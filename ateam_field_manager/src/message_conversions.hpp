@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,24 +21,31 @@
 #ifndef MESSAGE_CONVERSIONS_HPP_
 #define MESSAGE_CONVERSIONS_HPP_
 
-#include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
-#include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
-#include <ssl_league_protobufs/ssl_simulation_control.pb.h>
+#include <optional>
+#include <string>
+#include <vector>
+#include <ateam_msgs/msg/field_info.hpp>
+#include <ateam_msgs/msg/field_sided_info.hpp>
+#include <ateam_common/game_controller_listener.hpp>
+#include <ssl_league_msgs/msg/vision_detection_ball.hpp>
+#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
+#include <ssl_league_msgs/msg/vision_detection_frame.hpp>
+#include <ssl_league_msgs/msg/vision_wrapper.hpp>
 
-#include <ssl_league_msgs/msg/simulator_control.hpp>
-
-#include <ateam_msgs/msg/robot_feedback.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-
-namespace ateam_ssl_simulation_radio_bridge::message_conversions
+namespace ateam_field_manager::message_conversions
 {
 
-ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg);
+ateam_msgs::msg::FieldInfo fromMsg(
+  const ssl_league_msgs::msg::VisionGeometryData & ros_msg,
+  const ateam_common::TeamSide & team_side,
+  const int ignore_side);
 
-RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id);
+void invertFieldInfo(ateam_msgs::msg::FieldInfo & info);
 
-SimulatorControl fromMsg(const ssl_league_msgs::msg::SimulatorControl & ros_msg);
+std::vector<geometry_msgs::msg::Point32> getPointsFromLines(
+  const std::vector<ssl_league_msgs::msg::VisionFieldLineSegment> & lines,
+  const std::vector<std::string> & line_names);
 
-}  // namespace ateam_ssl_simulation_radio_bridge::message_conversions
+}  // namespace ateam_field_manager::message_conversions
 
 #endif  // MESSAGE_CONVERSIONS_HPP_

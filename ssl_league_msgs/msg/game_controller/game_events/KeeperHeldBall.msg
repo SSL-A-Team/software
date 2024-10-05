@@ -1,3 +1,3 @@
 ssl_league_msgs/Team by_team
-geometry_msgs/Point32[<=1] location
-float32[<=1] duration
+geometry_msgs/Point32[] location
+float32[] duration

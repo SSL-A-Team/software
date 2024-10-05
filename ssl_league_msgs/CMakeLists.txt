@@ -72,6 +72,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
   msg/vision/VisionWrapper.msg
 
+  msg/simulator/SimulatorControl.msg
+  msg/simulator/TeleportBallCommand.msg
+  msg/simulator/TeleportRobotCommand.msg
+
   DEPENDENCIES
   builtin_interfaces
   std_msgs
