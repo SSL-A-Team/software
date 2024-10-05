@@ -220,6 +220,23 @@ TEST(IntersectionTests, SegmentToSegmentColinearOverlap)
             ag::Point{1.0, 1.0}}))));
 }
 
+TEST(IntersectionTests, SegmentToSegmentColinearOnePoint)
+{
+  ag::Segment a{
+    ag::Point{0, 0},
+    ag::Point{1, 1}
+  };
+
+  ag::Segment b{
+    ag::Point{1, 1},
+    ag::Point{2, 2}
+  };
+
+  EXPECT_THAT(
+    ag::intersection(a, b),
+    Optional(VariantWith<ag::Point>(PointIsNear(ag::Point{1, 1}))));
+}
+
 TEST(IntersectionTests, SegmentToSegmentColinearNoIntersection)
 {
   ag::Segment a{

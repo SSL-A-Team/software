@@ -234,6 +234,11 @@ std::optional<std::variant<Point, Segment>> intersection(const Segment & a, cons
     };
     std::sort(points.begin(), points.end());
 
+    if (nearEqual(points[1].point, points[2].point)) {
+      // Colinear segments overlap on a single point
+      return points[1].point;
+    }
+
     if (points[0].segment_index == points[1].segment_index) {
       // Colinear segments do not overlap
       return std::nullopt;
