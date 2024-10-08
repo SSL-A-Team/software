@@ -18,33 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__COMPARISONS_HPP_
-#define ATEAM_GEOMETRY__COMPARISONS_HPP_
-
-#include "types.hpp"
-#include "normalize.hpp"
-#include "epsilon.hpp"
+#ifndef ATEAM_GEOMETRY__EPSILON_HPP_
+#define ATEAM_GEOMETRY__EPSILON_HPP_
 
 namespace ateam_geometry
 {
 
-inline bool nearEqual(const Point & a, const Point & b, const double threshold = kDistanceEpsilon)
-{
-  return CGAL::squared_distance(a, b) < (threshold * threshold);
-}
+/// @brief Epsilon for treating a generic float as effectively 0
+const double kGenericEpsilon = 1e-8;
 
-inline bool nearEqual(const Vector & a, const Vector & b, const double threshold = kDistanceEpsilon)
-{
-  return std::hypot(a.x() - b.x(), a.y() - b.y()) < threshold;
-}
+/// @brief Epsilon under which an angle is effectively 0. In radians.
+/// Set to 0.01 degrees
+const double kAngleEpsilon = 1.75e-4;
 
-inline bool nearEqual(
-  const Direction & a, const Direction & b,
-  const double threshold = kDistanceEpsilon)
-{
-  return nearEqual(normalize(a.vector()), normalize(b.vector()), threshold);
-}
+/// @brief Epsilon under which a distance is effectively 0. In meters.
+/// Set to 1 micrometer
+const double kDistanceEpsilon = 1e-6;
 
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__COMPARISONS_HPP_
+#endif  // ATEAM_GEOMETRY__EPSILON_HPP_

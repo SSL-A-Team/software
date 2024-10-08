@@ -28,7 +28,7 @@ using ateam_geometry::Point;
 TEST(PointIsNearTests, MatchNearPoints)
 {
   EXPECT_THAT(Point(1, 1), PointIsNear(Point(1, 1)));
-  EXPECT_THAT(Point(1, 1), PointIsNear(Point(1.005, 1.005)));
+  EXPECT_THAT(Point(1, 1), PointIsNear(Point(1.0000005, 1.0000005)));
 }
 
 TEST(PointIsNearTests, DontMatchFarPoints)

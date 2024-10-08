@@ -51,6 +51,8 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
   const Arc & arc,
   const Segment & segment);
 
+std::optional<std::variant<Point, Segment>> intersection(const Segment & a, const Segment & b);
+
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__INTERSECTION_HPP_

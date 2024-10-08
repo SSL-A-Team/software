@@ -21,83 +21,8 @@
 #ifndef ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
 #define ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
 
-#include <gmock/gmock.h>
-#include <CGAL/squared_distance_2.h>
-#include <tuple>
-#include <ateam_geometry/types.hpp>
-#include <ateam_geometry/comparisons.hpp>
-
-// Style deviations in this file to match Google Test styling
-
-class PointIsNearMatcher : public ::testing::MatcherInterface<const ateam_geometry::Point &>
-{
-public:
-  explicit PointIsNearMatcher(const ateam_geometry::Point target, double threshold = 0.01)
-  : target_(target), threshold_(threshold) {}
-
-  bool MatchAndExplain(
-    const ateam_geometry::Point & p,
-    ::testing::MatchResultListener *) const override
-  {
-    return ateam_geometry::nearEqual(p, target_, threshold_);
-  }
-
-  void DescribeTo(std::ostream * os) const override
-  {
-    *os << "is near (" << target_.x() << ", " << target_.y() << ")";
-  }
-
-  void DescribeNegationTo(std::ostream * os) const override
-  {
-    *os << "is not near (" << target_.x() << ", " << target_.y() << ")";
-  }
-
-private:
-  const ateam_geometry::Point target_;
-  const double threshold_;
-};
-
-inline ::testing::Matcher<const ateam_geometry::Point &> PointIsNear(
-  const ateam_geometry::Point & target,
-  double threshold = 0.01)
-{
-  return ::testing::MakeMatcher(new PointIsNearMatcher(target, threshold));
-}
-
-class PointsAreNearMatcher : public ::testing::MatcherInterface<std::tuple<ateam_geometry::Point,
-    ateam_geometry::Point>>
-{
-public:
-  explicit PointsAreNearMatcher(double threshold = 0.01)
-  : threshold_(threshold) {}
-
-  bool MatchAndExplain(
-    std::tuple<ateam_geometry::Point, ateam_geometry::Point> points,
-    ::testing::MatchResultListener *) const override
-  {
-    return ateam_geometry::nearEqual(std::get<0>(points), std::get<1>(points), threshold_);
-  }
-
-  void DescribeTo(std::ostream * os) const override
-  {
-    *os << "are near";
-  }
-
-  void DescribeNegationTo(std::ostream * os) const override
-  {
-    *os << "are not near";
-  }
-
-private:
-  const double threshold_;
-};
-
-inline ::testing::Matcher<std::tuple<ateam_geometry::Point, ateam_geometry::Point>> PointsAreNear(
-  double threshold = 0.01)
-{
-  return ::testing::MakeMatcher<std::tuple<ateam_geometry::Point, ateam_geometry::Point>>(
-    new PointsAreNearMatcher(
-      threshold));
-}
+#include "point_is_near.hpp"
+#include "points_are_near.hpp"
+#include "segment_is_near.hpp"
 
 #endif  // ATEAM_GEOMETRY_TESTING__TESTING_UTILS_HPP_
