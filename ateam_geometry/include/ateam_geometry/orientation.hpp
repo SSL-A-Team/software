@@ -22,6 +22,7 @@
 #define ATEAM_GEOMETRY__ORIENTATION_HPP_
 
 #include "ateam_geometry/types.hpp"
+#include "ateam_geometry/epsilon.hpp"
 
 
 namespace ateam_geometry
@@ -41,7 +42,7 @@ enum class Orientation
 inline Orientation orientation(const Point & a, const Point & b, const Point & c)
 {
   const auto slope_diff = (b.y() - a.y()) * (c.x() - b.x()) - (b.x() - a.x()) * (c.y() - b.y());
-  if (std::abs(slope_diff) < 1e-12) {
+  if (std::abs(slope_diff) < kGenericEpsilon) {
     return Orientation::Colinear;
   }
   return slope_diff > 0 ? Orientation::Clockwise : Orientation::Counterclockwise;

@@ -31,6 +31,7 @@
 #include "disk.hpp"
 #include "do_intersect.hpp"
 #include "eigen_conversions.hpp"
+#include "epsilon.hpp"
 #include "intersection.hpp"
 #include "nearest_point.hpp"
 #include "normalize.hpp"

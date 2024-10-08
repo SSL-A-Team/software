@@ -26,13 +26,16 @@
 #include <tuple>
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/comparisons.hpp>
+#include <ateam_geometry/epsilon.hpp>
 
 // Style deviations in this file to match Google Test styling
 
 class PointIsNearMatcher : public ::testing::MatcherInterface<const ateam_geometry::Point &>
 {
 public:
-  explicit PointIsNearMatcher(const ateam_geometry::Point target, double threshold = 0.01)
+  explicit PointIsNearMatcher(
+    const ateam_geometry::Point target,
+    double threshold = ateam_geometry::kDistanceEpsilon)
   : target_(target), threshold_(threshold) {}
 
   bool MatchAndExplain(
@@ -59,7 +62,7 @@ private:
 
 inline ::testing::Matcher<const ateam_geometry::Point &> PointIsNear(
   const ateam_geometry::Point & target,
-  double threshold = 0.01)
+  double threshold = ateam_geometry::kDistanceEpsilon)
 {
   return ::testing::MakeMatcher(new PointIsNearMatcher(target, threshold));
 }

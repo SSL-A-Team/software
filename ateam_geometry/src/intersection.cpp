@@ -20,6 +20,7 @@
 
 #include "ateam_geometry/intersection.hpp"
 #include "ateam_geometry/comparisons.hpp"
+#include "ateam_geometry/epsilon.hpp"
 #include "ateam_geometry/orientation.hpp"
 
 namespace ateam_geometry
@@ -61,7 +62,7 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
   const auto y1 = ((-D * d_x) - (std::abs(d_y) * sqrt_descriminant)) / d_r_sqrd;
   const auto y2 = ((-D * d_x) + (std::abs(d_y) * sqrt_descriminant)) / d_r_sqrd;
 
-  if (std::abs(descriminant) < 1e-8) {
+  if (std::abs(descriminant) < kGenericEpsilon) {
     // Tangent line
     return circle.center() + Vector(x1, y1);
   } else if (descriminant > 0.0) {
@@ -123,7 +124,7 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
 
   // Not using Ray::has_on() because it does not account for small floating point mismatch
   auto point_on_ray = [&ray](const auto & p) {
-      return CGAL::squared_distance(p, ray) < 1e-6;
+      return CGAL::squared_distance(p, ray) < kDistanceEpsilon;
     };
 
   if (std::holds_alternative<Point>(*arc_intersection)) {
@@ -163,7 +164,7 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
 
   // Not using Segment::has_on() because it does not account for small floating point mismatch
   auto point_on_segment = [&segment](const auto & p) {
-      return CGAL::squared_distance(p, segment) < 1e-6;
+      return CGAL::squared_distance(p, segment) < kDistanceEpsilon;
     };
 
   if (std::holds_alternative<Point>(*arc_intersection)) {
@@ -219,7 +220,7 @@ std::optional<std::variant<Point, Segment>> intersection(const Segment & a, cons
       int segment_index;
       bool operator<(const PointWithSegmentIndex & other) const
       {
-        if (std::abs(point.x() - other.point.x()) < 1e-12) {
+        if (std::abs(point.x() - other.point.x()) < kDistanceEpsilon) {
           return point.y() < other.point.y();
         }
         return point.x() < other.point.x();
@@ -232,6 +233,11 @@ std::optional<std::variant<Point, Segment>> intersection(const Segment & a, cons
       {b.target(), 1}
     };
     std::sort(points.begin(), points.end());
+
+    if (nearEqual(points[1].point, points[2].point)) {
+      // Colinear segments overlap on a single point
+      return points[1].point;
+    }
 
     if (points[0].segment_index == points[1].segment_index) {
       // Colinear segments do not overlap
