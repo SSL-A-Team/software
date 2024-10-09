@@ -19,6 +19,7 @@ export default defineConfig({
     },
     base: '',
     build: {
-        outDir: 'resources'
+        outDir: 'resources',
+        chunkSizeWarningLimit: 1000
     }
 });

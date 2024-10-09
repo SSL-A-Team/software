@@ -20,7 +20,6 @@ import AIRecursiveComponent from "./AIRecursiveComponent.vue";
 export default {
     inject: ['state'],
     mounted() {
-        console.dir(this.$el)
     },
     computed: {
         getAIDescription: function() {
