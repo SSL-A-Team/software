@@ -32,13 +32,12 @@ TheirPenaltyPlay::TheirPenaltyPlay(stp::Options stp_options)
   move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
   goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  goalie_skill_.possesionTolerance() = 0.3;
 }
 
-double TheirPenaltyPlay::getScore(const World & world)
+stp::PlayScore TheirPenaltyPlay::getScore(const World & world)
 {
   if (world.in_play) {
-    return std::numeric_limits<double>::quiet_NaN();
+    return stp::PlayScore::NaN();
   }
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
@@ -46,9 +45,9 @@ double TheirPenaltyPlay::getScore(const World & world)
     (cmd == ateam_common::GameCommand::NormalStart &&
     prev == ateam_common::GameCommand::PreparePenaltyTheirs))
   {
-    return std::numeric_limits<double>::max();
+    return stp::PlayScore::Max();
   }
-  return std::numeric_limits<double>::quiet_NaN();
+  return stp::PlayScore::NaN();
 }
 
 void TheirPenaltyPlay::reset()
@@ -65,10 +64,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyP
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
-
-  if (available_robots.empty()) {
-    return {};
-  }
 
   goalie_skill_.runFrame(world, motion_commands);
 

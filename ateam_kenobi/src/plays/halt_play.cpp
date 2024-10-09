@@ -30,7 +30,7 @@ HaltPlay::HaltPlay(stp::Options stp_options)
 {
 }
 
-double HaltPlay::getScore(const World & world)
+stp::PlayScore HaltPlay::getScore(const World & world)
 {
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::Halt:
@@ -38,9 +38,9 @@ double HaltPlay::getScore(const World & world)
     case ateam_common::GameCommand::TimeoutTheirs:
     case ateam_common::GameCommand::GoalOurs:
     case ateam_common::GameCommand::GoalTheirs:
-      return std::numeric_limits<double>::max();
+      return stp::PlayScore::Max();
     default:
-      return std::numeric_limits<double>::lowest();
+      return stp::PlayScore::Min();
   }
 }
 

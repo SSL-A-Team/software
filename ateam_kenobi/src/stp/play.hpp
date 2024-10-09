@@ -23,15 +23,22 @@
 #define STP__PLAY_HPP_
 
 #include <array>
-#include <limits>
 #include <optional>
 #include <string>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "base.hpp"
+#include "play_score.hpp"
 #include "types/world.hpp"
 
 namespace ateam_kenobi::stp
 {
+
+enum class PlayCompletionState
+{
+  NotApplicable,
+  Done,
+  Busy
+};
 
 class Play : public Base
 {
@@ -50,11 +57,21 @@ public:
    *
    * If getScore() returns NaN, the play will never be executed unless specified via play override
    *
-   * @return double
+   * @return PlayScore
    */
-  virtual double getScore(const World &)
+  virtual PlayScore getScore(const World &)
   {
-    return std::numeric_limits<double>::quiet_NaN();
+    return PlayScore::NaN();
+  }
+
+  /**
+   * @brief Returns the completion state of the robot
+   *
+   * Should only be used by plays when interrupting them would be bad (ie. passing)
+   */
+  virtual PlayCompletionState getCompletionState()
+  {
+    return PlayCompletionState::NotApplicable;
   }
 
   virtual void reset() = 0;
