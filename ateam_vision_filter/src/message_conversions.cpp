@@ -22,8 +22,11 @@
 
 #include <tf2/utils.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
+#include <ateam_geometry/ateam_geometry.hpp>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
@@ -66,6 +69,14 @@ ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot)
       tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
     robot_state_msg.twist.angular.z = obj.omega;
     robot_state_msg.accel.angular.z = obj.alpha;
+
+    ateam_geometry::Vector velocity(robot_state_msg.twist.linear.x, robot_state_msg.twist.linear.y);
+    CGAL::Aff_transformation_2<ateam_geometry::Kernel> transformation(CGAL::ROTATION,
+      std::sin(-obj.theta), std::cos(-obj.theta));
+    const auto velocity_trans = velocity.transform(transformation);
+    robot_state_msg.twist_body.linear.x = velocity_trans.x();
+    robot_state_msg.twist_body.linear.y = velocity_trans.y();
+    robot_state_msg.twist_body.angular.z = robot_state_msg.twist.angular.z;
   }
 
   return robot_state_msg;
@@ -130,6 +141,8 @@ ateam_msgs::msg::FieldInfo fromMsg(
   field_info.goal_width = ros_msg.goal_width;
   field_info.goal_depth = ros_msg.goal_depth;
   field_info.boundary_width = ros_msg.boundary_width;
+  field_info.defense_area_width = ros_msg.penalty_area_width;
+  field_info.defense_area_depth = ros_msg.penalty_area_depth;
 
   field_info.field_corners.points = getPointsFromLines(
     ros_msg.field_lines,
@@ -161,6 +174,28 @@ ateam_msgs::msg::FieldInfo fromMsg(
   left_side_info.defense_area_corners.points = getPointsFromLines(
     ros_msg.field_lines,
     {"LeftFieldLeftPenaltyStretch", "LeftFieldRightPenaltyStretch"});
+
+  // If defense area depth is not set from proto, calculate it from points
+  if (field_info.defense_area_depth == 0.0) {
+    float max_x = -std::numeric_limits<float>::infinity();
+    float min_x = std::numeric_limits<float>::infinity();
+    for (const auto & point : left_side_info.defense_area_corners.points) {
+      max_x = std::max(max_x, point.x);
+      min_x = std::min(min_x, point.x);
+    }
+    field_info.defense_area_depth = max_x - min_x;
+  }
+
+  // If defense area width is not set from proto, calculate it from points
+  if (field_info.defense_area_width == 0.0) {
+    float max_y = -std::numeric_limits<float>::infinity();
+    float min_y = std::numeric_limits<float>::infinity();
+    for (const auto & point : left_side_info.defense_area_corners.points) {
+      max_y = std::max(max_y, point.y);
+      min_y = std::min(min_y, point.y);
+    }
+    field_info.defense_area_width = max_y - min_y;
+  }
 
   ateam_msgs::msg::FieldSidedInfo right_side_info;
   right_side_info.goal_corners.points = {

@@ -51,20 +51,29 @@ void Camera::update(const CameraMeasurement & camera_measurement)
     if (!camera_measurement.yellow_robots.at(robot_id).empty()) {
       std::vector<Eigen::VectorXd> vectored_measurements =
         robot_measurements_to_vector(camera_measurement.yellow_robots.at(robot_id));
-      yellow_team.at(robot_id).update(vectored_measurements);
+      removeMeasurementsOnIngoredHalf(vectored_measurements);
+      if (!vectored_measurements.empty()) {
+        yellow_team.at(robot_id).update(vectored_measurements);
+      }
     }
 
     if (!camera_measurement.blue_robots.at(robot_id).empty()) {
       std::vector<Eigen::VectorXd> vectored_measurements =
         robot_measurements_to_vector(camera_measurement.blue_robots.at(robot_id));
-      blue_team.at(robot_id).update(vectored_measurements);
+      removeMeasurementsOnIngoredHalf(vectored_measurements);
+      if (!vectored_measurements.empty()) {
+        blue_team.at(robot_id).update(vectored_measurements);
+      }
     }
   }
 
   if (!camera_measurement.ball.empty()) {
     std::vector<Eigen::VectorXd> vectored_measurements =
       ball_measurements_to_vector(camera_measurement.ball);
-    ball.update(vectored_measurements);
+    removeMeasurementsOnIngoredHalf(vectored_measurements);
+    if (!vectored_measurements.empty()) {
+      ball.update(vectored_measurements);
+    }
   }
 }
 
@@ -120,6 +129,21 @@ ateam_msgs::msg::VisionCameraState Camera::get_vision_camera_state() const
   camera_state.ball = ball.get_vision_mht_state();
 
   return camera_state;
+}
+
+void Camera::removeMeasurementsOnIngoredHalf(std::vector<Eigen::VectorXd> & measurements)
+{
+  measurements.erase(
+    std::remove_if(
+      measurements.begin(), measurements.end(), [this](const auto & m) {
+        if (ignore_half_ < 0 && m[0] < 0.0) {
+          return true;
+        }
+        if (ignore_half_ > 0 && m[0] > 0.0) {
+          return true;
+        }
+        return false;
+      }), measurements.end());
 }
 
 void Camera::setup_ball_interacting_multiple_model_filter(
