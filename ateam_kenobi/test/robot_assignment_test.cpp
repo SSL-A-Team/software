@@ -130,3 +130,55 @@ TEST(RobotAssignmentTest, DisallowAssigningDisallowedRobots)
   const auto assignments = assignRobots(robots, goals, disallowed_ids);
   EXPECT_THAT(assignments, testing::ElementsAre(Eq(std::nullopt)));
 }
+
+TEST(GroupAssignmentTest, ThreeGroups) {
+  std::vector<Robot> robots {
+    {0, true, true, ateam_geometry::Point(0, 0), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false},
+    {1, true, true, ateam_geometry::Point(1, 1), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false},
+    {2, true, true, ateam_geometry::Point(2, 2), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false},
+    {3, true, true, ateam_geometry::Point(3, 3), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false},
+    {4, true, true, ateam_geometry::Point(4, 4), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false}
+  };
+
+  play_helpers::GroupAssignmentSet groups;
+  groups.AddPosition("kicker", ateam_geometry::Point(0, 0));
+  groups.AddGroup("support", {ateam_geometry::Point(1, 1), ateam_geometry::Point(2, 2)});
+  groups.AddGroup("defense", {ateam_geometry::Point(3, 3), ateam_geometry::Point(4, 4)});
+
+  const auto assignments = play_helpers::assignGroups(robots, groups);
+
+  EXPECT_THAT(assignments.GetPositionAssignment("kicker"), Optional(Field(&Robot::id, Eq(0))));
+  EXPECT_THAT(
+    assignments.GetGroupAssignments("support"),
+    ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
+  EXPECT_THAT(
+    assignments.GetGroupAssignments("defense"),
+    ElementsAre(Optional(Field(&Robot::id, Eq(3))), Optional(Field(&Robot::id, Eq(4)))));
+}
+
+TEST(GroupAssignmentTest, DisallowedIds) {
+  std::vector<Robot> robots {
+    {0, true, true, ateam_geometry::Point(0, 0), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false},
+    {1, true, true, ateam_geometry::Point(1, 1), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false},
+    {2, true, true, ateam_geometry::Point(2, 2), 0.0, ateam_geometry::Vector{}, 0.0, false, true,
+      false}
+  };
+
+  play_helpers::GroupAssignmentSet groups;
+  groups.AddPosition("kicker", ateam_geometry::Point(0, 0), {0});
+  groups.AddGroup("support", {ateam_geometry::Point(1, 1), ateam_geometry::Point(2, 2)});
+
+  const auto assignments = play_helpers::assignGroups(robots, groups);
+
+  EXPECT_THAT(assignments.GetPositionAssignment("kicker"), Optional(Field(&Robot::id, Eq(1))));
+  EXPECT_THAT(
+    assignments.GetGroupAssignments("support"),
+    ElementsAre(Optional(Field(&Robot::id, Eq(0))), Optional(Field(&Robot::id, Eq(2)))));
+}

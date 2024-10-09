@@ -40,10 +40,14 @@ public:
     pivot_kick_skill_(createChild<skills::PivotKick>("pivot_kick")),
     line_kick_skill_(createChild<skills::LineKick>("line_kick"))
   {
-    getParamInterface().declareParameter(kUsePivotKickParam, true);
+    getParamInterface().declareParameter(kUsePivotKickParam, false);
   }
 
-  void reset() override {}
+  void reset() override
+  {
+    line_kick_skill_.Reset();
+    pivot_kick_skill_.Reset();
+  }
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override
@@ -56,17 +60,19 @@ public:
     const auto robot = robots.front();
 
     // aim for center of opponent goal
-    const ateam_geometry::Point target(world.field.field_length / 2.0, 0.0);
+    const ateam_geometry::Point target(-world.field.field_length / 2.0, 0.0);
 
-    line_kick_skill_.setTargetPoint(target);
-    pivot_kick_skill_.setTargetPoint(target);
+    line_kick_skill_.SetTargetPoint(target);
+    pivot_kick_skill_.SetTargetPoint(target);
 
     const auto use_pivot_kick = getParamInterface().getParameter<bool>(kUsePivotKickParam);
 
     motion_commands[robot.id] =
-      use_pivot_kick ? pivot_kick_skill_.runFrame(world, robot) : line_kick_skill_.runFrame(
+      use_pivot_kick ? pivot_kick_skill_.RunFrame(world, robot) : line_kick_skill_.RunFrame(
       world,
       robot);
+
+    getPlayInfo()["line kick"] = line_kick_skill_.getPlayInfo();
     return motion_commands;
   }
 

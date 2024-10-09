@@ -18,19 +18,32 @@ find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
 
 add_library(kenobi_node_component SHARED
+  src/defense_area_enforcement.cpp
   src/in_play_eval.cpp
   src/kenobi_node.cpp
   src/play_selector.cpp
+  src/path_planning/obstacles.cpp
   src/path_planning/path_planner.cpp
+  src/plays/passing_plays/pass_to_lane_play.cpp
+  src/plays/passing_plays/pass_to_segment_play.cpp
   src/plays/test_play.cpp
   src/plays/halt_play.cpp
+  src/plays/kick_on_goal_play.cpp
+  src/plays/kickoff_on_goal.cpp
   src/plays/stop_play.cpp
+  src/plays/our_ball_placement_play.cpp
+  src/plays/their_ball_placement_play.cpp
   src/plays/our_kickoff_play.cpp
+  src/plays/our_kickoff_prep_play.cpp
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
   src/plays/our_penalty_play.cpp
+  src/plays/their_free_kick_play.cpp
+  src/plays/their_kickoff_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/controls_test_play.cpp
+  src/plays/defense_play.cpp
+  src/plays/extract_play.cpp
   src/plays/triangle_pass_play.cpp
   src/plays/waypoints_play.cpp
   src/plays/spinning_a_play.cpp
@@ -38,13 +51,27 @@ add_library(kenobi_node_component SHARED
   src/motion/motion_controller.cpp
   src/visualization/overlays.cpp
   src/play_helpers/easy_move_to.cpp
+  src/play_helpers/lanes.cpp
+  src/play_helpers/possession.cpp
   src/play_helpers/available_robots.cpp
   src/play_helpers/robot_assignment.cpp
+  src/play_helpers/shot_evaluation.cpp
   src/play_helpers/window_evaluation.cpp
   src/skills/goalie.cpp
+  src/skills/kick_skill.cpp
+  src/skills/lane_idler.cpp
   src/skills/line_kick.cpp
+  src/skills/pass_receiver.cpp
   src/skills/pivot_kick.cpp
+  src/skills/dribble.cpp
+  src/skills/extract.cpp
+  src/skills/capture.cpp
   src/tactics/blockers.cpp
+  src/tactics/defenders.cpp
+  src/tactics/multi_move_to.cpp
+  src/tactics/pass_to_segment.cpp
+  src/tactics/pass.cpp
+  src/tactics/standard_defense.cpp
 )
 target_include_directories(kenobi_node_component PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>

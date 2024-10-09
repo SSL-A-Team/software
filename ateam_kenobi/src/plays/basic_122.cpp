@@ -20,9 +20,11 @@
 
 
 #include "basic_122.hpp"
+#include <ranges>
 #include <algorithm>
 #include <limits>
 #include <vector>
+#include <string>
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
 #include "play_helpers/window_evaluation.hpp"
@@ -34,26 +36,28 @@ Basic122::Basic122(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   striker_skill_(createChild<skills::LineKick>("striker")),
   blockers_skill_(createChild<tactics::Blockers>("blockers")),
-  goalie_skill_(createChild<skills::Goalie>("goalie"))
+  defense_(createChild<tactics::StandardDefense>("defense"))
 {
+  setEnabled(false);
 }
 
-double Basic122::getScore(const World & world)
+stp::PlayScore Basic122::getScore(const World & world)
 {
+  const auto default_score = 25.0;  // arbitrary score with room for other plays to be better
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::ForceStart:
     case ateam_common::GameCommand::NormalStart:
     case ateam_common::GameCommand::DirectFreeOurs:
-      return 0.0;
+      return default_score;
     default:
-      return world.in_play ? 0.0 : std::numeric_limits<double>::lowest();
+      return world.in_play ? stp::PlayScore(default_score) : stp::PlayScore::Min();
   }
 }
 
 void Basic122::reset()
 {
   blockers_skill_.reset();
-  goalie_skill_.reset();
+  defense_.reset();
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::runFrame(
@@ -64,41 +68,43 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
-  goalie_skill_.runFrame(world, motion_commands);
+  play_helpers::GroupAssignmentSet groups;
 
-  std::vector<ateam_geometry::Point> assignment_positions;
-  assignment_positions.push_back(striker_skill_.getAssignmentPoint(world));
-
-  const auto blocker_assignment_positions = blockers_skill_.getAssignmentPoints(world);
-  assignment_positions.insert(
-    assignment_positions.end(),
-    blocker_assignment_positions.begin(), blocker_assignment_positions.end());
-
-  std::vector<std::vector<int>> disallowed_ids;
+  std::vector<int> disallowed_strikers;
   if (world.double_touch_forbidden_id_) {
-    std::fill_n(
-      std::back_inserter(disallowed_ids), assignment_positions.size(),
-      std::vector<int>{});
-    disallowed_ids[0].push_back(*world.double_touch_forbidden_id_);
+    disallowed_strikers.push_back(*world.double_touch_forbidden_id_);
   }
+  groups.AddPosition("striker", striker_skill_.GetAssignmentPoint(world), disallowed_strikers);
 
-  const auto assignments = play_helpers::assignRobots(
-    available_robots, assignment_positions,
-    disallowed_ids);
+  groups.AddGroup("defenders", defense_.getAssignmentPoints(world));
 
-  const auto & striker = assignments[0];
+  groups.AddGroup("blockers", blockers_skill_.getAssignmentPoints(world));
 
+  const auto assignments = play_helpers::assignGroups(available_robots, groups);
+
+  const auto & striker = assignments.GetPositionAssignment("striker");
+
+  // using array to match formatting of other positions
+  auto & striker_info = getPlayInfo()["positions"]["striker"] = nlohmann::json::array();
   if (striker) {
     runStriker(*striker, world, motion_commands[striker->id].emplace());
+    striker_info.push_back(striker->id);
   }
 
-  std::vector<Robot> blockers;
-  for (auto ind = 1ul; ind < assignments.size(); ++ind) {
-    if (assignments[ind]) {
-      blockers.push_back(*assignments[ind]);
-    }
-  }
+  std::vector<Robot> defenders = assignments.GetGroupFilledAssignments("defenders");
+  auto & defenders_info = getPlayInfo()["positions"]["defenders"] = nlohmann::json::array();
+  std::ranges::transform(
+    defenders, std::back_inserter(defenders_info), [](const Robot & r) {
+      return r.id;
+    });
+  defense_.runFrame(world, defenders, motion_commands);
 
+  std::vector<Robot> blockers = assignments.GetGroupFilledAssignments("blockers");
+  auto & blockers_info = getPlayInfo()["positions"]["blockers"] = nlohmann::json::array();
+  std::ranges::transform(
+    blockers, std::back_inserter(blockers_info), [](const Robot & r) {
+      return r.id;
+    });
   runBlockers(blockers, world, motion_commands);
 
   return motion_commands;
@@ -108,7 +114,9 @@ void Basic122::runStriker(
   const Robot & striker_bot, const World & world,
   ateam_msgs::msg::RobotMotionCommand & motion_command)
 {
-  getPlayInfo()["Striker ID"] = striker_bot.id;
+  if (striker_skill_.IsDone()) {
+    striker_skill_.Reset();
+  }
 
   const auto they_have_possession = doTheyHavePossession(world);
 
@@ -117,8 +125,10 @@ void Basic122::runStriker(
   if (they_have_possession) {
     const auto ball_to_bot_vec = striker_bot.pos - world.ball.pos;
     const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
-    motion_command.twist.linear.x = vel.x();
-    motion_command.twist.linear.y = vel.y();
+    if (ateam_geometry::norm(ball_to_bot_vec) < kRobotDiameter) {
+      motion_command.twist.linear.x = vel.x();
+      motion_command.twist.linear.y = vel.y();
+    }
     return;
   }
 
@@ -143,9 +153,9 @@ void Basic122::runStriker(
   } else {
     target_point = ateam_geometry::Point(world.field.field_length / 2, 0.0);
   }
-  striker_skill_.setTargetPoint(target_point);
-  striker_skill_.setKickSpeed(3.0);
-  motion_command = striker_skill_.runFrame(world, striker_bot);
+  striker_skill_.SetTargetPoint(target_point);
+  striker_skill_.SetKickSpeed(3.0);
+  motion_command = striker_skill_.RunFrame(world, striker_bot);
 }
 
 void Basic122::runBlockers(
@@ -154,7 +164,7 @@ void Basic122::runBlockers(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
-  const auto skill_commands = blockers_skill_.runFrame(world, blocker_bots, &getPlayInfo());
+  const auto skill_commands = blockers_skill_.runFrame(world, blocker_bots);
 
   for (auto robot_ind = 0ul; robot_ind < blocker_bots.size(); ++robot_ind) {
     motion_commands[blocker_bots[robot_ind].id] = skill_commands[robot_ind];

@@ -82,16 +82,15 @@ void removeSegmentFromWindows(
   std::vector<ateam_geometry::Segment> & windows)
 {
   for (auto window_iter = windows.begin(); window_iter < windows.end(); ++window_iter) {
-    const auto window = *window_iter;
-    const auto maybe_intersection = CGAL::intersection(window, seg);
+    const auto & window = *window_iter;
+    const auto maybe_intersection = ateam_geometry::intersection(window, seg);
     if (!maybe_intersection) {
       continue;
     }
-    if (const ateam_geometry::Segment * intersection_seg =
-      boost::get<ateam_geometry::Segment>(&*maybe_intersection))
-    {
-      const auto & intersect_p1 = intersection_seg->source();
-      const auto & intersect_p2 = intersection_seg->target();
+    if (std::holds_alternative<ateam_geometry::Segment>(*maybe_intersection)) {
+      const auto & intersection_seg = std::get<ateam_geometry::Segment>(*maybe_intersection);
+      const auto & intersect_p1 = intersection_seg.source();
+      const auto & intersect_p2 = intersection_seg.target();
       const auto p1_vec = intersect_p1 - window.source();
       const auto p2_vec = intersect_p2 - window.source();
       ateam_geometry::Segment new_seg_1;

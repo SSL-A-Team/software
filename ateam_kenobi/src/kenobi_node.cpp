@@ -46,8 +46,10 @@
 #include "play_selector.hpp"
 #include "in_play_eval.hpp"
 #include "double_touch_eval.hpp"
+#include "ballsense_emulator.hpp"
 #include "motion/world_to_body_vel.hpp"
 #include "plays/halt_play.hpp"
+#include "defense_area_enforcement.hpp"
 
 namespace ateam_kenobi
 {
@@ -65,6 +67,7 @@ public:
     game_controller_listener_(*this)
   {
     declare_parameter<bool>("use_world_velocities", false);
+    declare_parameter<bool>("use_emulated_ballsense", false);
 
     overlay_publisher_ = create_publisher<ateam_msgs::msg::OverlayArray>(
       "/overlays",
@@ -137,6 +140,7 @@ private:
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
+  BallSenseEmulator ballsense_emulator_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
@@ -215,23 +219,26 @@ private:
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
   {
-    world_.ball.pos = ateam_geometry::Point(
-      ball_state_msg->pose.position.x,
-      ball_state_msg->pose.position.y);
-    world_.ball.vel = ateam_geometry::Vector(
-      ball_state_msg->twist.linear.x,
-      ball_state_msg->twist.linear.y);
+    if (ball_state_msg->visible) {
+      world_.ball.pos = ateam_geometry::Point(
+        ball_state_msg->pose.position.x,
+        ball_state_msg->pose.position.y);
+      world_.ball.vel = ateam_geometry::Vector(
+        ball_state_msg->twist.linear.x,
+        ball_state_msg->twist.linear.y);
+    }
   }
 
   void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
   {
-    // TODO(Collin) move this to message conversions to live with its sibiling
     Field field;
     field.field_length = field_msg->field_length;
     field.field_width = field_msg->field_width;
     field.goal_width = field_msg->goal_width;
     field.goal_depth = field_msg->goal_depth;
     field.boundary_width = field_msg->boundary_width;
+    field.defense_area_depth = field_msg->defense_area_depth;
+    field.defense_area_width = field_msg->defense_area_width;
 
     auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
         std::transform(
@@ -254,6 +261,11 @@ private:
     field.theirs.goal_posts = {field.theirs.goal_corners[0], field.theirs.goal_corners[1]};
 
     world_.field = field;
+    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
+      world_.ignore_side = -field_msg->ignore_side;
+    } else {
+      world_.ignore_side = field_msg->ignore_side;
+    }
   }
 
   void set_override_play_callback(
@@ -304,6 +316,17 @@ private:
           game_controller_listener_.GetLatestRefereeMessage().command_timestamp).nanoseconds()));
     world_.referee_info.prev_command = game_controller_listener_.GetPreviousGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
+
+    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
+      world_.referee_info.designated_position = ateam_geometry::Point(
+        -game_controller_listener_.GetDesignatedPosition().x,
+        -game_controller_listener_.GetDesignatedPosition().y);
+    } else {
+      world_.referee_info.designated_position = ateam_geometry::Point(
+        game_controller_listener_.GetDesignatedPosition().x,
+        game_controller_listener_.GetDesignatedPosition().y);
+    }
+
     if (game_controller_listener_.GetOurGoalieID().has_value()) {
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
     }
@@ -312,6 +335,9 @@ private:
     }
     in_play_eval_.Update(world_);
     double_touch_eval_.update(world_);
+    if (get_parameter("use_emulated_ballsense").as_bool()) {
+      ballsense_emulator_.Update(world_);
+    }
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
       auto & clk = *this->get_clock();
       RCLCPP_WARN_THROTTLE(
@@ -328,6 +354,8 @@ private:
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 
     auto motion_commands = runPlayFrame(world_);
+
+    defense_area_enforcement::EnforceDefenseAreaKeepout(world_, motion_commands);
 
     if (!get_parameter("use_world_velocities").as_bool()) {
       motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);
