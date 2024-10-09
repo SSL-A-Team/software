@@ -13,6 +13,8 @@
   <depend>rclcpp_components</depend>
   <depend>ateam_common</depend>
   <depend>ateam_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
   <depend>ssl_league_protobufs</depend>
 
   <test_depend>ament_lint_auto</test_depend>

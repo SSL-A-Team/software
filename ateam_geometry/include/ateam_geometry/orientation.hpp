@@ -18,33 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__COMPARISONS_HPP_
-#define ATEAM_GEOMETRY__COMPARISONS_HPP_
+#ifndef ATEAM_GEOMETRY__ORIENTATION_HPP_
+#define ATEAM_GEOMETRY__ORIENTATION_HPP_
 
-#include "types.hpp"
-#include "normalize.hpp"
-#include "epsilon.hpp"
+#include "ateam_geometry/types.hpp"
+#include "ateam_geometry/epsilon.hpp"
+
 
 namespace ateam_geometry
 {
 
-inline bool nearEqual(const Point & a, const Point & b, const double threshold = kDistanceEpsilon)
+enum class Orientation
 {
-  return CGAL::squared_distance(a, b) < (threshold * threshold);
-}
+  Colinear,
+  Clockwise,
+  Counterclockwise
+};
 
-inline bool nearEqual(const Vector & a, const Vector & b, const double threshold = kDistanceEpsilon)
+/**
+ * @brief Determines the orientation of the points in order A->B->C
+ * @note Based on https://www.geeksforgeeks.org/orientation-3-ordered-points/
+ */
+inline Orientation orientation(const Point & a, const Point & b, const Point & c)
 {
-  return std::hypot(a.x() - b.x(), a.y() - b.y()) < threshold;
-}
-
-inline bool nearEqual(
-  const Direction & a, const Direction & b,
-  const double threshold = kDistanceEpsilon)
-{
-  return nearEqual(normalize(a.vector()), normalize(b.vector()), threshold);
+  const auto slope_diff = (b.y() - a.y()) * (c.x() - b.x()) - (b.x() - a.x()) * (c.y() - b.y());
+  if (std::abs(slope_diff) < kGenericEpsilon) {
+    return Orientation::Colinear;
+  }
+  return slope_diff > 0 ? Orientation::Clockwise : Orientation::Counterclockwise;
 }
 
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__COMPARISONS_HPP_
+#endif  // ATEAM_GEOMETRY__ORIENTATION_HPP_

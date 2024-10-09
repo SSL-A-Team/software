@@ -18,33 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__COMPARISONS_HPP_
-#define ATEAM_GEOMETRY__COMPARISONS_HPP_
+#ifndef ATEAM_GEOMETRY__ANGLES_HPP_
+#define ATEAM_GEOMETRY__ANGLES_HPP_
 
+#include <angles/angles.h>
 #include "types.hpp"
-#include "normalize.hpp"
-#include "epsilon.hpp"
 
 namespace ateam_geometry
 {
 
-inline bool nearEqual(const Point & a, const Point & b, const double threshold = kDistanceEpsilon)
+inline double ToHeading(const ateam_geometry::Direction & direction)
 {
-  return CGAL::squared_distance(a, b) < (threshold * threshold);
+  return std::atan2(direction.dy(), direction.dx());
 }
 
-inline bool nearEqual(const Vector & a, const Vector & b, const double threshold = kDistanceEpsilon)
+inline double ToHeading(const ateam_geometry::Vector & vector)
 {
-  return std::hypot(a.x() - b.x(), a.y() - b.y()) < threshold;
+  return ToHeading(vector.direction());
 }
 
-inline bool nearEqual(
-  const Direction & a, const Direction & b,
-  const double threshold = kDistanceEpsilon)
+inline double ShortestAngleBetween(
+  const ateam_geometry::Direction & source,
+  const ateam_geometry::Direction & target)
 {
-  return nearEqual(normalize(a.vector()), normalize(b.vector()), threshold);
+  return angles::shortest_angular_distance(ToHeading(source), ToHeading(target));
+}
+
+inline double ShortestAngleBetween(
+  const ateam_geometry::Vector & source,
+  const ateam_geometry::Vector & target)
+{
+  return ShortestAngleBetween(source.direction(), target.direction());
 }
 
 }  // namespace ateam_geometry
 
-#endif  // ATEAM_GEOMETRY__COMPARISONS_HPP_
+#endif  // ATEAM_GEOMETRY__ANGLES_HPP_

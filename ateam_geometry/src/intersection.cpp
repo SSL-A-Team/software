@@ -20,6 +20,8 @@
 
 #include "ateam_geometry/intersection.hpp"
 #include "ateam_geometry/comparisons.hpp"
+#include "ateam_geometry/epsilon.hpp"
+#include "ateam_geometry/orientation.hpp"
 
 namespace ateam_geometry
 {
@@ -60,7 +62,7 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
   const auto y1 = ((-D * d_x) - (std::abs(d_y) * sqrt_descriminant)) / d_r_sqrd;
   const auto y2 = ((-D * d_x) + (std::abs(d_y) * sqrt_descriminant)) / d_r_sqrd;
 
-  if (std::abs(descriminant) < 1e-8) {
+  if (std::abs(descriminant) < kGenericEpsilon) {
     // Tangent line
     return circle.center() + Vector(x1, y1);
   } else if (descriminant > 0.0) {
@@ -122,7 +124,7 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
 
   // Not using Ray::has_on() because it does not account for small floating point mismatch
   auto point_on_ray = [&ray](const auto & p) {
-      return CGAL::squared_distance(p, ray) < 1e-6;
+      return CGAL::squared_distance(p, ray) < kDistanceEpsilon;
     };
 
   if (std::holds_alternative<Point>(*arc_intersection)) {
@@ -162,7 +164,7 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
 
   // Not using Segment::has_on() because it does not account for small floating point mismatch
   auto point_on_segment = [&segment](const auto & p) {
-      return CGAL::squared_distance(p, segment) < 1e-6;
+      return CGAL::squared_distance(p, segment) < kDistanceEpsilon;
     };
 
   if (std::holds_alternative<Point>(*arc_intersection)) {
@@ -187,6 +189,65 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
     }
   }
 
+  return std::nullopt;
+}
+
+std::optional<std::variant<Point, Segment>> intersection(const Segment & a, const Segment & b)
+{
+  const auto o1 = orientation(a.source(), a.target(), b.source());
+  const auto o2 = orientation(a.source(), a.target(), b.target());
+  const auto o3 = orientation(b.source(), b.target(), a.source());
+  const auto o4 = orientation(b.source(), b.target(), a.target());
+
+  if (o1 != o2 && o3 != o4) {
+    // segments intersect at a single point
+    const auto maybe_intersection = CGAL::intersection(a.supporting_line(), b.supporting_line());
+    if (!maybe_intersection) {
+      throw std::runtime_error("Broken CGAL assumptions. Segment-Segment intersection assert A.");
+    }
+    const auto intersection_point = boost::get<Point>(&*maybe_intersection);
+    if (!intersection_point) {
+      throw std::runtime_error("Broken CGAL assumptions. Segment-Segment intersection assert B.");
+    }
+    return *intersection_point;
+  }
+
+  if (o1 == Orientation::Colinear && o2 == Orientation::Colinear) {
+    // segments are colinear
+    struct PointWithSegmentIndex
+    {
+      Point point;
+      int segment_index;
+      bool operator<(const PointWithSegmentIndex & other) const
+      {
+        if (std::abs(point.x() - other.point.x()) < kDistanceEpsilon) {
+          return point.y() < other.point.y();
+        }
+        return point.x() < other.point.x();
+      }
+    };
+    std::vector<PointWithSegmentIndex> points = {
+      {a.source(), 0},
+      {a.target(), 0},
+      {b.source(), 1},
+      {b.target(), 1}
+    };
+    std::sort(points.begin(), points.end());
+
+    if (nearEqual(points[1].point, points[2].point)) {
+      // Colinear segments overlap on a single point
+      return points[1].point;
+    }
+
+    if (points[0].segment_index == points[1].segment_index) {
+      // Colinear segments do not overlap
+      return std::nullopt;
+    }
+
+    return Segment{points[1].point, points[2].point};
+  }
+
+  // No intersection
   return std::nullopt;
 }
 

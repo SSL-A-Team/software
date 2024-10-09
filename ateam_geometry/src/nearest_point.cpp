@@ -28,7 +28,7 @@ ateam_geometry::Point nearestPointOnSegment(
   const ateam_geometry::Point & p)
 {
   ateam_geometry::Point orthogonal_projection = s.supporting_line().projection(p);
-  if (s.has_on(orthogonal_projection)) {
+  if (s.collinear_has_on(orthogonal_projection)) {
     return orthogonal_projection;
   }
   return CGAL::squared_distance(orthogonal_projection, s.source()) <
