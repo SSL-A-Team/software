@@ -84,7 +84,7 @@ export class Robot {
         // Critical
 
         // Battery Level TODO: find what level to use
-        if (!sim && this.status.battery_level <= 19.2) {
+        if (!sim && this.status.battery_level <= 21.0) {
             return ErrorLevel.Critical;
         }
 
@@ -139,6 +139,7 @@ export class Robot {
         const end =  (230/180)*Math.PI;
 
         const robot = new PIXI.Container();
+        robot.eventMode = "dynamic";
 
         // Could possibly improve caching by using RenderTexture instead
         const graphic = new PIXI.Graphics();
