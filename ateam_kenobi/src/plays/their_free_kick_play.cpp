@@ -30,9 +30,10 @@ namespace ateam_kenobi::plays
 
 TheirFreeKickPlay::TheirFreeKickPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  defense_(createChild<tactics::StandardDefense>("defense")),
-  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("easy_move_to"))
-{}
+  defense_(createChild<tactics::StandardDefense>("defense"))
+{
+  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "easy_move_to");
+}
 
 stp::PlayScore TheirFreeKickPlay::getScore(const World & world)
 {

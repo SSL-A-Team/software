@@ -32,9 +32,9 @@
 namespace ateam_kenobi::plays
 {
 StopPlay::StopPlay(stp::Options stp_options)
-: stp::Play(kPlayName, stp_options),
-  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
+: stp::Play(kPlayName, stp_options)
 {
+  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
   for (auto & move_to : easy_move_tos_) {
     // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
     move_to.setMaxVelocity(1.0);

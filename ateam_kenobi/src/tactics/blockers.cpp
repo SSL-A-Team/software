@@ -30,9 +30,9 @@ namespace ateam_kenobi::tactics
 {
 
 Blockers::Blockers(stp::Options stp_options)
-: stp::Tactic(stp_options),
-  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
+: stp::Tactic(stp_options)
 {
+  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
 }
 
 void Blockers::reset()

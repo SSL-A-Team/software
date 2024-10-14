@@ -32,9 +32,9 @@ namespace ateam_kenobi::plays
 
 TrianglePassPlay::TrianglePassPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  pass_tactic_(createChild<tactics::Pass>("pass")),
-  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
+  pass_tactic_(createChild<tactics::Pass>("pass"))
 {
+  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_,"EasyMoveTo");
   positions.emplace_back(0.85, 0);
   const auto angle = angles::from_degrees(120);
   CGAL::Aff_transformation_2<ateam_geometry::Kernel> rotate_transform(CGAL::ROTATION, std::sin(

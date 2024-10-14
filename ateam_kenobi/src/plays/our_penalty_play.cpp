@@ -30,9 +30,9 @@ namespace ateam_kenobi::plays
 OurPenaltyPlay::OurPenaltyPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   goalie_skill_(createChild<skills::Goalie>("goalie")),
-  line_kick_skill_(createChild<skills::LineKick>("line_kick")),
-  move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
+  line_kick_skill_(createChild<skills::LineKick>("line_kick"))
 {
+  createIndexedChildren<play_helpers::EasyMoveTo>(move_tos_, "EasyMoveTo");
 }
 
 stp::PlayScore OurPenaltyPlay::getScore(const World & world)

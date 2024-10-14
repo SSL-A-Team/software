@@ -31,9 +31,10 @@ namespace ateam_kenobi::plays
 OurBallPlacementPlay::OurBallPlacementPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   pass_tactic_(createChild<tactics::Pass>("pass")),
-  dribble_(createChild<skills::Dribble>("dribble")),
-  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
-{}
+  dribble_(createChild<skills::Dribble>("dribble"))
+{
+  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
+}
 
 stp::PlayScore OurBallPlacementPlay::getScore(const World & world)
 {
