@@ -323,7 +323,7 @@ std::optional<ateam_geometry::Point> PathPlanner::findLastCollisionFreePoint(
 
 void PathPlanner::drawObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles)
 {
-  auto drawObstacle = [this, obstacle_ind = 0](const auto & shape)mutable {
+  auto drawObstacle = [this, obstacle_ind = 0](const auto & shape) mutable {
       const auto name = "obstacle" + std::to_string(obstacle_ind);
       const auto color = "FF00007F";
       using ShapeT = std::decay_t<decltype(shape)>;

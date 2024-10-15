@@ -143,7 +143,7 @@ std::pair<ateam_geometry::Ray, ateam_geometry::Ray> getRobotShadowRays(
   const auto shadow_vector_2 = ateam_geometry::normalize(rotate(source_center_vector));
   const auto shadow_point_1 = source + (shadow_vector_1 * source_to_bot_tangent_distance);
   const auto shadow_point_2 = source + (shadow_vector_2 * source_to_bot_tangent_distance);
-  return std::make_pair(
+      return std::make_pair(
     ateam_geometry::Ray(shadow_point_1, shadow_vector_1),
     ateam_geometry::Ray(shadow_point_2, shadow_vector_2));
 }
