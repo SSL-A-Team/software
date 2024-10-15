@@ -9,7 +9,7 @@ set -e
 install_npm_package_if_missing () {
   local package_name=$1
   echo "Checking for npm package: $package_name"
-  if npm list --depth 1 --global $package_name > /dev/null 2>&1; then
+  if [ `npm list --depth 1 -g -p $package_name | grep -c $package_name` -gt 0 ]; then
     echo "$package_name already installed"
   else
     echo "Installing $package_name"

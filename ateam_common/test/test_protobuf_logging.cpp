@@ -50,8 +50,8 @@ public:
     rcutils_logging_set_default_logger_level(RCUTILS_LOG_SEVERITY_DEBUG);
 
     auto output_handler = [](const rcutils_log_location_t * location,
-        int level, const char * name, rcutils_time_point_value_t timestamp,
-        const char * format, va_list * args) {
+      int level, const char * name, rcutils_time_point_value_t timestamp,
+      const char * format, va_list * args) {
         ++log_calls;
         last_log_event = LogEvent{
           location,

@@ -68,7 +68,7 @@ public:
   }
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr addSetParameterCallback(
-    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType callback)
+    rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType callback)
   {
     throwIfUninitialized();
     return ros_interface_->add_on_set_parameters_callback(callback);

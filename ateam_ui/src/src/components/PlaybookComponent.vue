@@ -18,9 +18,11 @@
                         :key="name"
                         :value="name"
                 >
-                    <v-container class="flex-grow-1 flex-shrink-0">
+                    <v-container class="flex-grow-1 flex-shrink-0 overflow-hidden" style="max-width:11em;">
                         <v-row  justify="space-between" style="flex-wrap: nowrap;">
-                            <div>{{ name }}</div>
+                            <div style="max-width:80%; overflow:hidden; text-wrap:nowrap">
+                                {{ name }}
+                            </div>
                             <v-spacer class="pr-3"/>
                             <div>{{ this.displayScore(play.score) }}</div>
                             <v-icon v-if="this.isScoreInf(play.score)" icon="mdi-infinity" class="mx-0 pl-1 justify-center" size="small"/>

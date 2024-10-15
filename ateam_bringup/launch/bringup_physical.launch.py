@@ -18,13 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import launch
-from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import LaunchConfiguration
-from launch.launch_description_sources import FrontendLaunchDescriptionSource
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
-from launch_ros.actions import Node
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
+import launch
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
+from launch.conditions import IfCondition, UnlessCondition
+from launch.launch_description_sources import FrontendLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
 
 
 def remap_indexed_topics(pattern_pairs):
@@ -38,69 +38,69 @@ def remap_indexed_topics(pattern_pairs):
 def generate_launch_description():
     return launch.LaunchDescription([
         # Marietta IPs
-        # DeclareLaunchArgument("vision_interface_address", default_value="172.16.1.10"),
-        # DeclareLaunchArgument("gc_interface_address", default_value="172.16.1.10"),
-        # DeclareLaunchArgument("gc_server_address", default_value="172.16.1.52"),
-        # DeclareLaunchArgument("radio_interface_address", default_value="172.16.1.10"),
+        # DeclareLaunchArgument('vision_interface_address', default_value='172.16.1.10'),
+        # DeclareLaunchArgument('gc_interface_address', default_value='172.16.1.10'),
+        # DeclareLaunchArgument('gc_server_address', default_value='172.16.1.52'),
+        # DeclareLaunchArgument('radio_interface_address', default_value='172.16.1.10'),
 
         # Competition IPs
-        DeclareLaunchArgument("vision_interface_address", default_value="192.168.1.40"),
-        DeclareLaunchArgument("radio_interface_address", default_value="172.16.1.10"),
-        DeclareLaunchArgument("team_name", default_value="A-Team"),
-        DeclareLaunchArgument("use_local_gc", default_value="False"),
+        DeclareLaunchArgument('vision_interface_address', default_value='192.168.1.40'),
+        DeclareLaunchArgument('radio_interface_address', default_value='172.16.1.10'),
+        DeclareLaunchArgument('team_name', default_value='A-Team'),
+        DeclareLaunchArgument('use_local_gc', default_value='False'),
 
         GroupAction(
-            condition=IfCondition(LaunchConfiguration("use_local_gc")),
+            condition=IfCondition(LaunchConfiguration('use_local_gc')),
             scoped=False,
             actions=[
-                DeclareLaunchArgument("gc_interface_address", default_value="172.17.0.1"),
-                DeclareLaunchArgument("gc_server_address", default_value="172.17.0.2"),
+                DeclareLaunchArgument('gc_interface_address', default_value='172.17.0.1'),
+                DeclareLaunchArgument('gc_server_address', default_value='172.17.0.2'),
             ]),
         GroupAction(
-            condition=UnlessCondition(LaunchConfiguration("use_local_gc")),
+            condition=UnlessCondition(LaunchConfiguration('use_local_gc')),
             scoped=False,
             actions=[
-                DeclareLaunchArgument("gc_interface_address", default_value="192.168.1.40"),
-                DeclareLaunchArgument("gc_server_address", default_value="192.168.0.114"),
+                DeclareLaunchArgument('gc_interface_address', default_value='192.168.1.40'),
+                DeclareLaunchArgument('gc_server_address', default_value='192.168.0.114'),
             ]),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution("ateam_bringup",
-                                              "game_controller_nodes.launch.xml")),
+                PackageLaunchFileSubstitution('ateam_bringup',
+                                              'game_controller_nodes.launch.xml')),
             launch_arguments={
-                "gc_ip_address": LaunchConfiguration("gc_server_address"),
-                "net_interface_address": LaunchConfiguration("gc_interface_address")
+                'gc_ip_address': LaunchConfiguration('gc_server_address'),
+                'net_interface_address': LaunchConfiguration('gc_interface_address')
             }.items()
         ),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution("ateam_bringup",
-                                              "autonomy.launch.xml")),
+                PackageLaunchFileSubstitution('ateam_bringup',
+                                              'autonomy.launch.xml')),
             launch_arguments={
-                "ssl_vision_interface_address": LaunchConfiguration("vision_interface_address")
+                'ssl_vision_interface_address': LaunchConfiguration('vision_interface_address')
             }.items()
         ),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution("ateam_bringup",
-                                              "ui.launch.xml"))
+                PackageLaunchFileSubstitution('ateam_bringup',
+                                              'ui.launch.xml'))
         ),
 
         Node(
-            package="ateam_radio_bridge",
-            executable="radio_bridge_node",
-            name="radio_bridge",
+            package='ateam_radio_bridge',
+            executable='radio_bridge_node',
+            name='radio_bridge',
             parameters=[{
-                "net_interface_address": LaunchConfiguration("radio_interface_address"),
-                "gc_team_name": LaunchConfiguration("team_name")
+                'net_interface_address': LaunchConfiguration('radio_interface_address'),
+                'gc_team_name': LaunchConfiguration('team_name')
             }],
             respawn=True,
             remappings=remap_indexed_topics([
-                ("~/robot_motion_commands/robot", "/robot_motion_commands/robot"),
-                ("~/robot_feedback/robot", "/robot_feedback/robot")
+                ('~/robot_motion_commands/robot', '/robot_motion_commands/robot'),
+                ('~/robot_feedback/robot', '/robot_feedback/robot')
             ])
         )
     ])

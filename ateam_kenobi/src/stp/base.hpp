@@ -84,13 +84,13 @@ public:
   }
 
   template<typename ChildType, typename ... Args>
-  std::array<ChildType, 16> createIndexedChildren(std::string name_prefix, Args &&... args)
+  void createIndexedChildren(
+    std::array<ChildType, 16> & destination, std::string name_prefix,
+    Args &&... args)
   {
-    std::array<ChildType, 16> children;
-    for (auto ind = 0; ind < 16; ++ind) {
-      children[ind] = createChild<ChildType>(name_prefix + "_" + std::to_string(ind));
-    }
-    return children;
+    std::ranges::generate(destination, [this, &name_prefix, ind = 0]() mutable{
+        return createChild<ChildType>(name_prefix + '_' + std::to_string(ind++));
+    });
   }
 
   const std::string & getName() const

@@ -55,11 +55,10 @@ export enum GameCommand {
     COMMAND_INDIRECT_FREE_BLUE,
     COMMAND_TIMEOUT_YELLOW,
     COMMAND_TIMEOUT_BLUE,
+    COMMAND_GOAL_YELLOW, // Deprecated
+    COMMAND_GOAL_BLUE, // Deprecated
     COMMAND_BALL_PLACEMENT_YELLOW,
-    COMMAND_BALL_PLACEMENT_BLUE,
-    // Deprecated commands
-    COMMAND_GOAL_YELLOW,
-    COMMAND_GOAL_BLUE
+    COMMAND_BALL_PLACEMENT_BLUE
 }
 
 export const GameCommandProperties: GameProperty[] = [

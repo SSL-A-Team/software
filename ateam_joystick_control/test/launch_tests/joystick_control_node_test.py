@@ -20,16 +20,17 @@
 
 import time
 import unittest
-import rclpy
+
+import ateam_msgs.msg
 import launch
 import launch_ros.actions
 import launch_testing
 import launch_testing_ros
 import pytest
-import sensor_msgs.msg
-import ateam_msgs.msg
-import rcl_interfaces.srv
 import rcl_interfaces.msg
+import rcl_interfaces.srv
+import rclpy
+import sensor_msgs.msg
 
 
 @pytest.mark.rostest
@@ -117,7 +118,7 @@ class TestJoystickControlNode(unittest.TestCase):
         set_param_request = rcl_interfaces.srv.SetParameters.Request()
         set_param_request.parameters = [
             rcl_interfaces.msg.Parameter(
-                name="robot_id",
+                name='robot_id',
                 value=rcl_interfaces.msg.ParameterValue(
                     type=rcl_interfaces.msg.ParameterType.PARAMETER_INTEGER,
                     integer_value=robot_id))
@@ -167,8 +168,8 @@ class TestJoystickControlNode(unittest.TestCase):
         set_param_response = self.setRobotId(1)
         if not set_param_response.results[0].successful:
             TestJoystickControlNode.node.get_logger() \
-                .error(f"Setting parameter failed with reason: \
-                   {set_param_response.results[0].reason}")
+                .error(f'Setting parameter failed with reason: \
+                   {set_param_response.results[0].reason}')
         self.assertTrue(set_param_response.results[0].successful)
 
         timeout = time.time() + 1

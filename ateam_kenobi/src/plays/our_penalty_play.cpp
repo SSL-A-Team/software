@@ -30,25 +30,25 @@ namespace ateam_kenobi::plays
 OurPenaltyPlay::OurPenaltyPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   goalie_skill_(createChild<skills::Goalie>("goalie")),
-  line_kick_skill_(createChild<skills::LineKick>("line_kick")),
-  move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
+  line_kick_skill_(createChild<skills::LineKick>("line_kick"))
 {
+  createIndexedChildren<play_helpers::EasyMoveTo>(move_tos_, "EasyMoveTo");
 }
 
-double OurPenaltyPlay::getScore(const World & world)
+stp::PlayScore OurPenaltyPlay::getScore(const World & world)
 {
-  if (world.in_play) {
-    return std::numeric_limits<double>::quiet_NaN();
-  }
+  // if (world.in_play) {
+  //   return stp::PlayScore::NaN();
+  // }
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
   if (cmd == ateam_common::GameCommand::PreparePenaltyOurs ||
     (cmd == ateam_common::GameCommand::NormalStart &&
     prev == ateam_common::GameCommand::PreparePenaltyOurs))
   {
-    return std::numeric_limits<double>::max();
+    return stp::PlayScore::Max();
   }
-  return std::numeric_limits<double>::quiet_NaN();
+  return stp::PlayScore::NaN();
 }
 
 void OurPenaltyPlay::reset()
@@ -90,8 +90,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   {
     // Stage for kick
     getPlayInfo()["State"] = "Preparing";
-    line_kick_skill_.setTargetPoint(chooseKickTarget(world));
-    const auto destination = line_kick_skill_.getAssignmentPoint(world);
+    line_kick_skill_.SetTargetPoint(chooseKickTarget(world));
+    const auto destination = line_kick_skill_.GetAssignmentPoint(world);
     auto & move_to = move_tos_[kicking_robot.id];
     move_to.setTargetPosition(destination);
     move_to.face_point(world.ball.pos);
@@ -100,7 +100,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   } else {
     // Kick ball
     getPlayInfo()["State"] = "Kicking";
-    motion_commands[kicking_robot.id] = line_kick_skill_.runFrame(world, kicking_robot);
+    if (line_kick_skill_.IsDone()) {
+      line_kick_skill_.Reset();
+    }
+    motion_commands[kicking_robot.id] = line_kick_skill_.RunFrame(world, kicking_robot);
   }
 
   ateam_geometry::Point pattern_point(kRobotDiameter - (world.field.field_length / 2.0),

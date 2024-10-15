@@ -82,16 +82,15 @@ void removeSegmentFromWindows(
   std::vector<ateam_geometry::Segment> & windows)
 {
   for (auto window_iter = windows.begin(); window_iter < windows.end(); ++window_iter) {
-    const auto window = *window_iter;
-    const auto maybe_intersection = CGAL::intersection(window, seg);
+    const auto & window = *window_iter;
+    const auto maybe_intersection = ateam_geometry::intersection(window, seg);
     if (!maybe_intersection) {
       continue;
     }
-    if (const ateam_geometry::Segment * intersection_seg =
-      boost::get<ateam_geometry::Segment>(&*maybe_intersection))
-    {
-      const auto & intersect_p1 = intersection_seg->source();
-      const auto & intersect_p2 = intersection_seg->target();
+    if (std::holds_alternative<ateam_geometry::Segment>(*maybe_intersection)) {
+      const auto & intersection_seg = std::get<ateam_geometry::Segment>(*maybe_intersection);
+      const auto & intersect_p1 = intersection_seg.source();
+      const auto & intersect_p2 = intersection_seg.target();
       const auto p1_vec = intersect_p1 - window.source();
       const auto p2_vec = intersect_p2 - window.source();
       ateam_geometry::Segment new_seg_1;
@@ -144,7 +143,7 @@ std::pair<ateam_geometry::Ray, ateam_geometry::Ray> getRobotShadowRays(
   const auto shadow_vector_2 = ateam_geometry::normalize(rotate(source_center_vector));
   const auto shadow_point_1 = source + (shadow_vector_1 * source_to_bot_tangent_distance);
   const auto shadow_point_2 = source + (shadow_vector_2 * source_to_bot_tangent_distance);
-  return std::make_pair(
+      return std::make_pair(
     ateam_geometry::Ray(shadow_point_1, shadow_vector_1),
     ateam_geometry::Ray(shadow_point_2, shadow_vector_2));
 }
