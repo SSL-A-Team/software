@@ -83,13 +83,11 @@ private:
     std::vector<ateam_geometry::AnyShape> & obstacles,
     const ateam_geometry::Point & point, const PlannerOptions & options);
 
-  bool isStateInBounds(const ateam_geometry::Point & state, const World & world);
-
   bool isStateValid(
     const ateam_geometry::Point & state,
     const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
-    const PlannerOptions & options);
+    const PlannerOptions & options, const bool offset_field_bounds = true);
 
   std::optional<ateam_geometry::Point> getCollisionPoint(
     const ateam_geometry::Point & p1, const ateam_geometry::Point & p2,
@@ -108,12 +106,6 @@ private:
     const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
-
-  void addRobotsToObstacles(
-    const World & world, const ateam_geometry::Point & start_pos,
-    std::vector<ateam_geometry::AnyShape> & obstacles);
-
-  void addDefaultObstacles(const World & world, std::vector<ateam_geometry::AnyShape> & obstacles);
 
   void removeSkippablePoints(
     Path & path, const World & world,

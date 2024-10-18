@@ -24,58 +24,144 @@
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
-#include "stp/skill.hpp"
+#include "kick_skill.hpp"
 #include "types/world.hpp"
 #include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::skills
 {
 
-class LineKick : public stp::Skill
+class LineKick : public KickSkill
 {
 public:
-  explicit LineKick(stp::Options stp_options);
+  explicit LineKick(
+    stp::Options stp_options,
+    KickSkill::WaitType wait_type = KickSkill::WaitType::KickWhenReady);
 
-  void setTargetPoint(ateam_geometry::Point point)
+  void Reset() override
   {
-    target_point_ = point;
+    KickSkill::Reset();
+    state_ = State::MoveBehindBall;
   }
 
-  ateam_geometry::Point getAssignmentPoint(const World & world);
-
-  void setKickSpeed(double speed)
+  void SetTargetPoint(ateam_geometry::Point point)
   {
-    kick_speed_ = speed;
+    if (state_ != State::KickBall && state_ != State::FaceBall) {
+      target_point_ = point;
+    }
   }
 
-  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
+  ateam_geometry::Point GetAssignmentPoint(const World & world);
+
+  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+
+  bool IsDone()
+  {
+    return state_ == State::Done;
+  }
+
+  /**
+   * @brief Set the default obstacles planner option on the internal EasyMoveTo
+   */
+  void SetUseDefaultObstacles(bool use_obstacles)
+  {
+    path_planning::PlannerOptions options = easy_move_to_.getPlannerOptions();
+    options.use_default_obstacles = use_obstacles;
+    easy_move_to_.setPlannerOptions(options);
+  }
+
+  double move_to_ball_velocity = 1.8;
+  double robot_perp_dist_to_ball_threshold = 0.008;
+  double angle_threshold = 0.1;
+  double kick_drive_velocity = 0.4;
+
+  // Allow the robot to push up against obstacles / other robots (slowly)
+  bool cowabunga = false;
+
+/*
+                                          #@%%%%%%%%%%%%%=
+                                  *%%%%%%%@@@@@@@@@@@@@@@@%%%%%%#
+                             :%%%%%@@@@@@@%%%%%%@%%%%%%%%%@@@@@@@%%%%:
+                          %%%%@@@@%%%%%%%%%::--------%%%%%%%%%%%%@@@@%%%%
+                       %%%@@@@%%%%%+---:#%##%:----------@%%%%%%%%%%%%@@@@%%%
+                    %%%@@@%%%%@:------------:@##%----------@%%%%%%%%%%%%@@@@%%%
+                  %%@@@@%%%+-------##+++++*%*---@##:---------:%%%%%%%%%%%%%@@@%%%
+                %%@@@@%%*-------+*%@##*   =%#**%--:%#@---------:@%%%@%%@%%%%%@@@%%%
+              %%@@@%%@#-------+*%@#%  #+**#   +*%----*%%%*--------%@%%%%%%%%%%%@@@%%@
+            #%@@@%%%--------#*%%@#  #*   %+**  +*@------:@%#%#%@%*=+@@@@@%%@@%%%%%@@%%=
+          .%%@@%%%--------%*#%%@%#  **%%%%%+*. ****-------------::.::-@%%%@%%%@%%@@%@@%%
+         %%%@@%%@%#**---==:-+%%@%#  +*@%%%@**  %%**:----------------------:%%%%@%@%@@@@%%:
+        %%@@%%%#*-------------@@%%:  ******+   #%**+-------------------------*@@%%@%%@@@@%%
+       #%@@%%@%@@@@#**#---------:@#@         -%%%@+**%------------%+****+%=----%@%%%%%%@@@%@
+      %%@@%%@%#**#%@##@***=----------:-####+:-------****%-----=**#@=      @#*%--%@@%@@@%@@@%@
+     #%@@%%*###########@%%#*+%----------------*#%#------:#@%%%*@@%  .+*#*** %%#--%%@%@@@@@@@%%
+    %%@@%@*#:----------@*#*@##@%*************#@@@%*+-----------*@% @*:  %@*+ @*+-@@@@@%%%@@@@%*
+   @%@@%%@:----------------:@##*@@@@@@%#@+#@%%%%%#%@%******-----%* +*@%%%%** %#%-:@@@@@%%%@@@%%
+   %%@%%@--------------------------:---------------=@%%%%%%@#@------**@@@*** %##--@@@@%@%@@@@@%%
+  %%@@@%---------------------------------------------------:@@%%#@=----##%  %@*---@@@@%%@@%@@@%%=
+  %%@@@#------------------------------------------------------=------:%----+@@%---@@@@@@%%@@@@@%%
+ %%@@%%-------------------------=%%*#################%#---=---------------%--%%---@@@@@@@%%%%@@%%
+ %%@@%@---------------=@%##################################@==---------------@*---@@@@@@@@%%%@@@%#
+ %@@%%+---------+%##############################################*--------------:--@@@@@@@%%%%%@@%%
+%%@@%@*.::--#*#@@@@@%%%%%%%%%%%%%%%%%%%%%%%@@@@####################@---=---------#@@@%@%%%%@@@@@%%
+@%@@%%      %@@@%%%@#. %%.       @@          @@%@%%%@@################%-----------=@@@@%@@@@@@@@%%:
+%%@@@* *##% ###@---%     %%%%%%%%%%%%@+     .%        =@%%@##############@----------@@@@%@@@@@@@%%+
+%%@@%%  ## %#####*+---#   %       %%%%%%%%%%%%:          .@=%%@#############---------@%@@@@@@%@@%%
+@%@@%@##############*=----@       @%      @%%%%%%%%@@.  =@.    @%%%###########==-----=@@@%%%@@@@%%
+-%@@@%#     ############%----=    %         %%     %%%%%%%%@      @%@###########------%@%%@@@@@@%%
+ %%@@@ *### +##############%-----*@         %          %%%%%%%%%@ @@ %%@#########@----=@@@%@@@@@%%
+ %%@@%#     *##################@-----=     @@          %     .@%%%%%   +%@#########----=@@%%%@@@%+
+ @%@@@%##*#*.######################@-----:#@          @@        @%%@@%@   @%########--=-@@@%%@@%%
+  %%@@@@#%  =###########################@-----=--:-%  %         %%  *%@%%%  %%######%---@%%@%@@%%
+  %%@@%%       ###############################%@=--------:=+   %%      %%%%@  %@######--%@@@@@%%
+   %%@@@@%@  +#########################################@#---=-=-%      %@  %%@ @@%####--@@@@@@%%
+    %%@@%-      #############################################@---=--# @@    .@@%%%@###+-@@%@@%@
+    %%%@%%%%%%%@%##@#############################################%=-----+   #@  %%%@##%%@@@@%%
+     %%@@@%%       @#%@###############################################*--=-=-=%*%=-@%@%@@@@%%=
+      %%@@%%@@ @  @%%%@@%%@################################################%%#######%%@@@@%@-
+       %%%@%%%  -@%%  %%%%@@#%%@%#################################################%%@@@@@%%..
+        %%%@@@%@%%   %  @@%%@@@@@%%%%%@##########################################%%@@@@@%%...
+         :%%@@@%@  @    @%%%@@%%%@@@@@%%%%%%%@@##########################   ###%%@@@@@@%@::..
+           %%@@@@%:   @@%  %%%%@@%%%%@@@@@@@@@@%%%%%%@%#################      @@@@@@@@@*:::.
+            =%%@@@@%@%%:  @%   %@@@@%%%%%@@%%@@%@@@@@@@@@%#%%%%%%%%%  @%%%%@# %@@@@%%@-:::..
+              %%%@@@%%%  %%  #@%  @%%%%%%%@%%@%%%%%@%@@@@@@@@@@- @@@@  +@@@=@@@@@@%@---:::.
+                %%%@@@@@@   @@%   @  @@@@@@@%@%@%%@@@%@%@#@    %@@@@@%:  @@@@@@@@%+----::.
+                  %%%@@@@@@%%%  @   :@%  @#  %@%   @@@@@  @@@%  @@@%@@@@@%@@@%%%==----:.
+                    +%%%@@@@@@@@@-  @@  @%  *%@  @ %@@%@% .@@@@  @@@@@@@@@%@%@===---:.
+                     .:#%%%@@@@@@@@@@%%     @%%     @@@@@  @@@@@@@@@@@@@%@%+====--:
+                      .:::*%%%@@@@@@@@@@@@@@@@%#@@@@%@@@@@@@@@@@@@@@%%%%++++==-.
+                       ..:::--#%%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%%%%%##**++=.
+                         ..::---===*%@%%%%@@@@@@@@@@%@@%%@%%%%%%%##*+:
+                            .::---====+++**###%%%%%%%%%%%%###=
+                                  .:--==+++++++=-.
+*/
 
 private:
-  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.07;
+  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.06;
   ateam_geometry::Point target_point_;
-  double kick_speed_ = 5.0;
   play_helpers::EasyMoveTo easy_move_to_;
 
   enum class State
   {
     MoveBehindBall,
     FaceBall,
-    KickBall
+    KickBall,
+    Done
   };
   State state_ = State::MoveBehindBall;
 
-  ateam_geometry::Point getPreKickPosition(const World & world);
+  ateam_geometry::Point GetPreKickPosition(const World & world);
 
-  void chooseState(const World & world, const Robot & robot);
+  void ChooseState(const World & world, const Robot & robot);
 
-  bool isRobotBehindBall(const World & world, const Robot & robot, double hysteresis);
-  bool isRobotSettled(const World & world, const Robot & robot);
-  bool isRobotFacingBall(const Robot & robot);
-  bool isBallMoving(const World & world);
+  bool IsRobotBehindBall(const World & world, const Robot & robot, double hysteresis);
+  bool IsRobotSettled(const World & world, const Robot & robot);
+  bool IsRobotFacingBall(const Robot & robot);
+  bool IsBallMoving(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand runMoveBehindBall(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand runFaceBall(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand runKickBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand RunMoveBehindBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand RunFaceBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand RunKickBall(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills

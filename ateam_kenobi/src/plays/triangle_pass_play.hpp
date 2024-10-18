@@ -24,8 +24,8 @@
 
 #include <vector>
 #include "stp/play.hpp"
-#include "skills/line_kick.hpp"
 #include "play_helpers/easy_move_to.hpp"
+#include "tactics/pass.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -43,28 +43,32 @@ public:
     16> runFrame(const World & world) override;
 
 private:
-  skills::LineKick line_kick_;
+  static constexpr double kKickSpeed = 3.0;
+  tactics::Pass pass_tactic_;
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   std::vector<ateam_geometry::Point> positions;
-  double ball_vel_avg_ = 0.0;
-  bool latch_receive_ = false;
-  int last_kicked_id_ = 0;
+  std::size_t kick_target_ind_ = 0;
 
   enum class State
   {
-    Kicking,
-    Receiving,
+    Setup,
+    Passing,
     BackOff
-  } state_ = State::Kicking;
+  } state_ = State::Setup;
 
-  void runKicking(
-    const std::vector<Robot> & available_robots, const World & world,
+  bool isReady(const World & world);
+
+  void runSetup(
+    const std::vector<Robot> & robots,
+    const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & motion_commands);
+
+  void runPassing(
+    const std::vector<Robot> & robots,
+    const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
-  void runReceiving(
-    std::vector<Robot> available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
+
   void runBackOff(
     const std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,

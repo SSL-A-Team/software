@@ -45,7 +45,7 @@ public:
       running_command != ateam_common::GameCommand::DirectFreeOurs)
     {
       // Game is in a state where the double-touch rule does not apply.
-      world.double_touch_forbidden_id_.reset();
+      double_touch_rule_applies_ = false;
       return;
     }
 
@@ -71,6 +71,9 @@ public:
       if (forbidden_id_ && toucher_id != forbidden_id_.value()) {
         // This is the second robot to touch the ball, double-touch hold is released
         forbidden_id_.reset();
+        double_touch_rule_applies_ = false;
+        world.double_touch_forbidden_id_.reset();
+        return;
       }
     }
 
@@ -101,13 +104,13 @@ private:
   std::optional<Robot> GetRobotTouchingBall(const World & world)
   {
     auto found_iter = std::ranges::find_if(
-      world.our_robots, [this, &world](const std::optional<Robot> & maybe_robot) {
-        if (!maybe_robot) {
+      world.our_robots, [this, &world](const Robot & robot) {
+        if (!robot.visible) {
           return false;
         }
         return std::sqrt(
           CGAL::squared_distance(
-            maybe_robot.value().pos,
+            robot.pos,
             world.ball.pos)) < (kRobotRadius + 0.025);
       });
     if (found_iter == world.our_robots.end()) {

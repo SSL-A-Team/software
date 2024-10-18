@@ -3,6 +3,7 @@ find_package(ament_cmake_gmock REQUIRED)
 ament_add_gmock(ateam_kenobi_tests
   robot_assignment_test.cpp
   path_planner_test.cpp
+  window_evaluation_test.cpp
 )
 
 target_include_directories(ateam_kenobi_tests PUBLIC

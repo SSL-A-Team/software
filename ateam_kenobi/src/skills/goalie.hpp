@@ -21,11 +21,12 @@
 #ifndef SKILLS__GOALIE_HPP_
 #define SKILLS__GOALIE_HPP_
 
+#include <vector>
 #include <ateam_geometry/types.hpp>
 #include "play_helpers/easy_move_to.hpp"
 #include "types/world.hpp"
 #include "stp/skill.hpp"
-#include "line_kick.hpp"
+#include "pivot_kick.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -40,15 +41,9 @@ public:
     const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
 
-  double & possesionTolerance()
-  {
-    return possesion_threshold_;
-  }
-
 private:
   play_helpers::EasyMoveTo easy_move_to_;
-  LineKick line_kick_;
-  double possesion_threshold_ = 0.03;
+  PivotKick kick_;
 
   bool doesOpponentHavePossesion(const World & world);
   bool isBallHeadedTowardsGoal(const World & world);
@@ -77,6 +72,8 @@ private:
    * @return ateam_msgs::msg::RobotMotionCommand
    */
   ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie);
+
+  std::vector<ateam_geometry::AnyShape> getCustomObstacles(const World & world);
 };
 
 }  // namespace ateam_kenobi::skills

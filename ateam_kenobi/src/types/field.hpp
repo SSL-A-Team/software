@@ -34,17 +34,13 @@ struct FieldSidedInfo
 };
 struct Field
 {
-  // we will definetly change the format of this at some point this is preliminary
-  // since we dont really have a geometry library yet
-  // all of this should be in our coordinate system
-  // There is a mirroring ros message of this type
   float field_length;
   float field_width;
-  // NOTE GOAL DEPTH AND WIDTH ARE THE SIZE OF THE GOALIE BOX NOT OF THE GOAL ITSELF
-  // TODO(CAVIDANO) all values in here are currently inaccurate
   float goal_width;
   float goal_depth;
   float boundary_width;
+  float defense_area_width;
+  float defense_area_depth;
   std::array<ateam_geometry::Point, 4> field_corners;
   FieldSidedInfo ours;
   FieldSidedInfo theirs;

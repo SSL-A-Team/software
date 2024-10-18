@@ -149,7 +149,7 @@ void Overlays::drawText(
   msg.command = ateam_msgs::msg::Overlay::REPLACE;
   msg.position.x = position.x();
   msg.position.y = position.y();
-  msg.stroke_color = color;
+  msg.fill_color = color;
   msg.stroke_width = font_size;
   msg.lifetime = lifetime;
   msg.depth = 1;
