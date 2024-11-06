@@ -42,10 +42,13 @@ void World::update_camera(const CameraID & cameraID, const CameraMeasurement & m
   // Update the specific camera
   cameras.at(cameraID).update(measurement);
 }
-void World::predict()
+void World::predict(const int ignore_side)
 {
+  ignore_side_ = ignore_side;
+
   // First, we predict all the things
   for (auto & camera_pair : cameras) {
+    camera_pair.second.set_ignored_half(ignore_side);
     camera_pair.second.predict();
   }
 
@@ -67,6 +70,7 @@ std::optional<Ball> World::get_ball_estimate()
   for (auto & camera_pair : cameras) {
     std::optional<BallWithScore> possible_ball_with_score =
       camera_pair.second.get_ball_estimate_with_score();
+
 
     if (possible_ball_with_score.has_value()) {
       balls_with_scores.emplace_back(possible_ball_with_score.value());

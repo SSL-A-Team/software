@@ -45,7 +45,19 @@ public:
     const World & world,
     const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
 
+  int getMaxBlockerCount() const
+  {
+    return max_blocker_count_;
+  }
+
+  void setMaxBlockerCount(int num)
+  {
+    max_blocker_count_ = num;
+  }
+
 private:
+  std::size_t max_blocker_count_ = 2;
+
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
   std::vector<Robot> getRankedBlockableRobots(const World & world);

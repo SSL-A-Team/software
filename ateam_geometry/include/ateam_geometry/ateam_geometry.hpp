@@ -23,6 +23,7 @@
 
 // This is a convenience header for including all ateam_geometry utilities
 
+#include "angles.hpp"
 #include "any_shape.hpp"
 #include "arc.hpp"
 #include "comparisons.hpp"
@@ -30,9 +31,11 @@
 #include "disk.hpp"
 #include "do_intersect.hpp"
 #include "eigen_conversions.hpp"
+#include "epsilon.hpp"
 #include "intersection.hpp"
 #include "nearest_point.hpp"
 #include "normalize.hpp"
+#include "orientation.hpp"
 #include "types.hpp"
 
 #endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_

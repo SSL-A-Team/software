@@ -26,6 +26,7 @@
 #include <iostream>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
+#include "obstacles.hpp"
 
 namespace ateam_kenobi::path_planning
 {
@@ -44,23 +45,24 @@ PathPlanner::Path PathPlanner::getPath(
 
   std::vector<ateam_geometry::AnyShape> augmented_obstacles = obstacles;
 
-  addRobotsToObstacles(world, start, augmented_obstacles);
+  AddRobotObstacles(world.our_robots, start, augmented_obstacles);
+  AddRobotObstacles(world.their_robots, augmented_obstacles);
 
   if (options.use_default_obstacles) {
-    addDefaultObstacles(world, augmented_obstacles);
+    AddDefaultObstacles(world, augmented_obstacles);
   }
 
   if (options.avoid_ball) {
     augmented_obstacles.push_back(ateam_geometry::makeDisk(world.ball.pos, kBallRadius));
   }
 
-  if (!isStateInBounds(start, world)) {
+  if (!IsPointInBounds(start, world, false)) {
     return {};
   }
 
   if (options.ignore_start_obstacle) {
     removeCollidingObstacles(augmented_obstacles, start, options);
-  } else if (!isStateValid(start, world, augmented_obstacles, options)) {
+  } else if (!isStateValid(start, world, augmented_obstacles, options, false)) {
     return {};
   }
 
@@ -132,22 +134,13 @@ void PathPlanner::removeCollidingObstacles(
   obstacles.erase(new_end, obstacles.end());
 }
 
-bool PathPlanner::isStateInBounds(const ateam_geometry::Point & state, const World & world)
-{
-  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - kRobotRadius;
-  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - kRobotRadius;
-  const ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
-    ateam_geometry::Point(x_bound, y_bound));
-  return CGAL::do_intersect(state, pathable_region);
-}
-
 bool PathPlanner::isStateValid(
   const ateam_geometry::Point & state,
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
-  const PlannerOptions & options)
+  const PlannerOptions & options, const bool offset_field_bounds)
 {
-  if (!isStateInBounds(state, world)) {
+  if (!IsPointInBounds(state, world, offset_field_bounds)) {
     return false;
   }
 
@@ -219,75 +212,6 @@ PathPlanner::SplitResult PathPlanner::splitSegmentIfNecessary(
     .split_needed = true,
     .split_succeeded = false
   };
-}
-
-void PathPlanner::addRobotsToObstacles(
-  const World & world,
-  const ateam_geometry::Point & start_pos,
-  std::vector<ateam_geometry::AnyShape> & obstacles)
-{
-  auto obstacle_from_robot = [](const Robot & robot) {
-      return ateam_geometry::AnyShape(
-        ateam_geometry::makeDisk(robot.pos, kRobotRadius));
-    };
-
-  auto not_current_robot = [&start_pos](const Robot & robot) {
-      // Assume any robot close enough to the start pos is the robot trying to navigate
-      return (robot.pos - start_pos).squared_length() > std::pow(kRobotRadius, 2);
-    };
-
-  auto robot_is_visible = [](const Robot & robot) {
-      return robot.visible;
-    };
-
-  auto our_robot_obstacles = world.our_robots |
-    std::views::filter(robot_is_visible) |
-    std::views::filter(not_current_robot) |
-    std::views::transform(obstacle_from_robot);
-  obstacles.insert(
-    obstacles.end(),
-    our_robot_obstacles.begin(),
-    our_robot_obstacles.end());
-
-  auto their_robot_obstacles = world.their_robots |
-    std::views::filter(robot_is_visible) |
-    std::views::transform(obstacle_from_robot);
-  obstacles.insert(
-    obstacles.end(),
-    their_robot_obstacles.begin(),
-    their_robot_obstacles.end());
-}
-
-void PathPlanner::addDefaultObstacles(
-  const World & world,
-  std::vector<ateam_geometry::AnyShape> & obstacles)
-{
-  /* top_Vertex_2 breaks ties by largest X value and bottom_vertex_2 breaks ties by smallest X
-   * value. Assuming the defense areas are axis-aligned rectangles (which should be a safe
-   * assumption), these two functions give us the opposite corner vertexes we need to build a
-   * Rectangle object.
-   */
-
-  // our goalie box
-  obstacles.push_back(
-    ateam_geometry::Rectangle(
-      *CGAL::top_vertex_2(
-        world.field.ours.defense_area_corners.begin(),
-        world.field.ours.defense_area_corners.end()),
-      *CGAL::bottom_vertex_2(
-        world.field.ours.defense_area_corners.begin(),
-        world.field.ours.defense_area_corners.end())
-  ));
-  // their goalie box
-  obstacles.push_back(
-    ateam_geometry::Rectangle(
-      *CGAL::top_vertex_2(
-        world.field.theirs.defense_area_corners.begin(),
-        world.field.theirs.defense_area_corners.end()),
-      *CGAL::bottom_vertex_2(
-        world.field.theirs.defense_area_corners.begin(),
-        world.field.theirs.defense_area_corners.end())
-  ));
 }
 
 void PathPlanner::removeSkippablePoints(

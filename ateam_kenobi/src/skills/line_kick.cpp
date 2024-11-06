@@ -27,72 +27,86 @@
 namespace ateam_kenobi::skills
 {
 
-LineKick::LineKick(stp::Options stp_options)
-: stp::Skill(stp_options),
+LineKick::LineKick(stp::Options stp_options, KickSkill::WaitType wait_type)
+: KickSkill(stp_options, wait_type),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
 {
+  this->cowabunga = false;
 }
 
-ateam_geometry::Point LineKick::getAssignmentPoint(const World & world)
+ateam_geometry::Point LineKick::GetAssignmentPoint(const World & world)
 {
-  return getPreKickPosition(world);
+  return GetPreKickPosition(world);
 }
 
-ateam_msgs::msg::RobotMotionCommand LineKick::runFrame(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand LineKick::RunFrame(const World & world, const Robot & robot)
 {
-  const auto pre_kick_position = getPreKickPosition(world);
+  const auto pre_kick_position = GetPreKickPosition(world);
 
   getOverlays().drawLine("kick_line", {pre_kick_position, target_point_}, "#FFFF007F");
 
-  chooseState(world, robot);
+  ChooseState(world, robot);
 
   switch (state_) {
     case State::MoveBehindBall:
-      return runMoveBehindBall(world, robot);
+      getPlayInfo()["state"] = "Move Behind Ball";
+      return RunMoveBehindBall(world, robot);
     case State::FaceBall:
-      return runFaceBall(world, robot);
+      getPlayInfo()["state"] = "Face Ball";
+      return RunFaceBall(world, robot);
     case State::KickBall:
-      return runKickBall(world, robot);
+      getPlayInfo()["state"] = "Kick Ball";
+      return RunKickBall(world, robot);
+    case State::Done:
+      return ateam_msgs::msg::RobotMotionCommand{};
     default:
       RCLCPP_WARN(getLogger(), "Unhandled state in line kick!");
       return ateam_msgs::msg::RobotMotionCommand{};
   }
 }
 
-ateam_geometry::Point LineKick::getPreKickPosition(const World & world)
+ateam_geometry::Point LineKick::GetPreKickPosition(const World & world)
 {
   return world.ball.pos + (kPreKickOffset * ateam_geometry::normalize(
            world.ball.pos - target_point_));
 }
 
 
-void LineKick::chooseState(const World & world, const Robot & robot)
+void LineKick::ChooseState(const World & world, const Robot & robot)
 {
+  getPlayInfo()["IsRobotBehindBall"] = IsRobotBehindBall(world, robot, 1.0);
+  getPlayInfo()["IsRobotSettled"] = IsRobotSettled(world, robot);
+  getPlayInfo()["IsRobotFacingBall"] = IsRobotFacingBall(robot);
   switch (state_) {
     case State::MoveBehindBall:
-      if (isRobotBehindBall(world, robot, 1.0) && isRobotSettled(world, robot)) {
+      if (IsRobotBehindBall(world, robot, 1.0) && IsRobotSettled(world, robot)) {
         state_ = State::FaceBall;
       }
       break;
     case State::FaceBall:
-      if (!isRobotBehindBall(world, robot, 3.0)) {
+      if (!IsRobotBehindBall(world, robot, 3.8)) {
         state_ = State::MoveBehindBall;
-      } else if (isRobotFacingBall(robot)) {
+      } else if (IsRobotFacingBall(robot) && IsAllowedToKick()) {
         state_ = State::KickBall;
       }
       break;
     case State::KickBall:
-      if (!isRobotBehindBall(world, robot, 3.0)) {
+      if (!IsAllowedToKick()) {
+        state_ = State::FaceBall;
+      } else if (!IsRobotBehindBall(world, robot, 3.8)) {
         state_ = State::MoveBehindBall;
-      } else if (isBallMoving(world)) {
-        state_ = State::MoveBehindBall;
+      } else if (IsBallMoving(world)) {
+        state_ = State::Done;
       }
+      break;
+    case State::Done:
+      // Done is only exitted by resetting.
       break;
   }
 }
 
 
-bool LineKick::isRobotBehindBall(const World & world, const Robot & robot, double hysteresis)
+bool LineKick::IsRobotBehindBall(const World & world, const Robot & robot, double hysteresis)
 {
   const auto ball_to_target = target_point_ - world.ball.pos;
 
@@ -109,12 +123,17 @@ bool LineKick::isRobotBehindBall(const World & world, const Robot & robot, doubl
 
   const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis &&
     robot_proj_dist_to_ball < 0.22;
-  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.007 * hysteresis;
+  const auto perp_dist_is_good = robot_perp_dist_to_ball <
+    robot_perp_dist_to_ball_threshold * hysteresis;
+
+  getPlayInfo()["IsRobotBehindBall_Perp"] = robot_perp_dist_to_ball;
+  getPlayInfo()["IsRobotBehindBall_Proj"] = robot_proj_dist_to_ball;
+
 
   return proj_dist_is_good && perp_dist_is_good;
 }
 
-bool LineKick::isRobotSettled(const World & world, const Robot & robot)
+bool LineKick::IsRobotSettled(const World & world, const Robot & robot)
 {
   const auto ball_to_target = target_point_ - world.ball.pos;
   const auto robot_vel_proj_mag = (ball_to_target * robot.vel) /
@@ -130,22 +149,22 @@ bool LineKick::isRobotSettled(const World & world, const Robot & robot)
   return robot_vel_is_good;
 }
 
-bool LineKick::isRobotFacingBall(const Robot & robot)
+bool LineKick::IsRobotFacingBall(const Robot & robot)
 {
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
   return std::abs(
     angles::shortest_angular_distance(
       robot.theta,
-      robot_to_target_angle)) < 0.05;
+      robot_to_target_angle)) < angle_threshold;
 }
 
-bool LineKick::isBallMoving(const World & world)
+bool LineKick::IsBallMoving(const World & world)
 {
-  return ateam_geometry::norm(world.ball.vel) > 0.5;
+  return ateam_geometry::norm(world.ball.vel) > 0.1 * GetKickSpeed();
 }
 
-ateam_msgs::msg::RobotMotionCommand LineKick::runMoveBehindBall(
+ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   const World & world,
   const Robot & robot)
 {
@@ -154,28 +173,110 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runMoveBehindBall(
   MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
-  path_planning::PlannerOptions planner_options;
+  path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.footprint_inflation = 0.04;
+
   planner_options.draw_obstacles = true;
+
+  // Add additional obstacles to better avoid ball
+  const auto ball_to_target = target_point_ - world.ball.pos;
+  const auto angle = std::atan2(ball_to_target.y(), ball_to_target.x());
+  std::vector<ateam_geometry::AnyShape> obstacles;
+
+  // Front Obstacle
+  obstacles.push_back(
+    ateam_geometry::makeDisk(
+      world.ball.pos + kBallDiameter * ateam_geometry::Vector(
+        std::cos(angle / 2),
+        std::sin(angle / 2)),
+      kBallRadius * 1.5
+  ));
+
+  // Left Obstacle
+  obstacles.push_back(
+    ateam_geometry::makeDisk(
+      world.ball.pos + kBallDiameter * ateam_geometry::Vector(
+        std::cos(angle + M_PI / 2),
+        std::sin(angle + M_PI / 2)),
+      kBallRadius * 1.5
+  ));
+
+  // Right Obstacle
+  obstacles.push_back(
+    ateam_geometry::makeDisk(
+      world.ball.pos + kBallDiameter * ateam_geometry::Vector(
+        std::cos(angle - M_PI / 2),
+        std::sin(angle - M_PI / 2)),
+      kBallRadius * 1.5
+  ));
+
+  easy_move_to_.setMaxVelocity(move_to_ball_velocity);
   easy_move_to_.setPlannerOptions(planner_options);
-  easy_move_to_.setTargetPosition(getPreKickPosition(world));
-  return easy_move_to_.runFrame(robot, world);
+  easy_move_to_.setTargetPosition(GetPreKickPosition(world));
+
+  auto command = easy_move_to_.runFrame(robot, world, obstacles);
+
+  // Cowabunga it is
+  if (this->cowabunga) {
+    // We are stuck due to a path planner failure or something
+    if (command.twist.linear.x == 0 && command.twist.linear.y == 0) {
+      getPlayInfo()["Cowabunga Mode"] = "Active";
+
+
+      // We are lined up enough to try to kick
+      if (IsRobotBehindBall(world, robot, 3.5)) {
+        getPlayInfo()["Cowabunga Mode State"] = "Kick the Ball";
+        state_ = State::KickBall;
+      }
+      // We are at least sort of already lined up behind the ball
+      // try to scoot around/along the obstacle
+      else if (IsRobotBehindBall(world, robot, 5.0)) {  // NOLINT
+        getPlayInfo()["Cowabunga Mode State"] = "Scoot Around";
+
+        // planner_options.avoid_ball = false;
+        // planner_options.footprint_inflation = -0.1;
+        // planner_options.draw_obstacles = false;
+
+        // easy_move_to_.setMaxVelocity(0.5);
+        // easy_move_to_.setPlannerOptions(planner_options);
+
+        // command = easy_move_to_.runFrame(robot, world);
+
+        // Where we're going we don't need plans
+        command.twist.linear.x = std::cos(robot.theta) * 0.5;
+        command.twist.linear.y = std::sin(robot.theta) * 0.5;
+      } else if (ateam_geometry::norm(robot.pos - world.ball.pos) < 1.0) {
+        getPlayInfo()["Cowabunga Mode State"] = "Get Closer";
+
+        planner_options.footprint_inflation = -0.1;
+        easy_move_to_.setPlannerOptions(planner_options);
+        easy_move_to_.setMaxVelocity(1.0);
+
+        command = easy_move_to_.runFrame(robot, world);
+      }
+      getPlayInfo()["dist to ball"] = ateam_geometry::norm(robot.pos - world.ball.pos);
+    }
+  }
+
+  return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand LineKick::runFaceBall(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
 {
   easy_move_to_.setTargetPosition(robot.pos);
   easy_move_to_.face_point(target_point_);
-  return easy_move_to_.runFrame(robot, world);
+
+  auto command = easy_move_to_.runFrame(robot, world);
+  command.twist.linear.x = 0;
+  command.twist.linear.y = 0;
+  return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand LineKick::runKickBall(const World & world, const Robot & robot)
+ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, const Robot & robot)
 {
-  path_planning::PlannerOptions planner_options;
+  path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.avoid_ball = false;
   planner_options.footprint_inflation = 0.0;
-  planner_options.use_default_obstacles = true;
-  planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
 
   // Handle robot angle
@@ -185,11 +286,10 @@ ateam_msgs::msg::RobotMotionCommand LineKick::runKickBall(const World & world, c
   auto command = easy_move_to_.runFrame(robot, world);
 
   // Override the velocity to move directly into the ball
-  double velocity = 0.4;
-  command.twist.linear.x = std::cos(robot.theta) * velocity;
-  command.twist.linear.y = std::sin(robot.theta) * velocity;
+  command.twist.linear.x = std::cos(robot.theta) * kick_drive_velocity;
+  command.twist.linear.y = std::sin(robot.theta) * kick_drive_velocity;
   command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
-  command.kick_speed = kick_speed_;
+  command.kick_speed = GetKickSpeed();
 
   return command;
 }

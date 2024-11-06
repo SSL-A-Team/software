@@ -23,21 +23,24 @@
 
 #include "types.hpp"
 #include "normalize.hpp"
+#include "epsilon.hpp"
 
 namespace ateam_geometry
 {
 
-inline bool nearEqual(const Point & a, const Point & b, const double threshold = 1e-3)
+inline bool nearEqual(const Point & a, const Point & b, const double threshold = kDistanceEpsilon)
 {
   return CGAL::squared_distance(a, b) < (threshold * threshold);
 }
 
-inline bool nearEqual(const Vector & a, const Vector & b, const double threshold = 1e-3)
+inline bool nearEqual(const Vector & a, const Vector & b, const double threshold = kDistanceEpsilon)
 {
   return std::hypot(a.x() - b.x(), a.y() - b.y()) < threshold;
 }
 
-inline bool nearEqual(const Direction & a, const Direction & b, const double threshold = 1e-3)
+inline bool nearEqual(
+  const Direction & a, const Direction & b,
+  const double threshold = kDistanceEpsilon)
 {
   return nearEqual(normalize(a.vector()), normalize(b.vector()), threshold);
 }

@@ -20,8 +20,11 @@
 
 
 #include "easy_move_to.hpp"
+#include <ranges>
+#include <algorithm>
 #include <chrono>
 #include <ateam_common/robot_constants.hpp>
+#include "path_planning/obstacles.hpp"
 
 namespace ateam_kenobi::play_helpers
 {
@@ -81,6 +84,11 @@ void EasyMoveTo::setTargetPosition(ateam_geometry::Point target_position)
   target_position_ = target_position;
 }
 
+const path_planning::PlannerOptions & EasyMoveTo::getPlannerOptions() const
+{
+  return planner_options_;
+}
+
 void EasyMoveTo::setPlannerOptions(path_planning::PlannerOptions options)
 {
   planner_options_ = options;
@@ -131,6 +139,10 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::runFrame(
   const Robot & robot, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles)
 {
+  const auto escape_velocity = generateEscapeVelocity(world, robot, obstacles);
+  if (escape_velocity) {
+    return *escape_velocity;
+  }
   const auto path = planPath(robot, world, obstacles);
   const auto motion_command = getMotionCommand(path, robot, world);
   drawTrajectoryOverlay(path, robot);
@@ -169,6 +181,79 @@ void EasyMoveTo::drawTrajectoryOverlay(
       getOverlays().drawLine("afterpath", {path.back(), target_position_}, "red");
     }
   }
+}
+
+std::optional<ateam_msgs::msg::RobotMotionCommand> EasyMoveTo::generateEscapeVelocity(
+  const World & world,
+  const Robot & robot,
+  std::vector<ateam_geometry::AnyShape> obstacles)
+{
+  if (planner_options_.use_default_obstacles) {
+    path_planning::AddDefaultObstacles(world, obstacles);
+  }
+  path_planning::AddRobotObstacles(world.our_robots, robot.id, obstacles);
+  path_planning::AddRobotObstacles(world.their_robots, obstacles);
+  const auto robot_footprint = ateam_geometry::makeDisk(
+    robot.pos,
+    kRobotRadius + planner_options_.footprint_inflation);
+
+  /* TODO(barulicm): Using only the first colliding obstacle to generate escape velocities may not
+   * yield a useful velocity when multiple collisions are occurring simultaneously.
+   */
+
+  const auto colliding_obstacle = path_planning::GetCollidingObstacle(robot_footprint, obstacles);
+  if (!colliding_obstacle) {
+    return std::nullopt;
+  }
+
+  const double safe_speed = 0.5;
+
+  auto msg_from_vector = [](const ateam_geometry::Vector & v) {
+      ateam_msgs::msg::RobotMotionCommand command;
+      command.twist.linear.x = v.x();
+      command.twist.linear.y = v.y();
+      return command;
+    };
+
+  if (std::holds_alternative<ateam_geometry::Circle>(*colliding_obstacle)) {
+    const auto & obstacle = std::get<ateam_geometry::Circle>(*colliding_obstacle);
+    const auto vector = robot.pos - obstacle.center();
+    return msg_from_vector(ateam_geometry::normalize(vector) * safe_speed);
+  }
+
+  if (std::holds_alternative<ateam_geometry::Disk>(*colliding_obstacle)) {
+    const auto & obstacle = std::get<ateam_geometry::Disk>(*colliding_obstacle);
+    const auto vector = robot.pos - obstacle.center();
+    return msg_from_vector(ateam_geometry::normalize(vector) * safe_speed);
+  }
+
+  if (std::holds_alternative<ateam_geometry::Rectangle>(*colliding_obstacle)) {
+    const auto & obstacle = std::get<ateam_geometry::Rectangle>(*colliding_obstacle);
+    std::array<ateam_geometry::Segment, 4> edges = {
+      ateam_geometry::Segment{obstacle[0], obstacle[1]},
+      ateam_geometry::Segment{obstacle[1], obstacle[2]},
+      ateam_geometry::Segment{obstacle[2], obstacle[3]},
+      ateam_geometry::Segment{obstacle[3], obstacle[0]},
+    };
+    std::array<double, 4> distances;
+    std::ranges::transform(
+      edges, distances.begin(), [&robot](const auto & edge) {
+        return CGAL::squared_distance(robot.pos, edge);
+      });
+    const auto min_iter = std::ranges::min_element(distances);
+
+    const auto closest_edge = edges[std::distance(distances.begin(), min_iter)];
+
+    const auto edge_direction = closest_edge.direction();
+
+    // Rotate direction by -90 deg. Assumes vertices are reported in counterclockwise order
+    const ateam_geometry::Vector escape_vector{edge_direction.dy(), -edge_direction.dx()};
+
+    return msg_from_vector(escape_vector * safe_speed);
+  }
+
+  // Default case when we don't recognize the obstacle type
+  return std::nullopt;
 }
 
 }  // namespace ateam_kenobi::play_helpers

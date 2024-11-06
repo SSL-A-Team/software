@@ -37,7 +37,7 @@ public:
 
   explicit StopPlay(stp::Options stp_options);
 
-  double getScore(const World & world) override;
+  stp::PlayScore getScore(const World & world) override;
 
   void reset() override;
 
@@ -46,7 +46,7 @@ public:
 
 private:
   static constexpr double kKeepoutRadiusRules = 0.5;
-  static constexpr double kKeepoutRadius = kKeepoutRadiusRules + kRobotRadius;
+  static constexpr double kKeepoutRadius = kKeepoutRadiusRules + kRobotRadius + 0.2;
 
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   int prev_assigned_id_ = -1;
@@ -54,6 +54,10 @@ private:
   std::vector<ateam_geometry::Point> getOpenSpots(const World & world);
 
   void removeArc(std::vector<ateam_geometry::Arc> & openings, const ateam_geometry::Arc & arc);
+
+  bool isPointInOrBehindGoal(const ateam_geometry::Point & point, const World & world);
+
+  std::vector<ateam_geometry::AnyShape> getAddedObstacles(const World & world);
 };
 }  // namespace ateam_kenobi::plays
 

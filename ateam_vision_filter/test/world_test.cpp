@@ -56,7 +56,7 @@ TEST(World, DISABLED_getBallEstimate_ShouldReturnData_WhenOneCameraConsistent)
   camera_measurement.ball = ball_measurements;
 
   world.update_camera(0, camera_measurement);
-  world.predict();
+  world.predict(0);
 
   auto ball_estimate = world.get_ball_estimate();
 
@@ -83,7 +83,7 @@ TEST(World, DISABLED_getBallEstimate_ShouldReturnAverageData_WhenTwoCameraConsis
 
   world.update_camera(0, camera_measurement1);
   world.update_camera(1, camera_measurement2);
-  world.predict();
+  world.predict(0);
 
   auto ball_estimate = world.get_ball_estimate();
 
@@ -108,7 +108,7 @@ TEST(World, DISABLED_getRobotEstimate_ShouldReturnData_WhenOneCameraConsistent)
   camera_measurement.blue_robots = robot_measurements;
 
   world.update_camera(0, camera_measurement);
-  world.predict();
+  world.predict(0);
 
   auto yellow_robots_estimate = world.get_yellow_robots_estimate();
   auto blue_robots_estimate = world.get_blue_robots_estimate();
@@ -168,7 +168,7 @@ TEST(World, DISABLED_getRobotEstimate_ShouldReturnAverageData_WhenTwoCameraConsi
 
   world.update_camera(0, camera_measurement1);
   world.update_camera(1, camera_measurement2);
-  world.predict();
+  world.predict(0);
 
   auto yellow_robots_estimate = world.get_yellow_robots_estimate();
   auto blue_robots_estimate = world.get_blue_robots_estimate();
