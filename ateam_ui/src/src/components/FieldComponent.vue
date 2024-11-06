@@ -127,7 +127,6 @@ export default {
         },
         rightClickDrag: function(event) {
             const viewport = this.pixi.stage.getChildAt(0);
-            const ball_pos = viewport.getChildByName("ball").getChildAt(0).position;
 
             const ballVelLine = this.pixi.stage.getChildByName("ballVelLine") as PIXI.Graphics;
             ballVelLine.clear();
@@ -136,8 +135,7 @@ export default {
                 ballVelLine.removeChild(oldBallVelText);
             }
 
-            let pos = PIXI.Point;
-            pos = event.global;
+            let pos = event.global;
 
             let vec = PIXI.Point;
             vec.x = this.startDragPoint.x - pos.x;

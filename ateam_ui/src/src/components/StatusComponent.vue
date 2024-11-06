@@ -152,7 +152,6 @@ export default {
                 textY: [-.12, .14, .14, -.12, -.13]
             }
 
-            // TODO: Figure out what order the motor numbers use
             // TODO: update this to match dribbler naming convention once it is added
             for (var i = 0; i < 5; i++) {
                 let general = robot.status["motor_" + i + "_general_error"];
@@ -167,11 +166,10 @@ export default {
                     ctx.lineTo(scale*wheels.endX[i], scale*wheels.endY[i]);
                     ctx.stroke();
 
-                    let errString = "";
+                    let errString = String(i);
                     if (general)  errString = errString + "G";
                     if (hall)  errString = errString + "H";
                     if (encoder)  errString = errString + "E";
-                    errString = String(i);
 
                     ctx.fillStyle = "red";
                     ctx.font = "13px Arial";
