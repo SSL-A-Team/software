@@ -144,15 +144,14 @@ export default {
 
             // Theres probably a better way to do this
             const wheels = {
-                startX: [-.075, .075, -.035, .035, -.05],
-                startY: [-.095, -.095, .12, .12, -.09],
-                endX: [-.12, .12, -.1, .1, .05],
-                endY: [-.03, -.03, .07, .07, -.09],
-                textX: [-.12, .12, -.12, .12, 0],
-                textY: [-.12, -.12, .14, .14, -.13]
+                startX: [-.075, -.035, .035, .075, -.05],
+                startY: [-.095, .12, .12, -.095, -.09],
+                endX: [-.12, -.1, .1, .12, .05],
+                endY: [-.03, .07, .07, -.03, -.09],
+                textX: [-.12, -.12, .12, .12, 0],
+                textY: [-.12, .14, .14, -.12, -.13]
             }
 
-            // TODO: Figure out what order the motor numbers use
             // TODO: update this to match dribbler naming convention once it is added
             for (var i = 0; i < 5; i++) {
                 let general = robot.status["motor_" + i + "_general_error"];
@@ -167,7 +166,7 @@ export default {
                     ctx.lineTo(scale*wheels.endX[i], scale*wheels.endY[i]);
                     ctx.stroke();
 
-                    let errString = "";
+                    let errString = String(i);
                     if (general)  errString = errString + "G";
                     if (hall)  errString = errString + "H";
                     if (encoder)  errString = errString + "E";
