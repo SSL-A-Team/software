@@ -196,6 +196,11 @@ std::optional<ateam_msgs::msg::RobotMotionCommand> EasyMoveTo::generateEscapeVel
   const auto robot_footprint = ateam_geometry::makeDisk(
     robot.pos,
     kRobotRadius + planner_options_.footprint_inflation);
+
+  /* TODO(barulicm): Using only the first colliding obstacle to generate escape velocities may not
+   * yield a useful velocity when multiple collisions are occurring simultaneously.
+   */
+
   const auto colliding_obstacle = path_planning::GetCollidingObstacle(robot_footprint, obstacles);
   if (!colliding_obstacle) {
     return std::nullopt;
