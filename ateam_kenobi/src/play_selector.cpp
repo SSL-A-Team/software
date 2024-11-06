@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -31,6 +32,7 @@ namespace ateam_kenobi
 {
 
 PlaySelector::PlaySelector(rclcpp::Node & node)
+: ros_logger_(node.get_logger().get_child("PlaySelector"))
 {
   using namespace ateam_kenobi::plays;  // NOLINT(build/namespaces)
   stp::Options stp_options;
@@ -42,20 +44,50 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<TestPlay>(stp_options);
   addPlay<StopPlay>(stp_options);
   addPlay<WallPlay>(stp_options);
+  addPlay<KickOnGoalPlay>(stp_options);
+  addPlay<KickoffOnGoalPlay>(stp_options);
   addPlay<OurKickoffPlay>(stp_options);
+  addPlay<OurKickoffPrepPlay>(stp_options);
+  addPlay<OurBallPlacementPlay>(stp_options);
+  addPlay<TheirBallPlacementPlay>(stp_options);
   addPlay<TestKickPlay>(stp_options);
   addPlay<Basic122>(stp_options);
   addPlay<OurPenaltyPlay>(stp_options);
+  addPlay<TestWindowEvalPlay>(stp_options);
+  addPlay<TheirFreeKickPlay>(stp_options);
+  addPlay<TheirKickoffPlay>(stp_options);
   addPlay<TheirPenaltyPlay>(stp_options);
   addPlay<ControlsTestPlay>(stp_options);
+  addPlay<DefensePlay>(stp_options);
+  addPlay<ExtractPlay>(stp_options);
   addPlay<TrianglePassPlay>(stp_options);
   addPlay<WaypointsPlay>(stp_options);
   addPlay<SpinningAPlay>(stp_options);
+  addPlay<PassToLanePlay>(
+    "PassLeftForwardPlay", stp_options, play_helpers::lanes::Lane::Left,
+    PassToLanePlay::PassDirection::Forward);
+  addPlay<PassToLanePlay>(
+    "PassCenterForwardPlay", stp_options, play_helpers::lanes::Lane::Center,
+    PassToLanePlay::PassDirection::Forward);
+  addPlay<PassToLanePlay>(
+    "PassRightForwardPlay", stp_options, play_helpers::lanes::Lane::Right,
+    PassToLanePlay::PassDirection::Forward);
+  addPlay<PassToLanePlay>(
+    "PassLeftBackwardPlay", stp_options, play_helpers::lanes::Lane::Left,
+    PassToLanePlay::PassDirection::Backward);
+  addPlay<PassToLanePlay>(
+    "PassCenterBackwardPlay", stp_options, play_helpers::lanes::Lane::Center,
+    PassToLanePlay::PassDirection::Backward);
+  addPlay<PassToLanePlay>(
+    "PassRightBackwardPlay", stp_options, play_helpers::lanes::Lane::Right,
+    PassToLanePlay::PassDirection::Backward);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg)
 {
   stp::Play * selected_play = nullptr;
+
+  std::vector<double> scores;
 
   if (world.referee_info.running_command == ateam_common::GameCommand::Halt) {
     selected_play = halt_play_.get();
@@ -66,7 +98,7 @@ stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::Playbook
   }
 
   if (selected_play == nullptr) {
-    selected_play = selectRankedPlay(world);
+    selected_play = selectRankedPlay(world, scores);
   }
 
   if (selected_play == nullptr) {
@@ -75,7 +107,7 @@ stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::Playbook
 
   resetPlayIfNeeded(selected_play);
 
-  fillStateMessage(state_msg, world);
+  fillStateMessage(state_msg, scores, selected_play);
 
   return selected_play;
 }
@@ -120,13 +152,30 @@ stp::Play * PlaySelector::selectOverridePlay()
   return found_iter->get();
 }
 
-stp::Play * PlaySelector::selectRankedPlay(const World & world)
+stp::Play * PlaySelector::selectRankedPlay(
+  const World & world,
+  std::vector<double> & scores_out)
 {
   std::vector<std::pair<stp::Play *, double>> play_scores;
 
   std::ranges::transform(
-    plays_, std::back_inserter(play_scores), [&world](auto play) {
-      return std::make_pair(play.get(), play->getScore(world));
+    plays_, std::back_inserter(play_scores), [this, &world](auto play) {
+      void * play_address = static_cast<void *>(play.get());
+      double score_multiplier = 1.0;
+      if (play_address == prev_play_address_) {
+        // 15% bonus to previous play as hysteresis
+        score_multiplier = 1.15;
+        if (play->getCompletionState() == stp::PlayCompletionState::Busy) {
+          // +90% if previous play should not be interrupted
+          score_multiplier += 0.9;
+        }
+      }
+      if (!play->isEnabled()) {
+        return std::make_pair(play.get(), std::numeric_limits<double>::quiet_NaN());
+      }
+      return std::make_pair(
+        play.get(),
+        std::clamp(score_multiplier * play->getScore(world), 0.0, 100.0));
     });
 
   auto sort_func = [](const auto & l, const auto & r) {
@@ -134,14 +183,15 @@ stp::Play * PlaySelector::selectRankedPlay(const World & world)
       if (std::isnan(l.second)) {return true;}
       if (std::isnan(r.second)) {return false;}
 
-      // Rank disabled plays low
-      if (!l.first->isEnabled()) {return true;}
-      if (!r.first->isEnabled()) {return false;}
-
       return l.second < r.second;
     };
 
   const auto & max_score = *std::ranges::max_element(play_scores, sort_func);
+
+  std::transform(
+    play_scores.begin(), play_scores.end(), std::back_inserter(scores_out), [](const auto & p) {
+      return p.second;
+    });
 
   if (std::isnan(max_score.second)) {
     return nullptr;
@@ -165,16 +215,45 @@ void PlaySelector::resetPlayIfNeeded(stp::Play * play)
   }
 }
 
-void PlaySelector::fillStateMessage(ateam_msgs::msg::PlaybookState & msg, const World & world)
+void PlaySelector::fillStateMessage(
+  ateam_msgs::msg::PlaybookState & msg,
+  std::vector<double> & scores,
+  const stp::Play * selected_play)
 {
+  if (scores.empty()) {
+    std::fill_n(
+      std::back_inserter(scores), plays_.size(),
+      std::numeric_limits<double>::quiet_NaN());
+  }
+  if (scores.size() != plays_.size()) {
+    RCLCPP_WARN(
+      ros_logger_, "fillStateMessage(): scores.size() != plays_.size(). buffering with NaN");
+    std::fill_n(
+      std::back_inserter(scores), plays_.size() - scores.size(),
+      std::numeric_limits<double>::quiet_NaN());
+  }
   msg.override_name = override_play_name_;
+  msg.running_play_name = selected_play->getName();
+
+  const auto found_iter = std::find_if(
+    plays_.begin(), plays_.end(), [selected_play](const std::shared_ptr<stp::Play> play)-> bool {
+      return play.get() == selected_play;
+    });
+  if (found_iter != plays_.end()) {
+    msg.running_play_index = std::distance(plays_.begin(), found_iter);
+  } else {
+    msg.running_play_index = -1;
+  }
+
   msg.names.reserve(plays_.size());
   msg.enableds.reserve(plays_.size());
   msg.scores.reserve(plays_.size());
+  auto ind = 0ul;
   for (const auto & play : plays_) {
     msg.names.push_back(play->getName());
     msg.enableds.push_back(play->isEnabled());
-    msg.scores.push_back(play->getScore(world));
+    msg.scores.push_back(scores[ind]);
+    ind++;
   }
 }
 

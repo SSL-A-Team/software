@@ -48,6 +48,8 @@ struct World
   bool our_penalty;
   bool their_penalty;
 
+  int ignore_side = 0;
+
   // Holds the ID of the robot not allowed to touch the ball, if any
   std::optional<int> double_touch_forbidden_id_;
 };

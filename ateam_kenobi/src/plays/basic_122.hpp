@@ -26,7 +26,7 @@
 #include "stp/play.hpp"
 #include "skills/line_kick.hpp"
 #include "tactics/blockers.hpp"
-#include "skills/goalie.hpp"
+#include "tactics/standard_defense.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -38,7 +38,7 @@ public:
 
   explicit Basic122(stp::Options stp_options);
 
-  double getScore(const World & world) override;
+  stp::PlayScore getScore(const World & world) override;
 
   void reset() override;
 
@@ -47,7 +47,7 @@ public:
 private:
   skills::LineKick striker_skill_;
   tactics::Blockers blockers_skill_;
-  skills::Goalie goalie_skill_;
+  tactics::StandardDefense defense_;
 
   void runStriker(
     const Robot & striker_bot, const World & world,
