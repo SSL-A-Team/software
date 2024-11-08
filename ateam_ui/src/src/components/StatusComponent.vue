@@ -170,6 +170,7 @@ export default {
                     if (general)  errString = errString + "G";
                     if (hall)  errString = errString + "H";
                     if (encoder)  errString = errString + "E";
+                    errString = String(i);
 
                     ctx.fillStyle = "red";
                     ctx.font = "13px Arial";

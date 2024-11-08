@@ -7,6 +7,7 @@ import { Ball } from "@/ball"
 import { Field } from "@/field"
 import { AIState } from "@/AI"
 import { Play } from "@/play"
+import { exportDefaultSpecifier } from "@babel/types"
 
 export class RenderConfig {
     angle: number = 0; // Rotation applied to the rendered field

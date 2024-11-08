@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 jobs:
   buildAndTest:
-    runs-on: ubuntu-22.04
-    container: ros:humble
+    runs-on: ubuntu-24.04
+    container: ros:jazzy
     steps:
       - uses: actions/checkout@v2
         with:
@@ -19,19 +19,19 @@ jobs:
       - name: Install Dependencies
         shell: bash
         run: |
-          source /opt/ros/humble/setup.bash
+          source /opt/ros/jazzy/setup.bash
           sudo apt-get update
-          rosdep update --rosdistro=humble
+          rosdep update --rosdistro=jazzy
           rosdep install --from-paths . --ignore-src -y
           ./src/ateam_software/ateam_ui/install_deps.sh
       - name: Build
         shell: bash
         run: |
-          source /opt/ros/humble/setup.bash
+          source /opt/ros/jazzy/setup.bash
           colcon build
       - name: Test
         shell: bash
         run: |
-          source /opt/ros/humble/setup.bash
+          source /opt/ros/jazzy/setup.bash
           colcon test --packages-skip ateam_ui
           colcon test-result --verbose 

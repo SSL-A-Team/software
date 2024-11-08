@@ -26,9 +26,10 @@ namespace ateam_kenobi::tactics
 {
 
 MultiMoveTo::MultiMoveTo(stp::Options stp_options)
-: stp::Tactic(stp_options),
-  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("easy_move_to"))
-{}
+: stp::Tactic(stp_options)
+{
+  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "easy_move_to");
+}
 
 void MultiMoveTo::Reset()
 {

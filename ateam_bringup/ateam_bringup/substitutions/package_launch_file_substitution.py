@@ -18,9 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from ament_index_python.packages import get_package_share_directory
 from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.substitutions import PathJoinSubstitution
-from ament_index_python.packages import get_package_share_directory
 
 
 class PackageLaunchFileSubstitution(PathJoinSubstitution):
@@ -28,4 +28,4 @@ class PackageLaunchFileSubstitution(PathJoinSubstitution):
 
     def __init__(self, package_name: SomeSubstitutionsType,
                  file_name: SomeSubstitutionsType) -> None:
-        super().__init__([get_package_share_directory(package_name), "launch", file_name])
+        super().__init__([get_package_share_directory(package_name), 'launch', file_name])

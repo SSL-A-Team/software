@@ -32,9 +32,10 @@ namespace ateam_kenobi::plays
 
 TheirKickoffPlay::TheirKickoffPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo")),
   defense_(createChild<tactics::StandardDefense>("defense"))
-{}
+{
+  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
+}
 
 stp::PlayScore TheirKickoffPlay::getScore(const World & world)
 {

@@ -28,9 +28,10 @@ namespace ateam_kenobi::plays
 {
 
 TheirBallPlacementPlay::TheirBallPlacementPlay(stp::Options stp_options)
-: stp::Play(kPlayName, stp_options),
-  easy_move_tos_(createIndexedChildren<play_helpers::EasyMoveTo>("EasyMoveTo"))
-{}
+: stp::Play(kPlayName, stp_options)
+{
+  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
+}
 
 stp::PlayScore TheirBallPlacementPlay::getScore(const World & world)
 {

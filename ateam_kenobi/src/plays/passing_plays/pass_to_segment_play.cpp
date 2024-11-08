@@ -200,7 +200,7 @@ play_helpers::lanes::Lane PassToSegmentPlay::getIdleLane(
     std::remove_if(
       lanes.begin(), lanes.end(), [&target_midpoint, &world](const auto & lane) {
         return play_helpers::lanes::IsPointInLane(world, target_midpoint, lane) ||
-        play_helpers::lanes::IsBallInLane(world, lane);
+               play_helpers::lanes::IsBallInLane(world, lane);
       }), lanes.end());
 
   if (lanes.empty()) {
