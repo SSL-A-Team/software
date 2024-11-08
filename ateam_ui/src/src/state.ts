@@ -1,10 +1,10 @@
 import ROSLIB from "roslib"
 // import 'roslib/build/roslib';
-import { Team, TeamInfo, TeamColor } from "@/team"
+import { Team, TeamColor } from "@/team"
 import { Overlay } from "@/overlay"
 import { Referee } from "@/referee"
 import { Ball } from "@/ball"
-import { Field, FieldDimensions, FieldSidedInfo } from "@/field"
+import { Field } from "@/field"
 import { AIState } from "@/AI"
 import { Play } from "@/play"
 import { exportDefaultSpecifier } from "@babel/types"
@@ -136,8 +136,6 @@ export class AppState {
     }
 
     setIgnoreFieldSide(ignore_side: number) {
-        const state = this; // fix dumb javascript things
-
         let int_side = 0;
         if (ignore_side > 0) {
             int_side = 1;
@@ -151,15 +149,13 @@ export class AppState {
         this.services["setIgnoreFieldSide"].callService(request,
             function(result) {
                 if(!result.success) {
-                    console.log("Failed to set ignore side: ", result.reason);
+                    console.error("Failed to set ignore side: ", result.reason);
                 }
             });
     }
 
     // TODO(chachmu): break this out into better functions for different things
     sendSimulatorControlPacket(simulator_control_packet) {
-        const state = this; // fix dumb javascript things
-
         const request = new ROSLIB.ServiceRequest({
             simulator_control: simulator_control_packet
         });
@@ -371,7 +367,7 @@ export class AppState {
         });
 
         this.ros.on('error', function(error) {
-            console.log('Error connecting to ROS server: ', error);
+            console.error('Error connecting to ROS server: ', error);
         });
 
         this.ros.on('close', function() {
