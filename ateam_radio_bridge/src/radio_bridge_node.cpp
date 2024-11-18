@@ -59,7 +59,7 @@ public:
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-      declare_parameter<std::string>("net_interface_address", "172.16.1.10")),
+      declare_parameter<std::string>("net_interface_address", "192.168.0.88")),
     firmware_parameter_server_(*this, connections_)
   {
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
@@ -71,13 +71,13 @@ public:
 
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotFeedback>(
       feedback_publishers_,
-      "~/robot_feedback/robot",
+      "~/robot_feedback/status/robot",
       rclcpp::SystemDefaultsQoS(),
       this);
 
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotMotionFeedback>(
       motion_feedback_publishers_,
-      "~/robot_motion_feedback/robot",
+      "~/robot_feedback/motion/robot",
       rclcpp::SystemDefaultsQoS(),
       this);
 
