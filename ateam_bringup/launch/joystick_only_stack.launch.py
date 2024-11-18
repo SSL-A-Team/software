@@ -22,7 +22,6 @@ from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 import launch
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
