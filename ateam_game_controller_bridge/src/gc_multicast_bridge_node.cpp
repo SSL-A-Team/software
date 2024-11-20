@@ -50,7 +50,11 @@ public:
       create_client<ateam_msgs::srv::ReconnectTeamClient>("/team_client_node/reconnect",
         rclcpp::ServicesQoS(), client_callback_group_);
 
-    team_client_connection_subscription_ = create_subscription<ateam_msgs::msg::TeamClientConnectionStatus>("/team_client_node/connection_status", rclcpp::SystemDefaultsQoS(), std::bind(&GCMulticastBridgeNode::TeamClientConnectionStatusCallback, this, std::placeholders::_1));
+    team_client_connection_subscription_ =
+      create_subscription<ateam_msgs::msg::TeamClientConnectionStatus>(
+        "/team_client_node/connection_status", rclcpp::SystemDefaultsQoS(),
+        std::bind(&GCMulticastBridgeNode::TeamClientConnectionStatusCallback, this,
+        std::placeholders::_1));
 
     const auto multicast_address =
       declare_parameter<std::string>("multicast.address", "224.5.23.1");

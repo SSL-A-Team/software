@@ -24,7 +24,8 @@
 #include <vector>
 #include <string>
 
-namespace ateam_common {
+namespace ateam_common
+{
 
 /**
  * Returns a vector of local IP addresses. Effectively enumerating available network interfaces.
