@@ -25,6 +25,8 @@
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/protobuf_logging.hpp>
 #include <ateam_common/topic_names.hpp>
+#include <ateam_msgs/msg/team_client_connection_status.hpp>
+#include <ateam_msgs/srv/reconnect_team_client.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
 #include "message_conversions.hpp"
 
@@ -43,6 +45,13 @@ public:
       std::string(Topics::kRefereeMessages),
       rclcpp::SystemDefaultsQoS());
 
+    client_callback_group_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    reconnect_client_ =
+      create_client<ateam_msgs::srv::ReconnectTeamClient>("/team_client_node/reconnect",
+        rclcpp::ServicesQoS(), client_callback_group_);
+
+    team_client_connection_subscription_ = create_subscription<ateam_msgs::msg::TeamClientConnectionStatus>("/team_client_node/connection_status", rclcpp::SystemDefaultsQoS(), std::bind(&GCMulticastBridgeNode::TeamClientConnectionStatusCallback, this, std::placeholders::_1));
+
     const auto multicast_address =
       declare_parameter<std::string>("multicast.address", "224.5.23.1");
     const auto multicast_port = declare_parameter<int>("multicast.port", 10003);
@@ -51,24 +60,48 @@ public:
       multicast_address.c_str(), multicast_port);
     multicast_receiver_ = std::make_unique<ateam_common::MulticastReceiver>(
       multicast_address,
-      multicast_port, std::bind(
-        &GCMulticastBridgeNode::PublishMulticastMessage, this, std::placeholders::_3,
-        std::placeholders::_4),
+      multicast_port,
+        std::bind(&GCMulticastBridgeNode::PublishMulticastMessage, this, std::placeholders::_1,
+        std::placeholders::_3, std::placeholders::_4),
       declare_parameter<std::string>("net_interface_address", ""));
   }
 
 private:
+  const std::chrono::seconds kReconnectTimeout{2};
+  bool team_client_connected_ = false;
   rclcpp::Publisher<ssl_league_msgs::msg::Referee>::SharedPtr referee_publisher_;
+  rclcpp::CallbackGroup::SharedPtr client_callback_group_;
+  rclcpp::Client<ateam_msgs::srv::ReconnectTeamClient>::SharedPtr reconnect_client_;
+  rclcpp::Subscription<ateam_msgs::msg::TeamClientConnectionStatus>::SharedPtr
+    team_client_connection_subscription_;
   std::unique_ptr<ateam_common::MulticastReceiver> multicast_receiver_;
 
-  void PublishMulticastMessage(const uint8_t * buffer, const size_t bytes_received)
+  void PublishMulticastMessage(
+    const std::string & sender_address, const uint8_t * buffer,
+    const size_t bytes_received)
   {
     Referee referee_proto;
     if (referee_proto.ParseFromArray(buffer, bytes_received)) {
       referee_publisher_->publish(message_conversions::fromProto(referee_proto));
+      if(!team_client_connected_ && reconnect_client_->service_is_ready()) {
+        auto request = std::make_shared<ateam_msgs::srv::ReconnectTeamClient::Request>();
+        request->server_address = sender_address;
+        auto service_future = reconnect_client_->async_send_request(request);
+        if(service_future.wait_for(kReconnectTimeout) == std::future_status::timeout) {
+          RCLCPP_WARN(get_logger(), "Timed out trying to reconnect team client.");
+        } else if(!service_future.get()->success) {
+          RCLCPP_WARN(get_logger(), "Connecting team client to deduced GC server failed.");
+        }
+      }
     } else {
       RCLCPP_WARN(get_logger(), "Failed to parse referee protobuf packet");
     }
+  }
+
+  void TeamClientConnectionStatusCallback(
+    const ateam_msgs::msg::TeamClientConnectionStatus::ConstSharedPtr msg)
+  {
+    team_client_connected_ = msg->connected;
   }
 };
 
