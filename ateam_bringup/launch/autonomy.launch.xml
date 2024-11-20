@@ -1,7 +1,7 @@
 <launch>
   <arg name="ssl_vision_ip" default="224.5.23.2"/>
   <arg name="ssl_vision_port" default="10006"/>
-  <arg name="ssl_vision_interface_address" default="10.193.15.132"/>
+  <arg name="ssl_vision_interface_address" default=""/>
   <arg name="use_world_velocities" default="false"/>
   <arg name="use_emulated_ballsense" default="false"/>
   <arg name="team_name" default="A-Team"/>

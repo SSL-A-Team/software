@@ -48,7 +48,7 @@ public:
       declare_parameter<std::string>("ssl_vision_ip", "224.5.23.2"),
       declare_parameter<int>("ssl_vision_port", 10020),
       std::bind_front(&SSLVisionBridgeNode::multicastCallback, this),
-      declare_parameter<std::string>("net_interface_address", "10.191.12.33"))
+      declare_parameter<std::string>("net_interface_address", ""))
   {
     SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
   }

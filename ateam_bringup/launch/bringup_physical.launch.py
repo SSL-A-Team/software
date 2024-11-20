@@ -42,16 +42,11 @@ def remap_indexed_topics(pattern_pairs):
 
 def generate_launch_description():
     return launch.LaunchDescription([
-        # Marietta IPs
-        DeclareLaunchArgument('vision_interface_address', default_value='172.16.1.10'),
-        DeclareLaunchArgument('radio_interface_address', default_value='172.16.1.10'),
-        DeclareLaunchArgument('gc_interface_address', default_value='172.16.1.10'),
-        DeclareLaunchArgument('gc_server_address', default_value='172.16.1.52'),
-        # Competition IPs
-        # DeclareLaunchArgument('vision_interface_address', default_value='192.168.1.40'),
-        # DeclareLaunchArgument('radio_interface_address', default_value='172.16.1.10'),
-        # DeclareLaunchArgument('gc_interface_address', default_value='192.168.1.40'),
-        # DeclareLaunchArgument('gc_server_address', default_value='192.168.0.114'),
+        # IP Overrides
+        DeclareLaunchArgument('vision_interface_address', default_value=''),
+        DeclareLaunchArgument('radio_interface_address', default_value=''),
+        DeclareLaunchArgument('gc_interface_address', default_value=''),
+        DeclareLaunchArgument('gc_server_address', default_value='127.0.0.1'),
 
         DeclareLaunchArgument('team_name', default_value='A-Team'),
         DeclareLaunchArgument('use_local_gc', default_value='False'),
