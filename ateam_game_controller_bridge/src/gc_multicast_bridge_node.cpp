@@ -54,7 +54,7 @@ public:
       multicast_port, std::bind(
         &GCMulticastBridgeNode::PublishMulticastMessage, this, std::placeholders::_3,
         std::placeholders::_4),
-      declare_parameter<std::string>("net_interface_address", "10.191.12.1"));
+      declare_parameter<std::string>("net_interface_address", ""));
   }
 
 private:
