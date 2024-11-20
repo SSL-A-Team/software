@@ -30,6 +30,7 @@
 #include <string>
 
 #include <boost/bind/bind.hpp>
+#include <boost/exception_ptr.hpp>
 
 #include "ateam_common/get_ip_addresses.hpp"
 
@@ -53,10 +54,19 @@ MulticastReceiver::MulticastReceiver(
     // If no interface specified, join on all interfaces
     const auto available_interface_addresses = GetIpAdresses(false);
     for(const auto & address : available_interface_addresses) {
-      multicast_socket_.set_option(
+      try {
+        multicast_socket_.set_option(
         boost::asio::ip::multicast::join_group(
           multicast_address,
           boost::asio::ip::make_address_v4(address)));
+      } catch (const boost::system::system_error & e) {
+        /* Ignore "address already in use" exceptions. This just indicates multiple addresses
+         * assigned to the same interface.
+         */
+        if(e.code().value() != EADDRINUSE) {
+          boost::rethrow_exception(boost::current_exception());
+        }
+      }
     }
   } else {
     multicast_socket_.set_option(
