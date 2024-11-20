@@ -41,7 +41,7 @@ def generate_launch_description():
         DeclareLaunchArgument('vision_interface_address', default_value=''),
         DeclareLaunchArgument('radio_interface_address', default_value=''),
         DeclareLaunchArgument('gc_interface_address', default_value=''),
-        DeclareLaunchArgument('gc_server_address', default_value='127.0.0.1'),
+        DeclareLaunchArgument('gc_server_address', default_value=''),
 
         DeclareLaunchArgument('team_name', default_value='A-Team'),
         DeclareLaunchArgument('use_local_gc', default_value='False'),
