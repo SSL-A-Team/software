@@ -72,7 +72,9 @@ public:
 
 private:
   const std::chrono::seconds kReconnectTimeout{2};
+  const std::chrono::seconds kReconnectRetryTime{1};
   bool team_client_connected_ = false;
+  std::chrono::steady_clock::time_point last_reconnect_attempt_time_;
   rclcpp::Publisher<ssl_league_msgs::msg::Referee>::SharedPtr referee_publisher_;
   rclcpp::CallbackGroup::SharedPtr client_callback_group_;
   rclcpp::Client<ateam_msgs::srv::ReconnectTeamClient>::SharedPtr reconnect_client_;
@@ -85,21 +87,32 @@ private:
     const size_t bytes_received)
   {
     Referee referee_proto;
-    if (referee_proto.ParseFromArray(buffer, bytes_received)) {
-      referee_publisher_->publish(message_conversions::fromProto(referee_proto));
-      if(!team_client_connected_ && reconnect_client_->service_is_ready()) {
-        auto request = std::make_shared<ateam_msgs::srv::ReconnectTeamClient::Request>();
-        request->server_address = sender_address;
-        auto service_future = reconnect_client_->async_send_request(request);
-        if(service_future.wait_for(kReconnectTimeout) == std::future_status::timeout) {
-          RCLCPP_WARN(get_logger(), "Timed out trying to reconnect team client.");
-        } else if(!service_future.get()->success) {
-          RCLCPP_WARN(get_logger(), "Connecting team client to deduced GC server failed.");
-        }
-      }
-    } else {
+    if(!referee_proto.ParseFromArray(buffer, bytes_received)) {
       RCLCPP_WARN(get_logger(), "Failed to parse referee protobuf packet");
+      return;
     }
+    referee_publisher_->publish(message_conversions::fromProto(referee_proto));
+    if(team_client_connected_ || !reconnect_client_->service_is_ready()) {
+      return;
+    }
+    const auto now = std::chrono::steady_clock::now();
+    const auto time_since_last_attempt = now - last_reconnect_attempt_time_;
+    if(time_since_last_attempt < kReconnectRetryTime) {
+      return;
+    }
+    last_reconnect_attempt_time_ = now;
+    auto request = std::make_shared<ateam_msgs::srv::ReconnectTeamClient::Request>();
+    request->server_address = sender_address;
+    auto service_future = reconnect_client_->async_send_request(request);
+    if(service_future.wait_for(kReconnectTimeout) == std::future_status::timeout) {
+      RCLCPP_WARN(get_logger(), "Timed out trying to reconnect team client.");
+      return;
+    }
+    if(!service_future.get()->success) {
+      RCLCPP_WARN(get_logger(), "Connecting team client to deduced GC server failed.");
+      return;
+    }
+    team_client_connected_ = true;
   }
 
   void TeamClientConnectionStatusCallback(
