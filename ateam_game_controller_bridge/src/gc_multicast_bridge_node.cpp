@@ -45,10 +45,8 @@ public:
       std::string(Topics::kRefereeMessages),
       rclcpp::SystemDefaultsQoS());
 
-    client_callback_group_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     reconnect_client_ =
-      create_client<ateam_msgs::srv::ReconnectTeamClient>("/team_client_node/reconnect",
-        rclcpp::ServicesQoS(), client_callback_group_);
+      create_client<ateam_msgs::srv::ReconnectTeamClient>("/team_client_node/reconnect");
 
     team_client_connection_subscription_ =
       create_subscription<ateam_msgs::msg::TeamClientConnectionStatus>(
@@ -76,7 +74,6 @@ private:
   bool team_client_connected_ = false;
   std::chrono::steady_clock::time_point last_reconnect_attempt_time_;
   rclcpp::Publisher<ssl_league_msgs::msg::Referee>::SharedPtr referee_publisher_;
-  rclcpp::CallbackGroup::SharedPtr client_callback_group_;
   rclcpp::Client<ateam_msgs::srv::ReconnectTeamClient>::SharedPtr reconnect_client_;
   rclcpp::Subscription<ateam_msgs::msg::TeamClientConnectionStatus>::SharedPtr
     team_client_connection_subscription_;
