@@ -73,6 +73,8 @@ public:
 
   bool Connect(const ConnectionParameters & parameters);
 
+  void Disconnect();
+
   bool IsConnected() const
   {
     return connected_;

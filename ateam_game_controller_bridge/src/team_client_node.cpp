@@ -194,6 +194,10 @@ private:
       const auto result = team_client_.Ping();
       status_msg.connected = result.request_result.accepted;
       status_msg.ping = rclcpp::Duration(result.ping);
+      if(!result.request_result.accepted) {
+        team_client_.Disconnect();
+        RCLCPP_WARN(get_logger(), "Ping failed. Team client disconnected.");
+      }
     }
     connection_status_publisher_->publish(status_msg);
   }
