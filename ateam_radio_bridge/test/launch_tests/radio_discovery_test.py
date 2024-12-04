@@ -71,7 +71,7 @@ class TestRadioBridgeNode(unittest.TestCase):
     def setUp(self):
         self.feedback_sub = self.node.create_subscription(
             ateam_msgs.msg.RobotFeedback,
-            "/radio_bridge/robot_feedback/robot0",
+            "/radio_bridge/robot_feedback/status/robot0",
             self.feedback_callback_0,
             1,
         )
