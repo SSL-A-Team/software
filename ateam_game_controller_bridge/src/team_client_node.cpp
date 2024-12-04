@@ -40,7 +40,7 @@ public:
   {
     SET_ROS_PROTOBUF_LOG_HANDLER("team_client_node.protobuf");
 
-    declare_parameter<std::string>("gc_ip_address", "127.0.0.1");
+    declare_parameter<std::string>("gc_ip_address", "");
     declare_parameter<uint16_t>("gc_port", 10008);
     declare_parameter<std::string>("team_name", "A-Team");
     declare_parameter<std::string>("team_color", "auto");
@@ -49,28 +49,28 @@ public:
       "~/set_desired_keeper",
       std::bind(
         &TeamClientNode::HandleSetDesiredKeeper, this, std::placeholders::_1,
-        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+        std::placeholders::_2), rclcpp::ServicesQoS());
 
     substitute_bot_service_ = create_service<ateam_msgs::srv::SubstituteBot>(
       "~/substitute_bot",
       std::bind(
         &TeamClientNode::HandleSubstituteBot, this, std::placeholders::_1,
-        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+        std::placeholders::_2), rclcpp::ServicesQoS());
 
     reconnect_service_ = create_service<ateam_msgs::srv::ReconnectTeamClient>(
       "~/reconnect",
       std::bind(
         &TeamClientNode::HandleReconnectTeamClient, this, std::placeholders::_1,
-        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+        std::placeholders::_2), rclcpp::ServicesQoS());
 
     advantage_choice_service_ = create_service<ateam_msgs::srv::SetTeamAdvantageChoice>(
       "~/set_advantage_choice",
       std::bind(
         &TeamClientNode::HandleSetAdvantageChoice, this, std::placeholders::_1,
-        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+        std::placeholders::_2), rclcpp::ServicesQoS());
 
     connection_status_publisher_ = create_publisher<ateam_msgs::msg::TeamClientConnectionStatus>(
-      "~/connection_status", rclcpp::SystemDefaultsQoS());
+      "~/connection_status", rclcpp::ServicesQoS());
 
     const auto ping_period = declare_parameter<double>("ping_period", 5);
     ping_timer_ =
@@ -95,9 +95,14 @@ private:
 
   bool Connect()
   {
+    const auto address_string = get_parameter("gc_ip_address").as_string();
+    if(address_string.empty()) {
+      RCLCPP_WARN(get_logger(), "Address parameter empty. Cannot attempt to connect.");
+      // Returning "success" because this isn't a problem during setup.
+      return true;
+    }
     TeamClient::ConnectionParameters connection_parameters;
-    connection_parameters.address =
-      boost::asio::ip::address::from_string(get_parameter("gc_ip_address").as_string());
+    connection_parameters.address = boost::asio::ip::address::from_string(address_string);
     connection_parameters.port = get_parameter("gc_port").as_int();
     connection_parameters.team_name = get_parameter("team_name").as_string();
     const auto team_color_name = get_parameter("team_color").as_string();
@@ -146,9 +151,12 @@ private:
   }
 
   void HandleReconnectTeamClient(
-    const ateam_msgs::srv::ReconnectTeamClient::Request::SharedPtr /*request*/,
+    const ateam_msgs::srv::ReconnectTeamClient::Request::SharedPtr request,
     ateam_msgs::srv::ReconnectTeamClient::Response::SharedPtr response)
   {
+    if(!request->server_address.empty()) {
+      set_parameter(rclcpp::Parameter("gc_ip_address", request->server_address));
+    }
     response->success = Connect();
   }
 
@@ -186,6 +194,10 @@ private:
       const auto result = team_client_.Ping();
       status_msg.connected = result.request_result.accepted;
       status_msg.ping = rclcpp::Duration(result.ping);
+      if(!result.request_result.accepted) {
+        team_client_.Disconnect();
+        RCLCPP_WARN(get_logger(), "Ping failed. Team client disconnected.");
+      }
     }
     connection_status_publisher_->publish(status_msg);
   }

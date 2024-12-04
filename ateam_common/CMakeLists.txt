@@ -20,6 +20,7 @@ find_package(ssl_league_msgs REQUIRED)
 add_library(${PROJECT_NAME} SHARED
   src/assignment.cpp
   src/bi_directional_udp.cpp
+  src/get_ip_addresses.cpp
   src/multicast_receiver.cpp
   src/parameters.cpp
   src/status.cpp

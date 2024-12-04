@@ -46,6 +46,12 @@ bool TeamClient::Connect(const ConnectionParameters & parameters)
   return true;
 }
 
+void TeamClient::Disconnect()
+{
+  connected_ = false;
+  socket_.close();
+}
+
 TeamClient::Result TeamClient::SetDesiredKeeper(const int keeper_id)
 {
   TeamToController team_to_controller;
