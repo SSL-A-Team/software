@@ -71,13 +71,13 @@ public:
 
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotFeedback>(
       feedback_publishers_,
-      "~/robot_feedback/robot",
+      "~/robot_feedback/status/robot",
       rclcpp::SystemDefaultsQoS(),
       this);
 
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotMotionFeedback>(
       motion_feedback_publishers_,
-      "~/robot_motion_feedback/robot",
+      "~/robot_feedback/motion/robot",
       rclcpp::SystemDefaultsQoS(),
       this);
 
