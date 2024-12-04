@@ -410,12 +410,12 @@ export class AppState {
 
             let robotStatusTopic = new ROSLIB.Topic({
                 ros: this.ros,
-                name: '/robot_feedback/robot' + i,
+                name: '/robot_feedback/status/robot' + i,
                 messageType: 'ateam_msgs/msg/RobotFeedback'
             });
 
             robotStatusTopic.subscribe(this.getRobotStatusCallback(i));
-            this.subscriptions['/robot_feedback/robot' + i] = robotStatusTopic;
+            this.subscriptions['/robot_feedback/status/robot' + i] = robotStatusTopic;
         }
 
         // Set up overlay subscriber

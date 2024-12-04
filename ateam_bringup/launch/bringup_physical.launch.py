@@ -100,7 +100,8 @@ def generate_launch_description():
             respawn=True,
             remappings=remap_indexed_topics([
                 ('~/robot_motion_commands/robot', '/robot_motion_commands/robot'),
-                ('~/robot_feedback/robot', '/robot_feedback/robot')
+                ('~/robot_feedback/status/robot', '/robot_feedback/status/robot'),
+                ('~/robot_feedback/motion/robot', '/robot_feedback/motion/robot')
             ])
         )
     ])
