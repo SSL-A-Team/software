@@ -20,8 +20,13 @@
 
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 import launch
-from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
-from launch.conditions import IfCondition, UnlessCondition
+from launch.actions import (
+    DeclareLaunchArgument,
+    GroupAction,
+    IncludeLaunchDescription,
+    SetLaunchConfiguration,
+)
+from launch.conditions import IfCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -38,14 +43,16 @@ def remap_indexed_topics(pattern_pairs):
 def generate_launch_description():
     return launch.LaunchDescription([
         # Marietta IPs
-        # DeclareLaunchArgument('vision_interface_address', default_value='172.16.1.10'),
-        # DeclareLaunchArgument('gc_interface_address', default_value='172.16.1.10'),
-        # DeclareLaunchArgument('gc_server_address', default_value='172.16.1.52'),
-        # DeclareLaunchArgument('radio_interface_address', default_value='172.16.1.10'),
-
-        # Competition IPs
-        DeclareLaunchArgument('vision_interface_address', default_value='192.168.1.40'),
+        DeclareLaunchArgument('vision_interface_address', default_value='172.16.1.10'),
         DeclareLaunchArgument('radio_interface_address', default_value='172.16.1.10'),
+        DeclareLaunchArgument('gc_interface_address', default_value='172.16.1.10'),
+        DeclareLaunchArgument('gc_server_address', default_value='172.16.1.52'),
+        # Competition IPs
+        # DeclareLaunchArgument('vision_interface_address', default_value='192.168.1.40'),
+        # DeclareLaunchArgument('radio_interface_address', default_value='172.16.1.10'),
+        # DeclareLaunchArgument('gc_interface_address', default_value='192.168.1.40'),
+        # DeclareLaunchArgument('gc_server_address', default_value='192.168.0.114'),
+
         DeclareLaunchArgument('team_name', default_value='A-Team'),
         DeclareLaunchArgument('use_local_gc', default_value='False'),
 
@@ -53,15 +60,8 @@ def generate_launch_description():
             condition=IfCondition(LaunchConfiguration('use_local_gc')),
             scoped=False,
             actions=[
-                DeclareLaunchArgument('gc_interface_address', default_value='172.17.0.1'),
-                DeclareLaunchArgument('gc_server_address', default_value='172.17.0.2'),
-            ]),
-        GroupAction(
-            condition=UnlessCondition(LaunchConfiguration('use_local_gc')),
-            scoped=False,
-            actions=[
-                DeclareLaunchArgument('gc_interface_address', default_value='192.168.1.40'),
-                DeclareLaunchArgument('gc_server_address', default_value='192.168.0.114'),
+                SetLaunchConfiguration('gc_interface_address', '172.17.0.1'),
+                SetLaunchConfiguration('gc_server_address', '172.17.0.2'),
             ]),
 
         IncludeLaunchDescription(
