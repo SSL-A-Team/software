@@ -259,14 +259,14 @@ private:
 
     motion_command_timestamps_[robot_id] = {};
     last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
-    connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
+    auto connection = std::make_unique<ateam_common::BiDirectionalUDP>(
       sender_address, sender_port,
       std::bind(
         &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_data.robot_id,
         std::placeholders::_1, std::placeholders::_2));
 
     HelloResponse response;
-    response.port = connections_[hello_data.robot_id]->GetLocalPort();
+    response.port = connection->GetLocalPort();
     const auto local_ip_address = GetClosestIpAddress(GetIpAddresses(), sender_address);
     const auto local_address_bytes =
       boost::asio::ip::make_address(local_ip_address).to_v4().to_bytes();
@@ -276,6 +276,8 @@ private:
     discovery_receiver_.SendTo(
       sender_address, sender_port,
       reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+
+    connections_[hello_data.robot_id] = std::move(connection);
   }
 
   void RobotIncomingPacketCallback(
