@@ -59,14 +59,14 @@ public:
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-      declare_parameter<std::string>("net_interface_address", "172.16.1.10")),
+      declare_parameter<std::string>("net_interface_address", "")),
     firmware_parameter_server_(*this, connections_)
   {
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
       "~/robot_motion_commands/robot",
       rclcpp::SystemDefaultsQoS(),
-      &RadioBridgeNode::motion_command_callback,
+      &RadioBridgeNode::MotionCommandCallback,
       this);
 
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotFeedback>(
@@ -99,6 +99,7 @@ public:
 private:
   const std::chrono::milliseconds timeout_threshold_;
   const std::chrono::milliseconds command_timeout_threshold_;
+  std::mutex mutex_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   ateam_common::GameControllerListener game_controller_listener_;
@@ -113,10 +114,11 @@ private:
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
 
-  void motion_command_callback(
+  void MotionCommandCallback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr command_msg,
     int robot_id)
   {
+    const std::lock_guard lock(mutex_);
     motion_commands_[robot_id] = *command_msg;
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
@@ -146,6 +148,7 @@ private:
    */
   void ConnectionCheckCallback()
   {
+    const std::lock_guard lock(mutex_);
     for (auto i = 0ul; i < connections_.size(); ++i) {
       if (!connections_[i]) {
         ateam_msgs::msg::RobotFeedback feedback_message;
@@ -164,6 +167,7 @@ private:
 
   void SendCommandsCallback()
   {
+    const std::lock_guard lock(mutex_);
     for (auto id = 0; id < 16; ++id) {
       if (connections_[id] == nullptr) {
         continue;
@@ -242,6 +246,8 @@ private:
       return;
     }
 
+    const std::lock_guard lock(mutex_);
+
     if (connections_[robot_id] != nullptr &&
       sender_address != connections_[robot_id]->GetRemoteIPAddress())
     {
@@ -259,14 +265,14 @@ private:
 
     motion_command_timestamps_[robot_id] = {};
     last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
-    auto connection = std::make_unique<ateam_common::BiDirectionalUDP>(
+    connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
       sender_address, sender_port,
       std::bind(
         &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_data.robot_id,
         std::placeholders::_1, std::placeholders::_2));
 
     HelloResponse response;
-    response.port = connection->GetLocalPort();
+    response.port = connections_[hello_data.robot_id]->GetLocalPort();
     const auto local_ip_address = GetClosestIpAddress(GetIpAddresses(), sender_address);
     const auto local_address_bytes =
       boost::asio::ip::make_address(local_ip_address).to_v4().to_bytes();
@@ -276,8 +282,6 @@ private:
     discovery_receiver_.SendTo(
       sender_address, sender_port,
       reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
-
-    connections_[hello_data.robot_id] = std::move(connection);
   }
 
   void RobotIncomingPacketCallback(
@@ -290,6 +294,8 @@ private:
       RCLCPP_WARN(get_logger(), "Ignoring telemetry message. %s", error.c_str());
       return;
     }
+
+    const std::lock_guard lock(mutex_);
 
     switch (packet.command_code) {
       case CC_GOODBYE:
@@ -350,6 +356,7 @@ private:
 
   void TeamColorChangeCallback(const ateam_common::TeamColor)
   {
+    const std::lock_guard lock(mutex_);
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);
     }
