@@ -98,7 +98,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
     angles::shortest_angular_distance(robot.theta, robot_to_target_angle) >= 0;
 
   ateam_msgs::msg::RobotMotionCommand command;
-  command.twist.angular.z = 1.5;  // turn at 1.5 rad/s
+  command.twist.angular.z = 2.5;  // rad/s
   if (!positive_angle) {
     command.twist.angular.z *= -1;
   }
