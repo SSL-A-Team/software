@@ -35,6 +35,7 @@ def generate_launch_description():
         DeclareLaunchArgument('headless_sim', default_value='True'),
         DeclareLaunchArgument('sim_radio_ip', default_value='127.0.0.1'),
         DeclareLaunchArgument('team_name', default_value='A-Team'),
+        DeclareLaunchArgument('ui_debug', default_value='False'),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
@@ -80,7 +81,10 @@ def generate_launch_description():
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
                                               'ui.launch.xml')),
-            condition=IfCondition(LaunchConfiguration('start_ui'))
+            condition=IfCondition(LaunchConfiguration('start_ui')),
+            launch_arguments={
+                'ui_debug': LaunchConfiguration('ui_debug')
+            }.items()
         ),
 
         Node(
