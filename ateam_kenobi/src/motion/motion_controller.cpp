@@ -148,7 +148,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
 
   // calculate angle movement commands
-  double target_angle;
+  double target_angle = 0.0;
 
   switch (this->angle_mode) {
     case AngleMode::no_face:
