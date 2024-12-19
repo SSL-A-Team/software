@@ -1,0 +1,10 @@
+# Request
+uint8 choice
+
+uint8 STOP=0
+uint8 CONTINUE=1
+
+---
+# Response
+bool success
+string reason

@@ -12,9 +12,11 @@ ament_target_dependencies(${PROJECT_NAME}_vision_bridge
   tf2_geometry_msgs
 )
 target_link_libraries(${PROJECT_NAME}_vision_bridge ${PROJECT_NAME}_core)
+
 rclcpp_components_register_node(
   ${PROJECT_NAME}_vision_bridge
   PLUGIN "ssl_ros_bridge::vision_bridge::SSLVisionBridgeNode"
   EXECUTABLE vision_bridge_node
 )
+
 install(TARGETS ${PROJECT_NAME}_vision_bridge DESTINATION lib)
