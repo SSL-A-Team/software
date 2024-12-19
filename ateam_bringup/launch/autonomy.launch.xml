@@ -6,7 +6,7 @@
   <arg name="use_emulated_ballsense" default="false"/>
   <arg name="team_name" default="A-Team"/>
 
-  <node name="ssl_vision_bridge" pkg="ateam_ssl_vision_bridge" exec="ssl_vision_bridge_node" respawn="True">
+  <node name="ssl_vision_bridge" pkg="ssl_ros_bridge" exec="vision_bridge_node" respawn="True">
     <param name="ssl_vision_ip" value="$(var ssl_vision_ip)"/>
     <param name="ssl_vision_port" value="$(var ssl_vision_port)"/>
     <param name="net_interface_address" value="$(var ssl_vision_interface_address)"/>
