@@ -1,4 +1,4 @@
-add_library(${PROJECT_NAME}_game_controller_bridge
+add_library(${PROJECT_NAME}_game_controller_bridge SHARED
     gc_multicast_bridge_node.cpp
     message_conversions.cpp
 )
@@ -14,7 +14,7 @@ target_link_libraries(${PROJECT_NAME}_game_controller_bridge ${PROJECT_NAME}_cor
 
 rclcpp_components_register_node(
   ${PROJECT_NAME}_game_controller_bridge
-  PLUGIN "ateam_game_controller_bridge::GCMulticastBridgeNode"
+  PLUGIN "ssl_ros_bridge::game_controller_bridge::GCMulticastBridgeNode"
   EXECUTABLE gc_multicast_bridge_node
 )
 
