@@ -1,0 +1,9 @@
+# Request
+
+# Address of the server to connect to. If blank, will reconnect to the last used address.
+string server_address ""
+
+---
+# Response
+
+bool success

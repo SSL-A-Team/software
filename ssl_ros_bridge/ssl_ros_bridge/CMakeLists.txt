@@ -13,6 +13,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 find_package(ssl_league_protobufs REQUIRED)
+find_package(ssl_ros_bridge_msgs REQUIRED)
 
 add_subdirectory(src/core)
 add_subdirectory(src/game_controller_bridge)
