@@ -1,2 +1,0 @@
-ssl_league_msgs/VisionGeometryFieldSize field
-ssl_league_msgs/VisionGeometryCameraCalibration[] calibration
