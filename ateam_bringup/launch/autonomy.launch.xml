@@ -11,6 +11,7 @@
     <param name="ssl_vision_port" value="$(var ssl_vision_port)"/>
     <param name="net_interface_address" value="$(var ssl_vision_interface_address)"/>
     <param name="gc_team_name" value="$(var team_name)"/>
+    <remap from="/ssl_vision_bridge/vision_messages" to="/vision_messages"/>
   </node>
   <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True">
     <param name="gc_team_name" value="$(var team_name)"/>
