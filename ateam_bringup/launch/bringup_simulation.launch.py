@@ -56,10 +56,12 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
-                                              'game_controller_nodes.launch.xml')),
+                                              'league_bridges.launch.xml')),
             launch_arguments={
-                'net_interface_address': '172.17.0.1',
+                'gc_net_interface_address': '172.17.0.1',
                 'gc_ip_address': '172.17.0.2',
+                'vision_net_interface_address': '172.17.0.1',
+                'vision_port': '10020',
                 'team_name': LaunchConfiguration('team_name')
             }.items()
         ),
@@ -69,8 +71,6 @@ def generate_launch_description():
                 PackageLaunchFileSubstitution('ateam_bringup',
                                               'autonomy.launch.xml')),
             launch_arguments={
-                'ssl_vision_interface_address': '',
-                'ssl_vision_port': '10020',
                 'team_name': LaunchConfiguration('team_name'),
                 'use_emulated_ballsense': 'True'
             }.items()

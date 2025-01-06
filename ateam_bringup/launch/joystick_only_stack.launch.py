@@ -19,18 +19,11 @@
 # THE SOFTWARE.
 
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
+from ateam_bringup.utils import remap_indexed_topics
 import launch
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch_ros.actions import Node
-
-
-def remap_indexed_topics(pattern_pairs):
-    return [
-        (pattern_from + str(i), pattern_to + str(i))
-        for i in range(16)
-        for pattern_from, pattern_to in pattern_pairs
-    ]
 
 
 def generate_launch_description():

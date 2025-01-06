@@ -1,18 +1,8 @@
 <launch>
-  <arg name="ssl_vision_ip" default="224.5.23.2"/>
-  <arg name="ssl_vision_port" default="10006"/>
-  <arg name="ssl_vision_interface_address" default=""/>
   <arg name="use_world_velocities" default="false"/>
   <arg name="use_emulated_ballsense" default="false"/>
   <arg name="team_name" default="A-Team"/>
 
-  <node name="ssl_vision_bridge" pkg="ssl_ros_bridge" exec="vision_bridge_node" respawn="True">
-    <param name="ssl_vision_ip" value="$(var ssl_vision_ip)"/>
-    <param name="ssl_vision_port" value="$(var ssl_vision_port)"/>
-    <param name="net_interface_address" value="$(var ssl_vision_interface_address)"/>
-    <param name="gc_team_name" value="$(var team_name)"/>
-    <remap from="/ssl_vision_bridge/vision_messages" to="/vision_messages"/>
-  </node>
   <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True">
     <param name="gc_team_name" value="$(var team_name)"/>
   </node>
