@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
+from ateam_bringup.utils import remap_indexed_topics
 import launch
 from launch.actions import (
     DeclareLaunchArgument,
@@ -30,14 +31,6 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-
-
-def remap_indexed_topics(pattern_pairs):
-    return [
-        (pattern_from + str(i), pattern_to + str(i))
-        for i in range(16)
-        for pattern_from, pattern_to in pattern_pairs
-    ]
 
 
 def generate_launch_description():
@@ -62,10 +55,12 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
-                                              'game_controller_nodes.launch.xml')),
+                                              'league_bridges.launch.xml')),
             launch_arguments={
                 'gc_ip_address': LaunchConfiguration('gc_server_address'),
-                'net_interface_address': LaunchConfiguration('gc_interface_address')
+                'gc_net_interface_address': LaunchConfiguration('gc_interface_address'),
+                'vision_net_interface_address': LaunchConfiguration('vision_interface_address'),
+                'team_name': LaunchConfiguration('team_name')
             }.items()
         ),
 
@@ -74,7 +69,7 @@ def generate_launch_description():
                 PackageLaunchFileSubstitution('ateam_bringup',
                                               'autonomy.launch.xml')),
             launch_arguments={
-                'ssl_vision_interface_address': LaunchConfiguration('vision_interface_address')
+                'team_name': LaunchConfiguration('team_name')
             }.items()
         ),
 
