@@ -31,7 +31,7 @@ namespace ateam_kenobi::plays
 class OurKickoffPrepPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "OurPenaltyPlay";
+  static constexpr const char * kPlayName = "OurKickoffPrepPlay";
 
   explicit OurKickoffPrepPlay(stp::Options stp_options);
 
