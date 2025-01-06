@@ -28,7 +28,7 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 
-// TODO(barulicm) Remove when control_toolbox no longer uses deprecated realtime_tools headers 
+// TODO(barulicm) Remove when control_toolbox no longer uses deprecated realtime_tools headers
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcpp"
 #include <control_toolbox/pid.hpp>
