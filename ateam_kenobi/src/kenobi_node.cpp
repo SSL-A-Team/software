@@ -66,6 +66,8 @@ public:
     play_selector_(*this),
     game_controller_listener_(*this)
   {
+    initialize_robot_ids();
+
     declare_parameter<bool>("use_world_velocities", false);
     declare_parameter<bool>("use_emulated_ballsense", false);
 
@@ -164,24 +166,37 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
 
+  void initialize_robot_ids() {
+    for(auto i = 0u; i < world_.our_robots.size(); ++i) {
+      world_.our_robots[i].id = i;
+    }
+    for(auto i = 0u; i < world_.their_robots.size(); ++i) {
+      world_.their_robots[i].id = i;
+    }
+  }
+
   void blue_robot_state_callback(
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
   {
-    const auto are_we_blue = game_controller_listener_.GetTeamColor() ==
-      ateam_common::TeamColor::Blue;
+    const auto our_color = game_controller_listener_.GetTeamColor();
+    if(our_color == ateam_common::TeamColor::Unknown) {
+      return;
+    }
+    const auto are_we_blue = our_color == ateam_common::TeamColor::Blue;
     auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
 
-  // TODO(CAVIDANO): REMOVE THE THEIR ROBOTS HERE THIS SHOULD NOT ASSIGN ANYTHING IN THE NOT CASE
-  // AS IT ALSO CATCHES UNKOWN TEAM
   void yellow_robot_state_callback(
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
   {
-    const auto are_we_yellow = game_controller_listener_.GetTeamColor() ==
-      ateam_common::TeamColor::Yellow;
+    const auto our_color = game_controller_listener_.GetTeamColor();
+    if(our_color == ateam_common::TeamColor::Unknown) {
+      return;
+    }
+    const auto are_we_yellow = our_color == ateam_common::TeamColor::Yellow;
     auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
