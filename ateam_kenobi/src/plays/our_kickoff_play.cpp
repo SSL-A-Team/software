@@ -36,6 +36,7 @@ OurKickoffPlay::OurKickoffPlay(stp::Options stp_options)
   multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_To")),
   pass_(createChild<tactics::Pass>("pass"))
 {
+  pass_.setCaptureSpeed(0.1);
 }
 
 stp::PlayScore OurKickoffPlay::getScore(const World & world)

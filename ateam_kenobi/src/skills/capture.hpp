@@ -62,10 +62,20 @@ public:
     easy_move_to_.setPlannerOptions(options);
   }
 
+  /**
+   * @brief Set the capture speed used to approach the ball in the final phase
+   * 
+   * @param speed Speed in meters per second
+   */
+  void SetCaptureSpeed(double speed) {
+    capture_speed_ = speed;
+  }
+
 private:
   play_helpers::EasyMoveTo easy_move_to_;
   bool done_ = false;
   int ball_detected_filter_ = 0;
+  double capture_speed_ = 0.3;  // m/s
 
   enum class State
   {

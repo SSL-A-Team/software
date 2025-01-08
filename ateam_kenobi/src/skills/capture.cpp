@@ -107,7 +107,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
 
-  easy_move_to_.setMaxVelocity(0.3);
+  easy_move_to_.setMaxVelocity(capture_speed_);
   easy_move_to_.face_point(world.ball.pos);
 
   easy_move_to_.setTargetPosition(world.ball.pos);

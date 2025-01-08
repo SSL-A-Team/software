@@ -72,6 +72,10 @@ public:
     capture_.SetUseDefaultObstacles(use_obstacles);
   }
 
+  void SetCaptureSpeed(double speed) {
+    capture_.SetCaptureSpeed(speed);
+  }
+
 private:
   const double kPreKickOffset = kRobotRadius + 0.1;
   ateam_geometry::Point target_point_;

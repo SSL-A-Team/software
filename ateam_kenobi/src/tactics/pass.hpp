@@ -59,6 +59,10 @@ public:
     speed_ = speed;
   }
 
+  void setCaptureSpeed(double speed) {
+    kick_.SetCaptureSpeed(speed);
+  }
+
 private:
   const double kReceiverPositionThreshold = 0.1;
   std::optional<double> speed_;
