@@ -1,0 +1,22 @@
+<launch>
+  <arg name="gc_ip_address" default=""/>
+  <arg name="gc_net_interface_address" default=""/>
+  <arg name="vision_net_interface_address" default=""/>
+  <arg name="vision_port" default="10006"/>
+  <arg name="team_name" default="A-Team"/>
+
+  <node name="ssl_vision_bridge" pkg="ssl_ros_bridge" exec="vision_bridge_node" respawn="True">
+    <param name="net_interface_address" value="$(var vision_net_interface_address)"/>
+    <param name="ssl_vision_port" value="$(var vision_port)"/>
+    <remap from="/ssl_vision_bridge/vision_messages" to="/vision_messages"/>
+  </node>
+
+  <node name="ssl_gc_bridge" pkg="ssl_ros_bridge" exec="gc_multicast_bridge_node" respawn="True">
+    <param name="net_interface_address" value="$(var gc_net_interface_address)"/>
+    <remap from="/ssl_gc_bridge/referee_messages" to="/referee_messages"/>
+  </node>
+  <node name="team_client_node" pkg="ssl_ros_bridge" exec="team_client_node" respawn="True">
+    <param name="gc_ip_address" value="$(var gc_ip_address)"/>
+    <param name="team_name" value="$(var team_name)"/>
+  </node>
+</launch>

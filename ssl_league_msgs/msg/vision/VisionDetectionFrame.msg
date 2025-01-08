@@ -1,8 +1,0 @@
-uint32 frame_number
-builtin_interfaces/Time t_capture
-builtin_interfaces/Time t_sent
-builtin_interfaces/Time t_capture_camera
-uint32 camera_id
-ssl_league_msgs/VisionDetectionBall[] balls
-ssl_league_msgs/VisionDetectionRobot[] robots_yellow
-ssl_league_msgs/VisionDetectionRobot[] robots_blue
