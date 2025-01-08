@@ -75,7 +75,7 @@ private:
   play_helpers::EasyMoveTo easy_move_to_;
   bool done_ = false;
   int ball_detected_filter_ = 0;
-  double capture_speed_ = 0.3;  // m/s
+  double capture_speed_ = 0.5;  // m/s
 
   enum class State
   {

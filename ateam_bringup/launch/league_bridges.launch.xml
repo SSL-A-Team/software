@@ -7,6 +7,7 @@
 
   <node name="ssl_vision_bridge" pkg="ssl_ros_bridge" exec="vision_bridge_node" respawn="True">
     <param name="net_interface_address" value="$(var vision_net_interface_address)"/>
+    <param name="ssl_vision_port" value="$(var vision_port)"/>
     <remap from="/ssl_vision_bridge/vision_messages" to="/vision_messages"/>
   </node>
 
