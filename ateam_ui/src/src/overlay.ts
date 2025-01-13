@@ -8,7 +8,7 @@ enum OverlayType {
     Ellipse,
     Polygon,
     Text,
-    Mesh,
+    Heatmap,
     Custom,
     Arc,
 }
@@ -28,8 +28,10 @@ export class Overlay {
     stroke_width: number = 20
     lifetime: number
     points: Point[] | null
-    mesh: Mesh1d[] | null
-    mesh_alpha: Mesh1d[] | null
+    heatmap_data: Uint8Array
+    heatmap_alpha: Uint8Array
+    heatmap_resolution_width: number
+    heatmap_resolution_height: number
     text: string | null
     depth: number = 0
     start_angle: number
@@ -44,6 +46,9 @@ export class Overlay {
             this[member] = msg[member];
         }
 
+        // TODO(barulicm) need to figure out how to decode this from base64
+        console.log(msg["heatmap_data"]);
+        
         // lifetime is falsey if it will live forever
         if (this.lifetime) {
             this.lifetime_end = Date.now() + this.lifetime;
@@ -204,8 +209,8 @@ export class Overlay {
                 }
 
                 break;
-            case OverlayType.Mesh:
-                let heat_texture = this.createMeshTexture(this.mesh, this.mesh_alpha)
+            case OverlayType.Heatmap:
+                let heat_texture = this.createHeatmapTexture()
                 if (heat_texture.valid) {
                     this.heatmap_filter.uniforms.uTexture = heat_texture;
 
@@ -231,37 +236,32 @@ export class Overlay {
         container.addChild(graphic);
     }
 
-    createMeshTexture(mesh: Mesh1d[], mesh_alpha: Mesh1d[]) {
-        // TODO: Should really throw appropriate exceptions
-        // NOTE: Regardless of what we return the user can just check if this.valid is true
-
+    createHeatmapTexture() {
         const bytes_per_pixel = 4;
+        const num_pixels = this.heatmap_resolution_width * this.heatmap_resolution_height;
+        let buffer = new Uint8Array(num_pixels * bytes_per_pixel);
 
-        let height = mesh.length;
-        if (height <= 0) {
-            return PIXI.Texture.fromBuffer(null, 0, 0);
+        if(!this.heatmap_data) {
+            throw new Error("No heatmap data.");
         }
 
-        let width = mesh[0].mesh1d.length;
-        if (width <= 0) {
-            return PIXI.Texture.fromBuffer(null, 0, 0);
+        if(this.heatmap_data.length != num_pixels) {
+            throw new Error("Heatmap data array does not have expected length. Expected " + num_pixels + ", but got " + this.heatmap_data.length);
         }
 
-        let buffer = new Uint8Array(width * height * bytes_per_pixel);
-        for (let i = 0; i < height; i++) {
-            // should do check to make sure each ros is length width
-            if (mesh[i].mesh1d.length != width){
-                return PIXI.Texture.fromBuffer(null, 0, 0);
-            }
-            for (let j = 0; j < width; j++) {
-                let linear_index = ((width * i) + j) * bytes_per_pixel;
-                buffer[linear_index] = mesh[i].mesh1d[j] * 20;
-                buffer[linear_index + 1] = 0;
-                buffer[linear_index + 2] = 0;
-                buffer[linear_index + 3] = 1.0;
-            }
+        const has_alpha_layer = this.heatmap_alpha.length != 0;
+        if(has_alpha_layer && this.heatmap_alpha.length != num_pixels) {
+            throw new Error("Heatmap alpha array does not have expected length. Expected " + num_pixels + ", but got " + this.heatmap_alpha.length);
         }
 
-        return PIXI.Texture.fromBuffer(buffer, width, height, {scaleMode: PIXI.SCALE_MODES.LINEAR    });
+        for(let dst_index = 0; dst_index < buffer.length; dst_index+=4) {
+            const src_index = dst_index / 4;
+            buffer[dst_index + 0] = this.heatmap_data[src_index];
+            buffer[dst_index + 1] = 0;
+            buffer[dst_index + 2] = 0;
+            buffer[dst_index + 3] = has_alpha_layer ? this.heatmap_alpha[src_index] : 255;
+        }
+
+        return PIXI.Texture.fromBuffer(buffer, this.heatmap_resolution_width, this.heatmap_resolution_height, {scaleMode: PIXI.SCALE_MODES.LINEAR});
     }
 }
