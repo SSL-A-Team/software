@@ -1,6 +1,19 @@
 import { RenderConfig } from "@/state"
 import { Field } from "@/field"
 import * as PIXI from "pixi.js";
+import { render } from "vue";
+
+enum OverlayType {
+    Point=0,
+    Line,
+    Rectangle,
+    Ellipse,
+    Polygon,
+    Text,
+    Mesh,
+    Custom,
+    Arc,
+}
 
 // Overlay Types
 export class Overlay {
@@ -8,7 +21,7 @@ export class Overlay {
     ns: string
     name: string
     visible: boolean = true
-    type: number
+    type: OverlayType
     command: number
     position: Point
     scale: Point
@@ -38,51 +51,60 @@ export class Overlay {
         }
     }
 
+    /**
+     * @param overlay background container
+     * @param underlay foreground container
+     * @param renderConfig field rendering properties
+     * @returns true if this overlay should be deleted, false otherwise
+     */
     update(overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig): boolean {
         let container = underlay;
         if (this.depth == 0) {
             container = overlay;
         }
-
-        // this could get slow if we have hundreds of overlays, hopefully its not a problem
-        let graphic = container.getChildByName(this.id) as PIXI.Graphics;
-    
-        if (graphic) {
-            // There might be a way to improve performance if we can confirm that
-            // we are just translating the overlay without changing its internal points
-            graphic.clear();
-            if (!this.lifetime_end || Date.now() < this.lifetime_end) {
-                this.draw(graphic, renderConfig);
-                return false;
-            } else {
-                container.removeChild(graphic);
-                return true;
-            }
-        } else {
-            graphic = new PIXI.Graphics();
-            graphic.name = this.id;
-            this.draw(graphic, renderConfig);
-            container.addChild(graphic);
-            return false;
+        if(this.isExpired()) {
+            this.deleteGraphic(container);
+            return true;
         }
+        this.draw(container, renderConfig);
+        return false;
     }
 
-    draw(graphic: PIXI.Graphics, renderConfig: RenderConfig) {
+    isExpired(): boolean {
+        return this.lifetime_end && Date.now() >= this.lifetime_end;
+    }
+
+    deleteGraphic(container: PIXI.Container) {
+        let graphic = container.getChildByName(this.id) as PIXI.Graphics;
+        if(!graphic) {
+            return;
+        }
+        graphic.clear();
+        container.removeChild(graphic);
+    }
+
+    draw(container: PIXI.Container, renderConfig: RenderConfig) {
+        // this could get slow if we have hundreds of overlays, hopefully its not a problem
+        let graphic = container.getChildByName(this.id) as PIXI.Graphics;
+
+        if (!graphic) {
+            graphic = new PIXI.Graphics();
+            graphic.name = this.id;
+        }
+
         const scale = renderConfig.scale;
 
         graphic.position.x = scale * this.position.x;
         graphic.position.y = -scale * this.position.y;
         
         switch(this.type) {
-            // POINT
-            case 0:
+            case OverlayType.Point:
                 graphic.beginFill(this.fill_color);
                 graphic.lineStyle(0, this.stroke_color);
                 graphic.drawEllipse(0, 0, scale/30, scale/30);
                 graphic.endFill();
                 break;
-            // LINE
-            case 1:
+            case OverlayType.Line:
                 if (this.points.length >= 2) {
                     graphic.lineStyle(this.stroke_width, this.stroke_color);
                     graphic.moveTo(scale*this.points[0].x, -scale*this.points[0].y);
@@ -91,22 +113,19 @@ export class Overlay {
                     }
                 }
                 break;
-            // RECTANGLE
-            case 2:
+            case OverlayType.Rectangle:
                 graphic.beginFill(this.fill_color);
                 graphic.lineStyle(this.stroke_width, this.stroke_color);
                 graphic.drawRect(-scale*this.scale.x/2, -scale*this.scale.y/2, scale*this.scale.x, scale*this.scale.y);
                 graphic.endFill();
                 break;
-            // ELLIPSE
-            case 3:
+            case OverlayType.Ellipse:
                 graphic.beginFill(this.fill_color);
                 graphic.lineStyle(this.stroke_width, this.stroke_color);
                 graphic.drawEllipse(0, 0, scale*this.scale.x/2, scale*this.scale.y/2);
                 graphic.endFill();
                 break;
-            // POLYGON
-            case 4:
+            case OverlayType.Polygon:
                 if (this.points.length >= 2){
                     graphic.moveTo(scale*this.points.at(-1).x, -scale*this.points.at(-1).y);
                     graphic.beginFill(this.fill_color);
@@ -117,8 +136,7 @@ export class Overlay {
                     graphic.endFill();
                 }
                 break;
-            // TEXT
-            case 5:
+            case OverlayType.Text:
                 // TEXT IS WEIRD IN PIXI
                 // The text is rendered as a new object and added
                 // as a child to the graphics object
@@ -141,21 +159,20 @@ export class Overlay {
                 }
 
                 break;
-            // MESH
-            case 6:
+            case OverlayType.Mesh:
                 // I think I can use a PIXI filter to do this more efficiently
                 break;
-            // CUSTOM
-            case 7:
+            case OverlayType.Custom:
                 // TODO: This is probably a very low priority to implement
                 break;
-            // ARC
-            case 8:
+            case OverlayType.Arc:
                 graphic.beginFill(0, 0);
                 graphic.lineStyle(this.stroke_width, this.stroke_color);
                 graphic.arc(0, 0, scale*this.scale.x/2, -this.start_angle + renderConfig.angle, -this.end_angle + renderConfig.angle, true);
                 graphic.endFill();
                 break;
         }
-    }       
+
+        container.addChild(graphic);
+    }
 }
