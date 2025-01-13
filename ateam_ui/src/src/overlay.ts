@@ -1,5 +1,6 @@
 import { RenderConfig } from "@/state"
 import * as PIXI from "pixi.js"
+import { Buffer } from "buffer";
 
 enum OverlayType {
     Point=0,
@@ -43,12 +44,13 @@ export class Overlay {
     constructor(id: string, msg: any) {
         this.id = id;
     	for (const member of Object.getOwnPropertyNames(msg)) {
-            this[member] = msg[member];
+            if (member === "heatmap_data" || member == "heatmap_alpha") {
+                this[member] = Buffer.from(msg[member], 'base64');
+            } else {
+                this[member] = msg[member];
+            }
         }
 
-        // TODO(barulicm) need to figure out how to decode this from base64
-        console.log(msg["heatmap_data"]);
-        
         // lifetime is falsey if it will live forever
         if (this.lifetime) {
             this.lifetime_end = Date.now() + this.lifetime;
