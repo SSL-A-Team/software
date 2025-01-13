@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 
-#include "our_kickoff_play.hpp"
+#include "kickoff_pass_play.hpp"
 #include <limits>
 #include <random>
 #include <vector>
@@ -30,7 +30,7 @@
 
 namespace ateam_kenobi::plays
 {
-OurKickoffPlay::OurKickoffPlay(stp::Options stp_options)
+KickoffPassPlay::KickoffPassPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   defense_(createChild<tactics::StandardDefense>("defense")),
   multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_To")),
@@ -39,7 +39,7 @@ OurKickoffPlay::OurKickoffPlay(stp::Options stp_options)
   pass_.setCaptureSpeed(0.1);
 }
 
-stp::PlayScore OurKickoffPlay::getScore(const World & world)
+stp::PlayScore KickoffPassPlay::getScore(const World & world)
 {
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
@@ -76,7 +76,7 @@ stp::PlayScore OurKickoffPlay::getScore(const World & world)
   return score;
 }
 
-stp::PlayCompletionState OurKickoffPlay::getCompletionState()
+stp::PlayCompletionState KickoffPassPlay::getCompletionState()
 {
   if (pass_.isDone()) {
     return stp::PlayCompletionState::Done;
@@ -84,7 +84,7 @@ stp::PlayCompletionState OurKickoffPlay::getCompletionState()
   return stp::PlayCompletionState::Busy;
 }
 
-void OurKickoffPlay::reset()
+void KickoffPassPlay::reset()
 {
   defense_.reset();
   multi_move_to_.Reset();
@@ -92,7 +92,7 @@ void OurKickoffPlay::reset()
   pass_direction_chosen_ = false;
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPlay::runFrame(
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffPassPlay::runFrame(
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;

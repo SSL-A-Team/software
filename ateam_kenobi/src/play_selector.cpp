@@ -46,7 +46,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<WallPlay>(stp_options);
   addPlay<KickOnGoalPlay>(stp_options);
   addPlay<KickoffOnGoalPlay>(stp_options);
-  addPlay<OurKickoffPlay>(stp_options);
+  addPlay<KickoffPassPlay>(stp_options);
   addPlay<OurKickoffPrepPlay>(stp_options);
   addPlay<OurBallPlacementPlay>(stp_options);
   addPlay<TheirBallPlacementPlay>(stp_options);

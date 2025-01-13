@@ -24,22 +24,22 @@ add_library(kenobi_node_component SHARED
   src/play_selector.cpp
   src/path_planning/obstacles.cpp
   src/path_planning/path_planner.cpp
+  src/plays/kickoff_plays/defense/their_kickoff_play.cpp
+  src/plays/kickoff_plays/offense/kickoff_on_goal.cpp
+  src/plays/kickoff_plays/offense/kickoff_pass_play.cpp
+  src/plays/kickoff_plays/offense/our_kickoff_prep_play.cpp
   src/plays/passing_plays/pass_to_lane_play.cpp
   src/plays/passing_plays/pass_to_segment_play.cpp
   src/plays/test_play.cpp
   src/plays/halt_play.cpp
   src/plays/kick_on_goal_play.cpp
-  src/plays/kickoff_on_goal.cpp
   src/plays/stop_play.cpp
   src/plays/our_ball_placement_play.cpp
   src/plays/their_ball_placement_play.cpp
-  src/plays/our_kickoff_play.cpp
-  src/plays/our_kickoff_prep_play.cpp
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
   src/plays/our_penalty_play.cpp
   src/plays/their_free_kick_play.cpp
-  src/plays/their_kickoff_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/controls_test_play.cpp
   src/plays/defense_play.cpp
