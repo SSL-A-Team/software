@@ -1,7 +1,5 @@
 import { RenderConfig } from "@/state"
-import { Field } from "@/field"
-import * as PIXI from "pixi.js";
-import { render } from "vue";
+import * as PIXI from "pixi.js"
 
 enum OverlayType {
     Point=0,
@@ -37,7 +35,8 @@ export class Overlay {
     start_angle: number
     end_angle: number
 
-    lifetime_end: number;
+    lifetime_end: number
+    heatmap_filter: PIXI.Filter
     
     constructor(id: string, msg: any) {
         this.id = id;
@@ -49,6 +48,52 @@ export class Overlay {
         if (this.lifetime) {
             this.lifetime_end = Date.now() + this.lifetime;
         }
+
+        let cmap_src = `
+            // jet cmap
+            vec4 cmap (float x) {
+                const float e0 = 0.0;
+                const vec4 v0 = vec4(0,0,0.5137254901960784,1);
+                const float e1 = 0.125;
+                const vec4 v1 = vec4(0,0.23529411764705882,0.6666666666666666,1);
+                const float e2 = 0.375;
+                const vec4 v2 = vec4(0.0196078431372549,1,1,1);
+                const float e3 = 0.625;
+                const vec4 v3 = vec4(1,1,0,1);
+                const float e4 = 0.875;
+                const vec4 v4 = vec4(0.9803921568627451,0,0,1);
+                const float e5 = 1.0;
+                const vec4 v5 = vec4(0.5019607843137255,0,0,1);
+                float a0 = smoothstep(e0,e1,x);
+                float a1 = smoothstep(e1,e2,x);
+                float a2 = smoothstep(e2,e3,x);
+                float a3 = smoothstep(e3,e4,x);
+                float a4 = smoothstep(e4,e5,x);
+                return max(mix(v0,v1,a0)*step(e0,x)*step(x,e1),
+                    max(mix(v1,v2,a1)*step(e1,x)*step(x,e2),
+                    max(mix(v2,v3,a2)*step(e2,x)*step(x,e3),
+                    max(mix(v3,v4,a3)*step(e3,x)*step(x,e4),mix(v4,v5,a4)*step(e4,x)*step(x,e5)
+                ))));
+            }
+        `
+
+        let frag_src = cmap_src + `
+            varying vec2 vTextureCoord;
+            uniform sampler2D uSample;
+            uniform sampler2D uTexture;
+
+            void main () {
+                vec4 dst = cmap(texture2D(uTexture, vTextureCoord).r);
+                dst.a = 0.1; // alpha control on heatmap as a whole
+
+                vec4 src = texture2D(uSample, vTextureCoord);
+                float final_alpha = src.a + dst.a * (1.0 - src.a);
+                gl_FragColor = vec4(
+                    (src.rgb * src.a + dst.rgb * dst.a * (1.0 - src.a)) / final_alpha, final_alpha);
+            }
+        `
+
+        this.heatmap_filter = new PIXI.Filter("", frag_src);
     }
 
     /**
@@ -160,7 +205,17 @@ export class Overlay {
 
                 break;
             case OverlayType.Mesh:
-                // I think I can use a PIXI filter to do this more efficiently
+                let heat_texture = this.createMeshTexture(this.mesh, this.mesh_alpha)
+                if (heat_texture.valid) {
+                    this.heatmap_filter.uniforms.uTexture = heat_texture;
+
+                    // Filled black rectangle this is mapped to
+                    graphic.beginFill('Black');
+                    graphic.lineStyle(this.stroke_width, 'Black');
+                    graphic.drawRect(-scale * this.scale.x / 2, -scale * this.scale.y / 2, scale * this.scale.x, scale * this.scale.y);
+                    graphic.endFill();
+                    graphic.filters = [this.heatmap_filter];
+                }
                 break;
             case OverlayType.Custom:
                 // TODO: This is probably a very low priority to implement
@@ -174,5 +229,39 @@ export class Overlay {
         }
 
         container.addChild(graphic);
+    }
+
+    createMeshTexture(mesh: Mesh1d[], mesh_alpha: Mesh1d[]) {
+        // TODO: Should really throw appropriate exceptions
+        // NOTE: Regardless of what we return the user can just check if this.valid is true
+
+        const bytes_per_pixel = 4;
+
+        let height = mesh.length;
+        if (height <= 0) {
+            return PIXI.Texture.fromBuffer(null, 0, 0);
+        }
+
+        let width = mesh[0].mesh1d.length;
+        if (width <= 0) {
+            return PIXI.Texture.fromBuffer(null, 0, 0);
+        }
+
+        let buffer = new Uint8Array(width * height * bytes_per_pixel);
+        for (let i = 0; i < height; i++) {
+            // should do check to make sure each ros is length width
+            if (mesh[i].mesh1d.length != width){
+                return PIXI.Texture.fromBuffer(null, 0, 0);
+            }
+            for (let j = 0; j < width; j++) {
+                let linear_index = ((width * i) + j) * bytes_per_pixel;
+                buffer[linear_index] = mesh[i].mesh1d[j] * 20;
+                buffer[linear_index + 1] = 0;
+                buffer[linear_index + 2] = 0;
+                buffer[linear_index + 3] = 1.0;
+            }
+        }
+
+        return PIXI.Texture.fromBuffer(buffer, width, height, {scaleMode: PIXI.SCALE_MODES.LINEAR    });
     }
 }
