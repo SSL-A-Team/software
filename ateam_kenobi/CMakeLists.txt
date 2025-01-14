@@ -16,6 +16,7 @@ find_package(ateam_geometry REQUIRED)
 find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
+find_package(OpenCV REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/defense_area_enforcement.cpp
@@ -66,6 +67,8 @@ add_library(kenobi_node_component SHARED
   src/skills/dribble.cpp
   src/skills/extract.cpp
   src/skills/capture.cpp
+  src/spatial/spatial_evaluator.cpp
+  src/spatial/spatial_inspection.cpp
   src/tactics/blockers.cpp
   src/tactics/defenders.cpp
   src/tactics/multi_move_to.cpp
@@ -90,6 +93,7 @@ ament_target_dependencies(
   "control_toolbox"
   "OMPL"
   "angles"
+  OpenCV
 )
 rclcpp_components_register_node(
   kenobi_node_component
