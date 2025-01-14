@@ -39,10 +39,13 @@ export class Overlay {
     end_angle: number
 
     lifetime_end: number
+    check_other_depth: boolean
     heatmap_filter: PIXI.Filter
     
-    constructor(id: string, msg: any) {
+    constructor(id: string, msg: any, check_other_depth: boolean = false) {
         this.id = id;
+	    this.check_other_depth = check_other_depth;
+
     	for (const member of Object.getOwnPropertyNames(msg)) {
             if (member === "heatmap_data" || member == "heatmap_alpha") {
                 this[member] = Buffer.from(msg[member], 'base64');
@@ -112,10 +115,15 @@ export class Overlay {
      * @returns true if this overlay should be deleted, false otherwise
      */
     update(overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig): boolean {
-        let container = overlay;
-        if (this.depth == 0) {
-            container = underlay;
+
+        // Handle if the overlay was moved between graphics containers
+        if (this.check_other_depth) {
+            const opposite_container = (this.depth) ? underlay : overlay;
+            this.deleteGraphic(opposite_container);
+            this.check_other_depth = false;
         }
+
+        const container = (this.depth) ? overlay : underlay;
         if(this.isExpired()) {
             this.deleteGraphic(container);
             return true;

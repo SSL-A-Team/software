@@ -219,22 +219,28 @@ export class AppState {
             for (const overlay of msg.overlays) {
                 let id = overlay.ns+"/"+overlay.name;
 
+                // Flag the overlay to check if it moved the graphic object between containers
+                const check_other_depth =  (id in state.world.field.overlays &&
+                    state.world.field.overlays[id].depth != overlay.depth);
+
                 // Overlays will now be deleted in the update function if
                 // the lifetime expires without having been updated
                 // to prevent potential future memory leaks
                 switch(overlay.command) {
                     // REPLACE
                     case 0:
-                        state.world.field.overlays[id] = new Overlay(id, overlay);
+                        state.world.field.overlays[id] = new Overlay(id, overlay, check_other_depth);
                         break;
                     // EDIT
                     case 1:
                         //TODO: Not sure if this command is necessary, will implement later if it is
                         // Might need to handle moving overlay between z-depths
-                        state.world.field.overlays[id] = new Overlay(id, overlay);
+                        state.world.field.overlays[id] = new Overlay(id, overlay, check_other_depth);
                         break;
                     // REMOVE
                     case 2:
+                        // I think this just leaves the graphics objects in the list :'(
+                        // TODO: fix memory leak ^
                         delete state.world.field.overlays[id];
                         break;
                 }
