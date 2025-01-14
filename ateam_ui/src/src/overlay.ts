@@ -94,25 +94,27 @@ export class Overlay {
                 dst.a = 0.1; // alpha control on heatmap as a whole
 
                 vec4 src = texture2D(uSample, vTextureCoord);
-                float final_alpha = src.a + dst.a * (1.0 - src.a);
+                float src_a = src.a / 255.0;
+                float final_alpha = src_a + dst.a * (1.0 - src_a);
                 gl_FragColor = vec4(
-                    (src.rgb * src.a + dst.rgb * dst.a * (1.0 - src.a)) / final_alpha, final_alpha);
+                    (src.rgb * src_a + dst.rgb * dst.a * (1.0 - src_a)) / final_alpha, final_alpha);
             }
         `
 
         this.heatmap_filter = new PIXI.Filter("", frag_src);
+        this.heatmap_filter.uniforms.uTexture = this.createHeatmapTexture();
     }
 
     /**
-     * @param overlay background container
-     * @param underlay foreground container
+     * @param overlay foreground container
+     * @param underlay background container
      * @param renderConfig field rendering properties
      * @returns true if this overlay should be deleted, false otherwise
      */
     update(overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig): boolean {
-        let container = underlay;
+        let container = overlay;
         if (this.depth == 0) {
-            container = overlay;
+            container = underlay;
         }
         if(this.isExpired()) {
             this.deleteGraphic(container);
@@ -212,17 +214,11 @@ export class Overlay {
 
                 break;
             case OverlayType.Heatmap:
-                let heat_texture = this.createHeatmapTexture()
-                if (heat_texture.valid) {
-                    this.heatmap_filter.uniforms.uTexture = heat_texture;
-
-                    // Filled black rectangle this is mapped to
-                    graphic.beginFill('Black');
-                    graphic.lineStyle(this.stroke_width, 'Black');
-                    graphic.drawRect(-scale * this.scale.x / 2, -scale * this.scale.y / 2, scale * this.scale.x, scale * this.scale.y);
-                    graphic.endFill();
-                    graphic.filters = [this.heatmap_filter];
-                }
+                graphic.beginFill('Black');
+                graphic.lineStyle(this.stroke_width, 'Black');
+                graphic.drawRect(-scale * this.scale.x / 2, -scale * this.scale.y / 2, scale * this.scale.x, scale * this.scale.y);
+                graphic.endFill();
+                graphic.filters = [this.heatmap_filter];
                 break;
             case OverlayType.Custom:
                 // TODO: This is probably a very low priority to implement
@@ -248,20 +244,28 @@ export class Overlay {
         }
 
         if(this.heatmap_data.length != num_pixels) {
-            throw new Error("Heatmap data array does not have expected length. Expected " + num_pixels + ", but got " + this.heatmap_data.length);
+            throw new Error("Heatmap data array does not have expected length.");
         }
 
         const has_alpha_layer = this.heatmap_alpha.length != 0;
-        if(has_alpha_layer && this.heatmap_alpha.length != num_pixels) {
-            throw new Error("Heatmap alpha array does not have expected length. Expected " + num_pixels + ", but got " + this.heatmap_alpha.length);
+        const has_full_alpha = this.heatmap_alpha.length == num_pixels;
+        // Alpha array must be empty, one element, or matching size
+        if(has_alpha_layer && this.heatmap_alpha.length != 1 && !has_full_alpha) {
+            throw new Error("Heatmap alpha array does not have expected length.");
         }
 
         for(let dst_index = 0; dst_index < buffer.length; dst_index+=4) {
             const src_index = dst_index / 4;
+            let alpha = 255;
+            if(has_full_alpha) {
+                alpha = this.heatmap_alpha[src_index];
+            } else if(has_alpha_layer) {
+                alpha = this.heatmap_alpha[0];
+            }
             buffer[dst_index + 0] = this.heatmap_data[src_index];
             buffer[dst_index + 1] = 0;
             buffer[dst_index + 2] = 0;
-            buffer[dst_index + 3] = has_alpha_layer ? this.heatmap_alpha[src_index] : 255;
+            buffer[dst_index + 3] = alpha;
         }
 
         return PIXI.Texture.fromBuffer(buffer, this.heatmap_resolution_width, this.heatmap_resolution_height, {scaleMode: PIXI.SCALE_MODES.LINEAR});

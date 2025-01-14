@@ -55,7 +55,9 @@ geometry_msgs/Point[] points
 uint8[] heatmap_data
 uint32 heatmap_resolution_width
 uint32 heatmap_resolution_height
-# if heatmap_alpha is empty, the heatmap will have full opacity, otherwise it should match heatmap_data's size
+# if heatmap_alpha is empty, the heatmap will have full opacity
+# if heatmap_alpha has one element, that alpha value will be used for the whole heatmap
+# otherwise heatmap_alpha should match heatmap_data's size
 uint8[] heatmap_alpha
 
 # When using the TEXT type place the text here, when using the CUSTOM type put arbitrary javascript in this variable
