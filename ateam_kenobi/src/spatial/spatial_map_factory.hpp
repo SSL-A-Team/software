@@ -30,16 +30,16 @@ namespace ateam_kenobi::spatial
 
 class SpatialMapFactory {
 public:
-  SpatialMapFactory(const std::string & name) : name_(name) {}
+  SpatialMapFactory(std::string name) : name_(name) {}
 
   const std::string & GetName() const {
     return name_;
   }
 
-  virtual void FillMap(cv::Mat & layer, const World & world, const std::unordered_map<std::string, cv::Mat> & layers) = 0;
+  virtual void FillMap(cv::Mat & map, const World & world, const std::unordered_map<std::string, cv::Mat> & layers) = 0;
 
 private:
-  const std::string & name_;
+  const std::string name_;
 
 };
 

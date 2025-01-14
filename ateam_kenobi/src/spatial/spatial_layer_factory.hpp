@@ -31,7 +31,7 @@ namespace ateam_kenobi::spatial
 
 class SpatialLayerFactory {
 public:
-  SpatialLayerFactory(const std::string & name) : name_(name) {}
+  SpatialLayerFactory(std::string name) : name_(name) {}
 
   const std::string & GetName() const {
     return name_;
@@ -63,11 +63,11 @@ protected:
   }
 
   float WorldWidth() {
-    return field_.field_width + (2.0 * field_.boundary_width);
+    return field_.field_length + (2.0 * field_.boundary_width);
   }
 
   float WorldHeight() {
-    return field_.field_length + (2.0 * field_.boundary_width);
+    return field_.field_width + (2.0 * field_.boundary_width);
   }
 
   int LayerWidth() {
@@ -106,7 +106,7 @@ protected:
 
 private:
   const float kResolution = 0.1;  // meters per pixel
-  const std::string & name_;
+  const std::string name_;
   Field field_;
 
 };
