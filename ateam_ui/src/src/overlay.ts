@@ -266,14 +266,9 @@ export class Overlay {
             uniform sampler2D uTexture;
 
             void main () {
-                vec4 dst = cmap(texture2D(uTexture, vTextureCoord).r);
-                dst.a = 0.1; // alpha control on heatmap as a whole
-
-                vec4 src = texture2D(uSample, vTextureCoord);
-                float src_a = src.a / 255.0;
-                float final_alpha = src_a + dst.a * (1.0 - src_a);
-                gl_FragColor = vec4(
-                    (src.rgb * src_a + dst.rgb * dst.a * (1.0 - src_a)) / final_alpha, final_alpha);
+                vec4 heatmap_color_raw = texture2D(uTexture, vTextureCoord);
+                vec4 heatmap_color = cmap(heatmap_color_raw.r);
+                gl_FragColor = heatmap_color_raw.a * heatmap_color;
             }
         `
 
