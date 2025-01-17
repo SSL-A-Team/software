@@ -40,7 +40,8 @@ export class Overlay {
 
     lifetime_end: number
     check_other_depth: boolean
-    heatmap_filter: PIXI.Filter
+    //heatmap_filter: PIXI.Filter
+    heatmap_sprite: PIXI.Sprite
     
     constructor(id: string, msg: any, check_other_depth: boolean = false) {
         this.id = id;
@@ -178,11 +179,19 @@ export class Overlay {
 
                 break;
             case OverlayType.Heatmap:
+                /*
                 graphic.beginFill('Black');
                 graphic.lineStyle(this.stroke_width, 'Black');
                 graphic.drawRect(-scale * this.scale.x / 2, -scale * this.scale.y / 2, scale * this.scale.x, scale * this.scale.y);
                 graphic.endFill();
                 graphic.filters = [this.heatmap_filter];
+                */
+
+                this.heatmap_sprite.width = scale * this.scale.x;
+                this.heatmap_sprite.height = scale * this.scale.y;
+                this.heatmap_sprite.x = -scale * this.scale.x / 2;
+                this.heatmap_sprite.y = -scale * this.scale.y / 2;
+                graphic.addChild(this.heatmap_sprite);
                 break;
             case OverlayType.Custom:
                 // TODO: This is probably a very low priority to implement
@@ -228,35 +237,40 @@ export class Overlay {
             }
             buffer[dst_index + 0] = this.heatmap_data[src_index];
             buffer[dst_index + 1] = 0;
-            buffer[dst_index + 2] = 0;
+            buffer[dst_index + 2] = 255 - this.heatmap_data[src_index];
             buffer[dst_index + 3] = alpha;
         }
 
+        /*
         let cmap_src = `
-            // jet cmap
+             float invmix(float a, float b, float x) {
+                return (x - a) / (b - a);
+            }
+
             vec4 cmap (float x) {
-                const float e0 = 0.0;
-                const vec4 v0 = vec4(0,0,0.5137254901960784,1);
-                const float e1 = 0.125;
-                const vec4 v1 = vec4(0,0.23529411764705882,0.6666666666666666,1);
-                const float e2 = 0.375;
-                const vec4 v2 = vec4(0.0196078431372549,1,1,1);
-                const float e3 = 0.625;
-                const vec4 v3 = vec4(1,1,0,1);
-                const float e4 = 0.875;
-                const vec4 v4 = vec4(0.9803921568627451,0,0,1);
-                const float e5 = 1.0;
-                const vec4 v5 = vec4(0.5019607843137255,0,0,1);
-                float a0 = smoothstep(e0,e1,x);
-                float a1 = smoothstep(e1,e2,x);
-                float a2 = smoothstep(e2,e3,x);
-                float a3 = smoothstep(e3,e4,x);
-                float a4 = smoothstep(e4,e5,x);
-                return max(mix(v0,v1,a0)*step(e0,x)*step(x,e1),
-                    max(mix(v1,v2,a1)*step(e1,x)*step(x,e2),
-                    max(mix(v2,v3,a2)*step(e2,x)*step(x,e3),
-                    max(mix(v3,v4,a3)*step(e3,x)*step(x,e4),mix(v4,v5,a4)*step(e4,x)*step(x,e5)
-                ))));
+                return vec4(step(0.5,x),0,0,1);
+                // const float e0 = 0.0;
+                // const vec4 v0 = vec4(0,0,0.5137254901960784,1);
+                // const float e1 = 0.125;
+                // const vec4 v1 = vec4(0,0.23529411764705882,0.6666666666666666,1);
+                // const float e2 = 0.375;
+                // const vec4 v2 = vec4(0.0196078431372549,1,1,1);
+                // const float e3 = 0.625;
+                // const vec4 v3 = vec4(1,1,0,1);
+                // const float e4 = 0.875;
+                // const vec4 v4 = vec4(0.9803921568627451,0,0,1);
+                // const float e5 = 1.0;
+                // const vec4 v5 = vec4(0.5019607843137255,0,0,1);
+                // float a0 = invmix(e0,e1,x);
+                // float a1 = invmix(e1,e2,x);
+                // float a2 = invmix(e2,e3,x);
+                // float a3 = invmix(e3,e4,x);
+                // float a4 = invmix(e4,e5,x);
+                // return max(mix(v0,v1,a0)*step(e0,x)*step(x,e1),
+                //     max(mix(v1,v2,a1)*step(e1,x)*step(x,e2),
+                //     max(mix(v2,v3,a2)*step(e2,x)*step(x,e3),
+                //     max(mix(v3,v4,a3)*step(e3,x)*step(x,e4),mix(v4,v5,a4)*step(e4,x)*step(x,e5)
+                // ))));
             }
         `
 
@@ -273,6 +287,12 @@ export class Overlay {
         `
 
         this.heatmap_filter = new PIXI.Filter("", frag_src);
+        this.heatmap_filter.autoFit = false;
         this.heatmap_filter.uniforms.uTexture = PIXI.Texture.fromBuffer(buffer, this.heatmap_resolution_width, this.heatmap_resolution_height, {scaleMode: PIXI.SCALE_MODES.LINEAR});
+        */
+        this.heatmap_sprite = new PIXI.Sprite(
+            PIXI.Texture.fromBuffer(buffer, this.heatmap_resolution_width, this.heatmap_resolution_height, {scaleMode: PIXI.SCALE_MODES.LINEAR})
+        );
+        this.heatmap_sprite.name = this.id;
     }
 }
