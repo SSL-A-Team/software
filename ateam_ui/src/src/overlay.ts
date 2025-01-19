@@ -168,14 +168,15 @@ export class Overlay {
 
                 text.anchor.set(0.5, 0.5);
                 text.rotation = -renderConfig.angle; // offset the rotation of the canvas so the text always appears right side up
+		{
+			let graphicChild = graphic.getChildByName("text");
 
-                let graphicChild = graphic.getChildByName("text");
-
-                if (graphicChild) {
-                    graphicChild = text;
-                } else {
-                    graphic.addChild(text);
-                }
+			if (graphicChild) {
+			    graphicChild = text;
+			} else {
+			    graphic.addChild(text);
+			}
+		}
 
                 break;
             case OverlayType.Heatmap:
@@ -191,7 +192,15 @@ export class Overlay {
                 this.heatmap_sprite.height = scale * this.scale.y;
                 this.heatmap_sprite.x = -scale * this.scale.x / 2;
                 this.heatmap_sprite.y = -scale * this.scale.y / 2;
-                graphic.addChild(this.heatmap_sprite);
+
+		{
+			let graphicChild = graphic.getChildByName(this.id);
+			if (graphicChild) {
+			    graphicChild = this.heatmap_sprite;
+			} else {
+			    graphic.addChild(this.heatmap_sprite);
+			}
+		}
                 break;
             case OverlayType.Custom:
                 // TODO: This is probably a very low priority to implement
