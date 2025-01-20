@@ -21,6 +21,7 @@
 #ifndef SPATIAL__SPATIAL_LAYER_FACTORY_HPP_
 #define SPATIAL__SPATIAL_LAYER_FACTORY_HPP_
 
+#include <ateam_geometry/types.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc.hpp>
 #include "types/field.hpp"
@@ -78,34 +79,42 @@ protected:
     return WorldHeight() / kResolution;
   }
 
-  float LayerToWorldX(int x) {
+  float LayerToWorldX(const int x) {
     return (x * kResolution) - (WorldWidth()/2.0);
   }
 
-  float LayerToWorldY(int y) {
-    return (y * kResolution) - (WorldHeight()/2.0);
+  float LayerToWorldY(const int y) {
+    return ((LayerHeight() - y) * kResolution) - (WorldHeight()/2.0);
   }
 
-  cv::Point2d LayerToWorld(cv::Point2i p) {
+  cv::Point2d LayerToWorld(const cv::Point2i & p) {
     return cv::Point2d(LayerToWorldX(p.x), LayerToWorldY(p.y));
   }
 
-  int WorldToLayerX(float x) {
+  int WorldToLayerX(const float x) {
     return (x + (WorldWidth() / 2.0)) / kResolution;
   }
 
-  int WorldToLayerY(float y) {
-    return (y + (WorldHeight() / 2.0)) / kResolution;
+  int WorldToLayerY(const float y) {
+    return (-y + (WorldHeight() / 2.0)) / kResolution;
   }
 
-  cv::Point2i WorldToLayer(cv::Point2d p) {
+  cv::Point2i WorldToLayer(const cv::Point2d & p) {
     return cv::Point2i(WorldToLayerX(p.x), WorldToLayerY(p.y));
+  }
+
+  cv::Point2i WorldToLayer(const ateam_geometry::Point & p) {
+    return WorldToLayer(cv::Point2d(p.x(), p.y()));
+  }
+
+  int WorldToLayerDist(const double d) {
+    return static_cast<int>(d / kResolution);
   }
 
   virtual void FillLayer(cv::Mat & layer, const World & world) = 0;
 
 private:
-  const float kResolution = 0.1;  // meters per pixel
+  const float kResolution = 0.05;  // meters per pixel
   const std::string name_;
   Field field_;
 

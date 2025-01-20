@@ -79,7 +79,7 @@ public:
 
   void drawHeatmap(
     const std::string & name, const ateam_geometry::Rectangle & bounds,
-    const cv::Mat & data);
+    const cv::Mat & data, const uint8_t alpha = 255, const uint32_t lifetime = kDefaultLifetime);
 
 private:
   static const uint32_t kDefaultLifetime = 200;
