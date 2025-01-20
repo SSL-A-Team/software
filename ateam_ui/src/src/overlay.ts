@@ -193,6 +193,7 @@ export class Overlay {
                     let graphicChild = graphic.getChildByName(this.id) as PIXI.Sprite;
                     if (!graphicChild) {
                         graphicChild = new PIXI.Sprite();
+                        graphicChild.name = this.id;
                         graphic.addChild(graphicChild);
                     }
 
