@@ -24,6 +24,7 @@
 #include "layers/distance_from_their_bots.hpp"
 #include "layers/line_of_sight_ball.hpp"
 #include "layers/line_of_sight_their_goal.hpp"
+#include "layers/their_defense_area_keepout.hpp"
 #include "maps/receiver_position_quality.hpp"
 #include "maps/test_map.hpp"
 
@@ -36,7 +37,8 @@ SpatialEvaluator::SpatialEvaluator()
     std::make_shared<layers::DistanceDownField>(),
     std::make_shared<layers::DistanceFromTheirBots>(),
     std::make_shared<layers::LineOfSightBall>(),
-    std::make_shared<layers::LineOfSightTheirGoal>()
+    std::make_shared<layers::LineOfSightTheirGoal>(),
+    std::make_shared<layers::TheirDefenseAreaKeepout>()
   };
   map_factories_ = {
     std::make_shared<maps::TestMap>()
