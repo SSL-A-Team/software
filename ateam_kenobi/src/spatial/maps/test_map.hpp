@@ -37,12 +37,14 @@ public:
   {
     const auto & goal_sight = layers.at("LineOfSightTheirGoal");
     const auto & ball_sight = layers.at("LineOfSightBall");
-    if(goal_sight.empty() || ball_sight.empty()) {
+    const auto & def_area_keepout = layers.at("TheirDefenseAreaKeepout");
+    if(goal_sight.empty() || ball_sight.empty() || def_area_keepout.empty()) {
       return;
     }
-    cv::Mat mask = goal_sight & ball_sight;
+    cv::Mat mask = goal_sight & ball_sight & def_area_keepout;
+    cv::Mat scores = layers.at("DistanceDownField").mul(layers.at("DistanceFromTheirBots"));
     map = cv::Scalar{0};
-    layers.at("DistanceDownField").copyTo(map, mask);
+    scores.copyTo(map, mask);
   }
 
 };
