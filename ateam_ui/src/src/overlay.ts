@@ -41,7 +41,7 @@ export class Overlay {
     lifetime_end: number
     check_other_depth: boolean
     //heatmap_filter: PIXI.Filter
-    heatmap_sprite: PIXI.Sprite
+    heatmap_texture: PIXI.Texture
     
     constructor(id: string, msg: any, check_other_depth: boolean = false) {
         this.id = id;
@@ -168,15 +168,16 @@ export class Overlay {
 
                 text.anchor.set(0.5, 0.5);
                 text.rotation = -renderConfig.angle; // offset the rotation of the canvas so the text always appears right side up
-		{
-			let graphicChild = graphic.getChildByName("text");
 
-			if (graphicChild) {
-			    graphicChild = text;
-			} else {
-			    graphic.addChild(text);
-			}
-		}
+                {
+                    let graphicChild = graphic.getChildByName("text");
+
+                    if (graphicChild) {
+                        graphicChild = text;
+                    } else {
+                        graphic.addChild(text);
+                    }
+                }
 
                 break;
             case OverlayType.Heatmap:
@@ -188,19 +189,20 @@ export class Overlay {
                 graphic.filters = [this.heatmap_filter];
                 */
 
-                this.heatmap_sprite.width = scale * this.scale.x;
-                this.heatmap_sprite.height = scale * this.scale.y;
-                this.heatmap_sprite.x = -scale * this.scale.x / 2;
-                this.heatmap_sprite.y = -scale * this.scale.y / 2;
+                {
+                    let graphicChild = graphic.getChildByName(this.id) as PIXI.Sprite;
+                    if (!graphicChild) {
+                        graphicChild = new PIXI.Sprite();
+                        graphic.addChild(graphicChild);
+                    }
 
-		{
-			let graphicChild = graphic.getChildByName(this.id);
-			if (graphicChild) {
-			    graphicChild = this.heatmap_sprite;
-			} else {
-			    graphic.addChild(this.heatmap_sprite);
-			}
-		}
+                    graphicChild.texture = this.heatmap_texture;
+                    graphicChild.width = scale * this.scale.x;
+                    graphicChild.height = scale * this.scale.y;
+                    graphicChild.x = -scale * this.scale.x / 2;
+                    graphicChild.y = -scale * this.scale.y / 2;
+                }
+
                 break;
             case OverlayType.Custom:
                 // TODO: This is probably a very low priority to implement
@@ -299,9 +301,6 @@ export class Overlay {
         this.heatmap_filter.autoFit = false;
         this.heatmap_filter.uniforms.uTexture = PIXI.Texture.fromBuffer(buffer, this.heatmap_resolution_width, this.heatmap_resolution_height, {scaleMode: PIXI.SCALE_MODES.LINEAR});
         */
-        this.heatmap_sprite = new PIXI.Sprite(
-            PIXI.Texture.fromBuffer(buffer, this.heatmap_resolution_width, this.heatmap_resolution_height, {scaleMode: PIXI.SCALE_MODES.LINEAR})
-        );
-        this.heatmap_sprite.name = this.id;
+        this.heatmap_texture = PIXI.Texture.fromBuffer(buffer, this.heatmap_resolution_width, this.heatmap_resolution_height, {scaleMode: PIXI.SCALE_MODES.NEAREST})
     }
 }
