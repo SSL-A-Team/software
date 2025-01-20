@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,36 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef MAPS__TEST_MAP_HPP_
-#define MAPS__TEST_MAP_HPP_
+#include <gtest/gtest.h>
 
-#include "spatial/spatial_map_factory.hpp"
+#include "ateam_geometry/angles.hpp"
 
-namespace ateam_kenobi::spatial::maps
+TEST(AnglesTests, IsClockwiseBetween)
 {
+  EXPECT_TRUE(ateam_geometry::IsClockwiseBetween(2.0, 1.0, 3.0));
+  EXPECT_FALSE(ateam_geometry::IsClockwiseBetween(0.5, 1.0, 3.0));
+  EXPECT_TRUE(ateam_geometry::IsClockwiseBetween(0.1, 3.0, 1.0));
+  EXPECT_FALSE(ateam_geometry::IsClockwiseBetween(1.5, 2.5, 0.5));
+}
 
-class TestMap : public SpatialMapFactory {
-public:
-  TestMap()
-  : SpatialMapFactory("TestMap") {}
-
-  void FillMap(
-    cv::Mat & map, const World &,
-    const std::unordered_map<std::string, cv::Mat> & layers) override
-  {
-    const auto & goal_sight = layers.at("LineOfSightTheirGoal");
-    const auto & ball_sight = layers.at("LineOfSightBall");
-    if(goal_sight.empty() || ball_sight.empty()) {
-      return;
-    }
-    cv::Mat mask = goal_sight & ball_sight;
-    map = cv::Scalar{0};
-    layers.at("DistanceDownField").copyTo(map, mask);
-  }
-
-};
-
-} // namespace ateam_kenobi::spatial::maps
-
-
-#endif  // MAPS__TEST_MAP_HPP_
+TEST(AnglesTests, IsCounterclockwiseBetween)
+{
+  EXPECT_FALSE(ateam_geometry::IsCounterclockwiseBetween(2.0, 1.0, 3.0));
+  EXPECT_TRUE(ateam_geometry::IsCounterclockwiseBetween(0.5, 1.0, 3.0));
+  EXPECT_FALSE(ateam_geometry::IsCounterclockwiseBetween(0.1, 3.0, 1.0));
+  EXPECT_TRUE(ateam_geometry::IsCounterclockwiseBetween(1.5, 2.5, 0.5));
+}

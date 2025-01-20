@@ -21,20 +21,54 @@
 #ifndef LAYERS__LINE_OF_SIGHT_BALL_HPP_
 #define LAYERS__LINE_OF_SIGHT_BALL_HPP_
 
+#include <ateam_common/robot_constants.hpp>
 #include "spatial/spatial_layer_factory.hpp"
+#include "robot_shadows.hpp"
 
 namespace ateam_kenobi::spatial::layers
 {
 
 class LineOfSightBall : public SpatialLayerFactory {
 public:
-  LineOfSightBall() : SpatialLayerFactory("LineOfSightBall") {}
+  LineOfSightBall()
+  : SpatialLayerFactory("LineOfSightBall") {}
 
-  void FillLayer(cv::Mat & /*layer*/, const World & /*world*/) override {
-
+  void FillLayer(cv::Mat & layer, const World & world) override
+  {
+    SetupLayer(layer, CV_8UC1);
+    layer = cv::Scalar(255);  // fills layer with white
+    AddRobotShadows(layer, world);
   }
 
 private:
+  void AddRobotShadows(cv::Mat & layer, const World & world)
+  {
+    const cv::Scalar black{0};
+    for(const auto & robot : world.their_robots) {
+      if(!robot.visible) {
+        continue;
+      }
+      const auto robot_radius_layer = WorldToLayerDist(kRobotRadius);
+      cv::circle(layer, WorldToLayer(robot.pos), robot_radius_layer, black, cv::FILLED);
+
+      const auto [top_ray, bottom_ray] = GetRobotShadowRays(robot, world.ball.pos);
+      cv::line(layer, WorldToLayer(top_ray.source()), WorldToLayer(top_ray.point(1)), black);
+      cv::line(layer, WorldToLayer(bottom_ray.source()), WorldToLayer(bottom_ray.point(1)), black);
+
+      const auto shadow_poly = GetRobotShadowPoly(robot, world.ball.pos, world);
+      if(shadow_poly.empty()) {
+        continue;
+      }
+      std::vector<cv::Point> shadow_poly_layer;
+      shadow_poly_layer.reserve(shadow_poly.size());
+      std::ranges::transform(shadow_poly, std::back_inserter(shadow_poly_layer),
+        [this](const auto & wp){
+          return WorldToLayer(wp);
+      });
+      cv::fillPoly(layer, shadow_poly_layer, black);
+    }
+
+  }
 
 };
 
