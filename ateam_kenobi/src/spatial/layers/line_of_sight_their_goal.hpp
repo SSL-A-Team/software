@@ -23,6 +23,7 @@
 
 #include <ateam_common/robot_constants.hpp>
 #include "spatial/spatial_layer_factory.hpp"
+#include "robot_shadows.hpp"
 
 namespace ateam_kenobi::spatial::layers
 {
@@ -79,8 +80,10 @@ private:
   void AddRobotShadows(cv::Mat & layer, const World & world) {
     const cv::Scalar black{0};
     const auto half_field_length = world.field.field_length / 2.0;
-    const ateam_geometry::Point goal_top{half_field_length, -world.field.goal_width / 2.0};
-    const ateam_geometry::Point goal_bottom{half_field_length, world.field.goal_width / 2.0};
+    const ateam_geometry::Segment goal_segment{
+      ateam_geometry::Point{half_field_length, -world.field.goal_width / 2.0},
+      ateam_geometry::Point{half_field_length, world.field.goal_width / 2.0}
+    };
     for(const auto & robot : world.their_robots) {
       if(!robot.visible) {
         continue;
@@ -90,41 +93,17 @@ private:
       if(robot.pos.x() > half_field_length) {
         continue;
       }
-      const auto top_shadow_ray = GetRobotTangentRay(robot, world, true);
-      const auto bottom_shadow_ray = GetRobotTangentRay(robot, world, false);
-      const auto maybe_intersection = ateam_geometry::intersection(top_shadow_ray, bottom_shadow_ray);
-      if(!maybe_intersection) {
+      const auto shadow_poly = GetRobotShadowPoly(robot, goal_segment, world);
+      if(shadow_poly.empty()) {
         continue;
       }
-      const auto intersection_point = boost::get<ateam_geometry::Point>(&*maybe_intersection);
-      if(!intersection_point) {
-        continue;
-      }
-      const std::vector<cv::Point> points = {
-        WorldToLayer(top_shadow_ray.source()),
-        WorldToLayer(bottom_shadow_ray.source()),
-        WorldToLayer(*intersection_point)
-      };
-      cv::fillPoly(layer, points, black);
+      std::vector<cv::Point> shadow_poly_layer;
+      shadow_poly_layer.reserve(shadow_poly.size());
+      std::ranges::transform(shadow_poly, std::back_inserter(shadow_poly_layer), [this](const auto & wp){
+        return WorldToLayer(wp);
+      });
+      cv::fillPoly(layer, shadow_poly_layer, black);
     }
-  }
-
-  ateam_geometry::Ray GetRobotTangentRay(const Robot & robot, const World & world, const bool top) {
-    const ateam_geometry::Point source{
-      world.field.field_length / 2.0,
-      (world.field.goal_width / 2.0) * (top ? -1 : 1)
-    };
-    const auto source_center_vector = robot.pos - source;
-    const auto source_center_distance = ateam_geometry::norm(source_center_vector);
-    const auto shadow_angle = std::asin(kRobotRadius / source_center_distance);
-    CGAL::Aff_transformation_2<ateam_geometry::Kernel> rotate(CGAL::ROTATION, std::sin(shadow_angle), std::cos(shadow_angle));
-    if(!top) {
-      rotate = rotate.inverse();
-    }
-    const auto source_to_bot_tangent_distance = std::hypot(source_center_distance, kRobotRadius);
-    const auto shadow_vector = ateam_geometry::normalize(rotate(source_center_vector));
-    const auto tangent_point = source + (shadow_vector * source_to_bot_tangent_distance);
-    return ateam_geometry::Ray(tangent_point, shadow_vector);
   }
 
 };

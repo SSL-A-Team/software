@@ -51,6 +51,41 @@ inline double ShortestAngleBetween(
   return ShortestAngleBetween(source.direction(), target.direction());
 }
 
+/**
+ * @brief Checks if the angle @c a is in the clockwise range from @c start to @c end
+ *
+ * @param a the angle, in radians, to check
+ * @param start the angle, in radians, defining the start of the range
+ * @param end the angle, in radians, defining the end of the range
+ * @return true @a is between @c start and @c end
+ * @return false @a is outside of @c start and @c end
+ */
+inline bool IsClockwiseBetween(const double a, const double start, const double end)
+{
+  if(start > end) {
+    return (a <= start && a <= end) || (a >= start && a >= end);
+  } else {
+    return (a >= start) && (a <= end);
+  }
+}
+
+/**
+ * @brief Checks if the angle @c a is in the counterclockwise range from @c start to @c end
+ *
+ * @param a the angle, in radians, to check
+ * @param start the angle, in radians, defining the start of the range
+ * @param end the angle, in radians, defining the end of the range
+ * @return true @a is between @c start and @c end
+ */
+inline bool IsCounterclockwiseBetween(const double a, const double start, const double end)
+{
+  if(start < end) {
+    return (a <= start && a <= end) || (a >= start && a >= end);
+  } else {
+    return (a <= start) && (a >= end);
+  }
+}
+
 }  // namespace ateam_geometry
 
 #endif  // ATEAM_GEOMETRY__ANGLES_HPP_
