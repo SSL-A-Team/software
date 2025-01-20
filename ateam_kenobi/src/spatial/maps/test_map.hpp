@@ -35,7 +35,8 @@ public:
     cv::Mat & map, const World &,
     const std::unordered_map<std::string, cv::Mat> & layers) override
   {
-    map = layers.at("DistanceDownField");
+    map = cv::Scalar{0};
+    layers.at("DistanceDownField").copyTo(map, layers.at("LineOfSightTheirGoal"));
   }
 
 };

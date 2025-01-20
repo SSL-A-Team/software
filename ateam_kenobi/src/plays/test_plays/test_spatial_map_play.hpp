@@ -35,7 +35,7 @@ public:
 
   explicit TestSpatialMapPlay(stp::Options stp_options)
   : stp::Play(kPlayName, stp_options) {
-    cv::namedWindow("heatmap", cv::WINDOW_NORMAL);
+    // cv::namedWindow("heatmap", cv::WINDOW_NORMAL);
   }
 
   void reset() override {}
@@ -43,30 +43,30 @@ public:
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override
   {
-    const auto half_field_length = world.field.field_length / 2.0;
-    const auto half_field_width = world.field.field_width / 2.0;
+    const auto half_field_length = (world.field.field_length / 2.0) + world.field.boundary_width;
+    const auto half_field_width = (world.field.field_width / 2.0) + world.field.boundary_width;
     ateam_geometry::Rectangle bounds {
       ateam_geometry::Point{-half_field_length, -half_field_width},
       ateam_geometry::Point{half_field_length, half_field_width}
     };
-    // getOverlays().drawHeatmap("heatmap", bounds, world.spatial_maps["TestMap"].data);
+    getOverlays().drawHeatmap("heatmap", bounds, world.spatial_maps["TestMap"].data, 200);
 
-    const auto & heatmap = world.spatial_maps["TestMap"].data;
-    cv::Mat displayHeatmap;
-    switch(heatmap.type()) {
-      case CV_8UC1:
-        displayHeatmap = heatmap;
-        break;
-      case CV_32FC1:
-        cv::normalize(heatmap, displayHeatmap, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-        break;
-    }
-    if(!heatmap.empty()) {
-      cv::imshow("heatmap", displayHeatmap);
-      cv::waitKey(10);
-    } else {
-      std::cerr << "empty heatmap\n";
-    }
+    // const auto & heatmap = world.spatial_maps["TestMap"].data;
+    // cv::Mat displayHeatmap;
+    // switch(heatmap.type()) {
+    //   case CV_8UC1:
+    //     displayHeatmap = heatmap;
+    //     break;
+    //   case CV_32FC1:
+    //     cv::normalize(heatmap, displayHeatmap, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    //     break;
+    // }
+    // if(!heatmap.empty()) {
+    //   cv::imshow("heatmap", displayHeatmap);
+    //   cv::waitKey(10);
+    // } else {
+    //   std::cerr << "empty heatmap\n";
+    // }
 
     return {};
   }

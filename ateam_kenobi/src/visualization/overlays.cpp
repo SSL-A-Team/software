@@ -207,7 +207,7 @@ void Overlays::drawArc(
 
 void Overlays::drawHeatmap(
   const std::string & name, const ateam_geometry::Rectangle & bounds,
-  const cv::Mat & data)
+  const cv::Mat & data, const uint8_t alpha, const uint32_t lifetime)
 {
   ateam_msgs::msg::Overlay msg;
   msg.ns = ns_;
@@ -215,12 +215,14 @@ void Overlays::drawHeatmap(
   msg.visible = true;
   msg.type = ateam_msgs::msg::Overlay::HEATMAP;
   msg.command = ateam_msgs::msg::Overlay::REPLACE;
+  msg.lifetime = lifetime;
   msg.position.x = std::midpoint(bounds.xmin(), bounds.xmax());
   msg.position.y = std::midpoint(bounds.ymin(), bounds.ymax());
   msg.scale.x = bounds.xmax() - bounds.xmin();
   msg.scale.y = bounds.ymax() - bounds.ymin();
   msg.heatmap_resolution_width = data.cols;
   msg.heatmap_resolution_height = data.rows;
+  msg.heatmap_alpha = {alpha};
   msg.heatmap_data.reserve(data.rows * data.cols);
   if(!data.empty()) {
     switch(data.type()) {
