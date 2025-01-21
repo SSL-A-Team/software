@@ -31,6 +31,7 @@ add_library(kenobi_node_component SHARED
   src/plays/kickoff_plays/offense/our_kickoff_prep_play.cpp
   src/plays/passing_plays/pass_to_lane_play.cpp
   src/plays/passing_plays/pass_to_segment_play.cpp
+  src/plays/passing_plays/spatial_pass_play.cpp
   src/plays/test_play.cpp
   src/plays/halt_play.cpp
   src/plays/kick_on_goal_play.cpp

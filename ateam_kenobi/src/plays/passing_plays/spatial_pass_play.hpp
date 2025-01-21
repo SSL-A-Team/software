@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,12 +18,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
-#define PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
+#include "stp/play.hpp"
+#include "tactics/standard_defense.hpp"
+#include "tactics/pass.hpp"
+#include "skills/lane_idler.hpp"
 
-#include "pass_to_lane_play.hpp"
-#include "pass_to_segment_play.hpp"
-#include "segment_passing_target_funcs.hpp"
-#include "spatial_pass_play.hpp"
+#ifndef PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
+#define PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
 
-#endif  // PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_
+namespace ateam_kenobi::plays
+{
+
+class SpatialPassPlay : public stp::Play
+{
+public:
+  static constexpr const char * kPlayName = "SpatialPassPlay";
+
+  SpatialPassPlay(stp::Options stp_options);
+
+  virtual ~SpatialPassPlay() = default;
+
+  stp::PlayScore getScore(const World & world) override;
+
+  stp::PlayCompletionState getCompletionState() override;
+
+  void reset() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  tactics::StandardDefense defense_tactic_;
+  tactics::Pass pass_tactic_;
+  skills::LaneIdler idler_skill_;
+  ateam_geometry::Point target_;
+  bool started_ = false;
+
+  play_helpers::lanes::Lane getIdleLane(const World & world);
+};
+
+}  // namespace ateam_kenobi::plays
+
+#endif  // PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_

@@ -82,6 +82,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
     "PassRightBackwardPlay", stp_options, play_helpers::lanes::Lane::Right,
     PassToLanePlay::PassDirection::Backward);
   addPlay<TestSpatialMapPlay>(stp_options);
+  addPlay<SpatialPassPlay>(stp_options);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg)

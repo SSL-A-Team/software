@@ -26,6 +26,7 @@
 #include <opencv2/imgproc.hpp>
 #include "types/field.hpp"
 #include "types/world.hpp"
+#include "coordinate_conversion.hpp"
 
 namespace ateam_kenobi::spatial
 {
@@ -59,62 +60,53 @@ protected:
     }
   }
 
-  float Resolution() {
-    return kResolution;
-  }
-
   float WorldWidth() {
-    return field_.field_length + (2.0 * field_.boundary_width);
+    return spatial::WorldWidth(field_);
   }
 
   float WorldHeight() {
-    return field_.field_width + (2.0 * field_.boundary_width);
+    return spatial::WorldHeight(field_);
   }
 
   int LayerWidth() {
-    return WorldWidth() / kResolution;
+    return spatial::LayerWidth(field_);
   }
 
   int LayerHeight() {
-    return WorldHeight() / kResolution;
+    return spatial::LayerHeight(field_);
   }
 
   float LayerToWorldX(const int x) {
-    return (x * kResolution) - (WorldWidth()/2.0);
+    return spatial::LayerToWorldX(x, field_);
   }
 
   float LayerToWorldY(const int y) {
-    return ((LayerHeight() - y) * kResolution) - (WorldHeight()/2.0);
+    return spatial::LayerToWorldY(y, field_);
   }
 
   cv::Point2d LayerToWorld(const cv::Point2i & p) {
-    return cv::Point2d(LayerToWorldX(p.x), LayerToWorldY(p.y));
+    return spatial::LayerToWorld(p, field_);
   }
 
   int WorldToLayerX(const float x) {
-    return (x + (WorldWidth() / 2.0)) / kResolution;
+    return spatial::WorldToLayerX(x, field_);
   }
 
   int WorldToLayerY(const float y) {
-    return (-y + (WorldHeight() / 2.0)) / kResolution;
+    return spatial::WorldToLayerY(y, field_);
   }
 
   cv::Point2i WorldToLayer(const cv::Point2d & p) {
-    return cv::Point2i(WorldToLayerX(p.x), WorldToLayerY(p.y));
+    return spatial::WorldToLayer(p, field_);
   }
 
   cv::Point2i WorldToLayer(const ateam_geometry::Point & p) {
-    return WorldToLayer(cv::Point2d(p.x(), p.y()));
-  }
-
-  int WorldToLayerDist(const double d) {
-    return static_cast<int>(d / kResolution);
+    return spatial::WorldToLayer(p, field_);
   }
 
   virtual void FillLayer(cv::Mat & layer, const World & world) = 0;
 
 private:
-  const float kResolution = 0.05;  // meters per pixel
   const std::string name_;
   Field field_;
 

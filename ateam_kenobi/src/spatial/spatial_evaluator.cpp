@@ -41,7 +41,8 @@ SpatialEvaluator::SpatialEvaluator()
     std::make_shared<layers::TheirDefenseAreaKeepout>()
   };
   map_factories_ = {
-    std::make_shared<maps::TestMap>()
+    std::make_shared<maps::TestMap>(),
+    std::make_shared<maps::ReceiverPositionQuality>()
   };
 }
 

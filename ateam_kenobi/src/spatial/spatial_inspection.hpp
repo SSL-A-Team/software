@@ -21,12 +21,18 @@
 #ifndef SPATIAL__SPATIAL_EVALUATOR_HPP_
 #define SPATIAL__SPATIAL_EVALUATOR_HPP_
 
-#include <opencv2/opencv.hpp>
+#include <ateam_geometry/types.hpp>
+#include "types/field.hpp"
+#include "spatial_map.hpp"
 
 namespace ateam_kenobi::spatial
 {
 
+ateam_geometry::Point GetMaxPosition(const SpatialMap & map, const Field & field);
 
+ateam_geometry::Point GetMaxPosition(
+  const SpatialMap & map, const Field & field,
+  const ateam_geometry::Rectangle & roi);
 
 }  // namespace ateam_kenobi::spatial
 
