@@ -105,13 +105,13 @@ export class Overlay {
     draw(container: PIXI.Container, renderConfig: RenderConfig) {
         // this could get slow if we have hundreds of overlays, hopefully its not a problem
         let graphic = container.getChildByName(this.id) as PIXI.Graphics;
-        graphic.clear()
 
         if (!graphic) {
             graphic = new PIXI.Graphics();
             graphic.name = this.id;
         }
 
+        graphic.clear()
         const scale = renderConfig.scale;
 
         graphic.position.x = scale * this.position.x;
