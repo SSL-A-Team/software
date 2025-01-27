@@ -22,6 +22,7 @@
 #define MAPS__RECEIVER_POSITION_QUALITY_HPP_
 
 #include "spatial/spatial_map_factory.hpp"
+#include "play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::spatial::maps
 {
@@ -32,7 +33,7 @@ public:
   : SpatialMapFactory("ReceiverPositionQuality") {}
 
   void FillMap(
-    cv::Mat & map, const World &,
+    cv::Mat & map, const World & world,
     const std::unordered_map<std::string, cv::Mat> & layers) override
   {
     const auto & goal_sight = layers.at("LineOfSightTheirGoal");
@@ -42,7 +43,12 @@ public:
       return;
     }
     cv::Mat mask = goal_sight & ball_sight & def_area_keepout;
-    cv::Mat scores = layers.at("DistanceDownField").mul(layers.at("DistanceFromTheirBots"));
+    cv::Mat scores;
+    if(play_helpers::getVisibleRobots(world.their_robots).empty()) {
+      scores = layers.at("DistanceDownField");
+    } else {
+      scores = layers.at("DistanceDownField").mul(layers.at("DistanceFromTheirBots"));
+    }
     map = cv::Scalar{0};
     scores.copyTo(map, mask);
   }

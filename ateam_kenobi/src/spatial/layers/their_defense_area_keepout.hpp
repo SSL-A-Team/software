@@ -51,8 +51,8 @@ public:
 
     layer = cv::Scalar(255);
 
-    const ateam_geometry::Point top_left(half_field_length - world.field.defense_area_depth, -half_defense_area_width);
-    const ateam_geometry::Point bottom_right(half_field_length, half_defense_area_width);
+    const ateam_geometry::Point top_left(half_field_length - world.field.defense_area_depth - padding_, -half_defense_area_width - padding_);
+    const ateam_geometry::Point bottom_right(half_field_length, half_defense_area_width + padding_);
 
     const auto top_left_layer = WorldToLayer(top_left);
     const auto bottom_right_layer = WorldToLayer(bottom_right);
@@ -62,6 +62,7 @@ public:
 
 private:
   Field prev_field;
+  const double padding_ = kRobotDiameter;
 
 };
 

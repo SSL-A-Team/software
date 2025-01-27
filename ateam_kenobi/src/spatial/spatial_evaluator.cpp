@@ -21,6 +21,7 @@
 #include "spatial_evaluator.hpp"
 #include <ranges>
 #include "layers/distance_down_field.hpp"
+#include "layers/distance_from_field_edge.hpp"
 #include "layers/distance_from_their_bots.hpp"
 #include "layers/line_of_sight_ball.hpp"
 #include "layers/line_of_sight_their_goal.hpp"
@@ -35,6 +36,7 @@ SpatialEvaluator::SpatialEvaluator()
 {
   layer_factories_ = {
     std::make_shared<layers::DistanceDownField>(),
+    std::make_shared<layers::DistanceFromFieldEdge>(),
     std::make_shared<layers::DistanceFromTheirBots>(),
     std::make_shared<layers::LineOfSightBall>(),
     std::make_shared<layers::LineOfSightTheirGoal>(),

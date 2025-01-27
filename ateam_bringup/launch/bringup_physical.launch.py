@@ -92,6 +92,7 @@ def generate_launch_description():
                 ('~/robot_motion_commands/robot', '/robot_motion_commands/robot'),
                 ('~/robot_feedback/status/robot', '/robot_feedback/status/robot'),
                 ('~/robot_feedback/motion/robot', '/robot_feedback/motion/robot')
-            ])
+            ]),
+            # prefix=['xterm -bg black -fg white -e gdb -ex run --args']
         )
     ])

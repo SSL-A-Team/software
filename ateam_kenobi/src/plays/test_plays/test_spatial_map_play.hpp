@@ -25,6 +25,7 @@
 #include "motion/motion_controller.hpp"
 #include "stp/play.hpp"
 #include <opencv2/opencv.hpp>
+#include "spatial/spatial_inspection.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -49,7 +50,14 @@ public:
       ateam_geometry::Point{-half_field_length, -half_field_width},
       ateam_geometry::Point{half_field_length, half_field_width}
     };
-    getOverlays().drawHeatmap("heatmap", bounds, world.spatial_maps["TestMap"].data, 200);
+
+    const auto & map = world.spatial_maps["TestMap"];
+
+    getOverlays().drawHeatmap("heatmap", bounds, map.data, 200);
+
+    const auto max_pos = spatial::GetMaxPosition(map, world.field);
+
+    getOverlays().drawCircle("heatmap_max", ateam_geometry::makeCircle(max_pos, kRobotRadius));
 
     // const auto & heatmap = world.spatial_maps["TestMap"].data;
     // cv::Mat displayHeatmap;
