@@ -59,14 +59,14 @@ public:
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-      declare_parameter<std::string>("net_interface_address", "")),
+      declare_parameter<std::string>("net_interface_address", "172.16.1.10")),
     firmware_parameter_server_(*this, connections_)
   {
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
       "~/robot_motion_commands/robot",
       rclcpp::SystemDefaultsQoS(),
-      &RadioBridgeNode::MotionCommandCallback,
+      &RadioBridgeNode::motion_command_callback,
       this);
 
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotFeedback>(
@@ -99,7 +99,6 @@ public:
 private:
   const std::chrono::milliseconds timeout_threshold_;
   const std::chrono::milliseconds command_timeout_threshold_;
-  std::mutex mutex_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   ateam_common::GameControllerListener game_controller_listener_;
@@ -114,11 +113,10 @@ private:
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
 
-  void MotionCommandCallback(
+  void motion_command_callback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr command_msg,
     int robot_id)
   {
-    const std::lock_guard lock(mutex_);
     motion_commands_[robot_id] = *command_msg;
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
@@ -148,7 +146,6 @@ private:
    */
   void ConnectionCheckCallback()
   {
-    const std::lock_guard lock(mutex_);
     for (auto i = 0ul; i < connections_.size(); ++i) {
       if (!connections_[i]) {
         ateam_msgs::msg::RobotFeedback feedback_message;
@@ -167,7 +164,6 @@ private:
 
   void SendCommandsCallback()
   {
-    const std::lock_guard lock(mutex_);
     for (auto id = 0; id < 16; ++id) {
       if (connections_[id] == nullptr) {
         continue;
@@ -246,8 +242,6 @@ private:
       return;
     }
 
-    const std::lock_guard lock(mutex_);
-
     if (connections_[robot_id] != nullptr &&
       sender_address != connections_[robot_id]->GetRemoteIPAddress())
     {
@@ -294,8 +288,6 @@ private:
       RCLCPP_WARN(get_logger(), "Ignoring telemetry message. %s", error.c_str());
       return;
     }
-
-    const std::lock_guard lock(mutex_);
 
     switch (packet.command_code) {
       case CC_GOODBYE:
@@ -356,7 +348,6 @@ private:
 
   void TeamColorChangeCallback(const ateam_common::TeamColor)
   {
-    const std::lock_guard lock(mutex_);
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);
     }
