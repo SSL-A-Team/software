@@ -64,20 +64,29 @@ export class AppState {
     hovered_field_ignore_side: number = 0;
     draggedRobot: number = null;
 
+    goalie_service_status: [status: boolean, reason: string] = [true, ""] // False if the set goalie service fails
+
     setGoalie(goalie_id: number) {
+        const state = this; // fix dumb javascript things
+
         const request = new ROSLIB.ServiceRequest({
             desired_keeper: goalie_id
         });
 
         this.services["setGoalie"].callService(request,
+            // Service Response Callback
             function(result) {
                 if(!result.success) {
-                    console.log("Failed to set goalie ID: ", result.reason);
+                    state.goalie_service_status = [false, result.reason];
                 } else {
-                    console.log("Goalie ID set!");
+                    state.goalie_service_status = [true, ""];
                 }
-            });
-        console.log("Goalie ID set request sent.");
+            },
+            // Failed to call service callback
+            function(result) {
+                state.goalie_service_status = [false, result];
+            }
+        );
     }
 
     getGoalie(): string {
