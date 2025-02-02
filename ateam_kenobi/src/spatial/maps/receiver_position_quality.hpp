@@ -44,11 +44,13 @@ public:
       return;
     }
     cv::Mat mask = goal_sight & ball_sight & def_area_keepout & in_field;
+    cv::Mat distance_from_bots = cv::min(layers.at("DistanceFromTheirBots"), cv::Scalar(1.0));
+    cv::Mat distance_from_edge = cv::min(layers.at("DistanceFromFieldEdge"), cv::Scalar(2.0)) / 2.0;
     cv::Mat scores;
-    if(play_helpers::getVisibleRobots(world.their_robots).empty()) {
-      scores = layers.at("DistanceDownField");
+    if(!play_helpers::getVisibleRobots(world.their_robots).empty()) {
+      scores = layers.at("DistanceDownField").mul(distance_from_edge).mul(distance_from_bots);
     } else {
-      scores = layers.at("DistanceDownField").mul(layers.at("DistanceFromTheirBots"));
+      scores = layers.at("DistanceDownField").mul(distance_from_edge);
     }
     map = cv::Scalar{0};
     scores.copyTo(map, mask);
