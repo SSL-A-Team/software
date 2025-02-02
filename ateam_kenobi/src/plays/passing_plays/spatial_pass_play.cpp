@@ -38,13 +38,15 @@ SpatialPassPlay::SpatialPassPlay(stp::Options stp_options)
 
 stp::PlayScore SpatialPassPlay::getScore(const World & world)
 {
-  const auto pass_target = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"], world.field);
+  const auto pass_target = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"],
+      world.field);
   const auto their_robots = play_helpers::getVisibleRobots(world.their_robots);
   const ateam_geometry::Segment goal_segment(
     ateam_geometry::Point(world.field.field_length / 2.0, -world.field.goal_width),
     ateam_geometry::Point(world.field.field_length / 2.0, world.field.goal_width)
   );
-  const auto windows = play_helpers::window_evaluation::getWindows(goal_segment, pass_target, their_robots);
+  const auto windows = play_helpers::window_evaluation::getWindows(goal_segment, pass_target,
+      their_robots);
   const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
   if(!largest_window) {
     return stp::PlayScore::NaN();
@@ -89,7 +91,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     ateam_geometry::Point{half_field_length, half_field_width}
   };
   getOverlays().drawHeatmap("heatmap", bounds, world.spatial_maps["ReceiverPositionQuality"].data,
-      200);
+      world.spatial_maps["ReceiverPositionQuality"].data, 200);
 
   pass_tactic_.setTarget(target_);
 
