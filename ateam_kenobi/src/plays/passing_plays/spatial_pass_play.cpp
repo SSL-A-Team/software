@@ -141,6 +141,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     pass_tactic_.runFrame(world, *maybe_kicker, *maybe_receiver, kicker_command, receiver_command);
   }
 
+  std::string play_state;
+  if(!started_) {
+    play_state = "Prep";
+  } else if(!pass_tactic_.isDone()) {
+    play_state = "Passing";
+  } else {
+    play_state = "Done";
+  }
+  getPlayInfo()["play state"] = play_state;
+
   // if (enough_bots_for_idler) {
   //   assignments.RunPositionIfAssigned(
   //     "idler", [this, &world, &motion_commands](const Robot & robot) {
