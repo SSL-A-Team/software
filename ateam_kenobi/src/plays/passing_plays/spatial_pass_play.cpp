@@ -20,9 +20,11 @@
 
 #include "spatial_pass_play.hpp"
 #include <ateam_common/robot_constants.hpp>
+#include <ateam_geometry/types.hpp>
 #include "spatial/spatial_inspection.hpp"
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
+#include "play_helpers/window_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -36,9 +38,18 @@ SpatialPassPlay::SpatialPassPlay(stp::Options stp_options)
 
 stp::PlayScore SpatialPassPlay::getScore(const World & world)
 {
-  // TODO(barulicm) just using this for testing for now
-  (void)world;
-  return stp::PlayScore::NaN();
+  const auto pass_target = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"], world.field);
+  const auto their_robots = play_helpers::getVisibleRobots(world.their_robots);
+  const ateam_geometry::Segment goal_segment(
+    ateam_geometry::Point(world.field.field_length / 2.0, -world.field.goal_width),
+    ateam_geometry::Point(world.field.field_length / 2.0, world.field.goal_width)
+  );
+  const auto windows = play_helpers::window_evaluation::getWindows(goal_segment, pass_target, their_robots);
+  const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
+  if(!largest_window) {
+    return stp::PlayScore::NaN();
+  }
+  return stp::PlayScore::Max() * (largest_window->squared_length() / goal_segment.squared_length());
 }
 
 stp::PlayCompletionState SpatialPassPlay::getCompletionState()
