@@ -250,7 +250,7 @@ export class Overlay {
             }
             buffer[dst_index + 0] = this.heatmap_data[src_index];
             buffer[dst_index + 1] = 0;
-            buffer[dst_index + 2] = 255 - this.heatmap_data[src_index];
+            buffer[dst_index + 2] = 0;
             buffer[dst_index + 3] = alpha;
         }
 
