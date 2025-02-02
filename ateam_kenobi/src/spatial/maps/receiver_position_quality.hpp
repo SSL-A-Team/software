@@ -39,10 +39,11 @@ public:
     const auto & goal_sight = layers.at("LineOfSightTheirGoal");
     const auto & ball_sight = layers.at("LineOfSightBall");
     const auto & def_area_keepout = layers.at("TheirDefenseAreaKeepout");
-    if(goal_sight.empty() || ball_sight.empty() || def_area_keepout.empty()) {
+    const auto & in_field = layers.at("InField");
+    if(goal_sight.empty() || ball_sight.empty() || def_area_keepout.empty() || in_field.empty()) {
       return;
     }
-    cv::Mat mask = goal_sight & ball_sight & def_area_keepout;
+    cv::Mat mask = goal_sight & ball_sight & def_area_keepout & in_field;
     cv::Mat scores;
     if(play_helpers::getVisibleRobots(world.their_robots).empty()) {
       scores = layers.at("DistanceDownField");

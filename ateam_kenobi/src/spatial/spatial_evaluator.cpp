@@ -23,6 +23,7 @@
 #include "layers/distance_down_field.hpp"
 #include "layers/distance_from_field_edge.hpp"
 #include "layers/distance_from_their_bots.hpp"
+#include "layers/in_field.hpp"
 #include "layers/line_of_sight_ball.hpp"
 #include "layers/line_of_sight_their_goal.hpp"
 #include "layers/their_defense_area_keepout.hpp"
@@ -38,6 +39,7 @@ SpatialEvaluator::SpatialEvaluator()
     std::make_shared<layers::DistanceDownField>(),
     std::make_shared<layers::DistanceFromFieldEdge>(),
     std::make_shared<layers::DistanceFromTheirBots>(),
+    std::make_shared<layers::InField>(),
     std::make_shared<layers::LineOfSightBall>(),
     std::make_shared<layers::LineOfSightTheirGoal>(),
     std::make_shared<layers::TheirDefenseAreaKeepout>()
