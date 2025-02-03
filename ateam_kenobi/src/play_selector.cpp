@@ -214,6 +214,8 @@ void PlaySelector::resetPlayIfNeeded(stp::Play * play)
       play->reset();
     }
     prev_play_address_ = play_address;
+  } else if (play->getCompletionState() == stp::PlayCompletionState::Done) {
+    play->reset();
   }
 }
 

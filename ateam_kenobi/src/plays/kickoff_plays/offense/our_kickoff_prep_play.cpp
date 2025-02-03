@@ -62,6 +62,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPre
   // TODO(barulicm): revert hacky fix for 2025 quals / replace with smarter fix (see git logs)
   if (available_robots.size() >= 2) {
     move_to_targets.push_back(ateam_geometry::Point(-0.3, world.field.field_width / 3));
+  }
+  if (available_robots.size() >= 3) {
     move_to_targets.push_back(ateam_geometry::Point(-0.3, -world.field.field_width / 3));
   }
 

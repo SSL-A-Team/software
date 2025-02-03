@@ -72,8 +72,14 @@ public:
     capture_.SetUseDefaultObstacles(use_obstacles);
   }
 
-  void SetCaptureSpeed(double speed) {
+  void SetCaptureSpeed(double speed)
+  {
     capture_.SetCaptureSpeed(speed);
+  }
+
+  void SetPivotSpeed(double speed)
+  {
+    pivot_speed_ = speed;
   }
 
 private:
@@ -82,6 +88,7 @@ private:
   play_helpers::EasyMoveTo easy_move_to_;
   skills::Capture capture_;
   bool done_ = false;
+  double pivot_speed_ = 2.5;  // rad/s
 
   enum class State
   {

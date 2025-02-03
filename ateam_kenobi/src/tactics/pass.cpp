@@ -30,6 +30,7 @@ Pass::Pass(stp::Options stp_options)
   receiver_(createChild<skills::PassReceiver>("receiver")),
   kick_(createChild<skills::PivotKick>("kicker", skills::KickSkill::WaitType::WaitToKick))
 {
+  kick_.SetPivotSpeed(1.75);
 }
 
 void Pass::reset()

@@ -102,10 +102,20 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffPassPl
   play_helpers::removeGoalie(current_available_robots, world);
 
   if (!pass_direction_chosen_) {
-    static std::default_random_engine rand_eng(std::random_device{}());
-    std::uniform_int_distribution<int> distribution(0, 1);
-    pass_left_ = distribution(rand_eng);
-    pass_direction_chosen_ = true;
+    if(current_available_robots.size() >= 3) {
+      static std::default_random_engine rand_eng(std::random_device{}());
+      std::uniform_int_distribution<int> distribution(0, 1);
+      pass_left_ = distribution(rand_eng);
+      pass_direction_chosen_ = true;
+    } else {
+      // pass in whatever direction the robot's are already biased towards
+      double avg_y = 0.0;
+      for(const auto & bot : current_available_robots) {
+        avg_y += bot.pos.y() / current_available_robots.size();
+      }
+      pass_left_ = avg_y > 0.0;
+      pass_direction_chosen_ = true;
+    }
   }
 
   multi_move_to_.SetTargetPoints(
