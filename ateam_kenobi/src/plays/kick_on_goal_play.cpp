@@ -39,6 +39,11 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
 
 stp::PlayScore KickOnGoalPlay::getScore(const World & world)
 {
+  //TODO(barulicm): this logic needs TLC
+  if( !world.in_play) {
+    return stp::PlayScore::NaN();
+  }
+
   if (world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
     world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)

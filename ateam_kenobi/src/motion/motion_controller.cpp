@@ -135,7 +135,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     auto vel_vector = ateam_geometry::Vector(x_command, y_command);
 
     // clamp to max/min velocity
-    double min_vel = 0.3;
+    double min_vel = 0.35;
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
     } 
