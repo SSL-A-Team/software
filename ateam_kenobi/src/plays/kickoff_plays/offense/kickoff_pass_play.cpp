@@ -66,6 +66,8 @@ stp::PlayScore KickoffPassPlay::getScore(const World & world)
         // arbitrary value to compare against KickoffOnGoalPlay
         score = 75.0;
       }
+    } else {
+      score = stp::PlayScore::NaN();
     }
   } else {
     score = stp::PlayScore::NaN();
