@@ -33,7 +33,7 @@ def generate_launch_description():
         DeclareLaunchArgument('start_gc', default_value='True'),
         DeclareLaunchArgument('start_ui', default_value='True'),
         DeclareLaunchArgument('headless_sim', default_value='True'),
-        DeclareLaunchArgument('sim_radio_ip', default_value='127.0.0.1'),
+        DeclareLaunchArgument('sim_radio_ip', default_value='172.16.1.158'),
         DeclareLaunchArgument('team_name', default_value='A-Team'),
 
         IncludeLaunchDescription(
@@ -58,9 +58,9 @@ def generate_launch_description():
                 PackageLaunchFileSubstitution('ateam_bringup',
                                               'league_bridges.launch.xml')),
             launch_arguments={
-                'gc_net_interface_address': '172.17.0.1',
-                'gc_ip_address': '172.17.0.2',
-                'vision_net_interface_address': '127.0.0.1',
+                'gc_net_interface_address': '172.16.1.7 ',
+                'gc_ip_address': '172.16.1.158',
+                'vision_net_interface_address': '172.16.1.7 ',
                 'vision_port': '10020',
                 'team_name': LaunchConfiguration('team_name')
             }.items()
