@@ -94,5 +94,12 @@ def generate_launch_description():
                 ('~/robot_feedback/motion/robot', '/robot_feedback/motion/robot')
             ]),
             # prefix=['xterm -bg black -fg white -e gdb -ex run --args']
+        ),
+
+        IncludeLaunchDescription(
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution('ateam_joystick_control',
+                                              'joystick_controller.launch.xml')
+            )
         )
     ])
