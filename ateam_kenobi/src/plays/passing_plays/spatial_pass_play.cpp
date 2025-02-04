@@ -25,6 +25,7 @@
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
 #include "play_helpers/window_evaluation.hpp"
+#include "play_helpers/possession.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -33,11 +34,18 @@ SpatialPassPlay::SpatialPassPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   defense_tactic_(createChild<tactics::StandardDefense>("defense")),
   pass_tactic_(createChild<tactics::Pass>("pass")),
-  idler_skill_(createChild<skills::LaneIdler>("idler")) {}
+  idler_skill_(createChild<skills::LaneIdler>("idler"))
+{
+  getParamInterface().declareParameter("show_heatmap", false);
+}
 
 
 stp::PlayScore SpatialPassPlay::getScore(const World & world)
 {
+  if(play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
+    return stp::PlayScore::Min();
+  }
+
   const auto pass_target = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"],
       world.field);
   const auto their_robots = play_helpers::getVisibleRobots(world.their_robots);
@@ -90,8 +98,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     ateam_geometry::Point{-half_field_length, -half_field_width},
     ateam_geometry::Point{half_field_length, half_field_width}
   };
-  getOverlays().drawHeatmap("heatmap", bounds, world.spatial_maps["ReceiverPositionQuality"].data,
-      world.spatial_maps["ReceiverPositionQuality"].data, 200);
+
+  if(getParamInterface().getParameter<bool>("show_heatmap")) {
+    getOverlays().drawHeatmap("heatmap", bounds, world.spatial_maps["ReceiverPositionQuality"].data,
+        world.spatial_maps["ReceiverPositionQuality"].data, 200);
+  }
 
   pass_tactic_.setTarget(target_);
 
@@ -119,11 +130,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
 
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  // if (enough_bots_for_defense) {
-  //   defense_tactic_.runFrame(
-  //     world, assignments.GetGroupFilledAssignments("defense"),
-  //     motion_commands);
-  // }
+  if (enough_bots_for_defense) {
+    defense_tactic_.runFrame(
+      world, assignments.GetGroupFilledAssignments("defense"),
+      motion_commands);
+  }
 
   const auto maybe_kicker = assignments.GetPositionAssignment("kicker");
   const auto maybe_receiver = assignments.GetPositionAssignment("receiver");
@@ -153,12 +164,12 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   }
   getPlayInfo()["play state"] = play_state;
 
-  // if (enough_bots_for_idler) {
-  //   assignments.RunPositionIfAssigned(
-  //     "idler", [this, &world, &motion_commands](const Robot & robot) {
-  //       motion_commands[robot.id] = idler_skill_.RunFrame(world, robot);
-  //     });
-  // }
+  if (enough_bots_for_idler) {
+    assignments.RunPositionIfAssigned(
+      "idler", [this, &world, &motion_commands](const Robot & robot) {
+        motion_commands[robot.id] = idler_skill_.RunFrame(world, robot);
+      });
+  }
 
   return motion_commands;
 }

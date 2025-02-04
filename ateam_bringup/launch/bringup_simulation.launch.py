@@ -33,7 +33,7 @@ def generate_launch_description():
         DeclareLaunchArgument('start_gc', default_value='True'),
         DeclareLaunchArgument('start_ui', default_value='True'),
         DeclareLaunchArgument('headless_sim', default_value='True'),
-        DeclareLaunchArgument('sim_radio_ip', default_value='172.16.1.158'),
+        DeclareLaunchArgument('sim_radio_ip', default_value='127.0.0.1'),
         DeclareLaunchArgument('team_name', default_value='A-Team'),
 
         IncludeLaunchDescription(

@@ -34,6 +34,7 @@ ExtractPlay::ExtractPlay(stp::Options stp_options)
   lane_idler_a_(createChild<skills::LaneIdler>("lane_idler_a")),
   lane_idler_b_(createChild<skills::LaneIdler>("lane_idler_b"))
 {
+  setEnabled(false);
 }
 
 stp::PlayScore ExtractPlay::getScore(const World & world)

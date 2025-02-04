@@ -62,7 +62,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
 
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
-  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.05) {
+  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.1) {
     if (prev_state_ != State::Pivot) {
       easy_move_to_.reset();
       prev_state_ = State::Pivot;
@@ -94,13 +94,18 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 {
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
-  const bool positive_angle =
-    angles::shortest_angular_distance(robot.theta, robot_to_target_angle) >= 0;
+
+  const auto angle_error = angles::shortest_angular_distance(robot.theta, robot_to_target_angle);
 
   ateam_msgs::msg::RobotMotionCommand command;
-  command.twist.angular.z = pivot_speed_;
-  if (!positive_angle) {
-    command.twist.angular.z *= -1;
+
+  const auto k_p = 1.0;
+
+  command.twist.angular.z = std::min(k_p * angle_error, pivot_speed_);
+
+  const auto min_angular_vel = 0.6;
+  if(std::abs(command.twist.angular.z) < min_angular_vel) {
+    command.twist.angular.z = std::copysign(min_angular_vel, command.twist.angular.z);
   }
 
   /* rotate in a circle with diameter 0.0427 + 0.18 = 0.2227 (This might be tunable to use 8cm for
