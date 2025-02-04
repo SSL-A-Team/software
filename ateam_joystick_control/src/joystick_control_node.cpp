@@ -25,6 +25,7 @@
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/msg/joystick_control_status.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 
 namespace ateam_joystick_control
@@ -36,6 +37,9 @@ public:
   explicit JoystickControlNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("joystick_control_node", options)
   {
+    status_publisher_ =
+      create_publisher<ateam_msgs::msg::JoystickControlStatus>(std::string(
+        Topics::kJoystickControlStatus), rclcpp::QoS(1).transient_local());
     joy_subscription_ = create_subscription<sensor_msgs::msg::Joy>(
       std::string(Topics::kJoystick), rclcpp::QoS{1}, std::bind(
         &JoystickControlNode::JoyCallback, this,
@@ -75,7 +79,7 @@ public:
 
     declare_parameter<double>("kick_speed", 5.0);
 
-    CreatePublisher(declare_parameter<int>("robot_id", 0));
+    CreatePublisher(declare_parameter<int>("robot_id", -1));
     parameter_callback_handle_ =
       add_on_set_parameters_callback(
       std::bind(
@@ -90,6 +94,7 @@ private:
   float dribbler_speed_ = 0.0f;
   sensor_msgs::msg::Joy prev_joy_msg_;
   rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr control_publisher_;
+  rclcpp::Publisher<ateam_msgs::msg::JoystickControlStatus>::SharedPtr status_publisher_;
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscription_;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
 
@@ -103,8 +108,11 @@ private:
 
   void CreatePublisher(const int robot_id)
   {
+    ateam_msgs::msg::JoystickControlStatus status_msg;
     if (robot_id == -1) {
       control_publisher_.reset();
+      status_msg.is_active = false;
+      status_msg.active_id = -1;
     } else {
       std::string topic = command_topic_template_;
       const auto placeholder_pos = topic.find("{}");
@@ -113,7 +121,10 @@ private:
       }
       control_publisher_ =
         create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic, rclcpp::QoS{1});
+      status_msg.is_active = true;
+      status_msg.active_id = robot_id;
     }
+    status_publisher_->publish(status_msg);
   }
 
   void JoyCallback(const sensor_msgs::msg::Joy::SharedPtr joy_message)

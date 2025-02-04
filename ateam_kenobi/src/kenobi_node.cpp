@@ -51,6 +51,7 @@
 #include "plays/halt_play.hpp"
 #include "defense_area_enforcement.hpp"
 #include "spatial/spatial_evaluator.hpp"
+#include "joystick_enforcer.hpp"
 
 namespace ateam_kenobi
 {
@@ -65,6 +66,7 @@ public:
   explicit KenobiNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("kenobi_node", options),
     play_selector_(*this),
+    joystick_enforcer_(*this),
     game_controller_listener_(*this)
   {
     initialize_robot_ids();
@@ -145,6 +147,7 @@ private:
   DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
   spatial::SpatialEvaluator spatial_evaluator_;
+  JoystickEnforcer joystick_enforcer_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
@@ -374,6 +377,8 @@ private:
     auto motion_commands = runPlayFrame(world_);
 
     defense_area_enforcement::EnforceDefenseAreaKeepout(world_, motion_commands);
+
+    joystick_enforcer_.RemoveCommandForJoystickBot(motion_commands);
 
     if (!get_parameter("use_world_velocities").as_bool()) {
       motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);

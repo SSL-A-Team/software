@@ -91,5 +91,12 @@ def generate_launch_description():
                 'ssl_sim_radio_ip': LaunchConfiguration('sim_radio_ip'),
                 'gc_team_name': LaunchConfiguration('team_name')
             }]
+        ),
+
+        IncludeLaunchDescription(
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution('ateam_joystick_control',
+                                              'joystick_controller.launch.xml')
+            )
         )
     ])
