@@ -1,0 +1,6 @@
+<launch>
+  <arg name="simulatorcli_path" default="$(env SIMULATORCLI_PATH simulator-cli)" />
+  <arg name="geom_config" default="2023B" />
+  <arg name="realism_config" default="None" />
+  <executable cmd="$(var simulatorcli_path) -g $(var geom_config) --realism $(var realism_config)" output="screen" respawn="true"/>
+</launch>
