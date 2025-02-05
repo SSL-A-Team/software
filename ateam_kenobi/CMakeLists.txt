@@ -16,30 +16,33 @@ find_package(ateam_geometry REQUIRED)
 find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
+find_package(OpenCV REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/defense_area_enforcement.cpp
   src/in_play_eval.cpp
+  src/joystick_enforcer.cpp
   src/kenobi_node.cpp
   src/play_selector.cpp
   src/path_planning/obstacles.cpp
   src/path_planning/path_planner.cpp
+  src/plays/kickoff_plays/defense/their_kickoff_play.cpp
+  src/plays/kickoff_plays/offense/kickoff_on_goal.cpp
+  src/plays/kickoff_plays/offense/kickoff_pass_play.cpp
+  src/plays/kickoff_plays/offense/our_kickoff_prep_play.cpp
   src/plays/passing_plays/pass_to_lane_play.cpp
   src/plays/passing_plays/pass_to_segment_play.cpp
+  src/plays/passing_plays/spatial_pass_play.cpp
   src/plays/test_play.cpp
   src/plays/halt_play.cpp
   src/plays/kick_on_goal_play.cpp
-  src/plays/kickoff_on_goal.cpp
   src/plays/stop_play.cpp
   src/plays/our_ball_placement_play.cpp
   src/plays/their_ball_placement_play.cpp
-  src/plays/our_kickoff_play.cpp
-  src/plays/our_kickoff_prep_play.cpp
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
   src/plays/our_penalty_play.cpp
   src/plays/their_free_kick_play.cpp
-  src/plays/their_kickoff_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/controls_test_play.cpp
   src/plays/defense_play.cpp
@@ -66,6 +69,9 @@ add_library(kenobi_node_component SHARED
   src/skills/dribble.cpp
   src/skills/extract.cpp
   src/skills/capture.cpp
+  src/spatial/spatial_evaluator.cpp
+  src/spatial/spatial_inspection.cpp
+  src/spatial/layers/robot_shadows.cpp
   src/tactics/blockers.cpp
   src/tactics/defenders.cpp
   src/tactics/multi_move_to.cpp
@@ -90,6 +96,7 @@ ament_target_dependencies(
   "control_toolbox"
   "OMPL"
   "angles"
+  OpenCV
 )
 rclcpp_components_register_node(
   kenobi_node_component

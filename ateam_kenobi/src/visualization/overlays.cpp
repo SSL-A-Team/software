@@ -21,6 +21,7 @@
 
 #include "overlays.hpp"
 #include <memory>
+#include <opencv2/opencv.hpp>
 
 namespace ateam_kenobi::visualization
 {
@@ -201,6 +202,102 @@ void Overlays::drawArc(
   msg.stroke_width = stroke_width;
   msg.lifetime = lifetime;
   msg.depth = 1;
+  addOverlay(msg);
+}
+
+void Overlays::drawHeatmap(
+  const std::string & name, const ateam_geometry::Rectangle & bounds,
+  const cv::Mat & data, const uint8_t alpha, const uint32_t lifetime)
+{
+  ateam_msgs::msg::Overlay msg;
+  msg.ns = ns_;
+  msg.name = name;
+  msg.visible = true;
+  msg.type = ateam_msgs::msg::Overlay::HEATMAP;
+  msg.command = ateam_msgs::msg::Overlay::REPLACE;
+  msg.lifetime = lifetime;
+  msg.position.x = std::midpoint(bounds.xmin(), bounds.xmax());
+  msg.position.y = std::midpoint(bounds.ymin(), bounds.ymax());
+  msg.scale.x = bounds.xmax() - bounds.xmin();
+  msg.scale.y = bounds.ymax() - bounds.ymin();
+  msg.heatmap_resolution_width = data.cols;
+  msg.heatmap_resolution_height = data.rows;
+  msg.heatmap_alpha = {alpha};
+  msg.heatmap_data.reserve(data.rows * data.cols);
+  if(!data.empty()) {
+    switch(data.type()) {
+      case CV_8UC1:
+        std::copy(data.begin<uint8_t>(), data.end<uint8_t>(), std::back_inserter(msg.heatmap_data));
+        break;
+      case CV_32FC1:
+        {
+          cv::Mat byte_data{data.rows, data.cols, CV_8UC1};
+          cv::normalize(data, byte_data, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+          std::copy(byte_data.begin<uint8_t>(), byte_data.end<uint8_t>(),
+            std::back_inserter(msg.heatmap_data));
+          break;
+        }
+      default:
+        throw std::runtime_error("Unsupported heatmap data type: " + std::to_string(data.type()));
+    }
+  }
+  addOverlay(msg);
+}
+
+void Overlays::drawHeatmap(
+  const std::string & name, const ateam_geometry::Rectangle & bounds,
+  const cv::Mat & data, const cv::Mat & alpha, const uint32_t lifetime)
+{
+  ateam_msgs::msg::Overlay msg;
+  msg.ns = ns_;
+  msg.name = name;
+  msg.visible = true;
+  msg.type = ateam_msgs::msg::Overlay::HEATMAP;
+  msg.command = ateam_msgs::msg::Overlay::REPLACE;
+  msg.lifetime = lifetime;
+  msg.position.x = std::midpoint(bounds.xmin(), bounds.xmax());
+  msg.position.y = std::midpoint(bounds.ymin(), bounds.ymax());
+  msg.scale.x = bounds.xmax() - bounds.xmin();
+  msg.scale.y = bounds.ymax() - bounds.ymin();
+  msg.heatmap_resolution_width = data.cols;
+  msg.heatmap_resolution_height = data.rows;
+  msg.heatmap_alpha.reserve(alpha.rows * alpha.cols);
+  if(!alpha.empty()) {
+    switch(alpha.type()) {
+      case CV_8UC1:
+        std::copy(alpha.begin<uint8_t>(), alpha.end<uint8_t>(),
+          std::back_inserter(msg.heatmap_alpha));
+        break;
+      case CV_32FC1:
+        {
+          cv::Mat byte_alpha{alpha.rows, alpha.cols, CV_8UC1};
+          cv::normalize(alpha, byte_alpha, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+          std::copy(byte_alpha.begin<uint8_t>(), byte_alpha.end<uint8_t>(),
+            std::back_inserter(msg.heatmap_alpha));
+          break;
+        }
+      default:
+        throw std::runtime_error("Unsupported heatmap alpha type: " + std::to_string(data.type()));
+    }
+  }
+  msg.heatmap_data.reserve(data.rows * data.cols);
+  if(!data.empty()) {
+    switch(data.type()) {
+      case CV_8UC1:
+        std::copy(data.begin<uint8_t>(), data.end<uint8_t>(), std::back_inserter(msg.heatmap_data));
+        break;
+      case CV_32FC1:
+        {
+          cv::Mat byte_data{data.rows, data.cols, CV_8UC1};
+          cv::normalize(data, byte_data, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+          std::copy(byte_data.begin<uint8_t>(), byte_data.end<uint8_t>(),
+            std::back_inserter(msg.heatmap_data));
+          break;
+        }
+      default:
+        throw std::runtime_error("Unsupported heatmap data type: " + std::to_string(data.type()));
+    }
+  }
   addOverlay(msg);
 }
 

@@ -7,7 +7,7 @@ uint8 RECTANGLE=2
 uint8 ELLIPSE=3
 uint8 POLYGON=4
 uint8 TEXT=5
-uint8 MESH=6
+uint8 HEATMAP=6
 uint8 CUSTOM=7
 uint8 ARC=8
 
@@ -51,9 +51,14 @@ uint32 lifetime 0
 # List of points for the LINE and POLYGON types (relative to the center position point)
 geometry_msgs/Point[] points
 
-# when using the MESH type specify the boundaries of the mesh as a rectangle using the position and scale values
-ateam_msgs/Mesh1d[] mesh
-ateam_msgs/Mesh1d[] mesh_alpha
+# when using the HEATMAP type specify the boundaries of the mesh as a rectangle using the position and scale values
+uint8[] heatmap_data
+uint32 heatmap_resolution_width
+uint32 heatmap_resolution_height
+# if heatmap_alpha is empty, the heatmap will have full opacity
+# if heatmap_alpha has one element, that alpha value will be used for the whole heatmap
+# otherwise heatmap_alpha should match heatmap_data's size
+uint8[] heatmap_alpha
 
 # When using the TEXT type place the text here, when using the CUSTOM type put arbitrary javascript in this variable
 string text

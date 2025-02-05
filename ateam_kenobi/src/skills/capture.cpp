@@ -57,7 +57,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const
 
 void Capture::chooseState(const World & world, const Robot & robot)
 {
-  if (ateam_geometry::norm(world.ball.pos - robot.pos) < 1.0) {
+  if (ateam_geometry::norm(world.ball.pos - robot.pos) < 0.6) {
     state_ = State::Capture;
   } else {
     state_ = State::MoveToBall;
@@ -104,8 +104,12 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
    */
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.avoid_ball = false;
-  planner_options.draw_obstacles = true;
+  // planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
+
+  MotionOptions motion_options;
+  motion_options.completion_threshold = 0;
+  easy_move_to_.setMotionOptions(motion_options);
 
   easy_move_to_.setMaxVelocity(capture_speed_);
   easy_move_to_.face_point(world.ball.pos);

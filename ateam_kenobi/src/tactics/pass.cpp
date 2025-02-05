@@ -30,6 +30,7 @@ Pass::Pass(stp::Options stp_options)
   receiver_(createChild<skills::PassReceiver>("receiver")),
   kick_(createChild<skills::PivotKick>("kicker", skills::KickSkill::WaitType::WaitToKick))
 {
+  kick_.SetPivotSpeed(1.75);
 }
 
 void Pass::reset()
@@ -70,7 +71,7 @@ void Pass::runFrame(
     world.ball.vel) < 0.02;
 
   const bool is_in_receiver_territory =
-    std::sqrt(CGAL::squared_distance(world.ball.pos, receiver_bot.pos)) < 1.0;
+    std::sqrt(CGAL::squared_distance(world.ball.pos, receiver_bot.pos)) < 0.25;
 
   if (is_stalled && !is_in_receiver_territory) {
     kick_.Reset();

@@ -6,9 +6,10 @@
         <v-main>
             <v-container fluid class="d-inline-flex justify-space-between">
             <v-row class="flex-nowrap">
-                <v-col v-if="!this.state.comp" class="flex-grow-0 flex-shrink-0">
-                    <RefButtonsComponent/>
+                <v-col class="flex-grow-0 flex-shrink-0">
+                    <GoaliePickerComponent/>
                     <FieldSideComponent/>
+                    <RefButtonsComponent v-if="!this.state.comp" />
                 </v-col>
                 <v-col class="flex-grow-0 flex-shrink-0">
                     <StatusComponent ref="robotStatus"/>
@@ -57,6 +58,7 @@ import { provide } from 'vue'
 import { defineComponent, toRaw } from 'vue'
 
 import { AppState } from '@/state'
+import GoaliePickerComponent from './components/GoaliePickerComponent.vue'
 
 
 export default {
@@ -109,7 +111,8 @@ export default {
         GameStatusComponent,
         AIComponent,
         PlaybookComponent,
-        FieldSideComponent
+        FieldSideComponent,
+        GoaliePickerComponent
     }
 }
 </script>

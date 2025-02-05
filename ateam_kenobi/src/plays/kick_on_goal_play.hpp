@@ -23,7 +23,7 @@
 
 #include "stp/play.hpp"
 #include "tactics/standard_defense.hpp"
-#include "skills/line_kick.hpp"
+#include "skills/pivot_kick.hpp"
 #include "skills/lane_idler.hpp"
 
 namespace ateam_kenobi::plays
@@ -45,7 +45,7 @@ public:
 
 private:
   tactics::StandardDefense defense_;
-  skills::LineKick striker_;
+  skills::PivotKick striker_;
   skills::LaneIdler lane_idler_a_;
   skills::LaneIdler lane_idler_b_;
 };

@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 
-#include "our_kickoff_play.hpp"
+#include "kickoff_pass_play.hpp"
 #include <limits>
 #include <random>
 #include <vector>
@@ -30,7 +30,7 @@
 
 namespace ateam_kenobi::plays
 {
-OurKickoffPlay::OurKickoffPlay(stp::Options stp_options)
+KickoffPassPlay::KickoffPassPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   defense_(createChild<tactics::StandardDefense>("defense")),
   multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_To")),
@@ -39,7 +39,7 @@ OurKickoffPlay::OurKickoffPlay(stp::Options stp_options)
   pass_.setCaptureSpeed(0.3);
 }
 
-stp::PlayScore OurKickoffPlay::getScore(const World & world)
+stp::PlayScore KickoffPassPlay::getScore(const World & world)
 {
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
@@ -66,6 +66,8 @@ stp::PlayScore OurKickoffPlay::getScore(const World & world)
         // arbitrary value to compare against KickoffOnGoalPlay
         score = 75.0;
       }
+    } else {
+      score = stp::PlayScore::NaN();
     }
   } else {
     score = stp::PlayScore::NaN();
@@ -76,7 +78,7 @@ stp::PlayScore OurKickoffPlay::getScore(const World & world)
   return score;
 }
 
-stp::PlayCompletionState OurKickoffPlay::getCompletionState()
+stp::PlayCompletionState KickoffPassPlay::getCompletionState()
 {
   if (pass_.isDone()) {
     return stp::PlayCompletionState::Done;
@@ -84,7 +86,7 @@ stp::PlayCompletionState OurKickoffPlay::getCompletionState()
   return stp::PlayCompletionState::Busy;
 }
 
-void OurKickoffPlay::reset()
+void KickoffPassPlay::reset()
 {
   defense_.reset();
   multi_move_to_.Reset();
@@ -92,7 +94,7 @@ void OurKickoffPlay::reset()
   pass_direction_chosen_ = false;
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPlay::runFrame(
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffPassPlay::runFrame(
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
@@ -100,10 +102,20 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPla
   play_helpers::removeGoalie(current_available_robots, world);
 
   if (!pass_direction_chosen_) {
-    static std::default_random_engine rand_eng(std::random_device{}());
-    std::uniform_int_distribution<int> distribution(0, 1);
-    pass_left_ = distribution(rand_eng);
-    pass_direction_chosen_ = true;
+    if(current_available_robots.size() >= 3) {
+      static std::default_random_engine rand_eng(std::random_device{}());
+      std::uniform_int_distribution<int> distribution(0, 1);
+      pass_left_ = distribution(rand_eng);
+      pass_direction_chosen_ = true;
+    } else {
+      // pass in whatever direction the robot's are already biased towards
+      double avg_y = 0.0;
+      for(const auto & bot : current_available_robots) {
+        avg_y += bot.pos.y() / current_available_robots.size();
+      }
+      pass_left_ = avg_y > 0.0;
+      pass_direction_chosen_ = true;
+    }
   }
 
   multi_move_to_.SetTargetPoints(

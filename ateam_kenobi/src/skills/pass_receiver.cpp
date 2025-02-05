@@ -72,7 +72,7 @@ bool PassReceiver::isBallClose(const World & world, const Robot & robot)
 bool PassReceiver::isBallStalledAndReachable(const World & world, const Robot & robot)
 {
   return ateam_geometry::norm(world.ball.vel) < 0.01 &&
-         std::sqrt(CGAL::squared_distance(world.ball.pos, robot.pos)) < 1.0;
+         std::sqrt(CGAL::squared_distance(world.ball.pos, robot.pos)) < 0.4;
 }
 
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(

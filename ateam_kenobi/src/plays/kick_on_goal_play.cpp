@@ -31,7 +31,7 @@ namespace ateam_kenobi::plays
 KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   defense_(createChild<tactics::StandardDefense>("defense")),
-  striker_(createChild<skills::LineKick>("striker")),
+  striker_(createChild<skills::PivotKick>("striker")),
   lane_idler_a_(createChild<skills::LaneIdler>("lane_idler_a")),
   lane_idler_b_(createChild<skills::LaneIdler>("lane_idler_b"))
 {
@@ -39,6 +39,11 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
 
 stp::PlayScore KickOnGoalPlay::getScore(const World & world)
 {
+  //TODO(barulicm): this logic needs TLC
+  if( !world.in_play) {
+    return stp::PlayScore::NaN();
+  }
+
   if (world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
     world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
