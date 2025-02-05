@@ -61,7 +61,7 @@
                 @change="toggleContinueAutomatically()"/>
         </v-container>
         <v-container class="d-flex flex-column" v-if="!gameControllerCommandsAvailable">
-            <p class="d-flex my-1 justify-space-around">No local GC.</p>
+            <p class="d-flex text-no-wrap my-1 justify-space-around">No local GC.</p>
         </v-container>
 
         <!-- TODO(barulicm) Add a settings modal for chaning GC address / reconnecting. -->
