@@ -89,13 +89,41 @@ geometry_msgs::msg::Twist ConvertFloatArrayToTwist(const float (&fw_state_space_
   return twist;
 }
 
-ateam_msgs::msg::RobotMotorFeedback Convert(const MotorDebugTelemetry & motor_debug_telemetry) {
+ateam_msgs::msg::RobotMotorFeedback Convert(const MotorResponse_Motion_Packet & motor_debug_telemetry) {
   ateam_msgs::msg::RobotMotorFeedback robot_motor_feedback;
 
-  robot_motor_feedback.setpoint = motor_debug_telemetry.wheel_setpoint;
-  robot_motor_feedback.velocity = motor_debug_telemetry.wheel_velocity;
-  robot_motor_feedback.torque = motor_debug_telemetry.wheel_torque;
+  robot_motor_feedback.master_error = motor_debug_telemetry.master_error;
+  robot_motor_feedback.hall_power_error = motor_debug_telemetry.hall_power_error;
+  robot_motor_feedback.hall_disconnected_error = motor_debug_telemetry.hall_disconnected_error;
+  robot_motor_feedback.bldc_transition_error = motor_debug_telemetry.bldc_transition_error;
+  robot_motor_feedback.bldc_commutation_watchdog_error = motor_debug_telemetry.bldc_commutation_watchdog_error;
+  robot_motor_feedback.enc_disconnected_error = motor_debug_telemetry.enc_disconnected_error;
+  robot_motor_feedback.enc_decoding_error = motor_debug_telemetry.enc_decoding_error;
+  robot_motor_feedback.hall_enc_vel_disagreement_error = motor_debug_telemetry.hall_enc_vel_disagreement_error;
+  robot_motor_feedback.overcurrent_error = motor_debug_telemetry.overcurrent_error;
+  robot_motor_feedback.undervoltage_error = motor_debug_telemetry.undervoltage_error;
+  robot_motor_feedback.overvoltage_error = motor_debug_telemetry.overvoltage_error;
+  robot_motor_feedback.torque_limited = motor_debug_telemetry.torque_limited;
+  robot_motor_feedback.control_loop_time_error = motor_debug_telemetry.control_loop_time_error;
+  robot_motor_feedback.reset_watchdog_independent = motor_debug_telemetry.reset_watchdog_independent;
+  robot_motor_feedback.reset_watchdog_window = motor_debug_telemetry.reset_watchdog_window;
+  robot_motor_feedback.reset_low_power = motor_debug_telemetry.reset_low_power;
+  robot_motor_feedback.reset_software = motor_debug_telemetry.reset_software;
+  robot_motor_feedback.reset_pin = motor_debug_telemetry.reset_pin;
 
+  robot_motor_feedback.vel_setpoint = motor_debug_telemetry.vel_setpoint;
+  robot_motor_feedback.vel_setpoint_clamped = motor_debug_telemetry.vel_setpoint_clamped;
+  robot_motor_feedback.encoder_delta = motor_debug_telemetry.encoder_delta;
+  robot_motor_feedback.vel_enc_estimate = motor_debug_telemetry.vel_enc_estimate;
+  robot_motor_feedback.vel_computed_error = motor_debug_telemetry.vel_computed_error;
+  robot_motor_feedback.vel_computed_setpoint = motor_debug_telemetry.vel_computed_setpoint;
+  
+  robot_motor_feedback.torque_setpoint = motor_debug_telemetry.torque_setpoint;
+  robot_motor_feedback.current_estimate = motor_debug_telemetry.current_estimate;
+  robot_motor_feedback.torque_estimate = motor_debug_telemetry.torque_estimate;
+  robot_motor_feedback.torque_computed_error = motor_debug_telemetry.torque_computed_error;
+  robot_motor_feedback.torque_computed_setpoint = motor_debug_telemetry.torque_computed_setpoint;
+  
   return robot_motor_feedback;
 }
 
