@@ -99,9 +99,9 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 
   ateam_msgs::msg::RobotMotionCommand command;
 
-  const auto k_p = 1.0;
+  const auto k_p = 3.0;
 
-  command.twist.angular.z = std::min(k_p * angle_error, pivot_speed_);
+  command.twist.angular.z = std::clamp(k_p * angle_error, -pivot_speed_, pivot_speed_);
 
   const auto min_angular_vel = 0.6;
   if(std::abs(command.twist.angular.z) < min_angular_vel) {
