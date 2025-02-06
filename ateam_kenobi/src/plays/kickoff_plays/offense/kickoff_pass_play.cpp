@@ -41,6 +41,10 @@ KickoffPassPlay::KickoffPassPlay(stp::Options stp_options)
 
 stp::PlayScore KickoffPassPlay::getScore(const World & world)
 {
+  if (world.in_play) {
+    return stp::PlayScore::NaN();
+  }
+
   const auto & cmd = world.referee_info.running_command;
   const auto & prev = world.referee_info.prev_command;
 
