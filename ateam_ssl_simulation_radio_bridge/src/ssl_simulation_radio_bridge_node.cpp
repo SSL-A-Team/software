@@ -177,14 +177,16 @@ public:
       // ignore empty feedback packets
       return;
     }
+
     RobotControlResponse feedback_proto;
-    if (!feedback_proto.ParseFromArray(buffer, bytes_received - 1)) {
-      for (const auto & single_feedback : feedback_proto.feedback()) {
-        int robot_id = single_feedback.id();
-        feedback_publishers_.at(robot_id)->publish(message_conversions::fromProto(single_feedback));
-      }
-    } else {
+    if (!feedback_proto.ParseFromArray(buffer, bytes_received)) {
       RCLCPP_WARN(get_logger(), "Failed to parse robot feedback protobuf packet");
+      return;
+    }
+
+    for (const auto & single_feedback : feedback_proto.feedback()) {
+      int robot_id = single_feedback.id();
+      feedback_publishers_.at(robot_id)->publish(message_conversions::fromProto(single_feedback));
     }
   }
 
