@@ -40,7 +40,7 @@ public:
     pivot_kick_skill_(createChild<skills::PivotKick>("pivot_kick")),
     line_kick_skill_(createChild<skills::LineKick>("line_kick"))
   {
-    getParamInterface().declareParameter(kUsePivotKickParam, false);
+    getParamInterface().declareParameter(kUsePivotKickParam, true);
   }
 
   void reset() override
