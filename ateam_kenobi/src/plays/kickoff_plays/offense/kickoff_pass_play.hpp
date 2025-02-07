@@ -39,7 +39,9 @@ public:
 
   stp::PlayCompletionState getCompletionState() override;
 
-  void reset() override;
+  void enter() override;
+
+  void exit() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override;
@@ -51,6 +53,7 @@ private:
   tactics::MultiMoveTo multi_move_to_;
   tactics::Pass pass_;
   ateam_common::GameCommand prev_frame_game_command_;
+  bool kickoff_is_over_ = false;
 
   bool pass_direction_chosen_ = false;
 

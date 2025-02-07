@@ -74,7 +74,24 @@ public:
     return PlayCompletionState::NotApplicable;
   }
 
-  virtual void reset() = 0;
+  /**
+   * @deprecated Use @c enter and @c exit instead.
+   */
+  virtual void reset() {}
+
+  /**
+   * @brief Called before a play is run when the previous frame was running a different frame.
+   * 
+   * Also called if a play is being chosen again after reporting itself done in @c getCompletionState.
+   */
+  virtual void enter() {}
+
+  /**
+   * @brief Called when a new play is being run and this play was running in the previous frame.
+   * 
+   * Also called if a play is being chosen again after reporting itself done in @c getCompletionState.
+   */
+  virtual void exit() {}
 
   virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
     const World & world) = 0;

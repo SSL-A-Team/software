@@ -41,12 +41,21 @@ KickoffPassPlay::KickoffPassPlay(stp::Options stp_options)
 
 stp::PlayScore KickoffPassPlay::getScore(const World & world)
 {
-  if (world.in_play) {
+  const auto & cmd = world.referee_info.running_command;
+  const auto & prev = world.referee_info.prev_command;
+
+  if (cmd == ateam_common::GameCommand::PrepareKickoffOurs) {
+    kickoff_is_over_ = false;
+  }
+
+  if(kickoff_is_over_) {
     return stp::PlayScore::NaN();
   }
 
-  const auto & cmd = world.referee_info.running_command;
-  const auto & prev = world.referee_info.prev_command;
+  if(pass_.isDone()) {
+    kickoff_is_over_ = true;
+    return stp::PlayScore::NaN();
+  }
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
@@ -90,12 +99,17 @@ stp::PlayCompletionState KickoffPassPlay::getCompletionState()
   return stp::PlayCompletionState::Busy;
 }
 
-void KickoffPassPlay::reset()
+void KickoffPassPlay::enter()
 {
   defense_.reset();
   multi_move_to_.Reset();
   pass_.reset();
   pass_direction_chosen_ = false;
+}
+
+void KickoffPassPlay::exit()
+{
+  kickoff_is_over_ = true;
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffPassPlay::runFrame(
