@@ -21,6 +21,13 @@
 #ifndef TEST_PLAYS__ALL_TEST_PLAYS_HPP_
 #define TEST_PLAYS__ALL_TEST_PLAYS_HPP_
 
+#include "controls_test_play.hpp"
+#include "spinning_a_play.hpp"
+#include "test_kick_play.hpp"
+#include "test_play.hpp"
 #include "test_spatial_map_play.hpp"
+#include "test_window_eval.hpp"
+#include "triangle_pass_play.hpp"
+#include "waypoints_play.hpp"
 
 #endif  // TEST_PLAYS__ALL_TEST_PLAYS_HPP_

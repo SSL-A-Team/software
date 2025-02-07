@@ -33,7 +33,11 @@ add_library(kenobi_node_component SHARED
   src/plays/passing_plays/pass_to_lane_play.cpp
   src/plays/passing_plays/pass_to_segment_play.cpp
   src/plays/passing_plays/spatial_pass_play.cpp
-  src/plays/test_play.cpp
+  src/plays/test_plays/controls_test_play.cpp
+  src/plays/test_plays/spinning_a_play.cpp
+  src/plays/test_plays/test_play.cpp
+  src/plays/test_plays/triangle_pass_play.cpp
+  src/plays/test_plays/waypoints_play.cpp
   src/plays/halt_play.cpp
   src/plays/kick_on_goal_play.cpp
   src/plays/stop_play.cpp
@@ -44,12 +48,8 @@ add_library(kenobi_node_component SHARED
   src/plays/our_penalty_play.cpp
   src/plays/their_free_kick_play.cpp
   src/plays/their_penalty_play.cpp
-  src/plays/controls_test_play.cpp
   src/plays/defense_play.cpp
   src/plays/extract_play.cpp
-  src/plays/triangle_pass_play.cpp
-  src/plays/waypoints_play.cpp
-  src/plays/spinning_a_play.cpp
   src/types/message_conversions.cpp
   src/motion/motion_controller.cpp
   src/visualization/overlays.cpp
