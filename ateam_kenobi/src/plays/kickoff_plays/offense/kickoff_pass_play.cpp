@@ -180,11 +180,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffPassPl
     pass_.runFrame(world, kicker, receiver, kicker_command, receiver_command);
   }
 
-  if (enough_bots_for_defense) {
-    defense_.runFrame(
-      world, assignments.GetGroupFilledAssignments("defenders"),
+  defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defenders"),
       maybe_motion_commands);
-  }
 
   if (enough_bots_for_supports) {
     multi_move_to_.RunFrame(

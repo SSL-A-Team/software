@@ -150,11 +150,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
 
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  if (enough_bots_for_defense) {
-    defense_tactic_.runFrame(
-      world, assignments.GetGroupFilledAssignments("defense"),
+  defense_tactic_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
       motion_commands);
-  }
 
   const auto maybe_kicker = assignments.GetPositionAssignment("kicker");
   const auto maybe_receiver = assignments.GetPositionAssignment("receiver");

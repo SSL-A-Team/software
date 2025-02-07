@@ -78,9 +78,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPre
   }
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  if (enough_bots_for_defense) {
-    defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
-  }
+  defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
+      motion_commands);
   multi_move_to_.RunFrame(world, assignments.GetGroupAssignments("movers"), motion_commands);
 
   return motion_commands;

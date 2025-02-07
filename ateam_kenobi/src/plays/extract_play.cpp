@@ -92,9 +92,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ExtractPlay::
 
   auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  if (enough_bots_for_defense) {
-    defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
-  }
+  defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"), motion_commands);
 
   assignments.RunPositionIfAssigned(
     "extract", [this, &world, &motion_commands](const Robot & robot) {
