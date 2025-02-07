@@ -46,8 +46,15 @@ stp::PlayScore SpatialPassPlay::getScore(const World & world)
     return stp::PlayScore::Min();
   }
 
-  const auto pass_target = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"],
-      world.field);
+  ateam_geometry::Point pass_target;
+
+  if(started_) {
+    pass_target = target_;
+  } else {
+    pass_target = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"],
+        world.field);
+  }
+
   const auto their_robots = play_helpers::getVisibleRobots(world.their_robots);
   const ateam_geometry::Segment goal_segment(
     ateam_geometry::Point(world.field.field_length / 2.0, -world.field.goal_width),
@@ -133,6 +140,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   if (enough_bots_for_defense) {
     defense_tactic_.runFrame(
       world, assignments.GetGroupFilledAssignments("defense"),
+      motion_commands);
+  } else {
+    // Run without defenders to run goalie
+    defense_tactic_.runFrame(
+      world, {},
       motion_commands);
   }
 
