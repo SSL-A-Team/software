@@ -50,4 +50,23 @@ ateam_geometry::Point GetMaxPosition(
   return ateam_geometry::Point{max_loc_world.x, max_loc_world.y};
 }
 
+double GetValueAtLocation(
+  const SpatialMap & map, const ateam_geometry::Point & location,
+  const Field & field)
+{
+  const auto layer_point = WorldToLayer(location, field);
+  switch(map.data.type()) {
+    case CV_8U:
+      return map.data.at<uint8_t>(layer_point);
+    case CV_16U:
+      return map.data.at<uint16_t>(layer_point);
+    case CV_32F:
+      return map.data.at<float>(layer_point);
+    case CV_64F:
+      return map.data.at<double>(layer_point);
+    default:
+      throw std::runtime_error("Unsupported map type in GetValueAtLocation.");
+  }
+}
+
 } // namespace ateam_kenobi::spatial

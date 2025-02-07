@@ -27,6 +27,7 @@
 #include "layers/line_of_sight_ball.hpp"
 #include "layers/line_of_sight_their_goal.hpp"
 #include "layers/their_defense_area_keepout.hpp"
+#include "maps/line_of_sight_ball_map.hpp"
 #include "maps/receiver_position_quality.hpp"
 #include "maps/test_map.hpp"
 
@@ -45,8 +46,9 @@ SpatialEvaluator::SpatialEvaluator()
     std::make_shared<layers::TheirDefenseAreaKeepout>()
   };
   map_factories_ = {
-    std::make_shared<maps::TestMap>(),
-    std::make_shared<maps::ReceiverPositionQuality>()
+    std::make_shared<maps::LineOfSightBallMap>(),
+    std::make_shared<maps::ReceiverPositionQuality>(),
+    std::make_shared<maps::TestMap>()
   };
 }
 
