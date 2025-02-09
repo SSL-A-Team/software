@@ -110,6 +110,7 @@ void KickoffPassPlay::enter()
 void KickoffPassPlay::exit()
 {
   kickoff_is_over_ = true;
+  pass_.reset();
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffPassPlay::runFrame(
