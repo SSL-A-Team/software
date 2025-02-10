@@ -84,7 +84,7 @@ export class Robot {
         // Critical
 
         // Battery Level TODO: find what level to use
-        if (!sim && this.status.battery_level <= 21.0) {
+        if (!sim && this.status.battery_level <= 23.0) {
             return ErrorLevel.Critical;
         }
 
