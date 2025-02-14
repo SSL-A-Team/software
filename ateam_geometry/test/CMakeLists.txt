@@ -1,4 +1,5 @@
 ament_add_gmock(ateam_geometry_tests
+  angles_test.cpp
   do_intersect_test.cpp
   intersection_test.cpp
   nearest_point_test.cpp
