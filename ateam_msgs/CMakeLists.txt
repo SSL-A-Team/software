@@ -12,6 +12,7 @@ find_package(ssl_league_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   msg/BallState.msg
   msg/BehaviorExecutorState.msg
+  msg/JoystickControlStatus.msg
   msg/Mesh1d.msg
   msg/Overlay.msg
   msg/OverlayArray.msg
