@@ -361,6 +361,17 @@ export class AppState {
         }
     }
 
+    getJoystickStatusCallback() {
+        const state = this; // fix dumb javascript things
+        return function(msg:any) {
+            if (msg.is_active) {
+                state.controlled_robot = msg.active_id;
+            } else {
+                state.controlled_robot = -1;
+            }
+        }
+    }
+
     constructor() {
         this.renderConfig = new RenderConfig();
         this.world = new WorldState();
@@ -481,6 +492,16 @@ export class AppState {
 
         playbookTopic.subscribe(this.getPlaybookCallback());
         this.subscriptions["playbook"] = playbookTopic;
+
+        // Set up joystick control status subscriber
+        let joystickStatusTopic = new ROSLIB.Topic({
+            ros: this.ros,
+            name: '/joystick_control_status',
+            messageType: 'ateam_msgs/msg/JoystickControlStatus'
+        });
+
+        joystickStatusTopic.subscribe(this.getJoystickStatusCallback());
+        this.subscriptions["joystickStatus"] = joystickStatusTopic;
 
         // Set up Goalie Service
         let goalieService = new ROSLIB.Service({
