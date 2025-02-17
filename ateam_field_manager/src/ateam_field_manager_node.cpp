@@ -59,11 +59,10 @@ public:
       10,
       std::bind(&FieldManagerNode::vision_callback, this, std::placeholders::_1));
 
-    set_ignore_field_side_service_ = create_service<ateam_msgs::srv::SetIgnoreFieldSide>(
-      "~/set_ignore_field_side",
-      std::bind(
-        &FieldManagerNode::handle_set_ignore_field_side, this, std::placeholders::_1,
-        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+    set_ignore_field_side_service_ =
+      create_service<ateam_msgs::srv::SetIgnoreFieldSide>("~/set_ignore_field_side",
+        std::bind(&FieldManagerNode::handle_set_ignore_field_side, this, std::placeholders::_1,
+        std::placeholders::_2));
   }
 
   void vision_callback(
