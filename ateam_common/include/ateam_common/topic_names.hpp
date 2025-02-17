@@ -44,6 +44,7 @@ constexpr std::string_view kField = "/field";  // Internal vision filter state
 
 // Output from joysticks
 constexpr std::string_view kJoystick = "/joy";
+constexpr std::string_view kJoystickControlStatus = "/joystick_control_status";
 
 // Output from AI
 constexpr std::string_view kRobotMotionCommandPrefix = "/robot_motion_commands/robot";

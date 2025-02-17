@@ -101,7 +101,6 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
 
   double dt = current_time - this->prev_time;
-  uint64_t dt_nano = dt * 1e9;  // convert to nanoseconds
 
   // TODO(anon): figure out what point on the trajectory to use as the target
   uint64_t index;
@@ -129,8 +128,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   bool xy_slow = false;
   if (!trajectory_complete) {
     // Calculate translational movement commands
-    double x_command = this->x_controller.computeCommand(x_error, dt_nano);
-    double y_command = this->y_controller.computeCommand(y_error, dt_nano);
+    double x_command = this->x_controller.compute_command(x_error, dt);
+    double y_command = this->y_controller.compute_command(y_error, dt);
 
     auto vel_vector = ateam_geometry::Vector(x_command, y_command);
 
@@ -148,7 +147,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
 
   // calculate angle movement commands
-  double target_angle;
+  double target_angle = 0.0;
 
   switch (this->angle_mode) {
     case AngleMode::no_face:
@@ -172,7 +171,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
   if (this->angle_mode != AngleMode::no_face) {
     double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
-    double t_command = this->t_controller.computeCommand(t_error, dt_nano);
+    double t_command = this->t_controller.compute_command(t_error, dt);
 
     if (trajectory_complete && xy_slow) {
       double theta_min = 0.35;
@@ -196,9 +195,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   // TODO(anon): handle pid gains better
-  this->x_controller.initPid(2.8, 0.0, 0.002, 0.3, -0.3, true);
-  this->y_controller.initPid(2.8, 0.0, 0.002, 0.15, -0.15, true);
-  this->t_controller.initPid(2.5, 0.0, 0.0, 0.5, -0.5, true);
+  this->x_controller.initialize(2.8, 0.0, 0.002, 0.3, -0.3, true);
+  this->y_controller.initialize(2.8, 0.0, 0.002, 0.15, -0.15, true);
+  this->t_controller.initialize(2.5, 0.0, 0.0, 0.5, -0.5, true);
 
   this->progress = 0;
   this->total_dist = 0;
@@ -212,7 +211,7 @@ void MotionController::reset()
 
 void MotionController::set_x_pid_gain(GainType gain, double value)
 {
-  control_toolbox::Pid::Gains gains = this->x_controller.getGains();
+  control_toolbox::Pid::Gains gains = this->x_controller.get_gains();
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
@@ -224,12 +223,12 @@ void MotionController::set_x_pid_gain(GainType gain, double value)
       gains.d_gain_ = value;
       break;
   }
-  this->x_controller.setGains(gains);
+  this->x_controller.set_gains(gains);
 }
 
 void MotionController::set_y_pid_gain(GainType gain, double value)
 {
-  control_toolbox::Pid::Gains gains = this->y_controller.getGains();
+  control_toolbox::Pid::Gains gains = this->y_controller.get_gains();
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
@@ -241,12 +240,12 @@ void MotionController::set_y_pid_gain(GainType gain, double value)
       gains.d_gain_ = value;
       break;
   }
-  this->y_controller.setGains(gains);
+  this->y_controller.set_gains(gains);
 }
 
 void MotionController::set_t_pid_gain(GainType gain, double value)
 {
-  control_toolbox::Pid::Gains gains = this->t_controller.getGains();
+  control_toolbox::Pid::Gains gains = this->t_controller.get_gains();
   switch (gain) {
     case GainType::p:
       gains.p_gain_ = value;
@@ -258,7 +257,7 @@ void MotionController::set_t_pid_gain(GainType gain, double value)
       gains.d_gain_ = value;
       break;
   }
-  this->t_controller.setGains(gains);
+  this->t_controller.set_gains(gains);
 }
 
 void MotionController::set_x_pid_gains(double p, double i, double d)
@@ -267,7 +266,7 @@ void MotionController::set_x_pid_gains(double p, double i, double d)
   gains.p_gain_ = p;
   gains.i_gain_ = i;
   gains.d_gain_ = d;
-  this->x_controller.setGains(gains);
+  this->x_controller.set_gains(gains);
 }
 
 void MotionController::set_y_pid_gains(double p, double i, double d)
@@ -276,7 +275,7 @@ void MotionController::set_y_pid_gains(double p, double i, double d)
   gains.p_gain_ = p;
   gains.i_gain_ = i;
   gains.d_gain_ = d;
-  this->y_controller.setGains(gains);
+  this->y_controller.set_gains(gains);
 }
 
 void MotionController::set_t_pid_gains(double p, double i, double d)
@@ -285,5 +284,5 @@ void MotionController::set_t_pid_gains(double p, double i, double d)
   gains.p_gain_ = p;
   gains.i_gain_ = i;
   gains.d_gain_ = d;
-  this->t_controller.setGains(gains);
+  this->t_controller.set_gains(gains);
 }
