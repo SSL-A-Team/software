@@ -132,6 +132,10 @@ ateam_msgs::msg::World toMsg(const World & obj)
     }
   }
 
+  world_msg.ball_in_play = obj.in_play;
+  world_msg.double_touch_enforced = obj.double_touch_forbidden_id_.has_value();
+  world_msg.double_touch_id = obj.double_touch_forbidden_id_.value_or(-1);
+
   return world_msg;
 }
 
