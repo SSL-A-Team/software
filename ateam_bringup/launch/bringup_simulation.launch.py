@@ -39,7 +39,7 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
-                                              'ssl_grsim.launch.xml')),
+                                              'ssl_erforce_sim.launch.xml')),
             launch_arguments={
                 'headless': LaunchConfiguration('headless_sim')
             }.items(),
@@ -60,7 +60,7 @@ def generate_launch_description():
             launch_arguments={
                 'gc_net_interface_address': '172.17.0.1',
                 'gc_ip_address': '172.17.0.2',
-                'vision_net_interface_address': '172.17.0.1',
+                'vision_net_interface_address': '127.0.0.1',
                 'vision_port': '10020',
                 'team_name': LaunchConfiguration('team_name')
             }.items()
