@@ -81,10 +81,15 @@ export class Robot {
     }
 
     errorLevel(sim: boolean): ErrorLevel {
+        // Lost radio, no status to use for other warnings
+        if (!this.status.radio_connected) {
+            return ErrorLevel.Warning;
+        }
+
         // Critical
 
         // Battery Level TODO: find what level to use
-        if (!sim && this.status.battery_level <= 21.0) {
+        if (!sim && this.status.battery_level <= 23.0) {
             return ErrorLevel.Critical;
         }
 
@@ -107,11 +112,6 @@ export class Robot {
         }
 
         // Warning
-
-        // Lost radio
-        if (!this.status.radio_connected) {
-            return ErrorLevel.Warning;
-        }
 
         // Robot tipped over, someone should probably go pick it up
         if (this.status.tipped_error) {

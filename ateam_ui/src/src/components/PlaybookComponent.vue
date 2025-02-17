@@ -5,6 +5,8 @@
         </v-col>
     </v-container>
     <v-else>
+        <v-btn @click.stop=this.setAllPlayEnabledValue(true)> Select All </v-btn>
+        <v-btn @click.stop=this.setAllPlayEnabledValue(false)> Deselect All </v-btn>
         <v-row justify="space-between" style="flex-wrap: nowrap;">
             <v-list
                 lines="one"
@@ -102,7 +104,13 @@ export default {
             } else {
                 this.selectedPlay = [this.state.selected_play_name];
             }
-        }
+        },
+        setAllPlayEnabledValue(value: boolean) {
+            for (var [name, play] of Object.entries(this.state.plays)) {
+                play.enabled = value;
+                this.setPlayEnabled(play);
+            }
+        },
     },
     computed: {
         getPlays: function() {

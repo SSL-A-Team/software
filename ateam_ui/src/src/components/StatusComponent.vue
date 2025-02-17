@@ -4,6 +4,12 @@
             <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots.filter((obj)=> obj.isValid())" :ref="'robotCard' + robot.id" style="outline-offset:-1px" @click.stop="this.state.setJoystickRobot(robot.id)">
                     {{robot.id}}
                     <canvas :ref="'canvas' + robot.id" height=100 width=100 style="width:90px; height:90px;"/>
+                    <v-btn variant="plain" density="compact" style="min-width:0px; width:0px" :disabled="(batteryLevel(robot) === '')">
+                        <v-tooltip activator="parent" location="end">
+                            {{batteryLevel(robot)}}
+                        </v-tooltip>
+                        <v-icon :icon="batteryIcon(robot.status.battery_level)" class="mx-0 pl-1 justify-center" size="small"/>
+                    </v-btn>
             </v-card>
         </v-container>
     </v-container>
@@ -187,6 +193,26 @@ export default {
                 ctx.textBaseline = "middle";
                 ctx.fillText("DC", .14*scale, -.14*scale);
             }
+        },
+        batteryIcon: function(battery_level) {
+            if (!battery_level) {
+                return "mdi-battery-alert-variant-outline";
+            }
+
+            let percentage = Math.round((battery_level - 20) * 100 / 5.2);
+            if (percentage <= 5) {
+                return "mdi-battery-alert-variant-outline";
+            }
+
+            const percentage_string = String(Math.round(percentage / 10) * 10);
+            return "mdi-battery-" + percentage_string;
+        },
+        batteryLevel: function(robot) {
+            if (robot && robot.status && robot.status.battery_level) {
+                return robot.status.battery_level.toFixed(2)
+            }
+
+            return ""
         }
     },
     computed: {
