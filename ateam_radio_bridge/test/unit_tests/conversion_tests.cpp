@@ -93,30 +93,20 @@ TEST(ConvertBasicTelemmetry, PacketConversions)
 }
 
 TEST(ConvertControlDebugTelemetry, PacketConversions) {
+  MotorResponse_Motion_Packet front_left_motor_packet;
+  front_left_motor_packet.vel_setpoint = 1.0f;
+  MotorResponse_Motion_Packet back_left_motor_packet;
+  back_left_motor_packet.vel_setpoint = 2.0f;
+  MotorResponse_Motion_Packet back_right_motor_packet;
+  back_right_motor_packet.vel_setpoint = 3.0f;
+  MotorResponse_Motion_Packet front_right_motor_packet;
+  front_right_motor_packet.vel_setpoint = 4.0f;
+
   ControlDebugTelemetry control_debug_telemetry {
-    MotorDebugTelemetry {
-      3.14,
-      3.12,
-      2.0
-    },
-
-    MotorDebugTelemetry {
-      3.14,
-      3.14,
-      3.0
-    },
-
-    MotorDebugTelemetry {
-      3.14,
-      3.15,
-      2.0
-    },
-
-    MotorDebugTelemetry {
-      3.14,
-      3.20,
-      1.0
-    },
+    front_left_motor_packet,
+    back_left_motor_packet,
+    back_right_motor_packet,
+    front_right_motor_packet,
 
     {10.0, 20.0, 30.0},
     {100.0, 200.0, 300.0},
@@ -131,21 +121,12 @@ TEST(ConvertControlDebugTelemetry, PacketConversions) {
   };
 
   const auto motion_feedback_msg = ateam_radio_bridge::Convert(control_debug_telemetry);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_LEFT_MOTOR].setpoint, 3.14);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_LEFT_MOTOR].velocity, 3.12);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_LEFT_MOTOR].torque, 2.0);
 
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].setpoint, 3.14);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].velocity, 3.14);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].torque, 3.0);
-
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_RIGHT_MOTOR].setpoint, 3.14);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_RIGHT_MOTOR].velocity, 3.15);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_RIGHT_MOTOR].torque, 2.0);
-
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].setpoint, 3.14);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].velocity, 3.20);
-  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].torque, 1.0);
+  // This just checks that the motor ordering is correct
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_LEFT_MOTOR].vel_setpoint, 1.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_LEFT_MOTOR].vel_setpoint, 2.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.BACK_RIGHT_MOTOR].vel_setpoint, 3.0);
+  EXPECT_FLOAT_EQ(motion_feedback_msg.motors[motion_feedback_msg.FRONT_RIGHT_MOTOR].vel_setpoint, 4.0);
 
   EXPECT_FLOAT_EQ(motion_feedback_msg.imu.orientation_covariance[0], -1.0);
 
@@ -182,4 +163,57 @@ TEST(ConvertControlDebugTelemetry, PacketConversions) {
   EXPECT_FLOAT_EQ(motion_feedback_msg.clamped_wheel_velocity_control_variable[motion_feedback_msg.BACK_LEFT_MOTOR], 2.0);
   EXPECT_FLOAT_EQ(motion_feedback_msg.clamped_wheel_velocity_control_variable[motion_feedback_msg.BACK_RIGHT_MOTOR], 3.0);
   EXPECT_FLOAT_EQ(motion_feedback_msg.clamped_wheel_velocity_control_variable[motion_feedback_msg.FRONT_RIGHT_MOTOR], 4.0);
+}
+
+
+TEST(ConvertMotorFeedback, PacketConversions) {
+  const MotorResponse_Motion_Packet src {
+    0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1,
+    0,
+    1.0f,
+    2.0f,
+    3,
+    4.0f,
+    5.0f,
+    6.0f,
+    7.0f,
+    8.0f,
+    9.0f,
+    10.0f,
+    11.0f
+  };
+
+  const auto dst = ateam_radio_bridge::Convert(src);
+
+  EXPECT_FALSE(dst.master_error);
+  EXPECT_TRUE(dst.hall_power_error);
+  EXPECT_FALSE(dst.hall_disconnected_error);
+  EXPECT_TRUE(dst.bldc_transition_error);
+  EXPECT_FALSE(dst.bldc_commutation_watchdog_error);
+  EXPECT_FALSE(dst.enc_disconnected_error);
+  EXPECT_TRUE(dst.enc_decoding_error);
+  EXPECT_TRUE(dst.hall_enc_vel_disagreement_error);
+  EXPECT_FALSE(dst.overcurrent_error);
+  EXPECT_TRUE(dst.undervoltage_error);
+  EXPECT_TRUE(dst.overvoltage_error);
+  EXPECT_FALSE(dst.torque_limited);
+  EXPECT_TRUE(dst.control_loop_time_error);
+  EXPECT_FALSE(dst.reset_watchdog_independent);
+  EXPECT_FALSE(dst.reset_watchdog_window);
+  EXPECT_TRUE(dst.reset_low_power);
+  EXPECT_FALSE(dst.reset_software);
+  EXPECT_TRUE(dst.reset_pin);
+
+  EXPECT_FLOAT_EQ(dst.vel_setpoint, 1.0f);
+  EXPECT_FLOAT_EQ(dst.vel_setpoint_clamped, 2.0f);
+  EXPECT_EQ(dst.encoder_delta, 3);
+  EXPECT_FLOAT_EQ(dst.vel_enc_estimate, 4.0f);
+  EXPECT_FLOAT_EQ(dst.vel_computed_error, 5.0f);
+  EXPECT_FLOAT_EQ(dst.vel_computed_setpoint, 6.0f);
+
+  EXPECT_FLOAT_EQ(dst.torque_setpoint, 7.0f);
+  EXPECT_FLOAT_EQ(dst.current_estimate, 8.0f);
+  EXPECT_FLOAT_EQ(dst.torque_estimate, 9.0f);
+  EXPECT_FLOAT_EQ(dst.torque_computed_error, 10.0f);
+  EXPECT_FLOAT_EQ(dst.torque_computed_setpoint, 11.0f);
 }
