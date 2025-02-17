@@ -34,6 +34,7 @@
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/game_controller_listener.hpp>
+#include <ateam_common/protobuf_logging.hpp>
 #include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/srv/send_simulator_control_packet.hpp>
@@ -51,6 +52,8 @@ public:
     gc_listener_(*this,
       std::bind_front(&SSLSimulationRadioBridgeNode::team_color_change_callback, this))
   {
+    SET_ROS_PROTOBUF_LOG_HANDLER("ateam_ssl_simulation_radio_bridge.protobuf");
+
     declare_parameter("ssl_sim_radio_ip", "127.0.0.1");
     declare_parameter("ssl_sim_control_port", 10300);
     declare_parameter("ssl_sim_blue_port", 10301);
@@ -72,11 +75,10 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
-    send_simulator_control_service_ = create_service<ateam_msgs::srv::SendSimulatorControlPacket>(
-      "~/send_simulator_control_packet",
-      std::bind(
-        &SSLSimulationRadioBridgeNode::handle_send_simulator_control, this, std::placeholders::_1,
-        std::placeholders::_2), rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+    send_simulator_control_service_ =
+      create_service<ateam_msgs::srv::SendSimulatorControlPacket>("~/send_simulator_control_packet",
+        std::bind(&SSLSimulationRadioBridgeNode::handle_send_simulator_control, this,
+        std::placeholders::_1, std::placeholders::_2));
 
     std::ranges::fill(command_timestamps_, std::chrono::steady_clock::now());
     zero_command_timer_ =
@@ -175,14 +177,16 @@ public:
       // ignore empty feedback packets
       return;
     }
+
     RobotControlResponse feedback_proto;
-    if (!feedback_proto.ParseFromArray(buffer, bytes_received - 1)) {
-      for (const auto & single_feedback : feedback_proto.feedback()) {
-        int robot_id = single_feedback.id();
-        feedback_publishers_.at(robot_id)->publish(message_conversions::fromProto(single_feedback));
-      }
-    } else {
+    if (!feedback_proto.ParseFromArray(buffer, bytes_received)) {
       RCLCPP_WARN(get_logger(), "Failed to parse robot feedback protobuf packet");
+      return;
+    }
+
+    for (const auto & single_feedback : feedback_proto.feedback()) {
+      int robot_id = single_feedback.id();
+      feedback_publishers_.at(robot_id)->publish(message_conversions::fromProto(single_feedback));
     }
   }
 
