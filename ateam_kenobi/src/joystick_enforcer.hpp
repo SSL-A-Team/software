@@ -30,17 +30,19 @@ namespace ateam_kenobi
 
 class JoystickEnforcer {
 public:
-  JoystickEnforcer(rclcpp::Node & node);
+  explicit JoystickEnforcer(rclcpp::Node & node);
 
-  void RemoveCommandForJoystickBot(std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & robot_motion_commands);
+  void RemoveCommandForJoystickBot(
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & robot_motion_commands);
 
 private:
   rclcpp::Subscription<ateam_msgs::msg::JoystickControlStatus>::SharedPtr status_sub_;
   bool active_ = false;
   int robot_id_ = -1;
 
-  void JoystickControlStatusCallback(const ateam_msgs::msg::JoystickControlStatus::ConstSharedPtr msg);
-
+  void JoystickControlStatusCallback(
+    const ateam_msgs::msg::JoystickControlStatus::ConstSharedPtr msg);
 };
 
 }  // namespace ateam_kenobi

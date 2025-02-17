@@ -36,7 +36,8 @@ def runDiscovery():
     sock.sendto(packet, discovery_endpoint)
     try:
         data = sock.recv(18)
-        print(''.join('{:02x}'.format(x) for x in data))
+        print('Received discovery response packet:')
+        print(' '.join('{:02x}'.format(x) for x in data))
         if len(data) < 18:
             print(f'Bad packet length: {len(data)}')
             return

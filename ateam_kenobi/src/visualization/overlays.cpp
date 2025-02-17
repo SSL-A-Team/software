@@ -20,6 +20,7 @@
 
 
 #include "overlays.hpp"
+#include <algorithm>
 #include <memory>
 #include <opencv2/opencv.hpp>
 

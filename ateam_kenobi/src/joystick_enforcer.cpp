@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "joystick_enforcer.hpp"
+#include <string>
 #include <ateam_common/topic_names.hpp>
 
 namespace ateam_kenobi
