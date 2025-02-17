@@ -54,7 +54,7 @@
                 color="yellow-darken-1"
                 class="d-flex my-1 justify-space-around"
                 v-on:click="sendGCCommand('PENALTY', 'YELLOW')">Penalty</v-btn>
-            <v-switch 
+            <v-switch
                 label="Auto Continue"
                 density="compact"
                 v-model="autoContinue"
