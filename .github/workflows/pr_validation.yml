@@ -1,0 +1,44 @@
+name: CI
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  buildAndTest:
+    runs-on: ubuntu-24.04
+    container: ros:jazzy
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          path: src/ateam_software
+          submodules: true
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          sudo apt-get update
+          rosdep update --rosdistro=jazzy
+          rosdep install --from-paths . --ignore-src -y
+          ./src/ateam_software/ateam_ui/install_deps.sh
+      - name: Get Modified Packages
+        id: get-modified-packages
+        uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
+      - name: Build Up To Changes
+        if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --packages-up-to ${{ steps.get-modified-packages.outputs.modified-packages }}
+      - name: Build Above Changes
+        if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --packages-above-and-dependencies ${{ steps.get-modified-packages.outputs.modified-packages }}
+      - name: Test Changed Packages
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --packages-skip ateam_ui --packages-select ${{ steps.get-modified-packages.outputs.modified-packages }}
+          colcon test-result --verbose 

@@ -4,15 +4,14 @@ on:
     branches:
       - main
       - comp/**
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 jobs:
   buildAndTest:
     runs-on: ubuntu-24.04
     container: ros:jazzy
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v2
         with:
           path: src/ateam_software
           submodules: true
@@ -28,7 +27,7 @@ jobs:
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon build
+          colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
       - name: Test
         shell: bash
         run: |
