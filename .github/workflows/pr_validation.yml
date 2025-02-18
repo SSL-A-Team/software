@@ -25,7 +25,7 @@ jobs:
         id: get-changed-packages
         shell: bash
         run: |
-          changed_packages=$(./get_changed_packages.sh origin/${{ github.base_ref }} ./src)
+          changed_packages=$(./src/ateam_software/.github/workflows/get_changed_packages.sh origin/${{ github.base_ref }} ./src)
           echo "changed-packages=$changed_packages" >> $GITHUB_OUTPUT
       - name: Build Up To Changes
         if: ${{ steps.get-changed-packages.outputs.changed-packages != '' }}
