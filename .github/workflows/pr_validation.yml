@@ -21,24 +21,27 @@ jobs:
           rosdep update --rosdistro=jazzy
           rosdep install --from-paths . --ignore-src -y
           ./src/ateam_software/ateam_ui/install_deps.sh
-      - name: Get Modified Packages
-        id: get-modified-packages
-        uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
+      - name: Get Changed Packages
+        id: get-changed-packages
+        shell: bash
+        run: |
+          changed_packages=$(./get_changed_packages.sh origin/${{ github.base_ref }} ./src)
+          echo "changed-packages=$changed_packages" >> $GITHUB_OUTPUT
       - name: Build Up To Changes
-        if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
+        if: ${{ steps.get-changed-packages.outputs.changed-packages != '' }}
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon build --packages-up-to ${{ steps.get-modified-packages.outputs.modified-packages }}
+          colcon build --packages-up-to ${{ steps.get-changed-packages.outputs.changed-packages }}
       - name: Build Above Changes
-        if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
+        if: ${{ steps.get-changed-packages.outputs.changed-packages != '' }}
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon build --packages-above-and-dependencies ${{ steps.get-modified-packages.outputs.modified-packages }}
+          colcon build --packages-above-and-dependencies ${{ steps.get-changed-packages.outputs.changed-packages }}
       - name: Test Changed Packages
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon test --packages-skip ateam_ui --packages-select ${{ steps.get-modified-packages.outputs.modified-packages }}
+          colcon test --packages-skip ateam_ui --packages-select ${{ steps.get-changed-packages.outputs.changed-packages }}
           colcon test-result --verbose 
