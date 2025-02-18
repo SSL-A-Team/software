@@ -1,4 +1,4 @@
-name: CI
+name: Full CI
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
       - comp/**
   workflow_dispatch:
 jobs:
-  buildAndTest:
+  Build-and-Test:
     runs-on: ubuntu-24.04
     container: ros:jazzy
     steps:
@@ -15,6 +15,7 @@ jobs:
         with:
           path: src/ateam_software
           submodules: true
+      
       - name: Install Dependencies
         shell: bash
         run: |
@@ -23,11 +24,13 @@ jobs:
           rosdep update --rosdistro=jazzy
           rosdep install --from-paths . --ignore-src -y
           ./src/ateam_software/ateam_ui/install_deps.sh
+      
       - name: Build
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
           colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+      
       - name: Test
         shell: bash
         run: |
