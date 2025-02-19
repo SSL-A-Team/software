@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef LAYERS__IN_FIELD_HPP_
-#define LAYERS__IN_FIELD_HPP_
+#ifndef SPATIAL__LAYERS__IN_FIELD_HPP_
+#define SPATIAL__LAYERS__IN_FIELD_HPP_
 
 #include "spatial/spatial_layer_factory.hpp"
 
@@ -28,9 +28,11 @@ namespace ateam_kenobi::spatial::layers
 
 class InField : public SpatialLayerFactory {
 public:
-  InField() : SpatialLayerFactory("InField") {}
+  InField()
+  : SpatialLayerFactory("InField") {}
 
-  void FillLayer(cv::Mat & layer, const World & world) override {
+  void FillLayer(cv::Mat & layer, const World & world) override
+  {
     SetupLayer(layer, CV_8UC1);
     if(layer.size() == prev_size) {
       // No need to regenerate this layer unless the field size changes
@@ -54,9 +56,7 @@ public:
 
 private:
   cv::Size prev_size;
-
 };
+}  // namespace ateam_kenobi::spatial::layers
 
-}  // namespace ateam_kenobi::spatial
-
-#endif  // LAYERS__IN_FIELD_HPP_
+#endif  // SPATIAL__LAYERS__IN_FIELD_HPP_

@@ -18,9 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
-#define MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
+#ifndef SPATIAL__MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
+#define SPATIAL__MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
 
+#include <string>
+#include <unordered_map>
 #include "spatial/spatial_map_factory.hpp"
 
 namespace ateam_kenobi::spatial::maps
@@ -37,9 +39,8 @@ public:
   {
     map = layers.at("LineOfSightBall");
   }
-
 };
 
-} // namespace ateam_kenobi::spatial::maps
+}  // namespace ateam_kenobi::spatial::maps
 
-#endif  // MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
+#endif  // SPATIAL__MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_

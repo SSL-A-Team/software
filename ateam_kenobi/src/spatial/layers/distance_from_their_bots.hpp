@@ -18,9 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef LAYERS__DISTANCE_FROM_THEIR_BOTS_HPP_
-#define LAYERS__DISTANCE_FROM_THEIR_BOTS_HPP_
+#ifndef SPATIAL__LAYERS__DISTANCE_FROM_THEIR_BOTS_HPP_
+#define SPATIAL__LAYERS__DISTANCE_FROM_THEIR_BOTS_HPP_
 
+#include <algorithm>
+#include <limits>
 #include "spatial/spatial_layer_factory.hpp"
 
 namespace ateam_kenobi::spatial::layers
@@ -28,32 +30,36 @@ namespace ateam_kenobi::spatial::layers
 
 class DistanceFromTheirBots : public SpatialLayerFactory {
 public:
-  DistanceFromTheirBots() : SpatialLayerFactory("DistanceFromTheirBots") {}
+  DistanceFromTheirBots()
+  : SpatialLayerFactory("DistanceFromTheirBots") {}
 
-  void FillLayer(cv::Mat & layer, const World & world) override {
+  void FillLayer(cv::Mat & layer, const World & world) override
+  {
     SetupLayer(layer, CV_32FC1);
     for(auto r = 0; r < layer.rows; ++r) {
       auto row = layer.ptr<float>(r);
       for(auto c = 0; c < layer.cols; ++c) {
-        row[c] = GetDistanceFromNearestBot(ateam_geometry::Point(LayerToWorldX(c), LayerToWorldY(r)), world);
+        row[c] = GetDistanceFromNearestBot(ateam_geometry::Point(LayerToWorldX(c),
+            LayerToWorldY(r)), world);
       }
     }
   }
 
 private:
-  float GetDistanceFromNearestBot(const ateam_geometry::Point & p, const World & world) {
+  float GetDistanceFromNearestBot(const ateam_geometry::Point & p, const World & world)
+  {
     float distance = std::numeric_limits<float>::max();
     for(const auto & robot : world.their_robots) {
       if(!robot.visible) {
         continue;
       }
-      distance = std::min(distance, static_cast<float>(CGAL::approximate_sqrt(CGAL::squared_distance(p, robot.pos))));
+      distance = std::min(distance,
+          static_cast<float>(CGAL::approximate_sqrt(CGAL::squared_distance(p, robot.pos))));
     }
     return distance;
   }
-
 };
 
-}  // namespace ateam_kenobi::spatial
+}  // namespace ateam_kenobi::spatial::layers
 
-#endif  // LAYERS__DISTANCE_FROM_THEIR_BOTS_HPP_
+#endif  // SPATIAL__LAYERS__DISTANCE_FROM_THEIR_BOTS_HPP_

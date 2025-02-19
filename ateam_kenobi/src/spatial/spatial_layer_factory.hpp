@@ -21,6 +21,7 @@
 #ifndef SPATIAL__SPATIAL_LAYER_FACTORY_HPP_
 #define SPATIAL__SPATIAL_LAYER_FACTORY_HPP_
 
+#include <string>
 #include <ateam_geometry/types.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc.hpp>
@@ -33,24 +34,27 @@ namespace ateam_kenobi::spatial
 
 class SpatialLayerFactory {
 public:
-  SpatialLayerFactory(std::string name) : name_(name) {}
+  explicit SpatialLayerFactory(std::string name)
+  : name_(name) {}
 
-  const std::string & GetName() const {
+  const std::string & GetName() const
+  {
     return name_;
   }
 
-  void Build(cv::Mat & layer, const World & world) {
+  void Build(cv::Mat & layer, const World & world)
+  {
     field_ = world.field;
     FillLayer(layer, world);
   }
 
 protected:
-
   /**
    * @brief Sets layer dimensions and ensures data is allocated. Reinitializes data if field
    * dimensions change.
    */
-  void SetupLayer(cv::Mat & layer, int layer_type) {
+  void SetupLayer(cv::Mat & layer, int layer_type)
+  {
     const cv::Size size(LayerWidth(), LayerHeight());
     if(layer.empty() || layer.type() != layer_type) {
       layer = cv::Mat(size, layer_type);
@@ -60,47 +64,58 @@ protected:
     }
   }
 
-  float WorldWidth() {
+  float WorldWidth()
+  {
     return spatial::WorldWidth(field_);
   }
 
-  float WorldHeight() {
+  float WorldHeight()
+  {
     return spatial::WorldHeight(field_);
   }
 
-  int LayerWidth() {
+  int LayerWidth()
+  {
     return spatial::LayerWidth(field_);
   }
 
-  int LayerHeight() {
+  int LayerHeight()
+  {
     return spatial::LayerHeight(field_);
   }
 
-  float LayerToWorldX(const int x) {
+  float LayerToWorldX(const int x)
+  {
     return spatial::LayerToWorldX(x, field_);
   }
 
-  float LayerToWorldY(const int y) {
+  float LayerToWorldY(const int y)
+  {
     return spatial::LayerToWorldY(y, field_);
   }
 
-  cv::Point2d LayerToWorld(const cv::Point2i & p) {
+  cv::Point2d LayerToWorld(const cv::Point2i & p)
+  {
     return spatial::LayerToWorld(p, field_);
   }
 
-  int WorldToLayerX(const float x) {
+  int WorldToLayerX(const float x)
+  {
     return spatial::WorldToLayerX(x, field_);
   }
 
-  int WorldToLayerY(const float y) {
+  int WorldToLayerY(const float y)
+  {
     return spatial::WorldToLayerY(y, field_);
   }
 
-  cv::Point2i WorldToLayer(const cv::Point2d & p) {
+  cv::Point2i WorldToLayer(const cv::Point2d & p)
+  {
     return spatial::WorldToLayer(p, field_);
   }
 
-  cv::Point2i WorldToLayer(const ateam_geometry::Point & p) {
+  cv::Point2i WorldToLayer(const ateam_geometry::Point & p)
+  {
     return spatial::WorldToLayer(p, field_);
   }
 
@@ -109,7 +124,6 @@ protected:
 private:
   const std::string name_;
   Field field_;
-
 };
 
 }  // namespace ateam_kenobi::spatial

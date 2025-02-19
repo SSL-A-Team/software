@@ -69,4 +69,4 @@ double GetValueAtLocation(
   }
 }
 
-} // namespace ateam_kenobi::spatial
+}  // namespace ateam_kenobi::spatial

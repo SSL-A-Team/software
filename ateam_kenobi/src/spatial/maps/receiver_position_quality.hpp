@@ -18,9 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef MAPS__RECEIVER_POSITION_QUALITY_HPP_
-#define MAPS__RECEIVER_POSITION_QUALITY_HPP_
+#ifndef SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_
+#define SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_
 
+#include <algorithm>
+#include <string>
+#include <unordered_map>
 #include "spatial/spatial_map_factory.hpp"
 #include "play_helpers/available_robots.hpp"
 
@@ -46,7 +49,8 @@ public:
     cv::Mat mask = goal_sight & ball_sight & def_area_keepout & in_field;
     cv::Mat distance_from_bots = cv::min(layers.at("DistanceFromTheirBots"), cv::Scalar(1.0));
     const auto max_dist_from_edge = 0.75;
-    cv::Mat distance_from_edge = cv::min(layers.at("DistanceFromFieldEdge"), cv::Scalar(max_dist_from_edge)) / max_dist_from_edge;
+    cv::Mat distance_from_edge = cv::min(layers.at("DistanceFromFieldEdge"),
+        cv::Scalar(max_dist_from_edge)) / max_dist_from_edge;
     cv::Mat scores;
     if(!play_helpers::getVisibleRobots(world.their_robots).empty()) {
       scores = layers.at("DistanceDownField").mul(distance_from_edge).mul(distance_from_bots);
@@ -56,9 +60,8 @@ public:
     map = cv::Scalar{0};
     scores.copyTo(map, mask);
   }
-
 };
 
-} // namespace ateam_kenobi::spatial::maps
+}  // namespace ateam_kenobi::spatial::maps
 
-#endif  // MAPS__RECEIVER_POSITION_QUALITY_HPP_
+#endif  // SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_
