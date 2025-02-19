@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef LAYERS__THEIR_DEFENSE_AREA_KEEPOUT_HPP_
-#define LAYERS__THEIR_DEFENSE_AREA_KEEPOUT_HPP_
+#ifndef SPATIAL__LAYERS__THEIR_DEFENSE_AREA_KEEPOUT_HPP_
+#define SPATIAL__LAYERS__THEIR_DEFENSE_AREA_KEEPOUT_HPP_
 
 #include "spatial/spatial_layer_factory.hpp"
 
@@ -51,7 +51,8 @@ public:
 
     layer = cv::Scalar(255);
 
-    const ateam_geometry::Point top_left(half_field_length - world.field.defense_area_depth - padding_, -half_defense_area_width - padding_);
+    const ateam_geometry::Point top_left(half_field_length - world.field.defense_area_depth -
+      padding_, -half_defense_area_width - padding_);
     const ateam_geometry::Point bottom_right(half_field_length, half_defense_area_width + padding_);
 
     const auto top_left_layer = WorldToLayer(top_left);
@@ -63,9 +64,8 @@ public:
 private:
   Field prev_field;
   const double padding_ = kRobotDiameter;
-
 };
 
-}  // namespace ateam_kenobi::spatial
+}  // namespace ateam_kenobi::spatial::layers
 
-#endif  // LAYERS__THEIR_DEFENSE_AREA_KEEPOUT_HPP_
+#endif  // SPATIAL__LAYERS__THEIR_DEFENSE_AREA_KEEPOUT_HPP_

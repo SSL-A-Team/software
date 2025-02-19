@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef LAYERS__DISTANCE_FROM_FIELD_EDGE_HPP_
-#define LAYERS__DISTANCE_FROM_FIELD_EDGE_HPP_
+#ifndef SPATIAL__LAYERS__DISTANCE_FROM_FIELD_EDGE_HPP_
+#define SPATIAL__LAYERS__DISTANCE_FROM_FIELD_EDGE_HPP_
 
 #include "spatial/spatial_layer_factory.hpp"
 
@@ -50,7 +50,8 @@ public:
         const auto y_world = LayerToWorldY(y);
         double distance = 0.0;
         if(std::abs(x_world) < (half_world_width - half_world_height) ||
-           (std::abs(x_world) - (half_world_width - half_world_height)) < std::abs(y_world)) {
+          (std::abs(x_world) - (half_world_width - half_world_height)) < std::abs(y_world))
+        {
           distance = half_world_height - std::abs(y_world);
         } else {
           distance = half_world_width - std::abs(x_world);
@@ -63,9 +64,8 @@ public:
 
 private:
   cv::Size prev_size;
-
 };
 
-}  // namespace ateam_kenobi::spatial
+}  // namespace ateam_kenobi::spatial::layers
 
-#endif  // LAYERS__DISTANCE_FROM_FIELD_EDGE_HPP_
+#endif  // SPATIAL__LAYERS__DISTANCE_FROM_FIELD_EDGE_HPP_

@@ -27,7 +27,7 @@
 namespace ateam_kenobi::spatial
 {
 
-const static double kResolution = 0.05;  // m/px
+static const double kResolution = 0.05;  // m/px
 
 inline float WorldWidth(const Field & field)
 {
@@ -51,7 +51,7 @@ inline int LayerHeight(const Field & field)
 
 inline float LayerToWorldX(const int x, const Field & field)
 {
-  return (x * kResolution) -(WorldWidth(field) / 2.0);
+  return (x * kResolution) - (WorldWidth(field) / 2.0);
 }
 
 inline float LayerToWorldY(const int y, const Field & field)

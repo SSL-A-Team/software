@@ -21,7 +21,9 @@
 #ifndef SPATIAL__SPATIAL_MAP_COLLECTION_HPP_
 #define SPATIAL__SPATIAL_MAP_COLLECTION_HPP_
 
+#include <string>
 #include <unordered_map>
+#include <utility>
 #include "spatial_map.hpp"
 
 namespace ateam_kenobi::spatial
@@ -29,23 +31,28 @@ namespace ateam_kenobi::spatial
 
 class SpatialMapCollection {
 public:
-  void AddMap(SpatialMap && map) {
+  void AddMap(SpatialMap && map)
+  {
     maps_.insert_or_assign(map.name, std::move(map));
   }
 
-  void EmplaceMap(std::string name, cv::Mat data) {
+  void EmplaceMap(std::string name, cv::Mat data)
+  {
     maps_.emplace(name, SpatialMap{name, data});
   }
 
-  void Clear() {
+  void Clear()
+  {
     maps_.clear();
   }
 
-  const SpatialMap & operator[] (const std::string & name) const {
+  const SpatialMap & operator[](const std::string & name) const
+  {
     return maps_.at(name);
   }
 
-  SpatialMap & operator[] (const std::string & name) {
+  SpatialMap & operator[](const std::string & name)
+  {
     return maps_[name];
   }
 

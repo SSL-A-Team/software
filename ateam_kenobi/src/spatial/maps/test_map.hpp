@@ -18,9 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef MAPS__TEST_MAP_HPP_
-#define MAPS__TEST_MAP_HPP_
+#ifndef SPATIAL__MAPS__TEST_MAP_HPP_
+#define SPATIAL__MAPS__TEST_MAP_HPP_
 
+#include <algorithm>
+#include <string>
+#include <unordered_map>
 #include "spatial/spatial_map_factory.hpp"
 
 namespace ateam_kenobi::spatial::maps
@@ -53,10 +56,9 @@ public:
     map = cv::Scalar{0};
     scores.copyTo(map, mask);
   }
-
 };
 
-} // namespace ateam_kenobi::spatial::maps
+}  // namespace ateam_kenobi::spatial::maps
 
 
-#endif  // MAPS__TEST_MAP_HPP_
+#endif  // SPATIAL__MAPS__TEST_MAP_HPP_
