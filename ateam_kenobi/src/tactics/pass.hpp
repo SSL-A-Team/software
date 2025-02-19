@@ -25,7 +25,7 @@
 #include <ateam_geometry/types.hpp>
 #include "stp/tactic.hpp"
 #include "types/world.hpp"
-#include "skills/line_kick.hpp"
+#include "skills/pivot_kick.hpp"
 #include "skills/pass_receiver.hpp"
 
 namespace ateam_kenobi::tactics
@@ -59,12 +59,17 @@ public:
     speed_ = speed;
   }
 
+  void setCaptureSpeed(double speed)
+  {
+    kick_.SetCaptureSpeed(speed);
+  }
+
 private:
   const double kReceiverPositionThreshold = 0.1;
   std::optional<double> speed_;
   ateam_geometry::Point target_;
   skills::PassReceiver receiver_;
-  skills::LineKick kick_;
+  skills::PivotKick kick_;
   int kicker_id_ = -1;
 
   double calculateDefaultKickSpeed(const World & world);

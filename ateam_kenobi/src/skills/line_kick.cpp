@@ -176,7 +176,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.footprint_inflation = 0.04;
 
-  planner_options.draw_obstacles = true;
+  // planner_options.draw_obstacles = true;
 
   // Add additional obstacles to better avoid ball
   const auto ball_to_target = target_point_ - world.ball.pos;

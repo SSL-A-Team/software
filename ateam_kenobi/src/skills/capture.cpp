@@ -21,6 +21,7 @@
 
 #include "capture.hpp"
 #include <angles/angles.h>
+#include <algorithm>
 #include <vector>
 #include <ateam_geometry/normalize.hpp>
 #include "play_helpers/available_robots.hpp"
@@ -57,7 +58,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const
 
 void Capture::chooseState(const World & world, const Robot & robot)
 {
-  if (ateam_geometry::norm(world.ball.pos - robot.pos) < 1.0) {
+  if (ateam_geometry::norm(world.ball.pos - robot.pos) < approach_radius_) {
     state_ = State::Capture;
   } else {
     state_ = State::MoveToBall;
@@ -79,7 +80,15 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(world.ball.pos);
 
-  easy_move_to_.setMaxVelocity(2.0);
+  const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
+      world.ball.pos));
+
+  const auto decel_distance = distance_to_ball - approach_radius_;
+
+  const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
+      (capture_speed_ * capture_speed_));
+
+  easy_move_to_.setMaxVelocity(std::min(max_decel_vel, max_speed_));
 
   return easy_move_to_.runFrame(robot, world);
 }
@@ -104,10 +113,14 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
    */
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.avoid_ball = false;
-  planner_options.draw_obstacles = true;
+  // planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
 
-  easy_move_to_.setMaxVelocity(0.35);
+  MotionOptions motion_options;
+  motion_options.completion_threshold = 0;
+  easy_move_to_.setMotionOptions(motion_options);
+
+  easy_move_to_.setMaxVelocity(capture_speed_);
   easy_move_to_.face_point(world.ball.pos);
 
   easy_move_to_.setTargetPosition(world.ball.pos);
