@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,44 +18,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef LAYERS__IN_FIELD_HPP_
+#define LAYERS__IN_FIELD_HPP_
 
-#ifndef TYPES__WORLD_HPP_
-#define TYPES__WORLD_HPP_
+#include "spatial/spatial_layer_factory.hpp"
 
-#include <optional>
-#include <array>
-#include <chrono>
-
-#include "spatial/spatial_map_collection.hpp"
-#include "types/ball.hpp"
-#include "types/field.hpp"
-#include "types/referee_info.hpp"
-#include "types/robot.hpp"
-
-namespace ateam_kenobi
+namespace ateam_kenobi::spatial::layers
 {
-struct World
-{
-  std::chrono::steady_clock::time_point current_time;
 
-  Field field;
-  RefereeInfo referee_info;
+class InField : public SpatialLayerFactory {
+public:
+  InField() : SpatialLayerFactory("InField") {}
 
-  Ball ball;
-  std::array<Robot, 16> our_robots;
-  std::array<Robot, 16> their_robots;
+  void FillLayer(cv::Mat & layer, const World & world) override {
+    SetupLayer(layer, CV_8UC1);
+    if(layer.size() == prev_size) {
+      // No need to regenerate this layer unless the field size changes
+      return;
+    }
+    prev_size = layer.size();
 
-  bool in_play;
-  bool our_penalty;
-  bool their_penalty;
+    const auto half_field_length = world.field.field_length / 2.0;
+    const auto half_field_width = world.field.field_width / 2.0;
 
-  int ignore_side = 0;
 
-  // Holds the ID of the robot not allowed to touch the ball, if any
-  std::optional<int> double_touch_forbidden_id_;
+    cv::Rect field_bounds(
+      cv::Point(WorldToLayerX(-half_field_length), WorldToLayerY(-half_field_width)),
+      cv::Point(WorldToLayerX(half_field_length), WorldToLayerY(half_field_width))
+    );
 
-  spatial::SpatialMapCollection spatial_maps;
+    layer = cv::Scalar(0);
+
+    cv::rectangle(layer, field_bounds, cv::Scalar(255), cv::FILLED);
+  }
+
+private:
+  cv::Size prev_size;
+
 };
-}  // namespace ateam_kenobi
 
-#endif  // TYPES__WORLD_HPP_
+}  // namespace ateam_kenobi::spatial
+
+#endif  // LAYERS__IN_FIELD_HPP_

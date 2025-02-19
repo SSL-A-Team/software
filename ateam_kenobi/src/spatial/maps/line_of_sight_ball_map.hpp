@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,44 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
+#define MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
 
-#ifndef TYPES__WORLD_HPP_
-#define TYPES__WORLD_HPP_
+#include "spatial/spatial_map_factory.hpp"
 
-#include <optional>
-#include <array>
-#include <chrono>
-
-#include "spatial/spatial_map_collection.hpp"
-#include "types/ball.hpp"
-#include "types/field.hpp"
-#include "types/referee_info.hpp"
-#include "types/robot.hpp"
-
-namespace ateam_kenobi
+namespace ateam_kenobi::spatial::maps
 {
-struct World
-{
-  std::chrono::steady_clock::time_point current_time;
 
-  Field field;
-  RefereeInfo referee_info;
+class LineOfSightBallMap : public SpatialMapFactory {
+public:
+  LineOfSightBallMap()
+  : SpatialMapFactory("LineOfSightBallMap") {}
 
-  Ball ball;
-  std::array<Robot, 16> our_robots;
-  std::array<Robot, 16> their_robots;
+  void FillMap(
+    cv::Mat & map, const World &,
+    const std::unordered_map<std::string, cv::Mat> & layers) override
+  {
+    map = layers.at("LineOfSightBall");
+  }
 
-  bool in_play;
-  bool our_penalty;
-  bool their_penalty;
-
-  int ignore_side = 0;
-
-  // Holds the ID of the robot not allowed to touch the ball, if any
-  std::optional<int> double_touch_forbidden_id_;
-
-  spatial::SpatialMapCollection spatial_maps;
 };
-}  // namespace ateam_kenobi
 
-#endif  // TYPES__WORLD_HPP_
+} // namespace ateam_kenobi::spatial::maps
+
+#endif  // MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_

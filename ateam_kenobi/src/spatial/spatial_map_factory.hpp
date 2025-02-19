@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,44 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef SPATIAL__SPATIAL_MAP_FACTORY_HPP_
+#define SPATIAL__SPATIAL_MAP_FACTORY_HPP_
 
-#ifndef TYPES__WORLD_HPP_
-#define TYPES__WORLD_HPP_
+#include <unordered_map>
+#include <opencv2/core/mat.hpp>
+#include "types/world.hpp"
 
-#include <optional>
-#include <array>
-#include <chrono>
-
-#include "spatial/spatial_map_collection.hpp"
-#include "types/ball.hpp"
-#include "types/field.hpp"
-#include "types/referee_info.hpp"
-#include "types/robot.hpp"
-
-namespace ateam_kenobi
+namespace ateam_kenobi::spatial
 {
-struct World
-{
-  std::chrono::steady_clock::time_point current_time;
 
-  Field field;
-  RefereeInfo referee_info;
+class SpatialMapFactory {
+public:
+  SpatialMapFactory(std::string name) : name_(name) {}
 
-  Ball ball;
-  std::array<Robot, 16> our_robots;
-  std::array<Robot, 16> their_robots;
+  const std::string & GetName() const {
+    return name_;
+  }
 
-  bool in_play;
-  bool our_penalty;
-  bool their_penalty;
+  virtual void FillMap(cv::Mat & map, const World & world, const std::unordered_map<std::string, cv::Mat> & layers) = 0;
 
-  int ignore_side = 0;
+private:
+  const std::string name_;
 
-  // Holds the ID of the robot not allowed to touch the ball, if any
-  std::optional<int> double_touch_forbidden_id_;
-
-  spatial::SpatialMapCollection spatial_maps;
 };
-}  // namespace ateam_kenobi
 
-#endif  // TYPES__WORLD_HPP_
+}  // namespace ateam_kenobi::spatial
+
+#endif  // SPATIAL__SPATIAL_MAP_FACTORY_HPP_
