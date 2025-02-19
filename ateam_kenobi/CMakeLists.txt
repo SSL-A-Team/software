@@ -68,6 +68,9 @@ add_library(kenobi_node_component SHARED
   src/skills/dribble.cpp
   src/skills/extract.cpp
   src/skills/capture.cpp
+  src/spatial/spatial_evaluator.cpp
+  src/spatial/spatial_inspection.cpp
+  src/spatial/layers/robot_shadows.cpp
   src/tactics/blockers.cpp
   src/tactics/defenders.cpp
   src/tactics/multi_move_to.cpp
