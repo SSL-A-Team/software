@@ -18,38 +18,58 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__KICK_ON_GOAL_PLAY_HPP_
-#define PLAYS__KICK_ON_GOAL_PLAY_HPP_
 
+#ifndef PLAYS__TEST_PLAYS__WAYPOINTS_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__WAYPOINTS_PLAY_HPP_
+
+#include <array>
+#include <chrono>
+#include <tuple>
+#include <vector>
+#include <string>
+#include <ateam_geometry/types.hpp>
 #include "stp/play.hpp"
-#include "tactics/standard_defense.hpp"
-#include "skills/pivot_kick.hpp"
-#include "skills/lane_idler.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class KickOnGoalPlay : public stp::Play
+class WaypointsPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "KickOnGoalPlay";
+  static constexpr const char * kPlayName = "WaypointsPlay";
 
-  explicit KickOnGoalPlay(stp::Options stp_options);
-
-  stp::PlayScore getScore(const World & world) override;
+  explicit WaypointsPlay(stp::Options stp_options);
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
 
 private:
-  tactics::StandardDefense defense_;
-  skills::PivotKick striker_;
-  skills::LaneIdler lane_idler_a_;
-  skills::LaneIdler lane_idler_b_;
+  struct Pose
+  {
+    ateam_geometry::Point position;
+    double heading;
+  };
+
+  struct Waypoint
+  {
+    std::vector<Pose> poses;
+    int64_t duration_ms;
+  };
+
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  std::vector<Waypoint> waypoints_;
+  std::chrono::steady_clock::time_point next_transition_time_ =
+    std::chrono::steady_clock::time_point::max();
+  std::size_t waypoint_index_ = 0;
+
+  void addWaypoint(
+    const int64_t duration_ms, const std::vector<std::tuple<double, double,
+    double>> & poses);
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAYS__WAYPOINTS_PLAY_HPP_

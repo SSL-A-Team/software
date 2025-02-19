@@ -18,38 +18,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__KICK_ON_GOAL_PLAY_HPP_
-#define PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#ifndef PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_
 
+#include <array>
+#include <vector>
+#include "motion/motion_controller.hpp"
 #include "stp/play.hpp"
-#include "tactics/standard_defense.hpp"
-#include "skills/pivot_kick.hpp"
-#include "skills/lane_idler.hpp"
+#include "ateam_geometry/types.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
-
-class KickOnGoalPlay : public stp::Play
+class ControlsTestPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "KickOnGoalPlay";
+  static constexpr const char * kPlayName = "ControlsTestPlay";
 
-  explicit KickOnGoalPlay(stp::Options stp_options);
-
-  stp::PlayScore getScore(const World & world) override;
+  explicit ControlsTestPlay(stp::Options stp_options);
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
 
 private:
-  tactics::StandardDefense defense_;
-  skills::PivotKick striker_;
-  skills::LaneIdler lane_idler_a_;
-  skills::LaneIdler lane_idler_b_;
+  struct Waypoint
+  {
+    ateam_geometry::Point position;
+    AngleMode angle_mode;
+    double heading;
+    double hold_time_sec;
+  };
+
+  MotionController motion_controller_;
+  MotionOptions motion_options_;
+
+  int index = 0;
+  std::vector<Waypoint> waypoints;
+  bool goal_hit;
+  std::chrono::steady_clock::time_point goal_hit_time;
+  double position_threshold = 0.15;
+  double angle_threshold = 8.0;
+
+  bool isGoalHit(const Robot & robot);
 };
-
 }  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_

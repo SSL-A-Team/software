@@ -18,38 +18,55 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__KICK_ON_GOAL_PLAY_HPP_
-#define PLAYS__KICK_ON_GOAL_PLAY_HPP_
+
+#ifndef PLAYS__TEST_PLAYS__TEST_WINDOW_EVAL_HPP_
+#define PLAYS__TEST_PLAYS__TEST_WINDOW_EVAL_HPP_
 
 #include "stp/play.hpp"
-#include "tactics/standard_defense.hpp"
-#include "skills/pivot_kick.hpp"
-#include "skills/lane_idler.hpp"
+#include "play_helpers/available_robots.hpp"
+#include "play_helpers/window_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class KickOnGoalPlay : public stp::Play
+class TestWindowEvalPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "KickOnGoalPlay";
+  static constexpr const char * kPlayName = "TestWindowEvalPlay";
 
-  explicit KickOnGoalPlay(stp::Options stp_options);
+  explicit TestWindowEvalPlay(stp::Options stp_options)
+  : stp::Play(kPlayName, stp_options)
+  {
+  }
 
-  stp::PlayScore getScore(const World & world) override;
+  void reset() override
+  {
+  }
 
-  void reset() override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override
+  {
+    const auto source = world.ball.pos;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) override;
+    const ateam_geometry::Segment target{
+      ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width},
+      ateam_geometry::Point{world.field.field_length / 2.0, world.field.goal_width}
+    };
+
+    const auto opponent_robots = play_helpers::getVisibleRobots(world.their_robots);
+
+    const auto windows =
+      play_helpers::window_evaluation::getWindows(target, source, opponent_robots);
+
+    play_helpers::window_evaluation::drawWindows(windows, source, getOverlays());
+
+    return {};
+  }
 
 private:
-  tactics::StandardDefense defense_;
-  skills::PivotKick striker_;
-  skills::LaneIdler lane_idler_a_;
-  skills::LaneIdler lane_idler_b_;
+  char const * const kUsePivotKickParam = "use_pivot_kick";
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAYS__TEST_WINDOW_EVAL_HPP_

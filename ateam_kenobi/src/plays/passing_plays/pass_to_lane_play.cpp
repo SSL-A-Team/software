@@ -36,6 +36,7 @@ PassToLanePlay::PassToLanePlay(
   lane_(lane),
   direction_(direction)
 {
+  setEnabled(false);
 }
 
 stp::PlayScore PassToLanePlay::getScore(const World & world)
