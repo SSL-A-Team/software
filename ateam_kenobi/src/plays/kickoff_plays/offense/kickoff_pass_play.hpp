@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,38 +18,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__KICK_ON_GOAL_PLAY_HPP_
-#define PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_PASS_PLAY_HPP_
+#define PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_PASS_PLAY_HPP_
 
 #include "stp/play.hpp"
 #include "tactics/standard_defense.hpp"
-#include "skills/pivot_kick.hpp"
-#include "skills/lane_idler.hpp"
+#include "tactics/multi_move_to.hpp"
+#include "tactics/pass.hpp"
 
 namespace ateam_kenobi::plays
 {
-
-class KickOnGoalPlay : public stp::Play
+class KickoffPassPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "KickOnGoalPlay";
+  static constexpr const char * kPlayName = "KickoffPassPlay";
 
-  explicit KickOnGoalPlay(stp::Options stp_options);
+  explicit KickoffPassPlay(stp::Options stp_options);
 
   stp::PlayScore getScore(const World & world) override;
 
-  void reset() override;
+  stp::PlayCompletionState getCompletionState() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) override;
+  void enter() override;
+
+  void exit() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+  void set_kickoff_ready();
 
 private:
   tactics::StandardDefense defense_;
-  skills::PivotKick striker_;
-  skills::LaneIdler lane_idler_a_;
-  skills::LaneIdler lane_idler_b_;
-};
+  tactics::MultiMoveTo multi_move_to_;
+  tactics::Pass pass_;
+  ateam_common::GameCommand prev_frame_game_command_;
+  bool kickoff_is_over_ = false;
 
+  bool pass_direction_chosen_ = false;
+
+  // if false, pass right
+  bool pass_left_ = false;
+};
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#endif  // PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_PASS_PLAY_HPP_

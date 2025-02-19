@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,23 +19,36 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__ALL_PLAYS_HPP_
-#define PLAYS__ALL_PLAYS_HPP_
+#ifndef PLAYS__TEST_PLAYS__SPINNING_A_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__SPINNING_A_PLAY_HPP_
 
-#include "halt_play.hpp"
-#include "kick_on_goal_play.hpp"
-#include "our_ball_placement_play.hpp"
-#include "their_ball_placement_play.hpp"
-#include "stop_play.hpp"
-#include "wall_play.hpp"
-#include "basic_122.hpp"
-#include "our_penalty_play.hpp"
-#include "their_free_kick_play.hpp"
-#include "their_penalty_play.hpp"
-#include "defense_play.hpp"
-#include "extract_play.hpp"
-#include "passing_plays/all_passing_plays.hpp"
-#include "kickoff_plays/all_kickoff_plays.hpp"
-#include "test_plays/all_test_plays.hpp"
+#include <vector>
+#include "stp/play.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
-#endif  // PLAYS__ALL_PLAYS_HPP_
+namespace ateam_kenobi::plays
+{
+
+class SpinningAPlay : public stp::Play
+{
+public:
+  static constexpr const char * kPlayName = "SpinningAPlay";
+
+  explicit SpinningAPlay(stp::Options stp_options);
+
+  void reset() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  const double kAngleSpeed = 0.01;
+  const double kNumRotations = 5;
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  std::vector<ateam_geometry::Point> base_shape_;
+  double angle_;
+};
+
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__TEST_PLAYS__SPINNING_A_PLAY_HPP_

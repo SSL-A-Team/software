@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,38 +18,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__KICK_ON_GOAL_PLAY_HPP_
-#define PLAYS__KICK_ON_GOAL_PLAY_HPP_
-
 #include "stp/play.hpp"
 #include "tactics/standard_defense.hpp"
-#include "skills/pivot_kick.hpp"
+#include "tactics/pass.hpp"
 #include "skills/lane_idler.hpp"
+
+#ifndef PLAYS__PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
+#define PLAYS__PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
 
 namespace ateam_kenobi::plays
 {
 
-class KickOnGoalPlay : public stp::Play
+class SpatialPassPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "KickOnGoalPlay";
+  static constexpr const char * kPlayName = "SpatialPassPlay";
 
-  explicit KickOnGoalPlay(stp::Options stp_options);
+  explicit SpatialPassPlay(stp::Options stp_options);
+
+  virtual ~SpatialPassPlay() = default;
 
   stp::PlayScore getScore(const World & world) override;
 
+  stp::PlayCompletionState getCompletionState() override;
+
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
 
 private:
-  tactics::StandardDefense defense_;
-  skills::PivotKick striker_;
-  skills::LaneIdler lane_idler_a_;
-  skills::LaneIdler lane_idler_b_;
+  tactics::StandardDefense defense_tactic_;
+  tactics::Pass pass_tactic_;
+  skills::LaneIdler idler_skill_;
+  ateam_geometry::Point target_;
+  bool started_ = false;
+
+  play_helpers::lanes::Lane getIdleLane(const World & world);
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#endif  // PLAYS__PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
