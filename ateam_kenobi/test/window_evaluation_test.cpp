@@ -65,9 +65,9 @@ TEST(WindowEvaluationTest, OneRobot)
       SegmentIsNear(
         ateam_geometry::Segment{
     ateam_geometry::Point{4.5, -1},
-    ateam_geometry::Point{4.5, -0.12}}),
+    ateam_geometry::Point{4.5, -0.120605}}),
       SegmentIsNear(
         ateam_geometry::Segment{
-    ateam_geometry::Point{4.5, 0.12},
+    ateam_geometry::Point{4.5, 0.120605},
     ateam_geometry::Point{4.5, 1}})));
 }

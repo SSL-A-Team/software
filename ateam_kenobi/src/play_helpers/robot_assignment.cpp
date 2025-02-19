@@ -192,16 +192,17 @@ std::vector<Robot> GroupAssignmentResult::GetGroupFilledAssignments(const std::s
   return robots;
 }
 
-std::vector<Robot> GroupAssignmentResult::GetGroupFilledAssignmentsOrEmpty(const std::string & name) const
+std::vector<Robot> GroupAssignmentResult::GetGroupFilledAssignmentsOrEmpty(
+  const std::string & name) const
 {
-    const auto record_iter = std::ranges::find_if(
+  const auto record_iter = std::ranges::find_if(
     records_, [&name](const GroupRecord & record) {
       return record.name == name;
     });
-    if(record_iter == records_.end()) {
-      return {};
-    }
-    return GetGroupFilledAssignments(name);
+  if(record_iter == records_.end()) {
+    return {};
+  }
+  return GetGroupFilledAssignments(name);
 }
 
 const GroupRecord & GroupAssignmentResult::GetRecord(const std::string & name) const

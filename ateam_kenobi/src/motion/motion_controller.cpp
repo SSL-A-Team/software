@@ -137,7 +137,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     double min_vel = 0.4;
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
-    } 
+    }
     if (ateam_geometry::norm(vel_vector) < min_vel) {
       xy_slow = true;
       vel_vector = min_vel * ateam_geometry::normalize(vel_vector);

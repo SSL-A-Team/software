@@ -171,7 +171,8 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
 
-  void initialize_robot_ids() {
+  void initialize_robot_ids()
+  {
     for(auto i = 0u; i < world_.our_robots.size(); ++i) {
       world_.our_robots[i].id = i;
     }
