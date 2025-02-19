@@ -208,10 +208,18 @@ void PlaySelector::resetPlayIfNeeded(stp::Play * play)
 {
   void * play_address = static_cast<void *>(play);
   if (play_address != prev_play_address_) {
+    if(prev_play_address_ != nullptr) {
+      static_cast<stp::Play *>(prev_play_address_)->exit();
+    }
     if (play != nullptr) {
       play->reset();
+      play->enter();
     }
     prev_play_address_ = play_address;
+  } else if (play->getCompletionState() == stp::PlayCompletionState::Done) {
+    play->exit();
+    play->reset();
+    play->enter();
   }
 }
 
