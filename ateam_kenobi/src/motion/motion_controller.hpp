@@ -96,7 +96,7 @@ public:
   void set_t_pid_gains(double p, double i, double d);
 
 // Velocity limits
-  double v_max = 2;
+  double v_max = 1.5;
   double t_max = 2;
 
   double face_angle = 0;

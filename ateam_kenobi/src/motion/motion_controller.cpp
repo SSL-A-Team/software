@@ -134,10 +134,11 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     auto vel_vector = ateam_geometry::Vector(x_command, y_command);
 
     // clamp to max/min velocity
-    double min_vel = 0.35;
+    double min_vel = 0.4;
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
-    } else if (ateam_geometry::norm(vel_vector) < min_vel) {
+    }
+    if (ateam_geometry::norm(vel_vector) < min_vel) {
       xy_slow = true;
       vel_vector = min_vel * ateam_geometry::normalize(vel_vector);
     }
@@ -174,7 +175,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     double t_command = this->t_controller.compute_command(t_error, dt);
 
     if (trajectory_complete && xy_slow) {
-      double theta_min = 0.35;
+      double theta_min = 0.6;
       if (abs(t_command) < theta_min) {
         if (t_command > 0) {
           t_command = std::clamp(t_command, theta_min, this->t_max);
