@@ -46,7 +46,6 @@ public:
     {
       // Game is in a state where the double-touch rule does not apply.
       double_touch_rule_applies_ = false;
-      return;
     }
 
     if (running_command != prev_game_command_ &&
