@@ -72,12 +72,23 @@ public:
     capture_.SetUseDefaultObstacles(use_obstacles);
   }
 
+  void SetCaptureSpeed(double speed)
+  {
+    capture_.SetCaptureSpeed(speed);
+  }
+
+  void SetPivotSpeed(double speed)
+  {
+    pivot_speed_ = speed;
+  }
+
 private:
   const double kPreKickOffset = kRobotRadius + 0.1;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
   skills::Capture capture_;
   bool done_ = false;
+  double pivot_speed_ = 4.0;  // rad/s
 
   enum class State
   {
