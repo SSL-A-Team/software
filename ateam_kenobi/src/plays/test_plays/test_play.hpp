@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__TEST_PLAY_HPP_
-#define PLAYS__TEST_PLAY_HPP_
+#ifndef PLAYS__TEST_PLAYS__TEST_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__TEST_PLAY_HPP_
 
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
@@ -45,4 +45,4 @@ private:
   skills::Goalie goalie_skill_;
 };
 }  // namespace ateam_kenobi::plays
-#endif  // PLAYS__TEST_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAYS__TEST_PLAY_HPP_

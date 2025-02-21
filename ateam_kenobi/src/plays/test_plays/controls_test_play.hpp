@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__CONTROLS_TEST_PLAY_HPP_
-#define PLAYS__CONTROLS_TEST_PLAY_HPP_
+#ifndef PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_
 
 #include <array>
 #include <vector>
@@ -64,4 +64,4 @@ private:
   bool isGoalHit(const Robot & robot);
 };
 }  // namespace ateam_kenobi::plays
-#endif  // PLAYS__CONTROLS_TEST_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_

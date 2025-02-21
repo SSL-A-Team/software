@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__TEST_WINDOW_EVAL_HPP_
-#define PLAYS__TEST_WINDOW_EVAL_HPP_
+#ifndef PLAYS__TEST_PLAYS__TEST_WINDOW_EVAL_HPP_
+#define PLAYS__TEST_PLAYS__TEST_WINDOW_EVAL_HPP_
 
 #include "stp/play.hpp"
 #include "play_helpers/available_robots.hpp"
@@ -69,4 +69,4 @@ private:
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__TEST_WINDOW_EVAL_HPP_
+#endif  // PLAYS__TEST_PLAYS__TEST_WINDOW_EVAL_HPP_

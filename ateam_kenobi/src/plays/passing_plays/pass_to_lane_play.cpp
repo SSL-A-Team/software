@@ -36,7 +36,6 @@ PassToLanePlay::PassToLanePlay(
   lane_(lane),
   direction_(direction)
 {
-  //TODO(barulicm): Disabling this play type to test SpatialPassPlay in game
   setEnabled(false);
 }
 

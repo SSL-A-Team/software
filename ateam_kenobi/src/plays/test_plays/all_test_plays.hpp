@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TEST_PLAYS__ALL_TEST_PLAYS_HPP_
-#define TEST_PLAYS__ALL_TEST_PLAYS_HPP_
+#ifndef PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
+#define PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
 
 #include "controls_test_play.hpp"
 #include "spinning_a_play.hpp"
@@ -30,4 +30,4 @@
 #include "triangle_pass_play.hpp"
 #include "waypoints_play.hpp"
 
-#endif  // TEST_PLAYS__ALL_TEST_PLAYS_HPP_
+#endif  // PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_

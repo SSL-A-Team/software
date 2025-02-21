@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
-#define TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
+#ifndef PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
 
 #include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
@@ -35,7 +35,8 @@ public:
   static constexpr const char * kPlayName = "TestSpatialMapPlay";
 
   explicit TestSpatialMapPlay(stp::Options stp_options)
-  : stp::Play(kPlayName, stp_options) {
+  : stp::Play(kPlayName, stp_options)
+  {
     // cv::namedWindow("heatmap", cv::WINDOW_NORMAL);
   }
 
@@ -59,26 +60,9 @@ public:
 
     getOverlays().drawCircle("heatmap_max", ateam_geometry::makeCircle(max_pos, kRobotRadius));
 
-    // const auto & heatmap = world.spatial_maps["TestMap"].data;
-    // cv::Mat displayHeatmap;
-    // switch(heatmap.type()) {
-    //   case CV_8UC1:
-    //     displayHeatmap = heatmap;
-    //     break;
-    //   case CV_32FC1:
-    //     cv::normalize(heatmap, displayHeatmap, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-    //     break;
-    // }
-    // if(!heatmap.empty()) {
-    //   cv::imshow("heatmap", displayHeatmap);
-    //   cv::waitKey(10);
-    // } else {
-    //   std::cerr << "empty heatmap\n";
-    // }
-
     return {};
   }
 };
 }  // namespace ateam_kenobi::plays
 
-#endif  // TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
