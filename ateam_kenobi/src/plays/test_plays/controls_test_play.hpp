@@ -18,24 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_
 
-#ifndef PLAYS__TRIANGLE_PASS_PLAY_HPP_
-#define PLAYS__TRIANGLE_PASS_PLAY_HPP_
-
+#include <array>
 #include <vector>
+#include "motion/motion_controller.hpp"
 #include "stp/play.hpp"
+#include "ateam_geometry/types.hpp"
 #include "play_helpers/easy_move_to.hpp"
-#include "tactics/pass.hpp"
 
 namespace ateam_kenobi::plays
 {
-
-class TrianglePassPlay : public stp::Play
+class ControlsTestPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "TrianglePassPlay";
+  static constexpr const char * kPlayName = "ControlsTestPlay";
 
-  explicit TrianglePassPlay(stp::Options stp_options);
+  explicit ControlsTestPlay(stp::Options stp_options);
 
   void reset() override;
 
@@ -43,38 +43,25 @@ public:
     16> runFrame(const World & world) override;
 
 private:
-  static constexpr double kKickSpeed = 3.0;
-  tactics::Pass pass_tactic_;
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-  std::vector<ateam_geometry::Point> positions;
-  std::size_t kick_target_ind_ = 0;
-
-  enum class State
+  struct Waypoint
   {
-    Setup,
-    Passing,
-    BackOff
-  } state_ = State::Setup;
+    ateam_geometry::Point position;
+    AngleMode angle_mode;
+    double heading;
+    double hold_time_sec;
+  };
 
-  bool isReady(const World & world);
+  MotionController motion_controller_;
+  MotionOptions motion_options_;
 
-  void runSetup(
-    const std::vector<Robot> & robots,
-    const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
+  int index = 0;
+  std::vector<Waypoint> waypoints;
+  bool goal_hit;
+  std::chrono::steady_clock::time_point goal_hit_time;
+  double position_threshold = 0.15;
+  double angle_threshold = 8.0;
 
-  void runPassing(
-    const std::vector<Robot> & robots,
-    const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
-
-  void runBackOff(
-    const std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
+  bool isGoalHit(const Robot & robot);
 };
-
 }  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__TRIANGLE_PASS_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_

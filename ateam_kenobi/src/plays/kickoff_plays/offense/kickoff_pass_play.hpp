@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,51 +18,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__THEIR_KICKOFF_PLAY_HPP_
-#define PLAYS__THEIR_KICKOFF_PLAY_HPP_
+#ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_PASS_PLAY_HPP_
+#define PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_PASS_PLAY_HPP_
 
-#include <array>
-#include <vector>
 #include "stp/play.hpp"
-#include "play_helpers/easy_move_to.hpp"
 #include "tactics/standard_defense.hpp"
+#include "tactics/multi_move_to.hpp"
+#include "tactics/pass.hpp"
 
 namespace ateam_kenobi::plays
 {
-
-class TheirKickoffPlay : public stp::Play
+class KickoffPassPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "TheirKickoffPlay";
+  static constexpr const char * kPlayName = "KickoffPassPlay";
 
-  explicit TheirKickoffPlay(stp::Options stp_options);
+  explicit KickoffPassPlay(stp::Options stp_options);
 
   stp::PlayScore getScore(const World & world) override;
 
-  void reset() override;
+  stp::PlayCompletionState getCompletionState() override;
+
+  void enter() override;
+
+  void exit() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override;
 
+  void set_kickoff_ready();
+
 private:
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   tactics::StandardDefense defense_;
+  tactics::MultiMoveTo multi_move_to_;
+  tactics::Pass pass_;
+  ateam_common::GameCommand prev_frame_game_command_;
+  bool kickoff_is_over_ = false;
 
-  std::vector<ateam_geometry::Point> getOffensePoints(const World & world);
+  bool pass_direction_chosen_ = false;
 
-  ateam_geometry::Point getOffensePointToBlockTarget(
-    const World & world,
-    const ateam_geometry::Point & target,
-    const double & x,
-    const ateam_geometry::Point & fallback);
-
-  void runOffense(
-    const World & world,
-    const std::vector<ateam_geometry::Point> & points,
-    const std::vector<std::optional<Robot>> & robots,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+  // if false, pass right
+  bool pass_left_ = false;
 };
-
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__THEIR_KICKOFF_PLAY_HPP_
+#endif  // PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_PASS_PLAY_HPP_

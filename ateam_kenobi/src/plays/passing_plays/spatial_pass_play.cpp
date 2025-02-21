@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,64 +18,60 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "pass_to_segment_play.hpp"
-#include <algorithm>
+#include "spatial_pass_play.hpp"
+#include <string>
 #include <vector>
-#include "play_helpers/window_evaluation.hpp"
+#include <ateam_common/robot_constants.hpp>
+#include <ateam_geometry/types.hpp>
+#include "spatial/spatial_inspection.hpp"
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/shot_evaluation.hpp"
+#include "play_helpers/window_evaluation.hpp"
+#include "play_helpers/possession.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-PassToSegmentPlay::PassToSegmentPlay(
-  stp::Options stp_options,
-  PassToSegmentPlay::TargetSelectionFunc target_func)
-: stp::Play(stp_options.name, stp_options),
-  target_func_(target_func),
+SpatialPassPlay::SpatialPassPlay(stp::Options stp_options)
+: stp::Play(kPlayName, stp_options),
   defense_tactic_(createChild<tactics::StandardDefense>("defense")),
-  pass_tactic_(createChild<tactics::PassToSegment>("pass")),
+  pass_tactic_(createChild<tactics::Pass>("pass")),
   idler_skill_(createChild<skills::LaneIdler>("idler"))
 {
+  getParamInterface().declareParameter("show_heatmap", false);
 }
 
-stp::PlayScore PassToSegmentPlay::getScore(const World & world)
-{
-  // TODO(barulicm) does not work generically if we want to use this to get the ball into play
-  if (!world.in_play &&
-    world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
-  {
-    return stp::PlayScore::NaN();
-  }
 
-  const auto target = target_func_(world);
-  const auto visible_opponents = play_helpers::getVisibleRobots(world.their_robots);
-  const auto windows = play_helpers::window_evaluation::getWindows(
-    target, world.ball.pos,
-    visible_opponents);
-  const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
-  if (!largest_window) {
+stp::PlayScore SpatialPassPlay::getScore(const World & world)
+{
+  if(play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore::Min();
   }
-  const auto target_point = CGAL::midpoint(*largest_window);
 
-  const auto goal_chance = play_helpers::GetShotSuccessChance(world, target_point);
+  ateam_geometry::Point pass_target;
 
-  // Even if there is no window now, things might change, so assume a non-zero success chance
-  const double goal_chance_multiplier = std::max(goal_chance / 100.0, 0.2);
+  if(started_) {
+    pass_target = target_;
+  } else {
+    pass_target = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"],
+        world.field);
+  }
 
-  // Arbitrary value that would give us plenty of room to catch a pass
-  const auto ideal_target_length = kRobotDiameter * 5;
-  const auto pass_chance_multiplier =
-    std::clamp(
-    largest_window->squared_length() / (ideal_target_length * ideal_target_length), 0.0, 1.0);
-  return pass_chance_multiplier * goal_chance_multiplier * stp::PlayScore::Max();
+  const auto their_robots = play_helpers::getVisibleRobots(world.their_robots);
+  const ateam_geometry::Segment goal_segment(
+    ateam_geometry::Point(world.field.field_length / 2.0, -world.field.goal_width),
+    ateam_geometry::Point(world.field.field_length / 2.0, world.field.goal_width)
+  );
+  const auto windows = play_helpers::window_evaluation::getWindows(goal_segment, pass_target,
+      their_robots);
+  const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
+  if(!largest_window) {
+    return stp::PlayScore::NaN();
+  }
+  return stp::PlayScore::Max() * (largest_window->squared_length() / goal_segment.squared_length());
 }
 
-stp::PlayCompletionState PassToSegmentPlay::getCompletionState()
+stp::PlayCompletionState SpatialPassPlay::getCompletionState()
 {
   if (!started_) {
     return stp::PlayCompletionState::NotApplicable;
@@ -86,47 +82,48 @@ stp::PlayCompletionState PassToSegmentPlay::getCompletionState()
   return stp::PlayCompletionState::Done;
 }
 
-void PassToSegmentPlay::reset()
+void SpatialPassPlay::reset()
 {
   defense_tactic_.reset();
   pass_tactic_.reset();
   idler_skill_.Reset();
   started_ = false;
-  cached_target_ = ateam_geometry::Segment{};
+  target_ = ateam_geometry::Point{};
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegmentPlay::runFrame(
-  const World & world)
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  16> SpatialPassPlay::runFrame(const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
-  ateam_geometry::Segment target = cached_target_;
-
-  if (!started_) {
-    target = target_func_(world);
-    cached_target_ = target;
+  if(!started_) {
+    target_ = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"], world.field);
+  } else {
+    // TODO(barulicm): need to granularize "started" state to not change target while ball is moving
+    if(spatial::GetValueAtLocation(world.spatial_maps["LineOfSightBallMap"], target_,
+        world.field) < 1)
+    {
+      // If pass is being blocked, choose a new target
+      target_ = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"], world.field);
+    }
   }
 
-  getOverlays().drawLine("target", {target.source(), target.target()}, "grey");
-  getOverlays().drawRectangle(
-    "left_lane",
-    play_helpers::lanes::GetLaneBounds(
-      world,
-      play_helpers::lanes::Lane::Left), "aqua", "transparent");
-  getOverlays().drawRectangle(
-    "center_lane",
-    play_helpers::lanes::GetLaneBounds(
-      world,
-      play_helpers::lanes::Lane::Center), "aqua", "transparent");
-  getOverlays().drawRectangle(
-    "right_lane",
-    play_helpers::lanes::GetLaneBounds(
-      world,
-      play_helpers::lanes::Lane::Right), "aqua", "transparent");
+  getOverlays().drawCircle("target", ateam_geometry::makeCircle(target_, kRobotRadius), "grey");
+  const auto half_field_length = (world.field.field_length / 2.0) + world.field.boundary_width;
+  const auto half_field_width = (world.field.field_width / 2.0) + world.field.boundary_width;
+  ateam_geometry::Rectangle bounds {
+    ateam_geometry::Point{-half_field_length, -half_field_width},
+    ateam_geometry::Point{half_field_length, half_field_width}
+  };
 
-  pass_tactic_.setTarget(target);
+  if(getParamInterface().getParameter<bool>("show_heatmap")) {
+    getOverlays().drawHeatmap("heatmap", bounds, world.spatial_maps["ReceiverPositionQuality"].data,
+        world.spatial_maps["ReceiverPositionQuality"].data, 200);
+  }
 
-  idler_skill_.SetLane(getIdleLane(world, target));
+  pass_tactic_.setTarget(target_);
+
+  idler_skill_.SetLane(getIdleLane(world));
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
@@ -138,7 +135,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
     disallowed_strikers.push_back(*world.double_touch_forbidden_id_);
   }
   groups.AddPosition("kicker", pass_tactic_.getKickerAssignmentPoint(world), disallowed_strikers);
-  groups.AddPosition("receiver", pass_tactic_.getReceiverAssignmentPoint(world));
+  groups.AddPosition("receiver", pass_tactic_.getReceiverAssignmentPoint());
   const auto enough_bots_for_defense = available_robots.size() >= 4;
   if (enough_bots_for_defense) {
     groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
@@ -171,6 +168,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
     pass_tactic_.runFrame(world, *maybe_kicker, *maybe_receiver, kicker_command, receiver_command);
   }
 
+  std::string play_state;
+  if(!started_) {
+    play_state = "Prep";
+  } else if(!pass_tactic_.isDone()) {
+    play_state = "Passing";
+  } else {
+    play_state = "Done";
+  }
+  getPlayInfo()["play state"] = play_state;
+
   if (enough_bots_for_idler) {
     assignments.RunPositionIfAssigned(
       "idler", [this, &world, &motion_commands](const Robot & robot) {
@@ -182,30 +189,21 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
 }
 
 
-play_helpers::lanes::Lane PassToSegmentPlay::getIdleLane(
-  const World & world,
-  const ateam_geometry::Segment & target)
+play_helpers::lanes::Lane SpatialPassPlay::getIdleLane(const World & world)
 {
   std::vector<play_helpers::lanes::Lane> lanes = {
     play_helpers::lanes::Lane::Left,
     play_helpers::lanes::Lane::Center,
     play_helpers::lanes::Lane::Right,
   };
-
-  const auto target_midpoint = CGAL::midpoint(target);
-  lanes.erase(
-    std::remove_if(
-      lanes.begin(), lanes.end(), [&target_midpoint, &world](const auto & lane) {
-        return play_helpers::lanes::IsPointInLane(world, target_midpoint, lane) ||
-               play_helpers::lanes::IsBallInLane(world, lane);
-      }), lanes.end());
-
-  if (lanes.empty()) {
-    // Fallback to center lane
-    return play_helpers::lanes::Lane::Center;
+  for(const auto lane : lanes) {
+    if(!play_helpers::lanes::IsPointInLane(world, target_, lane) &&
+      !play_helpers::lanes::IsBallInLane(world, lane))
+    {
+      return lane;
+    }
   }
-
-  return lanes.front();
+  return play_helpers::lanes::Lane::Center;
 }
 
 }  // namespace ateam_kenobi::plays

@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,45 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__OUR_KICKOFF_PLAY_HPP_
-#define PLAYS__OUR_KICKOFF_PLAY_HPP_
+#ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_
+#define PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_
 
 #include "stp/play.hpp"
 #include "tactics/standard_defense.hpp"
 #include "tactics/multi_move_to.hpp"
-#include "tactics/pass.hpp"
 
 namespace ateam_kenobi::plays
 {
-class OurKickoffPlay : public stp::Play
+
+class OurKickoffPrepPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "OurKickoffPlay";
+  static constexpr const char * kPlayName = "OurKickoffPrepPlay";
 
-  explicit OurKickoffPlay(stp::Options stp_options);
+  explicit OurKickoffPrepPlay(stp::Options stp_options);
 
   stp::PlayScore getScore(const World & world) override;
 
-  stp::PlayCompletionState getCompletionState() override;
-
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
-
-  void set_kickoff_ready();
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world);
 
 private:
   tactics::StandardDefense defense_;
   tactics::MultiMoveTo multi_move_to_;
-  tactics::Pass pass_;
-  ateam_common::GameCommand prev_frame_game_command_;
-
-  bool pass_direction_chosen_ = false;
-
-  // if false, pass right
-  bool pass_left_ = false;
 };
+
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__OUR_KICKOFF_PLAY_HPP_
+#endif  // PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_

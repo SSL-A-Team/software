@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,31 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__TEST_PLAY_HPP_
-#define PLAYS__TEST_PLAY_HPP_
+#ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_
+#define PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_
 
-#include "path_planning/path_planner.hpp"
-#include "motion/motion_controller.hpp"
 #include "stp/play.hpp"
-#include "skills/goalie.hpp"
+#include "tactics/standard_defense.hpp"
+#include "skills/line_kick.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
-class TestPlay : public stp::Play
+
+class KickoffOnGoalPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "TestPlay";
+  static constexpr const char * kPlayName = "KickoffOnGoalPlay";
 
-  explicit TestPlay(stp::Options stp_options);
+  explicit KickoffOnGoalPlay(stp::Options stp_options);
+
+  stp::PlayScore getScore(const World & world) override;
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world) override;
 
 private:
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-  skills::Goalie goalie_skill_;
+  tactics::StandardDefense defense_;
+  skills::LineKick kick_;
+  tactics::MultiMoveTo multi_move_to_;
+
+  std::optional<ateam_geometry::Segment> getLargestWindowOnGoal(const World & world);
 };
+
 }  // namespace ateam_kenobi::plays
-#endif  // PLAYS__TEST_PLAY_HPP_
+
+#endif  // PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_

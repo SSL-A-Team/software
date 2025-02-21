@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,55 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__TEST_PLAYS__TEST_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__TEST_PLAY_HPP_
 
-#ifndef PLAYS__TEST_WINDOW_EVAL_HPP_
-#define PLAYS__TEST_WINDOW_EVAL_HPP_
-
+#include "path_planning/path_planner.hpp"
+#include "motion/motion_controller.hpp"
 #include "stp/play.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/window_evaluation.hpp"
+#include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays
 {
-
-class TestWindowEvalPlay : public stp::Play
+class TestPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "TestWindowEvalPlay";
+  static constexpr const char * kPlayName = "TestPlay";
 
-  explicit TestWindowEvalPlay(stp::Options stp_options)
-  : stp::Play(kPlayName, stp_options)
-  {
-  }
+  explicit TestPlay(stp::Options stp_options);
 
-  void reset() override
-  {
-  }
+  void reset() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override
-  {
-    const auto source = world.ball.pos;
-
-    const ateam_geometry::Segment target{
-      ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width},
-      ateam_geometry::Point{world.field.field_length / 2.0, world.field.goal_width}
-    };
-
-    const auto opponent_robots = play_helpers::getVisibleRobots(world.their_robots);
-
-    const auto windows =
-      play_helpers::window_evaluation::getWindows(target, source, opponent_robots);
-
-    play_helpers::window_evaluation::drawWindows(windows, source, getOverlays());
-
-    return {};
-  }
+    16> runFrame(const World & world) override;
 
 private:
-  char const * const kUsePivotKickParam = "use_pivot_kick";
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  skills::Goalie goalie_skill_;
 };
-
 }  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__TEST_WINDOW_EVAL_HPP_
+#endif  // PLAYS__TEST_PLAYS__TEST_PLAY_HPP_

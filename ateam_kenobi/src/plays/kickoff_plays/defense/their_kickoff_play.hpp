@@ -18,39 +18,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__KICKOFF_ON_GOAL_HPP_
-#define PLAYS__KICKOFF_ON_GOAL_HPP_
+#ifndef PLAYS__KICKOFF_PLAYS__DEFENSE__THEIR_KICKOFF_PLAY_HPP_
+#define PLAYS__KICKOFF_PLAYS__DEFENSE__THEIR_KICKOFF_PLAY_HPP_
 
+#include <array>
+#include <vector>
 #include "stp/play.hpp"
+#include "play_helpers/easy_move_to.hpp"
 #include "tactics/standard_defense.hpp"
-#include "skills/line_kick.hpp"
-#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class KickoffOnGoalPlay : public stp::Play
+class TheirKickoffPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "KickoffOnGoalPlay";
+  static constexpr const char * kPlayName = "TheirKickoffPlay";
 
-  explicit KickoffOnGoalPlay(stp::Options stp_options);
+  explicit TheirKickoffPlay(stp::Options stp_options);
 
   stp::PlayScore getScore(const World & world) override;
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
 
 private:
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   tactics::StandardDefense defense_;
-  skills::LineKick kick_;
-  tactics::MultiMoveTo multi_move_to_;
 
-  std::optional<ateam_geometry::Segment> getLargestWindowOnGoal(const World & world);
+  std::vector<ateam_geometry::Point> getOffensePoints(const World & world);
+
+  ateam_geometry::Point getOffensePointToBlockTarget(
+    const World & world,
+    const ateam_geometry::Point & target,
+    const double & x,
+    const ateam_geometry::Point & fallback);
+
+  void runOffense(
+    const World & world,
+    const std::vector<ateam_geometry::Point> & points,
+    const std::vector<std::optional<Robot>> & robots,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__KICKOFF_ON_GOAL_HPP_
+#endif  // PLAYS__KICKOFF_PLAYS__DEFENSE__THEIR_KICKOFF_PLAY_HPP_

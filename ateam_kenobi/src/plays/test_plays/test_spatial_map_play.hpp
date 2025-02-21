@@ -18,50 +18,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__CONTROLS_TEST_PLAY_HPP_
-#define PLAYS__CONTROLS_TEST_PLAY_HPP_
+#ifndef PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
 
-#include <array>
-#include <vector>
+#include "path_planning/path_planner.hpp"
 #include "motion/motion_controller.hpp"
 #include "stp/play.hpp"
-#include "ateam_geometry/types.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include <opencv2/opencv.hpp>
+#include "spatial/spatial_inspection.hpp"
 
 namespace ateam_kenobi::plays
 {
-class ControlsTestPlay : public stp::Play
+class TestSpatialMapPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "ControlsTestPlay";
+  static constexpr const char * kPlayName = "TestSpatialMapPlay";
 
-  explicit ControlsTestPlay(stp::Options stp_options);
+  explicit TestSpatialMapPlay(stp::Options stp_options)
+  : stp::Play(kPlayName, stp_options)
+  {
+    // cv::namedWindow("heatmap", cv::WINDOW_NORMAL);
+  }
 
-  void reset() override;
+  void reset() override {}
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
-
-private:
-  struct Waypoint
+    16> runFrame(const World & world) override
   {
-    ateam_geometry::Point position;
-    AngleMode angle_mode;
-    double heading;
-    double hold_time_sec;
-  };
+    const auto half_field_length = (world.field.field_length / 2.0) + world.field.boundary_width;
+    const auto half_field_width = (world.field.field_width / 2.0) + world.field.boundary_width;
+    ateam_geometry::Rectangle bounds {
+      ateam_geometry::Point{-half_field_length, -half_field_width},
+      ateam_geometry::Point{half_field_length, half_field_width}
+    };
 
-  MotionController motion_controller_;
-  MotionOptions motion_options_;
+    const auto & map = world.spatial_maps["TestMap"];
 
-  int index = 0;
-  std::vector<Waypoint> waypoints;
-  bool goal_hit;
-  std::chrono::steady_clock::time_point goal_hit_time;
-  double position_threshold = 0.15;
-  double angle_threshold = 8.0;
+    getOverlays().drawHeatmap("heatmap", bounds, map.data, 200);
 
-  bool isGoalHit(const Robot & robot);
+    const auto max_pos = spatial::GetMaxPosition(map, world.field);
+
+    getOverlays().drawCircle("heatmap_max", ateam_geometry::makeCircle(max_pos, kRobotRadius));
+
+    return {};
+  }
 };
 }  // namespace ateam_kenobi::plays
-#endif  // PLAYS__CONTROLS_TEST_PLAY_HPP_
+
+#endif  // PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
