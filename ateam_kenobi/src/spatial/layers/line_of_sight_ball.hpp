@@ -30,7 +30,7 @@
 namespace ateam_kenobi::spatial::layers
 {
 
-class LineOfSightBall : public SpatialLayerFactory {
+class LineOfSightBall final : public SpatialLayerFactory {
 public:
   LineOfSightBall()
   : SpatialLayerFactory("LineOfSightBall") {}

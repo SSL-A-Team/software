@@ -26,7 +26,7 @@
 namespace ateam_kenobi::spatial::layers
 {
 
-class TheirDefenseAreaKeepout : public SpatialLayerFactory {
+class TheirDefenseAreaKeepout final : public SpatialLayerFactory {
 public:
   TheirDefenseAreaKeepout()
   : SpatialLayerFactory("TheirDefenseAreaKeepout") {}

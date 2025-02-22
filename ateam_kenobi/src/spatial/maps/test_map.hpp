@@ -29,7 +29,7 @@
 namespace ateam_kenobi::spatial::maps
 {
 
-class TestMap : public SpatialMapFactory {
+class TestMap final : public SpatialMapFactory {
 public:
   TestMap()
   : SpatialMapFactory("TestMap") {}

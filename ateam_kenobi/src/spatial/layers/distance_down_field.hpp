@@ -26,7 +26,7 @@
 namespace ateam_kenobi::spatial::layers
 {
 
-class DistanceDownField : public SpatialLayerFactory {
+class DistanceDownField final : public SpatialLayerFactory {
 public:
   DistanceDownField()
   : SpatialLayerFactory("DistanceDownField") {}
