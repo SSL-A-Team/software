@@ -20,9 +20,3 @@ interface Accel {
     linear: ROSLIB.Vector3
     angular: ROSLIB.Vector3
 }
-
-// Helper message type for overlays
-interface Mesh1d {
-    mesh1d: number[]
-}
-

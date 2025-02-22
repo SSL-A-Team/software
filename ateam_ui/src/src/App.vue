@@ -4,6 +4,7 @@
             <v-app-bar-title> ATeam UI </v-app-bar-title>
         </v-app-bar>
         <v-main>
+            <HistoryComponent/>
             <v-container fluid class="d-inline-flex justify-space-between">
             <v-row class="flex-nowrap">
                 <v-col class="flex-grow-0 flex-shrink-0">
@@ -59,6 +60,7 @@ import { defineComponent, toRaw } from 'vue'
 
 import { AppState } from '@/state'
 import GoaliePickerComponent from './components/GoaliePickerComponent.vue'
+import HistoryComponent from './components/HistoryComponent.vue'
 
 
 export default {
@@ -85,6 +87,31 @@ export default {
         updateField: function() {
             this.$refs.mainField.update();
 
+            // Hack for testing, need to find a better way to trigger update when kenobi is not available
+            const timestamp = Date.now();
+            if (timestamp - this.state.currentWorld.timestamp > 500) {
+                this.state.currentWorld.timestamp = timestamp;
+            }
+
+            // Only store history while we are unpausued
+            if (this.state.selectedHistoryFrame == -1) {
+                // if (this.state.worldHistory.length < 100000) {
+                //     this.state.worldHistory.push(structuredClone(this.state.world.__v_raw));
+                // } else {
+                //     this.state.historyEndIndex++;
+                //     if (this.state.historyEndIndex >= this.state.worldHistory.length) {
+                //         this.state.historyEndIndex = 0;
+                //     }
+                //     this.state.worldHistory[this.state.historyEndIndex] = structuredClone(this.state.world.__v_raw);
+                // }
+            } else if (!this.state.historyReplayIsPaused) {
+                if (this.state.selectedHistoryFrame >= this.state.worldHistory.length - 1) {
+                    this.state.historyReplayIsPaused = true;
+                    console.log("reached end of history")
+                } else {
+                    this.state.selectedHistoryFrame++;
+                }
+            }
         },
         updateStatus: function() {
             this.$refs.robotStatus.update();
@@ -112,7 +139,8 @@ export default {
         AIComponent,
         PlaybookComponent,
         FieldSideComponent,
-        GoaliePickerComponent
+        GoaliePickerComponent,
+        HistoryComponent
     }
 }
 </script>

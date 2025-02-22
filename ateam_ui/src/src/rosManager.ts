@@ -1,5 +1,4 @@
 import ROSLIB from "roslib"
-// import 'roslib/build/roslib';
 import { Team, TeamColor } from "@/team"
 import { Overlay } from "@/overlay"
 import { Referee } from "@/referee"
@@ -7,186 +6,17 @@ import { Ball } from "@/ball"
 import { Field } from "@/field"
 import { AIState } from "@/AI"
 import { Play } from "@/play"
-import { exportDefaultSpecifier } from "@babel/types"
+import { WorldState, AppState } from "@/state"
 
-export class RenderConfig {
-    angle: number = 0; // Rotation applied to the rendered field
-    scale: number = 140; // Pixels per meter (in the rendering canvas)   
-}
-
-export class WorldState {
-    team_name: string;
-    team: TeamColor;
-    teams: Team[];
-    ball: Ball;
-    field: Field;
-    referee: Referee;
-    ai: AIState;
-    ignore_side: number;
-    timestamp: number;
-
-    constructor() {
-        this.team_name = "A-Team";
-        this.team = TeamColor.Blue;
-        this.teams = [];
-        this.teams[TeamColor.Blue] = new Team(this.team_name, TeamColor.Blue, -1);
-        this.teams[TeamColor.Yellow] = new Team("Opponent", TeamColor.Yellow, 1);
-
-        this.ball = new Ball();
-        this.field = new Field();
-
-        this.referee = new Referee();
-        this.ai = new AIState();
-
-        this.ignore_side = 0;
-    }
-}
-
-export class AppState {
-    renderConfig: RenderConfig;
-    currentWorld: WorldState; // World that is constantly kept up to date by ROS callbacks
-    world: WorldState; // World to be displayed, can be set to a world state in the past history buffer
-
-    worldHistory: WorldState[] = []; // Treated as a circular buffer
-    historyEndIndex: number = 0; // Index of the last element of circular buffer
-    selectedHistoryFrame: number = -1; // Goes from 0 to length of the history buffer linearly, not using the circular buffer index system.
-    historyReplayIsPaused: boolean = true;
-
+export class RosManager {
     // I'm not sure if we will need ongoing access to these
     ros: ROSLIB.Ros;
-    publishers: ROSLIB.Topic[]
-    subscriptions: ROSLIB.Topic[]
-    services: ROSLIB.Service[]
-    params: ROSLIB.Param[]
+    publishers: Map<string, ROSLIB.Topic>
+    subscriptions: Map<string, ROSLIB.Topic>
+    services: Map<string, ROSLIB.Service>
+    params: Map<string, ROSLIB.Param>
 
-    sim: boolean = true;
-    comp: boolean = false; // TODO: find a better way to set this value
-
-    controlled_robot: number = null;
-
-    plays = {};
-    selected_play_name: string = null;
-    override_play_in_progress: string = null;
-
-    hovered_field_ignore_side: number = 0;
-    draggedRobot: number = null;
-
-    goalie_service_status: [status: boolean, reason: string] = [true, ""] // False if the set goalie service fails
-
-    setGoalie(goalie_id: number) {
-        const state = this; // fix dumb javascript things
-
-        const request = new ROSLIB.ServiceRequest({
-            desired_keeper: goalie_id
-        });
-
-        this.services["setGoalie"].callService(request,
-            // Service Response Callback
-            function(result) {
-                if(!result.success) {
-                    state.goalie_service_status = [false, result.reason];
-                } else {
-                    state.goalie_service_status = [true, ""];
-                }
-            },
-            // Failed to call service callback
-            function(result) {
-                state.goalie_service_status = [false, result];
-            }
-        );
-    }
-
-    getGoalie(): string {
-        // Using current world since the goalie UI element should be based on up to date data from the game controller
-        if (this.currentWorld.referee && this.currentWorld.referee[this.currentWorld.team]) {
-            const id = this.currentWorld.referee[this.currentWorld.team].goalkeeper
-            if (id == null || isNaN(id)) {
-                return "X";
-            }
-
-            return String(id);
-        }
-
-        return "X";
-    }
-
-    setJoystickRobot(id: number) {
-        // Toggle the selected robot off if it is the same
-        if (this.controlled_robot == id) {
-            this.controlled_robot = -1;
-        } else {
-            this.controlled_robot = id;
-        }
-        this.params["joystick_param"].set(this.controlled_robot);
-    }
-
-
-    setPlayEnabled(play: Play) {
-        const state = this; // fix dumb javascript things
-        const request = new ROSLIB.ServiceRequest({
-            play_name: play.name,
-            enabled: play.enabled
-        });
-
-        this.services["setPlayEnabled"].callService(request,
-            function(result) {
-                if(!result.success) {
-                    console.log("Failed to enable/disable ", play.name, ": ", result.reason);
-                }
-            });
-    }
-
-    setOverridePlay(play_name: string) {
-        const state = this; // fix dumb javascript things
-        const request = new ROSLIB.ServiceRequest({
-            play_name: play_name
-        });
-
-        state.override_play_in_progress = play_name;
-        this.services["setOverridePlay"].callService(request,
-            function(result) {
-                state.override_play_in_progress = null;
-                if(!result.success) {
-                    console.log("Failed to set override play to ", play_name, ": ", result.reason);
-                }
-            });
-    }
-
-    setIgnoreFieldSide(ignore_side: number) {
-        let int_side = 0;
-        if (ignore_side > 0) {
-            int_side = 1;
-        } else if (ignore_side < 0) {
-            int_side = -1;
-        }
-        const request = new ROSLIB.ServiceRequest({
-            ignore_side: int_side
-        });
-
-        this.services["setIgnoreFieldSide"].callService(request,
-            function(result) {
-                if(!result.success) {
-                    console.error("Failed to set ignore side: ", result.reason);
-                }
-            });
-    }
-
-    // TODO(chachmu): break this out into better functions for different things
-    sendSimulatorControlPacket(simulator_control_packet) {
-        const request = new ROSLIB.ServiceRequest({
-            simulator_control: simulator_control_packet
-        });
-
-        this.services["sendSimulatorControlPacket"].callService(request,
-            function(result) {
-                if(!result.success) {
-                    console.log("Failed to send simulator packet: ", result.reason);
-                }
-            });
-    }
-
-    getTeamNameCallback() {
-        const state = this; // fix dumb javascript things
+    getTeamNameCallback(state: WorldState) {
         return function(value: any) {
             state.currentWorld.team_name = value;
 

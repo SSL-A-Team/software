@@ -217,10 +217,12 @@ export class Field {
 
         state.world.ball.update(viewport.getChildByName("ball").children[0] as PIXI.Container, state.renderConfig);
 
+        // console.log(this.overlays)
         for (const id in this.overlays) {
-            const should_delete = this.overlays[id].update(viewport.getChildByName("overlay"), viewport.getChildByName("underlay"), state.renderConfig);
+            const should_delete = this.overlays[id].update(state.world.timestamp, viewport.getChildByName("overlay"), viewport.getChildByName("underlay"), state.renderConfig);
 
             if (should_delete) {
+                console.log("deleting: ", this.overlays[id])
                 delete this.overlays[id];
             }
         }

@@ -20,26 +20,26 @@ export class Ball {
             }
         })
     }
+}
 
-    update(container: PIXI.Container, renderConfig: RenderConfig) {
-        const scale = renderConfig.scale;
-        container.position.x = this.pose.position.x * scale;
-        container.position.y = -this.pose.position.y * scale;
-        container.visible = this.visible;
-    }
+export function update(ball: Ball, container: PIXI.Container, renderConfig: RenderConfig) {
+    const scale = renderConfig.scale;
+    container.position.x = ball.pose.position.x * scale;
+    container.position.y = -ball.pose.position.y * scale;
+    container.visible = ball.visible;
+}
 
-    draw(container: PIXI.Container, renderConfig: RenderConfig) {
-        // TODO: figure out how to pass scale around
-        const scale = renderConfig.scale;
+export function draw(ball: Ball, container: PIXI.Container, renderConfig: RenderConfig) {
+    // TODO: figure out how to pass scale around
+    const scale = renderConfig.scale;
 
-        const graphic = new PIXI.Graphics();
+    const graphic = new PIXI.Graphics();
 
-        graphic.beginFill("orange");
-        graphic.drawCircle(0, 0, .022 * scale);
+    graphic.beginFill("orange");
+    graphic.drawCircle(0, 0, .022 * scale);
 
-        container.addChild(graphic);
-        container.position.x = this.pose.position.x * scale;
-        container.position.y = -this.pose.position.y * scale;
-        container.visible = this.visible
-    }
+    container.addChild(graphic);
+    container.position.x = ball.pose.position.x * scale;
+    container.position.y = -ball.pose.position.y * scale;
+    container.visible = ball.visible
 }

@@ -98,6 +98,7 @@ ateam_msgs::msg::RobotState toMsg(const Robot & obj)
   robot_state_msg.twist.linear.x = obj.vel.x();
   robot_state_msg.twist.linear.y = obj.vel.y();
   robot_state_msg.twist.angular.z = obj.omega;
+  robot_state_msg.visible = obj.visible;
 
   return robot_state_msg;
 }

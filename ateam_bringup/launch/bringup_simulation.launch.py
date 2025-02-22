@@ -36,22 +36,22 @@ def generate_launch_description():
         DeclareLaunchArgument('sim_radio_ip', default_value='127.0.0.1'),
         DeclareLaunchArgument('team_name', default_value='A-Team'),
 
-        IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution('ateam_bringup',
-                                              'ssl_erforce_sim.launch.xml')),
-            launch_arguments={
-                'headless': LaunchConfiguration('headless_sim')
-            }.items(),
-            condition=IfCondition(LaunchConfiguration('start_sim'))
-        ),
+        # IncludeLaunchDescription(
+        #     FrontendLaunchDescriptionSource(
+        #         PackageLaunchFileSubstitution('ateam_bringup',
+        #                                       'ssl_erforce_sim.launch.xml')),
+        #     launch_arguments={
+        #         'headless': LaunchConfiguration('headless_sim')
+        #     }.items(),
+        #     condition=IfCondition(LaunchConfiguration('start_sim'))
+        # ),
 
-        IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution('ateam_bringup',
-                                              'ssl_game_controller.launch.xml')),
-            condition=IfCondition(LaunchConfiguration('start_gc'))
-        ),
+        # IncludeLaunchDescription(
+        #     FrontendLaunchDescriptionSource(
+        #         PackageLaunchFileSubstitution('ateam_bringup',
+        #                                       'ssl_game_controller.launch.xml')),
+        #     condition=IfCondition(LaunchConfiguration('start_gc'))
+        # ),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
@@ -76,12 +76,12 @@ def generate_launch_description():
             }.items()
         ),
 
-        IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution('ateam_bringup',
-                                              'ui.launch.xml')),
-            condition=IfCondition(LaunchConfiguration('start_ui'))
-        ),
+        # IncludeLaunchDescription(
+        #     FrontendLaunchDescriptionSource(
+        #         PackageLaunchFileSubstitution('ateam_bringup',
+        #                                       'ui.launch.xml')),
+        #     condition=IfCondition(LaunchConfiguration('start_ui'))
+        # ),
 
         Node(
             package='ateam_ssl_simulation_radio_bridge',

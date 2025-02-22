@@ -2,7 +2,7 @@ import { RenderConfig } from "@/state"
 import * as PIXI from "pixi.js"
 import { Buffer } from "buffer";
 
-enum OverlayType {
+export enum OverlayType {
     Point = 0,
     Line,
     Rectangle,
@@ -65,12 +65,13 @@ export class Overlay {
     }
 
     /**
+     * @param timestamp time in millis
      * @param overlay foreground container
      * @param underlay background container
      * @param renderConfig field rendering properties
      * @returns true if this overlay should be deleted, false otherwise
      */
-    update(overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig): boolean {
+    update(timestamp: number, overlay: PIXI.Container, underlay: PIXI.Container, renderConfig: RenderConfig): boolean {
 
         // Handle if the overlay was moved between graphics containers
         if (this.check_other_depth) {
@@ -80,7 +81,7 @@ export class Overlay {
         }
 
         const container = (this.depth) ? overlay : underlay;
-        if (this.isExpired()) {
+        if (this.isExpired(timestamp)) {
             this.deleteGraphic(container);
             return true;
         }
@@ -88,8 +89,8 @@ export class Overlay {
         return false;
     }
 
-    isExpired(): boolean {
-        return this.lifetime_end && Date.now() >= this.lifetime_end;
+    isExpired(timestamp: number): boolean {
+        return this.lifetime_end && timestamp >= this.lifetime_end;
     }
 
     deleteGraphic(container: PIXI.Container) {
