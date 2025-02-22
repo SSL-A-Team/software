@@ -26,7 +26,7 @@
 namespace ateam_kenobi::spatial::layers
 {
 
-class DistanceFromFieldEdge : public SpatialLayerFactory {
+class DistanceFromFieldEdge final : public SpatialLayerFactory {
 public:
   DistanceFromFieldEdge()
   : SpatialLayerFactory("DistanceFromFieldEdge") {}

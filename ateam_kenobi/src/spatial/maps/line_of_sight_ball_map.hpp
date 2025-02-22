@@ -28,7 +28,7 @@
 namespace ateam_kenobi::spatial::maps
 {
 
-class LineOfSightBallMap : public SpatialMapFactory {
+class LineOfSightBallMap final : public SpatialMapFactory {
 public:
   LineOfSightBallMap()
   : SpatialMapFactory("LineOfSightBallMap") {}

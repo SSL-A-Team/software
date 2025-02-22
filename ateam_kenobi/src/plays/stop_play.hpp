@@ -49,7 +49,6 @@ private:
   static constexpr double kKeepoutRadius = kKeepoutRadiusRules + kRobotRadius + 0.2;
 
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-  int prev_assigned_id_ = -1;
 
   std::vector<ateam_geometry::Point> getOpenSpots(const World & world);
 

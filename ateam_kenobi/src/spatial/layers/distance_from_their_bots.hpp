@@ -28,7 +28,7 @@
 namespace ateam_kenobi::spatial::layers
 {
 
-class DistanceFromTheirBots : public SpatialLayerFactory {
+class DistanceFromTheirBots final : public SpatialLayerFactory {
 public:
   DistanceFromTheirBots()
   : SpatialLayerFactory("DistanceFromTheirBots") {}

@@ -30,7 +30,7 @@
 namespace ateam_kenobi::spatial::maps
 {
 
-class ReceiverPositionQuality : public SpatialMapFactory {
+class ReceiverPositionQuality final : public SpatialMapFactory {
 public:
   ReceiverPositionQuality()
   : SpatialMapFactory("ReceiverPositionQuality") {}

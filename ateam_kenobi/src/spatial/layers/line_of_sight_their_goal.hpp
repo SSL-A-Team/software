@@ -30,7 +30,7 @@
 namespace ateam_kenobi::spatial::layers
 {
 
-class LineOfSightTheirGoal : public SpatialLayerFactory {
+class LineOfSightTheirGoal final : public SpatialLayerFactory {
 public:
   LineOfSightTheirGoal()
   : SpatialLayerFactory("LineOfSightTheirGoal") {}

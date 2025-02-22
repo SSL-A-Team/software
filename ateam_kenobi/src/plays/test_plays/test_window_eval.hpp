@@ -64,7 +64,6 @@ public:
   }
 
 private:
-  char const * const kUsePivotKickParam = "use_pivot_kick";
 };
 
 }  // namespace ateam_kenobi::plays

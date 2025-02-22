@@ -26,7 +26,7 @@
 namespace ateam_kenobi::spatial::layers
 {
 
-class InField : public SpatialLayerFactory {
+class InField final : public SpatialLayerFactory {
 public:
   InField()
   : SpatialLayerFactory("InField") {}
