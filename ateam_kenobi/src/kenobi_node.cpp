@@ -453,7 +453,7 @@ private:
       return std::filesystem::path(home_env) / cache_dir;
     }
 
-    struct passwd * pwd = getpwuid(getuid());
+    struct passwd * pwd = getpwuid(getuid());  // NOLINT(runtime/threadsafe_fn)
     if (pwd != nullptr) {
       return std::filesystem::path(pwd->pw_dir) / cache_dir;
     }

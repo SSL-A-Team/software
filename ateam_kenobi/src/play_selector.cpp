@@ -178,7 +178,8 @@ void PlaySelector::loadFromFile(const std::filesystem::path & path)
     }
     auto play = getPlayByName(name);
     if(play == nullptr) {
-      RCLCPP_WARN(ros_logger_, "Could not find play with name %s. Skipping.", name.get<std::string>().c_str());
+      RCLCPP_WARN(ros_logger_, "Could not find play with name %s. Skipping.",
+          name.get<std::string>().c_str());
       continue;
     }
     const auto & enabled = play_settings["enabled"];
