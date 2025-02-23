@@ -53,6 +53,7 @@
 #include "defense_area_enforcement.hpp"
 #include "spatial/spatial_evaluator.hpp"
 #include "joystick_enforcer.hpp"
+#include <ateam_spatial/placeholder.hpp>
 
 namespace ateam_kenobi
 {
@@ -151,6 +152,8 @@ public:
     }
 
     RCLCPP_INFO(get_logger(), "Kenobi node ready.");
+
+    ateam_spatial::cuda_hello();
   }
 
   ~KenobiNode()
