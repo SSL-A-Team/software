@@ -14,7 +14,15 @@ endif()
 find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
-# find_package(<dependency> REQUIRED)
+
+add_library(ateam_cuda_ops SHARED
+  src/distance_ops.cu
+)
+target_include_directories(ateam_cuda_ops PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+)
+# How to use this to include the CUDA version set above?
+# target_compile_features(ateam_cuda_ops PUBLIC)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
