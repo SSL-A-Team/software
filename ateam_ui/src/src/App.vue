@@ -4,18 +4,18 @@
             <v-app-bar-title> ATeam UI </v-app-bar-title>
         </v-app-bar>
         <v-main>
-            <HistoryComponent/>
             <v-container fluid class="d-inline-flex justify-space-between">
             <v-row class="flex-nowrap">
                 <v-col class="flex-grow-0 flex-shrink-0">
                     <GoaliePickerComponent/>
                     <FieldSideComponent/>
-                    <RefButtonsComponent v-if="!this.state.comp" />
+                    <RefButtonsComponent v-if="!state.comp" />
                 </v-col>
                 <v-col class="flex-grow-0 flex-shrink-0">
                     <StatusComponent ref="robotStatus"/>
                 </v-col>
                 <v-col class="flex-grow-1 flex-shrink-1" style="height: auto">
+                    <HistoryComponent ref="historyComponent"/>
                     <GameStatusComponent ref="refStatus"/>
                     <FieldComponent ref="mainField" class="ma-2 pa-2"/>
                 </v-col>
@@ -47,6 +47,7 @@
 
 
 <script lang="ts">
+import { AppState } from "@/state";
 
 import FieldComponent from './components/FieldComponent.vue'
 import StatusComponent from './components/StatusComponent.vue'
@@ -55,18 +56,13 @@ import GameStatusComponent from './components/GameStatusComponent.vue'
 import AIComponent from './components/AIComponent.vue'
 import PlaybookComponent from './components/PlaybookComponent.vue'
 import FieldSideComponent from './components/FieldSideComponent.vue'
-import { provide } from 'vue'
-import { defineComponent, toRaw } from 'vue'
-
-import { AppState } from '@/state'
 import GoaliePickerComponent from './components/GoaliePickerComponent.vue'
 import HistoryComponent from './components/HistoryComponent.vue'
-
 
 export default {
     data() {
         return {
-            intervalIds:  [],
+            intervalIds: [] as NodeJS.Timer[],
             state: new AppState(),
             renderConfig: {
                 angle: 0,
@@ -85,31 +81,24 @@ export default {
     methods: {
         // Renders field at 100fps
         updateField: function() {
-            this.$refs.mainField.update();
 
             // Hack for testing, need to find a better way to trigger update when kenobi is not available
             const timestamp = Date.now();
-            if (timestamp - this.state.currentWorld.timestamp > 500) {
-                this.state.currentWorld.timestamp = timestamp;
-            }
+            this.state.realtimeWorld.timestamp = timestamp;
 
             // Only store history while we are unpausued
             if (this.state.selectedHistoryFrame == -1) {
-                // if (this.state.worldHistory.length < 100000) {
-                //     this.state.worldHistory.push(structuredClone(this.state.world.__v_raw));
-                // } else {
-                //     this.state.historyEndIndex++;
-                //     if (this.state.historyEndIndex >= this.state.worldHistory.length) {
-                //         this.state.historyEndIndex = 0;
-                //     }
-                //     this.state.worldHistory[this.state.historyEndIndex] = structuredClone(this.state.world.__v_raw);
-                // }
-            } else if (!this.state.historyReplayIsPaused) {
-                if (this.state.selectedHistoryFrame >= this.state.worldHistory.length - 1) {
-                    this.state.historyReplayIsPaused = true;
-                    console.log("reached end of history")
+                // Only render while unpaused, HistoryComponent will handle field rendering while not in realtime
+                this.$refs.mainField.update();
+
+                this.state.historyEndIndex++;
+                if (this.state.worldHistory.length < 100000) {
+                    this.state.worldHistory.push(structuredClone(this.state.world.__v_raw));
                 } else {
-                    this.state.selectedHistoryFrame++;
+                    if (this.state.historyEndIndex >= this.state.worldHistory.length) {
+                        this.state.historyEndIndex = 0;
+                    }
+                    this.state.worldHistory[this.state.historyEndIndex] = structuredClone(this.state.world.__v_raw);
                 }
             }
         },
@@ -129,7 +118,7 @@ export default {
     mounted() {
         // This has to be called after Vue has started monitoring the properties so that the callbacks
         // get registered to track for updates
-        this.state.mount();
+        this.state.connectToRos();
     },
     components: {
         FieldComponent,

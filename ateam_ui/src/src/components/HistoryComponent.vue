@@ -1,84 +1,157 @@
 <template>
-    <v-slider v-model="historySlider" :min="-this.state.worldHistory.length+1" max="0" step="1"/>
-    <v-row class="nowrap justify-center ma-2 pa-2" align="center">
-        <v-btn @click.stop= "setPause(true)"> pause </v-btn>
-        <v-btn @click.stop= "setPause(false)"> unpause </v-btn>
-        <v-btn @click.stop= "goToRealTime()"> go to real time </v-btn>
-    </v-row>
+    <v-col class="flex-grow-0 flex-shrink-0 justify-center my-n3 py-n3">
+        <v-slider 
+            v-model="historySlider"
+            :min="-state.worldHistory.length+1"
+            max="0"
+            step="1"
+            v-on:start="startSlider"
+            class="px-10 pt-2 pb-n5 mb-n5"
+            align="center"
+        />
+        <v-row class="nowrap justify-center mx-3 my-0 px-1 py-0" align="center">
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "rewind()">
+                <v-icon icon="mdi-rewind"/>
+            </v-btn>
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "stepFrames(-1)">
+                <v-icon icon="mdi-step-backward"/>
+            </v-btn>
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "togglePause()">
+                <v-icon :icon="playPauseIcon()"/>
+            </v-btn>
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "stepFrames(1)">
+                <v-icon icon="mdi-step-forward"/>
+            </v-btn>
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "fastforward()">
+                <v-icon icon="mdi-fast-forward"/>
+            </v-btn>
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "goToRealTime()">
+                <v-icon icon="mdi-clock-end"/>
+            </v-btn>
+        </v-row>
+    </v-col>
 </template>
 
 
 <script lang="ts">
-import { ref, inject } from "vue";
-import { Referee, GameProperty} from "@/referee";
-import { Overlay, OverlayType } from '@/overlay'
-import { TeamColor } from '@/team'
+import { inject } from "vue";
+import { AppState } from "@/state";
+import * as PIXI from 'pixi.js';
 
 export default {
     inject: ['state'],
     data() {
         return {
-            historySlider: 0
+            historySlider: 0,
+            playbackSpeed: 1.0,
+            playbackTimer: null as NodeJS.Timer,
+            state: inject('state') as AppState
         }
     },
     mounted() {
     },
     methods: {
+        playPauseIcon: function() {
+            return (this.state.selectedHistoryFrame == -1 || !this.state.historyReplayIsPaused)? 'mdi-pause' : 'mdi-play';
+        },
+        togglePause: function() {
+            if (this.state.selectedHistoryFrame == -1) {
+                this.pause();
+                this.state.selectedHistoryFrame = this.state.worldHistory.length - 1;
+            } else if (this.state.historyReplayIsPaused) {
+                this.playbackSpeed = 1.0;
+                this.play();
+            } else {
+                this.pause();
+            }
+        },
+        play: function() {
+            clearInterval(this.playbackTimer);
+            this.state.historyReplayIsPaused = false;
+
+            // Playback runs at half framerate
+            this.playbackTimer = setInterval(this.playbackUpdate, 20);
+        },
+        pause: function() {
+            this.state.historyReplayIsPaused = true;
+            this.playbackSpeed = 1.0;
+            clearInterval(this.playbackTimer);
+        },
+        rewind: function() {
+            if (this.playbackSpeed >= 0) {
+                this.playbackSpeed = -1.0;
+            } else {
+                this.playbackSpeed -= 0.5;
+            }
+            this.play();
+        },
+        fastforward: function() {
+            if (this.playbackSpeed <= 1.0) {
+                this.playbackSpeed = 1.5;
+            } else {
+                this.playbackSpeed += 0.5;
+            }
+            this.play();
+        },
         goToRealTime: function() {
+            this.pause();
             this.state.selectedHistoryFrame = -1;
-            this.state.world = this.state.currentWorld;
         },
-        setPause: function(shouldPause: boolean) {
-            this.state.historyReplayIsPaused = shouldPause;
+        stepFrames: function(frames: number) {
+            let intendedFrame = this.state.selectedHistoryFrame + frames;
+            if (intendedFrame >= this.state.worldHistory.length) {
+                intendedFrame = this.state.worldHistory.length - 1;
+            } else if (intendedFrame < 0) {
+                intendedFrame = 0;
+            }
+
+            this.state.selectedHistoryFrame = intendedFrame;
         },
-        loadHistoryFrame: function() {
+        startSlider: function(sliderValue: number) {
+            // This function moves out of realtime when you first interact with the slider but 
+            // does not work for dragging
+            this.state.selectedHistoryFrame = this.state.worldHistory.length - 1 + sliderValue;
+        },
+        playbackUpdate: function() {
 
             if (this.state.selectedHistoryFrame == -1) {
-                return;
+                this.pause();
             }
 
-            // Calculate the correct index into the circular buffer
-            let circularBufferIndex = this.state.selectedHistoryFrame - this.state.historyEndIndex;
-            if (circularBufferIndex < 0) {
-                circularBufferIndex = this.state.worldHistory.length + circularBufferIndex;
-            }
-            let worldObject = this.state.worldHistory[circularBufferIndex];
-
-            // field
-            worldObject.field.drawSideIgnoreOverlay = this.state.world.field.drawSideIgnoreOverlay;
-            worldObject.field.drawFieldLines = this.state.world.field.drawFieldLines;
-            worldObject.field.initializePixi = this.state.world.field.initializePixi;
-            worldObject.field.update = this.state.world.field.update;
-
-            // overlays
-            // Overlays are messed up and don't properly handle the lifetime sometimes
-            for (const id in worldObject.field.overlays) {
-
-                let overlay_data = worldObject.field.overlays[id];
-                worldObject.field.overlays[id] = new Overlay(overlay_data.id, overlay_data, true);
-            }
-
-            // ball
-            worldObject.ball.update = this.state.world.ball.update;
-            worldObject.ball.draw = this.state.world.ball.draw;
-
-            // robots
-            for (const color of [TeamColor.Blue, TeamColor.Yellow]) {
-                for (let i = 0; i < worldObject.teams[color].robots.length; i++) {
-                    worldObject.teams[color].robots[i].isValid = this.state.world.teams[color].robots[i].isValid;
-                    worldObject.teams[color].robots[i].rotation = this.state.world.teams[color].robots[i].rotation;
-                    worldObject.teams[color].robots[i].setRotation = this.state.world.teams[color].robots[i].setRotation;
-                    worldObject.teams[color].robots[i].errorLevel = this.state.world.teams[color].robots[i].errorLevel;
-                    worldObject.teams[color].robots[i].update = this.state.world.teams[color].robots[i].update;
-                    worldObject.teams[color].robots[i].draw = this.state.world.teams[color].robots[i].draw;
+            if (!this.state.historyReplayIsPaused) {
+                if (this.state.selectedHistoryFrame >= this.state.worldHistory.length || this.state.selectedHistoryFrame <= 0) {
+                    this.state.historyReplayIsPaused = true;
+                } else {
+                    // Rendering every other frame for standard playback rn since it can be kind of laggy
+                    this.stepFrames(2 * Math.round(this.playbackSpeed));
                 }
             }
+        },
+        loadHistoryFrame: function() {
+            if (this.state.selectedHistoryFrame == -1) {
+                this.state.world = this.state.realtimeWorld;
+            } else {
+                // Calculate the correct index into the circular buffer
 
-            // referee
-            worldObject.referee.getStageProperty = this.state.world.referee.getStageProperty;
-            worldObject.referee.getCommandProperty = this.state.world.referee.getCommandProperty;
+                let circularBufferIndex = (this.state.historyEndIndex + 1) + this.state.selectedHistoryFrame;
+                if (circularBufferIndex >= this.state.worldHistory.length) {
+                    circularBufferIndex = circularBufferIndex - (this.state.worldHistory.length);
+                }
+                this.state.world = this.state.worldHistory[circularBufferIndex];
+                this.state.graphicState.updateField(); // Render the field and overlays
+            }
 
-            this.state.world = worldObject;
+            // Check for orphaned overlay graphics
+            const valid_ids = Array.from(this.state.world.field.overlays.keys());
+            for (const container of [this.state.graphicState.underlayContainer, this.state.graphicState.overlayContainer]) {
+                const graphics = Array.from(container.children) as PIXI.Graphics[];
+                for (const graphic of graphics) {
+                    if (!valid_ids.includes(graphic.name)) {
+                        graphic.clear();
+                        container.removeChild(graphic);
+                    }
+                }
+            }
         }
     },
     computed: {
@@ -91,14 +164,22 @@ export default {
             handler() {
                 // historySlider goes from 0 at current time to -(history_buffer length - 1) at the earliest recorded frame
 
-                // Does not account for circular buffer
-                this.state.selectedHistoryFrame = this.state.worldHistory.length - 1 + this.historySlider;
+                // This if statement prevents circular loops caused by moving the slider back to the start of the bar when switching to realtime
+                // which would then cause the selected frame to switch out of realtime to the last frame in history
+                if (this.state.selectedHistoryFrame != -1) {
+                    // Does not account for circular buffer
+                    this.state.selectedHistoryFrame = this.state.worldHistory.length - 1 + this.historySlider;
+                }
             },
             deep: false
         },
         selectedHistoryFrame: {
             handler() {
-                this.historySlider = this.state.selectedHistoryFrame - (this.state.worldHistory.length - 1);
+                if (this.state.selectedHistoryFrame == -1) {
+                    this.historySlider = 0;
+                } else {
+                    this.historySlider = this.state.selectedHistoryFrame - (this.state.worldHistory.length - 1);
+                }
                 this.loadHistoryFrame();
             },
             deep: false

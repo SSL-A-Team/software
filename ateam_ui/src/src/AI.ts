@@ -1,5 +1,3 @@
-import { WorldState } from "@/state"
-
 // Types used for ai data including what it thinks the referee states are and the current intended behavior
 
 

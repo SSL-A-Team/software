@@ -1,26 +1,29 @@
 <template>
-    <v-row v-if="this.state.world.referee.blue.name || this.state.world.referee.yellow.name" class="nowrap justify-center ma-2 pa-2" align="center">
-        <TeamGameComponent v-bind:team="this.state.world.referee.blue" style="background: blue"/>
-        <v-card variant="outlined" class="ma-2 pa-2 align-centered" :style="{color: stageProperty.color}">
-            {{this.stageProperty.name}}
+    <v-row v-if="state.world.referee.blue.name || state.world.referee.yellow.name" class="nowrap justify-center ma-2 pa-2" align="center">
+        <TeamGameComponent v-bind:team="state.world.referee.blue" style="background: blue"/>
+        <v-card variant="outlined" class="ma-2 pa-2 align-centered" :style="'color: ' + stageProperty.color">
+            {{stageProperty.name}}
         </v-card>
-        <v-card variant="outlined" class="ma-2 pa-2" :style="{color: commandProperty.color}">
-            {{this.commandProperty.name}}
+        <v-card variant="outlined" class="ma-2 pa-2" :style="'color: ' + commandProperty.color">
+            {{commandProperty.name}}
         </v-card>
-        <TeamGameComponent v-bind:team="this.state.world.referee.yellow" style="background: yellow; color: black"/>
+        <TeamGameComponent v-bind:team="state.world.referee.yellow" style="background: yellow; color: black"/>
     </v-row>
 </template>
 
 
 <script lang="ts">
-import { ref, inject } from "vue";
-import { Referee, GameProperty} from "@/referee";
+import { inject } from "vue";
+import { AppState } from "@/state";
+import { getStageProperty, getCommandProperty } from "@/referee";
 import TeamGameComponent from "./TeamGameComponent.vue";
 
 export default {
     inject: ['state'],
     data() {
-        return {}
+        return {
+            state: inject('state') as AppState
+        }
     },
     mounted() {
     },
@@ -31,10 +34,10 @@ export default {
             return this.state.world.referee;
         },
         stageProperty: function() {
-            return this.state.world.referee.getStageProperty();
+            return getStageProperty(this.state.world.referee);
         },
         commandProperty: function() {
-            return this.state.world.referee.getCommandProperty();
+            return getCommandProperty(this.state.world.referee);
         }
     },
     watch: {

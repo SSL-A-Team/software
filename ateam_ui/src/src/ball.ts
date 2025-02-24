@@ -1,7 +1,5 @@
-import { Team, TeamColor } from "@/team"
-import { RenderConfig } from "@/state"
-import { Field } from "@/field"
-import ROSLIB from "roslib"
+import { RenderConfig } from "@/state";
+import ROSLIB from "roslib";
 import * as PIXI from "pixi.js";
 
 export class Ball {
@@ -11,7 +9,6 @@ export class Ball {
     accel: Accel;
 
     constructor() {
-        // TODO: convert this to use the new coordinate system that centers the origin on our goal
         this.pose = new ROSLIB.Pose({
             position: {
                 x: 0,
@@ -22,14 +19,14 @@ export class Ball {
     }
 }
 
-export function update(ball: Ball, container: PIXI.Container, renderConfig: RenderConfig) {
+export function updateBall(ball: Ball, container: PIXI.Container, renderConfig: RenderConfig) {
     const scale = renderConfig.scale;
     container.position.x = ball.pose.position.x * scale;
     container.position.y = -ball.pose.position.y * scale;
     container.visible = ball.visible;
 }
 
-export function draw(ball: Ball, container: PIXI.Container, renderConfig: RenderConfig) {
+export function drawBall(ball: Ball, container: PIXI.Container, renderConfig: RenderConfig) {
     // TODO: figure out how to pass scale around
     const scale = renderConfig.scale;
 

@@ -1,12 +1,12 @@
 <template>
-    <v-container v-if="Object.entries(this.getPlays).length == 0">
+    <v-container v-if="getPlays.size == 0">
         <v-col class="d-flex justify-center">
             <v-progress-circular indeterminate class="mx-auto"/>
         </v-col>
     </v-container>
     <v-else>
-        <v-btn @click.stop=this.setAllPlayEnabledValue(true)> Select All </v-btn>
-        <v-btn @click.stop=this.setAllPlayEnabledValue(false)> Deselect All </v-btn>
+        <v-btn @click.stop=setAllPlayEnabledValue(true)> Select All </v-btn>
+        <v-btn @click.stop=setAllPlayEnabledValue(false)> Deselect All </v-btn>
         <v-row justify="space-between" style="flex-wrap: nowrap;">
             <v-list
                 lines="one"
@@ -16,7 +16,7 @@
                 @click:select="selectPlayOverride"
             >
                 <v-list-item
-                    v-for="[name, play] of Object.entries(this.getPlays)"
+                    v-for="[name, play] of getPlays"
                         :key="name"
                         :value="name"
                 >
@@ -26,8 +26,8 @@
                                 {{ name }}
                             </div>
                             <v-spacer class="pr-3"/>
-                            <div>{{ this.displayScore(play.score) }}</div>
-                            <v-icon v-if="this.isScoreInf(play.score)" icon="mdi-infinity" class="mx-0 pl-1 justify-center" size="small"/>
+                            <div>{{ displayScore(play.score) }}</div>
+                            <v-icon v-if="isScoreInf(play.score)" icon="mdi-infinity" class="mx-0 pl-1 justify-center" size="small"/>
                         </v-row>
                     </v-container>
                 </v-list-item>
@@ -35,7 +35,7 @@
 
             <v-list lines="one" selectable="false" class="flex-grow-0 flex-shrink-1">
                 <v-list-item
-                    v-for="[name, play] of Object.entries(this.getPlays)"
+                    v-for="[name, play] of getPlays"
                         :key="name + 'chkbox'"
                 >
                     <input type="checkbox" v-model="play.enabled" v-bind:id="name" @change="setPlayEnabled(play)">
@@ -47,12 +47,8 @@
 </template>
 
 <script lang="ts">
-import { ref, inject } from "vue";
-import { AIState } from "@/AI";
 import { Play } from "@/play";
-import { Referee, GameStage, GameCommand} from "@/referee";
-import AIRecursiveComponent from "./AIRecursiveComponent.vue";
-import '@mdi/font/css/materialdesignicons.css'
+import "@mdi/font/css/materialdesignicons.css";
 
 export default {
     inject: ['state'],
@@ -67,12 +63,12 @@ export default {
     methods: {
         selectPlayOverride(selection) {
             if (selection.value) {
-                this.state.selected_play_name = selection.id;
+                this.state.selectedPlayName = selection.id;
             } else {
-                this.state.selected_play_name = "";
+                this.state.selectedPlayName = "";
             }
 
-            this.state.setOverridePlay(this.state.selected_play_name);
+            this.state.setOverridePlay(this.state.selectedPlayName);
         },
         setPlayEnabled(play: Play) {
             this.state.setPlayEnabled(play)
@@ -99,14 +95,14 @@ export default {
             }
         },
         setListSelectedPlay() {
-            if (this.state.selected_play_name == "") {
+            if (this.state.selectedPlayName == "") {
                 this.selectedPlay = [];
             } else {
-                this.selectedPlay = [this.state.selected_play_name];
+                this.selectedPlay = [this.state.selectedPlayName];
             }
         },
         setAllPlayEnabledValue(value: boolean) {
-            for (var [name, play] of Object.entries(this.state.plays)) {
+            for (var [name, play] of this.state.plays) {
                 play.enabled = value;
                 this.setPlayEnabled(play);
             }
@@ -117,7 +113,7 @@ export default {
             return this.state.plays;
         },
         getSelectedPlayName: function() {
-            return this.state.selected_play_name
+            return this.state.selectedPlayName
         }
     },
     watch: {

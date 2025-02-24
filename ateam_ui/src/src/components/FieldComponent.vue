@@ -4,11 +4,12 @@
 
 
 <script lang="ts">
-import { shallowRef, ref, inject } from 'vue';
+import { shallowRef } from 'vue';
 import * as PIXI from 'pixi.js';
-import { Viewport } from 'pixi-viewport'
-import { TeamColor } from "@/team"
-import { Pose } from 'roslib';
+import { Viewport } from "pixi-viewport";
+import { AppState } from "@/state";
+import { TeamColor } from "@/team";
+import { initializePixi, updateField, drawFieldLines, drawSideIgnoreOverlay } from "@/field";
 
 export default {
     inject: ['state'],
@@ -31,7 +32,7 @@ export default {
             view: this.$refs.canvas
         });
         this.pixi = shallowRef(pixi);
-        this.state.world.field.initializePixi(this.pixi, this.state);
+        initializePixi(this.pixi, this.state);
 
         this.prepareRobotDragging();
 
@@ -45,14 +46,15 @@ export default {
             }
         }, false);
 
+        this.state.graphicState.updateField = this.update;
     },
     methods: {
         update: function() {
-            this.state.world.field.update(this.pixi, this.state);
+            updateField(this.state, this.pixi);
         },
         redraw: function() {
-            this.state.world.field.drawFieldLines(this.pixi.stage.getChildAt(0).getChildByName("fieldLines"), this.state);
-            this.state.world.field.drawSideIgnoreOverlay(this.pixi.stage.getChildAt(0).getChildByName("fieldUI"), this.state);
+            drawFieldLines(this.state, this.pixi.stage.getChildAt(0).getChildByName("fieldLines"));
+            drawSideIgnoreOverlay(this.state, this.pixi.stage.getChildAt(0).getChildByName("fieldUI"));
         },
         onRightDown: function(event: MouseEvent) {
             const stage = this.pixi.stage;
@@ -86,9 +88,9 @@ export default {
                     return;
                 }
 
-                let pos = PIXI.Point;
+                let pos = new PIXI.Point();
                 viewport.toLocal(sdPoint, null, pos);
-                const simulator_command = {
+                const simulatorCommand = {
                     teleport_ball: [{
                         pose: {
                             position: {
@@ -106,24 +108,24 @@ export default {
                     }],
                 };
 
-                state.sendSimulatorControlPacket(simulator_command);
+                state.sendSimulatorControlPacket(simulatorCommand);
             });
 
 
 
-            let pos = PIXI.Point;
+            let pos = new PIXI.Point();
             viewport.toLocal(event.global, null, pos);
 
             this.state.world.ball.pose.position.x = pos.x * -this.getDefending / scale;
             this.state.world.ball.pose.position.y = -pos.y / scale;
 
-            const simulator_command = {
+            const simulatorCommand = {
                 teleport_ball: [{
                     pose: this.state.world.ball.pose
                 }],
             };
 
-            this.state.sendSimulatorControlPacket(simulator_command);
+            this.state.sendSimulatorControlPacket(simulatorCommand);
         },
         rightClickDrag: function(event) {
             const viewport = this.pixi.stage.getChildAt(0);
@@ -137,7 +139,7 @@ export default {
 
             let pos = event.global;
 
-            let vec = PIXI.Point;
+            let vec = new PIXI.Point();
             vec.x = this.startDragPoint.x - pos.x;
             vec.y = this.startDragPoint.y - pos.y;
 
@@ -148,13 +150,13 @@ export default {
                 return;
             }
 
-            const kick_vel = 2 * dist / scale;
+            const kickVel = 2 * dist / scale;
 
             ballVelLine.lineStyle(.08 * scale , "F7F7F750");
             ballVelLine.moveTo(this.startDragPoint.x, this.startDragPoint.y);
             ballVelLine.lineTo(pos.x, pos.y);
 
-            const text = new PIXI.Text(String(kick_vel.toFixed(2)) + " m/s", {
+            const text = new PIXI.Text(String(kickVel.toFixed(2)) + " m/s", {
                 fontSize: 20,
                 fill: "F7F7F750"
             });
@@ -170,12 +172,12 @@ export default {
 
         },
         prepareRobotDragging: function() {
-            const state = this.state; // fix dumb javascript things
+            const state: AppState = this.state;
             const stage = this.pixi.stage;
             const viewport = this.pixi.stage.getChildAt(0);
             var defending = this.getDefending;
 
-            const robotArray = Object.entries(this.state.world.teams).map(i => { return i[1].robots }).flat()
+            const robotArray = Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()
             const robots = viewport.getChildByName("robots").children;
             for (let i = 0; i < robotArray.length; i++) {
                 const robot = robots[i] as PIXI.Container;
@@ -191,28 +193,28 @@ export default {
                         viewport.pause = false;
                         state.draggedRobot = null;
 
-                        const robot_obj = robotArray[i];
-                        let pos = PIXI.Point;
+                        const robotObj = robotArray[i];
+                        let pos = new PIXI.Point();
                         viewport.toLocal(event.global, null, pos);
                         const scale = state.renderConfig.scale;
 
-                        robot_obj.pose.position.x = pos.x * -defending / scale;
-                        robot_obj.pose.position.y = -pos.y / scale;
+                        robotObj.pose.position.x = pos.x * -defending / scale;
+                        robotObj.pose.position.y = -pos.y / scale;
 
-                        const simulator_command = {
+                        const simulatorCommand = {
                             teleport_robot: [{
                                 id: {
-                                    id: [robot_obj.id],
+                                    id: [robotObj.id],
                                     team: [{
-                                        color: robot_obj.team == TeamColor.Yellow ? 1 : 2
+                                        color: robotObj.team == TeamColor.Yellow ? 1 : 2
                                     }]
                                 },
-                                pose: robot_obj.pose,
+                                pose: robotObj.pose,
                                 present: true
                             }],
                         };
 
-                        state.sendSimulatorControlPacket(simulator_command);
+                        state.sendSimulatorControlPacket(simulatorCommand);
 
                         stage.off("pointerup");
                         stage.off("pointermove");
@@ -229,13 +231,13 @@ export default {
             return this.state.world.field.fieldDimensions;
         },
         getDefending: function() {
-            return this.state.world.teams[this.state.world.team].defending;
+            return this.state.world.teams.get(this.state.world.team).defending;
         },
         getIgnoreFieldSide: function() {
-            return this.state.world.ignore_side * -this.getDefending;
+            return this.state.world.ignoreSide * -this.getDefending;
         },
         getHoverIgnoreSide: function() {
-            return this.state.hovered_field_ignore_side * -this.getDefending;
+            return this.state.hoveredFieldIgnoreSide * -this.getDefending;
         },
     },
     watch: {
@@ -252,7 +254,7 @@ export default {
                 let hoverOverlay = viewport.getChildByName("fieldUI").getChildByName("hoverOverlay");
                 hoverOverlay.visible = false;
 
-                if (this.state.world.ignore_side == 0) {
+                if (this.state.world.ignoreSide == 0) {
                     ignoreOverlay.visible = false;
                 } else{
                     ignoreOverlay.visible = true;
@@ -267,9 +269,9 @@ export default {
                 let ignoreOverlay = viewport.getChildByName("fieldUI").getChildByName("ignoreOverlay");
                 let hoverOverlay = viewport.getChildByName("fieldUI").getChildByName("hoverOverlay");
 
-                if (this.state.hovered_field_ignore_side == 0) {
+                if (this.state.hoveredFieldIgnoreSide == 0) {
                     hoverOverlay.visible = false;
-                    if (this.state.world.ignore_side != 0) {
+                    if (this.state.world.ignoreSide != 0) {
                         ignoreOverlay.visible = true;
                     }
                 } else {

@@ -1,13 +1,12 @@
-import ROSLIB from "roslib"
-// import 'roslib/build/roslib';
-import { Team, TeamColor } from "@/team"
-import { Overlay } from "@/overlay"
-import { Referee } from "@/referee"
-import { Ball } from "@/ball"
-import { Field } from "@/field"
-import { AIState } from "@/AI"
-import { Play } from "@/play"
-import { exportDefaultSpecifier } from "@babel/types"
+import ROSLIB from "roslib";
+import { Team, TeamColor } from "@/team";
+import { Referee } from "@/referee";
+import { Ball } from "@/ball";
+import { Field } from "@/field";
+import { AIState } from "@/AI";
+import { Play } from "@/play";
+import { RosManager } from "./rosManager";
+import * as PIXI from "pixi.js";
 
 export class RenderConfig {
     angle: number = 0; // Rotation applied to the rendered field
@@ -15,22 +14,21 @@ export class RenderConfig {
 }
 
 export class WorldState {
-    team_name: string;
+    teamName: string;
     team: TeamColor;
-    teams: Team[];
+    teams: Map<TeamColor, Team> = new Map<TeamColor, Team>;
     ball: Ball;
     field: Field;
     referee: Referee;
     ai: AIState;
-    ignore_side: number;
+    ignoreSide: number;
     timestamp: number;
 
     constructor() {
-        this.team_name = "A-Team";
+        this.teamName = "A-Team";
         this.team = TeamColor.Blue;
-        this.teams = [];
-        this.teams[TeamColor.Blue] = new Team(this.team_name, TeamColor.Blue, -1);
-        this.teams[TeamColor.Yellow] = new Team("Opponent", TeamColor.Yellow, 1);
+        this.teams.set(TeamColor.Blue, new Team(this.teamName, TeamColor.Blue, -1));
+        this.teams.set(TeamColor.Yellow, new Team("Uknown", TeamColor.Yellow, 1));
 
         this.ball = new Ball();
         this.field = new Field();
@@ -38,68 +36,87 @@ export class WorldState {
         this.referee = new Referee();
         this.ai = new AIState();
 
-        this.ignore_side = 0;
+        this.ignoreSide = 0;
+
+        this.timestamp = Date.now();
     }
 }
 
+export class GraphicState {
+    fieldUpdateFunction: () => void
+    overlayContainer: PIXI.Container
+    underlayContainer: PIXI.Container
+    sslVisionContainers: Map<string, PIXI.Graphics> = new Map<string, PIXI.Graphics>;
+}
+
 export class AppState {
+    rosManager: RosManager;
+
     renderConfig: RenderConfig;
-    currentWorld: WorldState; // World that is constantly kept up to date by ROS callbacks
+    graphicState: GraphicState;
+
+    realtimeWorld: WorldState; // World that is constantly kept up to date by ROS callbacks
     world: WorldState; // World to be displayed, can be set to a world state in the past history buffer
 
     worldHistory: WorldState[] = []; // Treated as a circular buffer
-    historyEndIndex: number = 0; // Index of the last element of circular buffer
+    historyEndIndex: number = -1; // Index of the last element of circular buffer
     selectedHistoryFrame: number = -1; // Goes from 0 to length of the history buffer linearly, not using the circular buffer index system.
     historyReplayIsPaused: boolean = true;
 
-    // I'm not sure if we will need ongoing access to these
-    ros: ROSLIB.Ros;
-    publishers: ROSLIB.Topic[]
-    subscriptions: ROSLIB.Topic[]
-    services: ROSLIB.Service[]
-    params: ROSLIB.Param[]
-
+    // TODO: Add ROS params for these
     sim: boolean = true;
-    comp: boolean = false; // TODO: find a better way to set this value
+    comp: boolean = false;
 
-    controlled_robot: number = null;
+    controlledRobot: number = null;
 
-    plays = {};
-    selected_play_name: string = null;
-    override_play_in_progress: string = null;
+    plays: Map<string, Play> = new Map<string, Play>;
+    selectedPlayName: string = null;
+    overridePlayInProgress: string = null;
 
-    hovered_field_ignore_side: number = 0;
+    hoveredFieldIgnoreSide: number = 0;
     draggedRobot: number = null;
 
-    goalie_service_status: [status: boolean, reason: string] = [true, ""] // False if the set goalie service fails
+    goalieServiceStatus: [status: boolean, reason: string] = [true, ""] // False if the set goalie service fails
 
-    setGoalie(goalie_id: number) {
-        const state = this; // fix dumb javascript things
+    constructor() {
+        this.renderConfig = new RenderConfig();
+        this.graphicState = new GraphicState();
+
+        this.realtimeWorld = new WorldState();
+        this.world = this.realtimeWorld;
+    }
+
+    connectToRos(): void {
+        this.rosManager = new RosManager(this);
+    }
+
+    setGoalie(goalieId: number): void {
+        const state = this;
 
         const request = new ROSLIB.ServiceRequest({
-            desired_keeper: goalie_id
+            desired_keeper: goalieId
         });
 
-        this.services["setGoalie"].callService(request,
+        this.rosManager.services.get("setGoalie").callService(request,
             // Service Response Callback
-            function(result) {
+            function(result: any): void {
                 if(!result.success) {
-                    state.goalie_service_status = [false, result.reason];
+                    state.goalieServiceStatus = [false, result.reason];
                 } else {
-                    state.goalie_service_status = [true, ""];
+                    state.goalieServiceStatus = [true, ""];
                 }
             },
             // Failed to call service callback
-            function(result) {
-                state.goalie_service_status = [false, result];
+            function(result: any): void {
+                state.goalieServiceStatus = [false, result];
             }
         );
     }
 
     getGoalie(): string {
         // Using current world since the goalie UI element should be based on up to date data from the game controller
-        if (this.currentWorld.referee && this.currentWorld.referee[this.currentWorld.team]) {
-            const id = this.currentWorld.referee[this.currentWorld.team].goalkeeper
+        if (this.realtimeWorld.referee && this.realtimeWorld.referee[this.realtimeWorld.team]) {
+            const id = this.realtimeWorld.referee[this.realtimeWorld.team].goalkeeper;
             if (id == null || isNaN(id)) {
                 return "X";
             }
@@ -110,521 +127,79 @@ export class AppState {
         return "X";
     }
 
-    setJoystickRobot(id: number) {
+    setJoystickRobot(id: number): void {
         // Toggle the selected robot off if it is the same
-        if (this.controlled_robot == id) {
-            this.controlled_robot = -1;
+        if (this.controlledRobot == id) {
+            this.controlledRobot = -1;
         } else {
-            this.controlled_robot = id;
+            this.controlledRobot = id;
         }
-        this.params["joystick_param"].set(this.controlled_robot);
+        this.rosManager.params.get("joystick_param").set(this.controlledRobot, 
+            function(result: any): void {}
+        );
     }
 
-
-    setPlayEnabled(play: Play) {
-        const state = this; // fix dumb javascript things
+    setPlayEnabled(play: Play): void {
+        const state = this;
         const request = new ROSLIB.ServiceRequest({
             play_name: play.name,
             enabled: play.enabled
         });
 
-        this.services["setPlayEnabled"].callService(request,
-            function(result) {
+        this.rosManager.services.get("setPlayEnabled").callService(request,
+            function(result: any): void {
                 if(!result.success) {
                     console.log("Failed to enable/disable ", play.name, ": ", result.reason);
                 }
             });
     }
 
-    setOverridePlay(play_name: string) {
-        const state = this; // fix dumb javascript things
+    setOverridePlay(playName: string): void {
+        const state = this;
         const request = new ROSLIB.ServiceRequest({
-            play_name: play_name
+            play_name: playName
         });
 
-        state.override_play_in_progress = play_name;
-        this.services["setOverridePlay"].callService(request,
-            function(result) {
-                state.override_play_in_progress = null;
+        state.overridePlayInProgress = playName;
+        this.rosManager.services.get("setOverridePlay").callService(request,
+            function(result: any): void {
+                state.overridePlayInProgress = null;
                 if(!result.success) {
-                    console.log("Failed to set override play to ", play_name, ": ", result.reason);
+                    console.log("Failed to set override play to ", playName, ": ", result.reason);
                 }
             });
     }
 
-    setIgnoreFieldSide(ignore_side: number) {
-        let int_side = 0;
-        if (ignore_side > 0) {
-            int_side = 1;
-        } else if (ignore_side < 0) {
-            int_side = -1;
+    setIgnoreFieldSide(ignoreSide: number): void {
+        let intSide = 0;
+        if (ignoreSide > 0) {
+            intSide = 1;
+        } else if (ignoreSide < 0) {
+            intSide = -1;
         }
+
         const request = new ROSLIB.ServiceRequest({
-            ignore_side: int_side
+            ignore_side: intSide
         });
 
-        this.services["setIgnoreFieldSide"].callService(request,
-            function(result) {
+        this.rosManager.services.get("setIgnoreFieldSide").callService(request,
+            function(result: any): void {
                 if(!result.success) {
                     console.error("Failed to set ignore side: ", result.reason);
                 }
             });
     }
 
-    // TODO(chachmu): break this out into better functions for different things
-    sendSimulatorControlPacket(simulator_control_packet) {
+    sendSimulatorControlPacket(simulatorControlPacket: any): void {
         const request = new ROSLIB.ServiceRequest({
-            simulator_control: simulator_control_packet
+            simulator_control: simulatorControlPacket
         });
 
-        this.services["sendSimulatorControlPacket"].callService(request,
-            function(result) {
+        this.rosManager.services.get("sendSimulatorControlPacket").callService(request,
+            function(result: any): void {
                 if(!result.success) {
                     console.log("Failed to send simulator packet: ", result.reason);
                 }
             });
-    }
-
-    getTeamNameCallback() {
-        const state = this; // fix dumb javascript things
-        return function(value: any) {
-            state.currentWorld.team_name = value;
-
-            if (state.currentWorld.referee.blue.name == state.currentWorld.team_name) {
-                state.currentWorld.team = TeamColor.Blue;
-            } else if (state.currentWorld.referee.yellow.name == state.currentWorld.team_name) {
-                state.currentWorld.team = TeamColor.Yellow;
-            }
-        }
-    }
-
-    // TODO: figure out how to type ROSLIB Messages, the Message type doesn't seem to work properly
-    getKenobiCallback() {
-        const state = this;
-        return function(msg: any) {
-            state.currentWorld.timestamp = Date.now();
-
-            if (msg.balls.length > 0) {
-                state.currentWorld.ball.pose = msg.balls[0].pose;
-                // state.currentWorld.ball.visible = msg.balls[0].visible;
-                if (msg.balls[0].pose.position.x != 0.0) {
-                    state.currentWorld.ball.visible = true;
-                }
-            }
-
-            for (const team of [TeamColor.Blue, TeamColor.Yellow]) {
-                const msgRobotArray = (team === state.currentWorld.team) ? msg.our_robots : msg.their_robots;
-
-                console.log(team === state.currentWorld.team)
-                for (let id = 0; id < msgRobotArray.length; id++) {
-                    state.currentWorld.teams[team].robots[id].pose = msgRobotArray[id].pose;
-                    state.currentWorld.teams[team].robots[id].twist = msgRobotArray[id].twist;
-                    state.currentWorld.teams[team].robots[id].accel = msgRobotArray[id].accel;
-                    // state.currentWorld.teams[team].robots[id].visible = msgRobotArray[id].visible;
-
-                    // Jank temporary fix
-                    if (msgRobotArray[id].pose.position.x != 0.0) {
-                        state.currentWorld.teams[team].robots[id].visible = true;
-                    }
-
-                }
-            }
-
-            // Only store history while we are unpausued
-            if (state.selectedHistoryFrame == -1) {
-                if (state.worldHistory.length < 100000) {
-                    console.log(state.currentWorld);
-                    state.worldHistory.push(structuredClone(state.currentWorld.__v_raw));
-                } else {
-                    state.historyEndIndex++;
-                    if (state.historyEndIndex >= state.worldHistory.length) {
-                        state.historyEndIndex = 0;
-                    }
-                    state.worldHistory[state.historyEndIndex] = structuredClone(state.currentWorld.__v_raw);
-                }
-            }
-        }
-    }
-
-    getBallCallback() {
-        const state = this; // fix dumb javascript things
-        return function(msg: any) {
-            state.currentWorld.ball.pose = msg.pose;
-            state.currentWorld.ball.visible = msg.visible;
-        }
-    }
-
-    getRobotCallback(team: string, id: number) {
-	const state = this; // fix dumb javascript things
-        return function(msg: any) {
-            let robot = state.currentWorld.teams[team].robots[id];
-            robot.pose = msg.pose;
-            robot.twist = msg.twist;
-            robot.accel = msg.accel;
-            robot.visible = msg.visible;
-        };
-
-    }
-
-    getRobotStatusCallback(id: number) {
-	const state = this; // fix dumb javascript things
-        return function(msg: any) {
-            let robot = state.currentWorld.teams[state.currentWorld.team].robots[id];
-            for (const member of Object.getOwnPropertyNames(msg)) {
-                robot.status[member] = msg[member];
-            }
-        };
-
-    }
-
-    getOverlayCallback() {
-	    const state = this; // fix dumb javascript things
-	    return function(msg:any) {
-            for (const overlay of msg.overlays) {
-                let id = overlay.ns+"/"+overlay.name;
-
-                // Flag the overlay to check if it moved the graphic object between containers
-                const check_other_depth =  (id in state.currentWorld.field.overlays &&
-                    state.currentWorld.field.overlays[id].depth != overlay.depth);
-
-                // Overlays will now be deleted in the update function if
-                // the lifetime expires without having been updated
-                // to prevent potential future memory leaks
-                switch(overlay.command) {
-                    // REPLACE
-                    case 0:
-                        state.currentWorld.field.overlays[id] = new Overlay(id, overlay, check_other_depth);
-                        break;
-                    // EDIT
-                    case 1:
-                        //TODO: Not sure if this command is necessary, will implement later if it is
-                        // Might need to handle moving overlay between z-depths
-                        state.currentWorld.field.overlays[id] = new Overlay(id, overlay, check_other_depth);
-                        break;
-                    // REMOVE
-                    case 2:
-                        // I think this just leaves the graphics objects in the list :'(
-                        // TODO: fix memory leak ^
-                        delete state.currentWorld.field.overlays[id];
-                        break;
-                }
-            }
-        }
-    }
-
-    getFieldDimensionCallback() {
-	    const state = this; // fix dumb javascript things
-	    return function(msg:any) {
-            state.currentWorld.field.fieldDimensions.length = msg.field_length;
-            state.currentWorld.field.fieldDimensions.width = msg.field_width;
-            state.currentWorld.field.fieldDimensions.goalWidth = msg.goal_width;
-            state.currentWorld.field.fieldDimensions.goalDepth = msg.goal_depth;
-            state.currentWorld.field.fieldDimensions.border = msg.boundary_width;
-
-            let get_dims = function(rectangle_corners:Point[]) {
-                const first_point = rectangle_corners[0];
-
-                // find the opposite corner
-                let second_point;
-                for (let i = 1; i < rectangle_corners.length; i++) {
-                    second_point = rectangle_corners[i];
-                    if (first_point.x != second_point.x && first_point.y != second_point.y) {
-                        break;
-                    }
-                }
-
-                const dim_1 = Math.abs(first_point.x - second_point.x);
-                const dim_2 = Math.abs(first_point.y - second_point.y);
-
-                return [Math.min(dim_1, dim_2), Math.max(dim_1, dim_2)]
-            }
-
-            if (msg.ours.defense_area_corners.points.length) {
-                const defense_dims = get_dims(msg.ours.defense_area_corners.points);
-                state.currentWorld.field.fieldDimensions.penaltyShort = defense_dims[0];
-                state.currentWorld.field.fieldDimensions.penaltyLong = defense_dims[1];
-            }
-
-            if (msg.ours.goal_corners.points.length) {
-                const goal_dims = get_dims(msg.ours.goal_corners.points);
-                state.currentWorld.field.fieldDimensions.goalDepth = goal_dims[0];
-                state.currentWorld.field.fieldDimensions.goalWidth = goal_dims[1];
-            }
-
-            state.currentWorld.ignore_side = msg.ignore_side;
-        }
-    }
-
-    getRefereeCallback() {
-	    const state = this; // fix dumb javascript things
-	    return function(msg:any) {
-            // TODO: Check how well this works, the referee class doesn't exactly match Referee.msg type
-            for (const member of Object.getOwnPropertyNames(state.currentWorld.referee)) {
-                state.currentWorld.referee[member] = msg[member];
-            }
-
-            state.currentWorld.teams[TeamColor.Blue].defending = msg.blue_team_on_positive_half ? 1 : -1;
-            state.currentWorld.teams[TeamColor.Yellow].defending = msg.blue_team_on_positive_half ? -1 : 1;
-
-            // TODO: probably pull this from the ros network instead
-            if (state.currentWorld.referee.blue.name == state.currentWorld.team_name) {
-                state.currentWorld.team = TeamColor.Blue;
-            } else if (state.currentWorld.referee.yellow.name == state.currentWorld.team_name) {
-                state.currentWorld.team = TeamColor.Yellow;
-            }
-        }
-    }
-
-    getPlayInfoCallback() {
-	    const state = this; // fix dumb javascript things
-	    return function(msg:any) {
-                state.currentWorld.ai.name = msg.name;
-                state.currentWorld.ai.description = msg.description;
-        }
-    }
-
-    getPlaybookCallback() {
-        const state = this; // fix dumb javascript things
-        return function(msg:any) {
-
-            // Handle the transition time between overriding the play and
-            // it showing up in the kenobi message
-            if (state.override_play_in_progress == null) {
-                state.selected_play_name = msg.override_name;
-            } else {
-                state.selected_play_name = state.override_play_in_progress;
-            }
-
-
-            if (msg.names.length > 0) {
-                state.plays = [];
-                for (let i = 0; i < msg.names.length; i++) {
-                    if (msg.names[i] in state.plays) {
-                        state.plays[msg.names[i]].enabled = msg.enableds[i]
-                        state.plays[msg.names[i]].score = msg.scores[i]
-                    } else {
-                        let play = new Play(
-                            msg.names[i],
-                            msg.enableds[i],
-                            msg.scores[i]
-                        )
-
-                        state.plays[play.name] = play;
-                    }
-                }
-            }
-        }
-    }
-
-    getJoystickStatusCallback() {
-        const state = this; // fix dumb javascript things
-        return function(msg:any) {
-            if (msg.is_active) {
-                state.controlled_robot = msg.active_id;
-            } else {
-                state.controlled_robot = -1;
-            }
-        }
-    }
-
-    constructor() {
-        this.renderConfig = new RenderConfig();
-        this.currentWorld = new WorldState();
-        this.world = this.currentWorld;
-
-        this.publishers = [];
-        this.subscriptions = [];
-        this.services = [];
-        this.params = [];
-
-        this.controlled_robot = null;
-
-        // Configure ROS
-        this.ros = new ROSLIB.Ros({
-            url : 'ws://' + location.hostname + ':9090'
-        });
-
-        this.ros.on('connection', function() {
-            console.log('Connected to ROS server.');
-        });
-
-        this.ros.on('error', function(error) {
-            console.error('Error connecting to ROS server: ', error);
-        });
-
-        this.ros.on('close', function() {
-            console.log('Connection to ROS server closed.');
-         
-            // TODO: Handle disconnecting from ROS
-            //Neutralino.app.exit();
-        });
-
-    }
-
-    mount() {
-        // TODO: add a way to handle ROS namespaces
-
-        // Set up Kenobi World subscriber
-        let kenobiTopic = new ROSLIB.Topic({
-            ros: this.ros,
-            name: '/kenobi_node/world',
-            messageType: 'ateam_msgs/msg/World'
-        });
-
-        kenobiTopic.subscribe(this.getKenobiCallback());
-        this.subscriptions["kenobi"] = kenobiTopic;
-
-        /*
-        // Set up ball subscribers and publishers
-        let ballTopic = new ROSLIB.Topic({
-            ros: this.ros,
-            name: '/ball',
-            messageType: 'ateam_msgs/msg/BallState'
-        });
-
-        ballTopic.subscribe(this.getBallCallback());
-        this.subscriptions["ball"] = ballTopic;
-
-        for (var i = 0; i < 16; i++) {
-            for (var team in this.currentWorld.teams) {
-                let robotTopic = new ROSLIB.Topic({
-                    ros: this.ros,
-                    name: '/' + team + '_team/robot' + i,
-                    messageType: 'ateam_msgs/msg/RobotState'
-                });
-
-                robotTopic.subscribe(this.getRobotCallback(team, i));
-                this.subscriptions['/' + team + '_team/robot' + i] = robotTopic;
-
-
-                //TODO: add publisher for moving sim robots
-            }
-
-            let robotStatusTopic = new ROSLIB.Topic({
-                ros: this.ros,
-                name: '/robot_feedback/status/robot' + i,
-                messageType: 'ateam_msgs/msg/RobotFeedback'
-            });
-
-            robotStatusTopic.subscribe(this.getRobotStatusCallback(i));
-            this.subscriptions['/robot_feedback/status/robot' + i] = robotStatusTopic;
-        }
-        */
-        // Set up overlay subscriber
-        let overlayTopic = new ROSLIB.Topic({
-            ros: this.ros,
-            name: '/overlays',
-            messageType: 'ateam_msgs/msg/OverlayArray'
-        });
-        overlayTopic.subscribe(this.getOverlayCallback());
-        this.subscriptions["overlay"] = overlayTopic;
-        /*
-        // Set up fieldDimension subscriber
-        let fieldDimensionTopic = new ROSLIB.Topic({
-            ros: this.ros,
-            name: '/field',
-            messageType: 'ateam_msgs/msg/FieldInfo'
-        });
-
-        fieldDimensionTopic.subscribe(this.getFieldDimensionCallback());
-        this.subscriptions["fieldDimension"] = fieldDimensionTopic;
-
-        // Set up referee subscriber
-        let refereeTopic = new ROSLIB.Topic({
-            ros: this.ros,
-            name: '/referee_messages',
-            messageType: 'ssl_league_msgs/msg/Referee'
-        });
-
-        refereeTopic.subscribe(this.getRefereeCallback());
-        this.subscriptions["referee"] = refereeTopic;
-
-        // Set up play info subscriber
-        let playInfoTopic = new ROSLIB.Topic({
-            ros: this.ros,
-            name: '/play_info',
-            messageType: 'ateam_msgs/msg/PlayInfo'
-        });
-
-        playInfoTopic.subscribe(this.getPlayInfoCallback());
-        this.subscriptions["playInfo"] = playInfoTopic;
-
-        // Set up play book subscriber
-        let playbookTopic = new ROSLIB.Topic({
-            ros: this.ros,
-            name: '/kenobi_node/playbook_state',
-            messageType: 'ateam_msgs/msg/PlaybookState'
-        });
-
-        playbookTopic.subscribe(this.getPlaybookCallback());
-        this.subscriptions["playbook"] = playbookTopic;
-
-        // Set up joystick control status subscriber
-        let joystickStatusTopic = new ROSLIB.Topic({
-            ros: this.ros,
-            name: '/joystick_control_status',
-            messageType: 'ateam_msgs/msg/JoystickControlStatus'
-        });
-
-        joystickStatusTopic.subscribe(this.getJoystickStatusCallback());
-        this.subscriptions["joystickStatus"] = joystickStatusTopic;
-
-        // Set up Goalie Service
-        let goalieService = new ROSLIB.Service({
-            ros: this.ros,
-            name: '/team_client_node/set_desired_keeper',
-            serviceType: 'ateam_msgs/srv/SetDesiredKeeper'
-        })
-        this.services["setGoalie"] = goalieService;
-
-        // Set up set play enabled Service
-        let setPlayEnabledService = new ROSLIB.Service({
-            ros: this.ros,
-            name: '/kenobi_node/set_play_enabled',
-            serviceType: 'ateam_msgs/srv/SetPlayEnabled'
-        })
-        this.services["setPlayEnabled"] = setPlayEnabledService;
-
-        // Set up set override play Service
-        let setOverridePlayService = new ROSLIB.Service({
-            ros: this.ros,
-            name: '/kenobi_node/set_override_play',
-            serviceType: 'ateam_msgs/srv/SetOverridePlay'
-        })
-        this.services["setOverridePlay"] = setOverridePlayService;
-
-        */
-        // let teamNameParam = new ROSLIB.Param({
-        //     ros: this.ros,
-        //     name: "/team_client_node:team_name"
-        // });
-        // teamNameParam.get(this.getTeamNameCallback());
-        // this.params["team_name_param"] = teamNameParam;
-        this.currentWorld.team = TeamColor.Blue;
-        /*
-        // Set up joystick robot param service
-        const joystickParam = new ROSLIB.Param({
-            ros: this.ros,
-            name: "/joystick_control_node:robot_id"
-        });
-        this.params["joystick_param"] = joystickParam;
-
-        // Set up set ignore field side service
-        let setIgnoreFieldSideService = new ROSLIB.Service({
-            ros: this.ros,
-            name: '/field_manager/set_ignore_field_side',
-            serviceType: 'ateam_msgs/srv/SetIgnoreFieldSide'
-        })
-        this.services["setIgnoreFieldSide"] = setIgnoreFieldSideService;
-
-        // Set up set ignore field side service
-        let sendSimulatorControlPacketService = new ROSLIB.Service({
-            ros: this.ros,
-            name: '/radio_bridge/send_simulator_control_packet',
-            serviceType: 'ateam_msgs/srv/SendSimulatorControlPacket'
-        })
-        this.services["sendSimulatorControlPacket"] = sendSimulatorControlPacketService;
-
-        */
     }
 }

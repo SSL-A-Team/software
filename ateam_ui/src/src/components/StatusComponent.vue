@@ -1,7 +1,7 @@
 <template>
     <v-container class="d-flex flex-column">
         <v-container class="d-flex flex-column">
-            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of this.state.world.teams[this.state.world.team].robots.filter((obj)=> obj.isValid())" :ref="'robotCard' + robot.id" style="outline-offset:-1px" @click.stop="this.state.setJoystickRobot(robot.id)">
+            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of state.world.teams.get(state.world.team).robots.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" @click.stop="state.setJoystickRobot(robot.id)">
                     {{robot.id}}
                     <canvas :ref="'canvas' + robot.id" height=100 width=100 style="width:90px; height:90px;"/>
                     <v-btn variant="plain" density="compact" style="min-width:0px; width:0px" :disabled="(batteryLevel(robot) === '')">
@@ -17,30 +17,37 @@
 
 
 <script lang="ts">
-import { ref, inject } from "vue";
-import { Robot, ErrorLevel } from "@/robot";
+import { AppState } from "@/state";
+import { Robot, ErrorLevel, isValid,  getErrorLevel } from "@/robot";
+import { inject } from "vue";
 
 export default {
     inject: ['state'],
+    data() {
+        return {
+            state: inject('state') as AppState,
+            isValid: isValid
+        }
+    },
     mounted() {
         this.update();
     },
     methods: {
         update: function() {
-            for(const robot of this.state.world.teams[this.state.world.team].robots) {
-                if (robot.isValid() && this.$refs["robotCard" + robot.id]) {
+            for(const robot of this.state.world.teams.get(this.state.world.team).robots) {
+                if (isValid(robot) && this.$refs["robotCard" + robot.id]) {
                     let canvas = this.$refs["canvas" + robot.id][0];
                     this.drawStatus(robot, canvas.getContext("2d"));
 
                     const element = this.$refs["robotCard" + robot.id][0].$el;
-                    const errorLevel = robot.errorLevel(this.state.sim);
+                    const errorLevel = getErrorLevel(robot, this.state.sim);
 
                     if (errorLevel != ErrorLevel.Critical) {
                         element.getAnimations().forEach((animation) => {animation.cancel()});
                     }
 
                     let style = "";
-                    if (robot.id == this.state.controlled_robot) {
+                    if (robot.id == this.state.controlledRobot) {
                         style += "background: green;";
                     }
 
@@ -105,7 +112,7 @@ export default {
             // - front right
             // - back left
             // - back right
-            let color_patterns = new Map([
+            let colorPatterns = new Map([
                 [0, "PPGP"],
                 [1, "GPGP"],
                 [2, "GGGP"],
@@ -124,10 +131,10 @@ export default {
                 [15, "PGPP"]
             ]);
 
-            let id_pattern = color_patterns.get(robot.id)
+            let idPattern = colorPatterns.get(robot.id)
 
             for (var i = 0; i < 4; i++) {
-                ctx.fillStyle = id_pattern[i] == "P" ? 'DeepPink' : 'LawnGreen';
+                ctx.fillStyle = idPattern[i] == "P" ? 'DeepPink' : 'LawnGreen';
                 ctx.beginPath();
                 // radius increased by .005 for visibility
                 ctx.arc(pos.x[i]*scale, pos.y[i]*scale, .025*scale, 0, 2*Math.PI);
@@ -194,18 +201,18 @@ export default {
                 ctx.fillText("DC", .14*scale, -.14*scale);
             }
         },
-        batteryIcon: function(battery_level) {
-            if (!battery_level) {
+        batteryIcon: function(batteryLevel) {
+            if (!batteryLevel) {
                 return "mdi-battery-alert-variant-outline";
             }
 
-            let percentage = Math.round((battery_level - 20) * 100 / 5.2);
+            let percentage = Math.round((batteryLevel - 20) * 100 / 5.2);
             if (percentage <= 5) {
                 return "mdi-battery-alert-variant-outline";
             }
 
-            const percentage_string = String(Math.round(percentage / 10) * 10);
-            return "mdi-battery-" + percentage_string;
+            const percentageString = String(Math.round(percentage / 10) * 10);
+            return "mdi-battery-" + percentageString;
         },
         batteryLevel: function(robot) {
             if (robot && robot.status && robot.status.battery_level) {
@@ -218,10 +225,10 @@ export default {
     computed: {
         getRobotStatuses: function() {
             // If performance is a problem we can reduce this to just status members that would cause a redraw
-            return this.state.world.teams[this.state.world.team].robots.map(robot => robot.status);
+            return this.state.world.teams.get(this.state.world.team).robots.map(robot => robot.status);
         },
         getControlledRobot: function() {
-            return this.state.controlled_robot;
+            return this.state.controlledRobot;
         }
     },
     watch: {
