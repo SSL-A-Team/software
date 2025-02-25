@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,45 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__OUR_KICKOFF_PLAY_HPP_
-#define PLAYS__OUR_KICKOFF_PLAY_HPP_
+#ifndef SPATIAL__LAYERS__DISTANCE_DOWN_FIELD_HPP_
+#define SPATIAL__LAYERS__DISTANCE_DOWN_FIELD_HPP_
 
-#include "stp/play.hpp"
-#include "tactics/standard_defense.hpp"
-#include "tactics/multi_move_to.hpp"
-#include "tactics/pass.hpp"
+#include "spatial/spatial_layer_factory.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::spatial::layers
 {
-class OurKickoffPlay : public stp::Play
-{
+
+class DistanceDownField final : public SpatialLayerFactory {
 public:
-  static constexpr const char * kPlayName = "OurKickoffPlay";
+  DistanceDownField()
+  : SpatialLayerFactory("DistanceDownField") {}
 
-  explicit OurKickoffPlay(stp::Options stp_options);
+  void FillLayer(cv::Mat & layer, const World &) override
+  {
+    SetupLayer(layer, CV_32FC1);
+    if(layer.size() == prev_size) {
+      // No need to regenerate this layer unless the field size changes
+      return;
+    }
+    prev_size = layer.size();
 
-  stp::PlayScore getScore(const World & world) override;
+    const auto half_world_width = WorldWidth() / 2.0;
 
-  stp::PlayCompletionState getCompletionState() override;
-
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
-
-  void set_kickoff_ready();
+    for(auto x = 0; x < LayerWidth(); ++x) {
+      for(auto y = 0; y < LayerHeight(); ++y) {
+        layer.at<float>(y, x) = LayerToWorldX(x) + half_world_width;
+      }
+    }
+  }
 
 private:
-  tactics::StandardDefense defense_;
-  tactics::MultiMoveTo multi_move_to_;
-  tactics::Pass pass_;
-  ateam_common::GameCommand prev_frame_game_command_;
-
-  bool pass_direction_chosen_ = false;
-
-  // if false, pass right
-  bool pass_left_ = false;
+  cv::Size prev_size;
 };
-}  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__OUR_KICKOFF_PLAY_HPP_
+}  // namespace ateam_kenobi::spatial::layers
+
+#endif  // SPATIAL__LAYERS__DISTANCE_DOWN_FIELD_HPP_

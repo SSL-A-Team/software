@@ -18,50 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__CONTROLS_TEST_PLAY_HPP_
-#define PLAYS__CONTROLS_TEST_PLAY_HPP_
+#ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_
+#define PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_
 
-#include <array>
-#include <vector>
-#include "motion/motion_controller.hpp"
 #include "stp/play.hpp"
-#include "ateam_geometry/types.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "tactics/standard_defense.hpp"
+#include "skills/line_kick.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
-class ControlsTestPlay : public stp::Play
+
+class KickoffOnGoalPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "ControlsTestPlay";
+  static constexpr const char * kPlayName = "KickoffOnGoalPlay";
 
-  explicit ControlsTestPlay(stp::Options stp_options);
+  explicit KickoffOnGoalPlay(stp::Options stp_options);
+
+  stp::PlayScore getScore(const World & world) override;
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world) override;
 
 private:
-  struct Waypoint
-  {
-    ateam_geometry::Point position;
-    AngleMode angle_mode;
-    double heading;
-    double hold_time_sec;
-  };
+  tactics::StandardDefense defense_;
+  skills::LineKick kick_;
+  tactics::MultiMoveTo multi_move_to_;
 
-  MotionController motion_controller_;
-  MotionOptions motion_options_;
-
-  int index = 0;
-  std::vector<Waypoint> waypoints;
-  bool goal_hit;
-  std::chrono::steady_clock::time_point goal_hit_time;
-  double position_threshold = 0.15;
-  double angle_threshold = 8.0;
-
-  bool isGoalHit(const Robot & robot);
+  std::optional<ateam_geometry::Segment> getLargestWindowOnGoal(const World & world);
 };
+
 }  // namespace ateam_kenobi::plays
-#endif  // PLAYS__CONTROLS_TEST_PLAY_HPP_
+
+#endif  // PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_

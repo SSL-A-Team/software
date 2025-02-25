@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 
+#include <pwd.h>
 #include <tf2/convert.h>
 #include <tf2/utils.h>
 #include <chrono>
@@ -50,6 +51,7 @@
 #include "motion/world_to_body_vel.hpp"
 #include "plays/halt_play.hpp"
 #include "defense_area_enforcement.hpp"
+#include "spatial/spatial_evaluator.hpp"
 #include "joystick_enforcer.hpp"
 
 namespace ateam_kenobi
@@ -68,6 +70,8 @@ public:
     joystick_enforcer_(*this),
     game_controller_listener_(*this)
   {
+    initialize_robot_ids();
+
     declare_parameter<bool>("use_world_velocities", false);
     declare_parameter<bool>("use_emulated_ballsense", false);
 
@@ -134,7 +138,25 @@ public:
 
     timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
 
+    const auto playbook_path = declare_parameter<std::string>("playbook", "");
+    const auto autosave_playbook_path = getCacheDirectory() / "playbook/autosave.json";
+    if(!playbook_path.empty()) {
+      RCLCPP_INFO(get_logger(), "Loading playbook from %s", playbook_path.c_str());
+      play_selector_.loadFromFile(playbook_path);
+    } else if(std::filesystem::exists(autosave_playbook_path)) {
+      RCLCPP_INFO(get_logger(), "Loading playbook from autosave.");
+      play_selector_.loadFromFile(autosave_playbook_path);
+    } else {
+      RCLCPP_INFO(get_logger(), "Using default playbook.");
+    }
+
     RCLCPP_INFO(get_logger(), "Kenobi node ready.");
+  }
+
+  ~KenobiNode()
+  {
+    RCLCPP_INFO(get_logger(), "Autosaving playbook");
+    play_selector_.saveToFile(getCacheDirectory() / "playbook/autosave.json");
   }
 
 private:
@@ -143,6 +165,7 @@ private:
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
+  spatial::SpatialEvaluator spatial_evaluator_;
   JoystickEnforcer joystick_enforcer_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
@@ -167,24 +190,38 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
 
+  void initialize_robot_ids()
+  {
+    for(auto i = 0u; i < world_.our_robots.size(); ++i) {
+      world_.our_robots[i].id = i;
+    }
+    for(auto i = 0u; i < world_.their_robots.size(); ++i) {
+      world_.their_robots[i].id = i;
+    }
+  }
+
   void blue_robot_state_callback(
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
   {
-    const auto are_we_blue = game_controller_listener_.GetTeamColor() ==
-      ateam_common::TeamColor::Blue;
+    const auto our_color = game_controller_listener_.GetTeamColor();
+    if(our_color == ateam_common::TeamColor::Unknown) {
+      return;
+    }
+    const auto are_we_blue = our_color == ateam_common::TeamColor::Blue;
     auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
 
-  // TODO(CAVIDANO): REMOVE THE THEIR ROBOTS HERE THIS SHOULD NOT ASSIGN ANYTHING IN THE NOT CASE
-  // AS IT ALSO CATCHES UNKOWN TEAM
   void yellow_robot_state_callback(
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
   {
-    const auto are_we_yellow = game_controller_listener_.GetTeamColor() ==
-      ateam_common::TeamColor::Yellow;
+    const auto our_color = game_controller_listener_.GetTeamColor();
+    if(our_color == ateam_common::TeamColor::Unknown) {
+      return;
+    }
+    const auto are_we_yellow = our_color == ateam_common::TeamColor::Yellow;
     auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
     robot_state_callback(robot_state_array, id, robot_state_msg);
   }
@@ -222,6 +259,7 @@ private:
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
   {
+    world_.ball.visible = ball_state_msg->visible;
     if (ball_state_msg->visible) {
       world_.ball.pos = ateam_geometry::Point(
         ball_state_msg->pose.position.x,
@@ -338,6 +376,7 @@ private:
     }
     in_play_eval_.Update(world_);
     double_touch_eval_.update(world_);
+    spatial_evaluator_.Update(world_);
     if (get_parameter("use_emulated_ballsense").as_bool()) {
       ballsense_emulator_.Update(world_);
     }
@@ -405,6 +444,22 @@ private:
         robot_commands_publishers_.at(id)->publish(maybe_motion_command.value());
       }
     }
+  }
+
+  std::filesystem::path getCacheDirectory()
+  {
+    const std::filesystem::path cache_dir = ".ateam/software/kenobi/";
+    const char * home_env = getenv("HOME");
+    if (home_env != nullptr) {
+      return std::filesystem::path(home_env) / cache_dir;
+    }
+
+    struct passwd * pwd = getpwuid(getuid());  // NOLINT(runtime/threadsafe_fn)
+    if (pwd != nullptr) {
+      return std::filesystem::path(pwd->pw_dir) / cache_dir;
+    }
+
+    return cache_dir;
   }
 };
 

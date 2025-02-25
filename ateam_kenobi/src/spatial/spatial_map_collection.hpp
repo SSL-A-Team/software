@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2024 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,31 +18,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__TEST_PLAY_HPP_
-#define PLAYS__TEST_PLAY_HPP_
+#ifndef SPATIAL__SPATIAL_MAP_COLLECTION_HPP_
+#define SPATIAL__SPATIAL_MAP_COLLECTION_HPP_
 
-#include "path_planning/path_planner.hpp"
-#include "motion/motion_controller.hpp"
-#include "stp/play.hpp"
-#include "skills/goalie.hpp"
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include "spatial_map.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::spatial
 {
-class TestPlay : public stp::Play
-{
+
+class SpatialMapCollection {
 public:
-  static constexpr const char * kPlayName = "TestPlay";
+  void AddMap(SpatialMap && map)
+  {
+    maps_.insert_or_assign(map.name, std::move(map));
+  }
 
-  explicit TestPlay(stp::Options stp_options);
+  void EmplaceMap(std::string name, cv::Mat data)
+  {
+    maps_.emplace(name, SpatialMap{name, data});
+  }
 
-  void reset() override;
+  void Clear()
+  {
+    maps_.clear();
+  }
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
+  const SpatialMap & operator[](const std::string & name) const
+  {
+    return maps_.at(name);
+  }
+
+  SpatialMap & operator[](const std::string & name)
+  {
+    return maps_[name];
+  }
 
 private:
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-  skills::Goalie goalie_skill_;
+  std::unordered_map<std::string, SpatialMap> maps_;
 };
-}  // namespace ateam_kenobi::plays
-#endif  // PLAYS__TEST_PLAY_HPP_
+
+}  // namespace ateam_kenobi::spatial
+
+#endif  // SPATIAL__SPATIAL_MAP_COLLECTION_HPP_

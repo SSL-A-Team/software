@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__TRIANGLE_PASS_PLAY_HPP_
-#define PLAYS__TRIANGLE_PASS_PLAY_HPP_
+#ifndef PLAYS__TEST_PLAYS__TRIANGLE_PASS_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__TRIANGLE_PASS_PLAY_HPP_
 
 #include <vector>
 #include "stp/play.hpp"
@@ -77,4 +77,4 @@ private:
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__TRIANGLE_PASS_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAYS__TRIANGLE_PASS_PLAY_HPP_

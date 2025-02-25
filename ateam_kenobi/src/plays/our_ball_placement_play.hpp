@@ -48,7 +48,6 @@ public:
 private:
   tactics::Pass pass_tactic_;
   skills::Dribble dribble_;
-  bool latch_receive_ = false;
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   ateam_geometry::Point placement_point;
 

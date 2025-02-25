@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,35 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__OUR_KICKOFF_PREP_PLAY_HPP_
-#define PLAYS__OUR_KICKOFF_PREP_PLAY_HPP_
+#ifndef SPATIAL__LAYERS__ROBOT_SHADOWS_HPP_
+#define SPATIAL__LAYERS__ROBOT_SHADOWS_HPP_
 
-#include "stp/play.hpp"
-#include "tactics/standard_defense.hpp"
-#include "tactics/multi_move_to.hpp"
+#include <utility>
+#include <vector>
+#include <ateam_geometry/types.hpp>
+#include "types/robot.hpp"
+#include "types/world.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::spatial::layers
 {
 
-class OurKickoffPrepPlay : public stp::Play
-{
-public:
-  static constexpr const char * kPlayName = "OurPenaltyPlay";
+ateam_geometry::Ray GetRobotTangentRay(
+  const Robot & robot, const ateam_geometry::Point & source,
+  const CGAL::Orientation & orientation);
 
-  explicit OurKickoffPrepPlay(stp::Options stp_options);
+std::pair<ateam_geometry::Ray, ateam_geometry::Ray> GetRobotShadowRays(
+  const Robot & robot,
+  const ateam_geometry::Point & source);
+std::pair<ateam_geometry::Ray, ateam_geometry::Ray> GetRobotShadowRays(
+  const Robot & robot,
+  const ateam_geometry::Segment & source);
 
-  stp::PlayScore getScore(const World & world) override;
+std::vector<ateam_geometry::Point> GetRobotShadowPoly(
+  const Robot & robot,
+  const ateam_geometry::Point & source, const World & world);
+std::vector<ateam_geometry::Point> GetRobotShadowPoly(
+  const Robot & robot,
+  const ateam_geometry::Segment & source, const World & world);
 
-  void reset() override;
+}  // namespace ateam_kenobi::spatial::layers
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world);
-
-private:
-  tactics::StandardDefense defense_;
-  tactics::MultiMoveTo multi_move_to_;
-};
-
-}  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__OUR_KICKOFF_PREP_PLAY_HPP_
+#endif  // SPATIAL__LAYERS__ROBOT_SHADOWS_HPP_

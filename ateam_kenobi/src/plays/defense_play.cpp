@@ -32,7 +32,7 @@ DefensePlay::DefensePlay(stp::Options stp_options)
   defense_tactic_(createChild<tactics::StandardDefense>("defense")),
   blockers_(createChild<tactics::Blockers>("blockers"))
 {
-  setEnabled(false);
+  // setEnabled(false);
   blockers_.setMaxBlockerCount(3);
 }
 

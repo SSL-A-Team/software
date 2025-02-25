@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2023 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,37 +18,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_PASS_PLAY_HPP_
+#define PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_PASS_PLAY_HPP_
 
-#ifndef PLAYS__SPINNING_A_PLAY_HPP_
-#define PLAYS__SPINNING_A_PLAY_HPP_
-
-#include <vector>
 #include "stp/play.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "tactics/standard_defense.hpp"
+#include "tactics/multi_move_to.hpp"
+#include "tactics/pass.hpp"
 
 namespace ateam_kenobi::plays
 {
-
-class SpinningAPlay : public stp::Play
+class KickoffPassPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "SpinningAPlay";
+  static constexpr const char * kPlayName = "KickoffPassPlay";
 
-  explicit SpinningAPlay(stp::Options stp_options);
+  explicit KickoffPassPlay(stp::Options stp_options);
 
-  void reset() override;
+  stp::PlayScore getScore(const World & world) override;
+
+  stp::PlayCompletionState getCompletionState() override;
+
+  void enter() override;
+
+  void exit() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> runFrame(const World & world) override;
 
-private:
-  const double kAngleSpeed = 0.01;
-  const double kNumRotations = 5;
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-  std::vector<ateam_geometry::Point> base_shape_;
-  double angle_;
-};
+  void set_kickoff_ready();
 
+private:
+  tactics::StandardDefense defense_;
+  tactics::MultiMoveTo multi_move_to_;
+  tactics::Pass pass_;
+  ateam_common::GameCommand prev_frame_game_command_;
+  bool kickoff_is_over_ = false;
+
+  bool pass_direction_chosen_ = false;
+
+  // if false, pass right
+  bool pass_left_ = false;
+};
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__SPINNING_A_PLAY_HPP_
+#endif  // PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_PASS_PLAY_HPP_

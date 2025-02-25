@@ -46,7 +46,6 @@ public:
     {
       // Game is in a state where the double-touch rule does not apply.
       double_touch_rule_applies_ = false;
-      return;
     }
 
     if (running_command != prev_game_command_ &&
@@ -104,7 +103,7 @@ private:
   std::optional<Robot> GetRobotTouchingBall(const World & world)
   {
     auto found_iter = std::ranges::find_if(
-      world.our_robots, [this, &world](const Robot & robot) {
+      world.our_robots, [&world](const Robot & robot) {
         if (!robot.visible) {
           return false;
         }

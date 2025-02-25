@@ -95,6 +95,11 @@ public:
 
   std::vector<Robot> GetGroupFilledAssignments(const std::string & name) const;
 
+  /**
+   * @brief Same as @c GetGroupFilledAssignments but if there is no group with the given name, this function returns an empty array instead of throwing.
+   */
+  std::vector<Robot> GetGroupFilledAssignmentsOrEmpty(const std::string & name) const;
+
   template<typename PositionFunc>
   void RunPositionIfAssigned(const std::string & name, PositionFunc func) const
   {

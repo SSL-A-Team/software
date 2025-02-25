@@ -85,6 +85,7 @@ ateam_msgs::msg::BallState toMsg(const Ball & obj)
   ball_state_msg.pose.position.y = obj.pos.y();
   ball_state_msg.twist.linear.x = obj.vel.x();
   ball_state_msg.twist.linear.y = obj.vel.y();
+  ball_state_msg.visible = obj.visible;
 
   return ball_state_msg;
 }
@@ -109,7 +110,7 @@ ateam_msgs::msg::World toMsg(const World & obj)
 
   world_msg.current_time =
     rclcpp::Time(
-    std::chrono::duration_cast<std::chrono::duration<double>>(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(
       obj.current_time.time_since_epoch()).count());
 
   world_msg.field = toMsg(obj.field);
@@ -118,7 +119,7 @@ ateam_msgs::msg::World toMsg(const World & obj)
   world_msg.balls.push_back(toMsg(obj.ball));
 
   for (const Robot & robot : obj.our_robots) {
-    if (robot.IsAvailable()) {
+    if (robot.visible || robot.radio_connected) {
       world_msg.our_robots.push_back(toMsg(robot));
     } else {
       world_msg.our_robots.push_back(ateam_msgs::msg::RobotState());
@@ -126,7 +127,7 @@ ateam_msgs::msg::World toMsg(const World & obj)
   }
 
   for (const Robot & robot : obj.their_robots) {
-    if (robot.IsAvailable()) {
+    if (robot.visible) {
       world_msg.their_robots.push_back(toMsg(robot));
     } else {
       world_msg.their_robots.push_back(ateam_msgs::msg::RobotState());

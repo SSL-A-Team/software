@@ -18,55 +18,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_
 
-#ifndef PLAYS__TEST_WINDOW_EVAL_HPP_
-#define PLAYS__TEST_WINDOW_EVAL_HPP_
-
+#include <array>
+#include <vector>
+#include "motion/motion_controller.hpp"
 #include "stp/play.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/window_evaluation.hpp"
+#include "ateam_geometry/types.hpp"
+#include "play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
-
-class TestWindowEvalPlay : public stp::Play
+class ControlsTestPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "TestWindowEvalPlay";
+  static constexpr const char * kPlayName = "ControlsTestPlay";
 
-  explicit TestWindowEvalPlay(stp::Options stp_options)
-  : stp::Play(kPlayName, stp_options)
-  {
-  }
+  explicit ControlsTestPlay(stp::Options stp_options);
 
-  void reset() override
-  {
-  }
+  void reset() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override
-  {
-    const auto source = world.ball.pos;
-
-    const ateam_geometry::Segment target{
-      ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width},
-      ateam_geometry::Point{world.field.field_length / 2.0, world.field.goal_width}
-    };
-
-    const auto opponent_robots = play_helpers::getVisibleRobots(world.their_robots);
-
-    const auto windows =
-      play_helpers::window_evaluation::getWindows(target, source, opponent_robots);
-
-    play_helpers::window_evaluation::drawWindows(windows, source, getOverlays());
-
-    return {};
-  }
+    16> runFrame(const World & world) override;
 
 private:
-  char const * const kUsePivotKickParam = "use_pivot_kick";
+  struct Waypoint
+  {
+    ateam_geometry::Point position;
+    AngleMode angle_mode;
+    double heading;
+    double hold_time_sec;
+  };
+
+  MotionController motion_controller_;
+  MotionOptions motion_options_;
+
+  int index = 0;
+  std::vector<Waypoint> waypoints;
+  bool goal_hit;
+  std::chrono::steady_clock::time_point goal_hit_time;
+  double position_threshold = 0.15;
+  double angle_threshold = 8.0;
+
+  bool isGoalHit(const Robot & robot);
 };
-
 }  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__TEST_WINDOW_EVAL_HPP_
+#endif  // PLAYS__TEST_PLAYS__CONTROLS_TEST_PLAY_HPP_

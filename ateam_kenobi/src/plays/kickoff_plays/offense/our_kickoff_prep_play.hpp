@@ -18,58 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_
+#define PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_
 
-#ifndef PLAYS__WAYPOINTS_PLAY_HPP_
-#define PLAYS__WAYPOINTS_PLAY_HPP_
-
-#include <array>
-#include <chrono>
-#include <tuple>
-#include <vector>
-#include <string>
-#include <ateam_geometry/types.hpp>
 #include "stp/play.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "tactics/standard_defense.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class WaypointsPlay : public stp::Play
+class OurKickoffPrepPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "WaypointsPlay";
+  static constexpr const char * kPlayName = "OurKickoffPrepPlay";
 
-  explicit WaypointsPlay(stp::Options stp_options);
+  explicit OurKickoffPrepPlay(stp::Options stp_options);
+
+  stp::PlayScore getScore(const World & world) override;
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world) override;
 
 private:
-  struct Pose
-  {
-    ateam_geometry::Point position;
-    double heading;
-  };
-
-  struct Waypoint
-  {
-    std::vector<Pose> poses;
-    int64_t duration_ms;
-  };
-
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-  std::vector<Waypoint> waypoints_;
-  std::chrono::steady_clock::time_point next_transition_time_ =
-    std::chrono::steady_clock::time_point::max();
-  std::size_t waypoint_index_ = 0;
-
-  void addWaypoint(
-    const int64_t duration_ms, const std::vector<std::tuple<double, double,
-    double>> & poses);
+  tactics::StandardDefense defense_;
+  tactics::MultiMoveTo multi_move_to_;
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__WAYPOINTS_PLAY_HPP_
+#endif  // PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_
