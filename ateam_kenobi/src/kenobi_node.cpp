@@ -259,6 +259,7 @@ private:
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
   {
+    world_.ball.visible = ball_state_msg->visible;
     if (ball_state_msg->visible) {
       world_.ball.pos = ateam_geometry::Point(
         ball_state_msg->pose.position.x,

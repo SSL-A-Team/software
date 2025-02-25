@@ -30,6 +30,7 @@ struct Ball
 {
   ateam_geometry::Point pos;
   ateam_geometry::Vector vel;
+  bool visible = false;
 };
 }  // namespace ateam_kenobi
 
