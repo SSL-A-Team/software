@@ -18,14 +18,14 @@ find_package(angles REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
-  src/assignment.cpp
+  src/assignment/assign_tasks.cpp
+  src/assignment/cost_matrix_utilities.cpp
   src/bi_directional_udp.cpp
   src/get_ip_addresses.cpp
   src/multicast_receiver.cpp
   src/parameters.cpp
   src/status.cpp
   src/game_controller_listener.cpp
-  src/km_assignment.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME}
