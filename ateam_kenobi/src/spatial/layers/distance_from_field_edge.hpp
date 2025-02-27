@@ -22,6 +22,9 @@
 #define LAYERS__DISTANCE_FROM_FIELD_EDGE_HPP_
 
 #include "spatial/spatial_layer_factory.hpp"
+// Not sure if I need to include the world_utils since it has some of the constants???
+#include "ateam_cuda/distance_ops.cuh"
+#include "cuda_runtime.h"
 
 namespace ateam_kenobi::spatial::layers
 {
@@ -59,6 +62,44 @@ public:
         row[x] = distance;
       }
     }
+  }
+
+  void FillLayerGpu(cv::Mat & layer, const World &) override
+  {
+    // TODO (Christian): Fix this :)
+    // TODO (Christian): Abstract this out so we only copy this constant
+    // once for all layers we want to run at once
+    float* half_world_width = WorldWidth() / 2;
+    float* half_world_height = WorldHeight() / 2;
+    cudaMemcpyToSymbol(HALF_WORLD_WIDTH, half_world_width, sizeof(float));
+    cudaMemcpyToSymbol(HALF_WORLD_HEIGHT, half_world_height, sizeof(float));
+
+    int width = LayerWidth();
+    int height = LayerHeight();
+    size_t layerBytes = width * height * sizeof(float);
+
+    float* h_Pin = layer.data;
+    float* h_Pout = new float[width * height];
+
+    float* d_Pin;
+    float* d_Pout;
+
+    cudaMalloc(&d_Pin, layerBytes);
+    cudaMalloc(&d_Pout, layerBytes);
+
+    cudaMemcpy(h_Pin, d_Pin, layerBytes, cudaMemcpyHostToDevice);
+
+    launchDistanceFromEdgeKernel(h_Pout, d_Pout, width, height);
+
+    cudaMemcpy(d_Pout, h_Pout, layerBytes, cudaMemcpyDeviceToHost);
+
+    layer.data = h_Pout;
+
+    // Not sure if the data gets copied into the layer, so might not want to delete this.
+    delete[] h_Pout;
+    // Do we need to free h_Pin (the pointer to the input array) instead/as well?
+    cudaFree(d_Pin);
+    cudaFree(d_Pout);
   }
 
 private:

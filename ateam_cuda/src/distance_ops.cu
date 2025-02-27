@@ -17,17 +17,11 @@ void distanceFromEdgeKernel(unsigned char* Pout, unsigned char* Pin,
         // to ensure we include both the x and y coordinates
         // (x first, then y).
         int in_coord_array_pos = out_coord_array_pos * 2;
-        float world_pos_x = Pin[in_coord_array_pos];
-        float world_pos_y = Pin[in_coord_array_pos + 1];
+        float world_pos_x = fabsf(Pin[in_coord_array_pos]);
+        float world_pos_y = fabsf(Pin[in_coord_array_pos + 1]);
         // Get absolute value
         // There's probably a way to do this that doesn't involve conditions
         // so we can be more efficient
-        if (world_pos_x < 0) {
-            world_pos_x *= -1;
-        }
-        if (world_pos_y < 0) {
-            world_pos_y *= -1;
-        }
         if (world_pos_x < (HALF_WORLD_WIDTH_M - HALF_WORLD_HEIGHT_M) ||
             world_pos_x - (HALF_WORLD_WIDTH_M - HALF_WORLD_HEIGHT_M) < world_pos_y){
             distance = HALF_WORLD_HEIGHT_M - world_pos_y;
