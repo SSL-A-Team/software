@@ -39,8 +39,8 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
 
 stp::PlayScore KickOnGoalPlay::getScore(const World & world)
 {
-  //TODO(barulicm): this logic needs TLC
-  if( !world.in_play) {
+  // TODO(barulicm): this logic needs TLC
+  if(!world.in_play) {
     return stp::PlayScore::NaN();
   }
 
@@ -114,7 +114,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
 
   auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"), motion_commands);
+  defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
+      motion_commands);
 
   assignments.RunPositionIfAssigned(
     "striker", [this, &world, &motion_commands](const Robot & robot) {

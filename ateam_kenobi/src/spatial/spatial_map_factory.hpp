@@ -21,6 +21,7 @@
 #ifndef SPATIAL__SPATIAL_MAP_FACTORY_HPP_
 #define SPATIAL__SPATIAL_MAP_FACTORY_HPP_
 
+#include <string>
 #include <unordered_map>
 #include <opencv2/core/mat.hpp>
 #include "types/world.hpp"
@@ -30,17 +31,20 @@ namespace ateam_kenobi::spatial
 
 class SpatialMapFactory {
 public:
-  SpatialMapFactory(std::string name) : name_(name) {}
+  explicit SpatialMapFactory(std::string name)
+  : name_(name) {}
 
-  const std::string & GetName() const {
+  const std::string & GetName() const
+  {
     return name_;
   }
 
-  virtual void FillMap(cv::Mat & map, const World & world, const std::unordered_map<std::string, cv::Mat> & layers) = 0;
+  virtual void FillMap(
+    cv::Mat & map, const World & world,
+    const std::unordered_map<std::string, cv::Mat> & layers) = 0;
 
 private:
   const std::string name_;
-
 };
 
 }  // namespace ateam_kenobi::spatial

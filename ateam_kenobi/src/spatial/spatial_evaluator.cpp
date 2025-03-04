@@ -77,4 +77,4 @@ void SpatialEvaluator::BuildMaps(World & world)
   }
 }
 
-} // namespace ateam_kenobi::spatial
+}  // namespace ateam_kenobi::spatial

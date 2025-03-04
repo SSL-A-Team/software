@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__OUR_KICKOFF_PREP_PLAY_HPP_
-#define PLAYS__OUR_KICKOFF_PREP_PLAY_HPP_
+#ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_
+#define PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_
 
 #include "stp/play.hpp"
 #include "tactics/standard_defense.hpp"
@@ -40,7 +40,7 @@ public:
   void reset() override;
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world);
+    const World & world) override;
 
 private:
   tactics::StandardDefense defense_;
@@ -49,4 +49,4 @@ private:
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__OUR_KICKOFF_PREP_PLAY_HPP_
+#endif  // PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_

@@ -21,16 +21,16 @@
 #ifndef SPATIAL__SPATIAL_MAP_HPP_
 #define SPATIAL__SPATIAL_MAP_HPP_
 
+#include <string>
 #include <opencv2/core/mat.hpp>
 
 namespace ateam_kenobi::spatial
 {
 
-struct SpatialMap {
-
+struct SpatialMap
+{
   std::string name;
   cv::Mat data;
-
 };
 
 }  // namespace ateam_kenobi::spatial

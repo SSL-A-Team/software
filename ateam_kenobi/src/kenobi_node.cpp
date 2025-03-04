@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 
+#include <pwd.h>
 #include <tf2/convert.h>
 #include <tf2/utils.h>
 #include <chrono>
@@ -52,6 +53,7 @@
 #include "defense_area_enforcement.hpp"
 #include "spatial/spatial_evaluator.hpp"
 #include "joystick_enforcer.hpp"
+#include <ateam_spatial/placeholder.hpp>
 
 namespace ateam_kenobi
 {
@@ -137,7 +139,27 @@ public:
 
     timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
 
+    const auto playbook_path = declare_parameter<std::string>("playbook", "");
+    const auto autosave_playbook_path = getCacheDirectory() / "playbook/autosave.json";
+    if(!playbook_path.empty()) {
+      RCLCPP_INFO(get_logger(), "Loading playbook from %s", playbook_path.c_str());
+      play_selector_.loadFromFile(playbook_path);
+    } else if(std::filesystem::exists(autosave_playbook_path)) {
+      RCLCPP_INFO(get_logger(), "Loading playbook from autosave.");
+      play_selector_.loadFromFile(autosave_playbook_path);
+    } else {
+      RCLCPP_INFO(get_logger(), "Using default playbook.");
+    }
+
     RCLCPP_INFO(get_logger(), "Kenobi node ready.");
+
+    ateam_spatial::cuda_hello();
+  }
+
+  ~KenobiNode()
+  {
+    RCLCPP_INFO(get_logger(), "Autosaving playbook");
+    play_selector_.saveToFile(getCacheDirectory() / "playbook/autosave.json");
   }
 
 private:
@@ -171,7 +193,8 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
 
-  void initialize_robot_ids() {
+  void initialize_robot_ids()
+  {
     for(auto i = 0u; i < world_.our_robots.size(); ++i) {
       world_.our_robots[i].id = i;
     }
@@ -423,6 +446,22 @@ private:
         robot_commands_publishers_.at(id)->publish(maybe_motion_command.value());
       }
     }
+  }
+
+  std::filesystem::path getCacheDirectory()
+  {
+    const std::filesystem::path cache_dir = ".ateam/software/kenobi/";
+    const char * home_env = getenv("HOME");
+    if (home_env != nullptr) {
+      return std::filesystem::path(home_env) / cache_dir;
+    }
+
+    struct passwd * pwd = getpwuid(getuid());  // NOLINT(runtime/threadsafe_fn)
+    if (pwd != nullptr) {
+      return std::filesystem::path(pwd->pw_dir) / cache_dir;
+    }
+
+    return cache_dir;
   }
 };
 

@@ -19,11 +19,13 @@
 // THE SOFTWARE.
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <string>
 #include <utility>
 #include <vector>
+#include <nlohmann/json.hpp>
 #include "play_selector.hpp"
 #include "plays/all_plays.hpp"
 #include "ateam_common/game_controller_listener.hpp"
@@ -136,6 +138,57 @@ stp::Play * PlaySelector::getPlayByName(const std::string name)
   return found_iter->get();
 }
 
+
+void PlaySelector::saveToFile(const std::filesystem::path & path)
+{
+  std::filesystem::create_directories(path.parent_path());
+  nlohmann::json data;
+  auto plays_arr = nlohmann::json::array();
+
+  std::ranges::transform(plays_, std::back_inserter(plays_arr), [](const auto & play){
+      return nlohmann::json{
+      {"name", play->getName()},
+      {"enabled", play->isEnabled()}
+      };
+  });
+
+  data["plays"] = plays_arr;
+  std::ofstream file(path);
+  file << std::setw(2) << data << std::endl;
+}
+
+void PlaySelector::loadFromFile(const std::filesystem::path & path)
+{
+  std::ifstream file(path);
+  nlohmann::json data;
+  file >> data;
+
+  const auto & json_plays = data["plays"];
+
+  if(!json_plays.is_array()) {
+    RCLCPP_ERROR(ros_logger_, "No 'plays' member found in playbook file.");
+    return;
+  }
+
+  for(const auto & play_settings : json_plays) {
+    const auto & name = play_settings["name"];
+    if(!name.is_string()) {
+      RCLCPP_WARN(ros_logger_, "Skipping play entry with no name.");
+      continue;
+    }
+    auto play = getPlayByName(name);
+    if(play == nullptr) {
+      RCLCPP_WARN(ros_logger_, "Could not find play with name %s. Skipping.",
+          name.get<std::string>().c_str());
+      continue;
+    }
+    const auto & enabled = play_settings["enabled"];
+    if(enabled.is_boolean()) {
+      play->setEnabled(enabled);
+    }
+  }
+}
+
 stp::Play * PlaySelector::selectOverridePlay()
 {
   if (override_play_name_.empty()) {
@@ -211,7 +264,7 @@ void PlaySelector::resetPlayIfNeeded(stp::Play * play)
   void * play_address = static_cast<void *>(play);
   if (play_address != prev_play_address_) {
     if(prev_play_address_ != nullptr) {
-      static_cast<stp::Play*>(prev_play_address_)->exit();
+      static_cast<stp::Play *>(prev_play_address_)->exit();
     }
     if (play != nullptr) {
       play->reset();

@@ -59,7 +59,8 @@ public:
     speed_ = speed;
   }
 
-  void setCaptureSpeed(double speed) {
+  void setCaptureSpeed(double speed)
+  {
     kick_.SetCaptureSpeed(speed);
   }
 

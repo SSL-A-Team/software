@@ -18,9 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef LAYERS__LINE_OF_SIGHT_THEIR_GOAL_HPP_
-#define LAYERS__LINE_OF_SIGHT_THEIR_GOAL_HPP_
+#ifndef SPATIAL__LAYERS__LINE_OF_SIGHT_THEIR_GOAL_HPP_
+#define SPATIAL__LAYERS__LINE_OF_SIGHT_THEIR_GOAL_HPP_
 
+#include <algorithm>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include "spatial/spatial_layer_factory.hpp"
 #include "robot_shadows.hpp"
@@ -28,7 +30,7 @@
 namespace ateam_kenobi::spatial::layers
 {
 
-class LineOfSightTheirGoal : public SpatialLayerFactory {
+class LineOfSightTheirGoal final : public SpatialLayerFactory {
 public:
   LineOfSightTheirGoal()
   : SpatialLayerFactory("LineOfSightTheirGoal") {}
@@ -47,11 +49,13 @@ public:
 private:
   const float kMinimumShotAngle = 0.5236;  // 30 deg
 
-  void FillBackBoundryArea(cv::Mat & layer, const World & world) {
-    const auto half_field_length = world.field.field_length/2.0;
-    const auto half_world_width = (world.field.field_width/2.0) + world.field.boundary_width;
+  void FillBackBoundryArea(cv::Mat & layer, const World & world)
+  {
+    const auto half_field_length = world.field.field_length / 2.0;
+    const auto half_world_width = (world.field.field_width / 2.0) + world.field.boundary_width;
     const cv::Point2d top_left(half_field_length, -half_world_width);
-    const cv::Point2d bottom_right(half_field_length + world.field.boundary_width, half_world_width);
+    const cv::Point2d bottom_right(half_field_length + world.field.boundary_width,
+      half_world_width);
     const auto top_left_layer = WorldToLayer(top_left);
     const auto bottom_right_layer = WorldToLayer(bottom_right);
     cv::rectangle(layer, top_left_layer, bottom_right_layer, cv::Scalar(0), cv::FILLED);
@@ -59,25 +63,31 @@ private:
 
   void AddCornerShadows(cv::Mat & layer, const World & world)
   {
-    const auto half_field_length_layer = WorldToLayerX(world.field.field_length/2.0);
+    const auto half_field_length_layer = WorldToLayerX(world.field.field_length / 2.0);
     const cv::Point top_field_corner{half_field_length_layer, 0};
     const cv::Point bottom_field_corner{half_field_length_layer, LayerHeight()};
 
     const auto half_goal_height_world = world.field.goal_width / 2.0;
     const cv::Point top_goal_corner{half_field_length_layer, WorldToLayerY(half_goal_height_world)};
-    const cv::Point bottom_goal_corner{half_field_length_layer, WorldToLayerY(-half_goal_height_world)};
+    const cv::Point bottom_goal_corner{half_field_length_layer,
+      WorldToLayerY(-half_goal_height_world)};
 
-    const auto side_corner_x_world = ((WorldWidth() - half_goal_height_world) / 2.0) * tan(kMinimumShotAngle);
-    const auto side_corner_x = WorldToLayerX((world.field.field_length / 2.0) - side_corner_x_world);
+    const auto side_corner_x_world = ((WorldWidth() - half_goal_height_world) / 2.0) *
+      tan(kMinimumShotAngle);
+    const auto side_corner_x = WorldToLayerX((world.field.field_length / 2.0) -
+        side_corner_x_world);
     const cv::Point top_side_corner{side_corner_x, 0};
     const cv::Point bottom_side_corner{side_corner_x, LayerHeight()};
 
     const cv::Scalar black{0};
-    cv::fillPoly(layer, std::vector<cv::Point>{top_field_corner, top_goal_corner, top_side_corner}, black);
-    cv::fillPoly(layer, std::vector<cv::Point>{bottom_field_corner, bottom_goal_corner, bottom_side_corner}, black);
+    cv::fillPoly(layer, std::vector<cv::Point>{top_field_corner, top_goal_corner, top_side_corner},
+        black);
+    cv::fillPoly(layer,
+        std::vector<cv::Point>{bottom_field_corner, bottom_goal_corner, bottom_side_corner}, black);
   }
 
-  void AddRobotShadows(cv::Mat & layer, const World & world) {
+  void AddRobotShadows(cv::Mat & layer, const World & world)
+  {
     const cv::Scalar black{0};
     const auto half_field_length = world.field.field_length / 2.0;
     const ateam_geometry::Segment goal_segment{
@@ -99,15 +109,15 @@ private:
       }
       std::vector<cv::Point> shadow_poly_layer;
       shadow_poly_layer.reserve(shadow_poly.size());
-      std::ranges::transform(shadow_poly, std::back_inserter(shadow_poly_layer), [this](const auto & wp){
-        return WorldToLayer(wp);
+      std::ranges::transform(shadow_poly, std::back_inserter(shadow_poly_layer),
+        [this](const auto & wp){
+          return WorldToLayer(wp);
       });
       cv::fillPoly(layer, shadow_poly_layer, black);
     }
   }
-
 };
 
-}  // namespace ateam_kenobi::spatial
+}  // namespace ateam_kenobi::spatial::layers
 
-#endif  // LAYERS__LINE_OF_SIGHT_THEIR_GOAL_HPP_
+#endif  // SPATIAL__LAYERS__LINE_OF_SIGHT_THEIR_GOAL_HPP_

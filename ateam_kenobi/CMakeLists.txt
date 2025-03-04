@@ -17,6 +17,8 @@ find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(ateam_spatial REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/defense_area_enforcement.cpp
@@ -97,6 +99,8 @@ ament_target_dependencies(
   "OMPL"
   "angles"
   OpenCV
+  nlohmann_json
+  ateam_spatial
 )
 rclcpp_components_register_node(
   kenobi_node_component

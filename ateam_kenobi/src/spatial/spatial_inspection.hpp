@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SPATIAL__SPATIAL_EVALUATOR_HPP_
-#define SPATIAL__SPATIAL_EVALUATOR_HPP_
+#ifndef SPATIAL__SPATIAL_INSPECTION_HPP_
+#define SPATIAL__SPATIAL_INSPECTION_HPP_
 
 #include <ateam_geometry/types.hpp>
 #include "types/field.hpp"
@@ -40,4 +40,4 @@ double GetValueAtLocation(
 
 }  // namespace ateam_kenobi::spatial
 
-#endif  // SPATIAL__SPATIAL_EVALUATOR_HPP_
+#endif  // SPATIAL__SPATIAL_INSPECTION_HPP_

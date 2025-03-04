@@ -50,6 +50,10 @@ public:
 
   stp::Play * getPlayByName(const std::string name);
 
+  void saveToFile(const std::filesystem::path & path);
+
+  void loadFromFile(const std::filesystem::path & path);
+
 private:
   rclcpp::Logger ros_logger_;
   std::shared_ptr<stp::Play> halt_play_;

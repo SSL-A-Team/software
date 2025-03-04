@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__KICKOFF_ON_GOAL_HPP_
-#define PLAYS__KICKOFF_ON_GOAL_HPP_
+#ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_
+#define PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_
 
 #include "stp/play.hpp"
 #include "tactics/standard_defense.hpp"
@@ -53,4 +53,4 @@ private:
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__KICKOFF_ON_GOAL_HPP_
+#endif  // PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_

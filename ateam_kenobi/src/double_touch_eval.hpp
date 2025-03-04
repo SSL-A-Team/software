@@ -103,7 +103,7 @@ private:
   std::optional<Robot> GetRobotTouchingBall(const World & world)
   {
     auto found_iter = std::ranges::find_if(
-      world.our_robots, [this, &world](const Robot & robot) {
+      world.our_robots, [&world](const Robot & robot) {
         if (!robot.visible) {
           return false;
         }

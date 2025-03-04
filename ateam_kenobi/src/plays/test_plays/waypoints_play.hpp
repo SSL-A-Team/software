@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__WAYPOINTS_PLAY_HPP_
-#define PLAYS__WAYPOINTS_PLAY_HPP_
+#ifndef PLAYS__TEST_PLAYS__WAYPOINTS_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__WAYPOINTS_PLAY_HPP_
 
 #include <array>
 #include <chrono>
@@ -72,4 +72,4 @@ private:
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__WAYPOINTS_PLAY_HPP_
+#endif  // PLAYS__TEST_PLAYS__WAYPOINTS_PLAY_HPP_

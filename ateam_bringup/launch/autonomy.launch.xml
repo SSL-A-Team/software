@@ -3,6 +3,7 @@
   <arg name="use_emulated_ballsense" default="false"/>
   <arg name="team_name" default="A-Team"/>
   <arg name="kenobi_debug" default="false"/>
+  <arg name="kenobi_playbook" default=""/>
 
   <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True">
     <param name="gc_team_name" value="$(var team_name)"/>
@@ -15,5 +16,6 @@
     <param name="use_world_velocities" value="$(var use_world_velocities)"/>
     <param name="use_emulated_ballsense" value="$(var use_emulated_ballsense)"/>
     <param name="gc_team_name" value="$(var team_name)"/>
+    <param name="playbook" value="$(var kenobi_playbook)"/>
   </node>
 </launch>

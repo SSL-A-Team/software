@@ -18,19 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef LAYERS__DISTANCE_DOWN_FIELD_HPP_
-#define LAYERS__DISTANCE_DOWN_FIELD_HPP_
+#ifndef SPATIAL__LAYERS__DISTANCE_DOWN_FIELD_HPP_
+#define SPATIAL__LAYERS__DISTANCE_DOWN_FIELD_HPP_
 
 #include "spatial/spatial_layer_factory.hpp"
 
 namespace ateam_kenobi::spatial::layers
 {
 
-class DistanceDownField : public SpatialLayerFactory {
+class DistanceDownField final : public SpatialLayerFactory {
 public:
-  DistanceDownField() : SpatialLayerFactory("DistanceDownField") {}
+  DistanceDownField()
+  : SpatialLayerFactory("DistanceDownField") {}
 
-  void FillLayer(cv::Mat & layer, const World &) override {
+  void FillLayer(cv::Mat & layer, const World &) override
+  {
     SetupLayer(layer, CV_32FC1);
     if(layer.size() == prev_size) {
       // No need to regenerate this layer unless the field size changes
@@ -42,16 +44,15 @@ public:
 
     for(auto x = 0; x < LayerWidth(); ++x) {
       for(auto y = 0; y < LayerHeight(); ++y) {
-        layer.at<float>(y ,x) = LayerToWorldX(x) + half_world_width;
+        layer.at<float>(y, x) = LayerToWorldX(x) + half_world_width;
       }
     }
   }
 
 private:
   cv::Size prev_size;
-
 };
 
-}  // namespace ateam_kenobi::spatial
+}  // namespace ateam_kenobi::spatial::layers
 
-#endif  // LAYERS__DISTANCE_DOWN_FIELD_HPP_
+#endif  // SPATIAL__LAYERS__DISTANCE_DOWN_FIELD_HPP_

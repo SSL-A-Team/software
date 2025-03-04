@@ -19,6 +19,8 @@
 // THE SOFTWARE.
 
 #include "spatial_pass_play.hpp"
+#include <string>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/types.hpp>
 #include "spatial/spatial_inspection.hpp"
@@ -97,8 +99,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   if(!started_) {
     target_ = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"], world.field);
   } else {
-    //TODO(barulicm): need to granularize "started" state to not change target while ball is moving
-    if(spatial::GetValueAtLocation(world.spatial_maps["LineOfSightBallMap"], target_, world.field) < 1) {
+    // TODO(barulicm): need to granularize "started" state to not change target while ball is moving
+    if(spatial::GetValueAtLocation(world.spatial_maps["LineOfSightBallMap"], target_,
+        world.field) < 1)
+    {
       // If pass is being blocked, choose a new target
       target_ = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"], world.field);
     }

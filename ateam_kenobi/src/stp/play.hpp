@@ -81,14 +81,14 @@ public:
 
   /**
    * @brief Called before a play is run when the previous frame was running a different frame.
-   * 
+   *
    * Also called if a play is being chosen again after reporting itself done in @c getCompletionState.
    */
   virtual void enter() {}
 
   /**
    * @brief Called when a new play is being run and this play was running in the previous frame.
-   * 
+   *
    * Also called if a play is being chosen again after reporting itself done in @c getCompletionState.
    */
   virtual void exit() {}

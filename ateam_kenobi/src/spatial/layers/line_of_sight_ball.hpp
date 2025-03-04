@@ -18,9 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef LAYERS__LINE_OF_SIGHT_BALL_HPP_
-#define LAYERS__LINE_OF_SIGHT_BALL_HPP_
+#ifndef SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
+#define SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
 
+#include <algorithm>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include "spatial/spatial_layer_factory.hpp"
 #include "robot_shadows.hpp"
@@ -28,7 +30,7 @@
 namespace ateam_kenobi::spatial::layers
 {
 
-class LineOfSightBall : public SpatialLayerFactory {
+class LineOfSightBall final : public SpatialLayerFactory {
 public:
   LineOfSightBall()
   : SpatialLayerFactory("LineOfSightBall") {}
@@ -67,11 +69,9 @@ private:
       });
       cv::fillPoly(layer, shadow_poly_layer, black);
     }
-
   }
-
 };
 
-}  // namespace ateam_kenobi::spatial
+}  // namespace ateam_kenobi::spatial::layers
 
-#endif  // LAYERS__LINE_OF_SIGHT_BALL_HPP_
+#endif  // SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_

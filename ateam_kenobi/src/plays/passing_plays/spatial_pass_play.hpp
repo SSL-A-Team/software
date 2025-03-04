@@ -23,8 +23,8 @@
 #include "tactics/pass.hpp"
 #include "skills/lane_idler.hpp"
 
-#ifndef PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
-#define PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
+#ifndef PLAYS__PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
+#define PLAYS__PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
 
 namespace ateam_kenobi::plays
 {
@@ -34,7 +34,7 @@ class SpatialPassPlay : public stp::Play
 public:
   static constexpr const char * kPlayName = "SpatialPassPlay";
 
-  SpatialPassPlay(stp::Options stp_options);
+  explicit SpatialPassPlay(stp::Options stp_options);
 
   virtual ~SpatialPassPlay() = default;
 
@@ -59,4 +59,4 @@ private:
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_
+#endif  // PLAYS__PASSING_PLAYS__SPATIAL_PASS_PLAY_HPP_

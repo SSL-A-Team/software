@@ -22,6 +22,7 @@
 #define SPATIAL__SPATIAL_EVALUATOR_HPP_
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 #include <opencv2/opencv.hpp>

@@ -131,7 +131,7 @@ ros2 run ateam_bringup enable_loopback_multicast.sh
 
 You can run two instances of our gameplay stack against the same simulator to run simulated self-scrimmages. Just remember to set the team names in the game controller to be different teams.
 
-**Note:** Currently, only one instance of our AI can be run at a time, so the second gameplay stack runs headless.
+**Note:** Currently, only one instance of our UI can be run at a time, so the second gameplay stack runs headless.
 
 ```bash
 # In the first terminal

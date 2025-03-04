@@ -64,10 +64,11 @@ public:
 
   /**
    * @brief Set the capture speed used to approach the ball in the final phase
-   * 
+   *
    * @param speed Speed in meters per second
    */
-  void SetCaptureSpeed(double speed) {
+  void SetCaptureSpeed(double speed)
+  {
     capture_speed_ = speed;
   }
 
