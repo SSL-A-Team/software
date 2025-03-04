@@ -116,10 +116,25 @@ void TheirFreeKickPlay::runBlockers(
   const std::vector<ateam_geometry::Point> & points,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
 {
-  // See rules section 5.3.3 for Free Kick rules, with extra
-  const auto keepout_obstacle = ateam_geometry::makeDisk(world.ball.pos, 0.7);
-  getOverlays().drawCircle("keepout", keepout_obstacle, "red", "transparent");
-  std::vector<ateam_geometry::AnyShape> obstacles = {keepout_obstacle};
+  // Rules section 5.3.3 require 0.5m distance between defenders and ball
+  const auto ball_obstacle = ateam_geometry::makeDisk(world.ball.pos, 0.7);
+  getOverlays().drawCircle("ball_obstacle", ball_obstacle, "red", "transparent");
+
+  // Rules section 8.4.1 require 0.2m distance between all robtos and opponent defense area
+  const auto def_area_margin = kRobotRadius + 0.2;
+  const auto def_area_obst_width = world.field.defense_area_width + (2.0 * def_area_margin);
+  const auto def_area_obst_depth = world.field.defense_area_depth + def_area_margin;
+  const auto half_field_length = world.field.field_length / 2.0;
+  const auto def_area_back_x = half_field_length + ( 2 * world.field.boundary_width ) +
+    def_area_obst_depth;
+  const auto def_area_front_x = half_field_length - def_area_obst_depth;
+  const auto defense_area_obstacle = ateam_geometry::Rectangle{
+    ateam_geometry::Point{def_area_front_x, -def_area_obst_width / 2.0},
+    ateam_geometry::Point{def_area_back_x, def_area_obst_width / 2.0}
+  };
+  getOverlays().drawRectangle("defense_area_obstacle", defense_area_obstacle, "red", "transparent");
+
+  std::vector<ateam_geometry::AnyShape> obstacles = {ball_obstacle, defense_area_obstacle};
   for (auto i = 0ul; i < std::min(robots.size(), points.size()); ++i) {
     const auto & robot = robots[i];
     const auto & point = points[i];

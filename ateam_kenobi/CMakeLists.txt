@@ -25,6 +25,7 @@ add_library(kenobi_node_component SHARED
   src/joystick_enforcer.cpp
   src/kenobi_node.cpp
   src/play_selector.cpp
+  src/path_planning/escape_velocity.cpp
   src/path_planning/obstacles.cpp
   src/path_planning/path_planner.cpp
   src/plays/kickoff_plays/defense/their_kickoff_play.cpp

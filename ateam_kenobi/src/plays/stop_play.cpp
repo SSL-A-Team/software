@@ -20,14 +20,17 @@
 
 #include "stop_play.hpp"
 #include <ranges>
+#include <algorithm>
 #include <limits>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/normalize.hpp>
+#include <ateam_geometry/do_intersect.hpp>
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
 #include "path_planning/obstacles.hpp"
+#include "path_planning/escape_velocity.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -62,60 +65,20 @@ void StopPlay::reset()
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::runFrame(
   const World & world)
 {
-  const auto spots = getOpenSpots(world);
-
-  auto bot_too_close = [ball_pos = world.ball.pos, r = kKeepoutRadius](const Robot bot) {
-      return ateam_geometry::norm(bot.pos - ball_pos) < r;
-    };
-
-  std::vector<Robot> bots_to_move;
-  std::ranges::copy_if(
-    play_helpers::getAvailableRobots(world), std::back_inserter(
-      bots_to_move), bot_too_close);
-
-  std::ranges::transform(
-    bots_to_move, std::back_inserter(getPlayInfo()["bots to move"]),
-    [](const Robot & r) {return r.id;});
-
-  const auto assignments = play_helpers::assignRobots(bots_to_move, spots);
-
   const auto added_obstacles = getAddedObstacles(world);
+
+  drawObstacles(world, added_obstacles);
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
-  for (size_t spot_ind = 0; spot_ind < spots.size(); ++spot_ind) {
-    const auto & spot = spots[spot_ind];
-    const auto & maybe_bot = assignments[spot_ind];
-    if (!maybe_bot) {
-      continue;
-    }
-    const auto & bot = *maybe_bot;
-    auto & emt = easy_move_tos_.at(bot.id);
-    emt.setTargetPosition(spot);
-    emt.face_point(world.ball.pos);
-    if (bot.id == world.referee_info.our_goalie_id) {
-      auto planner_options = emt.getPlannerOptions();
-      planner_options.use_default_obstacles = false;
-      emt.setPlannerOptions(planner_options);
-    } else {
-      auto planner_options = emt.getPlannerOptions();
-      planner_options.use_default_obstacles = true;
-      emt.setPlannerOptions(planner_options);
-    }
-    motion_commands.at(bot.id) = emt.runFrame(bot, world, added_obstacles);
-    getOverlays().drawCircle(
-      "spot" + std::to_string(spot_ind),
-      ateam_geometry::makeCircle(spot, kRobotRadius), "blue", "transparent");
-  }
+  moveBotsTooCloseToBall(world, added_obstacles, motion_commands);
+
+  moveBotsInObstacles(world, added_obstacles, motion_commands);
 
   // Halt all robots that weren't already assigned a motion command
   std::ranges::replace_if(
     motion_commands,
     [](const auto & o) {return !o;}, std::make_optional(ateam_msgs::msg::RobotMotionCommand{}));
-
-  getOverlays().drawCircle(
-    "keepout_circle",
-    ateam_geometry::makeCircle(world.ball.pos, kKeepoutRadiusRules), "red", "transparent");
 
   return motion_commands;
 }
@@ -266,6 +229,116 @@ std::vector<ateam_geometry::AnyShape> StopPlay::getAddedObstacles(const World & 
       ateam_geometry::Point{-goal_backwall_x, goal_sidewall_outer_y}
     });
 
+  // Rules section 8.4.1 require 0.2m distance between all robtos and opponent defense area
+  const auto def_area_margin = kRobotRadius + 0.2;
+  const auto def_area_obst_width = world.field.defense_area_width + (2.0 * def_area_margin);
+  const auto def_area_obst_depth = world.field.defense_area_depth + def_area_margin;
+  const auto def_area_back_x = half_field_length + ( 2 * world.field.boundary_width ) +
+    def_area_obst_depth;
+  const auto def_area_front_x = half_field_length - def_area_obst_depth;
+  const auto defense_area_obstacle = ateam_geometry::Rectangle{
+    ateam_geometry::Point{def_area_front_x, -def_area_obst_width / 2.0},
+    ateam_geometry::Point{def_area_back_x, def_area_obst_width / 2.0}
+  };
+  obstacles.push_back(defense_area_obstacle);
+
   return obstacles;
+}
+
+void StopPlay::drawObstacles(
+  const World & world,
+  const std::vector<ateam_geometry::AnyShape> & added_obstacles)
+{
+  int obstacle_index = 0;
+  for(const auto & obst : added_obstacles) {
+    std::visit([this, &obstacle_index] (const auto & o) mutable {
+        if constexpr (std::is_same_v<decltype(o), const ateam_geometry::Circle &>) {
+          getOverlays().drawCircle("obstacle" + std::to_string(obstacle_index), o, "red",
+            "transparent");
+        } else if constexpr (std::is_same_v<decltype(o), const ateam_geometry::Rectangle &>) {
+          getOverlays().drawRectangle("obstacle" + std::to_string(obstacle_index), o, "red",
+            "transparent");
+        } else {
+          RCLCPP_WARN_STREAM(getLogger(), "Unsupported obstacle type: " << typeid(o).name());
+        }
+    }, obst);
+    obstacle_index++;
+  }
+
+  getOverlays().drawCircle(
+    "keepout_circle",
+    ateam_geometry::makeCircle(world.ball.pos, kKeepoutRadiusRules), "red", "transparent");
+}
+
+void StopPlay::moveBotsTooCloseToBall(
+  const World & world,
+  const std::vector<ateam_geometry::AnyShape> & added_obstacles,
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+{
+  const auto spots = getOpenSpots(world);
+
+  auto bot_too_close = [ball_pos = world.ball.pos, r = kKeepoutRadius](const Robot bot) {
+      return ateam_geometry::norm(bot.pos - ball_pos) < r;
+    };
+
+  std::vector<Robot> bots_to_move;
+  std::ranges::copy_if(
+    play_helpers::getAvailableRobots(world), std::back_inserter(
+      bots_to_move), bot_too_close);
+
+  auto & play_info_array = getPlayInfo()["bots near ball"];
+  play_info_array = nlohmann::json::array();
+  std::ranges::transform(bots_to_move, std::back_inserter(play_info_array),
+    [](const Robot & r) {return r.id;});
+
+  const auto assignments = play_helpers::assignRobots(bots_to_move, spots);
+
+  for (size_t spot_ind = 0; spot_ind < spots.size(); ++spot_ind) {
+    const auto & spot = spots[spot_ind];
+    const auto & maybe_bot = assignments[spot_ind];
+    if (!maybe_bot) {
+      continue;
+    }
+    const auto & bot = *maybe_bot;
+    auto & emt = easy_move_tos_.at(bot.id);
+    emt.setTargetPosition(spot);
+    emt.face_point(world.ball.pos);
+    if (bot.id == world.referee_info.our_goalie_id) {
+      auto planner_options = emt.getPlannerOptions();
+      planner_options.use_default_obstacles = false;
+      emt.setPlannerOptions(planner_options);
+    } else {
+      auto planner_options = emt.getPlannerOptions();
+      planner_options.use_default_obstacles = true;
+      emt.setPlannerOptions(planner_options);
+    }
+    motion_commands.at(bot.id) = emt.runFrame(bot, world, added_obstacles);
+    getOverlays().drawCircle(
+      "spot" + std::to_string(spot_ind),
+      ateam_geometry::makeCircle(spot, kRobotRadius), "blue", "transparent");
+  }
+}
+
+void StopPlay::moveBotsInObstacles(
+  const World & world,
+  const std::vector<ateam_geometry::AnyShape> & added_obstacles,
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+{
+  auto & play_info_bots = getPlayInfo()["bots in obstacles"];
+  play_info_bots = nlohmann::json::array();
+  for(auto i = 0ul; i < motion_commands.size(); ++i) {
+    const auto & robot = world.our_robots[i];
+    if(!robot.IsAvailable()) {
+      continue;
+    }
+    const auto opt_escape_vel = path_planning::GenerateEscapeVelocity(robot, added_obstacles);
+    if(!opt_escape_vel) {
+      continue;
+    }
+    ateam_msgs::msg::RobotMotionCommand command;
+    command.twist = *opt_escape_vel;
+    motion_commands[i] = command;
+    play_info_bots.push_back(robot.id);
+  }
 }
 }  // namespace ateam_kenobi::plays
