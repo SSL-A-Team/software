@@ -45,8 +45,7 @@ stp::PlayScore PassToSegmentPlay::getScore(const World & world)
   // TODO(barulicm) does not work generically if we want to use this to get the ball into play
   if (!world.in_play &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
+    world.referee_info.running_command != ateam_common::GameCommand::NormalStart)
   {
     return stp::PlayScore::NaN();
   }

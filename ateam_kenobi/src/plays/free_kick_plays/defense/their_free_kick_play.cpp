@@ -37,23 +37,10 @@ TheirFreeKickPlay::TheirFreeKickPlay(stp::Options stp_options)
 
 stp::PlayScore TheirFreeKickPlay::getScore(const World & world)
 {
-  switch (world.referee_info.running_command) {
-    case ateam_common::GameCommand::DirectFreeTheirs:
-      return world.in_play ? stp::PlayScore::Min() : stp::PlayScore::Max();
-    case ateam_common::GameCommand::NormalStart:
-      {
-        if (world.in_play) {
-          return stp::PlayScore::Min();
-        }
-        switch (world.referee_info.prev_command) {
-          case ateam_common::GameCommand::DirectFreeTheirs:
-            return stp::PlayScore::Max();
-          default:
-            return stp::PlayScore::NaN();
-        }
-      }
-    default:
-      return stp::PlayScore::NaN();
+  if(world.referee_info.running_command == ateam_common::GameCommand::DirectFreeTheirs) {
+    return world.in_play ? stp::PlayScore::Min() : stp::PlayScore::Max();
+  } else {
+    return stp::PlayScore::NaN();
   }
 }
 

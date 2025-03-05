@@ -85,6 +85,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
     PassToLanePlay::PassDirection::Backward);
   addPlay<TestSpatialMapPlay>(stp_options);
   addPlay<SpatialPassPlay>(stp_options);
+  addPlay<FreeKickOnGoalPlay>(stp_options);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg)
