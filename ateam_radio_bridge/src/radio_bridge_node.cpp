@@ -177,14 +177,14 @@ private:
       {
         RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Sending zeros.", id);
         motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
-        motion_commands_[id].kick = ateam_msgs::msg::RobotMotionCommand::KICK_DISABLE;
+        motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
       }
       BasicControl control_msg;
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
-      control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick);
+      control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
