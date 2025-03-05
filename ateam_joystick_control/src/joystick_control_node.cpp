@@ -54,16 +54,22 @@ public:
         "Command topic template does not contain '{}' placeholder. Robot ID will have no effect.");
     }
 
-    declare_parameters<int>(
-      "mapping", {
-        {"linear.x.axis", 1},
-        {"linear.y.axis", 0},
-        {"angular.z.axis", 3},
-        {"kick", 5},
-        {"dribbler.increment", 3},
-        {"dribbler.decrement", 2},
-        {"dribbler.spin", 4}
-      });
+    linear_x_axis_ = declare_parameter<int>("mapping.linear.x.axis", 1);
+    linear_y_axis_ = declare_parameter<int>("mapping.linear.y.axis", 1);
+    angular_z_axis_ = declare_parameter<int>("mapping.angular.z.axis", 1);
+
+    kick_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.kick",
+        "axis 5 < -0.8"));
+    chip_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.chip",
+        "button 5"));
+    dribbler_increment_trigger_ =
+      ParseTriggerFunction(declare_parameter<std::string>("mapping.dribbler.increment",
+        "button 3"));
+    dribbler_decrement_trigger_ =
+      ParseTriggerFunction(declare_parameter<std::string>("mapping.dribbler.decrement",
+        "button 2"));
+    dribbler_spin_trigger_ =
+      ParseTriggerFunction(declare_parameter<std::string>("mapping.dribbler.spin", "button 4"));
 
     declare_parameters<double>(
       "mapping", {
@@ -78,6 +84,7 @@ public:
     declare_parameter<double>("dribbler_speed_step", 10.0);
 
     declare_parameter<double>("kick_speed", 5.0);
+    declare_parameter<double>("chip_speed", 5.0);
 
     CreatePublisher(declare_parameter<int>("robot_id", -1));
     parameter_callback_handle_ =
@@ -90,9 +97,21 @@ public:
   }
 
 private:
+  using TriggerFunction = std::function<bool(const sensor_msgs::msg::Joy & )>;
+
   std::string command_topic_template_;
   float dribbler_speed_ = 0.0f;
   sensor_msgs::msg::Joy prev_joy_msg_;
+
+  TriggerFunction kick_trigger_;
+  TriggerFunction chip_trigger_;
+  TriggerFunction dribbler_increment_trigger_;
+  TriggerFunction dribbler_decrement_trigger_;
+  TriggerFunction dribbler_spin_trigger_;
+  int linear_x_axis_;
+  int linear_y_axis_;
+  int angular_z_axis_;
+
   rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr control_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::JoystickControlStatus>::SharedPtr status_publisher_;
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscription_;
@@ -136,32 +155,33 @@ private:
     ateam_msgs::msg::RobotMotionCommand command_message;
 
     command_message.twist.linear.x = get_parameter("mapping.linear.x.scale").as_double() *
-      joy_message->axes[get_parameter("mapping.linear.x.axis").as_int()];
+      joy_message->axes[linear_x_axis_];
     command_message.twist.linear.y = get_parameter("mapping.linear.y.scale").as_double() *
-      joy_message->axes[get_parameter("mapping.linear.y.axis").as_int()];
+      joy_message->axes[linear_y_axis_];
     command_message.twist.angular.z = get_parameter("mapping.angular.z.scale").as_double() *
-      joy_message->axes[get_parameter("mapping.angular.z.axis").as_int()];
+      joy_message->axes[angular_z_axis_];
 
-    const auto kick_button = get_parameter("mapping.kick").as_int();
-    if (joy_message->buttons[kick_button]) {
+    if (kick_trigger_(*joy_message)) {
       command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
       command_message.kick_speed = get_parameter("kick_speed").as_double();
+    } else if (chip_trigger_(*joy_message)) {
+      command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_CHIP_TOUCH;
+      command_message.kick_speed = get_parameter("chip_speed").as_double();
+    } else {
+      command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_ARM;
     }
 
-    const auto dribbler_inc_button = get_parameter("mapping.dribbler.increment").as_int();
-    const auto dribbler_dec_button = get_parameter("mapping.dribbler.decrement").as_int();
-
-    if (joy_message->buttons[dribbler_inc_button] && !prev_joy_msg_.buttons[dribbler_inc_button]) {
+    if (dribbler_increment_trigger_(*joy_message) && !dribbler_increment_trigger_(prev_joy_msg_)) {
       dribbler_speed_ += get_parameter("dribbler_speed_step").as_double();
     }
-    if (joy_message->buttons[dribbler_dec_button] && !prev_joy_msg_.buttons[dribbler_dec_button]) {
+    if (dribbler_decrement_trigger_(*joy_message) && !dribbler_decrement_trigger_(prev_joy_msg_)) {
       dribbler_speed_ -= get_parameter("dribbler_speed_step").as_double();
     }
     dribbler_speed_ =
       std::clamp(
       dribbler_speed_, static_cast<float>(get_parameter("mapping.dribbler.min").as_double()),
       static_cast<float>(get_parameter("mapping.dribbler.max").as_double()));
-    if (joy_message->buttons[get_parameter("mapping.dribbler.spin").as_int()]) {
+    if (dribbler_spin_trigger_(*joy_message)) {
       command_message.dribbler_speed = dribbler_speed_;
     } else {
       command_message.dribbler_speed = 0.0;
@@ -195,6 +215,74 @@ private:
 
     result.successful = true;
     return result;
+  }
+
+  TriggerFunction ParseTriggerFunction(const std::string & description)
+  {
+    std::stringstream stream(description);
+    std::string token;
+    std::vector<std::string> tokens;
+    while (std::getline(stream, token, ' ')) {
+      tokens.push_back(token);
+    }
+    return ParseTriggerFunction(tokens);
+  }
+
+  TriggerFunction ParseTriggerFunction(const std::span<std::string> tokens)
+  {
+    if(tokens.empty()) {
+      return [](const sensor_msgs::msg::Joy &){return false;};
+    }
+
+    const auto & first_token = tokens.front();
+
+    if(first_token == "not") {
+      auto inner_func = ParseTriggerFunction(tokens);
+      return [inner_func](const sensor_msgs::msg::Joy & m){return !inner_func(m);};
+    }
+
+    if(first_token == "button") {
+      if(tokens.size() != 2) {
+        throw std::runtime_error("Incorrect number of arguments to 'button' trigger.");
+      }
+      const auto & button_index_token = tokens[1];
+      const auto button_index = std::stoi(button_index_token);
+      return [button_index](const sensor_msgs::msg::Joy & m){
+               return m.buttons.at(button_index);
+             };
+    }
+
+    if(first_token == "axis") {
+      if(tokens.size() != 4) {
+        throw std::runtime_error("Incorrect number of arguments to 'axis' trigger.");
+      }
+      const auto & axis_index_token = tokens[1];
+      const auto & operator_token = tokens[2];
+      const auto & threshold_token = tokens[3];
+      const auto axis_index = std::stoi(axis_index_token);
+      const auto threshold = std::stod(threshold_token);
+      if(operator_token.size() != 1) {
+        throw std::runtime_error(std::string("Invalid operator: ") + operator_token);
+      }
+      switch(operator_token.at(0)) {
+        case '<':
+          return [axis_index, threshold](const sensor_msgs::msg::Joy & m){
+                   return m.axes[axis_index] < threshold;
+                 };
+        case '>':
+          return [axis_index, threshold](const sensor_msgs::msg::Joy & m) {
+                   return m.axes[axis_index] > threshold;
+                 };
+        case '=':
+          return [axis_index, threshold](const sensor_msgs::msg::Joy & m ) {
+                   return std::abs(m.axes[axis_index] - threshold) < 1e-2;
+                 };
+        default:
+          throw std::runtime_error(std::string("Invalid operator: ") + operator_token);
+      }
+    }
+
+    throw std::runtime_error(std::string("Unrecognized trigger token: ") + first_token);
   }
 };
 
