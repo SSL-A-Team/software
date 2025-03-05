@@ -12,8 +12,9 @@
         z:
           axis: 3
           scale: 4.0
-      kick: 5
+      kick: "axis 5 < -0.8"
+      chip: "button 5"
       dribbler:
-        increment: 3
-        decrement: 2
-        spin: 4
+        increment: "button 3"
+        decrement: "button 2"
+        spin: "button 4"
