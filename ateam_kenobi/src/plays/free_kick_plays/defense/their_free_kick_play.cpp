@@ -37,23 +37,10 @@ TheirFreeKickPlay::TheirFreeKickPlay(stp::Options stp_options)
 
 stp::PlayScore TheirFreeKickPlay::getScore(const World & world)
 {
-  switch (world.referee_info.running_command) {
-    case ateam_common::GameCommand::DirectFreeTheirs:
-      return world.in_play ? stp::PlayScore::Min() : stp::PlayScore::Max();
-    case ateam_common::GameCommand::NormalStart:
-      {
-        if (world.in_play) {
-          return stp::PlayScore::Min();
-        }
-        switch (world.referee_info.prev_command) {
-          case ateam_common::GameCommand::DirectFreeTheirs:
-            return stp::PlayScore::Max();
-          default:
-            return stp::PlayScore::NaN();
-        }
-      }
-    default:
-      return stp::PlayScore::NaN();
+  if(world.referee_info.running_command == ateam_common::GameCommand::DirectFreeTheirs) {
+    return world.in_play ? stp::PlayScore::Min() : stp::PlayScore::Max();
+  } else {
+    return stp::PlayScore::NaN();
   }
 }
 
@@ -120,7 +107,7 @@ void TheirFreeKickPlay::runBlockers(
   const auto ball_obstacle = ateam_geometry::makeDisk(world.ball.pos, 0.7);
   getOverlays().drawCircle("ball_obstacle", ball_obstacle, "red", "transparent");
 
-  // Rules section 8.4.1 require 0.2m distance between all robtos and opponent defense area
+  // Rules section 8.4.1 require 0.2m distance between all robots and opponent defense area
   const auto def_area_margin = kRobotRadius + 0.2;
   const auto def_area_obst_width = world.field.defense_area_width + (2.0 * def_area_margin);
   const auto def_area_obst_depth = world.field.defense_area_depth + def_area_margin;

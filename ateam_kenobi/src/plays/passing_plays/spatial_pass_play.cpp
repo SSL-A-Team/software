@@ -44,6 +44,12 @@ SpatialPassPlay::SpatialPassPlay(stp::Options stp_options)
 
 stp::PlayScore SpatialPassPlay::getScore(const World & world)
 {
+  if (!world.in_play &&
+    world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
+    world.referee_info.running_command != ateam_common::GameCommand::NormalStart)
+  {
+    return stp::PlayScore::NaN();
+  }
   if(play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore::Min();
   }
