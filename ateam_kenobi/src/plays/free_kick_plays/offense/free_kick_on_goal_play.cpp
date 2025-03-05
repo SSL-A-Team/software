@@ -20,6 +20,7 @@
 
 
 #include "free_kick_on_goal_play.hpp"
+#include <algorithm>
 #include "play_helpers/window_evaluation.hpp"
 #include "play_helpers/available_robots.hpp"
 #include "play_helpers/robot_assignment.hpp"
@@ -43,7 +44,7 @@ stp::PlayScore FreeKickOnGoalPlay::getScore(const World & world)
     return stp::PlayScore::NaN();
   }
 
-  const auto largest_window = getLargestWindowOnGoal(world);
+  const auto largest_window = GetLargestWindowOnGoal(world);
   if (!largest_window) {
     return stp::PlayScore::Min();
   }
@@ -57,7 +58,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
-  const auto window = getLargestWindowOnGoal(world);
+  const auto window = GetLargestWindowOnGoal(world);
 
   if(window) {
     striker_.SetTargetPoint(CGAL::midpoint(*window));
@@ -92,6 +93,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
 
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
+  SetDefenseAreaObstacles(world);
+
   assignments.RunPositionIfAssigned("striker", [this, &world, &motion_commands](const auto & robot){
       motion_commands[robot.id] = striker_.RunFrame(world, robot);
       getPlayInfo()["Striker"] = robot.id;
@@ -115,7 +118,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   return motion_commands;
 }
 
-std::optional<ateam_geometry::Segment> FreeKickOnGoalPlay::getLargestWindowOnGoal(
+std::optional<ateam_geometry::Segment> FreeKickOnGoalPlay::GetLargestWindowOnGoal(
   const World & world)
 {
   const ateam_geometry::Segment their_goal_segment{
@@ -127,6 +130,27 @@ std::optional<ateam_geometry::Segment> FreeKickOnGoalPlay::getLargestWindowOnGoa
     world.ball.pos, play_helpers::getVisibleRobots(
       world.their_robots));
   return play_helpers::window_evaluation::getLargestWindow(windows);
+}
+
+
+void FreeKickOnGoalPlay::SetDefenseAreaObstacles(const World & world)
+{
+  // Rules section 8.4.1 require 0.2m distance between all robots and opponent defense area
+  const auto def_area_margin = kRobotRadius + 0.2;
+  const auto def_area_obst_width = world.field.defense_area_width + (2.0 * def_area_margin);
+  const auto def_area_obst_depth = world.field.defense_area_depth + def_area_margin;
+  const auto half_field_length = world.field.field_length / 2.0;
+  const auto def_area_back_x = half_field_length + ( 2 * world.field.boundary_width ) +
+    def_area_obst_depth;
+  const auto def_area_front_x = half_field_length - def_area_obst_depth;
+  const auto defense_area_obstacle = ateam_geometry::Rectangle{
+    ateam_geometry::Point{def_area_front_x, -def_area_obst_width / 2.0},
+    ateam_geometry::Point{def_area_back_x, def_area_obst_width / 2.0}
+  };
+  const std::vector<ateam_geometry::AnyShape> obstacles = {defense_area_obstacle};
+  idler_1_.SetExtraObstacles(obstacles);
+  idler_2_.SetExtraObstacles(obstacles);
+  getOverlays().drawRectangle("defense_area_obstacle", defense_area_obstacle, "red", "transparent");
 }
 
 }  // namespace ateam_kenobi::plays

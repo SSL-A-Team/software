@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__FREE_KICK_PLAYS__DEFENSE__FREE_KICK_ON_GOAL_PLAY_HPP_
-#define PLAYS__FREE_KICK_PLAYS__DEFENSE__FREE_KICK_ON_GOAL_PLAY_HPP_
+#ifndef PLAYS__FREE_KICK_PLAYS__OFFENSE__FREE_KICK_ON_GOAL_PLAY_HPP_
+#define PLAYS__FREE_KICK_PLAYS__OFFENSE__FREE_KICK_ON_GOAL_PLAY_HPP_
 
 #include <vector>
 #include "stp/play.hpp"
@@ -49,9 +49,11 @@ private:
   skills::LaneIdler idler_2_;
   tactics::StandardDefense defense_;
 
-  std::optional<ateam_geometry::Segment> getLargestWindowOnGoal(const World & world);
+  std::optional<ateam_geometry::Segment> GetLargestWindowOnGoal(const World & world);
+
+  void SetDefenseAreaObstacles(const World & world);
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__FREE_KICK_PLAYS__DEFENSE__FREE_KICK_ON_GOAL_PLAY_HPP_
+#endif  // PLAYS__FREE_KICK_PLAYS__OFFENSE__FREE_KICK_ON_GOAL_PLAY_HPP_

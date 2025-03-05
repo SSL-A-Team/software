@@ -107,7 +107,7 @@ void TheirFreeKickPlay::runBlockers(
   const auto ball_obstacle = ateam_geometry::makeDisk(world.ball.pos, 0.7);
   getOverlays().drawCircle("ball_obstacle", ball_obstacle, "red", "transparent");
 
-  // Rules section 8.4.1 require 0.2m distance between all robtos and opponent defense area
+  // Rules section 8.4.1 require 0.2m distance between all robots and opponent defense area
   const auto def_area_margin = kRobotRadius + 0.2;
   const auto def_area_obst_width = world.field.defense_area_width + (2.0 * def_area_margin);
   const auto def_area_obst_depth = world.field.defense_area_depth + def_area_margin;
