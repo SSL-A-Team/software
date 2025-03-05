@@ -45,7 +45,7 @@ ateam_msgs::msg::RobotMotionCommand LaneIdler::RunFrame(const World & world, con
 {
   easy_move_to_.setTargetPosition(GetIdlingPosition(world));
   easy_move_to_.face_point(world.ball.pos);
-  return easy_move_to_.runFrame(robot, world);
+  return easy_move_to_.runFrame(robot, world, extra_obstacles_);
 }
 
 ateam_geometry::Point LaneIdler::GetIdlingPosition(const World & world)

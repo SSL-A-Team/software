@@ -28,6 +28,8 @@ add_library(kenobi_node_component SHARED
   src/path_planning/escape_velocity.cpp
   src/path_planning/obstacles.cpp
   src/path_planning/path_planner.cpp
+  src/plays/free_kick_plays/defense/their_free_kick_play.cpp
+  src/plays/free_kick_plays/offense/free_kick_on_goal_play.cpp
   src/plays/kickoff_plays/defense/their_kickoff_play.cpp
   src/plays/kickoff_plays/offense/kickoff_on_goal.cpp
   src/plays/kickoff_plays/offense/kickoff_pass_play.cpp
@@ -48,7 +50,6 @@ add_library(kenobi_node_component SHARED
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
   src/plays/our_penalty_play.cpp
-  src/plays/their_free_kick_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/defense_play.cpp
   src/plays/extract_play.cpp

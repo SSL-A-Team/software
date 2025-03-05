@@ -18,48 +18,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SKILLS__LANE_IDLER_HPP_
-#define SKILLS__LANE_IDLER_HPP_
+#ifndef PLAYS__FREE_KICK_PLAYS__DEFENSE__THEIR_FREE_KICK_PLAY_HPP_
+#define PLAYS__FREE_KICK_PLAYS__DEFENSE__THEIR_FREE_KICK_PLAY_HPP_
 
 #include <vector>
-#include <ateam_geometry/any_shape.hpp>
-#include "stp/skill.hpp"
+#include "stp/play.hpp"
 #include "play_helpers/easy_move_to.hpp"
-#include "play_helpers/lanes.hpp"
+#include "tactics/standard_defense.hpp"
 
-namespace ateam_kenobi::skills
+namespace ateam_kenobi::plays
 {
 
-class LaneIdler : public stp::Skill
+class TheirFreeKickPlay : public stp::Play
 {
 public:
-  explicit LaneIdler(stp::Options stp_options);
+  static constexpr const char * kPlayName = "TheirFreeKickPlay";
 
-  void Reset();
+  explicit TheirFreeKickPlay(stp::Options stp_options);
 
-  ateam_geometry::Point GetAssignmentPoint(const World & world);
+  stp::PlayScore getScore(const World & world) override;
 
-  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+  void reset() override;
 
-  void SetLane(play_helpers::lanes::Lane lane)
-  {
-    lane_ = lane;
-  }
-
-  void SetExtraObstacles(std::vector<ateam_geometry::AnyShape> obstacles)
-  {
-    extra_obstacles_ = obstacles;
-  }
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
 
 private:
-  play_helpers::lanes::Lane lane_ = play_helpers::lanes::Lane::Center;
-  play_helpers::EasyMoveTo easy_move_to_;
-  std::vector<ateam_geometry::AnyShape> extra_obstacles_;
+  tactics::StandardDefense defense_;
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
-  ateam_geometry::Point GetIdlingPosition(const World & world);
+  std::vector<ateam_geometry::Point> getBlockerPoints(const World & world);
+
+  void runBlockers(
+    const World & world, const std::vector<Robot> & robots,
+    const std::vector<ateam_geometry::Point> & points,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & motion_commands);
 };
 
-}  // namespace ateam_kenobi::skills
+}  // namespace ateam_kenobi::plays
 
-
-#endif  // SKILLS__LANE_IDLER_HPP_
+#endif  // PLAYS__FREE_KICK_PLAYS__DEFENSE__THEIR_FREE_KICK_PLAY_HPP_
