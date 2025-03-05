@@ -144,7 +144,7 @@ private:
 
     const auto kick_button = get_parameter("mapping.kick").as_int();
     if (joy_message->buttons[kick_button]) {
-      command_message.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
+      command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
       command_message.kick_speed = get_parameter("kick_speed").as_double();
     }
 

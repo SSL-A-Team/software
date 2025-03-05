@@ -288,7 +288,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, c
   // Override the velocity to move directly into the ball
   command.twist.linear.x = std::cos(robot.theta) * kick_drive_velocity;
   command.twist.linear.y = std::sin(robot.theta) * kick_drive_velocity;
-  command.kick = ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH;
+  command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
   command.kick_speed = GetKickSpeed();
 
   return command;
