@@ -26,11 +26,11 @@
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/normalize.hpp>
 #include <ateam_geometry/do_intersect.hpp>
-#include "play_helpers/window_evaluation.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/robot_assignment.hpp"
-#include "path_planning/obstacles.hpp"
-#include "path_planning/escape_velocity.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/path_planning/obstacles.hpp"
+#include "core/path_planning/escape_velocity.hpp"
 
 namespace ateam_kenobi::plays
 {

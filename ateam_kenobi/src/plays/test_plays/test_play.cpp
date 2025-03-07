@@ -20,9 +20,9 @@
 
 #include "test_play.hpp"
 #include "ateam_geometry/types.hpp"
-#include "types/world.hpp"
+#include "core/types/world.hpp"
 #include "skills/goalie.hpp"
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {

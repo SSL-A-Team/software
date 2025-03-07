@@ -22,8 +22,8 @@
 #include <angles/angles.h>
 #include <algorithm>
 #include <vector>
-#include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {

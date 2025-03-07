@@ -23,8 +23,8 @@
 #define TACTICS__PASS_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include "stp/tactic.hpp"
-#include "types/world.hpp"
+#include "core/stp/tactic.hpp"
+#include "core/types/world.hpp"
 #include "skills/pivot_kick.hpp"
 #include "skills/pass_receiver.hpp"
 

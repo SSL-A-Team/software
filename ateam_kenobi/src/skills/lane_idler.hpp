@@ -23,9 +23,9 @@
 
 #include <vector>
 #include <ateam_geometry/any_shape.hpp>
-#include "stp/skill.hpp"
-#include "play_helpers/easy_move_to.hpp"
-#include "play_helpers/lanes.hpp"
+#include "core/stp/skill.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
+#include "core/play_helpers/lanes.hpp"
 
 namespace ateam_kenobi::skills
 {

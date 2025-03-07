@@ -22,9 +22,9 @@
 #define TACTICS__MULTI_MOVE_TO_HPP_
 
 #include <vector>
-#include "stp/tactic.hpp"
-#include "play_helpers/easy_move_to.hpp"
-#include "motion/motion_controller.hpp"
+#include "core/stp/tactic.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
+#include "core/motion/motion_controller.hpp"
 
 namespace ateam_kenobi::tactics
 {

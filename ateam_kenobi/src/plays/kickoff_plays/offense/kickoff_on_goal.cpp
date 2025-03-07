@@ -19,9 +19,9 @@
 // THE SOFTWARE.
 
 #include "kickoff_on_goal.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {

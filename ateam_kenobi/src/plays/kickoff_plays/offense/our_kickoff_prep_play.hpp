@@ -21,7 +21,7 @@
 #ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_
 #define PLAYS__KICKOFF_PLAYS__OFFENSE__OUR_KICKOFF_PREP_PLAY_HPP_
 
-#include "stp/play.hpp"
+#include "core/stp/play.hpp"
 #include "tactics/standard_defense.hpp"
 #include "tactics/multi_move_to.hpp"
 

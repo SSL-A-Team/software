@@ -21,9 +21,9 @@
 #ifndef PLAYS__HALT_PLAY_HPP_
 #define PLAYS__HALT_PLAY_HPP_
 
-#include "path_planning/path_planner.hpp"
-#include "motion/motion_controller.hpp"
-#include "stp/play.hpp"
+#include "core/path_planning/path_planner.hpp"
+#include "core/motion/motion_controller.hpp"
+#include "core/stp/play.hpp"
 
 namespace ateam_kenobi::plays
 {

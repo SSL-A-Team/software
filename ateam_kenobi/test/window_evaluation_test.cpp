@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
 #include <ateam_geometry_testing/testing_utils.hpp>
 
 

@@ -20,14 +20,27 @@ find_package(OpenCV REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 add_library(kenobi_node_component SHARED
-  src/defense_area_enforcement.cpp
-  src/in_play_eval.cpp
-  src/joystick_enforcer.cpp
   src/kenobi_node.cpp
-  src/play_selector.cpp
-  src/path_planning/escape_velocity.cpp
-  src/path_planning/obstacles.cpp
-  src/path_planning/path_planner.cpp
+  src/core/defense_area_enforcement.cpp
+  src/core/in_play_eval.cpp
+  src/core/joystick_enforcer.cpp
+  src/core/play_selector.cpp
+  src/core/path_planning/escape_velocity.cpp
+  src/core/path_planning/obstacles.cpp
+  src/core/path_planning/path_planner.cpp
+  src/core/types/message_conversions.cpp
+  src/core/motion/motion_controller.cpp
+  src/core/visualization/overlays.cpp
+  src/core/play_helpers/easy_move_to.cpp
+  src/core/play_helpers/lanes.cpp
+  src/core/play_helpers/possession.cpp
+  src/core/play_helpers/available_robots.cpp
+  src/core/play_helpers/robot_assignment.cpp
+  src/core/play_helpers/shot_evaluation.cpp
+  src/core/play_helpers/window_evaluation.cpp
+  src/core/spatial/spatial_evaluator.cpp
+  src/core/spatial/spatial_inspection.cpp
+  src/core/spatial/layers/robot_shadows.cpp
   src/plays/free_kick_plays/defense/their_free_kick_play.cpp
   src/plays/free_kick_plays/offense/free_kick_on_goal_play.cpp
   src/plays/kickoff_plays/defense/their_kickoff_play.cpp
@@ -53,16 +66,6 @@ add_library(kenobi_node_component SHARED
   src/plays/their_penalty_play.cpp
   src/plays/defense_play.cpp
   src/plays/extract_play.cpp
-  src/types/message_conversions.cpp
-  src/motion/motion_controller.cpp
-  src/visualization/overlays.cpp
-  src/play_helpers/easy_move_to.cpp
-  src/play_helpers/lanes.cpp
-  src/play_helpers/possession.cpp
-  src/play_helpers/available_robots.cpp
-  src/play_helpers/robot_assignment.cpp
-  src/play_helpers/shot_evaluation.cpp
-  src/play_helpers/window_evaluation.cpp
   src/skills/goalie.cpp
   src/skills/kick_skill.cpp
   src/skills/lane_idler.cpp
@@ -72,9 +75,6 @@ add_library(kenobi_node_component SHARED
   src/skills/dribble.cpp
   src/skills/extract.cpp
   src/skills/capture.cpp
-  src/spatial/spatial_evaluator.cpp
-  src/spatial/spatial_inspection.cpp
-  src/spatial/layers/robot_shadows.cpp
   src/tactics/blockers.cpp
   src/tactics/defenders.cpp
   src/tactics/multi_move_to.cpp

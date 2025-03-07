@@ -23,9 +23,9 @@
 #include <chrono>
 #include <random>
 
-#include "path_planning/path_planner.hpp"
-#include "types/world.hpp"
-#include "types/robot.hpp"
+#include "core/path_planning/path_planner.hpp"
+#include "core/types/world.hpp"
+#include "core/types/robot.hpp"
 
 #include <ateam_geometry/ateam_geometry.hpp>
 #include <ateam_geometry_testing/testing_utils.hpp>

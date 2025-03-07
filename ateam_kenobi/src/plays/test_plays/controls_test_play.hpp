@@ -23,10 +23,10 @@
 
 #include <array>
 #include <vector>
-#include "motion/motion_controller.hpp"
-#include "stp/play.hpp"
+#include "core/motion/motion_controller.hpp"
+#include "core/stp/play.hpp"
 #include "ateam_geometry/types.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {

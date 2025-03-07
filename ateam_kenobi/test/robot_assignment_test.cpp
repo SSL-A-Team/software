@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
 
 
 using namespace ateam_kenobi;  // NOLINT(build/namespaces)
