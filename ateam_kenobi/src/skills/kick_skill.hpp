@@ -21,7 +21,7 @@
 #ifndef SKILLS__KICK_SKILL_HPP_
 #define SKILLS__KICK_SKILL_HPP_
 
-#include "stp/skill.hpp"
+#include "core/stp/skill.hpp"
 
 namespace ateam_kenobi::skills
 {

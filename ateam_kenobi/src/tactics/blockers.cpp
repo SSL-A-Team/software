@@ -22,7 +22,7 @@
 #include "blockers.hpp"
 #include <algorithm>
 #include <vector>
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 #include <ateam_geometry/ateam_geometry.hpp>
 #include <ateam_common/robot_constants.hpp>
 

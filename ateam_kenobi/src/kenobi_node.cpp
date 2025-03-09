@@ -42,17 +42,17 @@
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_geometry/types.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include "types/world.hpp"
-#include "types/message_conversions.hpp"
-#include "play_selector.hpp"
-#include "in_play_eval.hpp"
-#include "double_touch_eval.hpp"
-#include "ballsense_emulator.hpp"
-#include "motion/world_to_body_vel.hpp"
+#include "core/types/world.hpp"
+#include "core/types/message_conversions.hpp"
+#include "core/play_selector.hpp"
+#include "core/in_play_eval.hpp"
+#include "core/double_touch_eval.hpp"
+#include "core/ballsense_emulator.hpp"
+#include "core/motion/world_to_body_vel.hpp"
 #include "plays/halt_play.hpp"
-#include "defense_area_enforcement.hpp"
-#include "spatial/spatial_evaluator.hpp"
-#include "joystick_enforcer.hpp"
+#include "core/defense_area_enforcement.hpp"
+#include "core/spatial/spatial_evaluator.hpp"
+#include "core/joystick_enforcer.hpp"
 
 namespace ateam_kenobi
 {

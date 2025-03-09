@@ -20,9 +20,9 @@
 
 #include "extract_play.hpp"
 #include <limits>
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/possession.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/possession.hpp"
 
 namespace ateam_kenobi::plays
 {

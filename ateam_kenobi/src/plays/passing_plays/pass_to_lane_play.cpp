@@ -21,10 +21,10 @@
 #include "pass_to_lane_play.hpp"
 #include <algorithm>
 #include <limits>
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/window_evaluation.hpp"
-#include "play_helpers/shot_evaluation.hpp"
-#include "play_helpers/possession.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/shot_evaluation.hpp"
+#include "core/play_helpers/possession.hpp"
 
 namespace ateam_kenobi::plays
 {

@@ -23,11 +23,11 @@
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/types.hpp>
-#include "spatial/spatial_inspection.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/window_evaluation.hpp"
-#include "play_helpers/possession.hpp"
+#include "core/spatial/spatial_inspection.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/possession.hpp"
 
 namespace ateam_kenobi::plays
 {

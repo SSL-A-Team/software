@@ -21,10 +21,10 @@
 
 #include "free_kick_on_goal_play.hpp"
 #include <algorithm>
-#include "play_helpers/window_evaluation.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/lanes.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/lanes.hpp"
 
 namespace ateam_kenobi::plays
 {

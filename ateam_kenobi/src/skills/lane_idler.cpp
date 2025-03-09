@@ -19,9 +19,9 @@
 // THE SOFTWARE.
 
 #include "lane_idler.hpp"
-#include "play_helpers/window_evaluation.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/lanes.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/lanes.hpp"
 
 namespace ateam_kenobi::skills
 {

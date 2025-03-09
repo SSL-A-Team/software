@@ -23,7 +23,7 @@
 #include <angles/angles.h>
 #include <algorithm>
 #include <tuple>
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {

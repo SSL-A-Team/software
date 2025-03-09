@@ -22,7 +22,7 @@
 #include "their_ball_placement_play.hpp"
 #include <angles/angles.h>
 #include <ateam_common/robot_constants.hpp>
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {

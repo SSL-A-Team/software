@@ -21,7 +21,7 @@
 #ifndef PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_
 #define PLAYS__KICKOFF_PLAYS__OFFENSE__KICKOFF_ON_GOAL_HPP_
 
-#include "stp/play.hpp"
+#include "core/stp/play.hpp"
 #include "tactics/standard_defense.hpp"
 #include "skills/line_kick.hpp"
 #include "tactics/multi_move_to.hpp"

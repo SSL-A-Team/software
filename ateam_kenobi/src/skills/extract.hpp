@@ -21,8 +21,8 @@
 #ifndef SKILLS__EXTRACT_HPP_
 #define SKILLS__EXTRACT_HPP_
 
-#include "stp/skill.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/stp/skill.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::skills
 {

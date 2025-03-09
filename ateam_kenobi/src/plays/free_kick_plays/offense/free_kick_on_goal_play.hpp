@@ -22,8 +22,8 @@
 #define PLAYS__FREE_KICK_PLAYS__OFFENSE__FREE_KICK_ON_GOAL_PLAY_HPP_
 
 #include <vector>
-#include "stp/play.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/stp/play.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 #include "tactics/standard_defense.hpp"
 #include "skills/pivot_kick.hpp"
 #include "skills/lane_idler.hpp"
