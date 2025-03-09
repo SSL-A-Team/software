@@ -33,14 +33,14 @@
 
 /*
 // PID gains
-CREATE_PARAM(double, "core/motion/pid/x_kp", x_kp, 2);
-CREATE_PARAM(double, "core/motion/pid/y_kp", y_kp, 2);
-CREATE_PARAM(double, "core/motion/pid/t_kp", t_kp, 3);
+CREATE_PARAM(double, "motion/pid/x_kp", x_kp, 2);
+CREATE_PARAM(double, "motion/pid/y_kp", y_kp, 2);
+CREATE_PARAM(double, "motion/pid/t_kp", t_kp, 3);
 
 // PID velocity limits
-CREATE_PARAM(double, "core/motion/pid/x_max", x_max, 2);
-CREATE_PARAM(double, "core/motion/pid/y_max", y_max, 2);
-CREATE_PARAM(double, "core/motion/pid/t_max", t_max, 4);
+CREATE_PARAM(double, "motion/pid/x_max", x_max, 2);
+CREATE_PARAM(double, "motion/pid/y_max", y_max, 2);
+CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 */
 
 
