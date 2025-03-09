@@ -35,6 +35,11 @@ namespace ateam_kenobi::skills
 class PivotKick : public KickSkill
 {
 public:
+  enum class KickType {
+    Kick,
+    Chip
+  };
+
   explicit PivotKick(
     stp::Options stp_options,
     KickSkill::WaitType wait_type = KickSkill::WaitType::KickWhenReady);
@@ -82,7 +87,12 @@ public:
     pivot_speed_ = speed;
   }
 
+  void SetKickType(KickType type) {
+    kick_type_ = type;
+  }
+
 private:
+  KickType kick_type_ = KickType::Kick;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
   skills::Capture capture_;
