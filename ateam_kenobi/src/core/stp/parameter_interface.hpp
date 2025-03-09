@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef STP__PARAMETER_INTERFACE_HPP_
-#define STP__PARAMETER_INTERFACE_HPP_
+#ifndef CORE__STP__PARAMETER_INTERFACE_HPP_
+#define CORE__STP__PARAMETER_INTERFACE_HPP_
 
 #include <string>
 #include <rclcpp/node_interfaces/node_parameters_interface.hpp>
@@ -117,4 +117,4 @@ private:
 
 }  // namespace ateam_kenobi::stp
 
-#endif  // STP__PARAMETER_INTERFACE_HPP_
+#endif  // CORE__STP__PARAMETER_INTERFACE_HPP_

@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TYPES__FIELD_HPP_
-#define TYPES__FIELD_HPP_
+#ifndef CORE__TYPES__FIELD_HPP_
+#define CORE__TYPES__FIELD_HPP_
 
 #include <array>
 #include <ateam_geometry/types.hpp>
@@ -47,4 +47,4 @@ struct Field
 };
 }  // namespace ateam_kenobi
 
-#endif  // TYPES__FIELD_HPP_
+#endif  // CORE__TYPES__FIELD_HPP_

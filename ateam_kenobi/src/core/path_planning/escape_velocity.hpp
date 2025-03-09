@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PATH_PLANNING__ESCAPE_VELOCITY_HPP_
-#define PATH_PLANNING__ESCAPE_VELOCITY_HPP_
+#ifndef CORE__PATH_PLANNING__ESCAPE_VELOCITY_HPP_
+#define CORE__PATH_PLANNING__ESCAPE_VELOCITY_HPP_
 
 #include <vector>
 #include <ateam_geometry/types.hpp>
@@ -66,4 +66,4 @@ std::optional<geometry_msgs::msg::Twist> GenerateEscapeVelocity(
 
 }  // namespace ateam_kenobi::path_planning
 
-#endif  // PATH_PLANNING__ESCAPE_VELOCITY_HPP_
+#endif  // CORE__PATH_PLANNING__ESCAPE_VELOCITY_HPP_

@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef STP__PLAY_HPP_
-#define STP__PLAY_HPP_
+#ifndef CORE__STP__PLAY_HPP_
+#define CORE__STP__PLAY_HPP_
 
 #include <array>
 #include <optional>
@@ -112,4 +112,4 @@ private:
 
 }  // namespace ateam_kenobi::stp
 
-#endif  // STP__PLAY_HPP_
+#endif  // CORE__STP__PLAY_HPP_

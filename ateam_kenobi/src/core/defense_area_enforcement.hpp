@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef DEFENSE_AREA_ENFORCEMENT_HPP_
-#define DEFENSE_AREA_ENFORCEMENT_HPP_
+#ifndef CORE__DEFENSE_AREA_ENFORCEMENT_HPP_
+#define CORE__DEFENSE_AREA_ENFORCEMENT_HPP_
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "core/types/world.hpp"
@@ -53,4 +53,4 @@ bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command);
 }  // namespace ateam_kenobi::defense_area_enforcement
 
 
-#endif  // DEFENSE_AREA_ENFORCEMENT_HPP_
+#endif  // CORE__DEFENSE_AREA_ENFORCEMENT_HPP_

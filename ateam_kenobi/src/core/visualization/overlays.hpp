@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef VISUALIZATION__OVERLAYS_HPP_
-#define VISUALIZATION__OVERLAYS_HPP_
+#ifndef CORE__VISUALIZATION__OVERLAYS_HPP_
+#define CORE__VISUALIZATION__OVERLAYS_HPP_
 
 #include <string>
 #include <vector>
@@ -95,4 +95,4 @@ private:
 
 }  // namespace ateam_kenobi::visualization
 
-#endif  // VISUALIZATION__OVERLAYS_HPP_
+#endif  // CORE__VISUALIZATION__OVERLAYS_HPP_

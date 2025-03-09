@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef TYPES__MESSAGE_CONVERSIONS_HPP_
-#define TYPES__MESSAGE_CONVERSIONS_HPP_
+#ifndef CORE__TYPES__MESSAGE_CONVERSIONS_HPP_
+#define CORE__TYPES__MESSAGE_CONVERSIONS_HPP_
 
 #include <ateam_msgs/msg/world.hpp>
 #include <ateam_msgs/msg/behavior_executor_state.hpp>
@@ -44,4 +44,4 @@ ateam_msgs::msg::World toMsg(const World & obj);
 
 }  // namespace ateam_kenobi::message_conversions
 
-#endif  // TYPES__MESSAGE_CONVERSIONS_HPP_
+#endif  // CORE__TYPES__MESSAGE_CONVERSIONS_HPP_

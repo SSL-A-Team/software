@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef STP__BASE_HPP_
-#define STP__BASE_HPP_
+#ifndef CORE__STP__BASE_HPP_
+#define CORE__STP__BASE_HPP_
 
 #include <string>
 #include <utility>
@@ -130,4 +130,4 @@ private:
 
 }  // namespace ateam_kenobi::stp
 
-#endif  // STP__BASE_HPP_
+#endif  // CORE__STP__BASE_HPP_

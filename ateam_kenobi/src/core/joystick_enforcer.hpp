@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef JOYSTICK_ENFORCER_HPP__
-#define JOYSTICK_ENFORCER_HPP__
+#ifndef CORE__JOYSTICK_ENFORCER_HPP__
+#define CORE__JOYSTICK_ENFORCER_HPP__
 
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_msgs/msg/joystick_control_status.hpp>
@@ -47,4 +47,4 @@ private:
 
 }  // namespace ateam_kenobi
 
-#endif  // JOYSTICK_ENFORCER_HPP__
+#endif  // CORE__JOYSTICK_ENFORCER_HPP__

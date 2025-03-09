@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAY_HELPERS__LANES_HPP_
-#define PLAY_HELPERS__LANES_HPP_
+#ifndef CORE__PLAY_HELPERS__LANES_HPP_
+#define CORE__PLAY_HELPERS__LANES_HPP_
 
 #include <ateam_geometry/types.hpp>
 #include "core/types/world.hpp"
@@ -50,4 +50,4 @@ bool IsBallInLane(const World & world, const Lane & lane);
 
 }  // namespace ateam_kenobi::play_helpers::lanes
 
-#endif  // PLAY_HELPERS__LANES_HPP_
+#endif  // CORE__PLAY_HELPERS__LANES_HPP_

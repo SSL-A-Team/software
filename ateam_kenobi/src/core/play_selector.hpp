@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAY_SELECTOR_HPP_
-#define PLAY_SELECTOR_HPP_
+#ifndef CORE__PLAY_SELECTOR_HPP_
+#define CORE__PLAY_SELECTOR_HPP_
 
 #include <memory>
 #include <string>
@@ -94,4 +94,4 @@ private:
 
 }  // namespace ateam_kenobi
 
-#endif  // PLAY_SELECTOR_HPP_
+#endif  // CORE__PLAY_SELECTOR_HPP_

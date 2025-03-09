@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef TYPES__BALL_HPP_
-#define TYPES__BALL_HPP_
+#ifndef CORE__TYPES__BALL_HPP_
+#define CORE__TYPES__BALL_HPP_
 
 #include <ateam_geometry/types.hpp>
 
@@ -34,4 +34,4 @@ struct Ball
 };
 }  // namespace ateam_kenobi
 
-#endif  // TYPES__BALL_HPP_
+#endif  // CORE__TYPES__BALL_HPP_
