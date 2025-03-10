@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAY_HELPERS__AVAILABLE_ROBOTS_HPP_
-#define PLAY_HELPERS__AVAILABLE_ROBOTS_HPP_
+#ifndef CORE__PLAY_HELPERS__AVAILABLE_ROBOTS_HPP_
+#define CORE__PLAY_HELPERS__AVAILABLE_ROBOTS_HPP_
 
 #include <vector>
 #include <ateam_geometry/types.hpp>
@@ -46,4 +46,4 @@ Robot getClosestRobot(const std::vector<Robot> & robots, const ateam_geometry::P
 
 }  // namespace ateam_kenobi::play_helpers
 
-#endif  // PLAY_HELPERS__AVAILABLE_ROBOTS_HPP_
+#endif  // CORE__PLAY_HELPERS__AVAILABLE_ROBOTS_HPP_

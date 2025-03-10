@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SPATIAL__COORDINATE_CONVERSION_HPP_
-#define SPATIAL__COORDINATE_CONVERSION_HPP_
+#ifndef CORE__SPATIAL__COORDINATE_CONVERSION_HPP_
+#define CORE__SPATIAL__COORDINATE_CONVERSION_HPP_
 
 #include <opencv2/core/mat.hpp>
 #include "core/types/field.hpp"
@@ -91,4 +91,4 @@ inline int WorldToLayerDist(const double d)
 
 }  // namespace ateam_kenobi::spatial
 
-#endif  // SPATIAL__COORDINATE_CONVERSION_HPP_
+#endif  // CORE__SPATIAL__COORDINATE_CONVERSION_HPP_

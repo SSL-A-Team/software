@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef TYPES__WORLD_HPP_
-#define TYPES__WORLD_HPP_
+#ifndef CORE__TYPES__WORLD_HPP_
+#define CORE__TYPES__WORLD_HPP_
 
 #include <optional>
 #include <array>
@@ -58,4 +58,4 @@ struct World
 };
 }  // namespace ateam_kenobi
 
-#endif  // TYPES__WORLD_HPP_
+#endif  // CORE__TYPES__WORLD_HPP_

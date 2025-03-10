@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAY_HELPERS__SHOT_EVALUATION_HPP_
-#define PLAY_HELPERS__SHOT_EVALUATION_HPP_
+#ifndef CORE__PLAY_HELPERS__SHOT_EVALUATION_HPP_
+#define CORE__PLAY_HELPERS__SHOT_EVALUATION_HPP_
 
 #include <ateam_geometry/types.hpp>
 #include "core/types/world.hpp"
@@ -32,4 +32,4 @@ double GetShotSuccessChance(const World & world, const ateam_geometry::Point & s
 
 }  // namespace ateam_kenobi::play_helpers
 
-#endif  // PLAY_HELPERS__SHOT_EVALUATION_HPP_
+#endif  // CORE__PLAY_HELPERS__SHOT_EVALUATION_HPP_

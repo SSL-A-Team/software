@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef STP__SKILL_HPP_
-#define STP__SKILL_HPP_
+#ifndef CORE__STP__SKILL_HPP_
+#define CORE__STP__SKILL_HPP_
 
 #include "base.hpp"
 
@@ -38,4 +38,4 @@ public:
 
 }  // namespace ateam_kenobi::stp
 
-#endif  // STP__SKILL_HPP_
+#endif  // CORE__STP__SKILL_HPP_

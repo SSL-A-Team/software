@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef STP__TACTIC_HPP_
-#define STP__TACTIC_HPP_
+#ifndef CORE__STP__TACTIC_HPP_
+#define CORE__STP__TACTIC_HPP_
 
 #include "base.hpp"
 
@@ -39,4 +39,4 @@ public:
 }  // namespace ateam_kenobi::stp
 
 
-#endif  // STP__TACTIC_HPP_
+#endif  // CORE__STP__TACTIC_HPP_

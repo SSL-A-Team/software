@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef BALLSENSE_EMULATOR_HPP_
-#define BALLSENSE_EMULATOR_HPP_
+#ifndef CORE__BALLSENSE_EMULATOR_HPP_
+#define CORE__BALLSENSE_EMULATOR_HPP_
 
 #include <angles/angles.h>
 #include <ranges>
@@ -76,4 +76,4 @@ private:
 
 }  // namespace ateam_kenobi
 
-#endif  // BALLSENSE_EMULATOR_HPP_
+#endif  // CORE__BALLSENSE_EMULATOR_HPP_

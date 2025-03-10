@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAY_HELPERS__POSSESSION_HPP_
-#define PLAY_HELPERS__POSSESSION_HPP_
+#ifndef CORE__PLAY_HELPERS__POSSESSION_HPP_
+#define CORE__PLAY_HELPERS__POSSESSION_HPP_
 
 #include "core/types/world.hpp"
 
@@ -37,4 +37,4 @@ PossessionResult WhoHasPossession(const World & world);
 
 }  // namespace ateam_kenobi::play_helpers
 
-#endif  // PLAY_HELPERS__POSSESSION_HPP_
+#endif  // CORE__PLAY_HELPERS__POSSESSION_HPP_

@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef PATH_PLANNING__OBSTACLES_HPP_
-#define PATH_PLANNING__OBSTACLES_HPP_
+#ifndef CORE__PATH_PLANNING__OBSTACLES_HPP_
+#define CORE__PATH_PLANNING__OBSTACLES_HPP_
 
 #include <vector>
 #include <ateam_geometry/any_shape.hpp>
@@ -63,4 +63,4 @@ bool IsPointInBounds(
 
 }  // namespace ateam_kenobi::path_planning
 
-#endif  // PATH_PLANNING__OBSTACLES_HPP_
+#endif  // CORE__PATH_PLANNING__OBSTACLES_HPP_

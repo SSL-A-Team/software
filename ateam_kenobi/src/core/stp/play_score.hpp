@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef STP__PLAY_SCORE_HPP_
-#define STP__PLAY_SCORE_HPP_
+#ifndef CORE__STP__PLAY_SCORE_HPP_
+#define CORE__STP__PLAY_SCORE_HPP_
 
 #include <algorithm>
 #include <cmath>
@@ -98,4 +98,4 @@ private:
 
 }  // namespace ateam_kenobi::stp
 
-#endif  // STP__PLAY_SCORE_HPP_
+#endif  // CORE__STP__PLAY_SCORE_HPP_

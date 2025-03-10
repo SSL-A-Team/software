@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef DOUBLE_TOUCH_EVAL_HPP_
-#define DOUBLE_TOUCH_EVAL_HPP_
+#ifndef CORE__DOUBLE_TOUCH_EVAL_HPP_
+#define CORE__DOUBLE_TOUCH_EVAL_HPP_
 
 #include <algorithm>
 #include <ateam_common/robot_constants.hpp>
@@ -121,4 +121,4 @@ private:
 
 }  // namespace ateam_kenobi
 
-#endif  // DOUBLE_TOUCH_EVAL_HPP_
+#endif  // CORE__DOUBLE_TOUCH_EVAL_HPP_

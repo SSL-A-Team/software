@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
-#define SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
+#ifndef CORE__SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
+#define CORE__SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
 
 #include <algorithm>
 #include <vector>
@@ -74,4 +74,4 @@ private:
 
 }  // namespace ateam_kenobi::spatial::layers
 
-#endif  // SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
+#endif  // CORE__SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_

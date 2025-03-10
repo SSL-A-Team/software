@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SPATIAL__MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
-#define SPATIAL__MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
+#ifndef CORE__SPATIAL__MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
+#define CORE__SPATIAL__MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
 
 #include <string>
 #include <unordered_map>
@@ -43,4 +43,4 @@ public:
 
 }  // namespace ateam_kenobi::spatial::maps
 
-#endif  // SPATIAL__MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_
+#endif  // CORE__SPATIAL__MAPS__LINE_OF_SIGHT_BALL_MAP_HPP_

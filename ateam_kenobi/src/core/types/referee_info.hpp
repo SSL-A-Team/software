@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef TYPES__REFEREE_INFO_HPP_
-#define TYPES__REFEREE_INFO_HPP_
+#ifndef CORE__TYPES__REFEREE_INFO_HPP_
+#define CORE__TYPES__REFEREE_INFO_HPP_
 
 #include <chrono>
 #include <ateam_common/game_controller_listener.hpp>
@@ -40,4 +40,4 @@ struct RefereeInfo
 };
 }  // namespace ateam_kenobi
 
-#endif  // TYPES__REFEREE_INFO_HPP_
+#endif  // CORE__TYPES__REFEREE_INFO_HPP_

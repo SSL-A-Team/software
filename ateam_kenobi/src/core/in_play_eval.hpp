@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef IN_PLAY_EVAL_HPP_
-#define IN_PLAY_EVAL_HPP_
+#ifndef CORE__IN_PLAY_EVAL_HPP_
+#define CORE__IN_PLAY_EVAL_HPP_
 
 #include <chrono>
 #include <optional>
@@ -61,4 +61,4 @@ private:
 
 }  // namespace ateam_kenobi
 
-#endif  // IN_PLAY_EVAL_HPP_
+#endif  // CORE__IN_PLAY_EVAL_HPP_

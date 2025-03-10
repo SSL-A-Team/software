@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAY_HELPERS__WINDOW_EVALUATION_HPP_
-#define PLAY_HELPERS__WINDOW_EVALUATION_HPP_
+#ifndef CORE__PLAY_HELPERS__WINDOW_EVALUATION_HPP_
+#define CORE__PLAY_HELPERS__WINDOW_EVALUATION_HPP_
 
 #include <optional>
 #include <utility>
@@ -68,4 +68,4 @@ std::pair<ateam_geometry::Ray, ateam_geometry::Ray> getRobotShadowRays(
 
 }  // namespace ateam_kenobi::play_helpers::window_evaluation
 
-#endif  // PLAY_HELPERS__WINDOW_EVALUATION_HPP_
+#endif  // CORE__PLAY_HELPERS__WINDOW_EVALUATION_HPP_

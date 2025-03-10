@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SPATIAL__LAYERS__ROBOT_SHADOWS_HPP_
-#define SPATIAL__LAYERS__ROBOT_SHADOWS_HPP_
+#ifndef CORE__SPATIAL__LAYERS__ROBOT_SHADOWS_HPP_
+#define CORE__SPATIAL__LAYERS__ROBOT_SHADOWS_HPP_
 
 #include <utility>
 #include <vector>
@@ -50,4 +50,4 @@ std::vector<ateam_geometry::Point> GetRobotShadowPoly(
 
 }  // namespace ateam_kenobi::spatial::layers
 
-#endif  // SPATIAL__LAYERS__ROBOT_SHADOWS_HPP_
+#endif  // CORE__SPATIAL__LAYERS__ROBOT_SHADOWS_HPP_

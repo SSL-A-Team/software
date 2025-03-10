@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef MOTION__MOTION_CONTROLLER_HPP_
-#define MOTION__MOTION_CONTROLLER_HPP_
+#ifndef CORE__MOTION__MOTION_CONTROLLER_HPP_
+#define CORE__MOTION__MOTION_CONTROLLER_HPP_
 
 #include <optional>
 #include <vector>
@@ -122,4 +122,4 @@ private:
   control_toolbox::Pid t_controller;
 };
 
-#endif  // MOTION__MOTION_CONTROLLER_HPP_
+#endif  // CORE__MOTION__MOTION_CONTROLLER_HPP_

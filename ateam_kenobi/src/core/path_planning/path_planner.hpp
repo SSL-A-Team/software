@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef PATH_PLANNING__PATH_PLANNER_HPP_
-#define PATH_PLANNING__PATH_PLANNER_HPP_
+#ifndef CORE__PATH_PLANNING__PATH_PLANNER_HPP_
+#define CORE__PATH_PLANNING__PATH_PLANNER_HPP_
 
 #include <vector>
 #include <ateam_geometry/any_shape.hpp>
@@ -129,4 +129,4 @@ private:
 
 }  // namespace ateam_kenobi::path_planning
 
-#endif  // PATH_PLANNING__PATH_PLANNER_HPP_
+#endif  // CORE__PATH_PLANNING__PATH_PLANNER_HPP_

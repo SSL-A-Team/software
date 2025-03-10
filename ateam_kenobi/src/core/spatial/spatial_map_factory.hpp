@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SPATIAL__SPATIAL_MAP_FACTORY_HPP_
-#define SPATIAL__SPATIAL_MAP_FACTORY_HPP_
+#ifndef CORE__SPATIAL__SPATIAL_MAP_FACTORY_HPP_
+#define CORE__SPATIAL__SPATIAL_MAP_FACTORY_HPP_
 
 #include <string>
 #include <unordered_map>
@@ -49,4 +49,4 @@ private:
 
 }  // namespace ateam_kenobi::spatial
 
-#endif  // SPATIAL__SPATIAL_MAP_FACTORY_HPP_
+#endif  // CORE__SPATIAL__SPATIAL_MAP_FACTORY_HPP_

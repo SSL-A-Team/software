@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef MOTION__WORLD_TO_BODY_VEL_HPP_
-#define MOTION__WORLD_TO_BODY_VEL_HPP_
+#ifndef CORE__MOTION__WORLD_TO_BODY_VEL_HPP_
+#define CORE__MOTION__WORLD_TO_BODY_VEL_HPP_
 
 #include <CGAL/Aff_transformation_2.h>
 #include <ateam_geometry/ateam_geometry.hpp>
@@ -57,4 +57,4 @@ inline void ConvertWorldVelsToBodyVels(
 
 }  // namespace ateam_kenobi::motion
 
-#endif  // MOTION__WORLD_TO_BODY_VEL_HPP_
+#endif  // CORE__MOTION__WORLD_TO_BODY_VEL_HPP_

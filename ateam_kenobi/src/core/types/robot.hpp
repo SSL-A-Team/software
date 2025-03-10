@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef TYPES__ROBOT_HPP_
-#define TYPES__ROBOT_HPP_
+#ifndef CORE__TYPES__ROBOT_HPP_
+#define CORE__TYPES__ROBOT_HPP_
 
 #include <ateam_geometry/types.hpp>
 
@@ -49,4 +49,4 @@ struct Robot
 };
 }  // namespace ateam_kenobi
 
-#endif  // TYPES__ROBOT_HPP_
+#endif  // CORE__TYPES__ROBOT_HPP_
