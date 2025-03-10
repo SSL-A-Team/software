@@ -264,6 +264,9 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
 
   kick_.SetTargetPoint(target_point);
 
+  kick_.SetKickType(goalie.chipper_available ? skills::PivotKick::KickType::Chip :
+      skills::PivotKick::KickType::Kick);
+
   return kick_.RunFrame(world, goalie);
 }
 

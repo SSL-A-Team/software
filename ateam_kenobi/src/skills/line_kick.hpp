@@ -34,6 +34,12 @@ namespace ateam_kenobi::skills
 class LineKick : public KickSkill
 {
 public:
+  enum class KickType
+  {
+    Kick,
+    Chip
+  };
+
   explicit LineKick(
     stp::Options stp_options,
     KickSkill::WaitType wait_type = KickSkill::WaitType::KickWhenReady);
@@ -68,6 +74,11 @@ public:
     path_planning::PlannerOptions options = easy_move_to_.getPlannerOptions();
     options.use_default_obstacles = use_obstacles;
     easy_move_to_.setPlannerOptions(options);
+  }
+
+  void SetKickType(KickType type)
+  {
+    kick_type_ = type;
   }
 
   double move_to_ball_velocity = 1.8;
@@ -138,6 +149,7 @@ public:
 
 private:
   const double kPreKickOffset = kRobotRadius + kBallRadius + 0.06;
+  KickType kick_type_ = KickType::Chip;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 
