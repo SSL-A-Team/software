@@ -12,7 +12,7 @@
     <param name="gc_team_name" value="$(var team_name)"/>
   </node>
   <let name="kenobi_prefix" value="$(eval '\'xterm -fg white -bg black -e gdb -ex run --args\' if (\'$(var kenobi_debug)\'.lower() == \'true\') else \'\'')"/>
-  <node name="kenobi_node" pkg="ateam_kenobi" exec="ateam_kenobi_node" respawn="True" launch-prefix="$(var kenobi_prefix)">
+  <node name="kenobi_node" pkg="ateam_kenobi" exec="ateam_kenobi_node" respawn="True" launch-prefix="valgrind --tool=callgrind --callgrind-out-file=test.out">
     <param name="use_world_velocities" value="$(var use_world_velocities)"/>
     <param name="use_emulated_ballsense" value="$(var use_emulated_ballsense)"/>
     <param name="gc_team_name" value="$(var team_name)"/>
