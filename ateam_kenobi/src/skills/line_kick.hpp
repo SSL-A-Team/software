@@ -34,7 +34,8 @@ namespace ateam_kenobi::skills
 class LineKick : public KickSkill
 {
 public:
-  enum class KickType {
+  enum class KickType
+  {
     Kick,
     Chip
   };

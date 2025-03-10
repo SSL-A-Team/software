@@ -35,7 +35,8 @@ namespace ateam_kenobi::skills
 class PivotKick : public KickSkill
 {
 public:
-  enum class KickType {
+  enum class KickType
+  {
     Kick,
     Chip
   };
@@ -87,7 +88,8 @@ public:
     pivot_speed_ = speed;
   }
 
-  void SetKickType(KickType type) {
+  void SetKickType(KickType type)
+  {
     kick_type_ = type;
   }
 
