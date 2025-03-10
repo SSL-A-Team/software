@@ -23,7 +23,7 @@
 
 #include <ateam_geometry/types.hpp>
 #include "pass_to_segment_play.hpp"
-#include "play_helpers/lanes.hpp"
+#include "core/play_helpers/lanes.hpp"
 
 namespace ateam_kenobi::plays
 {

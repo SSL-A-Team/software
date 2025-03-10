@@ -23,9 +23,9 @@
 #define PLAYS__PASSING_PLAYS__SEGMENT_PASSING_TARGET_FUNCS_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include "types/world.hpp"
-#include "play_helpers/lanes.hpp"
-#include "stp/base.hpp"
+#include "core/types/world.hpp"
+#include "core/play_helpers/lanes.hpp"
+#include "core/stp/base.hpp"
 
 namespace ateam_kenobi::segment_passing_target_funcs
 {

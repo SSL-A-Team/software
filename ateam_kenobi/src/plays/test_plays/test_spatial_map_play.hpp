@@ -21,11 +21,11 @@
 #ifndef PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
 #define PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
 
-#include "path_planning/path_planner.hpp"
-#include "motion/motion_controller.hpp"
-#include "stp/play.hpp"
+#include "core/path_planning/path_planner.hpp"
+#include "core/motion/motion_controller.hpp"
+#include "core/stp/play.hpp"
 #include <opencv2/opencv.hpp>
-#include "spatial/spatial_inspection.hpp"
+#include "core/spatial/spatial_inspection.hpp"
 
 namespace ateam_kenobi::plays
 {

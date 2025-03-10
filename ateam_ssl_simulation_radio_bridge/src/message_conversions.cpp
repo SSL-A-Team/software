@@ -48,14 +48,17 @@ RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int ro
   proto_robot_command->set_id(robot_id);
   proto_robot_command->set_dribbler_speed(9.5492968 * ros_msg.dribbler_speed);
 
-  switch (ros_msg.kick) {
-    case ateam_msgs::msg::RobotMotionCommand::KICK_ARM:
-    case ateam_msgs::msg::RobotMotionCommand::KICK_DISABLE:
+  switch (ros_msg.kick_request) {
+    case ateam_msgs::msg::RobotMotionCommand::KR_ARM:
+    case ateam_msgs::msg::RobotMotionCommand::KR_DISABLE:
       // Do nothing because the simulator doesn't "charge" kickers
       break;
-    case ateam_msgs::msg::RobotMotionCommand::KICK_NOW:
-    case ateam_msgs::msg::RobotMotionCommand::KICK_ON_TOUCH:
-    case ateam_msgs::msg::RobotMotionCommand::KICK_ON_CAPTURE:
+    case ateam_msgs::msg::RobotMotionCommand::KR_KICK_NOW:
+    case ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH:
+    case ateam_msgs::msg::RobotMotionCommand::KR_KICK_CAPTURED:
+    case ateam_msgs::msg::RobotMotionCommand::KR_CHIP_NOW:
+    case ateam_msgs::msg::RobotMotionCommand::KR_CHIP_TOUCH:
+    case ateam_msgs::msg::RobotMotionCommand::KR_CHIP_CAPTURED:
       proto_robot_command->set_kick_speed(ros_msg.kick_speed * 3.0);
       break;
   }

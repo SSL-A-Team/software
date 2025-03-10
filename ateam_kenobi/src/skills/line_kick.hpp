@@ -25,8 +25,8 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
 #include "kick_skill.hpp"
-#include "types/world.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/types/world.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::skills
 {

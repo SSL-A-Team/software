@@ -22,7 +22,7 @@
 #include "spinning_a_play.hpp"
 #include <algorithm>
 #include <ateam_common/robot_constants.hpp>
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {

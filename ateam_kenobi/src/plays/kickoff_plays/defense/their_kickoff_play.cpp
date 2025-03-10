@@ -24,8 +24,8 @@
 #include <limits>
 #include <vector>
 #include <ateam_geometry/intersection.hpp>
-#include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {

@@ -23,11 +23,11 @@
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/types.hpp>
-#include "spatial/spatial_inspection.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/window_evaluation.hpp"
-#include "play_helpers/possession.hpp"
+#include "core/spatial/spatial_inspection.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/possession.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -44,6 +44,12 @@ SpatialPassPlay::SpatialPassPlay(stp::Options stp_options)
 
 stp::PlayScore SpatialPassPlay::getScore(const World & world)
 {
+  if (!world.in_play &&
+    world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
+    world.referee_info.running_command != ateam_common::GameCommand::NormalStart)
+  {
+    return stp::PlayScore::NaN();
+  }
   if(play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore::Min();
   }

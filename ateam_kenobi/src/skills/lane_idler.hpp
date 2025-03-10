@@ -21,9 +21,11 @@
 #ifndef SKILLS__LANE_IDLER_HPP_
 #define SKILLS__LANE_IDLER_HPP_
 
-#include "stp/skill.hpp"
-#include "play_helpers/easy_move_to.hpp"
-#include "play_helpers/lanes.hpp"
+#include <vector>
+#include <ateam_geometry/any_shape.hpp>
+#include "core/stp/skill.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
+#include "core/play_helpers/lanes.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -44,9 +46,15 @@ public:
     lane_ = lane;
   }
 
+  void SetExtraObstacles(std::vector<ateam_geometry::AnyShape> obstacles)
+  {
+    extra_obstacles_ = obstacles;
+  }
+
 private:
   play_helpers::lanes::Lane lane_ = play_helpers::lanes::Lane::Center;
   play_helpers::EasyMoveTo easy_move_to_;
+  std::vector<ateam_geometry::AnyShape> extra_obstacles_;
 
   ateam_geometry::Point GetIdlingPosition(const World & world);
 };

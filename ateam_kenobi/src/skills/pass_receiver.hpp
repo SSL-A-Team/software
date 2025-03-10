@@ -22,9 +22,9 @@
 #define SKILLS__PASS_RECEIVER_HPP_
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "play_helpers/easy_move_to.hpp"
-#include "stp/skill.hpp"
-#include "types/world.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
+#include "core/stp/skill.hpp"
+#include "core/types/world.hpp"
 #include "capture.hpp"
 
 namespace ateam_kenobi::skills

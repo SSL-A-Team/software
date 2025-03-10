@@ -22,7 +22,7 @@
 #define PLAYS__PASSING_PLAYS__PASS_TO_SEGMENT_PLAY_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include "stp/play.hpp"
+#include "core/stp/play.hpp"
 #include "tactics/standard_defense.hpp"
 #include "tactics/pass_to_segment.hpp"
 #include "skills/lane_idler.hpp"

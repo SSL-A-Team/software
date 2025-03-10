@@ -22,7 +22,7 @@
 #define TACTICS__PASS_TO_SEGMENT_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include "stp/tactic.hpp"
+#include "core/stp/tactic.hpp"
 #include "pass.hpp"
 
 namespace ateam_kenobi::tactics

@@ -21,7 +21,7 @@
 
 #include "their_penalty_play.hpp"
 #include <limits>
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 #include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::plays

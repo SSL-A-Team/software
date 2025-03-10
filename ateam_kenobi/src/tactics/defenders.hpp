@@ -25,10 +25,10 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "types/world.hpp"
-#include "types/robot.hpp"
-#include "stp/tactic.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/types/world.hpp"
+#include "core/types/robot.hpp"
+#include "core/stp/tactic.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::tactics
 {

@@ -23,8 +23,8 @@
 
 #include <array>
 #include <vector>
-#include "stp/play.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/stp/play.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 #include "tactics/standard_defense.hpp"
 
 namespace ateam_kenobi::plays

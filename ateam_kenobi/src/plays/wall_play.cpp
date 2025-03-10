@@ -23,10 +23,10 @@
 #include <CGAL/point_generators_2.h>
 #include <limits>
 #include <ateam_common/robot_constants.hpp>
-#include "play_helpers/robot_assignment.hpp"
-#include "types/robot.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/types/robot.hpp"
 #include "skills/goalie.hpp"
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 namespace ateam_kenobi::plays
 {
 std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
