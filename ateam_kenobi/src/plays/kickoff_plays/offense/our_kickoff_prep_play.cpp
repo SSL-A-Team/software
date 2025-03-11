@@ -20,8 +20,8 @@
 
 #include "our_kickoff_prep_play.hpp"
 #include <vector>
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
 
 namespace ateam_kenobi::plays
 {

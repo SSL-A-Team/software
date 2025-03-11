@@ -25,9 +25,9 @@
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/nearest_point.hpp>
-#include "play_helpers/window_evaluation.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/possession.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/possession.hpp"
 
 namespace ateam_kenobi::skills
 {

@@ -22,9 +22,9 @@
 #ifndef PLAYS__TEST_PLAYS__TEST_WINDOW_EVAL_HPP_
 #define PLAYS__TEST_PLAYS__TEST_WINDOW_EVAL_HPP_
 
-#include "stp/play.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/window_evaluation.hpp"
+#include "core/stp/play.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {

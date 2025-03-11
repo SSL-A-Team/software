@@ -23,7 +23,7 @@
 #define PLAYS__BASIC_122_HPP_
 
 #include <vector>
-#include "stp/play.hpp"
+#include "core/stp/play.hpp"
 #include "skills/line_kick.hpp"
 #include "tactics/blockers.hpp"
 #include "tactics/standard_defense.hpp"

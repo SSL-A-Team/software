@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 #include "pass_to_segment.hpp"
-#include "play_helpers/window_evaluation.hpp"
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::tactics
 {

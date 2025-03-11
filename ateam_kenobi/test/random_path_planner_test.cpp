@@ -28,7 +28,7 @@
 #include <cmath>
 #include <random>
 #include <ateam_geometry/normalize.hpp>
-#include "path_planning/path_planner.hpp"
+#include "core/path_planning/path_planner.hpp"
 
 using ateam_kenobi::path_planning::PathPlanner;
 using ateam_kenobi::path_planning::PlannerOptions;

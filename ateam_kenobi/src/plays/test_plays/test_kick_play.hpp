@@ -22,10 +22,10 @@
 #ifndef PLAYS__TEST_PLAYS__TEST_KICK_PLAY_HPP_
 #define PLAYS__TEST_PLAYS__TEST_KICK_PLAY_HPP_
 
-#include "stp/play.hpp"
+#include "core/stp/play.hpp"
 #include "skills/pivot_kick.hpp"
 #include "skills/line_kick.hpp"
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {

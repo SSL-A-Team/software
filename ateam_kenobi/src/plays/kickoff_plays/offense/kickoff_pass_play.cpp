@@ -23,10 +23,10 @@
 #include <limits>
 #include <random>
 #include <vector>
-#include "types/world.hpp"
+#include "core/types/world.hpp"
 #include "skills/goalie.hpp"
-#include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
 {

@@ -21,8 +21,8 @@
 #ifndef PLAYS__THEIR_BALL_PLACEMENT_PLAY_HPP_
 #define PLAYS__THEIR_BALL_PLACEMENT_PLAY_HPP_
 
-#include "stp/play.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/stp/play.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {

@@ -23,9 +23,9 @@
 
 #include <vector>
 #include <ateam_geometry/types.hpp>
-#include "play_helpers/easy_move_to.hpp"
-#include "types/world.hpp"
-#include "stp/skill.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
+#include "core/types/world.hpp"
+#include "core/stp/skill.hpp"
 #include "pivot_kick.hpp"
 
 namespace ateam_kenobi::skills

@@ -22,10 +22,10 @@
 #define PLAYS__OUR_BALL_PLACEMENT_PLAY_HPP_
 
 #include <vector>
-#include "stp/play.hpp"
+#include "core/stp/play.hpp"
 #include "tactics/pass.hpp"
 #include "skills/dribble.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {

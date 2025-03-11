@@ -21,7 +21,7 @@
 #ifndef PLAYS__KICK_ON_GOAL_PLAY_HPP_
 #define PLAYS__KICK_ON_GOAL_PLAY_HPP_
 
-#include "stp/play.hpp"
+#include "core/stp/play.hpp"
 #include "tactics/standard_defense.hpp"
 #include "skills/pivot_kick.hpp"
 #include "skills/lane_idler.hpp"

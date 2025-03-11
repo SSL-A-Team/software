@@ -21,10 +21,10 @@
 #include "pass_to_segment_play.hpp"
 #include <algorithm>
 #include <vector>
-#include "play_helpers/window_evaluation.hpp"
-#include "play_helpers/available_robots.hpp"
-#include "play_helpers/robot_assignment.hpp"
-#include "play_helpers/shot_evaluation.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
+#include "core/play_helpers/available_robots.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/shot_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -45,8 +45,7 @@ stp::PlayScore PassToSegmentPlay::getScore(const World & world)
   // TODO(barulicm) does not work generically if we want to use this to get the ball into play
   if (!world.in_play &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
+    world.referee_info.running_command != ateam_common::GameCommand::NormalStart)
   {
     return stp::PlayScore::NaN();
   }

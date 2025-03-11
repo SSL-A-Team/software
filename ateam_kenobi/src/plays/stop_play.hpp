@@ -23,10 +23,10 @@
 
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
-#include "path_planning/path_planner.hpp"
-#include "motion/motion_controller.hpp"
-#include "stp/play.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/path_planning/path_planner.hpp"
+#include "core/motion/motion_controller.hpp"
+#include "core/stp/play.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -57,6 +57,20 @@ private:
   bool isPointInOrBehindGoal(const ateam_geometry::Point & point, const World & world);
 
   std::vector<ateam_geometry::AnyShape> getAddedObstacles(const World & world);
+
+  void drawObstacles(
+    const World & world,
+    const std::vector<ateam_geometry::AnyShape> & added_obstacles);
+
+  void moveBotsTooCloseToBall(
+    const World & world,
+    const std::vector<ateam_geometry::AnyShape> & added_obstacles,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+
+  void moveBotsInObstacles(
+    const World & world,
+    const std::vector<ateam_geometry::AnyShape> & added_obstacles,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
 };
 }  // namespace ateam_kenobi::plays
 

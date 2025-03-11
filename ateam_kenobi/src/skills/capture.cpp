@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <vector>
 #include <ateam_geometry/normalize.hpp>
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::skills
 {

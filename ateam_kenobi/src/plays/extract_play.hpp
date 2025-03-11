@@ -21,7 +21,7 @@
 #ifndef PLAYS__EXTRACT_PLAY_HPP_
 #define PLAYS__EXTRACT_PLAY_HPP_
 
-#include "stp/play.hpp"
+#include "core/stp/play.hpp"
 #include "tactics/standard_defense.hpp"
 #include "skills/lane_idler.hpp"
 #include "skills/extract.hpp"

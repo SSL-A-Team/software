@@ -26,9 +26,9 @@
 #include <array>
 
 #include "ateam_geometry/types.hpp"
-#include "types/robot.hpp"
-#include "stp/play.hpp"
-#include "play_helpers/easy_move_to.hpp"
+#include "core/types/robot.hpp"
+#include "core/stp/play.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 #include "skills/goalie.hpp"
 
 namespace ateam_kenobi::plays

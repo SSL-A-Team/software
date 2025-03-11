@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 #include "pass_receiver.hpp"
-#include "play_helpers/available_robots.hpp"
+#include "core/play_helpers/available_robots.hpp"
 #include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::skills
