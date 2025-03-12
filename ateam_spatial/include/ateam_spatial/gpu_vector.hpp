@@ -18,44 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_SPATIAL__GPU_ARRAY_HPP_
-#define ATEAM_SPATIAL__GPU_ARRAY_HPP_
+#ifndef ATEAM_SPATIAL__GPU_VECTOR_HPP_
+#define ATEAM_SPATIAL__GPU_VECTOR_HPP_
 
 #include <cuda_runtime_api.h>
 #include <cassert>
 #include <cstddef>
 #include <iostream>
-#include <array>
+#include <vector>
 #include <stdexcept>
 #include <string>
 
 namespace ateam_spatial
 {
 
-template<typename T, std::size_t S>
-class GpuArray {
+template<typename T>
+class GpuVector {
 public:
-  GpuArray()
+  GpuVector()
   {
     assert(std::is_trivial_v<T>);
-    const auto ret = cudaMalloc(&gpu_memory_, S * sizeof(T));
-    if(ret != cudaSuccess) {
-      throw std::runtime_error(std::string("cudaMalloc failed: ") + cudaGetErrorString(ret));
-    }
   }
 
-  GpuArray(const GpuArray<T,S> &) = delete;
+  GpuVector(const GpuVector<T> &) = delete;
 
-  GpuArray(GpuArray<T,S> && other)
+  GpuVector(GpuVector<T> && other)
   {
     gpu_memory_ = other.gpu_memory_;
+    size_ = other.size_;
     other.gpu_memory_ = nullptr;
+    other.size_ = 0;
   }
 
-  ~GpuArray()
+  ~GpuVector()
   {
-    if(gpu_memory_ == nullptr)
-    {
+    if(gpu_memory_ == nullptr) {
       return;
     }
     const auto ret = cudaFree(gpu_memory_);
@@ -64,16 +61,13 @@ public:
     }
   }
 
-  GpuArray<T,S>& operator=(GpuArray<T,S> & other)
+  GpuVector<T>& operator=(GpuVector<T> && other)
   {
-    if(gpu_memory_ != nullptr) {
-      const auto ret = cudaFree(gpu_memory_);
-      if(ret != cudaSuccess) {
-        throw std::runtime_error(std::string("cudaFree failed: ") + cudaGetErrorString(ret));
-      }
-    }
+    FreeGpuMemory();
     gpu_memory_ = other.gpu_memory_;
+    size_ = other.size_;
     other.gpu_memory_ = nullptr;
+    other.size_ = 0;
     return *this;
   }
 
@@ -84,11 +78,12 @@ public:
 
   std::size_t Size() const
   {
-    return S;
+    return size_;
   }
 
-  void CopyToGpu(const typename std::array<T, S> & values)
+  void CopyToGpu(const typename std::vector<T> & values)
   {
+    AllocateGpuMemory(values.size());
     const auto ret = cudaMemcpy(gpu_memory_, values.data(), values.size() * sizeof(T),
         cudaMemcpyHostToDevice);
     if(ret != cudaSuccess) {
@@ -96,9 +91,14 @@ public:
     }
   }
 
-  void CopyFromGpu(typename std::array<T, S> & values)
+  void CopyFromGpu(typename std::vector<T> & values)
   {
-    const auto ret = cudaMemcpy(values.data(), gpu_memory_, values.size() * sizeof(T),
+    if(size_ == 0) {
+      values.clear();
+      return;
+    }
+    values.resize(size_);
+    const auto ret = cudaMemcpy(values.data(), gpu_memory_, size_ * sizeof(T),
         cudaMemcpyDeviceToHost);
     if(ret != cudaSuccess) {
       throw std::runtime_error(std::string("cudaMemcpy failed: ") + cudaGetErrorString(ret));
@@ -107,8 +107,38 @@ public:
 
 private:
   void * gpu_memory_ = nullptr;
+  std::size_t size_ = 0;
+
+  void AllocateGpuMemory(const std::size_t new_size)
+  {
+    if(new_size == size_) {
+      return;
+    }
+    FreeGpuMemory();
+    if(new_size == 0) {
+      return;
+    }
+    const auto ret = cudaMalloc(&gpu_memory_, new_size * sizeof(T));
+    if(ret != cudaSuccess) {
+      throw std::runtime_error(std::string("cudaMalloc failed: ") + cudaGetErrorString(ret));
+    }
+    size_ = new_size;
+  }
+
+  void FreeGpuMemory()
+  {
+    if(gpu_memory_ == nullptr) {
+      return;
+    }
+    const auto ret = cudaFree(gpu_memory_);
+    if(ret != cudaSuccess) {
+      throw std::runtime_error(std::string("cudaFree failed: ") + cudaGetErrorString(ret));
+    }
+    gpu_memory_ = nullptr;
+    size_ = 0;
+  }
 };
 
 }  // namespace ateam_spatial
 
-#endif  // ATEAM_SPATIAL__GPU_ARRAY_HPP_
+#endif  // ATEAM_SPATIAL__GPU_VECTOR_HPP_

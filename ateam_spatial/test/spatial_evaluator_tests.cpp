@@ -18,40 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <cuda_runtime.h>
-#include <iostream>
-#include "ateam_spatial/placeholder.hpp"
-#include "ateam_spatial/gpu_object.hpp"
-#include "ateam_spatial/gpu_array.hpp"
-#include "ateam_spatial/gpu_vector.hpp"
+#include <gtest/gtest.h>
+#include <ateam_spatial/spatial_evaluator.hpp>
 
-struct TestStruct {
-  int mem;
-};
+TEST(SpatialEvaluatorTests, Basic)
+{
+  using ateam_spatial::SpatialEvaluator;
+  SpatialEvaluator eval;
 
-__global__ void cuda_hello_impl(TestStruct * t, int * arr, size_t arr_size, int * vec, size_t vec_size) {
-  printf("Hello World from GPU!\n");
-  printf("The number is %d\n", t->mem);
-  for(auto i = 0; i < arr_size; ++i) {
-    printf("Array[%d] = %d\n", i, arr[i]);
-  }
-  for(auto i = 0; i < vec_size; ++i) {
-    printf("Vector[%d] = %d\n", i, vec[i]);
-  }
-}
+  FieldDimensions field;
+  field.field_length = 16.0;
+  field.field_width = 9.0;
+  field.boundary_width = 0.3;
+  field.defense_area_width = 2.0;
+  field.defense_area_depth = 1.0;
+  field.goal_width = 1.0;
+  field.goal_depth = 0.1;
 
-namespace ateam_spatial {
+  Ball ball;
 
-void cuda_hello() {
-  GpuObject<TestStruct> t({42});
-  std::array<int,5> host_array = {2,4,6,8,10};
-  GpuArray<int, 5> a;
-  a.CopyToGpu(host_array);
-  std::vector<int> host_vector = {1,3,5,7,9};
-  GpuVector<int> v;
-  v.CopyToGpu(host_vector);
-  cuda_hello_impl<<<1,1>>>(t.Get(), a.Get(), a.Size(), v.Get(), v.Size());
-  cudaDeviceSynchronize();
-}
+  std::array<Robot, 16> our_bots;
 
+  std::array<Robot, 16> their_bots;
+
+  eval.UpdateMaps(field, ball, our_bots, their_bots);
+
+  std::vector<float> buffer_out;
+
+  eval.CopyMapBuffer(SpatialEvaluator::Maps::ReceiverPositionQuality, buffer_out);
+
+  EXPECT_EQ(buffer_out.size(), 159360000);
 }

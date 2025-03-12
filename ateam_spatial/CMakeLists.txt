@@ -10,6 +10,8 @@ add_library(${PROJECT_NAME} SHARED
   src/layers/distance_down_field.cu
   src/maps/receiver_position_quality.cu
   src/placeholder_cuda.cu
+  src/spatial_evaluator.cu
+  src/update_maps_kernel.cu
 )
 target_include_directories(${PROJECT_NAME}
   PUBLIC
@@ -40,6 +42,9 @@ install(TARGETS ${PROJECT_NAME}
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  # Disabling code linters because uncrustify doesn't play well with CUDA-C++
+  set(ament_cmake_cpplint_FOUND TRUE)
+  set(ament_cmake_uncrustify_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
   add_subdirectory(test)
 endif()

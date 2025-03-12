@@ -23,38 +23,57 @@
 
 struct Robot
 {
-  float x;
-  float y;
-  float theta;
-  float x_vel;
-  float y_vel;
-  float theta_vel;
+  bool visible = false;
+  float x = 0.0;
+  float y = 0.0;
+  float theta = 0.0;
+  float x_vel = 0.0;
+  float y_vel = 0.0;
+  float theta_vel = 0.0;
 };
 
 struct Ball
 {
-  float x;
-  float y;
-  float x_vel;
-  float y_vel;
+  float x = 0.0;
+  float y = 0.0;
+  float x_vel = 0.0;
+  float y_vel = 0.0;
 };
 
 struct FieldDimensions
 {
-  float field_width;
-  float field_length;
-  float goal_width;
-  float goal_depth;
-  float boundary_width;
-  float defense_area_width;
-  float defense_area_depth;
+  float field_width = 0.0;
+  float field_length = 0.0;
+  float goal_width = 0.0;
+  float goal_depth = 0.0;
+  float boundary_width = 0.0;
+  float defense_area_width = 0.0;
+  float defense_area_depth = 0.0;
+
+  bool operator==(const FieldDimensions & other) const
+  {
+    const float kEpsilon = 1e-3;
+    auto near_eq = [&kEpsilon](const float & a, const float & b) {
+        return std::abs(a - b) < kEpsilon;
+      };
+    return near_eq(field_width, other.field_width) &&
+           near_eq(field_length, other.field_length) &&
+           near_eq(goal_width, other.goal_width) &&
+           near_eq(goal_depth, other.goal_depth) &&
+           near_eq(boundary_width, other.boundary_width) &&
+           near_eq(defense_area_width, other.defense_area_width) &&
+           near_eq(defense_area_depth, other.defense_area_depth);
+  }
+
+  bool operator!=(const FieldDimensions & other) const
+  {
+    return !operator==(other);
+  }
 };
 
 struct SpatialSettings
 {
-  float resolution;  // m / px
-  unsigned int width;
-  unsigned int height;
+  float resolution = 0.0;  // m / px
 };
 
 #endif  // ATEAM_SPATIAL__TYPES_HPP_

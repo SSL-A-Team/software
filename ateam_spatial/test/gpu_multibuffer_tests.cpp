@@ -18,40 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <cuda_runtime.h>
-#include <iostream>
-#include "ateam_spatial/placeholder.hpp"
-#include "ateam_spatial/gpu_object.hpp"
-#include "ateam_spatial/gpu_array.hpp"
-#include "ateam_spatial/gpu_vector.hpp"
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include <ateam_spatial/gpu_multibuffer.hpp>
 
-struct TestStruct {
-  int mem;
-};
 
-__global__ void cuda_hello_impl(TestStruct * t, int * arr, size_t arr_size, int * vec, size_t vec_size) {
-  printf("Hello World from GPU!\n");
-  printf("The number is %d\n", t->mem);
-  for(auto i = 0; i < arr_size; ++i) {
-    printf("Array[%d] = %d\n", i, arr[i]);
-  }
-  for(auto i = 0; i < vec_size; ++i) {
-    printf("Vector[%d] = %d\n", i, vec[i]);
-  }
-}
+TEST(GpuMultibufferTests, CopyBackAndForth) {
+  ateam_spatial::GpuMultibuffer<int> mb(2, 10);
 
-namespace ateam_spatial {
+  const std::vector<int> in1{1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
+  const std::vector<int> in2{0, 2, 4, 6, 8, 10, 12, 14, 16, 18};
+  mb.CopyToGpu(0, in1);
+  mb.CopyToGpu(1, in2);
 
-void cuda_hello() {
-  GpuObject<TestStruct> t({42});
-  std::array<int,5> host_array = {2,4,6,8,10};
-  GpuArray<int, 5> a;
-  a.CopyToGpu(host_array);
-  std::vector<int> host_vector = {1,3,5,7,9};
-  GpuVector<int> v;
-  v.CopyToGpu(host_vector);
-  cuda_hello_impl<<<1,1>>>(t.Get(), a.Get(), a.Size(), v.Get(), v.Size());
-  cudaDeviceSynchronize();
-}
+  std::vector<int> out1;
+  std::vector<int> out2;
+  mb.CopyFromGpu(0, out1);
+  mb.CopyFromGpu(1, out2);
 
+  EXPECT_THAT(out1, ::testing::ContainerEq(in1));
+  EXPECT_THAT(out2, ::testing::ContainerEq(in2));
 }

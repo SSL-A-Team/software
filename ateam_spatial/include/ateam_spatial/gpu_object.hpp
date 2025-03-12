@@ -31,57 +31,89 @@
 namespace ateam_spatial
 {
 
-template<typename T>
-class GpuObject {
-public:
-  GpuObject()
+  template <typename T>
+  class GpuObject
   {
-    assert(std::is_trivial_v<T>);
-    const auto ret = cudaMalloc(&gpu_memory_, sizeof(T));
-    if(ret != cudaSuccess) {
-      throw std::runtime_error(std::string("cudaMalloc failed: ") + cudaGetErrorString(ret));
+  public:
+    GpuObject()
+    {
+      assert(std::is_trivial_v<T>);
+      const auto ret = cudaMalloc(&gpu_memory_, sizeof(T));
+      if (ret != cudaSuccess)
+      {
+        throw std::runtime_error(std::string("cudaMalloc failed: ") + cudaGetErrorString(ret));
+      }
     }
-  }
 
-  explicit GpuObject(const T & value)
-  : GpuObject()
-  {
-    CopyToGpu(value);
-  }
-
-  ~GpuObject()
-  {
-    const auto ret = cudaFree(gpu_memory_);
-    if(ret != cudaSuccess) {
-      std::cerr << "cudaFree failed: " << cudaGetErrorString(ret) << std::endl;
+    explicit GpuObject(const T &value)
+        : GpuObject()
+    {
+      CopyToGpu(value);
     }
-  }
 
-  T * Get()
-  {
-    return reinterpret_cast<T *>(gpu_memory_);
-  }
+    GpuObject(const GpuObject &) = delete;
 
-  void CopyToGpu(const T & value)
-  {
-    const auto ret = cudaMemcpy(gpu_memory_, &value, sizeof(T), cudaMemcpyHostToDevice);
-    if(ret != cudaSuccess) {
-      throw std::runtime_error(std::string("cudaMemcpy failed: ") + cudaGetErrorString(ret));
+    GpuObject(GpuObject &other)
+    {
+      gpu_memory_ = other.gpu_memory_;
+      other.gpu_memory_ = nullptr;
     }
-  }
 
-  void CopyFromGpu(T & value)
-  {
-    const auto ret = cudaMemcpy(&value, gpu_memory_, sizeof(T), cudaMemcpyDeviceToHost);
-    if(ret != cudaSuccess) {
-      throw std::runtime_error(std::string("cudaMemcpy failed: ") + cudaGetErrorString(ret));
+    ~GpuObject()
+    {
+      if (gpu_memory_ == nullptr)
+      {
+        return;
+      }
+      const auto ret = cudaFree(gpu_memory_);
+      if (ret != cudaSuccess)
+      {
+        std::cerr << "cudaFree failed: " << cudaGetErrorString(ret) << std::endl;
+      }
     }
-  }
 
-private:
-  void * gpu_memory_ = nullptr;
-};
+    GpuObject<T>& operator=(GpuObject<T> &&other)
+    {
+      if (gpu_memory_ != nullptr)
+      {
+        const auto ret = cudaFree(gpu_memory_);
+        if (ret != cudaSuccess)
+        {
+          throw std::runtime_error(std::string("cudaFree failed: ") + cudaGetErrorString(ret));
+        }
+      }
+      gpu_memory_ = other.gpu_memory_;
+      other.gpu_memory_ = nullptr;
+      return *this;
+    }
 
-}  // namespace ateam_spatial
+    T *Get()
+    {
+      return reinterpret_cast<T *>(gpu_memory_);
+    }
 
-#endif  // ATEAM_SPATIAL__GPU_OBJECT_HPP_
+    void CopyToGpu(const T &value)
+    {
+      const auto ret = cudaMemcpy(gpu_memory_, &value, sizeof(T), cudaMemcpyHostToDevice);
+      if (ret != cudaSuccess)
+      {
+        throw std::runtime_error(std::string("cudaMemcpy failed: ") + cudaGetErrorString(ret));
+      }
+    }
+
+    void CopyFromGpu(T &value)
+    {
+      const auto ret = cudaMemcpy(&value, gpu_memory_, sizeof(T), cudaMemcpyDeviceToHost);
+      if (ret != cudaSuccess)
+      {
+        throw std::runtime_error(std::string("cudaMemcpy failed: ") + cudaGetErrorString(ret));
+      }
+    }
+
+  private:
+    void *gpu_memory_ = nullptr;
+  };
+
+} // namespace ateam_spatial
+
+#endif // ATEAM_SPATIAL__GPU_OBJECT_HPP_

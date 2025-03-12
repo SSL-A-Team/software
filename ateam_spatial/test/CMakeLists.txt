@@ -3,9 +3,12 @@ find_package(ament_cmake_gmock REQUIRED)
 ament_add_gmock(ateam_spatial_tests
   coordinate_conversions_tests.cpp
   gpu_array_tests.cpp
+  gpu_multibuffer_tests.cpp
   gpu_object_tests.cpp
+  gpu_vector_tests.cpp
   layers_tests.cpp
   maps_tests.cpp
+  spatial_evaluator_tests.cpp
 )
 
 target_include_directories(ateam_spatial_tests PUBLIC
