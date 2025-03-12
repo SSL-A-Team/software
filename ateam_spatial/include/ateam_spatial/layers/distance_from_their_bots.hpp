@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_SPATIAL__LAYERS__DISTANCE_DOWN_FIELD_HPP_
-#define ATEAM_SPATIAL__LAYERS__DISTANCE_DOWN_FIELD_HPP_
+#ifndef ATEAM_SPATIAL__LAYERS__DISTANCE_FROM_THEIR_BOTS_HPP_
+#define ATEAM_SPATIAL__LAYERS__DISTANCE_FROM_THEIR_BOTS_HPP_
 
 #include "ateam_spatial/types.hpp"
 #include "ateam_spatial/cuda_hostdev.hpp"
@@ -27,13 +27,14 @@
 namespace ateam_spatial::layers
 {
 
-CUDA_HOSTDEV float DistanceDownField(
-  const int x, const FieldDimensions & field_dims,
+CUDA_HOSTDEV float DistanceFromBot(
+  const int x, const int y, const Robot & bot,
   const SpatialSettings & settings);
 
 __global__
-void distanceDownFieldKernel(unsigned char* Pout, unsigned char* Pin, const FieldDimensions & field_dims,
+void DistanceFromTheirBotsKernel(unsigned char* Pout, unsigned char* Pin, Robot* & their_robots,
     const SpatialSettings & settings);
+  
 
 }  // namespace ateam_spatial::layers
 

@@ -67,4 +67,9 @@ CUDA_HOSTDEV inline int RealToSpatialDist(const float d, const SpatialSettings &
   return static_cast<int>(d / settings.resolution);
 }
 
+CUDA_HOSTDEV inline float SpatialToRealDist(const float d, const SpatialSettings & settings)
+{
+  return static_cast<float>(d * settings.resolution);
+}
+
 #endif  // ATEAM_SPATIAL__COORDINATE_CONVERSIONS_HPP_

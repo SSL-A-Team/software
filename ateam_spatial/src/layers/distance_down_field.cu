@@ -16,7 +16,7 @@ void distanceDownFieldKernel(unsigned char* Pout, unsigned char* Pin, const Fiel
   int row = blockIdx.y * blockDim.y + threadIdx.y;
 
   if (col < width && row < height){
-    int out_coord_array_pos = row * width + col;
+    int out_coord_array_pos = row * settings.width + col;
 
     float distance = DistanceDownField(col, field_dims, settings);
     Pout[out_coord_array_pos]
