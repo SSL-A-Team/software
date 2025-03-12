@@ -24,8 +24,13 @@
 #include "ateam_spatial/types.hpp"
 #include "ateam_spatial/cuda_hostdev.hpp"
 
+namespace ateam_spatial::maps
+{
+
 CUDA_HOSTDEV float ReceiverPositionQuality(
   const int x, const int y, const FieldDimensions & field_dims,
   const SpatialSettings & settings);
+
+}  // namespace ateam_spatial::maps
 
 #endif  // ATEAM_SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_

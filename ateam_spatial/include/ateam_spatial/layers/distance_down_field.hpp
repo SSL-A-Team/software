@@ -24,8 +24,13 @@
 #include "ateam_spatial/types.hpp"
 #include "ateam_spatial/cuda_hostdev.hpp"
 
+namespace ateam_spatial::layers
+{
+
 CUDA_HOSTDEV float DistanceDownField(
   const int x, const FieldDimensions & field_dims,
   const SpatialSettings & settings);
+
+}  // namespace ateam_spatial::layers
 
 #endif  // ATEAM_SPATIAL__LAYERS__DISTANCE_DOWN_FIELD_HPP_

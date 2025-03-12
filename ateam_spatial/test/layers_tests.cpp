@@ -23,6 +23,8 @@
 
 TEST(LayersTests, DistanceDownField)
 {
+  using ateam_spatial::layers::DistanceDownField;
+
   SpatialSettings settings;
   settings.resolution = 0.001;
 

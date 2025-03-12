@@ -23,6 +23,8 @@
 
 TEST(MapsTests, ReceiverPositionQuality)
 {
+  using ateam_spatial::maps::ReceiverPositionQuality;
+
   SpatialSettings settings;
   settings.resolution = 0.001;
 
