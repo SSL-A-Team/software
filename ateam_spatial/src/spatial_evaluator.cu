@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "ateam_spatial/spatial_evaluator.hpp"
+#include <cuda_runtime_api.h>
 #include <algorithm>
 #include "ateam_spatial/update_maps_kernel.hpp"
 #include "ateam_spatial/coordinate_conversions.hpp"
@@ -35,6 +36,11 @@ void SpatialEvaluator::UpdateMaps(const FieldDimensions &field, const Ball &ball
 {
   UpdateBufferSizes(field);
   update_maps_kernel<<<1,1>>>();
+  const auto ret = cudaDeviceSynchronize();
+  if(ret != cudaSuccess) {
+    // TODO(barulicm): re-read cuda error handling blog post
+    throw std::runtime_error(std::string("cudaDeviceSynchronize failed: ") + cudaGetErrorString(ret));
+  }
 }
 
 void SpatialEvaluator::CopyMapBuffer(const SpatialEvaluator::Maps & map, std::vector<float> & destination)

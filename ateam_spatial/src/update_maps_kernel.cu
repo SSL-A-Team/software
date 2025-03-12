@@ -25,7 +25,7 @@ namespace ateam_spatial
 
 __global__ void update_maps_kernel()
 {
-
+  // TODO(barulicm): implement
 }
 
 }  // namespace ateam_spatial
