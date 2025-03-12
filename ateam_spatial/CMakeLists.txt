@@ -7,7 +7,8 @@ find_package(ament_cmake REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
-  src/layers.cu
+  src/layers/distance_down_field.cu
+  src/maps/receiver_position_quality.cu
   src/placeholder_cuda.cu
 )
 target_include_directories(${PROJECT_NAME}

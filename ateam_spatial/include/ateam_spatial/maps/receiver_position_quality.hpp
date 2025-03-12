@@ -18,14 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_SPATIAL__LAYERS_HPP_
-#define ATEAM_SPATIAL__LAYERS_HPP_
+#ifndef ATEAM_SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_
+#define ATEAM_SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_
 
-#include "types.hpp"
-#include "cuda_hostdev.hpp"
+#include "ateam_spatial/types.hpp"
+#include "ateam_spatial/cuda_hostdev.hpp"
 
-CUDA_HOSTDEV float DistanceDownField(
-  const int x, const FieldDimensions & field_dims,
+CUDA_HOSTDEV float ReceiverPositionQuality(
+  const int x, const int y, const FieldDimensions & field_dims,
   const SpatialSettings & settings);
 
-#endif  // ATEAM_SPATIAL__LAYERS_HPP_
+#endif  // ATEAM_SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_

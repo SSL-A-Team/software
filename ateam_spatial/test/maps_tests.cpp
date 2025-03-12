@@ -19,9 +19,9 @@
 // THE SOFTWARE.
 
 #include <gtest/gtest.h>
-#include <ateam_spatial/layers/distance_down_field.hpp>
+#include <ateam_spatial/maps/receiver_position_quality.hpp>
 
-TEST(LayersTests, DistanceDownField)
+TEST(MapsTests, ReceiverPositionQuality)
 {
   SpatialSettings settings;
   settings.resolution = 0.001;
@@ -35,7 +35,7 @@ TEST(LayersTests, DistanceDownField)
   field.goal_width = 1.0;
   field.goal_depth = 0.1;
 
-  EXPECT_FLOAT_EQ(DistanceDownField(0, field, settings), 0.0);
-  EXPECT_FLOAT_EQ(DistanceDownField(8300, field, settings), 8.3);
-  EXPECT_FLOAT_EQ(DistanceDownField(16600, field, settings), 16.6);
+  EXPECT_FLOAT_EQ(ReceiverPositionQuality(0, 0, field, settings), 0.0);
+  EXPECT_FLOAT_EQ(ReceiverPositionQuality(8300, 0, field, settings), 8.3);
+  EXPECT_FLOAT_EQ(ReceiverPositionQuality(16600, 0, field, settings), 16.6);
 }

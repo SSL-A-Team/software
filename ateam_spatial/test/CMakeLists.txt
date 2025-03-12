@@ -5,6 +5,7 @@ ament_add_gmock(ateam_spatial_tests
   gpu_array_tests.cpp
   gpu_object_tests.cpp
   layers_tests.cpp
+  maps_tests.cpp
 )
 
 target_include_directories(ateam_spatial_tests PUBLIC
