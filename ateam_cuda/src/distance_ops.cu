@@ -1,9 +1,10 @@
 #include "cuda_runtime.h"
 #include "world_utils.cuh"
+#include "types.hpp"
 
 __global__
 void distanceFromEdgeKernel(unsigned char* Pout, unsigned char* Pin,
-    int width, int height)
+    int width, int height, const spatialSettings settings)
 {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int row = blockIdx.y * blockDim.y + threadIdx.y;
@@ -13,12 +14,8 @@ void distanceFromEdgeKernel(unsigned char* Pout, unsigned char* Pin,
         // Return only one distance per point using row-major
         // indexing.
         int out_coord_array_pos = row * width + col;
-        // We have double the number of cols
-        // to ensure we include both the x and y coordinates
-        // (x first, then y).
-        int in_coord_array_pos = out_coord_array_pos * 2;
-        float world_pos_x = fabsf(Pin[in_coord_array_pos]);
-        float world_pos_y = fabsf(Pin[in_coord_array_pos + 1]);
+        float world_pos_x = settings.resolution * col;
+        float world_pos_y = settings.resolution * row; 
         // Get absolute value
         // There's probably a way to do this that doesn't involve conditions
         // so we can be more efficient
