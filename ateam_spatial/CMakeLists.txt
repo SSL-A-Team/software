@@ -8,6 +8,7 @@ find_package(CUDAToolkit REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/layers/distance_down_field.cu
+  src/layers/distance_from_their_bots.cu
   src/maps/receiver_position_quality.cu
   src/placeholder_cuda.cu
 )
