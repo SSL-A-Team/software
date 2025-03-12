@@ -9,13 +9,14 @@ import * as PIXI from 'pixi.js';
 import { Viewport } from "pixi-viewport";
 import { AppState } from "@/state";
 import { TeamColor } from "@/team";
-import { initializePixi, updateField, drawFieldLines, drawSideIgnoreOverlay } from "@/field";
+import { initializePixi, updateField, drawFieldLines, drawSideIgnoreOverlay, drawRobots } from "@/field";
 
 export default {
     inject: ['state'],
     data() {
         return {
             pixi: {},
+            fieldContainer: null,
             startDragPoint: null
         }
     },
@@ -32,7 +33,7 @@ export default {
             view: this.$refs.canvas
         });
         this.pixi = shallowRef(pixi);
-        initializePixi(this.pixi, this.state);
+        this.fieldContainer = initializePixi(this.pixi, this.state);
 
         this.prepareRobotDragging();
 
@@ -50,11 +51,12 @@ export default {
     },
     methods: {
         update: function() {
-            updateField(this.state, this.pixi);
+            updateField(this.state, this.fieldContainer);
         },
         redraw: function() {
-            drawFieldLines(this.state, this.pixi.stage.getChildAt(0).getChildByName("fieldLines"));
-            drawSideIgnoreOverlay(this.state, this.pixi.stage.getChildAt(0).getChildByName("fieldUI"));
+            drawFieldLines(this.state, this.fieldContainer.getChildByName("fieldLines"));
+            drawRobots(this.state, this.fieldContainer.getChildByName("robots"));
+            drawSideIgnoreOverlay(this.state, this.fieldContainer.getChildByName("fieldUI"));
         },
         onRightDown: function(event: MouseEvent) {
             const stage = this.pixi.stage;
@@ -78,9 +80,14 @@ export default {
                 stage.off("pointermove");
                 stage.off("rightup");
 
-                const vec = new PIXI.Point(
+                const screen_vec = new PIXI.Point(
                     sdPoint.x - event.global.x,
                     sdPoint.y - event.global.y
+                );
+
+                const vec = new PIXI.Point(
+                    (screen_vec.x * Math.cos(-state.renderConfig.angle * Math.PI / 180) - screen_vec.y * Math.sin(-state.renderConfig.angle * Math.PI / 180)),
+                    (screen_vec.x * Math.sin(-state.renderConfig.angle * Math.PI / 180) + screen_vec.y * Math.cos(-state.renderConfig.angle * Math.PI / 180))
                 );
 
                 const dist = Math.sqrt(vec.x**2 + vec.y**2);
@@ -90,6 +97,12 @@ export default {
 
                 let pos = new PIXI.Point();
                 viewport.toLocal(sdPoint, null, pos);
+
+                pos = new PIXI.Point(
+                    (pos.x * Math.cos(-state.renderConfig.angle * Math.PI / 180) - pos.y * Math.sin(-state.renderConfig.angle * Math.PI / 180)),
+                    (pos.x * Math.sin(-state.renderConfig.angle * Math.PI / 180) + pos.y * Math.cos(-state.renderConfig.angle * Math.PI / 180))
+                );
+
                 const simulatorCommand = {
                     teleport_ball: [{
                         pose: {
@@ -111,10 +124,13 @@ export default {
                 state.sendSimulatorControlPacket(simulatorCommand);
             });
 
-
-
             let pos = new PIXI.Point();
             viewport.toLocal(event.global, null, pos);
+
+            pos = new PIXI.Point(
+                (pos.x * Math.cos(-state.renderConfig.angle * Math.PI / 180) - pos.y * Math.sin(-state.renderConfig.angle * Math.PI / 180)),
+                (pos.x * Math.sin(-state.renderConfig.angle * Math.PI / 180) + pos.y * Math.cos(-state.renderConfig.angle * Math.PI / 180))
+            );
 
             this.state.world.ball.pose.position.x = pos.x * -this.getDefending / scale;
             this.state.world.ball.pose.position.y = -pos.y / scale;
@@ -163,7 +179,6 @@ export default {
             text.name = "ballVelText"
 
             text.anchor.set(0.5, 0.5);
-            text.rotation = -this.state.renderConfig.angle;
 
             text.position.x = this.startDragPoint.x + (0.2 * scale * vec.x / dist);
             text.position.y = this.startDragPoint.y + (0.2 * scale * vec.y / dist);
@@ -178,7 +193,7 @@ export default {
             var defending = this.getDefending;
 
             const robotArray = Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()
-            const robots = viewport.getChildByName("robots").children;
+            const robots = this.fieldContainer.getChildByName("robots").children;
             for (let i = 0; i < robotArray.length; i++) {
                 const robot = robots[i] as PIXI.Container;
                 robot.on("pointerdown", function(event){
@@ -196,6 +211,12 @@ export default {
                         const robotObj = robotArray[i];
                         let pos = new PIXI.Point();
                         viewport.toLocal(event.global, null, pos);
+
+                        pos = new PIXI.Point(
+                            (pos.x * Math.cos(-state.renderConfig.angle * Math.PI / 180) - pos.y * Math.sin(-state.renderConfig.angle * Math.PI / 180)),
+                            (pos.x * Math.sin(-state.renderConfig.angle * Math.PI / 180) + pos.y * Math.cos(-state.renderConfig.angle * Math.PI / 180))
+                        );
+
                         const scale = state.renderConfig.scale;
 
                         robotObj.pose.position.x = pos.x * -defending / scale;
@@ -220,7 +241,10 @@ export default {
                         stage.off("pointermove");
                     });
                     stage.on("pointermove", function(event){
-                        viewport.toLocal(event.global, null, robot.position);
+                        let pos = new PIXI.Point();
+                        viewport.toLocal(event.global, null, pos);
+                        robot.position.x = (pos.x * Math.cos(-state.renderConfig.angle * Math.PI / 180) - pos.y * Math.sin(-state.renderConfig.angle * Math.PI / 180));
+                        robot.position.y = (pos.x * Math.sin(-state.renderConfig.angle * Math.PI / 180) + pos.y * Math.cos(-state.renderConfig.angle * Math.PI / 180));
                     });
                 });
             }
@@ -239,19 +263,24 @@ export default {
         getHoverIgnoreSide: function() {
             return this.state.hoveredFieldIgnoreSide * -this.getDefending;
         },
+        getFieldRotation: function() {
+            return this.state.renderConfig.angle;
+        }
     },
     watch: {
         getFieldDimensions: {
-            handler() {
-                this.redraw();
+            handler(newValue, oldValue) {
+                // This makes me big sad
+                if ((JSON.stringify(newValue) != JSON.stringify(oldValue))) {
+                    this.redraw();
+                }
             },
             deep: true
         },
         getIgnoreFieldSide: {
             handler() {
-                const viewport = this.pixi.stage.getChildByName("viewport");
-                let ignoreOverlay = viewport.getChildByName("fieldUI").getChildByName("ignoreOverlay");
-                let hoverOverlay = viewport.getChildByName("fieldUI").getChildByName("hoverOverlay");
+                let ignoreOverlay = this.fieldContainer.getChildByName("fieldUI").getChildByName("ignoreOverlay");
+                let hoverOverlay = this.fieldContainer.getChildByName("fieldUI").getChildByName("hoverOverlay");
                 hoverOverlay.visible = false;
 
                 if (this.state.world.ignoreSide == 0) {
@@ -266,8 +295,8 @@ export default {
         getHoverIgnoreSide: {
             handler() {
                 const viewport = this.pixi.stage.getChildByName("viewport");
-                let ignoreOverlay = viewport.getChildByName("fieldUI").getChildByName("ignoreOverlay");
-                let hoverOverlay = viewport.getChildByName("fieldUI").getChildByName("hoverOverlay");
+                let ignoreOverlay = this.fieldContainer.getChildByName("fieldUI").getChildByName("ignoreOverlay");
+                let hoverOverlay = this.fieldContainer.getChildByName("fieldUI").getChildByName("hoverOverlay");
 
                 if (this.state.hoveredFieldIgnoreSide == 0) {
                     hoverOverlay.visible = false;
@@ -283,6 +312,13 @@ export default {
                 }
             },
             deep: true
+        },
+        getFieldRotation: {
+            handler() {
+                this.fieldContainer.angle = this.getFieldRotation;
+                this.redraw();
+            },
+            deep: false
         }
     }
 }

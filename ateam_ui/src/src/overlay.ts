@@ -38,13 +38,12 @@ export class Overlay {
     start_angle: number
     end_angle: number
 
-    lifetime_end: number
-    check_other_depth: boolean
-    heatmap_texture: PIXI.Texture
+    lifetimeEnd: number
+    checkOtherDepth: boolean
 
-    constructor(id: string, msg: any, check_other_depth: boolean = false) {
+    constructor(id: string, msg: any, checkOtherDepth: boolean = false, timestamp: number) {
         this.id = id;
-        this.check_other_depth = check_other_depth;
+        this.checkOtherDepth = checkOtherDepth;
 
         for (const member of Object.getOwnPropertyNames(msg)) {
             if (member === "heatmap_data" || member == "heatmap_alpha") {
@@ -56,7 +55,7 @@ export class Overlay {
 
         // lifetime is falsey if it will live forever
         if (this.lifetime) {
-            this.lifetime_end = Date.now() + this.lifetime;
+            this.lifetimeEnd = timestamp + this.lifetime;
         }
     }
 }
@@ -71,10 +70,10 @@ export class Overlay {
 export function updateOverlay(overlay: Overlay, timestamp: number, overlayContainer: PIXI.Container, underlayContainer: PIXI.Container, renderConfig: RenderConfig): boolean {
 
     // Handle if the overlay was moved between graphics containers
-    if (overlay.check_other_depth) {
+    if (overlay.checkOtherDepth) {
         const oppositeContainer = (overlay.depth) ? underlayContainer : overlayContainer;
         deleteOverlayGraphic(overlay, oppositeContainer);
-        overlay.check_other_depth = false;
+        overlay.checkOtherDepth = false;
     }
 
     const container = (overlay.depth) ? overlayContainer : underlayContainer;
@@ -87,7 +86,7 @@ export function updateOverlay(overlay: Overlay, timestamp: number, overlayContai
 }
 
 export function isOverlayExpired(overlay: Overlay, timestamp: number): boolean {
-    return overlay.lifetime_end && timestamp >= overlay.lifetime_end;
+    return overlay.lifetimeEnd && timestamp >= overlay.lifetimeEnd;
 }
 
 export function deleteOverlayGraphic(overlay: Overlay, container: PIXI.Container) {
@@ -182,12 +181,11 @@ export function drawOverlay(overlay: Overlay, container: PIXI.Container, renderC
             {
                 let graphicChild = graphic.getChildByName("heatmap") as PIXI.Sprite;
                 if (!graphicChild) {
-                    graphicChild = new PIXI.Sprite();
-                    graphicChild.name = overlay.id;
-                    graphic.addChild(graphicChild);
+                    // This should never happen
+                    return
                 }
 
-                graphicChild.texture = overlay.heatmap_texture;
+                console.log("drawing: ", graphicChild);
                 graphicChild.width = scale * overlay.scale.x;
                 graphicChild.height = scale * overlay.scale.y;
                 graphicChild.x = -scale * overlay.scale.x / 2;
@@ -243,7 +241,7 @@ export function initializeHeatmapGraphic(overlay: Overlay, graphicState: Graphic
         buffer[dst_index + 3] = alpha;
     }
 
-    const heatmap_texture = PIXI.Texture.fromBuffer(buffer, overlay.heatmap_resolution_width, overlay.heatmap_resolution_height, { scaleMode: PIXI.SCALE_MODES.NEAREST })
+    const heatmapTexture = PIXI.Texture.fromBuffer(buffer, overlay.heatmap_resolution_width, overlay.heatmap_resolution_height, { scaleMode: PIXI.SCALE_MODES.NEAREST })
 
     const container = (overlay.depth) ? graphicState.overlayContainer : graphicState.underlayContainer;
 
@@ -257,9 +255,9 @@ export function initializeHeatmapGraphic(overlay: Overlay, graphicState: Graphic
     let graphicChild = graphic.getChildByName("heatmap") as PIXI.Sprite;
     if (!graphicChild) {
         graphicChild = new PIXI.Sprite();
-        graphicChild.name = overlay.id;
+        graphicChild.name = "heatmap";
         graphic.addChild(graphicChild);
     }
 
-    graphicChild.texture = overlay.heatmap_texture;
+    graphicChild.texture = heatmapTexture;
 }

@@ -1,6 +1,6 @@
 <template>
-    <v-col class="flex-grow-0 flex-shrink-0 justify-center my-n3 py-n3">
-        <v-slider 
+    <v-col class="flex-grow-0 flex-shrink-0 justify-center mt-n8 pt-n8 mb-n4 pb-n4">
+        <v-slider
             v-model="historySlider"
             :min="-state.worldHistory.length+1"
             max="0"
@@ -13,13 +13,13 @@
             <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "rewind()">
                 <v-icon icon="mdi-rewind"/>
             </v-btn>
-            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "stepFrames(-1)">
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "stepButton(-1)">
                 <v-icon icon="mdi-step-backward"/>
             </v-btn>
             <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "togglePause()">
                 <v-icon :icon="playPauseIcon()"/>
             </v-btn>
-            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "stepFrames(1)">
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "stepButton(1)">
                 <v-icon icon="mdi-step-forward"/>
             </v-btn>
             <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "fastforward()">
@@ -97,6 +97,18 @@ export default {
             this.pause();
             this.state.selectedHistoryFrame = -1;
         },
+        stepButton: function(frames: number) {
+            // Pause history replay when stepping by frame
+            this.state.historyReplayIsPaused = true;
+            this.playbackSpeed = 1.0;
+
+            // If you are in realtime just go to the latest frame
+            if (this.state.selectedHistoryFrame == -1) {
+                this.state.selectedHistoryFrame = this.state.worldHistory.length - 1;
+            }
+
+            this.stepFrames(frames);
+        },
         stepFrames: function(frames: number) {
             let intendedFrame = this.state.selectedHistoryFrame + frames;
             if (intendedFrame >= this.state.worldHistory.length) {
@@ -108,8 +120,9 @@ export default {
             this.state.selectedHistoryFrame = intendedFrame;
         },
         startSlider: function(sliderValue: number) {
-            // This function moves out of realtime when you first interact with the slider but 
+            // This function moves out of realtime when you first interact with the slider but
             // does not work for dragging
+            this.state.historyReplayIsPaused = true;
             this.state.selectedHistoryFrame = this.state.worldHistory.length - 1 + sliderValue;
         },
         playbackUpdate: function() {
@@ -119,7 +132,9 @@ export default {
             }
 
             if (!this.state.historyReplayIsPaused) {
-                if (this.state.selectedHistoryFrame >= this.state.worldHistory.length || this.state.selectedHistoryFrame <= 0) {
+                if (this.state.selectedHistoryFrame >= this.state.worldHistory.length && this.playbackSpeed >= 0) {
+                    this.state.historyReplayIsPaused = true;
+                } else if (this.state.selectedHistoryFrame <= 0 && this.playbackSpeed <= 0) {
                     this.state.historyReplayIsPaused = true;
                 } else {
                     // Rendering every other frame for standard playback rn since it can be kind of laggy
@@ -142,11 +157,11 @@ export default {
             }
 
             // Check for orphaned overlay graphics
-            const valid_ids = Array.from(this.state.world.field.overlays.keys());
+            const validIds = Array.from(this.state.world.field.overlays.keys());
             for (const container of [this.state.graphicState.underlayContainer, this.state.graphicState.overlayContainer]) {
                 const graphics = Array.from(container.children) as PIXI.Graphics[];
                 for (const graphic of graphics) {
-                    if (!valid_ids.includes(graphic.name)) {
+                    if (!validIds.includes(graphic.name)) {
                         graphic.clear();
                         container.removeChild(graphic);
                     }
@@ -162,7 +177,7 @@ export default {
     watch: {
         historySlider: {
             handler() {
-                // historySlider goes from 0 at current time to -(history_buffer length - 1) at the earliest recorded frame
+                // historySlider goes from 0 at current time to -(history buffer length - 1) at the earliest recorded frame
 
                 // This if statement prevents circular loops caused by moving the slider back to the start of the bar when switching to realtime
                 // which would then cause the selected frame to switch out of realtime to the last frame in history

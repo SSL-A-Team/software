@@ -1,18 +1,18 @@
 <template>
-    <v-container class="d-flex flex-column">
-        <v-container class="d-flex flex-column">
-            <v-card variant="outlined" class="d-flex my-1 justify-space-around" v-for="robot of state.world.teams.get(state.world.team).robots.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" @click.stop="state.setJoystickRobot(robot.id)">
-                    {{robot.id}}
-                    <canvas :ref="'canvas' + robot.id" height=100 width=100 style="width:90px; height:90px;"/>
-                    <v-btn variant="plain" density="compact" style="min-width:0px; width:0px" :disabled="(batteryLevel(robot) === '')">
-                        <v-tooltip activator="parent" location="end">
-                            {{batteryLevel(robot)}}
-                        </v-tooltip>
-                        <v-icon :icon="batteryIcon(robot.status.battery_level)" class="mx-0 pl-1 justify-center" size="small"/>
-                    </v-btn>
-            </v-card>
-        </v-container>
-    </v-container>
+    <v-col style="max-width: 11vw; min-width: 11vw">
+        <v-card variant="outlined" class="mb-4 pl-4 pt-3 pb-1 justify-space-around" v-for="robot of state.world.teams.get(state.world.team).robots.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" @click.stop="state.setJoystickRobot(robot.id)">
+            <v-row>
+                {{robot.id}}
+                <canvas :ref="'canvas' + robot.id" height=100 width=100 style="width:90px; height:90px;"/>
+                <v-btn variant="plain" density="compact" style="min-width:0px; width:0px" :disabled="(batteryLevel(robot) === '')">
+                    <v-tooltip activator="parent" location="end">
+                        {{batteryLevel(robot)}}
+                    </v-tooltip>
+                    <v-icon :icon="batteryIcon(robot.status.battery_level)" class="mx-0 pl-1 justify-center" size="small"/>
+                </v-btn>
+            </v-row>
+        </v-card>
+    </v-col>
 </template>
 
 
@@ -48,25 +48,25 @@ export default {
 
                     let style = "";
                     if (robot.id == this.state.controlledRobot) {
-                        style += "background: green;";
+                        style += "background: rgb(var(--v-theme-status-controlled-robot));";
                     }
 
                     switch (errorLevel) {
                         case ErrorLevel.None:
                             if (!robot.visible) {
-                                style += " outline: solid 5px blue; outline-offset:-1px";
+                                style += " outline: solid 5px rgb(var(--v-theme-status-visibility)); outline-offset:-1px";
                             }
                             break;
                         case ErrorLevel.Warning:
-                            style += " outline: solid 5px yellow; outline-offset:-1px";
+                            style += " outline: solid 5px rgb(var(--v-theme-status-warn)); outline-offset:-1px";
                             break;
                         case ErrorLevel.Error:
-                            style +=  " outline: solid 5px red; outline-offset:-1px";
+                            style +=  " outline: solid 5px rgb(var(--v-theme-status-error)); outline-offset:-1px";
                             break;
                         case ErrorLevel.Critical:
                             if (element.getAnimations().length == 0) {
                                 element.animate([
-                                    {background: "red", outline: "solid 5px red"}],
+                                    {background: "red", outline: "solid 5px rgb(var(--v-theme-status-error))"}],
                                     {easing: "steps(2, jump-none)", duration: 1000, iterations: Infinity}
                                 );
                             }

@@ -23,19 +23,19 @@ export default {
   mounted() {
   },
   methods: {
-    setGoalieId(new_id) {
-      this.state.setGoalie(new_id);
+    setGoalieId(newId: number) {
+      this.state.setGoalie(newId);
     }
   },
   computed: {
-    goalie_service_status: function() {
-      return this.state.goalie_service_status
+    goalieServiceStatus: function() {
+      return this.state.goalieServiceStatus
     }
   },
   watch: {
-    goalie_service_status: {
+    goalieServiceStatus: {
       handler() {
-        if (this.state.goalie_service_status[0]) {
+        if (this.state.goalieServiceStatus[0]) {
           this.alert = false;
         } else {
           this.alert = true;

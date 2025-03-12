@@ -126,7 +126,14 @@ export function drawFieldLines(state: AppState, fieldLines: PIXI.Graphics) {
     }
 }
 
-export function initializePixi(app: PIXI.Application, state: AppState) {
+export function drawRobots(state: AppState, robotsContainer: PIXI.Container) {
+    const robotArray = Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()
+    for (var i = 0; i < robotArray.length; i++) {
+        drawRobot(robotArray[i], robotsContainer, state.renderConfig);
+    }
+}
+
+export function initializePixi(app: PIXI.Application, state: AppState): PIXI.Container {
     const field = state.world.field;
 
     // create viewport
@@ -157,7 +164,9 @@ export function initializePixi(app: PIXI.Application, state: AppState) {
         .pinch()
         .wheel()
 
-    const ballVelLine = new PIXI.Graphics;
+    const fieldContainer = new PIXI.Container();
+
+    const ballVelLine = new PIXI.Graphics();
     ballVelLine.name = "ballVelLine";
     app.stage.addChild(ballVelLine);
 
@@ -188,28 +197,28 @@ export function initializePixi(app: PIXI.Application, state: AppState) {
     drawSideIgnoreOverlay(state, fieldUI);
 
     // Robots
-    for (const robot of Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()) {
-        drawRobot(robot, robots, state.renderConfig);
-    }
+    drawRobots(state, robots);
 
     // Ball
     drawBall(state.world.ball, ball, state.renderConfig);
 
-    viewport.addChild(fieldLines);
-    viewport.addChild(underlay);
-    viewport.addChild(robots);
-    viewport.addChild(ball);
-    viewport.addChild(overlay);
-    viewport.addChild(fieldUI);
+    fieldContainer.addChild(fieldLines);
+    fieldContainer.addChild(underlay);
+    fieldContainer.addChild(robots);
+    fieldContainer.addChild(ball);
+    fieldContainer.addChild(overlay);
+    fieldContainer.addChild(fieldUI);
+
+    viewport.addChild(fieldContainer);
+
+    return fieldContainer;
 }
 
-export function updateField(state: AppState, app: PIXI.Application) {
+export function updateField(state: AppState, fieldContainer: PIXI.Container) {
     const field = state.world.field;
 
-    const viewport = app.stage.getChildByName("viewport") as Viewport;
-
     const robotArray = Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()
-    const robots = viewport.getChildByName("robots").children;
+    const robots = fieldContainer.getChildByName("robots").children;
     for (var i = 0; i < robotArray.length; i++) {
         if (i != state.draggedRobot) {
             const robotContainer = robots[i] as PIXI.Container;
@@ -217,12 +226,12 @@ export function updateField(state: AppState, app: PIXI.Application) {
         }
     }
 
-    updateBall(state.world.ball, viewport.getChildByName("ball").children[0] as PIXI.Container, state.renderConfig);
+    updateBall(state.world.ball, fieldContainer.getChildByName("ball").children[0] as PIXI.Container, state.renderConfig);
 
     for (const [id, overlay] of field.overlays) {
-        const should_delete = updateOverlay(overlay, state.world.timestamp, viewport.getChildByName("overlay"), viewport.getChildByName("underlay"), state.renderConfig);
+        const shouldDelete = updateOverlay(overlay, state.world.timestamp, fieldContainer.getChildByName("overlay"), fieldContainer.getChildByName("underlay"), state.renderConfig);
 
-        if (should_delete) {
+        if (shouldDelete) {
             field.overlays.delete(id);
         }
     }

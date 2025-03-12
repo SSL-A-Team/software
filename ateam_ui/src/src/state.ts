@@ -67,6 +67,8 @@ export class AppState {
     sim: boolean = true;
     comp: boolean = false;
 
+    useKenobi: boolean = true; // Specifies whether to use the Kenobi world topic or ros robot/ball state topics for world data
+
     controlledRobot: number = null;
 
     plays: Map<string, Play> = new Map<string, Play>;
@@ -88,6 +90,23 @@ export class AppState {
 
     connectToRos(): void {
         this.rosManager = new RosManager(this);
+    }
+
+    updateHistory(): void {
+        // Only store history while we are unpausued
+        if (this.selectedHistoryFrame == -1) {
+            this.historyEndIndex++;
+            if (this.worldHistory.length < 100000) {
+                // @ts-ignore
+                this.worldHistory.push(structuredClone(this.realtimeWorld.__v_raw));
+            } else {
+                if (this.historyEndIndex >= this.worldHistory.length) {
+                    this.historyEndIndex = 0;
+                }
+                // @ts-ignore
+                this.worldHistory[this.historyEndIndex] = structuredClone(this.realtimeWorld.__v_raw);
+            }
+        }
     }
 
     setGoalie(goalieId: number): void {
@@ -134,7 +153,7 @@ export class AppState {
         } else {
             this.controlledRobot = id;
         }
-        this.rosManager.params.get("joystick_param").set(this.controlledRobot, 
+        this.rosManager.params.get("joystick_param").set(this.controlledRobot,
             function(result: any): void {}
         );
     }
@@ -201,5 +220,19 @@ export class AppState {
                     console.log("Failed to send simulator packet: ", result.reason);
                 }
             });
+    }
+
+    setUseKenobiTopic(enable: boolean) {
+        if (enable != this.useKenobi) {
+            if (enable) {
+                this.rosManager.disableStateTopics(this);
+                this.rosManager.enableKenobiTopic(this);
+            } else {
+                this.rosManager.disableKenobiTopic(this);
+                this.rosManager.enableStateTopics(this);
+            }
+        }
+
+        this.useKenobi = enable;
     }
 }

@@ -4,9 +4,11 @@
             <v-progress-circular indeterminate class="mx-auto"/>
         </v-col>
     </v-container>
-    <v-else>
-        <v-btn @click.stop=setAllPlayEnabledValue(true)> Select All </v-btn>
-        <v-btn @click.stop=setAllPlayEnabledValue(false)> Deselect All </v-btn>
+    <v-col v-else>
+        <v-row class="flex-nowrap" justify="space-between">
+            <v-btn size="small" @click.stop=setAllPlayEnabledValue(true)> Select All </v-btn>
+            <v-btn size="small" @click.stop=setAllPlayEnabledValue(false)> Deselect All </v-btn>
+        </v-row>
         <v-row justify="space-between" style="flex-wrap: nowrap;">
             <v-list
                 lines="one"
@@ -21,7 +23,7 @@
                         :value="name"
                 >
                     <v-container class="flex-grow-1 flex-shrink-0 overflow-hidden" style="max-width:11em;">
-                        <v-row  justify="space-between" style="flex-wrap: nowrap;">
+                        <v-row justify="space-between" style="flex-wrap: nowrap;">
                             <div style="max-width:80%; overflow:hidden; text-wrap:nowrap">
                                 {{ name }}
                             </div>
@@ -42,7 +44,7 @@
                 </v-list-item>
             </v-list>
         </v-row>
-    </v-else>
+    </v-col>
 
 </template>
 

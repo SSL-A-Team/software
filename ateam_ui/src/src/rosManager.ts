@@ -3,6 +3,7 @@ import { TeamColor } from "@/team";
 import { Overlay, OverlayType, deleteOverlayGraphic, initializeHeatmapGraphic } from "@/overlay";
 import { Play } from "@/play";
 import { WorldState, AppState } from "@/state";
+import { FieldDimensions } from "./field";
 
 export class RosManager {
     ros: ROSLIB.Ros;
@@ -32,45 +33,17 @@ export class RosManager {
 
         // Set up topics, services, and params
 
-        // let kenobiTopic = new ROSLIB.Topic({
-        //     ros: this.ros,
-        //     name: '/kenobi_node/world',
-        //     messageType: 'ateam_msgs/msg/World'
-        // });
-
-        // kenobiTopic.subscribe(this.getKenobiCallback(appState));
-        // this.subscriptions.set("kenobi", kenobiTopic);
-
-        let ballTopic = new ROSLIB.Topic({
-            ros: this.ros,
-            name: '/ball',
-            messageType: 'ateam_msgs/msg/BallState'
-        });
-
-        ballTopic.subscribe(this.getBallCallback(appState.realtimeWorld));
-        this.subscriptions.set("ball", ballTopic);
-
-        // Robot topics for both teams
         for (var i = 0; i < 16; i++) {
             for (const team of appState.realtimeWorld.teams.keys()) {
-                let robotTopic = new ROSLIB.Topic({
+                let robotStatusTopic = new ROSLIB.Topic({
                     ros: this.ros,
-                    name: '/' + team + '_team/robot' + i,
-                    messageType: 'ateam_msgs/msg/RobotState'
+                    name: '/robot_feedback/status/robot' + i,
+                    messageType: 'ateam_msgs/msg/RobotFeedback'
                 });
 
-                robotTopic.subscribe(this.getRobotCallback(appState.realtimeWorld, team, i));
-                this.subscriptions.set("/" + team + "_team/robot" + i, robotTopic);
+                robotStatusTopic.subscribe(this.getRobotStatusCallback(appState.realtimeWorld, i));
+                this.subscriptions.set("/robot_feedback/status/robot" + i, robotStatusTopic);
             }
-
-            let robotStatusTopic = new ROSLIB.Topic({
-                ros: this.ros,
-                name: '/robot_feedback/status/robot' + i,
-                messageType: 'ateam_msgs/msg/RobotFeedback'
-            });
-
-            robotStatusTopic.subscribe(this.getRobotStatusCallback(appState.realtimeWorld, i));
-            this.subscriptions.set("/robot_feedback/status/robot" + i, robotStatusTopic);
         }
 
         let overlayTopic = new ROSLIB.Topic({
@@ -152,7 +125,7 @@ export class RosManager {
             name: "/team_client_node:team_name"
         });
         teamNameParam.get(this.getTeamNameCallback(appState.realtimeWorld));
-        this.params["team_name_param"] = teamNameParam;
+        this.params.set("team_name_param", teamNameParam);
 
         const joystickParam = new ROSLIB.Param({
             ros: this.ros,
@@ -173,6 +146,78 @@ export class RosManager {
             serviceType: 'ateam_msgs/srv/SendSimulatorControlPacket'
         })
         this.services.set("sendSimulatorControlPacket", sendSimulatorControlPacketService);
+
+        if (appState.useKenobi) {
+            this.enableKenobiTopic(appState);
+        } else {
+            this.enableStateTopics(appState);
+        }
+    }
+
+    enableKenobiTopic(appState: AppState) {
+        let kenobiTopic = this.subscriptions.get("kenobi");
+        if (!kenobiTopic) {
+            kenobiTopic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/kenobi_node/world',
+                messageType: 'ateam_msgs/msg/World'
+            });
+            this.subscriptions.set("kenobi", kenobiTopic);
+        }
+
+        kenobiTopic.subscribe(this.getKenobiCallback(appState));
+    }
+
+    disableKenobiTopic(appState: AppState) {
+        let kenobiTopic = this.subscriptions.get("kenobi");
+        if (kenobiTopic) {
+            kenobiTopic.unsubscribe();
+        }
+    }
+
+    enableStateTopics(appState: AppState) {
+        let ballTopic = this.subscriptions.get("ball");
+        if (!ballTopic) {
+            ballTopic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/ball',
+                messageType: 'ateam_msgs/msg/BallState'
+            });
+            this.subscriptions.set("ball", ballTopic);
+        }
+        ballTopic.subscribe(this.getBallCallback(appState.realtimeWorld));
+
+        for (var i = 0; i < 16; i++) {
+            for (const team of appState.realtimeWorld.teams.keys()) {
+                let robotTopic = this.subscriptions.get("/" + team + "_team/robot" + i);
+                if (!robotTopic) {
+                    robotTopic = new ROSLIB.Topic({
+                        ros: this.ros,
+                        name: '/' + team + '_team/robot' + i,
+                        messageType: 'ateam_msgs/msg/RobotState'
+                    });
+                    this.subscriptions.set("/" + team + "_team/robot" + i, robotTopic);
+                }
+
+                robotTopic.subscribe(this.getRobotCallback(appState.realtimeWorld, team, i));
+            }
+        }
+    }
+
+    disableStateTopics(appState: AppState) {
+        for (var i = 0; i < 16; i++) {
+            for (const team of appState.realtimeWorld.teams.keys()) {
+                let robotTopic = this.subscriptions.get("/" + team + "_team/robot" + i);
+                if (robotTopic)  {
+                    robotTopic.unsubscribe();
+                }
+            }
+        }
+
+        let ballTopic = this.subscriptions.get("ball");
+        if (ballTopic) {
+            ballTopic.unsubscribe();
+        }
     }
 
     getTeamNameCallback(world: WorldState): (value: any) => void {
@@ -189,12 +234,12 @@ export class RosManager {
 
     getKenobiCallback(appState: AppState): (msg: any) => void {
         return function(msg: any): void {
-            appState.realtimeWorld.timestamp = Date.now();
+            // Convert timestamp to millis
+            appState.realtimeWorld.timestamp = (msg.current_time.sec * 1e3) + (msg.current_time.nanosec / 1e6);
 
             if (msg.balls.length > 0) {
                 appState.realtimeWorld.ball.pose = msg.balls[0].pose;
-                // appState.realtimeWorld.ball.visible = msg.balls[0].visible;
-                appState.realtimeWorld.ball.visible = true;
+                appState.realtimeWorld.ball.visible = msg.balls[0].visible;
             }
 
             for (const team of [TeamColor.Blue, TeamColor.Yellow]) {
@@ -208,19 +253,10 @@ export class RosManager {
                 }
             }
 
-            // Only store history while we are unpausued
-            if (appState.selectedHistoryFrame == -1) {
-                if (appState.worldHistory.length < 100000) {
-                    // @ts-ignore
-                    appState.worldHistory.push(structuredClone(appState.realtimeWorld.__v_raw));
-                } else {
-                    appState.historyEndIndex++;
-                    if (appState.historyEndIndex >= appState.worldHistory.length) {
-                        appState.historyEndIndex = 0;
-                    }
-                    // @ts-ignore
-                    appState.worldHistory[appState.historyEndIndex] = structuredClone(appState.realtimeWorld.__v_raw);
-                }
+            if (appState.useKenobi) {
+                appState.updateHistory();
+            } else {
+                // This should never happen
             }
         }
     }
@@ -260,13 +296,13 @@ export class RosManager {
                 let id = overlay.ns+"/"+overlay.name;
 
                 // Flag the overlay to check if it moved the graphic object between containers
-                const check_other_depth = (id in appState.realtimeWorld.field.overlays &&
+                const checkOtherDepth = (id in appState.realtimeWorld.field.overlays &&
                     appState.realtimeWorld.field.overlays.get(id).depth != overlay.depth);
 
                 switch(overlay.command) {
                     // REPLACE
                     case 0:
-                        appState.realtimeWorld.field.overlays.set(id, new Overlay(id, overlay, check_other_depth));
+                        appState.realtimeWorld.field.overlays.set(id, new Overlay(id, overlay, checkOtherDepth, appState.realtimeWorld.timestamp));
                         if (overlay.type == OverlayType.Heatmap) {
                             initializeHeatmapGraphic(appState.realtimeWorld.field.overlays.get(id), appState.graphicState)
                         }
@@ -289,42 +325,46 @@ export class RosManager {
     getFieldDimensionCallback(world: WorldState): (msg: any) => void {
 	    const state = this; // fix dumb javascript things
 	    return function(msg: any): void {
-            world.field.fieldDimensions.length = msg.field_length;
-            world.field.fieldDimensions.width = msg.field_width;
-            world.field.fieldDimensions.goalWidth = msg.goal_width;
-            world.field.fieldDimensions.goalDepth = msg.goal_depth;
-            world.field.fieldDimensions.border = msg.boundary_width;
+            // Don't accidentally trigger field dimension update callbacks in vue
+            let newFieldDimensions = new FieldDimensions();
 
-            let get_dims = function(rectangle_corners: Point[]): [number, number] {
-                const first_point = rectangle_corners[0];
+            newFieldDimensions.length = msg.field_length;
+            newFieldDimensions.width = msg.field_width;
+            newFieldDimensions.goalWidth = msg.goal_width;
+            newFieldDimensions.goalDepth = msg.goal_depth;
+            newFieldDimensions.border = msg.boundary_width;
+
+            let getDims = function(rectangleCorners: Point[]): [number, number] {
+                const firstPoint = rectangleCorners[0];
 
                 // find the opposite corner
-                let second_point: Point;
-                for (let i = 1; i < rectangle_corners.length; i++) {
-                    second_point = rectangle_corners[i];
-                    if (first_point.x != second_point.x && first_point.y != second_point.y) {
+                let secondPoint: Point;
+                for (let i = 1; i < rectangleCorners.length; i++) {
+                    secondPoint = rectangleCorners[i];
+                    if (firstPoint.x != secondPoint.x && firstPoint.y != secondPoint.y) {
                         break;
                     }
                 }
 
-                const dim_1 = Math.abs(first_point.x - second_point.x);
-                const dim_2 = Math.abs(first_point.y - second_point.y);
+                const dim1 = Math.abs(firstPoint.x - secondPoint.x);
+                const dim2 = Math.abs(firstPoint.y - secondPoint.y);
 
-                return [Math.min(dim_1, dim_2), Math.max(dim_1, dim_2)]
+                return [Math.min(dim1, dim2), Math.max(dim1, dim2)]
             }
 
             if (msg.ours.defense_area_corners.points.length) {
-                const defense_dims = get_dims(msg.ours.defense_area_corners.points);
-                world.field.fieldDimensions.penaltyShort = defense_dims[0];
-                world.field.fieldDimensions.penaltyLong = defense_dims[1];
+                const defenseDims = getDims(msg.ours.defense_area_corners.points);
+                newFieldDimensions.penaltyShort = defenseDims[0];
+                newFieldDimensions.penaltyLong = defenseDims[1];
             }
 
             if (msg.ours.goal_corners.points.length) {
-                const goal_dims = get_dims(msg.ours.goal_corners.points);
-                world.field.fieldDimensions.goalDepth = goal_dims[0];
-                world.field.fieldDimensions.goalWidth = goal_dims[1];
+                const goalDims = getDims(msg.ours.goal_corners.points);
+                newFieldDimensions.goalDepth = goalDims[0];
+                newFieldDimensions.goalWidth = goalDims[1];
             }
 
+            world.field.fieldDimensions = newFieldDimensions;
             world.ignoreSide = msg.ignore_side;
         }
     }

@@ -131,6 +131,8 @@ export function updateRobot(robot: Robot, container: PIXI.Container, renderConfi
 }
 
 export function drawRobot(robot: Robot, container: PIXI.Container, renderConfig: RenderConfig) {
+    const robot_name = robot.team + "_robot" + robot.id;
+
     const scale = renderConfig.scale;
     const radius = .09;
     const sr = scale*radius;
@@ -138,8 +140,15 @@ export function drawRobot(robot: Robot, container: PIXI.Container, renderConfig:
     const start = (-50/180)*Math.PI;
     const end =  (230/180)*Math.PI;
 
-    const robotContainer = new PIXI.Container();
-    robotContainer.eventMode = "dynamic";
+
+    let robotContainer = container.getChildByName(robot_name) as PIXI.Container;
+    if (!robotContainer) {
+        robotContainer = new PIXI.Container();
+        robotContainer.name = robot_name;
+        robotContainer.eventMode = "dynamic";
+    } else {
+        robotContainer.removeChildren();
+    }
 
     // Could possibly improve caching by using RenderTexture instead
     const graphic = new PIXI.Graphics();
@@ -168,6 +177,9 @@ export function drawRobot(robot: Robot, container: PIXI.Container, renderConfig:
     robotContainer.addChild(text);
     robotContainer.visible = robot.visible;
 
+    const oldContainer = container.getChildByName(robotContainer.name);
+    if (oldContainer) {
+        container.removeChild(oldContainer);
+    }
     container.addChild(robotContainer);
-}   
-
+}

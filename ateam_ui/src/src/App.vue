@@ -1,38 +1,37 @@
 <template>
     <v-app>
-        <v-app-bar app ref="Top Bar" color="#cbb26b" density="compact">
-            <v-app-bar-title> ATeam UI </v-app-bar-title>
+        <v-app-bar app ref="Top Bar" color="ateam-color" density="compact">
+            <v-app-bar-title class="flex-0-0" v-text="'Ateam UI'" style="text-wrap-mode:nowrap;"/>
+            <MenuBarComponent/>
         </v-app-bar>
         <v-main>
             <v-container fluid class="d-inline-flex justify-space-between">
-            <v-row class="flex-nowrap">
-                <v-col class="flex-grow-0 flex-shrink-0">
+            <v-row class>
+                <v-col class="flex-grow-0 flex-shrink-0" style="min-width:12vw">
                     <GoaliePickerComponent/>
                     <FieldSideComponent/>
                     <RefButtonsComponent v-if="!state.comp" />
                 </v-col>
-                <v-col class="flex-grow-0 flex-shrink-0">
-                    <StatusComponent ref="robotStatus"/>
-                </v-col>
+                <StatusComponent ref="robotStatus"/>
                 <v-col class="flex-grow-1 flex-shrink-1" style="height: auto">
                     <HistoryComponent ref="historyComponent"/>
                     <GameStatusComponent ref="refStatus"/>
                     <FieldComponent ref="mainField" class="ma-2 pa-2"/>
                 </v-col>
-                <v-col class="flex-grow-0 flex-shrink-0 justify-center" style="max-width:15vw; min-width:17em">
+                <v-col class="flex-grow-0 flex-shrink-0 justify-center" style="max-width:18vw; min-width:18vw">
                     <v-card>
                         <v-tabs v-model="tab" show-arrows="false">
-                            <v-tab value="data_tree">Data Tree</v-tab>
-                            <v-tab value="play_book">Play List</v-tab>
+                            <v-tab value="dataTree">Data Tree</v-tab>
+                            <v-tab value="playBook">Play List</v-tab>
                         </v-tabs>
 
                         <v-card-text>
                             <v-window v-model="tab">
-                                <v-window-item value="data_tree">
+                                <v-window-item value="dataTree">
                                     <AIComponent ref="AIStatus"/>
                                 </v-window-item>
 
-                                <v-window-item value="play_book">
+                                <v-window-item value="playBook">
                                     <PlaybookComponent ref="Play Book"/>
                                 </v-window-item>
                             </v-window>
@@ -49,15 +48,16 @@
 <script lang="ts">
 import { AppState } from "@/state";
 
-import FieldComponent from './components/FieldComponent.vue'
-import StatusComponent from './components/StatusComponent.vue'
-import RefButtonsComponent from './components/RefButtonsComponent.vue'
-import GameStatusComponent from './components/GameStatusComponent.vue'
-import AIComponent from './components/AIComponent.vue'
-import PlaybookComponent from './components/PlaybookComponent.vue'
-import FieldSideComponent from './components/FieldSideComponent.vue'
-import GoaliePickerComponent from './components/GoaliePickerComponent.vue'
-import HistoryComponent from './components/HistoryComponent.vue'
+import FieldComponent from "./components/FieldComponent.vue";
+import StatusComponent from "./components/StatusComponent.vue";
+import RefButtonsComponent from "./components/RefButtonsComponent.vue";
+import GameStatusComponent from "./components/GameStatusComponent.vue";
+import AIComponent from "./components/AIComponent.vue";
+import PlaybookComponent from "./components/PlaybookComponent.vue";
+import FieldSideComponent from "./components/FieldSideComponent.vue";
+import GoaliePickerComponent from "./components/GoaliePickerComponent.vue";
+import HistoryComponent from "./components/HistoryComponent.vue";
+import MenuBarComponent from "./components/MenuBarComponent.vue";
 
 export default {
     data() {
@@ -82,24 +82,14 @@ export default {
         // Renders field at 100fps
         updateField: function() {
 
-            // Hack for testing, need to find a better way to trigger update when kenobi is not available
-            const timestamp = Date.now();
-            this.state.realtimeWorld.timestamp = timestamp;
+            if (!this.state.useKenobi) {
+                this.state.realtimeWorld.timestamp = Date.now();
+                this.state.updateHistory()
+            }
 
-            // Only store history while we are unpausued
+            // Only render while unpaused, HistoryComponent will handle field rendering while not in realtime
             if (this.state.selectedHistoryFrame == -1) {
-                // Only render while unpaused, HistoryComponent will handle field rendering while not in realtime
                 this.$refs.mainField.update();
-
-                this.state.historyEndIndex++;
-                if (this.state.worldHistory.length < 100000) {
-                    this.state.worldHistory.push(structuredClone(this.state.world.__v_raw));
-                } else {
-                    if (this.state.historyEndIndex >= this.state.worldHistory.length) {
-                        this.state.historyEndIndex = 0;
-                    }
-                    this.state.worldHistory[this.state.historyEndIndex] = structuredClone(this.state.world.__v_raw);
-                }
             }
         },
         updateStatus: function() {
@@ -129,7 +119,8 @@ export default {
         PlaybookComponent,
         FieldSideComponent,
         GoaliePickerComponent,
-        HistoryComponent
+        HistoryComponent,
+        MenuBarComponent
     }
 }
 </script>
