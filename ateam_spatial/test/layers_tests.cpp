@@ -18,11 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_spatial/placeholder.hpp"
+#include <gtest/gtest.h>
+#include <ateam_spatial/layers.hpp>
 
-namespace ateam_spatial
+TEST(LayersTests, DistanceDownField)
 {
+  SpatialSettings settings;
+  settings.resolution = 0.001;
 
-extern "C" void cuda_hello();
+  FieldDimensions field;
+  field.field_length = 16.0;
+  field.field_width = 9.0;
+  field.boundary_width = 0.3;
+  field.defense_area_width = 2.0;
+  field.defense_area_depth = 1.0;
+  field.goal_width = 1.0;
+  field.goal_depth = 0.1;
 
-}  // namespace ateam_spatial
+  EXPECT_FLOAT_EQ(DistanceDownField(0, field, settings), 0.0);
+  EXPECT_FLOAT_EQ(DistanceDownField(8300, field, settings), 8.3);
+  EXPECT_FLOAT_EQ(DistanceDownField(16600, field, settings), 16.6);
+}

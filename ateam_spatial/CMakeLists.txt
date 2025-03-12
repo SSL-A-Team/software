@@ -7,8 +7,8 @@ find_package(ament_cmake REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
+  src/layers.cu
   src/placeholder_cuda.cu
-  src/placeholder.cpp
 )
 target_include_directories(${PROJECT_NAME}
   PUBLIC
