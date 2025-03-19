@@ -45,9 +45,9 @@ struct World
   std::array<Robot, 16> our_robots;
   std::array<Robot, 16> their_robots;
 
-  bool in_play;
-  bool our_penalty;
-  bool their_penalty;
+  bool in_play = false;
+  bool our_penalty = false;
+  bool their_penalty = false;
 
   int ignore_side = 0;
 

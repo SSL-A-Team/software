@@ -24,6 +24,9 @@
 #include "types.hpp"
 #include "cuda_hostdev.hpp"
 
+namespace ateam_spatial
+{
+
 CUDA_HOSTDEV inline float WorldWidthReal(const FieldDimensions & field)
 {
   return field.field_length + (2.0 * field.boundary_width);
@@ -66,5 +69,7 @@ CUDA_HOSTDEV inline int RealToSpatialDist(const float d, const SpatialSettings &
 {
   return static_cast<int>(d / settings.resolution);
 }
+
+}  // namespace ateam_spatial
 
 #endif  // ATEAM_SPATIAL__COORDINATE_CONVERSIONS_HPP_

@@ -26,6 +26,7 @@
 #include "gpu_array.hpp"
 #include "gpu_object.hpp"
 #include "gpu_multibuffer.hpp"
+#include "gpu_vector.hpp"
 #include "types.hpp"
 #include "map_id.hpp"
 
@@ -42,9 +43,13 @@ namespace ateam_spatial
                     const std::array<Robot, 16> &our_bots,
                     const std::array<Robot, 16> &their_bots);
 
-    void CopyMapBuffer(const MapId & map, std::vector<float> & destination);
+    void CopyMapBuffer(const MapId map, std::vector<float> & destination);
 
-    void RenderMapBuffer(const MapId & map, std::vector<uint8_t> & destination);
+    void RenderMapBuffer(const MapId map, std::vector<uint8_t> & destination);
+
+    const SpatialSettings & GetSettings() const {
+      return settings_;
+    }
 
   private:
     SpatialSettings settings_;
@@ -55,8 +60,17 @@ namespace ateam_spatial
     GpuArray<Robot, 16> gpu_our_bots_;
     GpuArray<Robot, 16> gpu_their_bots_;
     GpuMultibuffer<float> gpu_map_buffers_;
+    GpuVector<uint8_t> gpu_render_buffer_;
 
     void UpdateBufferSizes(const FieldDimensions &field);
+
+    struct MinMaxLocResult {
+      float min_value;
+      float max_value;
+      std::size_t min_index;
+      std::size_t max_index;
+    };
+    MinMaxLocResult GetMinMaxLoc(const MapId map);
   };
 
 } // namespace ateam_spatial

@@ -84,6 +84,10 @@ public:
   void drawHeatmap(
     const std::string & name, const ateam_geometry::Rectangle & bounds,
     const cv::Mat & data, const cv::Mat & alpha, const uint32_t lifetime = kDefaultLifetime);
+  
+  void drawHeatmap(
+    const std::string & name, const ateam_geometry::Rectangle & bounds,
+    const std::vector<uint8_t> & data, const std::size_t resolution_width, const std::size_t resolution_height, const uint8_t alpha = 255, const uint32_t lifetime = kDefaultLifetime);
 
 private:
   static const uint32_t kDefaultLifetime = 200;

@@ -31,8 +31,8 @@ extern "C" {
 namespace ateam_spatial
 {
 
-__global__ void render_kernel(const MapId map, const SpatialSettings * settings, const float * map_buffers,
-                              const std::size_t map_count, const std::size_t map_buffer_size,
+__global__ void render_kernel(const float * input_buffer, const std::size_t buffer_size,
+                              const float min_value, const float max_value,
                               uint8_t * output_buffer);
 
 }  // namespace ateam_spatial

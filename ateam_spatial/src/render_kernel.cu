@@ -20,32 +20,21 @@
 
 #include "ateam_spatial/render_kernel.hpp"
 #include <cstdio>
+#include <cmath>
 
 namespace ateam_spatial
 {
 
-__global__ void render_kernel(const MapId map, const SpatialSettings * settings, const float * map_buffers,
-                              const std::size_t map_count, const std::size_t map_buffer_size,
+__global__ void render_kernel(const float * input_buffer, const std::size_t buffer_size,
+                              const float min_value, const float max_value,
                               uint8_t * output_buffer)
 {
-  if(map_count != static_cast<std::size_t>(MapId::MapCount)) {
-    printf("update_maps_kernel(): map_count does not match expected value.");
+  const auto index = (blockIdx.x * blockDim.x) + threadIdx.x;
+  if(index >= buffer_size) {
     return;
   }
 
-  const auto map_index = static_cast<std::size_t>(map);
-
-  const auto spatial_x = (blockIdx.x * blockDim.x) + threadIdx.x;
-  const auto spatial_y = (blockIdx.y * blockDim.y) + threadIdx.y;
-  if(spatial_x >= settings->width || spatial_y >= settings->height) {
-    return;
-  }
-
-  const auto map_buffer_index = (spatial_y * settings->width) + spatial_x;
-  const auto input_buffer_index = (map_index * map_buffer_size) + map_buffer_index;
-
-  // TODO(barulicm): How to efficiently find the max value for scaling?
-  output_buffer[map_buffer_index] = map_buffers[input_buffer_index] * (256 / 16.0);
+  output_buffer[index] = (input_buffer[index] - min_value) * (255 / (max_value - min_value));
 }
 
 }  // namespace ateam_spatial

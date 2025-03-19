@@ -23,10 +23,10 @@
 
 TEST(CooridinateConversionsTests, BasicTest)
 {
-  SpatialSettings settings;
+  ateam_spatial::SpatialSettings settings;
   settings.resolution = 0.001;
 
-  FieldDimensions field;
+  ateam_spatial::FieldDimensions field;
   field.field_length = 16.0;
   field.field_width = 9.0;
   field.boundary_width = 0.3;

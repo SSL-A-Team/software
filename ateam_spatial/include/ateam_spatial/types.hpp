@@ -21,6 +21,9 @@
 #ifndef ATEAM_SPATIAL__TYPES_HPP_
 #define ATEAM_SPATIAL__TYPES_HPP_
 
+namespace ateam_spatial
+{
+
 struct Robot
 {
   bool visible = false;
@@ -77,5 +80,7 @@ struct SpatialSettings
   std::size_t width = 0;
   std::size_t height = 0;
 };
+
+}  // namespace ateam_spatial
 
 #endif  // ATEAM_SPATIAL__TYPES_HPP_

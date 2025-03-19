@@ -114,6 +114,11 @@ public:
     return reinterpret_cast<T *>(gpu_memory_);
   }
 
+  T * Get(std::size_t index)
+  {
+    return GetBufferStartPointer(index);
+  }
+
   std::size_t BufferCount() const
   {
     return buffer_count_;

@@ -53,7 +53,7 @@
 #include "core/defense_area_enforcement.hpp"
 #include "core/spatial/spatial_evaluator.hpp"
 #include "core/joystick_enforcer.hpp"
-#include <ateam_spatial/placeholder.hpp>
+#include <ateam_spatial/spatial_evaluator.hpp>
 
 namespace ateam_kenobi
 {
@@ -152,8 +152,6 @@ public:
     }
 
     RCLCPP_INFO(get_logger(), "Kenobi node ready.");
-
-    ateam_spatial::cuda_hello();
   }
 
   ~KenobiNode()
@@ -169,6 +167,8 @@ private:
   DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
   spatial::SpatialEvaluator spatial_evaluator_;
+  ateam_spatial::SpatialEvaluator gpu_spatial_evaluator_;
+  std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
@@ -380,6 +380,7 @@ private:
     in_play_eval_.Update(world_);
     double_touch_eval_.update(world_);
     spatial_evaluator_.Update(world_);
+    UpdateSpatialEvaluator();
     if (get_parameter("use_emulated_ballsense").as_bool()) {
       ballsense_emulator_.Update(world_);
     }
@@ -463,6 +464,41 @@ private:
     }
 
     return cache_dir;
+  }
+
+  void UpdateSpatialEvaluator()
+  {
+    ateam_spatial::FieldDimensions field{
+      world_.field.field_width,
+      world_.field.field_length,
+      world_.field.goal_width,
+      world_.field.goal_depth,
+      world_.field.boundary_width,
+      world_.field.defense_area_width,
+      world_.field.defense_area_depth
+    };
+    ateam_spatial::Ball ball{
+      static_cast<float>(world_.ball.pos.x()),
+      static_cast<float>(world_.ball.pos.y()),
+      static_cast<float>(world_.ball.vel.x()),
+      static_cast<float>(world_.ball.vel.y())
+    };
+    auto make_spatial_robot = [](const Robot & robot){
+        return ateam_spatial::Robot{
+        robot.visible,
+        static_cast<float>(robot.pos.x()),
+        static_cast<float>(robot.pos.y()),
+        static_cast<float>(robot.theta),
+        static_cast<float>(robot.vel.x()),
+        static_cast<float>(robot.vel.y()),
+        static_cast<float>(robot.omega)
+        };
+      };
+    std::array<ateam_spatial::Robot, 16> our_robots;
+    std::ranges::transform(world_.our_robots, our_robots.begin(), make_spatial_robot);
+    std::array<ateam_spatial::Robot, 16> their_robots;
+    std::ranges::transform(world_.their_robots, their_robots.begin(), make_spatial_robot);
+    gpu_spatial_evaluator_.UpdateMaps(field, ball, our_robots, their_robots);
   }
 };
 

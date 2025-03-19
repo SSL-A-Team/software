@@ -27,7 +27,7 @@ TEST(SpatialEvaluatorTests, Basic)
   using ateam_spatial::MapId;
   SpatialEvaluator eval;
 
-  FieldDimensions field;
+  ateam_spatial::FieldDimensions field;
   field.field_length = 16.0;
   field.field_width = 9.0;
   field.boundary_width = 0.3;
@@ -36,11 +36,11 @@ TEST(SpatialEvaluatorTests, Basic)
   field.goal_width = 1.0;
   field.goal_depth = 0.1;
 
-  Ball ball;
+  ateam_spatial::Ball ball;
 
-  std::array<Robot, 16> our_bots;
+  std::array<ateam_spatial::Robot, 16> our_bots;
 
-  std::array<Robot, 16> their_bots;
+  std::array<ateam_spatial::Robot, 16> their_bots;
 
   eval.UpdateMaps(field, ball, our_bots, their_bots);
 
@@ -48,10 +48,10 @@ TEST(SpatialEvaluatorTests, Basic)
 
   eval.CopyMapBuffer(MapId::ReceiverPositionQuality, buffer_out);
 
-  EXPECT_EQ(buffer_out.size(), 159360000);
+  EXPECT_EQ(buffer_out.size(), 1'593'600);
 
   std::vector<uint8_t> rendered_buffer;
   eval.RenderMapBuffer(MapId::ReceiverPositionQuality, rendered_buffer);
 
-  EXPECT_EQ(rendered_buffer.size(), 159360000);
+  EXPECT_EQ(rendered_buffer.size(), 1'593'600);
 }

@@ -54,6 +54,9 @@ SpatialEvaluator::SpatialEvaluator()
 
 void SpatialEvaluator::Update(World & world)
 {
+  if(std::abs(world.field.field_length * world.field.field_width) < 1e-2) {
+    return;
+  }
   BuildLayers(world);
   BuildMaps(world);
 }

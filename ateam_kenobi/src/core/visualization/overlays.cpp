@@ -302,6 +302,29 @@ void Overlays::drawHeatmap(
   addOverlay(msg);
 }
 
+
+void Overlays::drawHeatmap(
+  const std::string & name, const ateam_geometry::Rectangle & bounds,
+  const std::vector<uint8_t> & data, const std::size_t resolution_width, const std::size_t resolution_height, const uint8_t alpha, const uint32_t lifetime)
+{
+  ateam_msgs::msg::Overlay msg;
+  msg.ns = ns_;
+  msg.name = name;
+  msg.visible = true;
+  msg.type = ateam_msgs::msg::Overlay::HEATMAP;
+  msg.command = ateam_msgs::msg::Overlay::REPLACE;
+  msg.lifetime = lifetime;
+  msg.position.x = std::midpoint(bounds.xmin(), bounds.xmax());
+  msg.position.y = std::midpoint(bounds.ymin(), bounds.ymax());
+  msg.scale.x = bounds.xmax() - bounds.xmin();
+  msg.scale.y = bounds.ymax() - bounds.ymin();
+  msg.heatmap_resolution_width = resolution_width;
+  msg.heatmap_resolution_height = resolution_height;
+  msg.heatmap_alpha = {alpha};
+  msg.heatmap_data = data;
+  addOverlay(msg);
+}
+
 void Overlays::addOverlay(ateam_msgs::msg::Overlay overlay)
 {
   if (overlay_array_) {

@@ -18,26 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <gtest/gtest.h>
-#include <ateam_spatial/layers/distance_down_field.hpp>
+#ifndef ATEAM_SPATIAL__MIN_MAX_LOC_KERNEL_HPP_
+#define ATEAM_SPATIAL__MIN_MAX_LOC_KERNEL_HPP_
 
-TEST(LayersTests, DistanceDownField)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+namespace ateam_spatial
 {
-  using ateam_spatial::layers::DistanceDownField;
 
-  ateam_spatial::SpatialSettings settings;
-  settings.resolution = 0.001;
+__global__ void min_max_loc_kernel(const float * buffer, const std::size_t buffer_size, float * min_out, float * max_out, std::size_t * min_loc_out, std::size_t * max_loc_out);
 
-  ateam_spatial::FieldDimensions field;
-  field.field_length = 16.0;
-  field.field_width = 9.0;
-  field.boundary_width = 0.3;
-  field.defense_area_width = 2.0;
-  field.defense_area_depth = 1.0;
-  field.goal_width = 1.0;
-  field.goal_depth = 0.1;
+}  // namespace ateam_spatial
 
-  EXPECT_FLOAT_EQ(DistanceDownField(0, field, settings), 0.0);
-  EXPECT_FLOAT_EQ(DistanceDownField(8300, field, settings), 8.3);
-  EXPECT_FLOAT_EQ(DistanceDownField(16600, field, settings), 16.6);
+#ifdef __cplusplus
 }
+#endif
+
+#endif  // ATEAM_SPATIAL__MIN_MAX_LOC_KERNEL_HPP_
