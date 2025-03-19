@@ -18,9 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_SPATIAL__UPDATE_MAPS_KERNEL_HPP_
-#define ATEAM_SPATIAL__UPDATE_MAPS_KERNEL_HPP_
+#ifndef ATEAM_SPATIAL__RENDER_KERNEL_HPP_
+#define ATEAM_SPATIAL__RENDER_KERNEL_HPP_
 
+#include "map_id.hpp"
 #include "types.hpp"
 
 #ifdef __cplusplus
@@ -30,11 +31,9 @@ extern "C" {
 namespace ateam_spatial
 {
 
-__global__ void update_maps_kernel(const SpatialSettings * spatial_settings,
-                                   const FieldDimensions * field_dimensions, const Ball * ball,
-                                   const Robot * our_bots, const Robot * their_bots,
-                                   float * map_buffers, const std::size_t map_count,
-                                   const std::size_t map_buffer_size);
+__global__ void render_kernel(const MapId map, const SpatialSettings * settings, const float * map_buffers,
+                              const std::size_t map_count, const std::size_t map_buffer_size,
+                              uint8_t * output_buffer);
 
 }  // namespace ateam_spatial
 

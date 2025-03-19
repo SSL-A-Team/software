@@ -18,28 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_SPATIAL__UPDATE_MAPS_KERNEL_HPP_
-#define ATEAM_SPATIAL__UPDATE_MAPS_KERNEL_HPP_
-
-#include "types.hpp"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "ateam_spatial/render_kernel.hpp"
+#include <cstdio>
 
 namespace ateam_spatial
 {
 
-__global__ void update_maps_kernel(const SpatialSettings * spatial_settings,
-                                   const FieldDimensions * field_dimensions, const Ball * ball,
-                                   const Robot * our_bots, const Robot * their_bots,
-                                   float * map_buffers, const std::size_t map_count,
-                                   const std::size_t map_buffer_size);
+__global__ void render_kernel(const MapId map, const SpatialSettings * settings, const float * map_buffers,
+                              const std::size_t map_count, const std::size_t map_buffer_size,
+                              uint8_t * output_buffer)
+{
+  if(map_count != static_cast<std::size_t>(MapId::MapCount)) {
+    printf("update_maps_kernel(): map_count does not match expected value.");
+    return;
+  }
+
+  const auto map_index = static_cast<std::size_t>(map);
+
+  const auto spatial_x = (blockIdx.x * blockDim.x) + threadIdx.x;
+  const auto spatial_y = (blockIdx.y * blockDim.y) + threadIdx.y;
+  if(spatial_x >= settings->width || spatial_y >= settings->height) {
+    return;
+  }
+
+  const auto map_buffer_index = (spatial_y * settings->width) + spatial_x;
+  const auto input_buffer_index = (map_index * map_buffer_size) + map_buffer_index;
+
+  // TODO(barulicm): How to efficiently find the max value for scaling?
+  output_buffer[map_buffer_index] = map_buffers[input_buffer_index] * (256 / 16.0);
+}
 
 }  // namespace ateam_spatial
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif  // ATEAM_SPATIAL__UPDATE_MAPS_KERNEL_HPP_

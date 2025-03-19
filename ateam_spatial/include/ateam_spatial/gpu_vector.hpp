@@ -35,9 +35,10 @@ namespace ateam_spatial
 template<typename T>
 class GpuVector {
 public:
-  GpuVector()
+  explicit GpuVector(const std::size_t size = 0)
   {
     assert(std::is_trivial_v<T>);
+    AllocateGpuMemory(size);
   }
 
   GpuVector(const GpuVector<T> &) = delete;

@@ -18,28 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_SPATIAL__UPDATE_MAPS_KERNEL_HPP_
-#define ATEAM_SPATIAL__UPDATE_MAPS_KERNEL_HPP_
+#ifndef ATEAM_SPATIAL__MAP_ID_HPP_
+#define ATEAM_SPATIAL__MAP_ID_HPP_
 
-#include "types.hpp"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <cstdint>
 
 namespace ateam_spatial
 {
-
-__global__ void update_maps_kernel(const SpatialSettings * spatial_settings,
-                                   const FieldDimensions * field_dimensions, const Ball * ball,
-                                   const Robot * our_bots, const Robot * their_bots,
-                                   float * map_buffers, const std::size_t map_count,
-                                   const std::size_t map_buffer_size);
+  
+enum class MapId : std::size_t {
+  ReceiverPositionQuality = 0,
+  MapCount
+};
 
 }  // namespace ateam_spatial
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif  // ATEAM_SPATIAL__UPDATE_MAPS_KERNEL_HPP_
+#endif  // ATEAM_SPATIAL__MAP_ID_HPP_

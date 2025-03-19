@@ -58,7 +58,6 @@ public:
         throw std::runtime_error(std::string("cudaMalloc failed: ") + cudaGetErrorString(ret));
       }
     }
-    std::cerr << "GpuMultibuffer  gpu_memory_ = " << (int64_t)gpu_memory_ << std::endl;
     {
       const auto ret = cudaMemset(gpu_memory_, 0, total_byte_size);
       if(ret != cudaSuccess) {
@@ -87,7 +86,6 @@ public:
     if(gpu_memory_ == nullptr) {
       return;
     }
-    std::cerr << "~GpuMultibuffer  gpu_memory_ = " << (int64_t)gpu_memory_ << std::endl;
     const auto ret = cudaFree(gpu_memory_);
     if(ret != cudaSuccess) {
       std::cerr << "cudaFree failed: " << cudaGetErrorString(ret) << std::endl;
@@ -148,10 +146,6 @@ public:
   {
     auto buffer_ptr = GetBufferStartPointer(buffer_index);
     values.resize(buffer_size_);
-
-    std::cerr << "gpu_memory_ = " << (int64_t)gpu_memory_ << std::endl;
-    std::cerr << "buffer_ptr = " << (int64_t)buffer_ptr << std::endl;
-    std::cerr << "values.data() = " << (int64_t)values.data() << std::endl;
 
     const auto ret = cudaMemcpy(values.data(), buffer_ptr, buffer_size_ * sizeof(T),
         cudaMemcpyDeviceToHost);

@@ -27,6 +27,7 @@
 #include "gpu_object.hpp"
 #include "gpu_multibuffer.hpp"
 #include "types.hpp"
+#include "map_id.hpp"
 
 namespace ateam_spatial
 {
@@ -34,11 +35,6 @@ namespace ateam_spatial
   class SpatialEvaluator
   {
   public:
-    enum class Maps : std::size_t {
-      ReceiverPositionQuality = 0,
-      MapCount
-    };
-
     SpatialEvaluator();
 
     void UpdateMaps(const FieldDimensions &field,
@@ -46,11 +42,14 @@ namespace ateam_spatial
                     const std::array<Robot, 16> &our_bots,
                     const std::array<Robot, 16> &their_bots);
 
-    void CopyMapBuffer(const Maps & map, std::vector<float> & destination);
+    void CopyMapBuffer(const MapId & map, std::vector<float> & destination);
+
+    void RenderMapBuffer(const MapId & map, std::vector<uint8_t> & destination);
 
   private:
     SpatialSettings settings_;
     FieldDimensions cached_filed_dims_;
+    GpuObject<SpatialSettings> gpu_spatial_settings_;
     GpuObject<FieldDimensions> gpu_field_dims_;
     GpuObject<Ball> gpu_ball_;
     GpuArray<Robot, 16> gpu_our_bots_;

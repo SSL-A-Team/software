@@ -74,6 +74,8 @@ struct FieldDimensions
 struct SpatialSettings
 {
   float resolution = 0.0;  // m / px
+  std::size_t width = 0;
+  std::size_t height = 0;
 };
 
 #endif  // ATEAM_SPATIAL__TYPES_HPP_

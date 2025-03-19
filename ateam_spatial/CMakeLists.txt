@@ -10,6 +10,7 @@ add_library(${PROJECT_NAME} SHARED
   src/layers/distance_down_field.cu
   src/maps/receiver_position_quality.cu
   src/placeholder_cuda.cu
+  src/render_kernel.cu
   src/spatial_evaluator.cu
   src/update_maps_kernel.cu
 )

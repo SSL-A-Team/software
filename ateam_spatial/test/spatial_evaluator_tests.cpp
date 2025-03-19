@@ -24,6 +24,7 @@
 TEST(SpatialEvaluatorTests, Basic)
 {
   using ateam_spatial::SpatialEvaluator;
+  using ateam_spatial::MapId;
   SpatialEvaluator eval;
 
   FieldDimensions field;
@@ -45,7 +46,12 @@ TEST(SpatialEvaluatorTests, Basic)
 
   std::vector<float> buffer_out;
 
-  eval.CopyMapBuffer(SpatialEvaluator::Maps::ReceiverPositionQuality, buffer_out);
+  eval.CopyMapBuffer(MapId::ReceiverPositionQuality, buffer_out);
 
   EXPECT_EQ(buffer_out.size(), 159360000);
+
+  std::vector<uint8_t> rendered_buffer;
+  eval.RenderMapBuffer(MapId::ReceiverPositionQuality, rendered_buffer);
+
+  EXPECT_EQ(rendered_buffer.size(), 159360000);
 }
