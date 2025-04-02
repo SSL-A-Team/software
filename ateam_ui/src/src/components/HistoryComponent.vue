@@ -132,7 +132,7 @@ export default {
             }
 
             if (!this.state.historyReplayIsPaused) {
-                if (this.state.selectedHistoryFrame >= this.state.worldHistory.length && this.playbackSpeed >= 0) {
+                if (this.state.selectedHistoryFrame >= this.state.worldHistory.length - 1 && this.playbackSpeed >= 0) {
                     this.state.historyReplayIsPaused = true;
                 } else if (this.state.selectedHistoryFrame <= 0 && this.playbackSpeed <= 0) {
                     this.state.historyReplayIsPaused = true;
