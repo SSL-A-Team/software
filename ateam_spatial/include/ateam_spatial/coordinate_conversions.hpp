@@ -70,6 +70,16 @@ CUDA_HOSTDEV inline int RealToSpatialDist(const float d, const SpatialSettings &
   return static_cast<int>(d / settings.resolution);
 }
 
+CUDA_HOSTDEV inline int RealToSpatialX(const float x, const FieldDimensions & field, const SpatialSettings & settings)
+{
+  return (x + (WorldWidthReal(field) / 2.f)) / settings.resolution;
+}
+
+CUDA_HOSTDEV inline int RealToSpatialY(const float x, const FieldDimensions & field, const SpatialSettings & settings)
+{
+  return (x + (WorldHeightReal(field) / 2.f)) / settings.resolution;
+}
+
 }  // namespace ateam_spatial
 
 #endif  // ATEAM_SPATIAL__COORDINATE_CONVERSIONS_HPP_

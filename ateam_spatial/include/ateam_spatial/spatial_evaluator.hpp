@@ -51,6 +51,10 @@ namespace ateam_spatial
       return settings_;
     }
 
+    Point GetMaxLocation(const MapId map);
+
+    float GetValueAtLocation(const MapId map, const Point & location);
+
   private:
     SpatialSettings settings_;
     FieldDimensions cached_filed_dims_;

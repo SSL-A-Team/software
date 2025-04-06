@@ -24,6 +24,12 @@
 namespace ateam_spatial
 {
 
+struct Point
+{
+  float x;
+  float y;
+};
+
 struct Robot
 {
   bool visible = false;

@@ -159,6 +159,18 @@ public:
     }
   }
 
+  T CopyValueFromGpu(const std::size_t buffer_index, const std::size_t value_index)
+  {
+    auto buffer_ptr = GetBufferStartPointer(buffer_index);
+    buffer_ptr += value_index;
+    float dest = 0.f;
+    const auto ret = cudaMemcpy(&dest, buffer_ptr, 1, cudaMemcpyDeviceToHost);
+    if(ret != cudaSuccess) {
+      throw std::runtime_error(std::string("cudaMemcpy failed: ") + cudaGetErrorString(ret));
+    }
+    return dest;
+  }
+
 private:
   void * gpu_memory_ = nullptr;
   std::size_t buffer_count_ = 0;

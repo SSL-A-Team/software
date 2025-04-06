@@ -87,6 +87,30 @@ void SpatialEvaluator::RenderMapBuffer(const MapId map, std::vector<uint8_t> & d
   gpu_render_buffer_.CopyFromGpu(destination);
 }
 
+Point SpatialEvaluator::GetMaxLocation(const MapId map)
+{
+  if(settings_.height * settings_.width == 0) {
+    return Point{0.f,0.f};
+  }
+  const auto min_max_loc = GetMinMaxLoc(map);
+  const auto max_y = min_max_loc.max_index / settings_.width;
+  const auto max_x = min_max_loc.max_index % settings_.width;
+  return Point{
+    SpatialToRealX(max_x, cached_filed_dims_, settings_),
+    SpatialToRealY(max_y, cached_filed_dims_, settings_)
+  };
+}
+
+float SpatialEvaluator::GetValueAtLocation(const MapId map, const Point & location)
+{
+  if(settings_.height * settings_.width == 0) {
+    return 0.f;
+  }
+  const auto index = (RealToSpatialY(location.y, cached_filed_dims_, settings_) * settings_.width)
+                      + RealToSpatialX(location.x, cached_filed_dims_, settings_);
+  return gpu_map_buffers_.CopyValueFromGpu(static_cast<std::size_t>(MapId::ReceiverPositionQuality), index);
+}
+
 void SpatialEvaluator::UpdateBufferSizes(const FieldDimensions &field)
 {
   if(field == cached_filed_dims_) {

@@ -71,6 +71,8 @@ public:
     joystick_enforcer_(*this),
     game_controller_listener_(*this)
   {
+    world_.spatial_evaluator = &gpu_spatial_evaluator_;
+    
     initialize_robot_ids();
 
     declare_parameter<bool>("use_world_velocities", false);
@@ -161,13 +163,13 @@ public:
   }
 
 private:
+  ateam_spatial::SpatialEvaluator gpu_spatial_evaluator_;
   World world_;
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
   spatial::SpatialEvaluator spatial_evaluator_;
-  ateam_spatial::SpatialEvaluator gpu_spatial_evaluator_;
   std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
