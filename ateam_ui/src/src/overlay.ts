@@ -185,7 +185,6 @@ export function drawOverlay(overlay: Overlay, container: PIXI.Container, renderC
                     return
                 }
 
-                console.log("drawing: ", graphicChild);
                 graphicChild.width = scale * overlay.scale.x;
                 graphicChild.height = scale * overlay.scale.y;
                 graphicChild.x = -scale * overlay.scale.x / 2;
