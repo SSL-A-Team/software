@@ -2,7 +2,9 @@
   "include": ["src/**/*", "src/**/*.vue"],
   "compilerOptions": {
     "esModuleInterop": true,
+    "downlevelIteration": true,
     "allowJs":true,
+    "outDir": "resources",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
