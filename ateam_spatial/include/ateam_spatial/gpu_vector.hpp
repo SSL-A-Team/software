@@ -39,12 +39,12 @@ public:
 
   GpuVector()
   {
-    assert(std::is_trivial_v<T>);
+    assert(std::is_trivially_copyable_v<T>);
   }
 
   explicit GpuVector(const std::size_t size)
   {
-    assert(std::is_trivial_v<T>);
+    assert(std::is_trivially_copyable_v<T>);
     AllocateGpuMemory(size);
   }
 

@@ -38,7 +38,7 @@ namespace ateam_spatial
   public:
     GpuObject()
     {
-      assert(std::is_trivial_v<T>);
+      assert(std::is_trivially_copyable_v<T>);
       if(!IsCudaDeviceAvailable()) {
         return;
       }

@@ -47,7 +47,7 @@ public:
   : buffer_count_(buffer_count),
     buffer_size_(buffer_size)
   {
-    assert(std::is_trivial_v<T>);
+    assert(std::is_trivially_copyable_v<T>);
     if(buffer_count == 0 || buffer_size == 0) {
       return;
     }
@@ -167,8 +167,8 @@ public:
   {
     auto buffer_ptr = GetBufferStartPointer(buffer_index);
     buffer_ptr += value_index;
-    float dest = 0.f;
-    const auto ret = cudaMemcpy(&dest, buffer_ptr, 1, cudaMemcpyDeviceToHost);
+    T dest;
+    const auto ret = cudaMemcpy(&dest, buffer_ptr, sizeof(T), cudaMemcpyDeviceToHost);
     if(ret != cudaSuccess) {
       throw std::runtime_error(std::string("cudaMemcpy failed: ") + cudaGetErrorString(ret));
     }

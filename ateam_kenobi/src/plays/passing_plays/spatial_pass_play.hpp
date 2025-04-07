@@ -53,6 +53,7 @@ private:
   skills::LaneIdler idler_skill_;
   ateam_geometry::Point target_;
   bool started_ = false;
+  std::vector<uint8_t> spatial_map_rendering_data_;
 
   play_helpers::lanes::Lane getIdleLane(const World & world);
 };

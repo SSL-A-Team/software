@@ -118,8 +118,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   };
 
   if(getParamInterface().getParameter<bool>("show_heatmap")) {
-    getOverlays().drawHeatmap("heatmap", bounds, world.spatial_maps["ReceiverPositionQuality"].data,
-        world.spatial_maps["ReceiverPositionQuality"].data, 200);
+    world.spatial_evaluator->RenderMapBuffer(spatial_map_id, spatial_map_rendering_data_);
+    const auto spatial_settings = world.spatial_evaluator->GetSettings();
+    getOverlays().drawHeatmap("heatmap", bounds, spatial_map_rendering_data_, spatial_settings.width, spatial_settings.height);
   }
 
   pass_tactic_.setTarget(target_);

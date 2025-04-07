@@ -161,17 +161,19 @@ SpatialEvaluator::MinMaxLocResult SpatialEvaluator::GetMinMaxLoc(const MapId map
   MinMaxLocResult result;
   result.max_value = block_maxs[0];
   result.min_value = block_mins[0];
+  result.min_index = 0;
+  result.max_index = 0;
   for(auto i = 1ul; i < grid_size.x; ++i)
   {
     if(result.max_value < block_maxs[i])
     {
       result.max_value = block_maxs[i];
-      result.max_index = i;
+      result.max_index = block_max_locs[i];
     }
     if(result.min_value > block_mins[i])
     {
       result.min_value = block_mins[i];
-      result.min_index = i;
+      result.min_index = block_min_locs[i];
     }
   }
   return result;
