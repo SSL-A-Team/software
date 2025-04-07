@@ -28,6 +28,7 @@
 #include <vector>
 #include <stdexcept>
 #include <string>
+#include "device_availability.hpp"
 
 namespace ateam_spatial
 {
@@ -119,6 +120,9 @@ private:
   void AllocateGpuMemory(const std::size_t new_size)
   {
     if(new_size == size_) {
+      return;
+    }
+    if(!IsCudaDeviceAvailable()) {
       return;
     }
     FreeGpuMemory();

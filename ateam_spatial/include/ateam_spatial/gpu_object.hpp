@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include "device_availability.hpp"
 
 namespace ateam_spatial
 {
@@ -38,6 +39,9 @@ namespace ateam_spatial
     GpuObject()
     {
       assert(std::is_trivial_v<T>);
+      if(!IsCudaDeviceAvailable()) {
+        return;
+      }
       const auto ret = cudaMalloc(&gpu_memory_, sizeof(T));
       if (ret != cudaSuccess)
       {

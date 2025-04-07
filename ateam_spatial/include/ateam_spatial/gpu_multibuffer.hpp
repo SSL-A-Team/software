@@ -28,6 +28,7 @@
 #include <vector>
 #include <stdexcept>
 #include <string>
+#include "device_availability.hpp"
 
 namespace ateam_spatial
 {
@@ -48,6 +49,9 @@ public:
   {
     assert(std::is_trivial_v<T>);
     if(buffer_count == 0 || buffer_size == 0) {
+      return;
+    }
+    if(!IsCudaDeviceAvailable()) {
       return;
     }
     const auto buffer_byte_size = buffer_size_ * sizeof(T);

@@ -56,6 +56,7 @@ namespace ateam_spatial
     float GetValueAtLocation(const MapId map, const Point & location);
 
   private:
+    bool cuda_device_available_;
     SpatialSettings settings_;
     FieldDimensions cached_filed_dims_;
     GpuObject<SpatialSettings> gpu_spatial_settings_;
@@ -65,6 +66,8 @@ namespace ateam_spatial
     GpuArray<Robot, 16> gpu_their_bots_;
     GpuMultibuffer<float> gpu_map_buffers_;
     GpuVector<uint8_t> gpu_render_buffer_;
+
+    bool IsReady();
 
     void UpdateBufferSizes(const FieldDimensions &field);
 

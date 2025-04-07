@@ -28,6 +28,7 @@
 #include <array>
 #include <stdexcept>
 #include <string>
+#include "device_availability.hpp"
 
 namespace ateam_spatial
 {
@@ -38,6 +39,9 @@ public:
   GpuArray()
   {
     assert(std::is_trivial_v<T>);
+    if(!IsCudaDeviceAvailable()) {
+      return;
+    }
     const auto ret = cudaMalloc(&gpu_memory_, S * sizeof(T));
     if(ret != cudaSuccess) {
       throw std::runtime_error(std::string("cudaMalloc failed: ") + cudaGetErrorString(ret));

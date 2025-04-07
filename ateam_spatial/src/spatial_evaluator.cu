@@ -26,6 +26,7 @@
 #include "ateam_spatial/coordinate_conversions.hpp"
 #include "ateam_spatial/gpu_vector.hpp"
 #include "ateam_spatial/min_max_loc_kernel.hpp"
+#include "ateam_spatial/device_availability.hpp"
 
 namespace ateam_spatial
 {
@@ -33,12 +34,16 @@ namespace ateam_spatial
 SpatialEvaluator::SpatialEvaluator()
 {
   settings_.resolution = 1e-2; // TODO(barulicm): parameterize this
+  cuda_device_available_ = IsCudaDeviceAvailable();
+  if(!cuda_device_available_) {
+    std::cerr << "Could not detect CUDA device. GPU-accelerated spatial code is disabled." << std::endl;
+  }
 }
 
 void SpatialEvaluator::UpdateMaps(const FieldDimensions &field, const Ball &ball, const std::array<Robot, 16> &our_bots, const std::array<Robot, 16> &their_bots)
 {
   UpdateBufferSizes(field);
-  if(settings_.height * settings_.width == 0) {
+  if(!IsReady()) {
     return;
   }
   gpu_spatial_settings_.CopyToGpu(settings_);
@@ -69,7 +74,7 @@ void SpatialEvaluator::CopyMapBuffer(const MapId map, std::vector<float> & desti
 
 void SpatialEvaluator::RenderMapBuffer(const MapId map, std::vector<uint8_t> & destination)
 {
-  if(settings_.height * settings_.width == 0) {
+  if(!IsReady()) {
     return;
   }
   const auto min_max_loc = GetMinMaxLoc(map);
@@ -89,7 +94,7 @@ void SpatialEvaluator::RenderMapBuffer(const MapId map, std::vector<uint8_t> & d
 
 Point SpatialEvaluator::GetMaxLocation(const MapId map)
 {
-  if(settings_.height * settings_.width == 0) {
+  if(!IsReady()) {
     return Point{0.f,0.f};
   }
   const auto min_max_loc = GetMinMaxLoc(map);
@@ -103,12 +108,16 @@ Point SpatialEvaluator::GetMaxLocation(const MapId map)
 
 float SpatialEvaluator::GetValueAtLocation(const MapId map, const Point & location)
 {
-  if(settings_.height * settings_.width == 0) {
+  if(!IsReady()) {
     return 0.f;
   }
   const auto index = (RealToSpatialY(location.y, cached_filed_dims_, settings_) * settings_.width)
                       + RealToSpatialX(location.x, cached_filed_dims_, settings_);
   return gpu_map_buffers_.CopyValueFromGpu(static_cast<std::size_t>(MapId::ReceiverPositionQuality), index);
+}
+
+bool SpatialEvaluator::IsReady() {
+  return cuda_device_available_ && settings_.height != 0 && settings_.width != 0;
 }
 
 void SpatialEvaluator::UpdateBufferSizes(const FieldDimensions &field)
