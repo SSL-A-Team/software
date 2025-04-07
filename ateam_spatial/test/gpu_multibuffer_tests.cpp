@@ -21,9 +21,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <ateam_spatial/gpu_multibuffer.hpp>
+#include "skip_if_no_gpu.hpp"
 
 
 TEST(GpuMultibufferTests, CopyBackAndForth) {
+  SKIP_IF_NO_GPU();
   ateam_spatial::GpuMultibuffer<int> mb(2, 10);
 
   const std::vector<int> in1{1, 3, 5, 7, 9, 11, 13, 15, 17, 19};

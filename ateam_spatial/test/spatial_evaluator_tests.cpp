@@ -20,9 +20,11 @@
 
 #include <gtest/gtest.h>
 #include <ateam_spatial/spatial_evaluator.hpp>
+#include "skip_if_no_gpu.hpp"
 
 TEST(SpatialEvaluatorTests, Basic)
 {
+  SKIP_IF_NO_GPU();
   using ateam_spatial::SpatialEvaluator;
   using ateam_spatial::MapId;
   SpatialEvaluator eval;

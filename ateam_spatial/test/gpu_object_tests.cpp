@@ -20,9 +20,11 @@
 
 #include <gtest/gtest.h>
 #include <ateam_spatial/gpu_object.hpp>
+#include "skip_if_no_gpu.hpp"
 
 
 TEST(GpuObjectTests, CopyBackAndForth) {
+  SKIP_IF_NO_GPU();
   ateam_spatial::GpuObject<int> g(12);
   int out = 0;
   g.CopyFromGpu(out);

@@ -21,9 +21,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <ateam_spatial/gpu_vector.hpp>
+#include "skip_if_no_gpu.hpp"
 
 
 TEST(GpuVectorTests, CopyBackAndForth) {
+  SKIP_IF_NO_GPU();
   const std::vector<int> in{1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
   std::vector<int> out;
 

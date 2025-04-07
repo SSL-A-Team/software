@@ -21,9 +21,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <ateam_spatial/gpu_array.hpp>
+#include "skip_if_no_gpu.hpp"
 
 
 TEST(GpuArrayTests, CopyBackAndForth) {
+  SKIP_IF_NO_GPU();
   const std::array<int, 10> in{0, 2, 4, 6, 8, 10, 12, 14, 16, 18};
   std::array<int, 10> out;
 

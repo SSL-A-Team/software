@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "ateam_spatial/device_availability.hpp"
+#include <cuda_runtime_api.h>
 
 namespace ateam_spatial
 {
