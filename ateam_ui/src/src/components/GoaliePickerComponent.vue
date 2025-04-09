@@ -1,38 +1,41 @@
 <template>
   <v-container class="d-flex flex-column">
     <b>Goalie</b>
-    <p>ID: {{ this.state.getGoalie() }}</p>
+    <p>ID: {{ state.getGoalie() }}</p>
     <v-select v-model="selectedItem" label="set ID" class="flex-grow-0 align-end" :items="Array.from({length: 16}, (value, index) => index)" density="compact" variant="solo" @update:modelValue="setGoalieId"/>
   </v-container>
-  <v-alert title="Set Goalie Failed" :text="this.state.goalie_service_status[1]" type="error" density="compact" :model-value="alert"></v-alert>
+  <v-alert title="Set Goalie Failed" :text="state.goalieServiceStatus[1]" type="error" density="compact" :model-value="alert"></v-alert>
 </template>
 
 <script lang="ts">
+import { inject } from "vue";
+import { AppState } from "@/state";
 
 export default {
   inject: ['state'],
   data() {
     return {
       alert: false,
-      selectedItem: null
+      selectedItem: null,
+      state: inject('state') as AppState
     }
   },
   mounted() {
   },
   methods: {
-    setGoalieId(new_id) {
-      this.state.setGoalie(new_id);
+    setGoalieId(newId: number) {
+      this.state.setGoalie(newId);
     }
   },
   computed: {
-    goalie_service_status: function() {
-      return this.state.goalie_service_status
+    goalieServiceStatus: function() {
+      return this.state.goalieServiceStatus
     }
   },
   watch: {
-    goalie_service_status: {
+    goalieServiceStatus: {
       handler() {
-        if (this.state.goalie_service_status[0]) {
+        if (this.state.goalieServiceStatus[0]) {
           this.alert = false;
         } else {
           this.alert = true;

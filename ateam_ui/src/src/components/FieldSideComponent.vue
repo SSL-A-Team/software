@@ -8,7 +8,7 @@
             <v-switch 
                 label="Ignore - Field Side"
                 density="compact"
-                v-model="negative_side"
+                v-model="negativeSide"
                 @change="handleSetSide(-1)"
             />
         </div>
@@ -19,7 +19,7 @@
             <v-switch 
                 label="Ignore + Field Side"
                 density="compact"
-                v-model="positive_side"
+                v-model="positiveSide"
                 @change="handleSetSide(1)"
             />
         </div>
@@ -32,52 +32,52 @@ export default {
     inject: ['state'],
     data: function() {
         return {
-            negative_side: false,
-            positive_side: false,
+            negativeSide: false,
+            positiveSide: false,
         }
     },
     methods: {
-        handleSetSide: function(changed_side: number) {
+        handleSetSide: function(changedSide: number) {
             // Only select one side at a time, deactivate the other side
-            if (this.negative_side && this.positive_side) {
-                if (changed_side > 0) {
-                    this.negative_side = false;
+            if (this.negativeSide && this.positiveSide) {
+                if (changedSide > 0) {
+                    this.negativeSide = false;
                 } else {
-                    this.positive_side = false;
+                    this.positiveSide = false;
                 }
             }
 
             // If neither switch is active set no ignore
-            if (!this.negative_side && !this.positive_side) {
+            if (!this.negativeSide && !this.positiveSide) {
                 this.state.setIgnoreFieldSide(0);
 
             // Otherwise the changed switch must be selected now
             } else {
-                this.state.setIgnoreFieldSide(changed_side);
+                this.state.setIgnoreFieldSide(changedSide);
             }
 
         },
-        handleHover: function(hovered_side: number) {
-            this.state.hovered_field_ignore_side = hovered_side;
+        handleHover: function(hoveredSide: number) {
+            this.state.hoveredFieldIgnoreSide = hoveredSide;
         },
     },
     computed: {
         getIgnoreSide: function() {
-            return this.state.world.ignore_side;
+            return this.state.world.ignoreSide;
         }
     },
     watch: {
         getIgnoreSide: {
             handler() {
-                if (this.state.world.ignore_side < 0) {
-                    this.negative_side = true;
-                    this.positive_side = false;
-                } else if (this.state.world.ignore_side > 0) {
-                    this.negative_side = false;
-                    this.positive_side = true;
+                if (this.state.world.ignoreSide < 0) {
+                    this.negativeSide = true;
+                    this.positiveSide = false;
+                } else if (this.state.world.ignoreSide > 0) {
+                    this.negativeSide = false;
+                    this.positiveSide = true;
                 } else {
-                    this.negative_side = false;
-                    this.positive_side = false;
+                    this.negativeSide = false;
+                    this.positiveSide = false;
                 }
             },
             deep: true

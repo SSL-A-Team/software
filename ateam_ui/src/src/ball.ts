@@ -1,7 +1,5 @@
-import { Team, TeamColor } from "@/team"
-import { RenderConfig } from "@/state"
-import { Field } from "@/field"
-import ROSLIB from "roslib"
+import { RenderConfig } from "@/state";
+import ROSLIB from "roslib";
 import * as PIXI from "pixi.js";
 
 export class Ball {
@@ -11,7 +9,6 @@ export class Ball {
     accel: Accel;
 
     constructor() {
-        // TODO: convert this to use the new coordinate system that centers the origin on our goal
         this.pose = new ROSLIB.Pose({
             position: {
                 x: 0,
@@ -20,26 +17,26 @@ export class Ball {
             }
         })
     }
+}
 
-    update(container: PIXI.Container, renderConfig: RenderConfig) {
-        const scale = renderConfig.scale;
-        container.position.x = this.pose.position.x * scale;
-        container.position.y = -this.pose.position.y * scale;
-        container.visible = this.visible;
-    }
+export function updateBall(ball: Ball, container: PIXI.Container, renderConfig: RenderConfig) {
+    const scale = renderConfig.scale;
+    container.position.x = ball.pose.position.x * scale;
+    container.position.y = -ball.pose.position.y * scale;
+    container.visible = ball.visible;
+}
 
-    draw(container: PIXI.Container, renderConfig: RenderConfig) {
-        // TODO: figure out how to pass scale around
-        const scale = renderConfig.scale;
+export function drawBall(ball: Ball, container: PIXI.Container, renderConfig: RenderConfig) {
+    // TODO: figure out how to pass scale around
+    const scale = renderConfig.scale;
 
-        const graphic = new PIXI.Graphics();
+    const graphic = new PIXI.Graphics();
 
-        graphic.beginFill("orange");
-        graphic.drawCircle(0, 0, .022 * scale);
+    graphic.beginFill("orange");
+    graphic.drawCircle(0, 0, .022 * scale);
 
-        container.addChild(graphic);
-        container.position.x = this.pose.position.x * scale;
-        container.position.y = -this.pose.position.y * scale;
-        container.visible = this.visible
-    }
+    container.addChild(graphic);
+    container.position.x = ball.pose.position.x * scale;
+    container.position.y = -ball.pose.position.y * scale;
+    container.visible = ball.visible
 }

@@ -1,5 +1,4 @@
-import { Team, TeamInfo, TeamColor } from "@/team"
-import ROSLIB from "roslib"
+import { Team, TeamInfo, TeamColor } from "@/team";
 
 export class GameProperty{
     name: String
@@ -82,12 +81,13 @@ export const GameCommandProperties: GameProperty[] = [
     {name: "Goal Blue", color:"blue"}
 ];
 
+// TODO: Add game_events[]
 export class Referee {
     stage: GameStage = GameStage.STAGE_NORMAL_FIRST_HALF_PRE;
     stage_time_left: number;
     command: GameCommand = GameCommand.COMMAND_HALT;
     command_counter: number = 0;
-    command_timestamp: number = 0; // May need to write a handler for this
+    command_timestamp: number = 0;
     
     yellow: TeamInfo;
     blue: TeamInfo;
@@ -97,19 +97,17 @@ export class Referee {
     next_command: GameCommand;
 
     current_action_time_remaining: number;
-    
-    getStageProperty(): GameProperty {
-        return GameStageProperties[this.stage];
-    }
-
-    getCommandProperty(): GameProperty {
-        return GameCommandProperties[this.command];
-    }
 
     constructor() {
         this.blue = new TeamInfo();
         this.yellow = new TeamInfo();
     }
+}
 
-    // TODO: Add game_events[]
+export function getStageProperty(referee: Referee): GameProperty {
+    return GameStageProperties[referee.stage];
+}
+
+export function getCommandProperty(referee: Referee): GameProperty {
+    return GameCommandProperties[referee.command];
 }

@@ -1,5 +1,5 @@
-import { Robot } from "@/robot"
-import ROSLIB from "roslib"
+import { Robot } from "@/robot";
+import ROSLIB from "roslib";
 
 // Types used for team data, our team and the opponent team intentionally both use the same class
 // with a place for data about robot status, active plays, etc so that we can use a single UI to control
@@ -15,7 +15,7 @@ export class TeamInfo {
     name: string
     score: number
     red_cards: number
-    yellow_card_times: number[]
+    yellow_card_times: number[] = [];
     yellow_cards: number
     timeouts: number
     timeout_time: number
@@ -26,9 +26,6 @@ export class TeamInfo {
     max_allowed_bots: number
     bot_substitution_intent: boolean
     ball_placement_failures_reached: boolean
-
-    constructor() {
-    }
 }
 
 export class Team {

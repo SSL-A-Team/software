@@ -1,31 +1,31 @@
 <template>
-        {{ this.name }}
+        {{ name }}
 
-        <div v-if="this.isLeaf" :style="{'margin-left': this.spacing + 'px'}">
+        <div v-if="isLeaf" :style="{'margin-left': spacing + 'px'}">
             <!-- Leaf: String/Number/Bool -->
-            {{ this.node }}
+            {{ node }}
         </div>
 
-        <div v-if="this.isArray" :style="{'margin-left': this.spacing + 'px'}">
+        <div v-if="isArray" :style="{'margin-left': spacing + 'px'}">
             <!-- Array -->
             <AIRecursiveComponent
-                v-for="item in this.node"
+                v-for="item in node"
                     :key= "item"
                     :name= "''"
                     :node= "item"
-                    :spacing= "this.spacing + 5"
+                    :spacing= "spacing + 5"
                     style="white-space: normal"
             />
         </div>
 
-        <div v-if="!this.isArray && !this.isLeaf && this.isValid" :style="{'margin-left': this.spacing + 'px'}">
+        <div v-if="!isArray && !isLeaf && isValid" :style="{'margin-left': spacing + 'px'}">
             <!-- Recursive Object -->
             <AIRecursiveComponent
-                v-for="member in Object.getOwnPropertyNames(this.node)"
+                v-for="member in Object.getOwnPropertyNames(node)"
                     :key= "member"
                     :name= "member"
-                    :node= "this.node[member]"
-                    :spacing= "this.spacing + 5"
+                    :node= "node[member]"
+                    :spacing= "spacing + 5"
                     style="white-space: normal"
             />
         </div>
