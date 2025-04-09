@@ -71,13 +71,8 @@ namespace ateam_spatial
 
     void UpdateBufferSizes(const FieldDimensions &field);
 
-    struct MinMaxLocResult {
-      float min_value;
-      float max_value;
-      std::size_t min_index;
-      std::size_t max_index;
-    };
-    MinMaxLocResult GetMinMaxLoc(const MapId map);
+    std::size_t GetMaxLoc(const MapId map);
+    std::size_t GetMinLoc(const MapId map);
   };
 
 } // namespace ateam_spatial

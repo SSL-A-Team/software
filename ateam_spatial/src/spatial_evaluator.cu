@@ -77,11 +77,14 @@ void SpatialEvaluator::RenderMapBuffer(const MapId map, std::vector<uint8_t> & d
   if(!IsReady()) {
     return;
   }
-  const auto min_max_loc = GetMinMaxLoc(map);
+  const auto max_index = GetMaxLoc(map);
+  const auto min_index = GetMinLoc(map);
+  const auto max_value = gpu_map_buffers_.CopyValueFromGpu(static_cast<std::size_t>(map), max_index);
+  const auto min_value = gpu_map_buffers_.CopyValueFromGpu(static_cast<std::size_t>(map), min_index);
 
   const dim3 block_size(64);
   const dim3 grid_size(std::ceil(static_cast<float>(gpu_map_buffers_.BufferSize()) / block_size.x));
-  render_kernel<<<grid_size, block_size>>>(gpu_map_buffers_.Get(static_cast<std::size_t>(map)), gpu_map_buffers_.BufferSize(), min_max_loc.min_value, min_max_loc.max_value, gpu_render_buffer_.Get());
+  render_kernel<<<grid_size, block_size>>>(gpu_map_buffers_.Get(static_cast<std::size_t>(map)), gpu_map_buffers_.BufferSize(), min_value, max_value, gpu_render_buffer_.Get());
   if(const auto ret = cudaDeviceSynchronize();ret != cudaSuccess) {
     throw std::runtime_error(std::string("Failed to launch render kernel: ") + cudaGetErrorString(ret));
   }
@@ -97,9 +100,9 @@ Point SpatialEvaluator::GetMaxLocation(const MapId map)
   if(!IsReady()) {
     return Point{0.f,0.f};
   }
-  const auto min_max_loc = GetMinMaxLoc(map);
-  const auto max_y = min_max_loc.max_index / settings_.width;
-  const auto max_x = min_max_loc.max_index % settings_.width;
+  const auto max_index = GetMaxLoc(map);
+  const auto max_y = max_index / settings_.width;
+  const auto max_x = max_index % settings_.width;
   return Point{
     SpatialToRealX(max_x, cached_filed_dims_, settings_),
     SpatialToRealY(max_y, cached_filed_dims_, settings_)
@@ -134,48 +137,41 @@ void SpatialEvaluator::UpdateBufferSizes(const FieldDimensions &field)
   settings_.height = world_height_spatial;
 }
 
-SpatialEvaluator::MinMaxLocResult SpatialEvaluator::GetMinMaxLoc(const MapId map)
+std::size_t SpatialEvaluator::GetMaxLoc(const MapId map)
 {
-  float * gpu_buffer = gpu_map_buffers_.Get(static_cast<std::size_t>(map));
-  const dim3 block_size(64);
+  const auto gpu_buffer = gpu_map_buffers_.Get(static_cast<std::size_t>(map));
+  constexpr auto kThreadsPerBlock = 64;
+  const dim3 block_size(kThreadsPerBlock);
   const dim3 grid_size(std::ceil(static_cast<float>(gpu_map_buffers_.BufferSize()) / block_size.x));
-  GpuVector<float> gpu_block_maxs(grid_size.x);
-  GpuVector<float> gpu_block_mins(grid_size.x);
-  GpuVector<std::size_t> gpu_block_max_locs(grid_size.x);
-  GpuVector<std::size_t> gpu_block_min_locs(grid_size.x);
-  min_max_loc_kernel<<<grid_size, block_size>>>(gpu_buffer, gpu_map_buffers_.BufferSize(), gpu_block_mins.Get(), gpu_block_maxs.Get(), gpu_block_min_locs.Get(), gpu_block_max_locs.Get());
+  GpuObject<uint32_t> gpu_max_index;
+  max_loc_kernel<kThreadsPerBlock><<<grid_size, block_size>>>(gpu_buffer, gpu_map_buffers_.BufferSize(), gpu_max_index.Get());
   if(const auto ret = cudaDeviceSynchronize();ret != cudaSuccess) {
-    throw std::runtime_error(std::string("Failed to launch minmax kernel: ") + cudaGetErrorString(ret));
+    throw std::runtime_error(std::string("Failed to launch max_loc_kernel: ") + cudaGetErrorString(ret));
   }
   if(const auto ret = cudaGetLastError(); ret != cudaSuccess) {
-    throw std::runtime_error(std::string("Failed to run minmax kernel: ") + cudaGetErrorString(ret));
+    throw std::runtime_error(std::string("Failed to run max_loc_kernel: ") + cudaGetErrorString(ret));
   }
-  std::vector<float> block_maxs;
-  std::vector<float> block_mins;
-  std::vector<std::size_t> block_max_locs;
-  std::vector<std::size_t> block_min_locs;
-  gpu_block_maxs.CopyFromGpu(block_maxs);
-  gpu_block_mins.CopyFromGpu(block_mins);
-  gpu_block_max_locs.CopyFromGpu(block_max_locs);
-  gpu_block_min_locs.CopyFromGpu(block_min_locs);
-  MinMaxLocResult result;
-  result.max_value = block_maxs[0];
-  result.min_value = block_mins[0];
-  result.min_index = 0;
-  result.max_index = 0;
-  for(auto i = 1ul; i < grid_size.x; ++i)
-  {
-    if(result.max_value < block_maxs[i])
-    {
-      result.max_value = block_maxs[i];
-      result.max_index = block_max_locs[i];
-    }
-    if(result.min_value > block_mins[i])
-    {
-      result.min_value = block_mins[i];
-      result.min_index = block_min_locs[i];
-    }
+  uint32_t result;
+  gpu_max_index.CopyFromGpu(result);
+  return result;
+}
+
+std::size_t SpatialEvaluator::GetMinLoc(const MapId map)
+{
+  const auto gpu_buffer = gpu_map_buffers_.Get(static_cast<std::size_t>(map));
+  constexpr auto kThreadsPerBlock = 64;
+  const dim3 block_size(kThreadsPerBlock);
+  const dim3 grid_size(std::ceil(static_cast<float>(gpu_map_buffers_.BufferSize()) / block_size.x));
+  GpuObject<uint32_t> gpu_min_index;
+  min_loc_kernel<kThreadsPerBlock><<<grid_size, block_size>>>(gpu_buffer, gpu_map_buffers_.BufferSize(), gpu_min_index.Get());
+  if(const auto ret = cudaDeviceSynchronize();ret != cudaSuccess) {
+    throw std::runtime_error(std::string("Failed to launch max_loc_kernel: ") + cudaGetErrorString(ret));
   }
+  if(const auto ret = cudaGetLastError(); ret != cudaSuccess) {
+    throw std::runtime_error(std::string("Failed to run max_loc_kernel: ") + cudaGetErrorString(ret));
+  }
+  uint32_t result;
+  gpu_min_index.CopyFromGpu(result);
   return result;
 }
 
