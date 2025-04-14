@@ -24,6 +24,7 @@
 namespace ateam_spatial
 {
 
+// Calculate the distance to the closest robot per field cell
 __global__ void distance_to_robots(const float * output, const Robot* robots, 
     const FieldDimensions field_dims, const SpatialSettings settings, int num_robots)
     {
