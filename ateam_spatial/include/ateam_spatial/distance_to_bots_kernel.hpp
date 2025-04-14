@@ -39,6 +39,8 @@ __global__ void distance_to_robots(const float * output, const Robot* robots,
         // Compute distance from (x, y) to all robots
         float min_dist = 1e20f;
     
+        // We assume the robots passed in have been filtered in advance to only
+        // be valid/visible robots
         for (int i = 0; i < num_robots; ++i) {
             float dx = x * settings.resolution - robots[i].x;
             float dy = y * settings.resolution - robots[i].y;
