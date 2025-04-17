@@ -4,3 +4,7 @@
 # VS Code settings
 .vscode
 
+# Colcon/Build Outputs
+build/
+install/
+log/
