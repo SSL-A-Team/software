@@ -22,6 +22,7 @@
 #include <ateam_spatial/layers/distance_down_field.hpp>
 #include <ateam_spatial/layers/distance_from_field_edge.hpp>
 #include <ateam_spatial/layers/in_field.hpp>
+#include <ateam_spatial/layers/outside_their_defense_area.hpp>
 
 TEST(LayersTests, DistanceDownField)
 {
@@ -94,4 +95,27 @@ TEST(LayersTests, InField)
   EXPECT_FLOAT_EQ(InField(8300, 4800, field, settings), 1.0);
   EXPECT_FLOAT_EQ(InField(8300, 9299, field, settings), 1.0);
   EXPECT_FLOAT_EQ(InField(8300, 9600, field, settings), 0.0);
+}
+
+TEST(LayersTests, OutsideTheirDefenseArea)
+{
+  using ateam_spatial::layers::OutsideTheirDefenseArea;
+
+  ateam_spatial::SpatialSettings settings;
+  settings.resolution = 0.001;
+
+  ateam_spatial::FieldDimensions field;
+  field.field_length = 16.0;
+  field.field_width = 9.0;
+  field.boundary_width = 0.3;
+  field.defense_area_width = 2.0;
+  field.defense_area_depth = 1.0;
+  field.goal_width = 1.0;
+  field.goal_depth = 0.1;
+
+  EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(0, 0, field, settings), 1.0);
+  EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(15500, 4800, field, settings), 0.0);
+  EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(15500, 1000, field, settings), 1.0);
+  EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(15500, 6000, field, settings), 1.0);
+  EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(500, 4800, field, settings), 1.0);
 }
