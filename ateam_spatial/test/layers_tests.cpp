@@ -20,6 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <ateam_spatial/layers/distance_down_field.hpp>
+#include <ateam_spatial/layers/distance_from_field_edge.hpp>
 #include <ateam_spatial/layers/in_field.hpp>
 
 TEST(LayersTests, DistanceDownField)
@@ -43,6 +44,29 @@ TEST(LayersTests, DistanceDownField)
   EXPECT_FLOAT_EQ(DistanceDownField(16600, field, settings), 16.6);
 }
 
+TEST(LayersTests, DistanceFromFieldEdge)
+{
+  using ateam_spatial::layers::DistanceFromFieldEdge;
+
+  ateam_spatial::SpatialSettings settings;
+  settings.resolution = 0.001;
+
+  ateam_spatial::FieldDimensions field;
+  field.field_length = 16.0;
+  field.field_width = 9.0;
+  field.boundary_width = 0.3;
+  field.defense_area_width = 2.0;
+  field.defense_area_depth = 1.0;
+  field.goal_width = 1.0;
+  field.goal_depth = 0.1;
+
+  const auto kAcceptableError = 1e-4;
+  EXPECT_NEAR(DistanceFromFieldEdge(500, 4800, field, settings), 0.5, kAcceptableError);
+  EXPECT_NEAR(DistanceFromFieldEdge(500, 30, field, settings), 0.03, kAcceptableError);
+  EXPECT_NEAR(DistanceFromFieldEdge(8300, 4800, field, settings), 4.8, kAcceptableError);
+  EXPECT_NEAR(DistanceFromFieldEdge(16000, 4800, field, settings), 0.6, kAcceptableError);
+  EXPECT_NEAR(DistanceFromFieldEdge(8300, 1000, field, settings), 1.0, kAcceptableError);
+}
 
 TEST(LayersTests, InField)
 {
