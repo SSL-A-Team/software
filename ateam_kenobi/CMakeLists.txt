@@ -45,9 +45,6 @@ target_sources(kenobi_node_component PRIVATE
   src/core/play_helpers/robot_assignment.cpp
   src/core/play_helpers/shot_evaluation.cpp
   src/core/play_helpers/window_evaluation.cpp
-  src/core/spatial/spatial_evaluator.cpp
-  src/core/spatial/spatial_inspection.cpp
-  src/core/spatial/layers/robot_shadows.cpp
 )
 
 #

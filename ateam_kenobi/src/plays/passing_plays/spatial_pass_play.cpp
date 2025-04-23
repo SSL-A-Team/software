@@ -58,7 +58,8 @@ stp::PlayScore SpatialPassPlay::getScore(const World & world)
   if(started_) {
     pass_target = target_;
   } else {
-    const auto spatial_target = world.spatial_evaluator->GetMaxLocation(ateam_spatial::MapId::ReceiverPositionQuality);
+    const auto spatial_target =
+      world.spatial_evaluator->GetMaxLocation(ateam_spatial::MapId::ReceiverPositionQuality);
     pass_target = ateam_geometry::Point{spatial_target.x, spatial_target.y};
   }
 
@@ -102,7 +103,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
   const auto spatial_map_id = ateam_spatial::MapId::ReceiverPositionQuality;
-  const auto is_pass_blocked = world.spatial_evaluator->GetValueAtLocation(spatial_map_id, ateam_spatial::Point(target_.x(), target_.y())) < 1;
+  const auto is_pass_blocked = world.spatial_evaluator->GetValueAtLocation(spatial_map_id,
+      ateam_spatial::Point(target_.x(), target_.y())) < 1;
   if(!started_ || is_pass_blocked) {
     // TODO(barulicm): need to granularize "started" state to not change target while ball is moving
     const auto spatial_target = world.spatial_evaluator->GetMaxLocation(spatial_map_id);
@@ -120,7 +122,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   if(getParamInterface().getParameter<bool>("show_heatmap")) {
     world.spatial_evaluator->RenderMapBuffer(spatial_map_id, spatial_map_rendering_data_);
     const auto spatial_settings = world.spatial_evaluator->GetSettings();
-    getOverlays().drawHeatmap("heatmap", bounds, spatial_map_rendering_data_, spatial_settings.width, spatial_settings.height);
+    getOverlays().drawHeatmap("heatmap", bounds, spatial_map_rendering_data_,
+        spatial_settings.width, spatial_settings.height);
   }
 
   pass_tactic_.setTarget(target_);

@@ -51,7 +51,6 @@
 #include "core/motion/world_to_body_vel.hpp"
 #include "plays/halt_play.hpp"
 #include "core/defense_area_enforcement.hpp"
-#include "core/spatial/spatial_evaluator.hpp"
 #include "core/joystick_enforcer.hpp"
 #include <ateam_spatial/spatial_evaluator.hpp>
 
@@ -71,8 +70,8 @@ public:
     joystick_enforcer_(*this),
     game_controller_listener_(*this)
   {
-    world_.spatial_evaluator = &gpu_spatial_evaluator_;
-    
+    world_.spatial_evaluator = &spatial_evaluator_;
+
     initialize_robot_ids();
 
     declare_parameter<bool>("use_world_velocities", false);
@@ -163,13 +162,12 @@ public:
   }
 
 private:
-  ateam_spatial::SpatialEvaluator gpu_spatial_evaluator_;
+  ateam_spatial::SpatialEvaluator spatial_evaluator_;
   World world_;
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
-  spatial::SpatialEvaluator spatial_evaluator_;
   std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
@@ -381,7 +379,6 @@ private:
     }
     in_play_eval_.Update(world_);
     double_touch_eval_.update(world_);
-    spatial_evaluator_.Update(world_);
     UpdateSpatialEvaluator();
     if (get_parameter("use_emulated_ballsense").as_bool()) {
       ballsense_emulator_.Update(world_);
@@ -500,7 +497,7 @@ private:
     std::ranges::transform(world_.our_robots, our_robots.begin(), make_spatial_robot);
     std::array<ateam_spatial::Robot, 16> their_robots;
     std::ranges::transform(world_.their_robots, their_robots.begin(), make_spatial_robot);
-    gpu_spatial_evaluator_.UpdateMaps(field, ball, our_robots, their_robots);
+    spatial_evaluator_.UpdateMaps(field, ball, our_robots, their_robots);
   }
 };
 

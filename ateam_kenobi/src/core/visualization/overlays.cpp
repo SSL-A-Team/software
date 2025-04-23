@@ -305,7 +305,8 @@ void Overlays::drawHeatmap(
 
 void Overlays::drawHeatmap(
   const std::string & name, const ateam_geometry::Rectangle & bounds,
-  const std::vector<uint8_t> & data, const std::size_t resolution_width, const std::size_t resolution_height, const uint8_t alpha, const uint32_t lifetime)
+  const std::vector<uint8_t> & data, const std::size_t resolution_width,
+  const std::size_t resolution_height, const uint8_t alpha, const uint32_t lifetime)
 {
   ateam_msgs::msg::Overlay msg;
   msg.ns = ns_;
