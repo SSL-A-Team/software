@@ -18,28 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <gtest/gtest.h>
-#include <ateam_spatial/maps/receiver_position_quality.hpp>
+#ifndef ATEAM_SPATIAL__LAYERS__IN_FIELD_HPP_
+#define ATEAM_SPATIAL__LAYERS__IN_FIELD_HPP_
 
-TEST(MapsTests, ReceiverPositionQuality)
+#include "ateam_spatial/types.hpp"
+#include "ateam_spatial/cuda_hostdev.hpp"
+
+namespace ateam_spatial::layers
 {
-  using ateam_spatial::maps::ReceiverPositionQuality;
 
-  ateam_spatial::SpatialSettings settings;
-  settings.resolution = 0.001;
+CUDA_HOSTDEV float InField(
+  const int x, const int y, const FieldDimensions & field_dims,
+  const SpatialSettings & settings);
 
-  ateam_spatial::FieldDimensions field;
-  field.field_length = 16.0;
-  field.field_width = 9.0;
-  field.boundary_width = 0.3;
-  field.defense_area_width = 2.0;
-  field.defense_area_depth = 1.0;
-  field.goal_width = 1.0;
-  field.goal_depth = 0.1;
+}  // namespace ateam_spatial::layers
 
-  EXPECT_FLOAT_EQ(ReceiverPositionQuality(0, 4800, field, settings), 0.0);
-  EXPECT_FLOAT_EQ(ReceiverPositionQuality(600, 4800, field, settings), 0.6);
-  EXPECT_FLOAT_EQ(ReceiverPositionQuality(8300, 4800, field, settings), 8.3);
-  EXPECT_FLOAT_EQ(ReceiverPositionQuality(16000, 4800, field, settings), 16.0);
-  EXPECT_FLOAT_EQ(ReceiverPositionQuality(16600, 4800, field, settings), 0.0);
-}
+#endif  // ATEAM_SPATIAL__LAYERS__IN_FIELD_HPP_
