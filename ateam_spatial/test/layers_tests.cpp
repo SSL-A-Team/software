@@ -22,6 +22,7 @@
 #include <ateam_spatial/layers/distance_down_field.hpp>
 #include <ateam_spatial/layers/distance_from_field_edge.hpp>
 #include <ateam_spatial/layers/in_field.hpp>
+#include <ateam_spatial/layers/line_of_sight_ball.hpp>
 #include <ateam_spatial/layers/outside_their_defense_area.hpp>
 
 TEST(LayersTests, DistanceDownField)
@@ -95,6 +96,45 @@ TEST(LayersTests, InField)
   EXPECT_FLOAT_EQ(InField(8300, 4800, field, settings), 1.0);
   EXPECT_FLOAT_EQ(InField(8300, 9299, field, settings), 1.0);
   EXPECT_FLOAT_EQ(InField(8300, 9600, field, settings), 0.0);
+}
+
+TEST(LayersTests, LineOfSightBall)
+{
+  using ateam_spatial::layers::LineOfSightBall;
+
+  ateam_spatial::SpatialSettings settings;
+  settings.resolution = 0.001;
+
+  ateam_spatial::FieldDimensions field;
+  field.field_length = 16.0;
+  field.field_width = 9.0;
+  field.boundary_width = 0.3;
+  field.defense_area_width = 2.0;
+  field.defense_area_depth = 1.0;
+  field.goal_width = 1.0;
+  field.goal_depth = 0.1;
+
+  ateam_spatial::Ball ball{
+    1.0,
+    1.0,
+    0.0,
+    0.0
+  };
+
+  std::array<ateam_spatial::Robot, 16> their_robots;
+  their_robots[0] = ateam_spatial::Robot{
+    true,
+    1.0,
+    2.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  };
+
+  EXPECT_FLOAT_EQ(LineOfSightBall(8300, 4800, ball, their_robots.data(), field, settings), 1.0);
+  EXPECT_FLOAT_EQ(LineOfSightBall(9300, 7000, ball, their_robots.data(), field, settings), 0.0);
+  EXPECT_FLOAT_EQ(LineOfSightBall(9300, 5000, ball, their_robots.data(), field, settings), 1.0);
 }
 
 TEST(LayersTests, OutsideTheirDefenseArea)

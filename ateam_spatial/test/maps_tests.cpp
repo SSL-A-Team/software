@@ -37,10 +37,29 @@ TEST(MapsTests, ReceiverPositionQuality)
   field.goal_width = 1.0;
   field.goal_depth = 0.1;
 
+  ateam_spatial::Ball ball{
+    1.0,
+    1.0,
+    0.0,
+    0.0
+  };
+
+  std::array<ateam_spatial::Robot, 16> their_robots;
+  their_robots[0] = ateam_spatial::Robot{
+    true,
+    1.0,
+    2.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  };
+
   const auto kAcceptableError = 1e-4;
-  EXPECT_FLOAT_EQ(ReceiverPositionQuality(0, 4800, field, settings), 0.0);
-  EXPECT_NEAR(ReceiverPositionQuality(600, 4800, field, settings), 0.48, kAcceptableError);
-  EXPECT_NEAR(ReceiverPositionQuality(8300, 4800, field, settings), 8.3, kAcceptableError);
-  EXPECT_NEAR(ReceiverPositionQuality(14500, 4800, field, settings), 14.5, kAcceptableError);
-  EXPECT_FLOAT_EQ(ReceiverPositionQuality(16600, 4800, field, settings), 0.0);
+  EXPECT_FLOAT_EQ(ReceiverPositionQuality(0, 4800, ball, their_robots.data(), field, settings), 0.0);
+  EXPECT_NEAR(ReceiverPositionQuality(600, 4800, ball, their_robots.data(), field, settings), 0.48, kAcceptableError);
+  EXPECT_NEAR(ReceiverPositionQuality(8300, 4800, ball, their_robots.data(), field, settings), 8.3, kAcceptableError);
+  EXPECT_NEAR(ReceiverPositionQuality(14500, 4800, ball, their_robots.data(), field, settings), 14.5, kAcceptableError);
+  EXPECT_FLOAT_EQ(ReceiverPositionQuality(16600, 4800, ball, their_robots.data(), field, settings), 0.0);
+  EXPECT_FLOAT_EQ(ReceiverPositionQuality(9300, 7000, ball, their_robots.data(), field, settings), 0.0);
 }

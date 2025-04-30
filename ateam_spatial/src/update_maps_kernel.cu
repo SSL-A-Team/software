@@ -54,7 +54,7 @@ __global__ void update_maps_kernel(const SpatialSettings * spatial_settings,
   float output = 0.0f;
   switch(static_cast<MapId>(map_index)) {
     case MapId::ReceiverPositionQuality:
-      output = maps::ReceiverPositionQuality(spatial_x, spatial_y, *field_dimensions, *spatial_settings);
+      output = maps::ReceiverPositionQuality(spatial_x, spatial_y, *ball, their_bots, *field_dimensions, *spatial_settings);
       break;
   }
 

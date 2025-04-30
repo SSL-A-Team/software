@@ -18,19 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_
-#define ATEAM_SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_
+#ifndef ATEAM_SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
+#define ATEAM_SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
 
 #include "ateam_spatial/types.hpp"
 #include "ateam_spatial/cuda_hostdev.hpp"
 
-namespace ateam_spatial::maps
+namespace ateam_spatial::layers
 {
 
-CUDA_HOSTDEV float ReceiverPositionQuality(
+CUDA_HOSTDEV float LineOfSightBall(
   const int x, const int y, const Ball & ball, const Robot * their_bots, const FieldDimensions & field_dims,
   const SpatialSettings & settings);
 
-}  // namespace ateam_spatial::maps
+}  // namespace ateam_spatial::layers
 
-#endif  // ATEAM_SPATIAL__MAPS__RECEIVER_POSITION_QUALITY_HPP_
+#endif  // ATEAM_SPATIAL__LAYERS__LINE_OF_SIGHT_BALL_HPP_
