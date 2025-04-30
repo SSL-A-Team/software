@@ -1,6 +1,5 @@
 #include "ateam_spatial/layers/line_of_sight_ball.hpp"
 #include "ateam_spatial/coordinate_conversions.hpp"
-#include <cstdio>
 
 namespace ateam_spatial::layers
 {
