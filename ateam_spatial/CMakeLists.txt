@@ -9,6 +9,7 @@ find_package(CUDAToolkit REQUIRED)
 add_library(${PROJECT_NAME} SHARED
   src/layers/distance_down_field.cu
   src/layers/distance_from_field_edge.cu
+  src/layers/distance_to_their_bots.cu
   src/layers/in_field.cu
   src/layers/line_of_sight_ball.cu
   src/layers/line_of_sight.cu
