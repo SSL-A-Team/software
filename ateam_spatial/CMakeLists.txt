@@ -11,7 +11,9 @@ add_library(${PROJECT_NAME} SHARED
   src/layers/distance_from_field_edge.cu
   src/layers/in_field.cu
   src/layers/line_of_sight_ball.cu
+  src/layers/line_of_sight.cu
   src/layers/outside_their_defense_area.cu
+  src/layers/width_of_shot_on_goal.cu
 
   src/maps/receiver_position_quality.cu
 

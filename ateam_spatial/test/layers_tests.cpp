@@ -24,6 +24,7 @@
 #include <ateam_spatial/layers/in_field.hpp>
 #include <ateam_spatial/layers/line_of_sight_ball.hpp>
 #include <ateam_spatial/layers/outside_their_defense_area.hpp>
+#include <ateam_spatial/layers/width_of_shot_on_goal.hpp>
 
 TEST(LayersTests, DistanceDownField)
 {
@@ -158,4 +159,48 @@ TEST(LayersTests, OutsideTheirDefenseArea)
   EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(15500, 1000, field, settings), 1.0);
   EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(15500, 6000, field, settings), 1.0);
   EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(500, 4800, field, settings), 1.0);
+}
+
+
+TEST(LayersTests, WidthOfShotOnGoal)
+{
+  using ateam_spatial::layers::WidthOfShotOnGoal;
+
+  ateam_spatial::SpatialSettings settings;
+  settings.resolution = 0.001;
+
+  ateam_spatial::FieldDimensions field;
+  field.field_length = 16.0;
+  field.field_width = 9.0;
+  field.boundary_width = 0.3;
+  field.defense_area_width = 2.0;
+  field.defense_area_depth = 1.0;
+  field.goal_width = 1.0;
+  field.goal_depth = 0.1;
+
+  std::array<ateam_spatial::Robot, 16> their_robots;
+  their_robots[0] = ateam_spatial::Robot{
+    true,
+    -1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  };
+
+  const auto kAcceptableError = 1e-2;
+  EXPECT_NEAR(WidthOfShotOnGoal(8300, 4800, their_robots.data(), field, settings), 1.0, kAcceptableError);
+  their_robots[0].x = 0.2;
+  their_robots[0].x = 0.0;
+  EXPECT_NEAR(WidthOfShotOnGoal(8300, 4800, their_robots.data(), field, settings), 0.0, kAcceptableError);
+  their_robots[0].x = 0.2;
+  their_robots[0].y = 0.09;
+  EXPECT_NEAR(WidthOfShotOnGoal(8300, 4800, their_robots.data(), field, settings), 0.5, kAcceptableError);
+  their_robots[0].x = 0.2;
+  their_robots[0].y = -0.09;
+  EXPECT_NEAR(WidthOfShotOnGoal(8300, 4800, their_robots.data(), field, settings), 0.5, kAcceptableError);
+  their_robots[0].x = 4.5;
+  their_robots[0].y = 0.18;
+  EXPECT_NEAR(WidthOfShotOnGoal(8300, 4800, their_robots.data(), field, settings), 0.65, kAcceptableError);
 }
