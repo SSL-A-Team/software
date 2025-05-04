@@ -30,11 +30,11 @@ namespace ateam_kenobi
 {
 struct RefereeInfo
 {
-  int our_goalie_id;
-  int their_goalie_id;
-  ateam_common::GameStage current_game_stage;
-  ateam_common::GameCommand running_command;
-  ateam_common::GameCommand prev_command;
+  int our_goalie_id = -1;
+  int their_goalie_id = -1;
+  ateam_common::GameStage current_game_stage = ateam_common::GameStage::Unknown;
+  ateam_common::GameCommand running_command = ateam_common::GameCommand::Halt;
+  ateam_common::GameCommand prev_command = ateam_common::GameCommand::Halt;
   ateam_geometry::Point designated_position;
   std::chrono::system_clock::time_point command_time;
 };
