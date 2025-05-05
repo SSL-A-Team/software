@@ -58,7 +58,7 @@ namespace ateam_spatial
   private:
     bool cuda_device_available_;
     SpatialSettings settings_;
-    FieldDimensions cached_filed_dims_;
+    FieldDimensions cached_field_dims_;
     GpuObject<SpatialSettings> gpu_spatial_settings_;
     GpuObject<FieldDimensions> gpu_field_dims_;
     GpuObject<Ball> gpu_ball_;
