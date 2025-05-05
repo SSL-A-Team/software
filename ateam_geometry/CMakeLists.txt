@@ -31,7 +31,7 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
 )
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(CGAL)
+ament_export_dependencies(CGAL angles)
 
 install(
   DIRECTORY include/

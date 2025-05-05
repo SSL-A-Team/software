@@ -34,13 +34,13 @@ struct FieldSidedInfo
 };
 struct Field
 {
-  float field_length;
-  float field_width;
-  float goal_width;
-  float goal_depth;
-  float boundary_width;
-  float defense_area_width;
-  float defense_area_depth;
+  float field_length = 0.f;
+  float field_width = 0.f;
+  float goal_width = 0.f;
+  float goal_depth = 0.f;
+  float boundary_width = 0.f;
+  float defense_area_width = 0.f;
+  float defense_area_depth = 0.f;
   std::array<ateam_geometry::Point, 4> field_corners;
   FieldSidedInfo ours;
   FieldSidedInfo theirs;
