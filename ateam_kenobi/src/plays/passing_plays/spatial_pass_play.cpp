@@ -23,7 +23,6 @@
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/types.hpp>
-#include "core/spatial/spatial_inspection.hpp"
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 #include "core/play_helpers/window_evaluation.hpp"
@@ -59,8 +58,9 @@ stp::PlayScore SpatialPassPlay::getScore(const World & world)
   if(started_) {
     pass_target = target_;
   } else {
-    pass_target = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"],
-        world.field);
+    const auto spatial_target =
+      world.spatial_evaluator->GetMaxLocation(ateam_spatial::MapId::ReceiverPositionQuality);
+    pass_target = ateam_geometry::Point{spatial_target.x, spatial_target.y};
   }
 
   const auto their_robots = play_helpers::getVisibleRobots(world.their_robots);
@@ -102,16 +102,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
-  if(!started_) {
-    target_ = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"], world.field);
-  } else {
+  const auto spatial_map_id = ateam_spatial::MapId::ReceiverPositionQuality;
+  const auto is_pass_blocked = world.spatial_evaluator->GetValueAtLocation(spatial_map_id,
+      ateam_spatial::Point(target_.x(), target_.y())) < 1;
+  if(!started_ || is_pass_blocked) {
     // TODO(barulicm): need to granularize "started" state to not change target while ball is moving
-    if(spatial::GetValueAtLocation(world.spatial_maps["LineOfSightBallMap"], target_,
-        world.field) < 1)
-    {
-      // If pass is being blocked, choose a new target
-      target_ = spatial::GetMaxPosition(world.spatial_maps["ReceiverPositionQuality"], world.field);
-    }
+    const auto spatial_target = world.spatial_evaluator->GetMaxLocation(spatial_map_id);
+    target_ = ateam_geometry::Point{spatial_target.x, spatial_target.y};
   }
 
   getOverlays().drawCircle("target", ateam_geometry::makeCircle(target_, kRobotRadius), "grey");
@@ -123,8 +120,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   };
 
   if(getParamInterface().getParameter<bool>("show_heatmap")) {
-    getOverlays().drawHeatmap("heatmap", bounds, world.spatial_maps["ReceiverPositionQuality"].data,
-        world.spatial_maps["ReceiverPositionQuality"].data, 200);
+    world.spatial_evaluator->RenderMapBuffer(spatial_map_id, spatial_map_rendering_data_);
+    const auto spatial_settings = world.spatial_evaluator->GetSettings();
+    getOverlays().drawHeatmap("heatmap", bounds, spatial_map_rendering_data_,
+        spatial_settings.width, spatial_settings.height);
   }
 
   pass_tactic_.setTarget(target_);

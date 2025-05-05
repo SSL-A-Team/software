@@ -21,11 +21,12 @@
 #ifndef PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
 #define PLAYS__TEST_PLAYS__TEST_SPATIAL_MAP_PLAY_HPP_
 
+#include <vector>
 #include "core/path_planning/path_planner.hpp"
 #include "core/motion/motion_controller.hpp"
 #include "core/stp/play.hpp"
 #include <opencv2/opencv.hpp>
-#include "core/spatial/spatial_inspection.hpp"
+#include <ateam_spatial/spatial_evaluator.hpp>
 
 namespace ateam_kenobi::plays
 {
@@ -37,7 +38,6 @@ public:
   explicit TestSpatialMapPlay(stp::Options stp_options)
   : stp::Play(kPlayName, stp_options)
   {
-    // cv::namedWindow("heatmap", cv::WINDOW_NORMAL);
   }
 
   void reset() override {}
@@ -52,13 +52,20 @@ public:
       ateam_geometry::Point{half_field_length, half_field_width}
     };
 
-    const auto & map = world.spatial_maps["TestMap"];
+    const auto map_id = ateam_spatial::MapId::ReceiverPositionQuality;
 
-    getOverlays().drawHeatmap("heatmap", bounds, map.data, 200);
+    std::vector<uint8_t> rendered_map;
+    world.spatial_evaluator->RenderMapBuffer(map_id, rendered_map);
 
-    const auto max_pos = spatial::GetMaxPosition(map, world.field);
+    const auto spatial_settings = world.spatial_evaluator->GetSettings();
 
-    getOverlays().drawCircle("heatmap_max", ateam_geometry::makeCircle(max_pos, kRobotRadius));
+    getOverlays().drawHeatmap("heatmap", bounds, rendered_map, spatial_settings.width,
+        spatial_settings.height);
+
+    const auto max_pos = world.spatial_evaluator->GetMaxLocation(map_id);
+
+    getOverlays().drawCircle("heatmap_max",
+        ateam_geometry::makeCircle(ateam_geometry::Point(max_pos.x, max_pos.y), kRobotRadius));
 
     return {};
   }

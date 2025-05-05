@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <vector>
 #include "core/stp/play.hpp"
 #include "tactics/standard_defense.hpp"
 #include "tactics/pass.hpp"
@@ -53,6 +54,7 @@ private:
   skills::LaneIdler idler_skill_;
   ateam_geometry::Point target_;
   bool started_ = false;
+  std::vector<uint8_t> spatial_map_rendering_data_;
 
   play_helpers::lanes::Lane getIdleLane(const World & world);
 };

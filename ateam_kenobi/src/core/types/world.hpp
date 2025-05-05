@@ -25,8 +25,8 @@
 #include <optional>
 #include <array>
 #include <chrono>
+#include <ateam_spatial/spatial_evaluator.hpp>
 
-#include "core/spatial/spatial_map_collection.hpp"
 #include "core/types/ball.hpp"
 #include "core/types/field.hpp"
 #include "core/types/referee_info.hpp"
@@ -54,7 +54,7 @@ struct World
   // Holds the ID of the robot not allowed to touch the ball, if any
   std::optional<int> double_touch_forbidden_id_;
 
-  spatial::SpatialMapCollection spatial_maps;
+  ateam_spatial::SpatialEvaluator * spatial_evaluator;
 };
 }  // namespace ateam_kenobi
 

@@ -18,6 +18,7 @@ find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(ateam_spatial REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/kenobi_node.cpp
@@ -44,9 +45,6 @@ target_sources(kenobi_node_component PRIVATE
   src/core/play_helpers/robot_assignment.cpp
   src/core/play_helpers/shot_evaluation.cpp
   src/core/play_helpers/window_evaluation.cpp
-  src/core/spatial/spatial_evaluator.cpp
-  src/core/spatial/spatial_inspection.cpp
-  src/core/spatial/layers/robot_shadows.cpp
 )
 
 #
@@ -126,6 +124,7 @@ ament_target_dependencies(
   "angles"
   OpenCV
   nlohmann_json
+  ateam_spatial
 )
 rclcpp_components_register_node(
   kenobi_node_component
