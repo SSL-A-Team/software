@@ -104,8 +104,8 @@ Point SpatialEvaluator::GetMaxLocation(const MapId map)
   const auto max_y = max_index / settings_.width;
   const auto max_x = max_index % settings_.width;
   return Point{
-    SpatialToRealX(max_x, cached_filed_dims_, settings_),
-    SpatialToRealY(max_y, cached_filed_dims_, settings_)
+    SpatialToRealX(max_x, cached_field_dims_, settings_),
+    SpatialToRealY(max_y, cached_field_dims_, settings_)
   };
 }
 
@@ -114,8 +114,8 @@ float SpatialEvaluator::GetValueAtLocation(const MapId map, const Point & locati
   if(!IsReady()) {
     return 0.f;
   }
-  const auto index = (RealToSpatialY(location.y, cached_filed_dims_, settings_) * settings_.width)
-                      + RealToSpatialX(location.x, cached_filed_dims_, settings_);
+  const auto index = (RealToSpatialY(location.y, cached_field_dims_, settings_) * settings_.width)
+                      + RealToSpatialX(location.x, cached_field_dims_, settings_);
   return gpu_map_buffers_.CopyValueFromGpu(static_cast<std::size_t>(MapId::ReceiverPositionQuality), index);
 }
 
@@ -125,7 +125,7 @@ bool SpatialEvaluator::IsReady() {
 
 void SpatialEvaluator::UpdateBufferSizes(const FieldDimensions &field)
 {
-  if(field == cached_filed_dims_) {
+  if(field == cached_field_dims_) {
     return;
   }
   const auto world_width_spatial = WorldWidthSpatial(field, settings_);
