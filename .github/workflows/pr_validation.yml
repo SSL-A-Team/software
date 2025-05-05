@@ -49,5 +49,5 @@ jobs:
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon test --packages-skip ateam_ui --packages-select ${{ steps.get-changed-packages.outputs.changed-packages }}
+          colcon test --packages-skip ateam_ui ateam_spatial --packages-select ${{ steps.get-changed-packages.outputs.changed-packages }}
           colcon test-result --verbose 
