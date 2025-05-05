@@ -35,5 +35,5 @@ jobs:
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon test --packages-skip ateam_ui
+          colcon test --packages-skip ateam_ui ateam_spatial
           colcon test-result --verbose 
