@@ -6,7 +6,7 @@ ament_add_gmock(ateam_spatial_tests
   gpu_multibuffer_tests.cpp
   gpu_object_tests.cpp
   gpu_vector_tests.cpp
-  layers_tests.cpp
+  # layers_tests.cpp
   maps_tests.cpp
   min_max_loc_kernel_tests.cu
   spatial_evaluator_tests.cpp

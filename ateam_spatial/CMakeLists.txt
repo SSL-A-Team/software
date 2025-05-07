@@ -6,6 +6,8 @@ enable_language(CUDA)
 find_package(ament_cmake REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
+set(CMAKE_CUDA_FLAGS "-Xptxas=\"-v\" --maxrregcount 62")
+
 add_library(${PROJECT_NAME} SHARED
   src/layers/distance_down_field.cu
   src/layers/distance_from_field_edge.cu

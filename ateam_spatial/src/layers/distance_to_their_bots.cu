@@ -5,9 +5,9 @@
 namespace ateam_spatial::layers
 {
 
-CUDA_HOSTDEV float DistanceToTheirBots(const int x, const int y, const Robot * their_robots, const FieldDimensions & field_dims, const SpatialSettings & settings) {
-  const auto real_x = SpatialToRealX(x, field_dims, settings);
-  const auto real_y = SpatialToRealY(y, field_dims, settings);
+CUDA_HOSTDEV float DistanceToTheirBots(const float x, const float y, const Robot * their_robots, const FieldDimensions & field_dims, const SpatialSettings & settings) {
+  const auto real_x = x;
+  const auto real_y = y;
   auto result = MAXFLOAT;
   for(auto i = 0; i < 16; ++i) {
     const auto & robot = their_robots[i];

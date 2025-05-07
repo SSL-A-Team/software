@@ -28,7 +28,7 @@ namespace ateam_spatial::layers
 {
 
 CUDA_HOSTDEV float DistanceDownField(
-  const int x, const FieldDimensions & field_dims,
+  const float x, const FieldDimensions & field_dims,
   const SpatialSettings & settings);
 
 }  // namespace ateam_spatial::layers
