@@ -23,6 +23,7 @@
 #define CORE__PATH_PLANNING__PATH_PLANNER_HPP_
 
 #include <vector>
+#include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/any_shape.hpp>
 #include <ateam_geometry/types.hpp>
 #include "core/types/world.hpp"
@@ -30,6 +31,13 @@
 
 namespace ateam_kenobi::path_planning
 {
+
+struct ReplanThresholds
+{
+  double goal_distance_ = 0.05;
+  double obstacle_distance_ = kRobotRadius;
+  double start_distance_ = 0.20;
+};
 
 struct PlannerOptions
 {
@@ -61,6 +69,10 @@ struct PlannerOptions
   bool ignore_start_obstacle = true;
 
   bool draw_obstacles = false;
+
+  bool force_replan = false;
+
+  ReplanThresholds replan_thresholds;
 };
 
 class PathPlanner : public stp::Base
@@ -78,6 +90,10 @@ public:
 
 private:
   visualization::Overlays overlays_;
+  bool cached_path_valid_ = false;
+  bool cached_path_truncated_ = false;
+  Path cached_path_;
+  Position cached_path_goal_;
 
   void removeCollidingObstacles(
     std::vector<ateam_geometry::AnyShape> & obstacles,
@@ -125,6 +141,11 @@ private:
     const PlannerOptions & options);
 
   void drawObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles);
+
+  bool shouldReplan(
+    const Position & start, const Position & goal, const World & world,
+    const std::vector<ateam_geometry::AnyShape> & obstacles,
+    const PlannerOptions & options);
 };
 
 }  // namespace ateam_kenobi::path_planning
