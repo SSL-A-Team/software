@@ -2,6 +2,7 @@
 # XY in translation (m/s)
 # Z in rotation (rad/s)
 geometry_msgs/Twist twist
+uint8 twist_frame 0
 uint8 kick_request
 float32 kick_speed # (m/s)
 float32 dribbler_speed # (rpm)
@@ -15,3 +16,7 @@ uint8 KR_KICK_CAPTURED = 4
 uint8 KR_CHIP_NOW = 5
 uint8 KR_CHIP_TOUCH = 6
 uint8 KR_CHIP_CAPTURED = 7
+
+# frame options
+uint8 FRAME_WORLD = 0
+uint8 FRAME_BODY = 1

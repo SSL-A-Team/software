@@ -404,7 +404,9 @@ private:
 
     joystick_enforcer_.RemoveCommandForJoystickBot(motion_commands);
 
-    if (!get_parameter("use_world_velocities").as_bool()) {
+    if (get_parameter("use_world_velocities").as_bool()) {
+      motion::ConvertBodyVelsToWorldVels(motion_commands, world_.our_robots);
+    } else {
       motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);
     }
 
