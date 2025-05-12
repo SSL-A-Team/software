@@ -34,12 +34,16 @@ inline void ConvertWorldVelsToBodyVels(
   ateam_msgs::msg::RobotMotionCommand & command,
   const Robot & robot)
 {
+  if(command.twist_frame == ateam_msgs::msg::RobotMotionCommand::FRAME_BODY) {
+    return;
+  }
   ateam_geometry::Vector velocity(command.twist.linear.x, command.twist.linear.y);
   CGAL::Aff_transformation_2<ateam_geometry::Kernel> transformation(CGAL::ROTATION,
     std::sin(-robot.theta), std::cos(-robot.theta));
   velocity = velocity.transform(transformation);
   command.twist.linear.x = velocity.x();
   command.twist.linear.y = velocity.y();
+  command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
 }
 
 inline void ConvertWorldVelsToBodyVels(
@@ -51,6 +55,35 @@ inline void ConvertWorldVelsToBodyVels(
     const auto & robot = robots.at(i);
     if (maybe_command && robot.visible) {
       ConvertWorldVelsToBodyVels(maybe_command.value(), robot);
+    }
+  }
+}
+
+inline void ConvertBodyVelsToWorldVels(
+  ateam_msgs::msg::RobotMotionCommand & command,
+  const Robot & robot)
+{
+  if(command.twist_frame == ateam_msgs::msg::RobotMotionCommand::FRAME_WORLD) {
+    return;
+  }
+  ateam_geometry::Vector velocity(command.twist.linear.x, command.twist.linear.y);
+  CGAL::Aff_transformation_2<ateam_geometry::Kernel> transformation(CGAL::ROTATION,
+    std::sin(robot.theta), std::cos(robot.theta));
+  velocity = velocity.transform(transformation);
+  command.twist.linear.x = velocity.x();
+  command.twist.linear.y = velocity.y();
+  command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_WORLD;
+}
+
+inline void ConvertBodyVelsToWorldVels(
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & commands,
+  const std::array<Robot, 16> & robots)
+{
+  for (auto i = 0u; i < 16; ++i) {
+    auto & maybe_command = commands.at(i);
+    const auto & robot = robots.at(i);
+    if (maybe_command && robot.visible) {
+      ConvertBodyVelsToWorldVels(maybe_command.value(), robot);
     }
   }
 }
