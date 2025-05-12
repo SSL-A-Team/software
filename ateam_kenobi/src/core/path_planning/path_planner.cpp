@@ -379,6 +379,8 @@ bool PathPlanner::shouldReplan(
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
+  // TODO(barulicm): re-enable after motion controller is compatible
+  return true;
   if (options.force_replan) {
     return true;
   }
