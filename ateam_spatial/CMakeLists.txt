@@ -35,6 +35,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   CUDA_STANDARD 17
   CUDA_ARCHITECTURES native
 )
+target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--maxrregcount 62>)
+if(ATEAM_SPATIAL_CUDA_COMPILE_STATS)
+  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xptxas="-v">)
+endif()
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(CUDAToolkit)

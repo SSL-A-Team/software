@@ -135,6 +135,7 @@ void SpatialEvaluator::UpdateBufferSizes(const FieldDimensions &field)
   gpu_render_buffer_ = GpuVector<uint8_t>(buffer_size);
   settings_.width = world_width_spatial;
   settings_.height = world_height_spatial;
+  cached_field_dims_ = field;
 }
 
 std::size_t SpatialEvaluator::GetMaxLoc(const MapId map)
