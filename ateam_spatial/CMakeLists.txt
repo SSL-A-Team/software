@@ -6,8 +6,6 @@ enable_language(CUDA)
 find_package(ament_cmake REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
-set(CMAKE_CUDA_FLAGS "-Xptxas=\"-v\" --maxrregcount 62")
-
 add_library(${PROJECT_NAME} SHARED
   src/layers/distance_down_field.cu
   src/layers/distance_from_field_edge.cu
@@ -37,6 +35,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   CUDA_STANDARD 17
   CUDA_ARCHITECTURES native
 )
+target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--maxrregcount 62>)
+if(ATEAM_SPATIAL_CUDA_COMPILE_STATS)
+  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xptxas="-v">)
+endif()
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(CUDAToolkit)
