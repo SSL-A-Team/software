@@ -28,7 +28,7 @@ namespace ateam_spatial::layers
 {
 
 CUDA_HOSTDEV float WidthOfShotOnGoal(
-  const int x, const int y, const Robot * their_bots, const FieldDimensions & field_dims,
+  const float x, const float y, const Robot * their_bots, const FieldDimensions & field_dims,
   const SpatialSettings & settings);
 
 }  // namespace ateam_spatial::layers

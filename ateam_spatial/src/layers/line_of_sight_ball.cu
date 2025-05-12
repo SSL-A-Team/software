@@ -5,9 +5,9 @@
 namespace ateam_spatial::layers
 {
 
-CUDA_HOSTDEV float LineOfSightBall(const int x, const int y, const Ball & ball, const Robot * their_bots, const FieldDimensions & field_dims, const SpatialSettings & settings) {
-  const auto real_x = SpatialToRealX(x, field_dims, settings);
-  const auto real_y = SpatialToRealY(y, field_dims, settings);
+CUDA_HOSTDEV float LineOfSightBall(const float x, const float y, const Ball & ball, const Robot * their_bots, const FieldDimensions & field_dims, const SpatialSettings & settings) {
+  const auto real_x = x;
+  const auto real_y = y;
 
   return LineOfSight(real_x, real_y, ball.x, ball.y, their_bots, field_dims, settings);
 }

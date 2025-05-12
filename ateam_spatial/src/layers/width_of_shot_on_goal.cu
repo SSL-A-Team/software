@@ -5,11 +5,11 @@
 namespace ateam_spatial::layers
 {
 
-CUDA_HOSTDEV float WidthOfShotOnGoal(const int x, const int y, const Robot * their_robots, const FieldDimensions & field_dims, const SpatialSettings & settings) {
+CUDA_HOSTDEV float WidthOfShotOnGoal(const float x, const float y, const Robot * their_robots, const FieldDimensions & field_dims, const SpatialSettings & settings) {
   constexpr int kNumSteps = 100;
 
-  const auto real_x = SpatialToRealX(x, field_dims, settings);
-  const auto real_y = SpatialToRealY(y, field_dims, settings);
+  const auto real_x = x;
+  const auto real_y = y;
 
   const auto goal_x = field_dims.field_length / 2.0;
   const auto goal_y_start = -field_dims.goal_width / 2.0;

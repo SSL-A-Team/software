@@ -4,9 +4,9 @@
 namespace ateam_spatial::layers
 {
 
-CUDA_HOSTDEV float DistanceFromFieldEdge(const int x, const int y, const FieldDimensions & field_dims, const SpatialSettings & settings) {
-  const auto x_real = SpatialToRealX(x, field_dims, settings);
-  const auto y_real = SpatialToRealY(y, field_dims, settings);
+CUDA_HOSTDEV float DistanceFromFieldEdge(const float x, const float y, const FieldDimensions & field_dims, const SpatialSettings & settings) {
+  const auto x_real = x;
+  const auto y_real = y;
   const auto half_world_width = WorldWidthReal(field_dims) / 2.0;
   const auto half_world_height = WorldHeightReal(field_dims) / 2.0;
   const auto half_world_diff = half_world_width - half_world_height;
