@@ -19,11 +19,13 @@
 // THE SOFTWARE.
 
 #include <chrono>
+#include <fstream>
 #include <functional>
 #include <mutex>
 #include <iostream>
 #include <string>
 
+#include <ateam_common/cache_directory.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/game_controller_listener.hpp>
@@ -46,6 +48,8 @@ public:
   : rclcpp::Node("ateam_field_manager", options),
     game_controller_listener_(*this)
   {
+    loadCachedState();
+
     rclcpp::QoS qos(1);
     qos.reliable();
     qos.transient_local();
@@ -63,6 +67,11 @@ public:
       create_service<ateam_msgs::srv::SetIgnoreFieldSide>("~/set_ignore_field_side",
         std::bind(&FieldManagerNode::handle_set_ignore_field_side, this, std::placeholders::_1,
         std::placeholders::_2));
+  }
+
+  ~FieldManagerNode()
+  {
+    saveCachedState();
   }
 
   void vision_callback(
@@ -94,6 +103,7 @@ public:
   }
 
 private:
+  const char * ignore_side_cache_filename_ = "ignore_side.txt";
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<ateam_msgs::msg::FieldInfo>::SharedPtr field_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
@@ -102,6 +112,31 @@ private:
   ateam_common::GameControllerListener game_controller_listener_;
 
   int ignore_side_ = 0;
+
+  std::filesystem::path getCacheDirectory()
+  {
+    return ateam_common::getCacheDirectory() / "field_manager";
+  }
+
+  void loadCachedState()
+  {
+    const auto ignore_side_path = getCacheDirectory() / ignore_side_cache_filename_;
+    if(std::filesystem::exists(ignore_side_path)) {
+      RCLCPP_INFO(get_logger(), "Loading cache from %s", ignore_side_path.c_str());
+      std::ifstream cache_file(ignore_side_path);
+      cache_file >> ignore_side_;
+    }
+  }
+
+  void saveCachedState()
+  {
+    const auto cache_dir = getCacheDirectory();
+    const auto ignore_side_path = cache_dir / ignore_side_cache_filename_;
+    RCLCPP_INFO(get_logger(), "Saving state to %s", ignore_side_path.c_str());
+    std::filesystem::create_directories(cache_dir);
+    std::ofstream cache_file(ignore_side_path);
+    cache_file << ignore_side_;
+  }
 };
 }  // namespace ateam_field_manager
 
