@@ -22,6 +22,8 @@ for file in $changed_files; do
   done < <(colcon --log-base /dev/null list)
 done
 
-printf "%s " "${changed_packages[*]}"
+deduped_changed_packages=($(printf "%s\n" "${changed_packages[@]}" | sort -u))
+
+printf "%s " "${deduped_changed_packages[*]}"
 
 popd > /dev/null
