@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 
-#include <pwd.h>
 #include <tf2/convert.h>
 #include <tf2/utils.h>
 #include <chrono>
@@ -37,6 +36,7 @@
 #include <ateam_msgs/srv/set_override_play.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
 #include <ateam_msgs/msg/playbook_state.hpp>
+#include <ateam_common/cache_directory.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
@@ -453,18 +453,7 @@ private:
 
   std::filesystem::path getCacheDirectory()
   {
-    const std::filesystem::path cache_dir = ".ateam/software/kenobi/";
-    const char * home_env = getenv("HOME");
-    if (home_env != nullptr) {
-      return std::filesystem::path(home_env) / cache_dir;
-    }
-
-    struct passwd * pwd = getpwuid(getuid());  // NOLINT(runtime/threadsafe_fn)
-    if (pwd != nullptr) {
-      return std::filesystem::path(pwd->pw_dir) / cache_dir;
-    }
-
-    return cache_dir;
+    return ateam_common::getCacheDirectory() / "kenobi";
   }
 
   void UpdateSpatialEvaluator()
