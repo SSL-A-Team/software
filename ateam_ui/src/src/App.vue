@@ -18,7 +18,7 @@
                     <GameStatusComponent ref="refStatus"/>
                     <FieldComponent ref="mainField" class="ma-2 pa-2"/>
                 </v-col>
-                <v-col class="flex-grow-0 flex-shrink-0 justify-center" style="max-width:18vw; min-width:18vw">
+                <v-col class="flex-grow-0 flex-shrink-0 justify-center overflow-y-auto" style="height: 100vh; max-width:18vw; min-width:18vw">
                     <v-card>
                         <v-tabs v-model="tab" show-arrows="false">
                             <v-tab value="dataTree">Data Tree</v-tab>
