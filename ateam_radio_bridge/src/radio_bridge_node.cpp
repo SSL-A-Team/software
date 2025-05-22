@@ -125,9 +125,14 @@ private:
 
   void CloseConnection(const std::size_t & connection_index)
   {
-    auto & connection = connections_.at(connection_index);
+    std::unique_ptr<ateam_common::BiDirectionalUDP> connection;
+    {
+      std::lock_guard lock(mutex_);
+      connections_.at(connection_index).swap(connection);
+    }
     if(!connection) {
       // Connection already closed
+      // lock released by destructor
       return;
     }
     RCLCPP_INFO(
@@ -139,7 +144,6 @@ private:
       GetPacketSize(packet.command_code));
     // Give some time for the message to actually send before closing the connection
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    connection.reset();
   }
 
   /**
@@ -148,8 +152,8 @@ private:
    */
   void ConnectionCheckCallback()
   {
-    const std::lock_guard lock(mutex_);
     for (auto i = 0ul; i < connections_.size(); ++i) {
+      std::unique_lock lock(mutex_);
       if (!connections_[i]) {
         ateam_msgs::msg::RobotFeedback feedback_message;
         feedback_message.radio_connected = false;
@@ -160,8 +164,11 @@ private:
       const auto time_since_heartbeat = std::chrono::steady_clock::now() - last_heartbeat_time;
       if (time_since_heartbeat > timeout_threshold_) {
         RCLCPP_WARN(get_logger(), "Connection to robot %ld timed out.", i);
+        // release lock early so CloseConnection can grab it
+        lock.unlock();
         CloseConnection(i);
       }
+      // lock released by destructor
     }
   }
 
@@ -197,7 +204,6 @@ private:
     const std::string & sender_address, const uint16_t sender_port,
     uint8_t * udp_packet_data, size_t udp_packet_size)
   {
-    RCLCPP_INFO(get_logger(), "Multicast packet received!");
     std::string parsing_error;
     RadioPacket packet = ParsePacket(udp_packet_data, udp_packet_size, parsing_error);
     if (!parsing_error.empty()) {
@@ -356,7 +362,6 @@ private:
 
   void TeamColorChangeCallback(const ateam_common::TeamColor)
   {
-    const std::lock_guard lock(mutex_);
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);
     }
