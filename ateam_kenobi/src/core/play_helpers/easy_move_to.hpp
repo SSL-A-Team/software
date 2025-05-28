@@ -69,8 +69,10 @@ public:
   void no_face();
 
   void setMaxVelocity(double velocity);
-
   void setMaxAngularVelocity(double velocity);
+
+  void setMaxAccel(double accel);
+  void setMaxDecel(double decel);
 
   ateam_msgs::msg::RobotMotionCommand runFrame(
     const Robot & robot, const World & world,

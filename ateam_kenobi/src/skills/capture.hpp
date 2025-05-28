@@ -72,25 +72,62 @@ public:
     capture_speed_ = speed;
   }
 
+  /**
+   * @brief Set if capture should attempt to steal the ball from an opponent robot
+   *
+   * @param should_steal Whether or not capture should attemp to steal the ball from opposing robots
+   */
+  void SetShouldSteal(double should_steal)
+  {
+    steal_from_opponent = should_steal;
+  }
+
 private:
   play_helpers::EasyMoveTo easy_move_to_;
   bool done_ = false;
+
+  bool steal_from_opponent = true;
+
   int ball_detected_filter_ = 0;
-  double approach_radius_ = 0.5;  // m
-  double capture_speed_ = 0.35;  // m/s
+  double approach_radius_ = kRobotRadius + kBallRadius + 0.15;  // m
+
+  double intercept_speed_ = 2.0;  // m/s
+
+  double capture_speed_ = 0.2;  // m/s
+
   double max_speed_ = 2.0;  // m/s
-  double decel_limit_ = 3.0;  // m/s/s
+  double accel_limit_ = 1.0;  // for extracting ball m/s/s
+  double decel_limit_ = 0.5;  // for approaching ball m/s/s
+
+  // Ball should have enough room for the robot to fit between it and the obstacle with a bit of extra space
+  double ball_distance_from_obstacle = kRobotDiameter + kBallRadius + 0.03;
+
+  ateam_geometry::Point approach_point;
+  ateam_geometry::Point fake_ball_point; // TESTING ONLY: REMOVE THIS
 
   enum class State
   {
-    MoveToBall,
-    Capture
+    Intercept,
+    MoveToApproachPoint,
+    Capture,
+    Extract
   };
-  State state_ = State::MoveToBall;
+  State state_ = State::MoveToApproachPoint;
+
+  ateam_geometry::Point calculateApproachPoint(const World & world, const Robot & robot);
+  ateam_geometry::Point calculateInterceptPoint(const World & world, const Robot & robot);
+  std::optional<ateam_geometry::Vector> calculateObstacleOffset(const World & world);
+
+  bool isBallNearInsideGoal(const World & world, double safe_distance);
+  bool isBallNearOutsideGoal(const World & world, double safe_distance);
+  bool isBallNearWall(const World & world, double safe_distance);
+  bool filteredBallSense(const Robot & robot);
 
   void chooseState(const World & world, const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand runMoveToBall(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runIntercept(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runMoveToApproachPoint(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runExtract(const World & world, const Robot & robot);
   ateam_msgs::msg::RobotMotionCommand runCapture(const World & world, const Robot & robot);
 };
 

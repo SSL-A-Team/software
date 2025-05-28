@@ -72,7 +72,11 @@ public:
       world,
       robot);
 
-    getPlayInfo()["line kick"] = line_kick_skill_.getPlayInfo();
+    if (use_pivot_kick) {
+      getPlayInfo()["pivot kick"] = pivot_kick_skill_.getPlayInfo();
+    } else {
+      getPlayInfo()["line kick"] = line_kick_skill_.getPlayInfo();
+    }
     return motion_commands;
   }
 

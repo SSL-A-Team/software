@@ -136,6 +136,24 @@ void EasyMoveTo::setMaxAngularVelocity(double velocity)
   motion_controller_.t_max = velocity;
 }
 
+void EasyMoveTo::setMaxAccel(double accel)
+{
+  if (accel > 6.0) {
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE ACCELERATION GIVEN TO SET MAX ACCELERATION");
+    return;
+  }
+  motion_controller_.accel_limit = accel;
+}
+
+void EasyMoveTo::setMaxDecel(double decel)
+{
+  if (decel > 6.0) {
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE DECELERATION GIVEN TO SET MAX DECELERATION");
+    return;
+  }
+  motion_controller_.decel_limit = decel;
+}
+
 ateam_msgs::msg::RobotMotionCommand EasyMoveTo::runFrame(
   const Robot & robot, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles)

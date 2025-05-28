@@ -38,9 +38,9 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 
   // Drive in square
   waypoints = {
-    {ateam_geometry::Point(1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(-1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(-1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(1.0, -1.0), AngleMode::face_absolute, 3*M_PI/2, 3.0},
+    {ateam_geometry::Point(-1.0, -1.0), AngleMode::face_absolute, M_PI, 3.0},
+    {ateam_geometry::Point(-1.0, 1.0), AngleMode::face_absolute, M_PI/2, 3.0},
     {ateam_geometry::Point(1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
   };
 

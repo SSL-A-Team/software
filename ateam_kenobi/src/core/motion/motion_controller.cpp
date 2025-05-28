@@ -87,6 +87,31 @@ void MotionController::set_trajectory(const std::vector<ateam_geometry::Point> &
   this->total_dist = 0;
 }
 
+double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robot& robot, double dt) {
+
+  // double vel = ateam_geometry::norm(robot.vel);
+  double vel = this->prev_command_vel;
+  double dist_to_stop = (vel*vel) / (2 * decel_limit);
+
+  // Cruise
+  double trapezoidal_vel = this->v_max;
+
+  // Decelerate to a stop
+  if (dist_to_stop >= ateam_geometry::norm(trajectory.back() - robot.pos)) {
+    trapezoidal_vel = vel - decel_limit * dt;
+
+  // Accelerate to speed
+  } else if (vel < this->v_max) {
+    trapezoidal_vel = vel + (accel_limit * dt);
+    // if (trapezoidal_vel < 0.1) {
+    //   trapezoidal_vel = 0.1;
+    // }
+  }
+
+  this->prev_command_vel = std::clamp(trapezoidal_vel, 0.0, this->v_max);
+  return this->prev_command_vel;
+}
+
 ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   ateam_kenobi::Robot robot,
   double current_time,
@@ -127,6 +152,10 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
   bool xy_slow = false;
   if (!trajectory_complete) {
+
+    // auto vel_vector = calculate_trapezoidal_velocity(robot, dt)
+    //   * ateam_geometry::normalize(target - robot.pos);
+
     // Calculate translational movement commands
     double x_command = this->x_controller.compute_command(x_error, dt);
     double y_command = this->y_controller.compute_command(y_error, dt);
@@ -134,15 +163,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     auto vel_vector = ateam_geometry::Vector(x_command, y_command);
 
     // clamp to max/min velocity
-    double min_vel = 0.4;
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
     }
-    if (ateam_geometry::norm(vel_vector) < min_vel) {
-      xy_slow = true;
-      vel_vector = min_vel * ateam_geometry::normalize(vel_vector);
-    }
-
     motion_command.twist.linear.x = vel_vector.x();
     motion_command.twist.linear.y = vel_vector.y();
   }
@@ -203,6 +226,7 @@ void MotionController::reset()
   this->progress = 0;
   this->total_dist = 0;
 
+  this->prev_command_vel = 0.0;
   this->prev_time = NAN;
 
   this->angle_mode = AngleMode::face_travel;

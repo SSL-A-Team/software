@@ -87,7 +87,10 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Capture(
   const World & world,
   const Robot & robot)
 {
-  return capture_.runFrame(world, robot);
+
+  auto motion_command = capture_.runFrame(world, robot);
+  getPlayInfo()["Capture"] = capture_.getPlayInfo();
+  return motion_command;
 }
 
 ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)

@@ -376,7 +376,7 @@ private:
     }
     in_play_eval_.Update(world_);
     double_touch_eval_.update(world_);
-    spatial_evaluator_.Update(world_);
+    // spatial_evaluator_.Update(world_);
     if (get_parameter("use_emulated_ballsense").as_bool()) {
       ballsense_emulator_.Update(world_);
     }
