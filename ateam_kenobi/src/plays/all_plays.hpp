@@ -26,7 +26,6 @@
 #include "kick_on_goal_play.hpp"
 #include "our_ball_placement_play.hpp"
 #include "their_ball_placement_play.hpp"
-#include "stop_play.hpp"
 #include "wall_play.hpp"
 #include "basic_122.hpp"
 #include "our_penalty_play.hpp"
@@ -36,6 +35,7 @@
 #include "passing_plays/all_passing_plays.hpp"
 #include "free_kick_plays/all_free_kick_plays.hpp"
 #include "kickoff_plays/all_kickoff_plays.hpp"
+#include "stop_plays/all_stop_plays.hpp"
 #include "test_plays/all_test_plays.hpp"
 
 #endif  // PLAYS__ALL_PLAYS_HPP_

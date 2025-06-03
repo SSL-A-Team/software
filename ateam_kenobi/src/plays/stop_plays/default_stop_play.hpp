@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__STOP_PLAY_HPP_
-#define PLAYS__STOP_PLAY_HPP_
+#ifndef STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
+#define STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
 
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
@@ -30,12 +30,12 @@
 
 namespace ateam_kenobi::plays
 {
-class StopPlay : public stp::Play
+class DefaultStopPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "StopPlay";
+  static constexpr const char * kPlayName = "DefaultStopPlay";
 
-  explicit StopPlay(stp::Options stp_options);
+  explicit DefaultStopPlay(stp::Options stp_options);
 
   stp::PlayScore getScore(const World & world) override;
 
@@ -74,4 +74,4 @@ private:
 };
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__STOP_PLAY_HPP_
+#endif  // STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_

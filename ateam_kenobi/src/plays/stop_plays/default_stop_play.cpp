@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "stop_play.hpp"
+#include "default_stop_play.hpp"
 #include <ranges>
 #include <algorithm>
 #include <limits>
@@ -34,7 +34,7 @@
 
 namespace ateam_kenobi::plays
 {
-StopPlay::StopPlay(stp::Options stp_options)
+DefaultStopPlay::DefaultStopPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options)
 {
   createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
@@ -42,10 +42,10 @@ StopPlay::StopPlay(stp::Options stp_options)
     // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
     move_to.setMaxVelocity(1.0);
   }
-  StopPlay::reset();
+  DefaultStopPlay::reset();
 }
 
-stp::PlayScore StopPlay::getScore(const World & world)
+stp::PlayScore DefaultStopPlay::getScore(const World & world)
 {
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::Stop:
@@ -55,14 +55,14 @@ stp::PlayScore StopPlay::getScore(const World & world)
   }
 }
 
-void StopPlay::reset()
+void DefaultStopPlay::reset()
 {
   for (auto & move_to : easy_move_tos_) {
     move_to.reset();
   }
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::runFrame(
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefaultStopPlay::runFrame(
   const World & world)
 {
   const auto added_obstacles = getAddedObstacles(world);
@@ -84,7 +84,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::run
 }
 
 
-std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
+std::vector<ateam_geometry::Point> DefaultStopPlay::getOpenSpots(const World & world)
 {
   const double consideration_radius = kKeepoutRadius + kRobotDiameter;
 
@@ -159,7 +159,7 @@ std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
   return spots;
 }
 
-void StopPlay::removeArc(
+void DefaultStopPlay::removeArc(
   std::vector<ateam_geometry::Arc> & openings,
   const ateam_geometry::Arc & arc)
 {
@@ -195,7 +195,7 @@ void StopPlay::removeArc(
   }
 }
 
-bool StopPlay::isPointInOrBehindGoal(const ateam_geometry::Point & point, const World & world)
+bool DefaultStopPlay::isPointInOrBehindGoal(const ateam_geometry::Point & point, const World & world)
 {
   const auto half_goal_width = world.field.goal_width / 2.0;
   const auto half_field_length = world.field.field_length / 2.0;
@@ -206,7 +206,7 @@ bool StopPlay::isPointInOrBehindGoal(const ateam_geometry::Point & point, const 
   return CGAL::do_intersect(bad_area, point);
 }
 
-std::vector<ateam_geometry::AnyShape> StopPlay::getAddedObstacles(const World & world)
+std::vector<ateam_geometry::AnyShape> DefaultStopPlay::getAddedObstacles(const World & world)
 {
   std::vector<ateam_geometry::AnyShape> obstacles;
 
@@ -245,7 +245,7 @@ std::vector<ateam_geometry::AnyShape> StopPlay::getAddedObstacles(const World & 
   return obstacles;
 }
 
-void StopPlay::drawObstacles(
+void DefaultStopPlay::drawObstacles(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles)
 {
@@ -270,7 +270,7 @@ void StopPlay::drawObstacles(
     ateam_geometry::makeCircle(world.ball.pos, kKeepoutRadiusRules), "red", "transparent");
 }
 
-void StopPlay::moveBotsTooCloseToBall(
+void DefaultStopPlay::moveBotsTooCloseToBall(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
@@ -319,7 +319,7 @@ void StopPlay::moveBotsTooCloseToBall(
   }
 }
 
-void StopPlay::moveBotsInObstacles(
+void DefaultStopPlay::moveBotsInObstacles(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
