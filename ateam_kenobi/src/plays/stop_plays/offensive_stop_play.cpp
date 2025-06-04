@@ -50,8 +50,17 @@ OffensiveStopPlay::OffensiveStopPlay(stp::Options stp_options)
 
 stp::PlayScore OffensiveStopPlay::getScore(const World & world)
 {
-  switch (world.referee_info.running_command) {
-    case ateam_common::GameCommand::Stop:
+  if (world.referee_info.running_command != ateam_common::GameCommand::Stop) {
+    return stp::PlayScore::Min();
+  }
+  if(!world.referee_info.next_command.has_value()) {
+    return stp::PlayScore::Min();
+  }
+  switch (world.referee_info.next_command.value()) {
+    case ateam_common::GameCommand::ForceStart:
+    case ateam_common::GameCommand::PrepareKickoffOurs:
+    case ateam_common::GameCommand::PreparePenaltyOurs:
+    case ateam_common::GameCommand::DirectFreeOurs:
       return stp::PlayScore::Max();
     default:
       return stp::PlayScore::Min();
@@ -79,12 +88,33 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OffensiveStop
 
   helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo());
 
+  runPrepBot(world, motion_commands);
+
   // Halt all robots that weren't already assigned a motion command
   std::ranges::replace_if(
     motion_commands,
     [](const auto & o) {return !o;}, std::make_optional(ateam_msgs::msg::RobotMotionCommand{}));
 
   return motion_commands;
+}
+
+void OffensiveStopPlay::runPrepBot(
+  const World & world,
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & maybe_motion_commands)
+{
+  const auto their_goal_center = ateam_geometry::Point(world.field.field_length / 2.0, 0.0);
+  const auto target_position = world.ball.pos +
+    (kPrepBotDistFromBall * (their_goal_center - world.ball.pos));
+
+  auto available_robots = play_helpers::getAvailableRobots(world);
+  play_helpers::removeGoalie(available_robots, world);
+  const auto closest_bot = play_helpers::getClosestRobot(available_robots, target_position);
+
+  auto & emt = easy_move_tos_[closest_bot.id];
+
+  emt.setTargetPosition(target_position);
+  emt.face_point(world.ball.pos);
+  maybe_motion_commands[closest_bot.id] = emt.runFrame(closest_bot, world);
 }
 
 }  // namespace ateam_kenobi::plays

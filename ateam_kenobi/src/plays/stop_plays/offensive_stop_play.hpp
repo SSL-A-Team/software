@@ -42,10 +42,15 @@ public:
     16> runFrame(const World & world) override;
 
 private:
+  constexpr static double kPrepBotDistFromBall = 0.9;
+
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
+  void runPrepBot(
+    const World & world,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & maybe_motion_commands);
 };
-  
+
 }  // namespace ateam_kenobi::plays
 
 #endif  // PLAYS__STOP_PLAYS__OFFENSIVE_STOP_PLAY_HPP_

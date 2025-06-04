@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
-#define STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
+#ifndef PLAYS__STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
+#define PLAYS__STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
 
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
@@ -49,4 +49,4 @@ private:
 };
 }  // namespace ateam_kenobi::plays
 
-#endif  // STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
+#endif  // PLAYS__STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_

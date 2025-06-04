@@ -66,7 +66,6 @@ void moveBotsInObstacles(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands,
   nlohmann::json & play_info);
 
-} // namespace ateam_kenobi::plays
-
+}  // namespace ateam_kenobi::plays::stop_plays::stop_helpers
 
 #endif  // PLAYS__STOP_PLAYS__STOP_HELPERS_HPP_

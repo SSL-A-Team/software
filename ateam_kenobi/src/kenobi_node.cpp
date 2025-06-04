@@ -353,12 +353,15 @@ private:
   {
     world_.current_time = std::chrono::steady_clock::now();
     world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
+    const auto & ref_msg = game_controller_listener_.GetLatestRefereeMessage();
     world_.referee_info.command_time =
       std::chrono::system_clock::time_point(
       std::chrono::nanoseconds(
-        rclcpp::Time(
-          game_controller_listener_.GetLatestRefereeMessage().command_timestamp).nanoseconds()));
+        rclcpp::Time(ref_msg.command_timestamp).nanoseconds()));
     world_.referee_info.prev_command = game_controller_listener_.GetPreviousGameCommand();
+    world_.referee_info.next_command =
+      ref_msg.next_command.empty() ? std::nullopt :
+      std::make_optional(static_cast<ateam_common::GameCommand>(ref_msg.next_command.front()));
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
 
     const auto & gc_designated_position =

@@ -52,7 +52,7 @@ stp::PlayScore DefaultStopPlay::getScore(const World & world)
 {
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::Stop:
-      return stp::PlayScore::Max();
+      return 50.0;
     default:
       return stp::PlayScore::Min();
   }
