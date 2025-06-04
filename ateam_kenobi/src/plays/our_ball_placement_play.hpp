@@ -49,7 +49,7 @@ private:
   tactics::Pass pass_tactic_;
   skills::Dribble dribble_;
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-  ateam_geometry::Point placement_point;
+  ateam_geometry::Point placement_point_;
 
   enum class State
   {
