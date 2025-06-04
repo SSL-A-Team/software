@@ -69,10 +69,13 @@ ateam_msgs::msg::RefereeInfo toMsg(const RefereeInfo & obj)
   ref_msg.game_command = static_cast<uint8_t>(obj.running_command);
   ref_msg.prev_command = static_cast<uint8_t>(obj.prev_command);
 
-  geometry_msgs::msg::Point32 designated_position;
-  designated_position.x = obj.designated_position.x();
-  designated_position.x = obj.designated_position.y();
-  ref_msg.designated_position = designated_position;
+  if (obj.designated_position.has_value()) {
+    ref_msg.designated_position.x = obj.designated_position->x();
+    ref_msg.designated_position.y = obj.designated_position->y();
+  } else {
+    ref_msg.designated_position.x = 0.0f;
+    ref_msg.designated_position.y = 0.0f;
+  }
 
   return ref_msg;
 }

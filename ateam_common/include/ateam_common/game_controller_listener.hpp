@@ -161,7 +161,7 @@ public:
     return their_goalie_id_;
   }
 
-  const geometry_msgs::msg::Point32 & GetDesignatedPosition() const
+  const std::optional<geometry_msgs::msg::Point32> & GetDesignatedPosition() const
   {
     return designated_position_;
   }
@@ -180,7 +180,7 @@ private:
   GameCommand prev_game_command_{GameCommand::Halt};
   std::optional<uint32_t> our_goalie_id_ {};
   std::optional<uint32_t> their_goalie_id_ {};
-  geometry_msgs::msg::Point32 designated_position_;
+  std::optional<geometry_msgs::msg::Point32> designated_position_;
   ssl_league_msgs::msg::Referee referee_msg_;
 
   ColorCallback color_callback_;
