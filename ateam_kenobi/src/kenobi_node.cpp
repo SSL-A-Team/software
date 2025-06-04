@@ -361,15 +361,22 @@ private:
     world_.referee_info.prev_command = game_controller_listener_.GetPreviousGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
 
-    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
-      world_.referee_info.designated_position = ateam_geometry::Point(
-        -game_controller_listener_.GetDesignatedPosition().x,
-        -game_controller_listener_.GetDesignatedPosition().y);
+    const auto & gc_designated_position =
+      game_controller_listener_.GetDesignatedPosition();
+    if (gc_designated_position.has_value()) {
+      if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
+        world_.referee_info.designated_position = ateam_geometry::Point(
+        -gc_designated_position->x,
+        -gc_designated_position->y);
+      } else {
+        world_.referee_info.designated_position = ateam_geometry::Point(
+        gc_designated_position->x,
+        gc_designated_position->y);
+      }
     } else {
-      world_.referee_info.designated_position = ateam_geometry::Point(
-        game_controller_listener_.GetDesignatedPosition().x,
-        game_controller_listener_.GetDesignatedPosition().y);
+      world_.referee_info.designated_position = std::nullopt;
     }
+
 
     if (game_controller_listener_.GetOurGoalieID().has_value()) {
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
