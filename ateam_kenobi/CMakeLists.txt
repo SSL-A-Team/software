@@ -61,6 +61,8 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/passing_plays/pass_to_segment_play.cpp
   src/plays/passing_plays/spatial_pass_play.cpp
   src/plays/stop_plays/default_stop_play.cpp
+  src/plays/stop_plays/offensive_stop_play.cpp
+  src/plays/stop_plays/stop_helpers.cpp
   src/plays/test_plays/controls_test_play.cpp
   src/plays/test_plays/spinning_a_play.cpp
   src/plays/test_plays/test_play.cpp

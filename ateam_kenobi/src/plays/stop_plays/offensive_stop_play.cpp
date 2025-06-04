@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "default_stop_play.hpp"
+#include "offensive_stop_play.hpp"
 #include <ranges>
 #include <algorithm>
 #include <limits>
@@ -37,7 +37,7 @@ namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;
 
 namespace ateam_kenobi::plays
 {
-DefaultStopPlay::DefaultStopPlay(stp::Options stp_options)
+OffensiveStopPlay::OffensiveStopPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options)
 {
   createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
@@ -45,10 +45,10 @@ DefaultStopPlay::DefaultStopPlay(stp::Options stp_options)
     // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
     move_to.setMaxVelocity(1.0);
   }
-  DefaultStopPlay::reset();
+  OffensiveStopPlay::reset();
 }
 
-stp::PlayScore DefaultStopPlay::getScore(const World & world)
+stp::PlayScore OffensiveStopPlay::getScore(const World & world)
 {
   switch (world.referee_info.running_command) {
     case ateam_common::GameCommand::Stop:
@@ -58,14 +58,14 @@ stp::PlayScore DefaultStopPlay::getScore(const World & world)
   }
 }
 
-void DefaultStopPlay::reset()
+void OffensiveStopPlay::reset()
 {
   for (auto & move_to : easy_move_tos_) {
     move_to.reset();
   }
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefaultStopPlay::runFrame(
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OffensiveStopPlay::runFrame(
   const World & world)
 {
   const auto added_obstacles = helpers::getAddedObstacles(world);

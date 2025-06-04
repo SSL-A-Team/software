@@ -18,9 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__STOP_PLAYS__ALL_STOP_PLAYS_HPP
-#define PLAYS__STOP_PLAYS__ALL_STOP_PLAYS_HPP
+#ifndef PLAYS__STOP_PLAYS__OFFENSIVE_STOP_PLAY_HPP_
+#define PLAYS__STOP_PLAYS__OFFENSIVE_STOP_PLAY_HPP_
 
-#include "default_stop_play.hpp"
+#include "core/stp/play.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 
-#endif // PLAYS__STOP_PLAYS__ALL_STOP_PLAYS_HPP
+namespace ateam_kenobi::plays
+{
+
+class OffensiveStopPlay : public stp::Play
+{
+public:
+  static constexpr const char * kPlayName = "OffensiveStopPlay";
+
+  explicit OffensiveStopPlay(stp::Options stp_options);
+
+  stp::PlayScore getScore(const World & world) override;
+
+  void reset() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+
+};
+  
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__STOP_PLAYS__OFFENSIVE_STOP_PLAY_HPP_
