@@ -359,6 +359,7 @@ private:
       std::chrono::nanoseconds(
         rclcpp::Time(ref_msg.command_timestamp).nanoseconds()));
     world_.referee_info.prev_command = game_controller_listener_.GetPreviousGameCommand();
+    // TODO(barulicm): This is incorrect and needs to go through GameControllerListener::ConvertGameCommand
     world_.referee_info.next_command =
       ref_msg.next_command.empty() ? std::nullopt :
       std::make_optional(static_cast<ateam_common::GameCommand>(ref_msg.next_command.front()));
