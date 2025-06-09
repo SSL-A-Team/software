@@ -45,6 +45,8 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   halt_play_ = addPlay<HaltPlay>(stp_options);
   addPlay<TestPlay>(stp_options);
   addPlay<DefaultStopPlay>(stp_options);
+  addPlay<OffensiveStopPlay>(stp_options);
+  addPlay<DefensiveStopPlay>(stp_options);
   addPlay<WallPlay>(stp_options);
   addPlay<KickOnGoalPlay>(stp_options);
   addPlay<KickoffOnGoalPlay>(stp_options);

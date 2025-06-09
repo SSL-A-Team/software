@@ -22,5 +22,7 @@
 #define PLAYS__STOP_PLAYS__ALL_STOP_PLAYS_HPP_
 
 #include "default_stop_play.hpp"
+#include "defensive_stop_play.hpp"
+#include "offensive_stop_play.hpp"
 
 #endif  // PLAYS__STOP_PLAYS__ALL_STOP_PLAYS_HPP_

@@ -86,9 +86,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OffensiveStop
   helpers::moveBotsTooCloseToBall(world, added_obstacles, motion_commands, easy_move_tos_,
     getOverlays(), getPlayInfo());
 
-  helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo());
-
   runPrepBot(world, motion_commands);
+
+  helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo());
 
   // Halt all robots that weren't already assigned a motion command
   std::ranges::replace_if(
@@ -103,11 +103,20 @@ void OffensiveStopPlay::runPrepBot(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & maybe_motion_commands)
 {
   const auto their_goal_center = ateam_geometry::Point(world.field.field_length / 2.0, 0.0);
+  // TODO(barulicm): May need to handle balls close to field edge smarter
   const auto target_position = world.ball.pos +
-    (kPrepBotDistFromBall * (their_goal_center - world.ball.pos));
+    (kPrepBotDistFromBall * ateam_geometry::normalize(world.ball.pos - their_goal_center));
+
+  if (!path_planning::IsPointInBounds(target_position, world)) {
+    return;
+  }
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
+  if(available_robots.empty()) {
+    // No available robots, nothing to do
+    return;
+  }
   const auto closest_bot = play_helpers::getClosestRobot(available_robots, target_position);
 
   auto & emt = easy_move_tos_[closest_bot.id];
