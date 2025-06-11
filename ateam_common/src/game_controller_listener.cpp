@@ -114,6 +114,12 @@ void GameControllerListener::RefereeMessageCallback(
     prev_game_command_ = game_command_;
     game_command_ = new_game_command;
   }
+  
+  if (msg->next_command.empty()) {
+    next_game_command_ = std::nullopt;
+  } else {
+    next_game_command_ = ConvertGameCommand(msg->next_command.front());
+  }
 
   designated_position_ =
     msg->designated_position.empty() ? std::nullopt :
