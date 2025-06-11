@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,24 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
+#define PLAYS__STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
 
-#ifndef PLAYS__ALL_PLAYS_HPP_
-#define PLAYS__ALL_PLAYS_HPP_
+#include <vector>
+#include <ateam_common/robot_constants.hpp>
+#include "core/path_planning/path_planner.hpp"
+#include "core/motion/motion_controller.hpp"
+#include "core/stp/play.hpp"
+#include "core/play_helpers/easy_move_to.hpp"
 
-#include "halt_play.hpp"
-#include "kick_on_goal_play.hpp"
-#include "our_ball_placement_play.hpp"
-#include "their_ball_placement_play.hpp"
-#include "wall_play.hpp"
-#include "basic_122.hpp"
-#include "our_penalty_play.hpp"
-#include "their_penalty_play.hpp"
-#include "defense_play.hpp"
-#include "extract_play.hpp"
-#include "passing_plays/all_passing_plays.hpp"
-#include "free_kick_plays/all_free_kick_plays.hpp"
-#include "kickoff_plays/all_kickoff_plays.hpp"
-#include "stop_plays/all_stop_plays.hpp"
-#include "test_plays/all_test_plays.hpp"
+namespace ateam_kenobi::plays
+{
+class DefaultStopPlay : public stp::Play
+{
+public:
+  static constexpr const char * kPlayName = "DefaultStopPlay";
 
-#endif  // PLAYS__ALL_PLAYS_HPP_
+  explicit DefaultStopPlay(stp::Options stp_options);
+
+  stp::PlayScore getScore(const World & world) override;
+
+  void reset() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+};
+}  // namespace ateam_kenobi::plays
+
+#endif  // PLAYS__STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
