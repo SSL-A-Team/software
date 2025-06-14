@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,73 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "stop_play.hpp"
-#include <ranges>
+#include "stop_helpers.hpp"
 #include <algorithm>
-#include <limits>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
-#include <ateam_geometry/normalize.hpp>
-#include <ateam_geometry/do_intersect.hpp>
-#include "core/play_helpers/window_evaluation.hpp"
 #include "core/play_helpers/available_robots.hpp"
-#include "core/play_helpers/robot_assignment.hpp"
+#include "core/play_helpers/window_evaluation.hpp"
 #include "core/path_planning/obstacles.hpp"
 #include "core/path_planning/escape_velocity.hpp"
+#include "core/play_helpers/robot_assignment.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::plays::stop_plays::stop_helpers
 {
-StopPlay::StopPlay(stp::Options stp_options)
-: stp::Play(kPlayName, stp_options)
-{
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
-  for (auto & move_to : easy_move_tos_) {
-    // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
-    move_to.setMaxVelocity(1.0);
-  }
-  StopPlay::reset();
-}
 
-stp::PlayScore StopPlay::getScore(const World & world)
-{
-  switch (world.referee_info.running_command) {
-    case ateam_common::GameCommand::Stop:
-      return stp::PlayScore::Max();
-    default:
-      return stp::PlayScore::Min();
-  }
-}
-
-void StopPlay::reset()
-{
-  for (auto & move_to : easy_move_tos_) {
-    move_to.reset();
-  }
-}
-
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> StopPlay::runFrame(
-  const World & world)
-{
-  const auto added_obstacles = getAddedObstacles(world);
-
-  drawObstacles(world, added_obstacles);
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
-
-  moveBotsTooCloseToBall(world, added_obstacles, motion_commands);
-
-  moveBotsInObstacles(world, added_obstacles, motion_commands);
-
-  // Halt all robots that weren't already assigned a motion command
-  std::ranges::replace_if(
-    motion_commands,
-    [](const auto & o) {return !o;}, std::make_optional(ateam_msgs::msg::RobotMotionCommand{}));
-
-  return motion_commands;
-}
-
-
-std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
+std::vector<ateam_geometry::Point> getOpenSpots(
+  const World & world,
+  visualization::Overlays & overlays)
 {
   const double consideration_radius = kKeepoutRadius + kRobotDiameter;
 
@@ -131,7 +79,7 @@ std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
 
   auto ind = 0;
   for (const auto & opening : openings) {
-    getOverlays().drawArc(
+    overlays.drawArc(
       "opening" + std::to_string(
         ind), opening, ind % 2 == 0 ? "white" : "lightgray");
     ind++;
@@ -152,14 +100,14 @@ std::vector<ateam_geometry::Point> StopPlay::getOpenSpots(const World & world)
 
   spots.erase(
     std::remove_if(
-      spots.begin(), spots.end(), [this, &world](const auto & p) {
+      spots.begin(), spots.end(), [&world](const auto & p) {
         return (!path_planning::IsPointInBounds(p, world)) || isPointInOrBehindGoal(p, world);
       }), spots.end());
 
   return spots;
 }
 
-void StopPlay::removeArc(
+void removeArc(
   std::vector<ateam_geometry::Arc> & openings,
   const ateam_geometry::Arc & arc)
 {
@@ -195,7 +143,9 @@ void StopPlay::removeArc(
   }
 }
 
-bool StopPlay::isPointInOrBehindGoal(const ateam_geometry::Point & point, const World & world)
+bool isPointInOrBehindGoal(
+  const ateam_geometry::Point & point,
+  const World & world)
 {
   const auto half_goal_width = world.field.goal_width / 2.0;
   const auto half_field_length = world.field.field_length / 2.0;
@@ -206,7 +156,7 @@ bool StopPlay::isPointInOrBehindGoal(const ateam_geometry::Point & point, const 
   return CGAL::do_intersect(bad_area, point);
 }
 
-std::vector<ateam_geometry::AnyShape> StopPlay::getAddedObstacles(const World & world)
+std::vector<ateam_geometry::AnyShape> getAddedObstacles(const World & world)
 {
   std::vector<ateam_geometry::AnyShape> obstacles;
 
@@ -245,37 +195,40 @@ std::vector<ateam_geometry::AnyShape> StopPlay::getAddedObstacles(const World & 
   return obstacles;
 }
 
-void StopPlay::drawObstacles(
+void drawObstacles(
   const World & world,
-  const std::vector<ateam_geometry::AnyShape> & added_obstacles)
+  const std::vector<ateam_geometry::AnyShape> & added_obstacles, visualization::Overlays & overlays,
+  rclcpp::Logger & logger)
 {
   int obstacle_index = 0;
   for(const auto & obst : added_obstacles) {
-    std::visit([this, &obstacle_index] (const auto & o) mutable {
+    std::visit([&obstacle_index, &overlays, &logger] (const auto & o) mutable {
         if constexpr (std::is_same_v<decltype(o), const ateam_geometry::Circle &>) {
-          getOverlays().drawCircle("obstacle" + std::to_string(obstacle_index), o, "red",
+          overlays.drawCircle("obstacle" + std::to_string(obstacle_index), o, "red",
             "transparent");
         } else if constexpr (std::is_same_v<decltype(o), const ateam_geometry::Rectangle &>) {
-          getOverlays().drawRectangle("obstacle" + std::to_string(obstacle_index), o, "red",
+          overlays.drawRectangle("obstacle" + std::to_string(obstacle_index), o, "red",
             "transparent");
         } else {
-          RCLCPP_WARN_STREAM(getLogger(), "Unsupported obstacle type: " << typeid(o).name());
+          RCLCPP_WARN_STREAM(logger, "Unsupported obstacle type: " << typeid(o).name());
         }
     }, obst);
     obstacle_index++;
   }
 
-  getOverlays().drawCircle(
+  overlays.drawCircle(
     "keepout_circle",
     ateam_geometry::makeCircle(world.ball.pos, kKeepoutRadiusRules), "red", "transparent");
 }
 
-void StopPlay::moveBotsTooCloseToBall(
+void moveBotsTooCloseToBall(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands,
+  std::array<play_helpers::EasyMoveTo, 16> & easy_move_tos, visualization::Overlays & overlays,
+  nlohmann::json & play_info)
 {
-  const auto spots = getOpenSpots(world);
+  const auto spots = getOpenSpots(world, overlays);
 
   auto bot_too_close = [ball_pos = world.ball.pos, r = kKeepoutRadius](const Robot bot) {
       return ateam_geometry::norm(bot.pos - ball_pos) < r;
@@ -286,7 +239,7 @@ void StopPlay::moveBotsTooCloseToBall(
     play_helpers::getAvailableRobots(world), std::back_inserter(
       bots_to_move), bot_too_close);
 
-  auto & play_info_array = getPlayInfo()["bots near ball"];
+  auto & play_info_array = play_info["bots near ball"];
   play_info_array = nlohmann::json::array();
   std::ranges::transform(bots_to_move, std::back_inserter(play_info_array),
     [](const Robot & r) {return r.id;});
@@ -300,7 +253,7 @@ void StopPlay::moveBotsTooCloseToBall(
       continue;
     }
     const auto & bot = *maybe_bot;
-    auto & emt = easy_move_tos_.at(bot.id);
+    auto & emt = easy_move_tos.at(bot.id);
     emt.setTargetPosition(spot);
     emt.face_point(world.ball.pos);
     if (bot.id == world.referee_info.our_goalie_id) {
@@ -313,18 +266,19 @@ void StopPlay::moveBotsTooCloseToBall(
       emt.setPlannerOptions(planner_options);
     }
     motion_commands.at(bot.id) = emt.runFrame(bot, world, added_obstacles);
-    getOverlays().drawCircle(
+    overlays.drawCircle(
       "spot" + std::to_string(spot_ind),
       ateam_geometry::makeCircle(spot, kRobotRadius), "blue", "transparent");
   }
 }
 
-void StopPlay::moveBotsInObstacles(
+void moveBotsInObstacles(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands,
+  nlohmann::json & play_info)
 {
-  auto & play_info_bots = getPlayInfo()["bots in obstacles"];
+  auto & play_info_bots = play_info["bots in obstacles"];
   play_info_bots = nlohmann::json::array();
   for(auto i = 0ul; i < motion_commands.size(); ++i) {
     const auto & robot = world.our_robots[i];
@@ -341,4 +295,5 @@ void StopPlay::moveBotsInObstacles(
     play_info_bots.push_back(robot.id);
   }
 }
-}  // namespace ateam_kenobi::plays
+
+}  // namespace ateam_kenobi::plays::stop_plays::stop_helpers

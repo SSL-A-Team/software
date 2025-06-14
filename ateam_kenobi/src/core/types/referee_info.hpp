@@ -37,6 +37,7 @@ struct RefereeInfo
   ateam_common::GameCommand running_command = ateam_common::GameCommand::Halt;
   ateam_common::GameCommand prev_command = ateam_common::GameCommand::Halt;
   std::optional<ateam_geometry::Point> designated_position;
+  std::optional<ateam_common::GameCommand> next_command = std::nullopt;
   std::chrono::system_clock::time_point command_time;
 };
 }  // namespace ateam_kenobi

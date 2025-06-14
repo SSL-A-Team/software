@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,24 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__STOP_PLAY_HPP_
-#define PLAYS__STOP_PLAY_HPP_
+#ifndef PLAYS__STOP_PLAYS__DEFENSIVE_STOP_PLAY_HPP_
+#define PLAYS__STOP_PLAYS__DEFENSIVE_STOP_PLAY_HPP_
 
-#include <vector>
-#include <ateam_common/robot_constants.hpp>
-#include "core/path_planning/path_planner.hpp"
-#include "core/motion/motion_controller.hpp"
 #include "core/stp/play.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
-class StopPlay : public stp::Play
+
+class DefensiveStopPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "StopPlay";
+  static constexpr const char * kPlayName = "DefensiveStopPlay";
 
-  explicit StopPlay(stp::Options stp_options);
+  explicit DefensiveStopPlay(stp::Options stp_options);
 
   stp::PlayScore getScore(const World & world) override;
 
@@ -45,33 +42,15 @@ public:
     16> runFrame(const World & world) override;
 
 private:
-  static constexpr double kKeepoutRadiusRules = 0.5;
-  static constexpr double kKeepoutRadius = kKeepoutRadiusRules + kRobotRadius + 0.2;
+  constexpr static double kPrepBotDistFromBall = 0.9;
 
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
-  std::vector<ateam_geometry::Point> getOpenSpots(const World & world);
-
-  void removeArc(std::vector<ateam_geometry::Arc> & openings, const ateam_geometry::Arc & arc);
-
-  bool isPointInOrBehindGoal(const ateam_geometry::Point & point, const World & world);
-
-  std::vector<ateam_geometry::AnyShape> getAddedObstacles(const World & world);
-
-  void drawObstacles(
+  void runPrepBot(
     const World & world,
-    const std::vector<ateam_geometry::AnyShape> & added_obstacles);
-
-  void moveBotsTooCloseToBall(
-    const World & world,
-    const std::vector<ateam_geometry::AnyShape> & added_obstacles,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
-
-  void moveBotsInObstacles(
-    const World & world,
-    const std::vector<ateam_geometry::AnyShape> & added_obstacles,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & maybe_motion_commands);
 };
+
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__STOP_PLAY_HPP_
+#endif  // PLAYS__STOP_PLAYS__DEFENSIVE_STOP_PLAY_HPP_
