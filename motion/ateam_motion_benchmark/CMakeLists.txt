@@ -12,6 +12,7 @@ find_package(ateam_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
 
 add_executable(velocity_benchmark src/velocity_benchmark.cpp)
+target_compile_features(velocity_benchmark PUBLIC cxx_std_20)
 ament_target_dependencies(velocity_benchmark
   rclcpp
   ateam_common

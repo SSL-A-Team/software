@@ -1,6 +1,7 @@
 #include <getopt.h>
 #include <cstdio>
 #include <cstdlib>
+#include <format>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_common/topic_names.hpp>
@@ -241,37 +242,6 @@ private:
     }
   }
 
-  void EndBenchmark()
-  {
-    timer_.reset();
-    ateam_msgs::msg::RobotMotionCommand command;
-    command.twist.linear.x = 0.0;
-    command.twist.linear.y = 0.0;
-    command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
-    command_pub_->publish(command);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    RCLCPP_INFO(get_logger(), "Benchmark finished.");
-
-    std::string filename = "benchmark_results_" + std::to_string(std::time(nullptr)) + ".csv";
-
-    std::ofstream file(filename);
-    if(!file.is_open()) {
-      RCLCPP_ERROR(get_logger(), "Failed to open file for writing.");
-      return;
-    }
-    file << "Time, Command speed, Robot speed, Robot perp speed, Robot perp distance\n";
-    for(const auto & entry : data_) {
-      file << entry.time << ", " << entry.command_speed << ", "
-           << entry.robot_speed << ", " << entry.robot_perp_speed << ", "
-           << entry.robot_perp_distance << "\n";
-    }
-    file.close();
-    RCLCPP_INFO(get_logger(), "Results saved to %s", filename.c_str());
-
-    rclcpp::shutdown();
-  }
-
   void RunBenchmark()
   {
     const auto & robot = robots_[robot_id_];
@@ -334,6 +304,56 @@ private:
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
 
     command_pub_->publish(command);
+  }
+
+  void EndBenchmark()
+  {
+    timer_.reset();
+    ateam_msgs::msg::RobotMotionCommand command;
+    command.twist.linear.x = 0.0;
+    command.twist.linear.y = 0.0;
+    command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
+    command_pub_->publish(command);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    RCLCPP_INFO(get_logger(), "Benchmark finished.");
+
+    std::string filename = "benchmark_results_" + std::to_string(std::time(nullptr)) + ".csv";
+
+    std::ofstream file(filename);
+    if(!file.is_open()) {
+      RCLCPP_ERROR(get_logger(), "Failed to open file for writing.");
+      return;
+    }
+    file << "Time, Command speed, Robot speed, Robot perp speed, Robot perp distance\n";
+    for(const auto & entry : data_) {
+      file << entry.time << ", " << entry.command_speed << ", "
+           << entry.robot_speed << ", " << entry.robot_perp_speed << ", "
+           << entry.robot_perp_distance << "\n";
+    }
+    file.close();
+    RCLCPP_INFO(get_logger(), "Results saved to %s", filename.c_str());
+
+    ShowGraph(filename);
+
+    rclcpp::shutdown();
+  }
+
+  void ShowGraph(const std::string & results_filename)
+  {
+    std::string command = std::format("gnuplot -e \""
+      "set title 'Velocity Benchmark Results';"
+      "set multiplot layout 1,3;"
+      "set xlabel 'Time (s)';"
+      "plot '{0}' using 1:2 with lines title 'Command Speed', '{0}' using 1:3 with lines>plot '{0}' using 1:4 with lines title 'Robot Perpendicular Speed';"
+      "plot '{0}' using 1:5 with lines title 'Robot Perpendicular Distance';"
+      "\"", results_filename);
+    int ret = std::system(command.c_str());
+    if(ret == -1) {
+      RCLCPP_ERROR(get_logger(), "Failed to run gnuplot.");
+    } else {
+      RCLCPP_INFO(get_logger(), "Graph view started.");
+    }
   }
 
   Direction PickDirection(const Robot & robot)
