@@ -18,7 +18,7 @@ ament_target_dependencies(velocity_benchmark
   ateam_msgs
 )
 
-install(TARGETS velocity_benchmark DESTINATION lib)
+install(TARGETS velocity_benchmark DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
