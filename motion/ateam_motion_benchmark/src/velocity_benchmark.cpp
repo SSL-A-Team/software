@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <format>
 #include <optional>
+#include <ranges>
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/game_controller_listener.hpp>
@@ -12,6 +13,7 @@
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/msg/robot_motion_feedback.hpp>
 
 
 enum class Axis
@@ -117,6 +119,7 @@ struct Robot
 {
   std::optional<ateam_msgs::msg::RobotState> state;
   std::optional<ateam_msgs::msg::RobotFeedback> feedback;
+  std::optional<ateam_msgs::msg::RobotMotionFeedback> motion_feedback;
 };
 
 
@@ -124,9 +127,11 @@ struct DataEntry
 {
   double time;
   double command_speed;
-  double robot_speed;
-  double robot_perp_speed;
-  double robot_perp_distance;
+  double vision_speed;
+  double vision_perp_speed;
+  double vision_perp_distance;
+  double firmware_speed;
+  double firmware_perp_speed;
 };
 
 
@@ -149,6 +154,10 @@ public:
     create_indexed_subscribers<ateam_msgs::msg::RobotFeedback>(robot_feedback_subs_,
       Topics::kRobotFeedbackPrefix, 1, &VelocityBenchmarkNode::RobotFeedbackCallback, this);
 
+    create_indexed_subscribers<ateam_msgs::msg::RobotMotionFeedback>(
+      robot_motion_feedback_subs_, Topics::kRobotMotionFeedbackPrefix, 1,
+      &VelocityBenchmarkNode::RobotMotionFeedbackCallback, this);
+
     RCLCPP_INFO(get_logger(), "Waiting for robot...");
     timer_ = create_wall_timer(kTimerDuration,
       std::bind(&VelocityBenchmarkNode::WaitForRobot, this));
@@ -163,6 +172,7 @@ private:
   std::array<Robot, 16> robots_;
   std::vector<DataEntry> data_;
 
+  std::chrono::steady_clock::time_point start_time_;
   int robot_id_ = -1;
   double perpendicular_start_pos_ = 0.0;
   Direction direction_ = Direction::Pos;
@@ -173,6 +183,8 @@ private:
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr, 16> robot_state_subs_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotFeedback>::SharedPtr,
     16> robot_feedback_subs_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionFeedback>::SharedPtr,
+    16> robot_motion_feedback_subs_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   void FieldCallback(const ateam_msgs::msg::FieldInfo::SharedPtr msg)
@@ -188,6 +200,12 @@ private:
   void RobotFeedbackCallback(const ateam_msgs::msg::RobotFeedback::SharedPtr msg, int robot_id)
   {
     robots_[robot_id].feedback = *msg;
+  }
+
+  void RobotMotionFeedbackCallback(
+    const ateam_msgs::msg::RobotMotionFeedback::SharedPtr msg, int robot_id)
+  {
+    robots_[robot_id].motion_feedback = *msg;
   }
 
   void WaitForRobot()
@@ -237,6 +255,7 @@ private:
       motion_ray_ = GetLocalRay(robot, options_.axis, direction_);
 
       RCLCPP_INFO(get_logger(), "Running benchmark...");
+      start_time_ = std::chrono::steady_clock::now();
       timer_ = create_wall_timer(kTimerDuration,
         std::bind(&VelocityBenchmarkNode::RunBenchmark, this));
     }
@@ -304,6 +323,29 @@ private:
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
 
     command_pub_->publish(command);
+
+    const auto vision_speed = options_.axis == Axis::X ?
+      robot.state->twist_body.linear.x : robot.state->twist_body.linear.y;
+    const auto vision_perp_speed = options_.axis == Axis::X ?
+      robot.state->twist_body.linear.y : robot.state->twist_body.linear.x;
+    const auto firmware_speed = options_.axis == Axis::X ?
+      robot.motion_feedback->body_velocity_state_estimate.linear.x :
+      robot.motion_feedback->body_velocity_state_estimate.linear.y;
+    const auto firmware_perp_speed = options_.axis == Axis::X ?
+      robot.motion_feedback->body_velocity_state_estimate.linear.y :
+      robot.motion_feedback->body_velocity_state_estimate.linear.x;
+
+    DataEntry entry{
+      .time = std::chrono::duration_cast<std::chrono::duration<double>>(
+        std::chrono::steady_clock::now() - start_time_).count(),
+      .command_speed = speed,
+      .vision_speed = vision_speed,
+      .vision_perp_speed = vision_perp_speed,
+      .vision_perp_distance = perp_distance,
+      .firmware_speed = firmware_speed,
+      .firmware_perp_speed = firmware_perp_speed
+    };
+    data_.push_back(entry);
   }
 
   void EndBenchmark()
@@ -318,25 +360,89 @@ private:
 
     RCLCPP_INFO(get_logger(), "Benchmark finished.");
 
-    std::string filename = "benchmark_results_" + std::to_string(std::time(nullptr)) + ".csv";
+    const std::string timestamp = std::to_string(std::time(nullptr));
+    const std::string filename = "vel_benchmark_" + timestamp + "_data.csv";
 
     std::ofstream file(filename);
     if(!file.is_open()) {
-      RCLCPP_ERROR(get_logger(), "Failed to open file for writing.");
+      RCLCPP_ERROR(get_logger(), "Failed to open %s for writing.", filename.c_str());
       return;
     }
-    file << "Time, Command speed, Robot speed, Robot perp speed, Robot perp distance\n";
+    file <<
+      "Time, Command speed, Vision speed, Vision perp speed, Vision perp distance, Firmware speed, Firmware perp speed\n";
     for(const auto & entry : data_) {
       file << entry.time << ", " << entry.command_speed << ", "
-           << entry.robot_speed << ", " << entry.robot_perp_speed << ", "
-           << entry.robot_perp_distance << "\n";
+           << entry.vision_speed << ", " << entry.vision_perp_speed << ", "
+           << entry.vision_perp_distance << ", " << entry.firmware_speed << ", " <<
+        entry.firmware_perp_speed << "\n";
     }
     file.close();
-    RCLCPP_INFO(get_logger(), "Results saved to %s", filename.c_str());
+    RCLCPP_INFO(get_logger(), "Data saved to %s", filename.c_str());
 
+    CalculateStats(timestamp);
     ShowGraph(filename);
 
     rclcpp::shutdown();
+  }
+
+  void CalculateStats(const std::string & filename_timestamp)
+  {
+    if(data_.empty()) {
+      RCLCPP_WARN(get_logger(), "No data collected during the benchmark.");
+      return;
+    }
+
+    const auto vision_errors = std::views::transform(data_,
+      [](const DataEntry & entry) {
+        return std::abs(entry.vision_speed - entry.command_speed);
+      });
+    const auto firmware_errors = std::views::transform(data_,
+      [](const DataEntry & entry) {
+        return std::abs(entry.firmware_speed - entry.command_speed);
+      });
+
+    const auto speed_vision_sum_sq_error = std::accumulate(vision_errors.begin(), vision_errors.end(), 0.0,
+      [](double acc, const double & error) {
+        return acc + std::pow(error - error, 2);
+      });
+    const auto speed_vision_avg_sq_error = speed_vision_sum_sq_error / vision_errors.size();
+    const auto speed_firmware_sum_sq_error = std::accumulate(firmware_errors.begin(), firmware_errors.end(), 0.0,
+      [](double acc, const double & error) {
+        return acc + std::pow(error - error, 2);
+      });
+    const auto speed_firmware_avg_sq_error = speed_firmware_sum_sq_error / firmware_errors.size();
+
+    const auto max_vision_error = std::ranges::max(vision_errors);
+    const auto max_firmware_error = std::ranges::max(firmware_errors);
+    const auto min_vision_error = std::ranges::min(vision_errors);
+    const auto min_firmware_error = std::ranges::min(firmware_errors);
+    
+    std::stringstream ss;
+    ss << '\n';
+    ss << "Benchmark Statistics:\n";
+    ss << "  Total entries: " << data_.size() << "\n";
+    ss << "  Benchmark Duration: "
+              << data_.back().time << " seconds\n";
+    ss << "  Vision Speed Loss: " << speed_vision_avg_sq_error << "\n";
+    ss << "  Firmware Speed Loss: " << speed_firmware_avg_sq_error << "\n";
+    ss << "  Max Vision Speed Error: " << max_vision_error << "\n";
+    ss << "  Max Firmware Speed Error: " << max_firmware_error << "\n";
+    ss << "  Min Vision Speed Error: " << min_vision_error << "\n";
+    ss << "  Min Firmware Speed Error: " << min_firmware_error << "\n";
+
+    const auto stats_display = ss.str();
+    RCLCPP_INFO(get_logger(), "%s", stats_display.c_str());
+
+    const std::string filename = "vel_benchmark_" + filename_timestamp + "_stats.csv";
+
+    std::ofstream file(filename);
+    if(!file.is_open()) {
+      RCLCPP_ERROR(get_logger(), "Failed to open %s for writing.", filename.c_str());
+      return;
+    }
+    file << stats_display;
+    file.close();
+    RCLCPP_INFO(get_logger(), "Statistics saved to %s", filename.c_str());
   }
 
   void ShowGraph(const std::string & results_filename)
@@ -345,8 +451,12 @@ private:
       "set title 'Velocity Benchmark Results';"
       "set multiplot layout 1,3;"
       "set xlabel 'Time (s)';"
-      "plot '{0}' using 1:2 with lines title 'Command Speed', '{0}' using 1:3 with lines>plot '{0}' using 1:4 with lines title 'Robot Perpendicular Speed';"
-      "plot '{0}' using 1:5 with lines title 'Robot Perpendicular Distance';"
+      "plot '{0}' using 1:2 with lines title 'Command Speed', "
+      "'{0}' using 1:3 with lines title 'Vision Speed', "
+      "'{0}' using 1:6 with lines title 'Firmware Speed';"
+      "plot '{0}' using 1:4 with lines title 'Vision Perpendicular Speed', "
+      "'{0}' using 1:7 with lines title 'Firmware Perpendicular Speed';"
+      "plot '{0}' using 1:5 with lines title 'Vision Perpendicular Distance';"
       "\"", results_filename);
     int ret = std::system(command.c_str());
     if(ret == -1) {
