@@ -14,6 +14,7 @@
 #include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_motion_feedback.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 
 enum class Axis
@@ -177,6 +178,7 @@ private:
   double perpendicular_start_pos_ = 0.0;
   Direction direction_ = Direction::Pos;
   ateam_geometry::Ray motion_ray_;
+  double command_speed_ = 0.0;
 
   rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr command_pub_;
   rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr field_sub_;
@@ -252,6 +254,8 @@ private:
       }
 
       direction_ = PickDirection(robot);
+      RCLCPP_INFO(get_logger(), "Direction: %s",
+        direction_ == Direction::Pos ? "Positive" : "Negative");
       motion_ray_ = GetLocalRay(robot, options_.axis, direction_);
 
       RCLCPP_INFO(get_logger(), "Running benchmark...");
@@ -293,6 +297,14 @@ private:
         }
       }();
 
+    if(distance_to_field_edge.direction == direction_ &&
+      distance_to_field_edge.distance < stopping_distance && std::abs(robot_speed) < 1e-2)
+    {
+      RCLCPP_INFO(get_logger(), "Benchmark completed successfully.");
+      EndBenchmark();
+      return;
+    }
+
     ateam_msgs::msg::RobotMotionCommand command;
 
     const auto delta_t =
@@ -300,19 +312,21 @@ private:
 
     auto speed = 0.0;
 
-    if(distance_to_field_edge.direction == direction_ ||
+    if(distance_to_field_edge.direction == Invert(direction_) ||
       distance_to_field_edge.distance > stopping_distance)
     {
-      speed = std::min(robot_speed + (options_.accel * delta_t), options_.max_speed);
+      speed = std::min(std::abs(command_speed_) + (options_.accel * delta_t), options_.max_speed);
       if(direction_ == Direction::Neg) {
         speed = -speed;
       }
     } else {
-      speed = std::max(robot_speed - (options_.accel * delta_t), 0.0);
-      if(direction_ == Direction::Pos) {
+      speed = std::max(std::abs(command_speed_) - (options_.accel * delta_t), 0.0);
+      if(direction_ == Direction::Neg) {
         speed = -speed;
       }
     }
+
+    command_speed_ = speed;
 
     if(options_.axis == Axis::X) {
       command.twist.linear.x = speed;
@@ -380,7 +394,8 @@ private:
     RCLCPP_INFO(get_logger(), "Data saved to %s", filename.c_str());
 
     CalculateStats(timestamp);
-    ShowGraph(filename);
+    RenderGraph(filename, timestamp, GraphDestination::PNG);
+    RenderGraph(filename, timestamp, GraphDestination::X11);
 
     rclcpp::shutdown();
   }
@@ -393,35 +408,45 @@ private:
     }
 
     const auto vision_errors = std::views::transform(data_,
-      [](const DataEntry & entry) {
-        return std::abs(entry.vision_speed - entry.command_speed);
+        [](const DataEntry & entry) {
+          return entry.vision_speed - entry.command_speed;
       });
     const auto firmware_errors = std::views::transform(data_,
-      [](const DataEntry & entry) {
-        return std::abs(entry.firmware_speed - entry.command_speed);
+        [](const DataEntry & entry) {
+          return entry.firmware_speed - entry.command_speed;
       });
 
-    const auto speed_vision_sum_sq_error = std::accumulate(vision_errors.begin(), vision_errors.end(), 0.0,
-      [](double acc, const double & error) {
-        return acc + std::pow(error - error, 2);
+    const auto speed_vision_sum_sq_error = std::accumulate(vision_errors.begin(),
+      vision_errors.end(), 0.0,
+        [](double acc, const double & error) {
+          return acc + std::pow(error, 2);
       });
     const auto speed_vision_avg_sq_error = speed_vision_sum_sq_error / vision_errors.size();
-    const auto speed_firmware_sum_sq_error = std::accumulate(firmware_errors.begin(), firmware_errors.end(), 0.0,
-      [](double acc, const double & error) {
-        return acc + std::pow(error - error, 2);
+    const auto speed_firmware_sum_sq_error = std::accumulate(firmware_errors.begin(),
+      firmware_errors.end(), 0.0,
+        [](double acc, const double & error) {
+          return acc + std::pow(error, 2);
       });
     const auto speed_firmware_avg_sq_error = speed_firmware_sum_sq_error / firmware_errors.size();
 
-    const auto max_vision_error = std::ranges::max(vision_errors);
-    const auto max_firmware_error = std::ranges::max(firmware_errors);
-    const auto min_vision_error = std::ranges::min(vision_errors);
-    const auto min_firmware_error = std::ranges::min(firmware_errors);
-    
+    const auto max_vision_error = std::ranges::max(vision_errors | std::views::transform([](double error) {
+      return std::abs(error);
+    }));
+    const auto max_firmware_error = std::ranges::max(firmware_errors | std::views::transform([](double error) {
+      return std::abs(error);
+    }));
+    const auto min_vision_error = std::ranges::min(vision_errors | std::views::transform([](double error) {
+      return std::abs(error);
+    }));
+    const auto min_firmware_error = std::ranges::min(firmware_errors | std::views::transform([](double error) {
+      return std::abs(error);
+    }));
+
     std::stringstream ss;
     ss << '\n';
     ss << "Benchmark Statistics:\n";
     ss << "  Total entries: " << data_.size() << "\n";
-    ss << "  Benchmark Duration: "
+    ss        << "  Benchmark Duration: "
               << data_.back().time << " seconds\n";
     ss << "  Vision Speed Loss: " << speed_vision_avg_sq_error << "\n";
     ss << "  Firmware Speed Loss: " << speed_firmware_avg_sq_error << "\n";
@@ -445,19 +470,32 @@ private:
     RCLCPP_INFO(get_logger(), "Statistics saved to %s", filename.c_str());
   }
 
-  void ShowGraph(const std::string & results_filename)
+  enum class GraphDestination
   {
-    std::string command = std::format("gnuplot -e \""
+    X11,
+    PNG
+  };
+
+  void RenderGraph(const std::string & results_filename, const std::string & filename_timestamp, const GraphDestination dest)
+  {
+    const auto width = 1200;
+    const auto height = 400;
+    const auto x11_terminal_commands = std::format("set terminal x11 size {} {}", width, height);
+    const auto png_filename = "vel_benchmark_" + filename_timestamp + "_graphs.png";
+    const auto png_terminal_commands = std::format("set terminal png size {} {} font 'Helvetica,10'; set output '{}'", width, height, png_filename);
+    const auto terminal_commands = dest == GraphDestination::X11 ? x11_terminal_commands : png_terminal_commands;
+    std::string command = std::format("gnuplot -p -e \""
+      "{0};"
       "set title 'Velocity Benchmark Results';"
       "set multiplot layout 1,3;"
       "set xlabel 'Time (s)';"
-      "plot '{0}' using 1:2 with lines title 'Command Speed', "
-      "'{0}' using 1:3 with lines title 'Vision Speed', "
-      "'{0}' using 1:6 with lines title 'Firmware Speed';"
-      "plot '{0}' using 1:4 with lines title 'Vision Perpendicular Speed', "
-      "'{0}' using 1:7 with lines title 'Firmware Perpendicular Speed';"
-      "plot '{0}' using 1:5 with lines title 'Vision Perpendicular Distance';"
-      "\"", results_filename);
+      "plot '{1}' using 1:2 with lines title 'Command Speed', "
+      "'{1}' using 1:3 with lines title 'Vision Speed', "
+      "'{1}' using 1:6 with lines title 'Firmware Speed';"
+      "plot '{1}' using 1:4 with lines title 'Vision Perpendicular Speed', "
+      "'{1}' using 1:7 with lines title 'Firmware Perpendicular Speed';"
+      "plot '{1}' using 1:5 with lines title 'Vision Perpendicular Distance';"
+      "\"", terminal_commands, results_filename);
     int ret = std::system(command.c_str());
     if(ret == -1) {
       RCLCPP_ERROR(get_logger(), "Failed to run gnuplot.");
@@ -481,8 +519,8 @@ private:
 
   bool RobotOutsideOfField(const Robot & robot)
   {
-    return std::abs(robot.state->pose.position.x) < field_->field_length / 2.0 &&
-           std::abs(robot.state->pose.position.y) < field_->field_width / 2.0;
+    return !(std::abs(robot.state->pose.position.x) < field_->field_length / 2.0 &&
+           std::abs(robot.state->pose.position.y) < field_->field_width / 2.0);
   }
 
   DirDistance DistanceToFieldEdge(const Robot & robot)
@@ -538,13 +576,16 @@ private:
     const Robot & robot, const Axis & axis,
     const Direction & direction)
   {
+    tf2::Quaternion quat;
+    tf2::fromMsg(robot.state->pose.orientation, quat);
+    double yaw, pitch, roll;
+    tf2::Matrix3x3(quat).getEulerYPR(yaw, pitch, roll);
+
     ateam_geometry::Vector vec;
     if(axis == Axis::X) {
-      vec = ateam_geometry::Vector(cos(robot.state->pose.orientation.z),
-        sin(robot.state->pose.orientation.z));
+      vec = ateam_geometry::Vector(cos(yaw), sin(yaw));
     } else if (axis == Axis::Y) {
-      vec = ateam_geometry::Vector(sin(robot.state->pose.orientation.z),
-        cos(robot.state->pose.orientation.z));
+      vec = ateam_geometry::Vector(-sin(yaw), cos(yaw));
     }
 
     const auto robot_pos = ateam_geometry::Point(robot.state->pose.position.x,

@@ -10,6 +10,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 add_executable(velocity_benchmark src/velocity_benchmark.cpp)
 target_compile_features(velocity_benchmark PUBLIC cxx_std_20)
@@ -17,6 +18,7 @@ ament_target_dependencies(velocity_benchmark
   rclcpp
   ateam_common
   ateam_msgs
+  tf2_geometry_msgs
 )
 
 install(TARGETS velocity_benchmark DESTINATION lib/${PROJECT_NAME})
