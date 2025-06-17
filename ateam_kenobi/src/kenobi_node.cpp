@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 
-#include <pwd.h>
 #include <tf2/convert.h>
 #include <tf2/utils.h>
 #include <chrono>
@@ -37,6 +36,7 @@
 #include <ateam_msgs/srv/set_override_play.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
 #include <ateam_msgs/msg/playbook_state.hpp>
+#include <ateam_common/cache_directory.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
@@ -51,8 +51,8 @@
 #include "core/motion/world_to_body_vel.hpp"
 #include "plays/halt_play.hpp"
 #include "core/defense_area_enforcement.hpp"
-#include "core/spatial/spatial_evaluator.hpp"
 #include "core/joystick_enforcer.hpp"
+#include <ateam_spatial/spatial_evaluator.hpp>
 
 namespace ateam_kenobi
 {
@@ -70,6 +70,8 @@ public:
     joystick_enforcer_(*this),
     game_controller_listener_(*this)
   {
+    world_.spatial_evaluator = &spatial_evaluator_;
+
     initialize_robot_ids();
 
     declare_parameter<bool>("use_world_velocities", false);
@@ -160,12 +162,13 @@ public:
   }
 
 private:
+  ateam_spatial::SpatialEvaluator spatial_evaluator_;
   World world_;
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
-  spatial::SpatialEvaluator spatial_evaluator_;
+  std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
@@ -350,23 +353,31 @@ private:
   {
     world_.current_time = std::chrono::steady_clock::now();
     world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
+    const auto & ref_msg = game_controller_listener_.GetLatestRefereeMessage();
     world_.referee_info.command_time =
       std::chrono::system_clock::time_point(
       std::chrono::nanoseconds(
-        rclcpp::Time(
-          game_controller_listener_.GetLatestRefereeMessage().command_timestamp).nanoseconds()));
+        rclcpp::Time(ref_msg.command_timestamp).nanoseconds()));
     world_.referee_info.prev_command = game_controller_listener_.GetPreviousGameCommand();
+    world_.referee_info.next_command = game_controller_listener_.GetNextGameCommand();
     world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
 
-    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
-      world_.referee_info.designated_position = ateam_geometry::Point(
-        -game_controller_listener_.GetDesignatedPosition().x,
-        -game_controller_listener_.GetDesignatedPosition().y);
+    const auto & gc_designated_position =
+      game_controller_listener_.GetDesignatedPosition();
+    if (gc_designated_position.has_value()) {
+      if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
+        world_.referee_info.designated_position = ateam_geometry::Point(
+        -gc_designated_position->x,
+        -gc_designated_position->y);
+      } else {
+        world_.referee_info.designated_position = ateam_geometry::Point(
+        gc_designated_position->x,
+        gc_designated_position->y);
+      }
     } else {
-      world_.referee_info.designated_position = ateam_geometry::Point(
-        game_controller_listener_.GetDesignatedPosition().x,
-        game_controller_listener_.GetDesignatedPosition().y);
+      world_.referee_info.designated_position = std::nullopt;
     }
+
 
     if (game_controller_listener_.GetOurGoalieID().has_value()) {
       world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
@@ -376,7 +387,7 @@ private:
     }
     in_play_eval_.Update(world_);
     double_touch_eval_.update(world_);
-    // spatial_evaluator_.Update(world_);
+    UpdateSpatialEvaluator();
     if (get_parameter("use_emulated_ballsense").as_bool()) {
       ballsense_emulator_.Update(world_);
     }
@@ -401,7 +412,9 @@ private:
 
     joystick_enforcer_.RemoveCommandForJoystickBot(motion_commands);
 
-    if (!get_parameter("use_world_velocities").as_bool()) {
+    if (get_parameter("use_world_velocities").as_bool()) {
+      motion::ConvertBodyVelsToWorldVels(motion_commands, world_.our_robots);
+    } else {
       motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);
     }
 
@@ -448,18 +461,42 @@ private:
 
   std::filesystem::path getCacheDirectory()
   {
-    const std::filesystem::path cache_dir = ".ateam/software/kenobi/";
-    const char * home_env = getenv("HOME");
-    if (home_env != nullptr) {
-      return std::filesystem::path(home_env) / cache_dir;
-    }
+    return ateam_common::getCacheDirectory() / "kenobi";
+  }
 
-    struct passwd * pwd = getpwuid(getuid());  // NOLINT(runtime/threadsafe_fn)
-    if (pwd != nullptr) {
-      return std::filesystem::path(pwd->pw_dir) / cache_dir;
-    }
-
-    return cache_dir;
+  void UpdateSpatialEvaluator()
+  {
+    ateam_spatial::FieldDimensions field{
+      world_.field.field_width,
+      world_.field.field_length,
+      world_.field.goal_width,
+      world_.field.goal_depth,
+      world_.field.boundary_width,
+      world_.field.defense_area_width,
+      world_.field.defense_area_depth
+    };
+    ateam_spatial::Ball ball{
+      static_cast<float>(world_.ball.pos.x()),
+      static_cast<float>(world_.ball.pos.y()),
+      static_cast<float>(world_.ball.vel.x()),
+      static_cast<float>(world_.ball.vel.y())
+    };
+    auto make_spatial_robot = [](const Robot & robot){
+        return ateam_spatial::Robot{
+        robot.visible,
+        static_cast<float>(robot.pos.x()),
+        static_cast<float>(robot.pos.y()),
+        static_cast<float>(robot.theta),
+        static_cast<float>(robot.vel.x()),
+        static_cast<float>(robot.vel.y()),
+        static_cast<float>(robot.omega)
+        };
+      };
+    std::array<ateam_spatial::Robot, 16> our_robots;
+    std::ranges::transform(world_.our_robots, our_robots.begin(), make_spatial_robot);
+    std::array<ateam_spatial::Robot, 16> their_robots;
+    std::ranges::transform(world_.their_robots, their_robots.begin(), make_spatial_robot);
+    spatial_evaluator_.UpdateMaps(field, ball, our_robots, their_robots);
   }
 };
 

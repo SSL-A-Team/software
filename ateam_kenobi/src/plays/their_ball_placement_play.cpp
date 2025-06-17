@@ -56,7 +56,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlac
 
   auto available_robots = play_helpers::getAvailableRobots(world);
 
-  ateam_geometry::Point placement_point = world.referee_info.designated_position;
+  const ateam_geometry::Point placement_point = [this, &world]() {
+      if (world.referee_info.designated_position.has_value()) {
+        return world.referee_info.designated_position.value();
+      } else {
+        RCLCPP_WARN(
+        getLogger(),
+        "No designated position set in referee info, using ball position.");
+        return world.ball.pos;
+      }
+    }();
 
   const auto point_to_ball = world.ball.pos - placement_point;
   const auto angle = std::atan2(point_to_ball.y(), point_to_ball.x());

@@ -96,8 +96,9 @@ void GameControllerListener::RefereeMessageCallback(
   const auto prev_side = team_side_;
   if (team_color_ == TeamColor::Unknown) {
     team_side_ = TeamSide::Unknown;
-  } else {
-    bool are_positive_half = !(msg->blue_team_on_positive_half ^ (team_color_ == TeamColor::Blue));
+  } else if (!msg->blue_team_on_positive_half.empty()) {
+    bool are_positive_half = !(msg->blue_team_on_positive_half.front() ^ (team_color_ ==
+      TeamColor::Blue));
     team_side_ = are_positive_half ? TeamSide::PositiveHalf : TeamSide::NegativeHalf;
     // Our field convention is we should always been on the negative half.
     // So if this is positive for our team we should invert coords
@@ -114,7 +115,15 @@ void GameControllerListener::RefereeMessageCallback(
     game_command_ = new_game_command;
   }
 
-  designated_position_ = msg->designated_position;
+  if (msg->next_command.empty()) {
+    next_game_command_ = std::nullopt;
+  } else {
+    next_game_command_ = ConvertGameCommand(msg->next_command.front());
+  }
+
+  designated_position_ =
+    msg->designated_position.empty() ? std::nullopt :
+    std::make_optional(msg->designated_position.front());
 
   if (team_color_ != TeamColor::Unknown) {
     our_goalie_id_ = team_color_ == TeamColor::Blue ? msg->blue.goalkeeper : msg->yellow.goalkeeper;

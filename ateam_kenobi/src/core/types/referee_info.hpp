@@ -23,6 +23,7 @@
 #define CORE__TYPES__REFEREE_INFO_HPP_
 
 #include <chrono>
+#include <optional>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 
@@ -30,12 +31,13 @@ namespace ateam_kenobi
 {
 struct RefereeInfo
 {
-  int our_goalie_id;
-  int their_goalie_id;
-  ateam_common::GameStage current_game_stage;
-  ateam_common::GameCommand running_command;
-  ateam_common::GameCommand prev_command;
-  ateam_geometry::Point designated_position;
+  int our_goalie_id = -1;
+  int their_goalie_id = -1;
+  ateam_common::GameStage current_game_stage = ateam_common::GameStage::Unknown;
+  ateam_common::GameCommand running_command = ateam_common::GameCommand::Halt;
+  ateam_common::GameCommand prev_command = ateam_common::GameCommand::Halt;
+  std::optional<ateam_geometry::Point> designated_position;
+  std::optional<ateam_common::GameCommand> next_command = std::nullopt;
   std::chrono::system_clock::time_point command_time;
 };
 }  // namespace ateam_kenobi

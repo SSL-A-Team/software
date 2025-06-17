@@ -25,7 +25,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     GroupAction,
     IncludeLaunchDescription,
-    SetLaunchConfiguration,
+    SetLaunchConfiguration
 )
 from launch.conditions import IfCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
@@ -43,6 +43,12 @@ def generate_launch_description():
 
         DeclareLaunchArgument('team_name', default_value='A-Team'),
         DeclareLaunchArgument('use_local_gc', default_value='False'),
+
+        Node(
+            package='ateam_bringup',
+            executable='scream_if_wifi_enabled.sh',
+            name='wifi_checker',
+        ),
 
         GroupAction(
             condition=IfCondition(LaunchConfiguration('use_local_gc')),

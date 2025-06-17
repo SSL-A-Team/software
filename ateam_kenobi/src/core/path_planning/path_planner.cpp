@@ -22,9 +22,9 @@
 #include "path_planner.hpp"
 #include <ranges>
 #include <algorithm>
+#include <limits>
 #include <vector>
 #include <iostream>
-#include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 #include "obstacles.hpp"
 
@@ -43,6 +43,14 @@ PathPlanner::Path PathPlanner::getPath(
 {
   const auto start_time = std::chrono::steady_clock::now();
 
+  // TODO(barulicm): Add ability to cache timedout paths and continue planning on next frame
+  if(!shouldReplan(start, goal, world, obstacles, options)) {
+    if (!cached_path_truncated_) {
+      cached_path_.back() = goal;
+    }
+    return cached_path_;
+  }
+
   std::vector<ateam_geometry::AnyShape> augmented_obstacles = obstacles;
 
   AddRobotObstacles(world.our_robots, start, augmented_obstacles);
@@ -57,12 +65,14 @@ PathPlanner::Path PathPlanner::getPath(
   }
 
   if (!IsPointInBounds(start, world, false)) {
+    cached_path_valid_ = false;
     return {};
   }
 
   if (options.ignore_start_obstacle) {
     removeCollidingObstacles(augmented_obstacles, start, options);
   } else if (!isStateValid(start, world, augmented_obstacles, options, false)) {
+    cached_path_valid_ = false;
     return {};
   }
 
@@ -77,10 +87,16 @@ PathPlanner::Path PathPlanner::getPath(
       start, goal, world, augmented_obstacles,
       options);
     if (!maybe_new_goal) {
+      cached_path_valid_ = false;
       return {};
     }
     path.back() = *maybe_new_goal;
+    cached_path_truncated_ = true;
+  } else {
+    cached_path_truncated_ = false;
   }
+
+  bool timed_out = false;
 
   while (true) {
     const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(
@@ -88,6 +104,7 @@ PathPlanner::Path PathPlanner::getPath(
     if (elapsed_time > options.search_time_limit) {
       RCLCPP_WARN(getLogger(), "Path planning timed out.");
       trimPathAfterCollision(path, world, augmented_obstacles, options);
+      timed_out = true;
       break;
     }
     bool had_to_split = false;
@@ -99,6 +116,7 @@ PathPlanner::Path PathPlanner::getPath(
         had_to_split = true;
         if (!split_result.split_succeeded) {
           // unable to find path around obstacle
+          cached_path_valid_ = false;
           return {};
         }
         break;
@@ -112,6 +130,12 @@ PathPlanner::Path PathPlanner::getPath(
 
   removeLoops(path);
   removeSkippablePoints(path, world, augmented_obstacles, options);
+
+  if (!timed_out) {
+    cached_path_ = path;
+    cached_path_goal_ = goal;
+    cached_path_valid_ = true;
+  }
 
   return path;
 }
@@ -348,6 +372,44 @@ void PathPlanner::drawObstacles(const std::vector<ateam_geometry::AnyShape> & ob
     };
 
   std::ranges::for_each(obstacles, [&drawObstacle](const auto & s) {std::visit(drawObstacle, s);});
+}
+
+bool PathPlanner::shouldReplan(
+  const Position & start, const Position & goal, const World & world,
+  const std::vector<ateam_geometry::AnyShape> & obstacles,
+  const PlannerOptions & options)
+{
+  // TODO(barulicm): re-enable after motion controller is compatible
+  return true;
+  if (options.force_replan) {
+    return true;
+  }
+  if (!cached_path_valid_) {
+    return true;
+  }
+  const auto goal_has_moved = CGAL::squared_distance(goal,
+      cached_path_goal_) >= CGAL::square(options.replan_thresholds.goal_distance_);
+  if (goal_has_moved) {
+    return true;
+  }
+
+  double min_squared_start_distance = std::numeric_limits<double>::max();
+  for(auto i = 0ul; i < cached_path_.size() - 1; ++i) {
+    const auto a = cached_path_[i];
+    const auto b = cached_path_[i + 1];
+    if (getCollisionPoint(a, b, world, obstacles, options).has_value()) {
+      return true;
+    }
+    const ateam_geometry::Segment s(a, b);
+    const auto squared_start_distance = CGAL::squared_distance(s, start);
+    min_squared_start_distance = std::min(squared_start_distance, min_squared_start_distance);
+  }
+
+  if(min_squared_start_distance >= CGAL::square(options.replan_thresholds.start_distance_)) {
+    return true;
+  }
+
+  return false;
 }
 
 }  // namespace ateam_kenobi::path_planning

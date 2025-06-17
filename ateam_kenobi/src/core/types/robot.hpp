@@ -33,9 +33,9 @@ struct Robot
   bool radio_connected = false;
 
   ateam_geometry::Point pos;
-  double theta;
+  double theta = 0.0;
   ateam_geometry::Vector vel;
-  double omega;
+  double omega = 0.0;
 
   bool breakbeam_ball_detected = false;
 

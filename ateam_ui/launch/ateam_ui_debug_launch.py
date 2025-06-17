@@ -34,14 +34,12 @@ def generate_launch_description():
 
     rosbridge_node = launch_ros.actions.Node(
         package="rosbridge_server",
-        namespace="ui",
         name="rosbridge",
         executable="rosbridge_websocket.py"
     )
 
     rosapi_node = launch_ros.actions.Node(
         package="rosapi",
-        namespace="ui",
         name="rosapi",
         executable="rosapi_node"
     )

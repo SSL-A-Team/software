@@ -151,6 +151,11 @@ public:
     return prev_game_command_;
   }
 
+  const std::optional<GameCommand> & GetNextGameCommand() const
+  {
+    return next_game_command_;
+  }
+
   const std::optional<uint32_t> & GetOurGoalieID() const
   {
     return our_goalie_id_;
@@ -161,7 +166,7 @@ public:
     return their_goalie_id_;
   }
 
-  const geometry_msgs::msg::Point32 & GetDesignatedPosition() const
+  const std::optional<geometry_msgs::msg::Point32> & GetDesignatedPosition() const
   {
     return designated_position_;
   }
@@ -178,9 +183,10 @@ private:
   GameStage game_stage_{GameStage::Unknown};
   GameCommand game_command_{GameCommand::Halt};
   GameCommand prev_game_command_{GameCommand::Halt};
+  std::optional<GameCommand> next_game_command_ {};
   std::optional<uint32_t> our_goalie_id_ {};
   std::optional<uint32_t> their_goalie_id_ {};
-  geometry_msgs::msg::Point32 designated_position_;
+  std::optional<geometry_msgs::msg::Point32> designated_position_;
   ssl_league_msgs::msg::Referee referee_msg_;
 
   ColorCallback color_callback_;

@@ -18,6 +18,7 @@ find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(ateam_spatial REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/kenobi_node.cpp
@@ -44,9 +45,6 @@ target_sources(kenobi_node_component PRIVATE
   src/core/play_helpers/robot_assignment.cpp
   src/core/play_helpers/shot_evaluation.cpp
   src/core/play_helpers/window_evaluation.cpp
-  src/core/spatial/spatial_evaluator.cpp
-  src/core/spatial/spatial_inspection.cpp
-  src/core/spatial/layers/robot_shadows.cpp
 )
 
 #
@@ -62,6 +60,10 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/passing_plays/pass_to_lane_play.cpp
   src/plays/passing_plays/pass_to_segment_play.cpp
   src/plays/passing_plays/spatial_pass_play.cpp
+  src/plays/stop_plays/default_stop_play.cpp
+  src/plays/stop_plays/defensive_stop_play.cpp
+  src/plays/stop_plays/offensive_stop_play.cpp
+  src/plays/stop_plays/stop_helpers.cpp
   src/plays/test_plays/controls_test_play.cpp
   src/plays/test_plays/spinning_a_play.cpp
   src/plays/test_plays/test_play.cpp
@@ -69,7 +71,6 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/test_plays/waypoints_play.cpp
   src/plays/halt_play.cpp
   src/plays/kick_on_goal_play.cpp
-  src/plays/stop_play.cpp
   src/plays/our_ball_placement_play.cpp
   src/plays/their_ball_placement_play.cpp
   src/plays/wall_play.cpp
@@ -126,6 +127,7 @@ ament_target_dependencies(
   "angles"
   OpenCV
   nlohmann_json
+  ateam_spatial
 )
 rclcpp_components_register_node(
   kenobi_node_component
