@@ -88,12 +88,18 @@ public:
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options = PlannerOptions());
 
+  bool usedCachedPath() const
+  {
+    return used_cached_path_;
+  }
+
 private:
   visualization::Overlays overlays_;
   bool cached_path_valid_ = false;
   bool cached_path_truncated_ = false;
   Path cached_path_;
   Position cached_path_goal_;
+  bool used_cached_path_ = false;
 
   void removeCollidingObstacles(
     std::vector<ateam_geometry::AnyShape> & obstacles,

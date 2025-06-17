@@ -48,8 +48,11 @@ PathPlanner::Path PathPlanner::getPath(
     if (!cached_path_truncated_) {
       cached_path_.back() = goal;
     }
+    used_cached_path_ = true;
     return cached_path_;
   }
+
+  used_cached_path_ = false;
 
   std::vector<ateam_geometry::AnyShape> augmented_obstacles = obstacles;
 
