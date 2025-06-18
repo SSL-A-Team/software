@@ -33,8 +33,6 @@ ateam_msgs::msg::RobotFeedback Convert(const BasicTelemetry & basic_telemetry)
   robot_feedback.sequence_number = basic_telemetry.sequence_number;
   robot_feedback.robot_revision_major = basic_telemetry.robot_revision_major;
   robot_feedback.robot_revision_minor = basic_telemetry.robot_revision_minor;
-  robot_feedback.battery_level = basic_telemetry.battery_level;
-  robot_feedback.battery_temperature = basic_telemetry.battery_temperature;
   robot_feedback.power_error = basic_telemetry.power_error;
   robot_feedback.tipped_error = basic_telemetry.tipped_error;
   robot_feedback.breakbeam_error = basic_telemetry.breakbeam_error;
@@ -43,24 +41,18 @@ ateam_msgs::msg::RobotFeedback Convert(const BasicTelemetry & basic_telemetry)
   robot_feedback.accelerometer_1_error = basic_telemetry.accelerometer_1_error;
   robot_feedback.gyroscope_0_error = basic_telemetry.gyroscope_0_error;
   robot_feedback.gyroscope_1_error = basic_telemetry.gyroscope_1_error;
-  robot_feedback.motor_0_general_error = basic_telemetry.motor_0_general_error;
-  robot_feedback.motor_0_hall_error = basic_telemetry.motor_0_hall_error;
-  robot_feedback.motor_1_general_error = basic_telemetry.motor_1_general_error;
-  robot_feedback.motor_1_hall_error = basic_telemetry.motor_1_hall_error;
-  robot_feedback.motor_2_general_error = basic_telemetry.motor_2_general_error;
-  robot_feedback.motor_2_hall_error = basic_telemetry.motor_2_hall_error;
-  robot_feedback.motor_3_general_error = basic_telemetry.motor_3_general_error;
-  robot_feedback.motor_3_hall_error = basic_telemetry.motor_3_hall_error;
-  robot_feedback.motor_4_general_error = basic_telemetry.motor_4_general_error;
-  robot_feedback.motor_4_hall_error = basic_telemetry.motor_4_hall_error;
+  robot_feedback.motor_0_general_error = basic_telemetry.motor_fl_general_error;
+  robot_feedback.motor_0_hall_error = basic_telemetry.motor_fl_hall_error;
+  robot_feedback.motor_1_general_error = basic_telemetry.motor_bl_general_error;
+  robot_feedback.motor_1_hall_error = basic_telemetry.motor_bl_hall_error;
+  robot_feedback.motor_2_general_error = basic_telemetry.motor_br_general_error;
+  robot_feedback.motor_2_hall_error = basic_telemetry.motor_br_hall_error;
+  robot_feedback.motor_3_general_error = basic_telemetry.motor_fr_general_error;
+  robot_feedback.motor_3_hall_error = basic_telemetry.motor_fr_hall_error;
+  robot_feedback.motor_4_general_error = basic_telemetry.motor_drib_general_error;
+  robot_feedback.motor_4_hall_error = basic_telemetry.motor_drib_hall_error;
   robot_feedback.chipper_available = basic_telemetry.chipper_available;
   robot_feedback.kicker_available = basic_telemetry.kicker_available;
-  robot_feedback.motor_0_temperature = basic_telemetry.motor_0_temperature;
-  robot_feedback.motor_1_temperature = basic_telemetry.motor_1_temperature;
-  robot_feedback.motor_2_temperature = basic_telemetry.motor_2_temperature;
-  robot_feedback.motor_3_temperature = basic_telemetry.motor_3_temperature;
-  robot_feedback.motor_4_temperature = basic_telemetry.motor_4_temperature;
-  robot_feedback.kicker_charge_level = basic_telemetry.kicker_charge_level;
 
 
   return robot_feedback;
@@ -89,7 +81,7 @@ geometry_msgs::msg::Twist ConvertFloatArrayToTwist(const float (&fw_state_space_
   return twist;
 }
 
-ateam_msgs::msg::RobotMotorFeedback Convert(const MotorResponse_Motion_Packet & motor_debug_telemetry) {
+ateam_msgs::msg::RobotMotorFeedback Convert(const MotorTelemetry & motor_debug_telemetry) {
   ateam_msgs::msg::RobotMotorFeedback robot_motor_feedback;
 
   robot_motor_feedback.master_error = motor_debug_telemetry.master_error;
@@ -127,28 +119,28 @@ ateam_msgs::msg::RobotMotorFeedback Convert(const MotorResponse_Motion_Packet & 
   return robot_motor_feedback;
 }
 
-ateam_msgs::msg::RobotMotionFeedback Convert(const ControlDebugTelemetry & control_debug_telemetry) {
+ateam_msgs::msg::RobotMotionFeedback Convert(const ExtendedTelemetry & extended_telemetry) {
   ateam_msgs::msg::RobotMotionFeedback robot_motion_feedback;
 
-  robot_motion_feedback.motors[robot_motion_feedback.FRONT_LEFT_MOTOR] = Convert(control_debug_telemetry.motor_fl);
-  robot_motion_feedback.motors[robot_motion_feedback.BACK_LEFT_MOTOR] = Convert(control_debug_telemetry.motor_bl);
-  robot_motion_feedback.motors[robot_motion_feedback.BACK_RIGHT_MOTOR] = Convert(control_debug_telemetry.motor_br);
-  robot_motion_feedback.motors[robot_motion_feedback.FRONT_RIGHT_MOTOR] = Convert(control_debug_telemetry.motor_fr);
+  robot_motion_feedback.motors[robot_motion_feedback.FRONT_LEFT_MOTOR] = Convert(extended_telemetry.front_left_motor);
+  robot_motion_feedback.motors[robot_motion_feedback.BACK_LEFT_MOTOR] = Convert(extended_telemetry.back_left_motor);
+  robot_motion_feedback.motors[robot_motion_feedback.BACK_RIGHT_MOTOR] = Convert(extended_telemetry.back_right_motor);
+  robot_motion_feedback.motors[robot_motion_feedback.FRONT_RIGHT_MOTOR] = Convert(extended_telemetry.front_right_motor);
 
   robot_motion_feedback.imu.orientation_covariance[0] = -1.0;  // ROS2 docs say if a sensor doesn't provide a data point, then set element '0' of it's covariance to -1
-  robot_motion_feedback.imu.angular_velocity = ConvertFloatArrayToVec3(control_debug_telemetry.imu_gyro);
-  robot_motion_feedback.imu.linear_acceleration = ConvertFloatArrayToVec3(control_debug_telemetry.imu_accel);
+  robot_motion_feedback.imu.angular_velocity = ConvertFloatArrayToVec3(extended_telemetry.imu_gyro);
+  robot_motion_feedback.imu.linear_acceleration = ConvertFloatArrayToVec3(extended_telemetry.imu_accel);
 
-  robot_motion_feedback.body_velocity_setpoint = ConvertFloatArrayToTwist(control_debug_telemetry.commanded_body_velocity);
-  robot_motion_feedback.clamped_body_velocity_setpoint = ConvertFloatArrayToTwist(control_debug_telemetry.clamped_commanded_body_velocity);
-  robot_motion_feedback.body_velocity_state_estimate = ConvertFloatArrayToTwist(control_debug_telemetry.cgkf_body_velocity_state_estimate);
-  robot_motion_feedback.body_velocity_control_variable = ConvertFloatArrayToTwist(control_debug_telemetry.body_velocity_u);
+  robot_motion_feedback.body_velocity_setpoint = ConvertFloatArrayToTwist(extended_telemetry.commanded_body_velocity);
+  robot_motion_feedback.clamped_body_velocity_setpoint = ConvertFloatArrayToTwist(extended_telemetry.clamped_commanded_body_velocity);
+  robot_motion_feedback.body_velocity_state_estimate = ConvertFloatArrayToTwist(extended_telemetry.cgkf_body_velocity_state_estimate);
+  robot_motion_feedback.body_velocity_control_variable = ConvertFloatArrayToTwist(extended_telemetry.body_velocity_u);
 
-  std::span wheel_velocity_u_span{control_debug_telemetry.wheel_velocity_u};
+  std::span wheel_velocity_u_span{extended_telemetry.wheel_velocity_u};
   static_assert(wheel_velocity_u_span.size() == robot_motion_feedback.wheel_velocity_control_variable.size());
   std::ranges::copy(wheel_velocity_u_span, robot_motion_feedback.wheel_velocity_control_variable.begin());
 
-  std::span wheel_velocity_clamped_u_span{control_debug_telemetry.wheel_velocity_clamped_u};
+  std::span wheel_velocity_clamped_u_span{extended_telemetry.wheel_velocity_clamped_u};
   static_assert(wheel_velocity_clamped_u_span.size() == robot_motion_feedback.clamped_wheel_velocity_control_variable.size());
   std::ranges::copy(wheel_velocity_clamped_u_span, robot_motion_feedback.clamped_wheel_velocity_control_variable.begin());
 

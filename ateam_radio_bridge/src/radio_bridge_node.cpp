@@ -331,8 +331,8 @@ private:
             return;
           }
 
-          if (std::holds_alternative<ControlDebugTelemetry>(data_var)) {
-            auto msg = Convert(std::get<ControlDebugTelemetry>(data_var));
+          if (std::holds_alternative<ExtendedTelemetry>(data_var)) {
+            auto msg = Convert(std::get<ExtendedTelemetry>(data_var));
             motion_feedback_publishers_[robot_id]->publish(msg);
           }
           break;

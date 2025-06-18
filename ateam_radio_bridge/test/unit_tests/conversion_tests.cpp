@@ -92,17 +92,17 @@ TEST(ConvertBasicTelemmetry, PacketConversions)
   EXPECT_FLOAT_EQ(feedback_msg.kicker_charge_level, 1.2);
 }
 
-TEST(ConvertControlDebugTelemetry, PacketConversions) {
-  MotorResponse_Motion_Packet front_left_motor_packet;
+TEST(ConvertExtendedTelemetry, PacketConversions) {
+  MotorTelemetry front_left_motor_packet;
   front_left_motor_packet.vel_setpoint = 1.0f;
-  MotorResponse_Motion_Packet back_left_motor_packet;
+  MotorTelemetry back_left_motor_packet;
   back_left_motor_packet.vel_setpoint = 2.0f;
-  MotorResponse_Motion_Packet back_right_motor_packet;
+  MotorTelemetry back_right_motor_packet;
   back_right_motor_packet.vel_setpoint = 3.0f;
-  MotorResponse_Motion_Packet front_right_motor_packet;
+  MotorTelemetry front_right_motor_packet;
   front_right_motor_packet.vel_setpoint = 4.0f;
 
-  ControlDebugTelemetry control_debug_telemetry {
+  ExtendedTelemetry control_debug_telemetry {
     front_left_motor_packet,
     back_left_motor_packet,
     back_right_motor_packet,
@@ -167,7 +167,7 @@ TEST(ConvertControlDebugTelemetry, PacketConversions) {
 
 
 TEST(ConvertMotorFeedback, PacketConversions) {
-  const MotorResponse_Motion_Packet src {
+  const MotorTelemetry src {
     0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1,
     0,
     1.0f,

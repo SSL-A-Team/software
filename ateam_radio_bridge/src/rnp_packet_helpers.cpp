@@ -68,7 +68,7 @@ std::size_t GetPacketSize(const CommandCode & command_code)
       return kPacketHeaderSize + sizeof(HelloResponse);
       break;
     case CC_CONTROL_DEBUG_TELEMETRY:
-      return kPacketHeaderSize + sizeof(ControlDebugTelemetry);
+      return kPacketHeaderSize + sizeof(ExtendedTelemetry);
       break;
     case CC_ROBOT_PARAMETER_COMMAND:
       return kPacketHeaderSize + sizeof(ParameterCommand);
@@ -231,8 +231,8 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
       }
     case CC_CONTROL_DEBUG_TELEMETRY:
       {
-        if (packet.data_length != sizeof(ControlDebugTelemetry)) {
-          error = "Incorrect data length for ControlDebugTelemetry type.";
+        if (packet.data_length != sizeof(ExtendedTelemetry)) {
+          error = "Incorrect data length for ExtendedTelemetry type.";
           break;
         }
         var = packet.data.control_debug_telemetry;

@@ -27,15 +27,15 @@
 #include <ateam_msgs/msg/robot_motion_feedback.hpp>
 #include <basic_control.h>
 #include <basic_telemetry.h>
-#include <control_debug_telemetry.h>
+#include <extended_telemetry.h>
 #include <hello_data.h>
 
 namespace ateam_radio_bridge
 {
 
 ateam_msgs::msg::RobotFeedback Convert(const BasicTelemetry & basic_telemetry);
-ateam_msgs::msg::RobotMotorFeedback Convert(const MotorResponse_Motion_Packet & motor_debug_telemetry);
-ateam_msgs::msg::RobotMotionFeedback Convert(const ControlDebugTelemetry & control_debug_telemetry);
+ateam_msgs::msg::RobotMotorFeedback Convert(const MotorTelemetry & motor_debug_telemetry);
+ateam_msgs::msg::RobotMotionFeedback Convert(const ExtendedTelemetry & control_debug_telemetry);
 
 }
 
