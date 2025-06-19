@@ -31,10 +31,11 @@ def generate_msg_for_struct(struct_ast_node, enums):
     type_name = struct_ast_node.spelling
     declarations = []
     for field in struct_ast_node.get_children():
+        if field.kind != clang.cindex.CursorKind.FIELD_DECL:
+            continue
         if field.spelling.startswith('_'):
             continue
-        if field.kind == clang.cindex.CursorKind.FIELD_DECL:
-            add_field_declarations(declarations, field, enums)
+        add_field_declarations(declarations, field, enums)
     return {'type_name': type_name, 'declarations': declarations}
 
 

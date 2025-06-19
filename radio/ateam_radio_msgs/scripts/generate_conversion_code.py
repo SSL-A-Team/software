@@ -22,7 +22,7 @@ def generate_header_file(output_directory, translation_unit, struct_names):
         '#ifndef CONVERSION_HPP_\n' \
         '#define CONVERSION_HPP_\n\n'
     for struct_name in struct_names:
-        header_text += f'#include <ateam_radio_msgs/msg/{struct_name}.hpp>\n'
+        header_text += f'#include <ateam_radio_msgs/msg/{camel_case_to_snake_case(struct_name)}.hpp>\n'
     for node in translation_unit.cursor.get_children():
         if node.kind == clang.cindex.CursorKind.STRUCT_DECL:
             msg_name = node.spelling
@@ -39,7 +39,7 @@ def generate_header_file(output_directory, translation_unit, struct_names):
             header_text += generate_conversion_function_declaration(node) + '\n'
     header_text += '}  // namespace ateam_radio_msgs\n\n'
     header_text += '#endif  // CONVERSION_HPP_\n'
-    os.makedirs(f'{output_directory}/include')
+    os.makedirs(f'{output_directory}/include', exist_ok=True)
     file_path = f'{output_directory}/include/conversion.hpp'
     with open(file_path, 'w') as f:
         f.write(header_text)
@@ -64,7 +64,7 @@ def generate_implementation_file(output_directory, translation_unit, struct_name
             case _:
                 continue
     impl_text += '}  // namespace ateam_radio_bridge\n'
-    os.makedirs(f'{output_directory}/src')
+    os.makedirs(f'{output_directory}/src', exist_ok=True)
     file_path = f'{output_directory}/src/conversion.cpp'
     with open(file_path, 'w') as f:
         f.write(impl_text)
@@ -79,13 +79,15 @@ def generate_conversion_function_declaration(struct_node):
 
 def generate_conversion_function_implementation(struct_node, enums):
     """Generate the implementation of a conversion function for the given struct."""
-    param_name = re.sub(r'(?<!^)(?=[A-Z])', '_', struct_node.spelling).lower()
+    param_name = camel_case_to_snake_case(struct_node.spelling)
     return_type = f'ateam_radio_msgs::msg::{struct_node.spelling}'
     impl_text = (
         f'{return_type} Convert(const {struct_node.spelling} & {param_name}) {{\n'
     )
     impl_text += f'    {return_type} msg;\n'
     for field in struct_node.get_children():
+        if field.kind != clang.cindex.CursorKind.FIELD_DECL:
+            continue
         if field.spelling.startswith('_'):
             continue
         impl_text += generate_field_copy_line(field, param_name, enums)
@@ -179,6 +181,11 @@ def get_ros2_basic_type(field_type):
                     return 'ateam_radio_msgs/' + field_type.spelling
         case _:
             raise ValueError(f'Unsupported basic type: {field_type.spelling}')
+
+
+def camel_case_to_snake_case(s):
+    """Convert s (assumed to be CamelCase) to snake_case."""
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', s).lower()
 
 
 if __name__ == '__main__':
