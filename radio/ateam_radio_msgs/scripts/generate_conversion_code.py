@@ -29,7 +29,7 @@ def generate_header_file(output_directory, translation_unit, struct_names):
             if msg_name not in struct_names:
                 continue
             declaration_file = pathlib.Path(node.get_definition().location.file.name).name
-            header_text += f'#include <{declaration_file}>\n'
+            header_text += f'#include <ateam_radio_msgs/packets/{declaration_file}>\n'
     header_text += 'namespace ateam_radio_msgs {\n'
     for node in translation_unit.cursor.get_children():
         if node.kind == clang.cindex.CursorKind.STRUCT_DECL:
@@ -49,7 +49,7 @@ def generate_implementation_file(output_directory, translation_unit, struct_name
     """Generate implementation file for conversion functions."""
     enums = []
     impl_text = '#include "conversion.hpp"\n\n' \
-        'namespace ateam_radio_bridge {\n\n'
+        'namespace ateam_radio_msgs {\n\n'
     for node in translation_unit.cursor.get_children():
         match node.kind:
             case clang.cindex.CursorKind.ENUM_DECL:

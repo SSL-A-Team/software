@@ -14,6 +14,8 @@ find_package(rosidl_default_generators REQUIRED)
 
 set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/ateam_generated)
 
+set(RADIO_PACKETS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/include)
+
 set(RADIO_STRUCTS_TO_GENERATE
     BasicTelemetry
     ExtendedTelemetry
@@ -24,21 +26,21 @@ set(RADIO_STRUCTS_TO_GENERATE
 )
 
 generate_msgs(
-  SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/include/radio.h
+  SOURCE ${RADIO_PACKETS_INCLUDE_DIR}/radio.h
   DESTINATION ${GENERATED_DIR}/msg
   STRUCTS ${RADIO_STRUCTS_TO_GENERATE}
 )
 
 generate_conversion_code(
-  SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/include/radio.h
+  SOURCE ${RADIO_PACKETS_INCLUDE_DIR}/radio.h
   DESTINATION ${GENERATED_DIR}
   STRUCTS ${RADIO_STRUCTS_TO_GENERATE}
 )
 
-file(GLOB CONFIG_DEPENDS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/include/*.*")
+file(GLOB CONFIG_DEPENDS CONFIGURE_DEPENDS "${RADIO_PACKETS_INCLUDE_DIR}/*.*")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CONFIG_DEPENDS})
 
-set(MSG_TARGET ${PROJECT_NAME}_msgs)
+set(MSG_TARGET ${PROJECT_NAME})
 rosidl_generate_interfaces(${MSG_TARGET}
   ${GENERATED_DIR}:msg/BasicTelemetry.msg
   ${GENERATED_DIR}:msg/ExtendedTelemetry.msg
@@ -46,6 +48,8 @@ rosidl_generate_interfaces(${MSG_TARGET}
   ${GENERATED_DIR}:msg/MotorTelemetry.msg
   ${GENERATED_DIR}:msg/PowerTelemetry.msg
   ${GENERATED_DIR}:msg/BatteryInfo.msg
+
+  msg/ConnectionStatus.msg
 
   srv/GetFirmwareParameter.srv
   srv/SetFirmwareParameter.srv
@@ -60,7 +64,6 @@ add_library(${LIB_TARGET} SHARED
 target_include_directories(${LIB_TARGET} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${GENERATED_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/include>
   $<INSTALL_INTERFACE:include>
 )
 set_target_properties(${LIB_TARGET} PROPERTIES CXX_STANDARD 20)
@@ -72,10 +75,16 @@ ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 install(
   DIRECTORY include/
   DESTINATION include
+  PATTERN packets EXCLUDE
 )
 install(
   DIRECTORY ${GENERATED_DIR}/include/
   DESTINATION include/ateam_radio_msgs/ateam_radio_msgs
+)
+file(GLOB SYMLINKED_INCLUDES include/ateam_radio_msgs/packets/*)
+install(
+  FILES ${SYMLINKED_INCLUDES}
+  DESTINATION include/ateam_radio_msgs/ateam_radio_msgs/packets
 )
 install(
   TARGETS ${LIB_TARGET}

@@ -24,7 +24,7 @@
 
 #include <mutex>
 #include <rclcpp/rclcpp.hpp>
-#include <robot_parameters.h>
+#include <ateam_radio_msgs/packets/robot_parameters.h>
 #include <ateam_msgs/srv/set_firmware_parameter.hpp>
 #include <ateam_msgs/srv/get_firmware_parameter.hpp>
 #include <ateam_common/bi_directional_udp.hpp>

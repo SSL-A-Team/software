@@ -26,17 +26,19 @@
 #include <thread>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ateam_radio_msgs/msg/connection_status.hpp>
+#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
+#include <ateam_radio_msgs/msg/extended_telemetry.hpp>
+#include <ateam_radio_msgs/srv/get_firmware_parameter.hpp>
+#include <ateam_radio_msgs/srv/set_firmware_parameter.hpp>
+#include <ateam_radio_msgs/conversion.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <ateam_msgs/msg/robot_feedback.hpp>
-#include <ateam_msgs/srv/set_firmware_parameter.hpp>
-#include <ateam_msgs/srv/get_firmware_parameter.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 
 #include "rnp_packet_helpers.hpp"
-#include "conversion.hpp"
 #include "ip_address_helpers.hpp"
 #include "firmware_parameter_server.hpp"
 
@@ -54,7 +56,8 @@ public:
   : rclcpp::Node("radio_bridge", options),
     timeout_threshold_(declare_parameter("timeout_ms", 250)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
-    game_controller_listener_(*this, std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
+    game_controller_listener_(*this,
+      std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
@@ -69,15 +72,21 @@ public:
       &RadioBridgeNode::MotionCommandCallback,
       this);
 
-    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotFeedback>(
-      feedback_publishers_,
-      "~/robot_feedback/status/robot",
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::ConnectionStatus>(
+      connection_publishers_,
+      "~/robot_feedback/connection/robot",
       rclcpp::SystemDefaultsQoS(),
       this);
 
-    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotMotionFeedback>(
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::BasicTelemetry>(
+      feedback_publishers_,
+      "~/robot_feedback/basic/robot",
+      rclcpp::SystemDefaultsQoS(),
+      this);
+
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::ExtendedTelemetry>(
       motion_feedback_publishers_,
-      "~/robot_feedback/motion/robot",
+      "~/robot_feedback/extended/robot",
       rclcpp::SystemDefaultsQoS(),
       this);
 
@@ -105,8 +114,12 @@ private:
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
-  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
-  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionFeedback>::SharedPtr, 16> motion_feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
+    16> connection_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
+    16> feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ExtendedTelemetry>::SharedPtr,
+    16> motion_feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
   FirmwareParameterServer firmware_parameter_server_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
@@ -155,9 +168,9 @@ private:
     for (auto i = 0ul; i < connections_.size(); ++i) {
       std::unique_lock lock(mutex_);
       if (!connections_[i]) {
-        ateam_msgs::msg::RobotFeedback feedback_message;
-        feedback_message.radio_connected = false;
-        feedback_publishers_[i]->publish(feedback_message);
+        ateam_radio_msgs::msg::ConnectionStatus connection_message;
+        connection_message.radio_connected = false;
+        connection_publishers_[i]->publish(connection_message);
         continue;
       }
       const auto & last_heartbeat_time = last_heartbeat_timestamp_[i];
@@ -317,9 +330,11 @@ private:
             return;
           }
           if (std::holds_alternative<BasicTelemetry>(data_var)) {
-            auto msg = Convert(std::get<BasicTelemetry>(data_var));
-            msg.radio_connected = true;
-            feedback_publishers_[robot_id]->publish(msg);
+            feedback_publishers_[robot_id]->publish(ateam_radio_msgs::Convert(
+              std::get<BasicTelemetry>(data_var)));
+            ateam_radio_msgs::msg::ConnectionStatus connection_message;
+            connection_message.radio_connected = true;
+            connection_publishers_[robot_id]->publish(connection_message);
           }
           break;
         }
@@ -332,8 +347,8 @@ private:
           }
 
           if (std::holds_alternative<ExtendedTelemetry>(data_var)) {
-            auto msg = Convert(std::get<ExtendedTelemetry>(data_var));
-            motion_feedback_publishers_[robot_id]->publish(msg);
+            motion_feedback_publishers_[robot_id]->publish(ateam_radio_msgs::Convert(
+              std::get<ExtendedTelemetry>(data_var)));
           }
           break;
         }
@@ -341,11 +356,13 @@ private:
         {
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
-            RCLCPP_WARN(get_logger(), "Ignoring parameter command response message. %s", error.c_str());
+            RCLCPP_WARN(get_logger(), "Ignoring parameter command response message. %s",
+              error.c_str());
             return;
           }
           if(std::holds_alternative<ParameterCommand>(data_var)) {
-            firmware_parameter_server_.HandleIncomingParameterPacket(robot_id, std::get<ParameterCommand>(data_var));
+            firmware_parameter_server_.HandleIncomingParameterPacket(robot_id,
+              std::get<ParameterCommand>(data_var));
           }
           break;
         }
