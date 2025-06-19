@@ -35,7 +35,8 @@
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/protobuf_logging.hpp>
-#include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
+#include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/srv/send_simulator_control_packet.hpp>
 
@@ -69,9 +70,15 @@ public:
       &SSLSimulationRadioBridgeNode::message_callback,
       this);
 
-    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_msgs::msg::RobotFeedback>(
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::BasicTelemetry>(
       feedback_publishers_,
       Topics::kRobotFeedbackPrefix,
+      rclcpp::SystemDefaultsQoS(),
+      this);
+
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::ConnectionStatus>(
+      connection_publishers_,
+      Topics::kRobotConnectionStatusPrefix,
       rclcpp::SystemDefaultsQoS(),
       this);
 
@@ -187,6 +194,9 @@ public:
     for (const auto & single_feedback : feedback_proto.feedback()) {
       int robot_id = single_feedback.id();
       feedback_publishers_.at(robot_id)->publish(message_conversions::fromProto(single_feedback));
+      ateam_radio_msgs::msg::ConnectionStatus connection_msg;
+      connection_msg.radio_connected = true;
+      connection_publishers_.at(robot_id)->publish(connection_msg);
     }
   }
 
@@ -219,7 +229,8 @@ private:
   std::unique_ptr<ateam_common::BiDirectionalUDP> udp_sim_control_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> command_subscriptions_;
-  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotFeedback>::SharedPtr, 16> feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr, 16> feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr, 16> connection_publishers_;
   rclcpp::Service<ateam_msgs::srv::SendSimulatorControlPacket>::SharedPtr
     send_simulator_control_service_;
   rclcpp::TimerBase::SharedPtr zero_command_timer_;

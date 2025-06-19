@@ -27,13 +27,13 @@
 
 #include <ssl_league_msgs/msg/simulator_control.hpp>
 
-#include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
 namespace ateam_ssl_simulation_radio_bridge::message_conversions
 {
 
-ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg);
+ateam_radio_msgs::msg::BasicTelemetry fromProto(const RobotFeedback & proto_msg);
 
 RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id);
 

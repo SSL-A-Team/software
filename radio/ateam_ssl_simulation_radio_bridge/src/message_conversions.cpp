@@ -28,14 +28,16 @@
 namespace ateam_ssl_simulation_radio_bridge::message_conversions
 {
 
-ateam_msgs::msg::RobotFeedback fromProto(const RobotFeedback & proto_msg)
+ateam_radio_msgs::msg::BasicTelemetry fromProto(const RobotFeedback & proto_msg)
 {
-  ateam_msgs::msg::RobotFeedback robot_feedback;
+  ateam_radio_msgs::msg::BasicTelemetry robot_feedback;
 
-  robot_feedback.radio_connected = true;
   if(proto_msg.has_dribbler_ball_contact()) {
     robot_feedback.breakbeam_ball_detected = proto_msg.dribbler_ball_contact();
   }
+  robot_feedback.kicker_available = true;
+  robot_feedback.chipper_available = true;
+  robot_feedback.battery_percent = 100;
 
   return robot_feedback;
 }

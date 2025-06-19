@@ -10,6 +10,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
+find_package(ateam_radio_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ssl_league_protobufs REQUIRED)
@@ -24,6 +25,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp_components
   ateam_common
   ateam_msgs
+  ateam_radio_msgs
   tf2
   tf2_geometry_msgs
   ssl_league_protobufs
