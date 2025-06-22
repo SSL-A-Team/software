@@ -57,7 +57,8 @@ public:
 
   void reset();
 
-  void setTargetPosition(ateam_geometry::Point target_position);
+  void setTargetPosition(ateam_geometry::Point target_position,
+    ateam_geometry::Vector target_velocity = ateam_geometry::Vector(0, 0));
 
   const path_planning::PlannerOptions & getPlannerOptions() const;
   void setPlannerOptions(path_planning::PlannerOptions options);
@@ -91,6 +92,7 @@ public:
 private:
   bool enable_escape_velocities_ = true;
   ateam_geometry::Point target_position_;
+  ateam_geometry::Vector target_velocity_;
   path_planning::PlannerOptions planner_options_;
   path_planning::PathPlanner path_planner_;
   MotionController motion_controller_;

@@ -38,14 +38,16 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 
   // Drive in square
   waypoints = {
-    {ateam_geometry::Point(1.0, -1.0), AngleMode::face_absolute, 3*M_PI/2, 3.0},
-    {ateam_geometry::Point(-1.0, -1.0), AngleMode::face_absolute, M_PI, 3.0},
-    {ateam_geometry::Point(-1.0, 1.0), AngleMode::face_absolute, M_PI/2, 3.0},
+    {ateam_geometry::Point(1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
     {ateam_geometry::Point(1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
   };
 
   motion_controller_.v_max = 2.0;
   motion_controller_.t_max = 20.0;
+  motion_controller_.accel_limit = 3.0;
+  motion_controller_.decel_limit = 0.2;
 }
 
 void ControlsTestPlay::reset()
@@ -80,7 +82,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   }
 
 
-  motion_controller_.set_trajectory(std::vector<ateam_geometry::Point> {waypoints[index].position});
+  motion_controller_.reset_trajectory(std::vector<ateam_geometry::Point> {waypoints[index].position});
   switch (waypoints[index].angle_mode) {
     case AngleMode::face_absolute:
       motion_controller_.face_absolute(waypoints[index].heading);
@@ -123,6 +125,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   getPlayInfo()["robot"]["vel"]["x"] = robot.vel.x();
   getPlayInfo()["robot"]["vel"]["y"] = robot.vel.y();
   getPlayInfo()["robot"]["vel"]["t"] = robot.omega;
+
+  getPlayInfo()["error"]["x"] = waypoints[index].position.x() - robot.pos.x();
+  getPlayInfo()["error"]["y"] = waypoints[index].position.y() - robot.pos.y();
 
   for (std::size_t i = 0; i < waypoints.size(); i++) {
     getOverlays().drawCircle(

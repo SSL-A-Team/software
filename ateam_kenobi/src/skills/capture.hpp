@@ -24,6 +24,7 @@
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "core/play_helpers/easy_move_to.hpp"
+#include "core/play_helpers/intercept_calculation.hpp"
 #include <ateam_common/robot_constants.hpp>
 #include "core/stp/skill.hpp"
 #include "core/types/world.hpp"
@@ -84,14 +85,13 @@ public:
 
 private:
   play_helpers::EasyMoveTo easy_move_to_;
+  play_helpers::InterceptResults intercept_result_;
   bool done_ = false;
 
   bool steal_from_opponent = true;
 
   int ball_detected_filter_ = 0;
   double approach_radius_ = kRobotRadius + kBallRadius + 0.15;  // m
-
-  double intercept_speed_ = 2.0;  // m/s
 
   double capture_speed_ = 0.2;  // m/s
 
@@ -100,10 +100,9 @@ private:
   double decel_limit_ = 0.5;  // for approaching ball m/s/s
 
   // Ball should have enough room for the robot to fit between it and the obstacle with a bit of extra space
-  double ball_distance_from_obstacle = kRobotDiameter + kBallRadius + 0.03;
+  double ball_distance_from_obstacle_ = kRobotDiameter + kBallRadius + 0.03;
 
   ateam_geometry::Point approach_point;
-  ateam_geometry::Point fake_ball_point; // TESTING ONLY: REMOVE THIS
 
   enum class State
   {

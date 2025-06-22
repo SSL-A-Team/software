@@ -78,6 +78,10 @@ export default {
             clearInterval(this.playbackTimer);
         },
         rewind: function() {
+            if (this.state.selectedHistoryFrame == -1) {
+                this.state.selectedHistoryFrame = this.state.worldHistory.length - 1;
+            }
+
             if (this.playbackSpeed >= 0) {
                 this.playbackSpeed = -1.0;
             } else {
@@ -86,6 +90,10 @@ export default {
             this.play();
         },
         fastforward: function() {
+            if (this.state.selectedHistoryFrame == -1) {
+                this.state.selectedHistoryFrame = this.state.worldHistory.length - 1;
+            }
+
             if (this.playbackSpeed <= 1.0) {
                 this.playbackSpeed = 1.5;
             } else {

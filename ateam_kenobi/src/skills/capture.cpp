@@ -39,7 +39,6 @@ void Capture::Reset()
   done_ = false;
   ball_detected_filter_ = 0;
   easy_move_to_.reset();
-  fake_ball_point = ateam_geometry::Point(0, 0); // TESTING ONLY: REMOVE THIS
 }
 
 ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const Robot & robot)
@@ -79,14 +78,7 @@ ateam_geometry::Point Capture::calculateApproachPoint(const World & world, const
     return approach_point;
   }
 
-  // TESTING ONLY: REMOVE THIS
-  if (state_ == State::Intercept) {
-    approach_point = calculateInterceptPoint(world, robot);
-    return approach_point;
-  }
-
-  
-  // Handle ball near goal/walls
+  // Handle ball near goal/walls/opponents
   auto maybe_offset_vector = calculateObstacleOffset(world);
   if (maybe_offset_vector) {
     approach_point = world.ball.pos + maybe_offset_vector.value();
@@ -121,20 +113,7 @@ void Capture::chooseState(const World & world, const Robot & robot)
 
   // Transition out of Intercept
   else if (state_ == State::Intercept) {
-    // state_ = State::MoveToApproachPoint;
-    state_ = State::Intercept; // TESTING ONLY: REMOVE THIS
-  }
-
-  // TODO: Make the transition out of MoveToApproachPoint check if the robot
-  // is already on the line from the approach point to the ball
-  // so it doesn't try to go backwards to the approach point if it is already lined up
-
-  // Transition out of MoveToApproachPoint
-  else if (state_ == State::MoveToApproachPoint
-    && ateam_geometry::norm(approach_point - robot.pos) < .04
-    && abs(approach_to_ball_angle - robot.theta) < 0.1 ) {
-
-    state_ = State::Capture;
+    state_ = State::MoveToApproachPoint;
   }
 
   // Transition out of Capture
@@ -161,6 +140,23 @@ void Capture::chooseState(const World & world, const Robot & robot)
       state_ = State::Capture;
     }
   }
+
+  // TODO: Make the transition out of MoveToApproachPoint check if the robot
+  // is already on the line from the approach point to the ball
+  // so it doesn't try to go backwards to the approach point if it is already lined up
+
+  // Should be in Capture State
+  else if (ateam_geometry::norm(approach_point - robot.pos) < .04
+    && abs(approach_to_ball_angle - robot.theta) < 0.1 ) {
+
+    state_ = State::Capture;
+  }
+
+  // Move to the approach point
+  else if (state_ != State::Capture) {
+    state_ = State::MoveToApproachPoint;
+  }
+
 }
 
 ateam_msgs::msg::RobotMotionCommand Capture::runIntercept(const World & world, const Robot & robot)
@@ -178,8 +174,13 @@ ateam_msgs::msg::RobotMotionCommand Capture::runIntercept(const World & world, c
   easy_move_to_.setMaxDecel(6.0); // TODO: Figure out how to improve tracking without doing this
   easy_move_to_.setTargetPosition(approach_point);
 
-
   auto command = easy_move_to_.runFrame(robot, world);
+
+  const double offset_ball_dist = kBallRadius + kRobotRadius + 0.05; // TODO be smarter about where to calculate this
+  if (intercept_result_.h < 0.03 && intercept_result_.d >= -offset_ball_dist) {
+    command.dribbler_speed = 300;
+  }
+
   return command;
 }
 
@@ -198,8 +199,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToApproachPoint(
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setMaxVelocity(2.0);
   easy_move_to_.setMaxDecel(decel_limit_);
-  //easy_move_to_.setTargetPosition(approach_point);
-  easy_move_to_.setTargetPosition(robot.pos);
+  easy_move_to_.setTargetPosition(approach_point);
 
   getPlayInfo()["ApproachPoint"]["x"] = approach_point.x();
   getPlayInfo()["ApproachPoint"]["y"] = approach_point.y();
@@ -221,7 +221,8 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   easy_move_to_.setMotionOptions(motion_options);
 
   easy_move_to_.setMaxVelocity(capture_speed_);
-  easy_move_to_.face_point(world.ball.pos);
+  easy_move_to_.setMaxDecel(6.0); // TODO: Figure out how to improve tracking without doing this
+  easy_move_to_.face_point(world.ball.pos); // This can cause weird behavior if the ball is occluded
 
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
@@ -248,6 +249,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runExtract(const World & world, con
 
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(approach_point);
+  easy_move_to_.setMaxVelocity(capture_speed_);
 
   auto command = easy_move_to_.runFrame(robot, world);
 
@@ -260,44 +262,15 @@ ateam_msgs::msg::RobotMotionCommand Capture::runExtract(const World & world, con
 ateam_geometry::Point Capture::calculateInterceptPoint(const World & world, const Robot & robot)
 {
 
-  // auto intercept_pos = world.ball.pos;
-  auto fake_ball_vel = ateam_geometry::Vector(1.0, 0);
-  fake_ball_point += fake_ball_vel / 100.0;
-  getOverlays().drawCircle("Simulated Intercept Ball", ateam_geometry::makeCircle(fake_ball_point, 0.025), "#FF0000FF");
+  const double vb = ateam_geometry::norm(world.ball.vel);
 
-  // ball velocity
-  // const double vb = ateam_geometry::norm(world.ball.vel);
-  const double vb = ateam_geometry::norm(fake_ball_vel); // TESTING ONLY: REMOVE THIS
-  // max robot velocity (slightly decreased to give robot time to prepare)
-  const double vr = 0.8;
+  const double offset_ball_dist = kBallRadius + kRobotRadius + 0.05;
+  const auto offset_ball_pos = world.ball.pos + (offset_ball_dist * ateam_geometry::normalize(world.ball.vel)); // TESTING ONLY: REMOVE THIS
 
-  // Need to get there a bit in front of the ball
-  // const auto offset_ball_pos = world.ball.pos + ((kBallRadius + kRobotRadius + 0.05) * ateam_geometry::normalize(world.ball.vel));
-  const auto offset_ball_pos = fake_ball_point + ((kBallRadius + kRobotRadius + 0.05) * ateam_geometry::normalize(fake_ball_vel)); // TESTING ONLY: REMOVE THIS
-  //const auto ball_to_robot = robot.pos - world.ball.pos;
-  const auto ball_to_robot = robot.pos - offset_ball_pos;
-
-  // robot distance to ball projected onto the balls trajectory
-  // const double d = (world.ball.vel * ball_to_robot) /
-  //   ateam_geometry::norm(world.ball.vel);
-
-  const double d = (fake_ball_vel * ball_to_robot) / // TESTING ONLY: REMOVE THIS
-    ateam_geometry::norm(fake_ball_vel);
-
-  // const auto robot_proj_ball = world.ball.vel * d /
-  //   ateam_geometry::norm(world.ball.vel);
-
-  const auto robot_proj_ball = fake_ball_vel * d / // TESTING ONLY: REMOVE THIS
-    ateam_geometry::norm(fake_ball_vel);
-
-  const auto robot_perp_ball = ball_to_robot - robot_proj_ball;
-
-  // robot distance tangent to the balls trajectory
-  const double h = ateam_geometry::norm(robot_perp_ball);
-
+  intercept_result_ = play_helpers::calculateIntercept(world, robot);
   
-  getPlayInfo()["Ball"]["x"] = fake_ball_point.x();
-  getPlayInfo()["Ball"]["y"] = fake_ball_point.y();
+  getPlayInfo()["Ball"]["x"] = world.ball.pos.x();
+  getPlayInfo()["Ball"]["y"] = world.ball.pos.y();
   getPlayInfo()["Ball"]["vel"] = vb;
   getPlayInfo()["Ball"]["vx"] = world.ball.vel.x();
   getPlayInfo()["Ball"]["vy"] = world.ball.vel.y();
@@ -310,66 +283,40 @@ ateam_geometry::Point Capture::calculateInterceptPoint(const World & world, cons
   getPlayInfo()["Offset Target"]["x"] = offset_ball_pos.x();
   getPlayInfo()["Offset Target"]["y"] = offset_ball_pos.y();
 
-  getPlayInfo()["Intercept"]["d"] = d;
-  getPlayInfo()["Intercept"]["h"] = h;
+  getPlayInfo()["Intercept"]["d"] = intercept_result_.d;
+  getPlayInfo()["Intercept"]["h"] = intercept_result_.h;
 
-  /*
-    Initial Equation:
-      d - vb*t = sin(acos(h/(vr*t))) * vr*t
-    Solve for t:
-      t = (d * vb - sqrt((d^2*vr^2) + (h^2 * vr^2) - (h^2 * vb^2)) / (vb^2 - vr^2)
-  */
-
-  double discriminant = (d * d * vr * vr) + (h * h * vr * vr) - (h * h * vb * vb);
-  double denominator = vb * vb - vr * vr;
-
-  // Imaginary result means we will never catch the ball
-  if (discriminant < 0) {
+  // Already aligned to receive the ball and are in front of it, capture it
+  if (intercept_result_.h < 0.03 && intercept_result_.d >= -offset_ball_dist) {
+    // Go to the ball
+    if (vb < 0.5 || intercept_result_.d >= 0.3) {
+      getPlayInfo()["Intercept"]["direction"] = "GO TO CAPTURE";
+      return world.ball.pos;
+    }
+    // Wait for the ball to come to us
+    else {
+      getPlayInfo()["Intercept"]["direction"] = "WAIT FOR CAPTURE";
+      return robot.pos + intercept_result_.robot_perp_ball;
+    }
+  }
+  
+  if (!intercept_result_.intercept_pos.has_value()) {
     getPlayInfo()["Intercept"]["direction"] = ":(";
     getPlayInfo()["Intercept"]["Intercept Time"] = "inf";
     // Chase after the ball in case it hits something or slows down
     return world.ball.pos;
   }
 
-  // If the robot and ball speeds are very similar then the denominator can go to 0
-  if (abs(denominator) < 0.01) {
-    // Choose a denominator representing a faster robot since:
-    //  a. we already assume a slower than actual robot speed
-    //  b. the ball will deccelerate as it rolls
-    denominator = -0.1;
-  }
+  getPlayInfo()["Intercept"]["Intercept Time"] = intercept_result_.t;
 
-  // Time to intercept moving towards the ball
-  double t = (d * vb - sqrt(discriminant)) / denominator;
-
-  // TODO(chachmu): add better checks to see if these times are possible to
-  // respond to
-  getPlayInfo()["Intercept"]["db_plus"] = t;
-  if (t > 0.0) {
-    getPlayInfo()["Intercept"]["Intercept Time"] = t;
+  if (intercept_result_.equation_sign < 0) {
     getPlayInfo()["Intercept"]["direction"] = "Toward";
-    
-    // return offset_ball_pos + (t * world.ball.vel);
-    return offset_ball_pos + (t * fake_ball_vel);
-  }
-
-  // Time to intercept moving away from the ball
-  t = (d * vb + sqrt(discriminant)) / denominator;
-  
-  getPlayInfo()["Intercept"]["db_minus"] = t;
-  if (t > 0.0) {
-    getPlayInfo()["Intercept"]["Intercept Time"] = t;
+  } else {
     getPlayInfo()["Intercept"]["direction"] = "Away";
-    
-    // return offset_ball_pos + (t * world.ball.vel);
-    return offset_ball_pos + (t * fake_ball_vel);
   }
-
-  getPlayInfo()["Intercept"]["Intercept Time"] = "inf";
-  getPlayInfo()["Intercept"]["direction"] = ":(";
-
-  // TODO: do something better here
-  return robot.pos;
+  
+  // Go to the intercept point
+  return intercept_result_.intercept_pos.value();
 }
 
 std::optional<ateam_geometry::Vector> Capture::calculateObstacleOffset(const World & world)
@@ -383,8 +330,8 @@ std::optional<ateam_geometry::Vector> Capture::calculateObstacleOffset(const Wor
   bool is_inside_goal = is_inside_goal_x && is_between_goalposts;
 
   if (is_inside_goal) {
-    bool is_near_back_goal_x = abs(world.ball.pos.x()) + ball_distance_from_obstacle > (world.field.field_length / 2) + world.field.goal_depth;
-    bool is_near_inside_goalposts_y = abs(world.ball.pos.y()) + ball_distance_from_obstacle > world.field.goal_width / 2;
+    bool is_near_back_goal_x = abs(world.ball.pos.x()) + ball_distance_from_obstacle_ > (world.field.field_length / 2) + world.field.goal_depth;
+    bool is_near_inside_goalposts_y = abs(world.ball.pos.y()) + ball_distance_from_obstacle_ > world.field.goal_width / 2;
 
     if (is_near_back_goal_x) {
       obstacle_offset_x = (world.ball.pos.x() > 0) ? -1.0 : 1.0;
@@ -398,8 +345,8 @@ std::optional<ateam_geometry::Vector> Capture::calculateObstacleOffset(const Wor
   }
 
   // Handle ball near outside goalposts
-  bool is_near_outside_goalposts_x = abs(world.ball.pos.x()) + ball_distance_from_obstacle > world.field.field_length / 2;
-  bool is_near_outside_goalposts_y = abs(world.ball.pos.y()) - ball_distance_from_obstacle < (world.field.goal_width / 2) + 0.02;
+  bool is_near_outside_goalposts_x = abs(world.ball.pos.x()) + ball_distance_from_obstacle_ > world.field.field_length / 2;
+  bool is_near_outside_goalposts_y = abs(world.ball.pos.y()) - ball_distance_from_obstacle_ < (world.field.goal_width / 2) + 0.02;
   bool is_near_outside_goalposts = is_near_outside_goalposts_x && is_near_outside_goalposts_y;
 
   if (is_near_outside_goalposts) {
@@ -415,8 +362,8 @@ std::optional<ateam_geometry::Vector> Capture::calculateObstacleOffset(const Wor
   }
 
   // Handle ball near walls
-  bool is_near_x_walls =  abs(world.ball.pos.x()) + ball_distance_from_obstacle > (world.field.field_length / 2) + world.field.boundary_width;
-  bool is_near_y_walls =  abs(world.ball.pos.y()) + ball_distance_from_obstacle > (world.field.field_width / 2) + world.field.boundary_width;
+  bool is_near_x_walls =  abs(world.ball.pos.x()) + ball_distance_from_obstacle_ > (world.field.field_length / 2) + world.field.boundary_width;
+  bool is_near_y_walls =  abs(world.ball.pos.y()) + ball_distance_from_obstacle_ > (world.field.field_width / 2) + world.field.boundary_width;
   bool is_near_wall =  is_near_x_walls || is_near_y_walls;
 
   if (is_near_wall) {
@@ -432,6 +379,15 @@ std::optional<ateam_geometry::Vector> Capture::calculateObstacleOffset(const Wor
   }
 
   // TODO: handle ball being held by opponent?
+  for (const auto & their_robot : world.their_robots) {
+
+    // Check if the ball is close enough to an opponent robot to require an offset
+    if (their_robot.visible && ateam_geometry::norm(their_robot.pos - world.ball.pos) < ball_distance_from_obstacle_) {
+      auto offset_vector = approach_radius_ * ateam_geometry::normalize(world.ball.pos - their_robot.pos);
+      getPlayInfo()["Intercept"]["OPPONENT_COLLISION"] = their_robot.id;
+      return std::make_optional(offset_vector);
+    }
+  }
 
   // No obstacles to account for
   return std::nullopt;

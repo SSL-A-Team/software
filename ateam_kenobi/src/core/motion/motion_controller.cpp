@@ -77,9 +77,19 @@ void MotionController::no_face()
 }
 
 
-void MotionController::set_trajectory(const std::vector<ateam_geometry::Point> & trajectory)
+void MotionController::update_trajectory(const std::vector<ateam_geometry::Point> & trajectory,
+  ateam_geometry::Vector target_velocity)
 {
   this->trajectory = trajectory;
+  this->target_velocity = target_velocity;
+}
+
+void MotionController::reset_trajectory(const std::vector<ateam_geometry::Point> & trajectory,
+  ateam_geometry::Vector target_velocity)
+{
+  this->trajectory = trajectory;
+  this->target_velocity = target_velocity;
+
   this->prev_point = 0;
 
   this->progress = 0;
@@ -91,14 +101,15 @@ double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robo
 
   // double vel = ateam_geometry::norm(robot.vel);
   double vel = this->prev_command_vel;
-  double dist_to_stop = (vel*vel) / (2 * decel_limit);
+  double target_vel = ateam_geometry::norm(target_velocity);
+  double dist_to_reach_target_vel = ((vel*vel) - (target_vel * target_vel)) / (2 * decel_limit);
 
   // Cruise
   double trapezoidal_vel = this->v_max;
 
-  // Decelerate to a stop
-  if (dist_to_stop >= ateam_geometry::norm(trajectory.back() - robot.pos)) {
-    trapezoidal_vel = vel - decel_limit * dt;
+  // Decelerate to target velocity
+  if (dist_to_reach_target_vel >= ateam_geometry::norm(trajectory.back() - robot.pos)) {
+    trapezoidal_vel = vel - (decel_limit * dt);
 
   // Accelerate to speed
   } else if (vel < this->v_max) {
@@ -108,8 +119,7 @@ double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robo
     // }
   }
 
-  this->prev_command_vel = std::clamp(trapezoidal_vel, 0.0, this->v_max);
-  return this->prev_command_vel;
+  return std::clamp(trapezoidal_vel, 0.0, this->v_max);
 }
 
 ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
@@ -119,13 +129,17 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 {
   ateam_msgs::msg::RobotMotionCommand motion_command;
 
-  // Skip the first frame if we can't calculate dt or there isn't a trajectory
-  if (std::isnan(this->prev_time) || this->trajectory.size() <= 0) {
+  // Skip if there isn't a trajectory
+  if (this->trajectory.size() <= 0) {
     this->prev_time = current_time;
     return motion_command;
   }
 
   double dt = current_time - this->prev_time;
+  // If we don't have a valid dt just assume we are running at standard loop rate
+  if (std::isnan(this->prev_time)) {
+    dt = 1/100.0; // TODO: set this dynamically
+  }
 
   // TODO(anon): figure out what point on the trajectory to use as the target
   uint64_t index;
@@ -153,14 +167,14 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   bool xy_slow = false;
   if (!trajectory_complete) {
 
-    // auto vel_vector = calculate_trapezoidal_velocity(robot, dt)
-    //   * ateam_geometry::normalize(target - robot.pos);
+    auto vel_vector = calculate_trapezoidal_velocity(robot, dt)
+      * ateam_geometry::normalize(target - robot.pos);
 
     // Calculate translational movement commands
-    double x_command = this->x_controller.compute_command(x_error, dt);
-    double y_command = this->y_controller.compute_command(y_error, dt);
+    // double x_command = this->x_controller.compute_command(x_error, dt);
+    // double y_command = this->y_controller.compute_command(y_error, dt);
 
-    auto vel_vector = ateam_geometry::Vector(x_command, y_command);
+    // auto vel_vector = ateam_geometry::Vector(x_command, y_command);
 
     // clamp to max/min velocity
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
@@ -168,6 +182,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     }
     motion_command.twist.linear.x = vel_vector.x();
     motion_command.twist.linear.y = vel_vector.y();
+    this->prev_command_vel = ateam_geometry::norm(vel_vector);
+  } else {
+    this->prev_command_vel = 0.0;
   }
 
   // calculate angle movement commands

@@ -375,8 +375,10 @@ export class RosManager {
                 world.referee[member] = msg[member];
             }
 
-            world.teams.get(TeamColor.Blue).defending = msg.blue_team_on_positive_half ? 1 : -1;
-            world.teams.get(TeamColor.Yellow).defending = msg.blue_team_on_positive_half ? -1 : 1;
+            if (msg.blue_team_on_positive_half.length != 0) {
+                world.teams.get(TeamColor.Blue).defending = msg.blue_team_on_positive_half[0] ? 1 : -1;
+                world.teams.get(TeamColor.Yellow).defending = msg.blue_team_on_positive_half[0] ? -1 : 1;
+            }
 
             if (world.referee.blue.name == world.teamName) {
                 world.team = TeamColor.Blue;

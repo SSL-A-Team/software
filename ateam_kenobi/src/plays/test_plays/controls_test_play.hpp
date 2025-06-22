@@ -58,7 +58,7 @@ private:
   std::vector<Waypoint> waypoints;
   bool goal_hit;
   std::chrono::steady_clock::time_point goal_hit_time;
-  double position_threshold = 0.15;
+  double position_threshold = 0.01;
   double angle_threshold = 8.0;
 
   bool isGoalHit(const Robot & robot);

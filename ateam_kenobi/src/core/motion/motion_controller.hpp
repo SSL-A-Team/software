@@ -70,8 +70,12 @@ class MotionController
 public:
   MotionController();
 
+  // Update the current trajectory (usually just moves the last point a bit)
+  void update_trajectory(const std::vector<ateam_geometry::Point> & trajectory,
+    ateam_geometry::Vector target_velocity = ateam_geometry::Vector(0, 0));
   // Load a new trajectory into the motion controller resetting its progress along the old one
-  void set_trajectory(const std::vector<ateam_geometry::Point> & trajectory);
+  void reset_trajectory(const std::vector<ateam_geometry::Point> & trajectory,
+    ateam_geometry::Vector target_velocity = ateam_geometry::Vector(0, 0));
 
   void face_point(std::optional<ateam_geometry::Point> point);
   void face_absolute(double angle);
@@ -122,6 +126,8 @@ private:
   double prev_command_vel;
   double prev_command;
   std::vector<ateam_geometry::Point> trajectory;
+  ateam_geometry::Vector target_velocity;
+
   AngleMode angle_mode = AngleMode::face_travel;  // This mode should have the best performance
 
   int prev_point;  // last point used in the trajectory
