@@ -65,6 +65,12 @@ public:
       declare_parameter<std::string>("net_interface_address", "")),
     firmware_parameter_server_(*this, connections_)
   {
+    declare_parameters<bool>("controls_enabled", {
+      {"body_vel", true},
+      {"wheel_vel", true},
+      {"wheel_torque", false}
+    });
+
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
       "~/robot_motion_commands/robot",
@@ -200,6 +206,13 @@ private:
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
       }
       BasicControl control_msg;
+      control_msg.request_shutdown = false;
+      control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() == ateam_common::GameCommand::Stop;
+      control_msg.emergency_stop = false;
+      control_msg.body_vel_controls_enabled = get_parameter("controls.body_vel").as_bool();
+      control_msg.wheel_vel_control_enabled = get_parameter("controls.wheel_vel").as_bool();
+      control_msg.wheel_torque_control_enabled = get_parameter("controls.wheel_torque").as_bool();
+      control_msg.play_song = 0;
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
