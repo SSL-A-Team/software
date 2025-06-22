@@ -230,7 +230,6 @@ private:
     const std::string & sender_address, const uint16_t sender_port,
     uint8_t * udp_packet_data, size_t udp_packet_size)
   {
-    RCLCPP_INFO(get_logger(), "Received discovery package.");
     std::string parsing_error;
     RadioPacket packet = ParsePacket(udp_packet_data, udp_packet_size, parsing_error);
     if (!parsing_error.empty()) {
