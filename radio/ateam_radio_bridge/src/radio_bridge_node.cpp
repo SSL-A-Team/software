@@ -209,9 +209,9 @@ private:
       control_msg.request_shutdown = false;
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() == ateam_common::GameCommand::Stop;
       control_msg.emergency_stop = false;
-      control_msg.body_vel_controls_enabled = get_parameter("controls.body_vel").as_bool();
-      control_msg.wheel_vel_control_enabled = get_parameter("controls.wheel_vel").as_bool();
-      control_msg.wheel_torque_control_enabled = get_parameter("controls.wheel_torque").as_bool();
+      control_msg.body_vel_controls_enabled = get_parameter("controls_enabled.body_vel").as_bool();
+      control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
+      control_msg.wheel_torque_control_enabled = get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.play_song = 0;
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
