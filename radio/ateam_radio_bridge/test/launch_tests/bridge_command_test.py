@@ -84,10 +84,10 @@ class TestRadioBridgeNode(unittest.TestCase):
                 break
             self.cmd_pub.publish(cmd_msg)
             last_packet = self.robot.getLastCmdMessage()
-            if len(last_packet) != 36:
+            if len(last_packet) != 40:
                 continue
             # Extract BasicControl.vel_x_linear
-            vel_x_linear = struct.unpack("<f", last_packet[12:16])[0]
+            vel_x_linear = struct.unpack("<f", last_packet[16:20])[0]
             if abs(vel_x_linear - 2.0) < 0.1:
                 # Pass the test
                 return
