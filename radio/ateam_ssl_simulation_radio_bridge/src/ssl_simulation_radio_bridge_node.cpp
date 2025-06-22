@@ -53,6 +53,9 @@ public:
     gc_listener_(*this,
       std::bind_front(&SSLSimulationRadioBridgeNode::team_color_change_callback, this))
   {
+    using ateam_common::indexed_topic_helpers::create_indexed_publishers;
+    using ateam_common::indexed_topic_helpers::create_indexed_subscribers;
+
     SET_ROS_PROTOBUF_LOG_HANDLER("ateam_ssl_simulation_radio_bridge.protobuf");
 
     declare_parameter("ssl_sim_radio_ip", "127.0.0.1");
@@ -62,7 +65,7 @@ public:
 
     team_color_change_callback(ateam_common::TeamColor::Blue);
 
-    ateam_common::indexed_topic_helpers::create_indexed_subscribers
+    create_indexed_subscribers
     <ateam_msgs::msg::RobotMotionCommand>(
       command_subscriptions_,
       Topics::kRobotMotionCommandPrefix,
@@ -70,13 +73,13 @@ public:
       &SSLSimulationRadioBridgeNode::message_callback,
       this);
 
-    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::BasicTelemetry>(
+    create_indexed_publishers<ateam_radio_msgs::msg::BasicTelemetry>(
       feedback_publishers_,
       Topics::kRobotFeedbackPrefix,
       rclcpp::SystemDefaultsQoS(),
       this);
 
-    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::ConnectionStatus>(
+    create_indexed_publishers<ateam_radio_msgs::msg::ConnectionStatus>(
       connection_publishers_,
       Topics::kRobotConnectionStatusPrefix,
       rclcpp::SystemDefaultsQoS(),
@@ -229,8 +232,10 @@ private:
   std::unique_ptr<ateam_common::BiDirectionalUDP> udp_sim_control_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> command_subscriptions_;
-  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr, 16> feedback_publishers_;
-  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr, 16> connection_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
+    16> feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
+    16> connection_publishers_;
   rclcpp::Service<ateam_msgs::srv::SendSimulatorControlPacket>::SharedPtr
     send_simulator_control_service_;
   rclcpp::TimerBase::SharedPtr zero_command_timer_;
