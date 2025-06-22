@@ -23,6 +23,7 @@ jobs:
           rosdep update --rosdistro=jazzy
           rosdep install --from-paths . --ignore-src -y
           ./src/ateam_software/ateam_ui/install_deps.sh
+          sudo apt install python3-clang
       
       - name: Get Changed Packages
         id: get-changed-packages
