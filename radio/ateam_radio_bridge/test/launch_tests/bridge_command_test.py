@@ -1,6 +1,5 @@
 """Tests the bridge's ability to pass command messages to robots."""
 
-import socket
 import struct
 import time
 import unittest

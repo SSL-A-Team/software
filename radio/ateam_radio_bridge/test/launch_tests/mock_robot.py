@@ -1,10 +1,9 @@
 #! /usr/bin/python3
 """Implements robot's radio behavior for testing."""
 
-import argparse
 import socket
 import struct
-from threading import Thread, Lock
+from threading import Thread
 
 
 class MockRobot:
@@ -83,24 +82,18 @@ class MockRobot:
 
     def _sendTelemetryPacket(self):
         packet = struct.pack(
-            'IHHBHHBBffIffffff',
+            'IHHBHHBBIHH',
             0,  # CRC
             0,  # Version Major
             1,  # Version Minor
             102,  # CC Telemetry
-            40,  # Data Length
+            12,  # Data Length
             1,  # Sequence Number
             0,  # Robot Revision Major
             0,  # Robot Revision Minor
-            24.0,  # Battery Voltage
-            0.0,  # Battery Temperature
             0,  # Bit Flags
-            0.0,  # Motor 0 Temp
-            0.0,  # Motor 1 Temp
-            0.0,  # Motor 2 Temp
-            0.0,  # Motor 3 Temp
-            0.0,  # Motor 4 Temp
-            0.0,  # Kicker Charge Level
+            100,  # Battery Percent
+            100,  # Kicker Charge Percent
         )
         self._socket.sendto(packet, self._bridge_endpoint)
 

@@ -2,7 +2,7 @@
 
 import time
 import unittest
-import ateam_msgs.msg
+import ateam_radio_msgs.msg
 import launch
 from launch.actions import TimerAction
 import launch_ros.actions
@@ -45,12 +45,12 @@ class TestRadioBridgeNode(unittest.TestCase):
             discovery_address=discovery_address, discovery_port=discovery_port
         )
         cls.robot.startAsync()
-        cls.feedback_topic_name = "/radio_bridge/robot_feedback/status/robot0"
+        cls.feedback_topic_name = "/radio_bridge/robot_feedback/basic/robot0"
         cls.feedback_waiter = WaitForTopics(
             [
                 (
                     cls.feedback_topic_name,
-                    ateam_msgs.msg.RobotFeedback,
+                    ateam_radio_msgs.msg.BasicTelemetry,
                 )
             ],
             timeout=1
@@ -73,12 +73,7 @@ class TestRadioBridgeNode(unittest.TestCase):
             1,
             "Did not receive message on feedback topic.",
         )
-        at_least_one_connected_message = False
         for message in self.feedback_waiter.received_messages(self.feedback_topic_name):
-            if not message.radio_connected:
-                continue
-            at_least_one_connected_message = True
             # Just checks a few fields to make sure it's a reasonably valid message
             self.assertEqual(message.sequence_number, 1)
-            self.assertAlmostEqual(message.battery_level, 24.0)
-        self.assertTrue(at_least_one_connected_message)
+            self.assertAlmostEqual(message.battery_percent, 100)

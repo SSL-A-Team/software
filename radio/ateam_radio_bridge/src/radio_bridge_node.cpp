@@ -230,6 +230,7 @@ private:
     const std::string & sender_address, const uint16_t sender_port,
     uint8_t * udp_packet_data, size_t udp_packet_size)
   {
+    RCLCPP_INFO(get_logger(), "Received discovery package.");
     std::string parsing_error;
     RadioPacket packet = ParsePacket(udp_packet_data, udp_packet_size, parsing_error);
     if (!parsing_error.empty()) {
@@ -275,6 +276,7 @@ private:
       discovery_receiver_.SendTo(
         sender_address, sender_port,
         reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+      RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Invalid robot ID: %d", robot_id);
       return;
     }
 
@@ -288,6 +290,7 @@ private:
       discovery_receiver_.SendTo(
         sender_address, sender_port,
         reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+      RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Robot ID already connected: %d", robot_id);
       return;
     }
 
