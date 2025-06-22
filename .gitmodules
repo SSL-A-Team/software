@@ -1,6 +1,3 @@
-[submodule "ateam_radio_bridge/software-communication"]
-	path = ateam_radio_bridge/software-communication
-	url = https://github.com/SSL-A-Team/software-communication.git
 [submodule "ssl_ros_bridge"]
 	path = ssl_ros_bridge
 	url = https://github.com/SSL-A-Team/ssl_ros_bridge.git
