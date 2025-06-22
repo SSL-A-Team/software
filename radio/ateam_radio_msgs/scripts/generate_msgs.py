@@ -1,5 +1,6 @@
 """Generates ROS2 message definitions from a C header file containing struct definitions."""
 
+import pathlib
 import sys
 
 import clang.cindex
@@ -20,8 +21,9 @@ def generate_msgs_for_file(output_dir, file_path, struct_names):
                 msg_name = node.spelling
                 if msg_name not in struct_names:
                     continue
+                declaration_file = pathlib.Path(node.get_definition().location.file.name).name
                 msg = generate_msg_for_struct(node, enums)
-                write_msg_to_file(output_dir, msg, file_path)
+                write_msg_to_file(output_dir, msg, declaration_file)
             case _:
                 continue
 
