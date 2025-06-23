@@ -96,8 +96,9 @@ def generate_launch_description():
             respawn=True,
             remappings=remap_indexed_topics([
                 ('~/robot_motion_commands/robot', '/robot_motion_commands/robot'),
-                ('~/robot_feedback/status/robot', '/robot_feedback/status/robot'),
-                ('~/robot_feedback/motion/robot', '/robot_feedback/motion/robot')
+                ('~/robot_feedback/basic/robot', '/robot_feedback/basic/robot'),
+                ('~/robot_feedback/extended/robot', '/robot_feedback/extended/robot'),
+                ('~/robot_feedback/connection/robot', '/robot_feedback/connection/robot')
             ]),
             # prefix=['xterm -bg black -fg white -e gdb -ex run --args']
         ),
