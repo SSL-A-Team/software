@@ -106,7 +106,7 @@ public:
       10,
       &KenobiNode::robot_feedback_callback,
       this);
-    
+
     create_indexed_subscribers<ateam_radio_msgs::msg::ConnectionStatus>(
       robot_connection_status_subscriptions_,
       Topics::kRobotConnectionStatusPrefix,
