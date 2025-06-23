@@ -8,7 +8,7 @@
                     <v-tooltip activator="parent" location="end">
                         {{batteryLevel(robot)}}
                     </v-tooltip>
-                    <v-icon :icon="batteryIcon(robot.status.battery_level)" class="mx-0 pl-1 justify-center" size="small"/>
+                    <v-icon :icon="batteryIcon(robot.status.battery_percent)" class="mx-0 pl-1 justify-center" size="small"/>
                 </v-btn>
             </v-row>
         </v-card>
@@ -166,10 +166,11 @@ export default {
             }
 
             // TODO: update this to match dribbler naming convention once it is added
+            const motor_names = ["fl", "bl", "br", "fr", "dribbler"];
             for (var i = 0; i < 5; i++) {
-                let general = robot.status["motor_" + i + "_general_error"];
-                let hall = robot.status["motor_" + i + "_hall_error"];
-                let encoder = robot.status["motor_" + i + "_encoder_error"];
+                let general = robot.status["motor_" + motor_names[i] + "_general_error"];
+                let hall = robot.status["motor_" + motor_names[i] + "_hall_error"];
+                let encoder = robot.status["motor_" + motor_names[i] + "_encoder_error"];
 
                 if (general || hall || encoder) {
                     ctx.beginPath();
@@ -193,7 +194,7 @@ export default {
                 }
             }
 
-            if (!robot.status.radio_connected) {
+            if (!robot.radio_connected) {
                 ctx.fillStyle = "yellow";
                 ctx.font = "15px Arial";
                 ctx.textAlign = "center";
@@ -201,22 +202,19 @@ export default {
                 ctx.fillText("DC", .14*scale, -.14*scale);
             }
         },
-        batteryIcon: function(batteryLevel) {
-            if (!batteryLevel) {
+        batteryIcon: function(percentage) {
+            if (!percentage || percentage <= 5) {
                 return "mdi-battery-alert-variant-outline";
-            }
-
-            let percentage = Math.round((batteryLevel - 20) * 100 / 5.2);
-            if (percentage <= 5) {
-                return "mdi-battery-alert-variant-outline";
+            } else if (percentage >= 100) {
+                return "mdi-battery";
             }
 
             const percentageString = String(Math.round(percentage / 10) * 10);
             return "mdi-battery-" + percentageString;
         },
-        batteryLevel: function(robot) {
-            if (robot && robot.status && robot.status.battery_level) {
-                return robot.status.battery_level.toFixed(2)
+        batteryLevel: function(robot: Robot) {
+            if (robot && robot.status && robot.status.battery_percent) {
+                return String(robot.status.battery_percent.toFixed(0)) + "%";
             }
 
             return ""

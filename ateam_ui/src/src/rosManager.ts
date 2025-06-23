@@ -35,14 +35,23 @@ export class RosManager {
 
         for (var i = 0; i < 16; i++) {
             for (const team of appState.realtimeWorld.teams.keys()) {
-                let robotStatusTopic = new ROSLIB.Topic({
+                let robotConnectionTopic = new ROSLIB.Topic({
                     ros: this.ros,
-                    name: '/robot_feedback/status/robot' + i,
-                    messageType: 'ateam_msgs/msg/RobotFeedback'
+                    name: '/robot_feedback/connection/robot' + i,
+                    messageType: 'ateam_radio_msgs/msg/ConnectionStatus'
                 });
 
-                robotStatusTopic.subscribe(this.getRobotStatusCallback(appState.realtimeWorld, i));
-                this.subscriptions.set("/robot_feedback/status/robot" + i, robotStatusTopic);
+                robotConnectionTopic.subscribe(this.getRobotConnectionCallback(appState.realtimeWorld, i));
+                this.subscriptions.set("/robot_feedback/connection/robot" + i, robotConnectionTopic);
+
+                let robotBasicTopic = new ROSLIB.Topic({
+                    ros: this.ros,
+                    name: '/robot_feedback/basic/robot' + i,
+                    messageType: 'ateam_radio_msgs/msg/BasicTelemetry'
+                });
+
+                robotBasicTopic.subscribe(this.getRobotBasicCallback(appState.realtimeWorld, i));
+                this.subscriptions.set("/robot_feedback/basic/robot" + i, robotBasicTopic);
             }
         }
 
@@ -278,7 +287,14 @@ export class RosManager {
         };
     }
 
-    getRobotStatusCallback(world: WorldState, id: number): (msg: any) => void {
+    getRobotConnectionCallback(world: WorldState, id: number): (msg: any) => void {
+        return function(msg: any): void {
+            let robot = world.teams.get(world.team).robots[id];
+            robot.radio_connected = msg.radio_connected;
+        };
+    }
+
+    getRobotBasicCallback(world: WorldState, id: number): (msg: any) => void {
         return function(msg: any): void {
             let robot = world.teams.get(world.team).robots[id];
             for (const member of Object.getOwnPropertyNames(msg)) {
@@ -375,8 +391,10 @@ export class RosManager {
                 world.referee[member] = msg[member];
             }
 
-            world.teams.get(TeamColor.Blue).defending = msg.blue_team_on_positive_half ? 1 : -1;
-            world.teams.get(TeamColor.Yellow).defending = msg.blue_team_on_positive_half ? -1 : 1;
+            if (msg.blue_team_on_positive_half.length != 0) {
+                world.teams.get(TeamColor.Blue).defending = msg.blue_team_on_positive_half[0] ? 1 : -1;
+                world.teams.get(TeamColor.Yellow).defending = msg.blue_team_on_positive_half[0] ? -1 : 1;
+            }
 
             if (world.referee.blue.name == world.teamName) {
                 world.team = TeamColor.Blue;
