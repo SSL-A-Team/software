@@ -1,3 +1,23 @@
+# Copyright 2025 A Team
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 """Generates ROS2 message definitions from a C header file containing struct definitions."""
 
 import pathlib
@@ -21,7 +41,9 @@ def generate_msgs_for_file(output_dir, file_path, struct_names):
                 msg_name = node.spelling
                 if msg_name not in struct_names:
                     continue
-                declaration_file = pathlib.Path(node.get_definition().location.file.name).name
+                declaration_file = pathlib.Path(
+                    node.get_definition().location.file.name
+                ).name
                 msg = generate_msg_for_struct(node, enums)
                 write_msg_to_file(output_dir, msg, declaration_file)
             case _:
@@ -81,7 +103,9 @@ def add_bitfield_declaration(declarations, field_node):
     elif bitfield_width <= 64:
         type_name = 'uint64'
     else:
-        raise ValueError(f'Unsupported bitfield width: {bitfield_width} for field {field_node.spelling}')
+        raise ValueError(
+            f'Unsupported bitfield width: {bitfield_width} for field {field_node.spelling}'
+        )
     declarations.append(f'{type_name} {field_node.spelling}')
 
 
@@ -96,7 +120,9 @@ def add_enum_declaration(declarations, field_node, enums):
     enum_details = [e for e in enums if e['type_name'] == field_node.type.spelling][0]
     declarations.append(f'{enum_details["underlying_type"]} {field_node.spelling}')
     for value_name, value in enum_details['values']:
-        declarations.append(f'{enum_details["underlying_type"]} {value_name.upper()} = {value}')
+        declarations.append(
+            f'{enum_details["underlying_type"]} {value_name.upper()} = {value}'
+        )
 
 
 def collect_enum_details(enum_node):
@@ -161,6 +187,9 @@ def get_ros2_basic_type(field_type):
 
 if __name__ == '__main__':
     if len(sys.argv) < 4:
-        print('Usage: python generate_msgs.py <output_dir> <path_to_c_header> <struct_name> [<struct_name> ...]')
+        print(
+            'Usage: python generate_msgs.py <output_dir> <path_to_c_header> '
+            '<struct_name> [<struct_name> ...]'
+        )
         sys.exit(1)
     generate_msgs_for_file(sys.argv[1], sys.argv[2], sys.argv[3:])

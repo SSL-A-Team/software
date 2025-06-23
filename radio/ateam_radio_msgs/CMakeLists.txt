@@ -96,8 +96,22 @@ install(
 )
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  file(GLOB_RECURSE submodule_files software-communication/*)
+  file(GLOB symlinked_headers include/ateam_radio_msgs/packets/*)
+  set(_linter_excludes
+    software-communication
+    ${submodule_files}
+    ${symlinked_headers}
+  )
+
+  find_package(ament_cmake_lint_cmake REQUIRED)
+  ament_lint_cmake()
+
+  find_package(ament_cmake_flake8 REQUIRED)
+  ament_flake8(EXCLUDE ${_linter_excludes})
+
+  find_package(ament_cmake_pep257 REQUIRED)
+  ament_pep257(EXCLUDE ${_linter_excludes})
 endif()
 
 ament_export_dependencies(rosidl_default_runtime)

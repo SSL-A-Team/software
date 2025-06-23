@@ -1,3 +1,23 @@
+# Copyright 2025 A Team
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 """Generates C++ conversion code for ROS2 messages from C structs."""
 
 import os
@@ -18,17 +38,22 @@ def generate_conversion_code(output_directory, header_file, struct_names):
 
 def generate_header_file(output_directory, translation_unit, struct_names):
     """Generate header file for conversion functions."""
-    header_text = '// Auto-generated conversion functions for ROS2 messages\n' \
-        '#ifndef CONVERSION_HPP_\n' \
+    header_text = (
+        '// Auto-generated conversion functions for ROS2 messages\n'
+        '#ifndef CONVERSION_HPP_\n'
         '#define CONVERSION_HPP_\n\n'
+    )
     for struct_name in struct_names:
-        header_text += f'#include <ateam_radio_msgs/msg/{camel_case_to_snake_case(struct_name)}.hpp>\n'
+        header_text += '#include <ateam_radio_msgs/msg/' \
+            f'{camel_case_to_snake_case(struct_name)}.hpp>\n'
     for node in translation_unit.cursor.get_children():
         if node.kind == clang.cindex.CursorKind.STRUCT_DECL:
             msg_name = node.spelling
             if msg_name not in struct_names:
                 continue
-            declaration_file = pathlib.Path(node.get_definition().location.file.name).name
+            declaration_file = pathlib.Path(
+                node.get_definition().location.file.name
+            ).name
             header_text += f'#include <ateam_radio_msgs/packets/{declaration_file}>\n'
     header_text += 'namespace ateam_radio_msgs {\n'
     for node in translation_unit.cursor.get_children():
@@ -48,8 +73,7 @@ def generate_header_file(output_directory, translation_unit, struct_names):
 def generate_implementation_file(output_directory, translation_unit, struct_names):
     """Generate implementation file for conversion functions."""
     enums = []
-    impl_text = '#include "conversion.hpp"\n\n' \
-        'namespace ateam_radio_msgs {\n\n'
+    impl_text = '#include "conversion.hpp"\n\n' 'namespace ateam_radio_msgs {\n\n'
     for node in translation_unit.cursor.get_children():
         match node.kind:
             case clang.cindex.CursorKind.ENUM_DECL:
@@ -58,9 +82,7 @@ def generate_implementation_file(output_directory, translation_unit, struct_name
                 msg_name = node.spelling
                 if msg_name not in struct_names:
                     continue
-                impl_text += generate_conversion_function_implementation(
-                    node, enums
-                )
+                impl_text += generate_conversion_function_implementation(node, enums)
             case _:
                 continue
     impl_text += '}  // namespace ateam_radio_bridge\n'
@@ -100,7 +122,8 @@ def generate_field_copy_line(field_node, param_name, enums):
     """Generate a line of code to copy a field from the struct to the message."""
     field_name = field_node.spelling
     if field_node.type.kind == clang.cindex.TypeKind.CONSTANTARRAY:
-        return f'    std::ranges::copy({param_name}.{field_node.spelling}, std::back_inserter(msg.{field_name}));\n'
+        return f'    std::ranges::copy({param_name}.{field_node.spelling}, ' \
+            f'std::back_inserter(msg.{field_name}));\n'
     elif field_node.type.kind == clang.cindex.TypeKind.ELABORATED:
         if field_node.type.spelling in [
             'uint8_t',
@@ -191,7 +214,8 @@ def camel_case_to_snake_case(s):
 if __name__ == '__main__':
     if len(sys.argv) < 4:
         print(
-            'Usage: generate_conversion_code.py <output_directory> <header_file> <struct_name> [<struct_name> ...]'
+            'Usage: generate_conversion_code.py <output_directory> <header_file> '
+            '<struct_name> [<struct_name> ...]'
         )
         sys.exit(1)
     generate_conversion_code(sys.argv[1], sys.argv[2], sys.argv[3:])

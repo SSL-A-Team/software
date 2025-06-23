@@ -114,6 +114,13 @@ public:
       &KenobiNode::robot_connection_callback,
       this);
 
+    create_indexed_subscribers<ateam_radio_msgs::msg::ConnectionStatus>(
+      robot_connection_status_subscriptions_,
+      Topics::kRobotConnectionStatusPrefix,
+      10,
+      &KenobiNode::robot_connection_callback,
+      this);
+
     create_indexed_publishers<ateam_msgs::msg::RobotMotionCommand>(
       robot_commands_publishers_, Topics::kRobotMotionCommandPrefix,
       rclcpp::SystemDefaultsQoS(), this);
