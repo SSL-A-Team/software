@@ -97,26 +97,31 @@ void MotionController::reset_trajectory(const std::vector<ateam_geometry::Point>
   this->total_dist = 0;
 }
 
-double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robot& robot, double dt) {
+double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robot& robot, double remaining_dist, double dt) {
 
-  // double vel = ateam_geometry::norm(robot.vel);
-  double vel = this->prev_command_vel;
+  // TODO: because this uses vector norms it doesn't really handle when the target velocity towards the robot
+
+  double vel = ateam_geometry::norm(robot.vel);
+  // // Prefer to use the previously commanded velocity for smoothness unless it is very wrong
+  // if (prev_command_vel < 1.2 * vel && prev_command_vel > 0.8 * prev_command_vel) {
+  //   vel = this->prev_command_vel;
+  // }
+
+  vel = this->prev_command_vel;
+
   double target_vel = ateam_geometry::norm(target_velocity);
-  double dist_to_reach_target_vel = ((vel*vel) - (target_vel * target_vel)) / (2 * decel_limit);
+  double deceleration_to_reach_target = ((vel*vel) - (target_vel * target_vel)) / (2 * remaining_dist);
 
   // Cruise
   double trapezoidal_vel = this->v_max;
 
   // Decelerate to target velocity
-  if (dist_to_reach_target_vel >= ateam_geometry::norm(trajectory.back() - robot.pos)) {
-    trapezoidal_vel = vel - (decel_limit * dt);
+  if (deceleration_to_reach_target > decel_limit * 0.95) {
+    trapezoidal_vel = vel - (deceleration_to_reach_target * dt);
 
   // Accelerate to speed
   } else if (vel < this->v_max) {
     trapezoidal_vel = vel + (accel_limit * dt);
-    // if (trapezoidal_vel < 0.1) {
-    //   trapezoidal_vel = 0.1;
-    // }
   }
 
   return std::clamp(trapezoidal_vel, 0.0, this->v_max);
@@ -141,40 +146,73 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     dt = 1/100.0; // TODO: set this dynamically
   }
 
-  // TODO(anon): figure out what point on the trajectory to use as the target
-  uint64_t index;
+  // I don't like having to iterate the trajectory twice but I'm not sure if there is a better way
 
-  // find a point in the trajectory that is far enough away from our current location
-  // for loop bound ensures index never exceeds the trajectory length even after the loop ends
-  for (index = this->prev_point; index < this->trajectory.size() - 1; index++) {
-    double dist = sqrt(CGAL::squared_distance(robot.pos, this->trajectory[index]));
+  // Find the closest point on the trajectory
+  u_int64_t closest_index = this->trajectory.size() - 1;
+  double closest_distance = sqrt(CGAL::squared_distance(robot.pos, this->trajectory[closest_index]));
+  for (int i = this->trajectory.size() - 2; i > 0; i--) {
+    double dist_to_point = sqrt(CGAL::squared_distance(robot.pos, this->trajectory[i]));
 
-    if (dist > this->v_max * dt) {
-      break;
+    if (dist_to_point <= closest_distance) {
+      closest_index = i;
+      closest_distance = dist_to_point;
     }
   }
 
-  // maybe do some sort of interpolation between points
+  // handle if the closest point is behind us
+  if (closest_index < this->trajectory.size() - 1) {
+    auto trajectory_segment_vector = trajectory[closest_index + 1] - trajectory[closest_index];
+    auto robot_to_closest_vector = trajectory[closest_index] - robot.pos;
 
-  ateam_geometry::Point target = this->trajectory[index];
+    // Use the next point in the trajectory instead
+    if (trajectory_segment_vector * robot_to_closest_vector < 0) {
+      closest_index++;
+    }
+  }
+
+  // 1. Find target point that is farther ahead of the robot than the lookahead distance
+  // 2. Calculate the total distance along the trajectory from the robot to the end point
+  double remaining_dist_along_trajectory = 0.0;
+  uint64_t target_index = this->trajectory.size() - 1;
+  for (uint64_t i = closest_index; i < this->trajectory.size(); i++) {
+    double dist_to_point = sqrt(CGAL::squared_distance(robot.pos, this->trajectory[i]));
+
+    // Find the target point farther than the lookahead distance
+    if (target_index == this->trajectory.size() - 1) {
+      if (dist_to_point > this->v_max * dt) {
+        // Should this target point be interpolated?
+        target_index = i;
+        remaining_dist_along_trajectory = dist_to_point;
+      }
+
+    // Add up the total distance remaining along the trajectory
+    } else {
+      remaining_dist_along_trajectory += ateam_geometry::norm(trajectory[i] - trajectory[i-1]);
+    }
+  }
+
+  // target_index will either be a validly chosen point or the last point in the trajectory
+  ateam_geometry::Point target = this->trajectory[target_index];
 
   double dist = sqrt(CGAL::squared_distance(robot.pos, target));
-  bool trajectory_complete = (dist <= options.completion_threshold);
+  bool trajectory_complete = (dist <= options.completion_threshold) && (target_index == this->trajectory.size() - 1);
 
   double x_error = target.x() - robot.pos.x();
   double y_error = target.y() - robot.pos.y();
 
   bool xy_slow = false;
-  if (!trajectory_complete) {
-
-    auto vel_vector = calculate_trapezoidal_velocity(robot, dt)
-      * ateam_geometry::normalize(target - robot.pos);
+  if (ateam_geometry::norm(target_velocity) > 0.01 || !trajectory_complete) {
 
     // Calculate translational movement commands
-    // double x_command = this->x_controller.compute_command(x_error, dt);
-    // double y_command = this->y_controller.compute_command(y_error, dt);
+    // double x_feedback = this->x_controller.compute_command(x_error, dt);
+    // double y_feedback = this->y_controller.compute_command(y_error, dt);
 
-    // auto vel_vector = ateam_geometry::Vector(x_command, y_command);
+    // auto feedback_vector = ateam_geometry::Vector(x_feedback, y_feedback);
+
+    auto vel_vector = (calculate_trapezoidal_velocity(robot, remaining_dist_along_trajectory, dt)
+      * ateam_geometry::normalize(target - robot.pos));
+      // + feedback_vector;
 
     // clamp to max/min velocity
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
@@ -227,7 +265,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
   }
 
-  this->prev_point = index;
+  //this->prev_point = index;
   this->prev_time = current_time;
 
   return motion_command;
@@ -236,8 +274,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   // TODO(anon): handle pid gains better
-  this->x_controller.initialize(2.8, 0.0, 0.002, 0.3, -0.3, true);
-  this->y_controller.initialize(2.8, 0.0, 0.002, 0.15, -0.15, true);
+  this->x_controller.initialize(0.1, 0.0, 0.002, 0.3, -0.3, true);
+  this->y_controller.initialize(0.1, 0.0, 0.002, 0.15, -0.15, true);
   this->t_controller.initialize(2.5, 0.0, 0.0, 0.5, -0.5, true);
 
   this->progress = 0;

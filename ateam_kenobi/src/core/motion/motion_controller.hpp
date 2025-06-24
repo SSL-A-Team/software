@@ -84,6 +84,7 @@ public:
 
   double calculate_trapezoidal_velocity(
     const ateam_kenobi::Robot& robot,
+    double remaining_dist,
     double dt);
 
   // Generate a robot motion command to follow a trajectory
