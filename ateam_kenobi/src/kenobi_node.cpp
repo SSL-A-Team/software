@@ -26,8 +26,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
+#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
+#include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
-#include <ateam_msgs/msg/robot_feedback.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/overlay.hpp>
@@ -99,11 +100,18 @@ public:
       &KenobiNode::yellow_robot_state_callback,
       this);
 
-    create_indexed_subscribers<ateam_msgs::msg::RobotFeedback>(
+    create_indexed_subscribers<ateam_radio_msgs::msg::BasicTelemetry>(
       robot_feedback_subscriptions_,
       Topics::kRobotFeedbackPrefix,
       10,
       &KenobiNode::robot_feedback_callback,
+      this);
+
+    create_indexed_subscribers<ateam_radio_msgs::msg::ConnectionStatus>(
+      robot_connection_status_subscriptions_,
+      Topics::kRobotConnectionStatusPrefix,
+      10,
+      &KenobiNode::robot_connection_callback,
       this);
 
     create_indexed_publishers<ateam_msgs::msg::RobotMotionCommand>(
@@ -177,8 +185,10 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotFeedback>::SharedPtr,
+  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
     16> robot_feedback_subscriptions_;
+  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
+    16> robot_connection_status_subscriptions_;
   rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr
     field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
@@ -251,13 +261,19 @@ private:
   }
 
   void robot_feedback_callback(
-    const ateam_msgs::msg::RobotFeedback::SharedPtr robot_feedback_msg,
+    const ateam_radio_msgs::msg::BasicTelemetry::SharedPtr robot_feedback_msg,
     int id)
   {
-    world_.our_robots.at(id).radio_connected = robot_feedback_msg->radio_connected;
     world_.our_robots.at(id).breakbeam_ball_detected = robot_feedback_msg->breakbeam_ball_detected;
     world_.our_robots.at(id).kicker_available = robot_feedback_msg->kicker_available;
     world_.our_robots.at(id).chipper_available = robot_feedback_msg->chipper_available;
+  }
+
+  void robot_connection_callback(
+    const ateam_radio_msgs::msg::ConnectionStatus::SharedPtr robot_connection_msg,
+    int id)
+  {
+    world_.our_robots.at(id).radio_connected = robot_connection_msg->radio_connected;
   }
 
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)

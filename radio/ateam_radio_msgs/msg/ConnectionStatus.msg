@@ -1,0 +1,1 @@
+bool radio_connected
