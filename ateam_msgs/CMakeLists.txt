@@ -16,10 +16,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/Overlay.msg
   msg/OverlayArray.msg
   msg/RefereeInfo.msg
-  msg/RobotFeedback.msg
   msg/RobotMotionCommand.msg
-  msg/RobotMotionFeedback.msg
-  msg/RobotMotorFeedback.msg
   msg/RobotState.msg
   msg/Sample3d.msg
   msg/TeamClientConnectionStatus.msg

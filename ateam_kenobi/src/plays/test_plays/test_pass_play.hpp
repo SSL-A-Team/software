@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,17 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
-#define PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
+#ifndef PLAYS__TEST_PLAYS__TEST_PASS_PLAY_HPP_
+#define PLAYS__TEST_PLAYS__TEST_PASS_PLAY_HPP_
 
-#include "controls_test_play.hpp"
-#include "spinning_a_play.hpp"
-#include "test_kick_play.hpp"
-#include "test_pass_play.hpp"
-#include "test_play.hpp"
-#include "test_spatial_map_play.hpp"
-#include "test_window_eval.hpp"
-#include "triangle_pass_play.hpp"
-#include "waypoints_play.hpp"
+#include <vector>
+#include "core/stp/play.hpp"
+#include "tactics/pass.hpp"
 
-#endif  // PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
+namespace ateam_kenobi::plays
+{
+class TestPassPlay : public stp::Play
+{
+public:
+  static constexpr const char * kPlayName = "TestPassPlay";
+
+  explicit TestPassPlay(stp::Options stp_options);
+
+  void enter() override;
+
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> runFrame(const World & world) override;
+
+private:
+  tactics::Pass pass_tactic_;
+  std::vector<ateam_geometry::Point> targets_;
+  size_t target_ind_ = 0;
+};
+}  // namespace ateam_kenobi::plays
+#endif  // PLAYS__TEST_PLAYS__TEST_PASS_PLAY_HPP_

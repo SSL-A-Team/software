@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2021 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,17 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
-#define PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
+#ifndef MESSAGE_CONVERSIONS_HPP_
+#define MESSAGE_CONVERSIONS_HPP_
 
-#include "controls_test_play.hpp"
-#include "spinning_a_play.hpp"
-#include "test_kick_play.hpp"
-#include "test_pass_play.hpp"
-#include "test_play.hpp"
-#include "test_spatial_map_play.hpp"
-#include "test_window_eval.hpp"
-#include "triangle_pass_play.hpp"
-#include "waypoints_play.hpp"
+#include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
+#include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
+#include <ssl_league_protobufs/ssl_simulation_control.pb.h>
 
-#endif  // PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
+#include <ssl_league_msgs/msg/simulator_control.hpp>
+
+#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
+#include <ateam_msgs/msg/robot_motion_command.hpp>
+
+namespace ateam_ssl_simulation_radio_bridge::message_conversions
+{
+
+ateam_radio_msgs::msg::BasicTelemetry fromProto(const RobotFeedback & proto_msg);
+
+RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id);
+
+SimulatorControl fromMsg(const ssl_league_msgs::msg::SimulatorControl & ros_msg);
+
+}  // namespace ateam_ssl_simulation_radio_bridge::message_conversions
+
+#endif  // MESSAGE_CONVERSIONS_HPP_
