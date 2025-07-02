@@ -11,9 +11,10 @@
 #include <ateam_geometry/types.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
-#include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
+#include <ateam_radio_msgs/msg/extended_telemetry.hpp>
+#include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <ateam_msgs/msg/robot_motion_feedback.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 
@@ -118,9 +119,10 @@ struct Options
 
 struct Robot
 {
+  bool connected = false;
   std::optional<ateam_msgs::msg::RobotState> state;
-  std::optional<ateam_msgs::msg::RobotFeedback> feedback;
-  std::optional<ateam_msgs::msg::RobotMotionFeedback> motion_feedback;
+  std::optional<ateam_radio_msgs::msg::BasicTelemetry> feedback;
+  std::optional<ateam_radio_msgs::msg::ExtendedTelemetry> motion_feedback;
 };
 
 
@@ -152,12 +154,15 @@ public:
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
       robot_state_subs_, state_topic_prefix, 1, &VelocityBenchmarkNode::RobotStateCallback, this);
 
-    create_indexed_subscribers<ateam_msgs::msg::RobotFeedback>(robot_feedback_subs_,
+    create_indexed_subscribers<ateam_radio_msgs::msg::BasicTelemetry>(robot_feedback_subs_,
       Topics::kRobotFeedbackPrefix, 1, &VelocityBenchmarkNode::RobotFeedbackCallback, this);
 
-    create_indexed_subscribers<ateam_msgs::msg::RobotMotionFeedback>(
+    create_indexed_subscribers<ateam_radio_msgs::msg::ExtendedTelemetry>(
       robot_motion_feedback_subs_, Topics::kRobotMotionFeedbackPrefix, 1,
       &VelocityBenchmarkNode::RobotMotionFeedbackCallback, this);
+
+    create_indexed_subscribers<ateam_radio_msgs::msg::ConnectionStatus>(robot_connection_subs_,
+      Topics::kRobotConnectionStatusPrefix, 1, &VelocityBenchmarkNode::ConnectionCallback, this);
 
     RCLCPP_INFO(get_logger(), "Waiting for robot...");
     timer_ = create_wall_timer(kTimerDuration,
@@ -183,10 +188,12 @@ private:
   rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr command_pub_;
   rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr field_sub_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr, 16> robot_state_subs_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotFeedback>::SharedPtr,
+  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
     16> robot_feedback_subs_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionFeedback>::SharedPtr,
+  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::ExtendedTelemetry>::SharedPtr,
     16> robot_motion_feedback_subs_;
+  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
+    16> robot_connection_subs_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   void FieldCallback(const ateam_msgs::msg::FieldInfo::SharedPtr msg)
@@ -199,15 +206,24 @@ private:
     robots_[robot_id].state = *msg;
   }
 
-  void RobotFeedbackCallback(const ateam_msgs::msg::RobotFeedback::SharedPtr msg, int robot_id)
+  void RobotFeedbackCallback(
+    const ateam_radio_msgs::msg::BasicTelemetry::SharedPtr msg,
+    int robot_id)
   {
     robots_[robot_id].feedback = *msg;
   }
 
   void RobotMotionFeedbackCallback(
-    const ateam_msgs::msg::RobotMotionFeedback::SharedPtr msg, int robot_id)
+    const ateam_radio_msgs::msg::ExtendedTelemetry::SharedPtr msg, int robot_id)
   {
     robots_[robot_id].motion_feedback = *msg;
+  }
+
+  void ConnectionCallback(
+    const ateam_radio_msgs::msg::ConnectionStatus::SharedPtr msg,
+    int robot_id)
+  {
+    robots_[robot_id].connected = msg->radio_connected;
   }
 
   void WaitForRobot()
@@ -217,12 +233,12 @@ private:
       robot_id_ = *options_.robot_id;
       const auto & robot = robots_.at(robot_id_);
       robot_ready = robot.feedback.has_value() && robot.state.has_value() &&
-        robot.feedback->radio_connected && robot.state->visible;
+        robot.connected && robot.state->visible;
     } else {
       const auto found_robot = std::find_if(robots_.begin(), robots_.end(),
           [](const Robot & robot)->bool{
             return robot.feedback.has_value() && robot.state.has_value() &&
-                   robot.feedback->radio_connected && robot.state->visible;
+                   robot.connected && robot.state->visible;
       });
       if(found_robot != robots_.end()) {
         robot_id_ = std::distance(robots_.begin(), found_robot);
@@ -343,11 +359,11 @@ private:
     const auto vision_perp_speed = options_.axis == Axis::X ?
       robot.state->twist_body.linear.y : robot.state->twist_body.linear.x;
     const auto firmware_speed = options_.axis == Axis::X ?
-      robot.motion_feedback->body_velocity_state_estimate.linear.x :
-      robot.motion_feedback->body_velocity_state_estimate.linear.y;
+      robot.motion_feedback->cgkf_body_velocity_state_estimate[0] :
+      robot.motion_feedback->cgkf_body_velocity_state_estimate[1];
     const auto firmware_perp_speed = options_.axis == Axis::X ?
-      robot.motion_feedback->body_velocity_state_estimate.linear.y :
-      robot.motion_feedback->body_velocity_state_estimate.linear.x;
+      robot.motion_feedback->cgkf_body_velocity_state_estimate[1] :
+      robot.motion_feedback->cgkf_body_velocity_state_estimate[0];
 
     DataEntry entry{
       .time = std::chrono::duration_cast<std::chrono::duration<double>>(
@@ -429,17 +445,21 @@ private:
       });
     const auto speed_firmware_avg_sq_error = speed_firmware_sum_sq_error / firmware_errors.size();
 
-    const auto max_vision_error = std::ranges::max(vision_errors | std::views::transform([](double error) {
-      return std::abs(error);
+    const auto max_vision_error = std::ranges::max(vision_errors |
+      std::views::transform([](double error) {
+          return std::abs(error);
     }));
-    const auto max_firmware_error = std::ranges::max(firmware_errors | std::views::transform([](double error) {
-      return std::abs(error);
+    const auto max_firmware_error = std::ranges::max(firmware_errors |
+      std::views::transform([](double error) {
+          return std::abs(error);
     }));
-    const auto min_vision_error = std::ranges::min(vision_errors | std::views::transform([](double error) {
-      return std::abs(error);
+    const auto min_vision_error = std::ranges::min(vision_errors |
+      std::views::transform([](double error) {
+          return std::abs(error);
     }));
-    const auto min_firmware_error = std::ranges::min(firmware_errors | std::views::transform([](double error) {
-      return std::abs(error);
+    const auto min_firmware_error = std::ranges::min(firmware_errors |
+      std::views::transform([](double error) {
+          return std::abs(error);
     }));
 
     std::stringstream ss;
@@ -476,14 +496,19 @@ private:
     PNG
   };
 
-  void RenderGraph(const std::string & results_filename, const std::string & filename_timestamp, const GraphDestination dest)
+  void RenderGraph(
+    const std::string & results_filename, const std::string & filename_timestamp,
+    const GraphDestination dest)
   {
     const auto width = 1200;
     const auto height = 400;
     const auto x11_terminal_commands = std::format("set terminal x11 size {} {}", width, height);
     const auto png_filename = "vel_benchmark_" + filename_timestamp + "_graphs.png";
-    const auto png_terminal_commands = std::format("set terminal png size {} {} font 'Helvetica,10'; set output '{}'", width, height, png_filename);
-    const auto terminal_commands = dest == GraphDestination::X11 ? x11_terminal_commands : png_terminal_commands;
+    const auto png_terminal_commands =
+      std::format("set terminal png size {} {} font 'Helvetica,10'; set output '{}'", width, height,
+      png_filename);
+    const auto terminal_commands = dest ==
+      GraphDestination::X11 ? x11_terminal_commands : png_terminal_commands;
     std::string command = std::format("gnuplot -p -e \""
       "{0};"
       "set title 'Velocity Benchmark Results';"
