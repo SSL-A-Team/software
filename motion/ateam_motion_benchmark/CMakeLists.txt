@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_msgs REQUIRED)
+find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
@@ -18,6 +19,7 @@ ament_target_dependencies(velocity_benchmark
   rclcpp
   ateam_common
   ateam_msgs
+  ateam_radio_msgs
   tf2_geometry_msgs
 )
 
