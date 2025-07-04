@@ -26,7 +26,7 @@
 namespace ateam_kenobi::play_helpers
 {
 
-InterceptResults calculateIntercept(const World & world, const Robot & robot)
+InterceptResults calculateIntercept(const World & world, const Robot & robot, double offset_distance)
 {
 
   InterceptResults result;
@@ -40,8 +40,7 @@ InterceptResults calculateIntercept(const World & world, const Robot & robot)
   const double vr = 1.5;
 
   // Need to get there a bit in front of the ball
-  const double offset_ball_dist = kBallRadius + kRobotRadius + 0.05;
-  const auto offset_ball_pos = world.ball.pos + (offset_ball_dist * ateam_geometry::normalize(world.ball.vel));
+  const auto offset_ball_pos = world.ball.pos + (offset_distance * ateam_geometry::normalize(world.ball.vel));
   const auto ball_to_robot = robot.pos - offset_ball_pos;
 
   // robot distance to ball projected onto the balls trajectory

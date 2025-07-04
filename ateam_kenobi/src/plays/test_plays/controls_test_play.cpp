@@ -45,7 +45,7 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
   // };
 
   waypoints = {
-    {ateam_geometry::Point(0.0, 0.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-2.0, 0.0), AngleMode::face_absolute, 0.0, 3.0},
   };
 
   motion_controller_.v_max = 2.0;
@@ -60,8 +60,11 @@ void ControlsTestPlay::reset()
   goal_hit = false;
   goal_hit_time = std::chrono::steady_clock::now();
 
+  // waypoints = {
+  //   {ateam_geometry::Point(-2.0, 0.0), AngleMode::face_absolute, 0.0, 3.0},
+  // };
   waypoints = {
-    {ateam_geometry::Point(0.0, 0.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(0.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
   };
 }
 
@@ -91,9 +94,14 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 
 
   // auto waypoint_vel = ateam_geometry::Vector(0.0, 0.0);
-  auto waypoint_vel = ateam_geometry::Vector(0.8, 0.0);
-  motion_controller_.reset_trajectory(std::vector<ateam_geometry::Point> {waypoints[index].position}, waypoint_vel);
-  waypoints[0].position += ateam_geometry::Vector(0.8 * (1.0/100.0), 0.0);
+  // auto waypoint_vel = ateam_geometry::Vector(0.8, 0.0);
+  // motion_controller_.reset_trajectory(std::vector<ateam_geometry::Point> {waypoints[index].position}, waypoint_vel);
+  motion_controller_.reset_trajectory(std::vector<ateam_geometry::Point> {
+    ateam_geometry::Point(1.0, 0.0),
+    ateam_geometry::Point(0.0, 0.0),
+    ateam_geometry::Point(0.0, -1.0),
+  });
+  // waypoints[0].position += ateam_geometry::Vector(0.8 * (1.0/100.0), 0.0);
   switch (waypoints[index].angle_mode) {
     case AngleMode::face_absolute:
       motion_controller_.face_absolute(waypoints[index].heading);
@@ -117,18 +125,26 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
     robot, current_time,
     motion_options);
 
-  const std::vector<ateam_geometry::Point> viz_path = {robot.pos, waypoints[index].position};
+  // const std::vector<ateam_geometry::Point> viz_path = {robot.pos, waypoints[index].position};
+  const std::vector<ateam_geometry::Point> viz_path = {
+    ateam_geometry::Point(1.0, 0.0),
+    ateam_geometry::Point(0.0, 0.0),
+    ateam_geometry::Point(0.0, -1.0),
+  };
   getOverlays().drawLine("controls_test_path", viz_path, "purple");
 
-  getPlayInfo()["robot"]["id"] = robot.id;
-  getPlayInfo()["robot"]["index"] = index;
-  getPlayInfo()["robot"]["goal_hit"] = goal_hit;
-  getPlayInfo()["robot"]["time_at_goal"] =
-    std::chrono::duration_cast<std::chrono::duration<double>>(
-    std::chrono::steady_clock::now() - goal_hit_time).count();
+  getOverlays().drawCircle("motion_debug_target", ateam_geometry::makeCircle(motion_controller_.debug_target, .02), "red");
+
+  // getPlayInfo()["robot"]["id"] = robot.id;
+  // getPlayInfo()["robot"]["index"] = index;
+  // getPlayInfo()["robot"]["goal_hit"] = goal_hit;
+  // getPlayInfo()["robot"]["time_at_goal"] =
+  //   std::chrono::duration_cast<std::chrono::duration<double>>(
+  //   std::chrono::steady_clock::now() - goal_hit_time).count();
+  getPlayInfo()["mdb"] = motion_controller_.debug_string;
   getPlayInfo()["robot"]["target"]["x"] = waypoints[index].position.x();
   getPlayInfo()["robot"]["target"]["y"] = waypoints[index].position.y();
-  getPlayInfo()["robot"]["target"]["angle_mode"] = waypoints[index].angle_mode;
+  // getPlayInfo()["robot"]["target"]["angle_mode"] = waypoints[index].angle_mode;
   getPlayInfo()["robot"]["target"]["theta"] = waypoints[index].heading;
   getPlayInfo()["robot"]["pos"]["x"] = robot.pos.x();
   getPlayInfo()["robot"]["pos"]["y"] = robot.pos.y();

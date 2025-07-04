@@ -36,13 +36,16 @@ Capture::Capture(stp::Options stp_options)
 
 void Capture::Reset()
 {
+  state_ = State::MoveToApproachPoint;
   done_ = false;
   ball_detected_filter_ = 0;
   easy_move_to_.reset();
+  getPlayInfo() = nlohmann::json();
 }
 
 ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const Robot & robot)
 {
+  getPlayInfo() = nlohmann::json();
   chooseState(world, robot);
 
   switch (state_) {
@@ -96,83 +99,136 @@ void Capture::chooseState(const World & world, const Robot & robot)
 
   calculateApproachPoint(world, robot);
   getOverlays().drawCircle("approach_point", ateam_geometry::makeCircle(approach_point, 0.025), "#0000FFFF");
-  
-  bool ballDetected = filteredBallSense(robot);
+
+
+  getOverlays().drawLine("ballvel_line", {world.ball.pos, world.ball.pos + (0.3 * world.ball.vel)}, "#FF00007F");
+
+  const bool ballDetected = filteredBallSense(robot);
   getPlayInfo()["FilteredBallSense"] = ballDetected;
 
-  bool ballTooCloseToObstacle = calculateObstacleOffset(world).has_value();
+  const bool ballTooCloseToObstacle = calculateObstacleOffset(world).has_value();
+  getPlayInfo()["ballTooCloseToObstacle"] = ballTooCloseToObstacle;
+
+  getPlayInfo()["ball_velocity"] = ateam_geometry::norm(world.ball.vel);
+  getPlayInfo()["robot_velocity"] = ateam_geometry::norm(robot.vel);
   
-  const auto approach_to_ball = world.ball.pos - approach_point;
-  const auto approach_to_ball_angle = std::atan2(approach_to_ball.y(), approach_to_ball.x());
+  const auto robot_to_ball = world.ball.pos - robot.pos;
+  const double robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
+
+  // TODO: REMOVE THIS TESTING ONLY
+    const auto ball_to_approach = approach_point - world.ball.pos;
+    // const double ball_to_approach_angle = std::atan2(ball_to_approach.y(), ball_to_approach.x());
+    const double robot_approach_angle_offset = std::acos((-robot_to_ball * ball_to_approach)
+      / (ateam_geometry::norm(robot_to_ball) * ateam_geometry::norm(ball_to_approach))
+    ); 
+    getPlayInfo()["robot_approach_offset"] = robot_approach_angle_offset;
+    // TODO: the above angle is super janky???
+
+
 
   // Prioritize handling intercepting a moving ball
   // TODO: May need some hysteresis at the capture/intercept level to avoid vision filter issues
-  if (ateam_geometry::norm(world.ball.vel) > 0.15) {
+
+  // Robot has the ball
+  if (ballDetected) {
+    if (world.ball.visible) {
+      if (ballTooCloseToObstacle) {
+        getPlayInfo()["reason"] = "setting extract: ball detected close to obstacle";
+        state_ = State::Extract;
+      } else {
+        getPlayInfo()["DONE"] = "CAPTURE HAS COMPLETED";
+        done_ = true;
+      }
+    }
+    // Vision is obstructed but we have moved far enough away
+    else if (ateam_geometry::norm(approach_point - robot.pos) < .02) {
+        getPlayInfo()["DONE"] = "CAPTURE HAS COMPLETED";
+        done_ = true;
+    
+    } else {
+      getPlayInfo()["reason"] = "setting extract: ball detected no vision";
+      state_ = State::Extract;
+    }
+  }
+
+  // TODO: May need some hysteresis at the capture/intercept level to avoid vision filter issues
+  else if (ateam_geometry::norm(world.ball.vel) > 0.15) {
+    getPlayInfo()["reason"] = "setting intercept: bv>0.15";
+    getPlayInfo()["howtf"] = "set intercept";
     state_ = State::Intercept;
   }
 
-  // Transition out of Intercept
-  else if (state_ == State::Intercept) {
-    state_ = State::MoveToApproachPoint;
-  }
+  // Robot needs to go to the ball
+  else {
 
-  // Transition out of Capture
-  else if (state_ == State::Capture && ballDetected) {
-    if (ballTooCloseToObstacle) {
-      state_ = State::Extract;
-    } else {
-      done_ = true;
-    }
-  }
-
-  // Transition out of Extract
-  else if (state_ == State::Extract) {
-    if (ballDetected) {
-      // Ball is usually occluded by the robot so if we have possession and the robot has moved away
-      // Then assume we successfully extracted
-      if (!ballTooCloseToObstacle
-          || ateam_geometry::norm(approach_point - robot.pos) < .02) {
-        done_ = true;
+    // Transition out of MoveToApproachPoint
+    if (state_ == State::MoveToApproachPoint) {
+      // Close to the approach point and facing the ball
+      if (ateam_geometry::norm(approach_point - robot.pos) < .04
+        && abs(robot_to_ball_angle - robot.theta) < 0.1 ) {
+        getPlayInfo()["reason"] = "setting capture: at approach";
+        state_ = State::Capture;
       }
-
-    // TODO: Could maybe have this check if the ball has moved into a position where we need to start over
-    } else {
-      state_ = State::Capture;
     }
+
+    // Transition into starting state
+    else if (state_ != State::Capture) {
+      // const auto ball_to_approach = approach_point - world.ball.pos;
+      // const double ball_to_approach_angle = std::atan2(ball_to_approach.y(), ball_to_approach.x());
+      // const double robot_approach_angle_offset = std::acos((-robot_to_ball * ball_to_approach)
+      //   / (ateam_geometry::norm(robot_to_ball) * ateam_geometry::norm(ball_to_approach))       
+      // ); 
+
+      const bool can_bypass_approach = !always_approach_first_ && !ballTooCloseToObstacle;
+
+      const bool robot_near_ball = ateam_geometry::norm(robot_to_ball) <= approach_radius_;
+      const bool robot_already_in_position = robot_near_ball
+        && abs(robot_approach_angle_offset) < 0.3
+        && abs(robot_to_ball_angle - robot.theta) < 0.1;
+
+      // the ball is clear of obstacles, just use capture directly
+      if (can_bypass_approach || robot_already_in_position) {
+        getPlayInfo()["reason"] = "setting capture: already in position";
+        state_ = State::Capture;
+      
+      // Otherwise we have to go to the approach point first
+      } else {
+        state_ = State::MoveToApproachPoint;
+      }
+    }
+
+    // Don't need to handle state_ == State::Capture since that ends when breakbeam detects the ball
+    // TODO: Should this transition back into approach point if the ball gets too far away or something?
   }
-
-  // TODO: Make the transition out of MoveToApproachPoint check if the robot
-  // is already on the line from the approach point to the ball
-  // so it doesn't try to go backwards to the approach point if it is already lined up
-
-  // Should be in Capture State
-  else if (ateam_geometry::norm(approach_point - robot.pos) < .04
-    && abs(approach_to_ball_angle - robot.theta) < 0.1 ) {
-
-    state_ = State::Capture;
-  }
-
-  // Move to the approach point
-  else if (state_ != State::Capture) {
-    state_ = State::MoveToApproachPoint;
-  }
-
 }
 
 ateam_msgs::msg::RobotMotionCommand Capture::runIntercept(const World & world, const Robot & robot)
 {
+  const auto target_point_to_ball = world.ball.pos - approach_point;
 
-  easy_move_to_.face_point(world.ball.pos);
   MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
-  planner_options.avoid_ball = false;
+  planner_options.footprint_inflation = kBallRadius + kRobotRadius + 0.09;
+
+  if (world.ball.vel * (world.ball.pos - robot.pos) > 0) {
+    getPlayInfo()["avoid_ball"] = "true";
+    planner_options.avoid_ball = true;
+  } else {
+    getPlayInfo()["avoid_ball"] = "false";
+    planner_options.avoid_ball = false;
+  }
 
   easy_move_to_.setPlannerOptions(planner_options);
-  easy_move_to_.setMaxVelocity(2.0);
+  easy_move_to_.setMaxVelocity(2.5);
+  easy_move_to_.setMaxAngularVelocity(4.0);
+  easy_move_to_.setMaxAccel(6.0); // TODO: Figure out how to improve tracking without doing this
   easy_move_to_.setMaxDecel(6.0); // TODO: Figure out how to improve tracking without doing this
-  easy_move_to_.setTargetPosition(approach_point);
+  easy_move_to_.face_absolute(std::atan2(target_point_to_ball.y(), target_point_to_ball.x()));
+  easy_move_to_.setTargetPosition(approach_point, world.ball.vel);
+  // easy_move_to_.face_point(world.ball.pos);
+  // easy_move_to_.setTargetPosition(world.ball.pos + (0.1 * ateam_geometry::normalize(world.ball.vel)), world.ball.vel); // TODO: TESTING REMOVE THIS
 
   auto command = easy_move_to_.runFrame(robot, world);
 
@@ -198,7 +254,9 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToApproachPoint(
 
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setMaxVelocity(2.0);
-  easy_move_to_.setMaxDecel(decel_limit_);
+  easy_move_to_.setMaxAngularVelocity(2.0);
+  easy_move_to_.setMaxAccel(3.0);
+  easy_move_to_.setMaxDecel(3.0);
   easy_move_to_.setTargetPosition(approach_point);
 
   getPlayInfo()["ApproachPoint"]["x"] = approach_point.x();
@@ -220,16 +278,22 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
 
-  easy_move_to_.setMaxVelocity(capture_speed_);
-  easy_move_to_.setMaxDecel(6.0); // TODO: Figure out how to improve tracking without doing this
-  easy_move_to_.face_point(world.ball.pos); // This can cause weird behavior if the ball is occluded
+  easy_move_to_.setMaxVelocity(capture_speed_); // depends on robot tuning but I don't think we need to drop this speed lower than normal
+  easy_move_to_.setMaxAngularVelocity(2.0);
+  easy_move_to_.setMaxAccel(3.0);
+  easy_move_to_.setMaxDecel(capture_decel_limit_); // TODO: Figure out how to improve tracking without doing this
+
+  if (world.ball.visible) {
+    easy_move_to_.face_point(world.ball.pos);
+
+  // If the ball is occluded we sometimes drive past its previous position and try to turn around
+  // so its better to just keep facing the same direction if we lose track of it
+  } else {
+    easy_move_to_.face_absolute(robot.theta);
+  }
 
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
-
-  // TESTING
-  command.twist.linear.x = capture_speed_ * cos(robot.theta);
-  command.twist.linear.y = capture_speed_ * sin(robot.theta);
 
   command.dribbler_speed = 300;
 
@@ -239,8 +303,8 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
 ateam_msgs::msg::RobotMotionCommand Capture::runExtract(const World & world, const Robot & robot)
 {
 
-  // Face away from the direction of travel
-  easy_move_to_.face_point(robot.pos + (robot.pos - approach_point));
+  // Maintain our facing direction
+  easy_move_to_.face_absolute(robot.theta);
   MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
@@ -250,6 +314,9 @@ ateam_msgs::msg::RobotMotionCommand Capture::runExtract(const World & world, con
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(approach_point);
   easy_move_to_.setMaxVelocity(capture_speed_);
+  easy_move_to_.setMaxAngularVelocity(2.0);
+  easy_move_to_.setMaxAccel(1.0);
+  easy_move_to_.setMaxDecel(3.0);
 
   auto command = easy_move_to_.runFrame(robot, world);
 
@@ -264,10 +331,10 @@ ateam_geometry::Point Capture::calculateInterceptPoint(const World & world, cons
 
   const double vb = ateam_geometry::norm(world.ball.vel);
 
-  const double offset_ball_dist = kBallRadius + kRobotRadius + 0.05;
-  const auto offset_ball_pos = world.ball.pos + (offset_ball_dist * ateam_geometry::normalize(world.ball.vel)); // TESTING ONLY: REMOVE THIS
+  // const double offset_ball_dist = kBallRadius + kRobotRadius + 0.05;
+  const double offset_ball_dist = kBallRadius + kRobotRadius + 0.1;
 
-  intercept_result_ = play_helpers::calculateIntercept(world, robot);
+  intercept_result_ = play_helpers::calculateIntercept(world, robot, offset_ball_dist);
   
   getPlayInfo()["Ball"]["x"] = world.ball.pos.x();
   getPlayInfo()["Ball"]["y"] = world.ball.pos.y();
@@ -280,9 +347,6 @@ ateam_geometry::Point Capture::calculateInterceptPoint(const World & world, cons
   getPlayInfo()["Robot"]["vx"] = robot.vel.x();
   getPlayInfo()["Robot"]["vy"] = robot.vel.y();
   
-  getPlayInfo()["Offset Target"]["x"] = offset_ball_pos.x();
-  getPlayInfo()["Offset Target"]["y"] = offset_ball_pos.y();
-
   getPlayInfo()["Intercept"]["d"] = intercept_result_.d;
   getPlayInfo()["Intercept"]["h"] = intercept_result_.h;
 

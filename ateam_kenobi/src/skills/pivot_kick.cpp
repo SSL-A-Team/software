@@ -144,7 +144,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::KickBall(const World & world, con
     } else {
       command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_CHIP_TOUCH;
     }
-    command.kick_speed = GetKickSpeed();
+    command.kick_speed = 0.75; // TODO: CHANGE THIS BACK, TESTING ONLY
   }
 
   return command;

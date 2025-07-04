@@ -82,9 +82,12 @@ public:
   void face_travel();
   void no_face();
 
+  void calculate_trajectory_velocity_limits();
+
   double calculate_trapezoidal_velocity(
     const ateam_kenobi::Robot& robot,
-    double remaining_dist,
+    ateam_geometry::Point target,
+    size_t target_index,
     double dt);
 
   // Generate a robot motion command to follow a trajectory
@@ -94,15 +97,7 @@ public:
 
   // Reset the PID controllers and remove previous time to recalculate dt
   void reset();
-  // const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
-  //     world.ball.pos));
 
-  // const auto decel_distance = distance_to_ball - approach_radius_;
-
-  // const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
-  //     (capture_speed_ * capture_speed_));
-
-  // easy_move_to_.setMaxVelocity(std::min(max_decel_vel, max_speed_));
   // Set gains for individual PID controllers
   void set_x_pid_gain(GainType gain, double value);
   void set_y_pid_gain(GainType gain, double value);
@@ -122,11 +117,16 @@ public:
   double face_angle = 0;
   std::optional<ateam_geometry::Point> face_towards;
 
+  // DEBUGGING - REMOVE THIS
+  ateam_geometry::Point debug_target;
+  std::string debug_string;
+
 private:
   double prev_time;
   double prev_command_vel;
   double prev_command;
   std::vector<ateam_geometry::Point> trajectory;
+  std::vector<ateam_geometry::Vector> trajectory_velocity_limits;
   ateam_geometry::Vector target_velocity;
 
   AngleMode angle_mode = AngleMode::face_travel;  // This mode should have the best performance

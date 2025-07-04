@@ -80,7 +80,7 @@ public:
    */
   void SetShouldSteal(double should_steal)
   {
-    steal_from_opponent = should_steal;
+    steal_from_opponent_ = should_steal;
   }
 
 private:
@@ -88,16 +88,20 @@ private:
   play_helpers::InterceptResults intercept_result_;
   bool done_ = false;
 
-  bool steal_from_opponent = true;
+  // Sets if the robot should go to the approach point and slow down before
+  // entering the capture state even if it can directly approach the ball
+  bool always_approach_first_ = true;
+  // TODO: actually listen to this boolean
+  bool steal_from_opponent_ = true;
 
   int ball_detected_filter_ = 0;
   double approach_radius_ = kRobotRadius + kBallRadius + 0.15;  // m
 
-  double capture_speed_ = 0.2;  // m/s
+  double capture_speed_ = 2.0;  // m/s
 
   double max_speed_ = 2.0;  // m/s
-  double accel_limit_ = 1.0;  // for extracting ball m/s/s
-  double decel_limit_ = 0.5;  // for approaching ball m/s/s
+  double extract_accel_limit_ = 1.0;  // for extracting ball m/s/s
+  double capture_decel_limit_ = 0.5;  // for approaching ball m/s/s
 
   // Ball should have enough room for the robot to fit between it and the obstacle with a bit of extra space
   double ball_distance_from_obstacle_ = kRobotDiameter + kBallRadius + 0.03;

@@ -40,7 +40,7 @@ struct InterceptResults {
     std::optional<ateam_geometry::Point> intercept_pos = std::nullopt;
 };
 
-InterceptResults calculateIntercept(const World & world, const Robot & robot);
+InterceptResults calculateIntercept(const World & world, const Robot & robot, double offset_distance);
 
 }  // namespace ateam_kenobi::play_helpers
 

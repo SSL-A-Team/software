@@ -140,7 +140,7 @@ void EasyMoveTo::setMaxAngularVelocity(double velocity)
 
 void EasyMoveTo::setMaxAccel(double accel)
 {
-  if (accel > 6.0) {
+  if (accel > 8.0) {
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE ACCELERATION GIVEN TO SET MAX ACCELERATION");
     return;
   }
@@ -149,7 +149,7 @@ void EasyMoveTo::setMaxAccel(double accel)
 
 void EasyMoveTo::setMaxDecel(double decel)
 {
-  if (decel > 6.0) {
+  if (decel > 8.0) {
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE DECELERATION GIVEN TO SET MAX DECELERATION");
     return;
   }
