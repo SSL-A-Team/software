@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(angles REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
@@ -23,7 +24,22 @@ ament_target_dependencies(velocity_benchmark
   tf2_geometry_msgs
 )
 
-install(TARGETS velocity_benchmark DESTINATION lib/${PROJECT_NAME})
+add_executable(angular_velocity_benchmark src/angular_velocity_benchmark.cpp)
+target_compile_features(angular_velocity_benchmark PUBLIC cxx_std_20)
+ament_target_dependencies(angular_velocity_benchmark
+  rclcpp
+  ateam_common
+  angles
+  ateam_msgs
+  ateam_radio_msgs
+  tf2_geometry_msgs
+)
+
+install(TARGETS
+  velocity_benchmark
+  angular_velocity_benchmark
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

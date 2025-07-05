@@ -11,6 +11,7 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>angles</depend>
   <depend>ateam_msgs</depend>
   <depend>ateam_radio_msgs</depend>
   <depend>ateam_common</depend>
