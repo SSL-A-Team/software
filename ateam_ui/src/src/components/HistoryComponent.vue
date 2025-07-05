@@ -100,6 +100,7 @@ export default {
         },
         goToRealTime: function() {
             this.pause();
+            this.playbackSpeed = 1.0;
             this.state.selectedHistoryFrame = -1;
         },
         stepButton: function(frames: number) {

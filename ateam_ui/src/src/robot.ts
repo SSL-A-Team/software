@@ -12,15 +12,17 @@ export enum ErrorLevel {
 }
 
 export class RobotStatus {
-    radio_connected: boolean = false;
-    message: string
 
     sequence_number: number
     robot_revision_major: number
     robot_revision_minor: number
-    battery_level: number        // volts
-    battery_temperature: number  // deg C
+
     power_error: boolean
+    power_board_error: boolean
+    battery_error: boolean
+    battery_low: boolean
+    battery_crit: boolean
+    shutdown_pending: boolean
     tipped_error: boolean
     breakbeam_error: boolean
     breakbeam_ball_detected: boolean
@@ -28,24 +30,22 @@ export class RobotStatus {
     accelerometer_1_error: boolean
     gyroscope_0_error: boolean
     gyroscope_1_error: boolean
-    motor_0_general_error: boolean
-    motor_0_hall_error: boolean
-    motor_1_general_error: boolean
-    motor_1_hall_error: boolean
-    motor_2_general_error: boolean
-    motor_2_hall_error: boolean
-    motor_3_general_error: boolean
-    motor_3_hall_error: boolean
-    motor_4_general_error: boolean
-    motor_4_hall_error: boolean
+    motor_fl_general_error: boolean
+    motor_fl_hall_error: boolean
+    motor_bl_general_error: boolean
+    motor_bl_hall_error: boolean
+    motor_br_general_error: boolean
+    motor_br_hall_error: boolean
+    motor_fr_general_error: boolean
+    motor_fr_hall_error: boolean
+    motor_drib_general_error: boolean
+    motor_drib_hall_error: boolean
+    kicker_board_error: boolean
     chipper_available: boolean
     kicker_available: boolean
-    motor_0_temperature: number  // deg C
-    motor_1_temperature: number  // deg C
-    motor_2_temperature: number  // deg C
-    motor_3_temperature: number  // deg C
-    motor_4_temperature: number  // deg C
-    kicker_charge_level: number  // volts
+
+    battery_percent: number
+    kicker_charge_percent: number
 }
 
 export class Robot {
@@ -55,6 +55,7 @@ export class Robot {
     pose: Pose;
     twist: Twist;
     accel: Accel;
+    radio_connected: boolean = false;
     status: RobotStatus;
 
     constructor(id: number, visible: boolean, team: TeamColor, pose: Pose) {
@@ -68,7 +69,7 @@ export class Robot {
 }
 
 export function isValid(robot: Robot): boolean {
-    return robot.visible || robot.status.radio_connected;
+    return robot.visible || robot.radio_connected;
 }
 
 export function rotation(robot: Robot): number {
@@ -82,26 +83,25 @@ export function setRotation(robot: Robot, degrees: number) {
 
 export function getErrorLevel(robot: Robot, sim: boolean): ErrorLevel {
     // Lost radio, no status to use for other warnings
-    if (!robot.status.radio_connected) {
+    if (!robot.radio_connected) {
         return ErrorLevel.Warning;
     }
 
     // Critical
 
-    // Battery Level TODO: find what level to use
-    if (!sim && robot.status.battery_level <= 23.0) {
+    if (!sim && (robot.status.power_error || robot.status.power_board_error || robot.status.battery_error)) {
+        return ErrorLevel.Critical;
+    }
+    
+    if (!sim && (robot.status.battery_crit)) {
         return ErrorLevel.Critical;
     }
 
-    // Kicker Voltage TODO: find max voltage
-    if (!sim && robot.status.kicker_charge_level >= 220) {
-        return ErrorLevel.Critical;
-    }
 
     // Error
 
     // Motor General/Hall
-    for (var i = 0; i < 5; i++) {
+    for (var i of ["fl", "bl", "br", "fr", "drib"]) {
         if (robot.status["motor_" + i + "_general_error"]) {
             return ErrorLevel.Error;
         }
@@ -113,8 +113,16 @@ export function getErrorLevel(robot: Robot, sim: boolean): ErrorLevel {
 
     // Warning
 
+    if (robot.status.battery_low) {
+        return ErrorLevel.Warning;
+    }
+
     // Robot tipped over, someone should probably go pick it up
     if (robot.status.tipped_error) {
+        return ErrorLevel.Warning;
+    }
+
+    if (!sim && robot.status.kicker_board_error) {
         return ErrorLevel.Warning;
     }
 

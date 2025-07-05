@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_msgs REQUIRED)
+find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -67,6 +68,7 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/stop_plays/stop_helpers.cpp
   src/plays/test_plays/controls_test_play.cpp
   src/plays/test_plays/spinning_a_play.cpp
+  src/plays/test_plays/test_pass_play.cpp
   src/plays/test_plays/test_play.cpp
   src/plays/test_plays/triangle_pass_play.cpp
   src/plays/test_plays/waypoints_play.cpp
@@ -118,6 +120,7 @@ ament_target_dependencies(
   kenobi_node_component
   "rclcpp"
   "rclcpp_components"
+  "ateam_radio_msgs"
   "ateam_msgs"
   "ateam_common"
   "tf2"

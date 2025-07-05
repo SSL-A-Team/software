@@ -41,7 +41,10 @@
    source /opt/ros/jazzy/setup.bash
    # In the ateam_ws directory
    ./src/software/ateam_ui/install_deps.sh
+
+   sudo apt install python3-clang
    ```
+   <!-- TODO(braulicm): Add custom rosdep keys file -->
 
 1. Build the code
 

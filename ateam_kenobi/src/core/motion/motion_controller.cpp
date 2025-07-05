@@ -24,6 +24,7 @@
 #include <CGAL/squared_distance_2.h>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
@@ -46,6 +47,9 @@ CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 
 
 MotionController::MotionController()
+: x_controller(0.0, 0.0, 0.0, 0.0, 0.0, control_toolbox::AntiWindupStrategy()),
+  y_controller(0.0, 0.0, 0.0, 0.0, 0.0, control_toolbox::AntiWindupStrategy()),
+  t_controller(0.0, 0.0, 0.0, 0.0, 0.0, control_toolbox::AntiWindupStrategy())
 {
   this->reset();
 }
@@ -386,10 +390,23 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
 void MotionController::reset()
 {
-  // TODO(anon): handle pid gains better
-  this->x_controller.initialize(4.0, 0.0, 0.02, 0.3, -0.3, true);
-  this->y_controller.initialize(4.0, 0.0, 0.02, 0.15, -0.15, true);
-  this->t_controller.initialize(2.5, 0.0, 0.0, 0.5, -0.5, true);
+  const auto u_max = std::numeric_limits<double>::infinity();
+  const auto u_min = -std::numeric_limits<double>::infinity();
+  control_toolbox::AntiWindupStrategy x_aws;
+  x_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
+  x_aws.i_max = 0.3;
+  x_aws.i_min = -0.3;
+  this->x_controller.initialize(2.8, 0.0, 0.002, u_max, u_min, x_aws);
+  control_toolbox::AntiWindupStrategy y_aws;
+  y_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
+  y_aws.i_max = 0.15;
+  y_aws.i_min = -0.15;
+  this->y_controller.initialize(2.8, 0.0, 0.002, u_max, u_min, y_aws);
+  control_toolbox::AntiWindupStrategy t_aws;
+  t_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
+  t_aws.i_max = 0.5;
+  t_aws.i_min = -0.5;
+  this->t_controller.initialize(2.5, 0.0, 0.0, u_max, u_min, t_aws);
 
   this->progress = 0;
   this->total_dist = 0;
@@ -455,7 +472,7 @@ void MotionController::set_t_pid_gain(GainType gain, double value)
 
 void MotionController::set_x_pid_gains(double p, double i, double d)
 {
-  control_toolbox::Pid::Gains gains;
+  control_toolbox::Pid::Gains gains = this->x_controller.get_gains();
   gains.p_gain_ = p;
   gains.i_gain_ = i;
   gains.d_gain_ = d;
@@ -464,7 +481,7 @@ void MotionController::set_x_pid_gains(double p, double i, double d)
 
 void MotionController::set_y_pid_gains(double p, double i, double d)
 {
-  control_toolbox::Pid::Gains gains;
+  control_toolbox::Pid::Gains gains = this->y_controller.get_gains();
   gains.p_gain_ = p;
   gains.i_gain_ = i;
   gains.d_gain_ = d;
@@ -473,7 +490,7 @@ void MotionController::set_y_pid_gains(double p, double i, double d)
 
 void MotionController::set_t_pid_gains(double p, double i, double d)
 {
-  control_toolbox::Pid::Gains gains;
+  control_toolbox::Pid::Gains gains = this->t_controller.get_gains();
   gains.p_gain_ = p;
   gains.i_gain_ = i;
   gains.d_gain_ = d;
