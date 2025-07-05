@@ -307,9 +307,9 @@ private:
 
     const auto robot_speed = [&]{
         if(options_.axis == Axis::X) {
-          return std::abs(robot.state->twist.linear.x);
+          return std::abs(robot.state->twist_body.linear.x);
         } else {
-          return std::abs(robot.state->twist.linear.y);
+          return std::abs(robot.state->twist_body.linear.y);
         }
       }();
 
