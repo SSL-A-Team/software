@@ -25,6 +25,14 @@
                 hide-details
                 class="px-2"
             />
+            <v-checkbox
+                label="Display Field Walls"
+                v-model="fieldBoundaryVisible"
+                @change="setFieldBoundaryVisibility()"
+                density="compact"
+                hide-details
+                class="px-2"
+            />
             <v-list-item link>
                 Rotate Field
                 <template v-slot:append>
@@ -65,6 +73,7 @@ export default {
     data() {
         return {
             useKenobiTopic: true,
+            fieldBoundaryVisible: true,
             globalTheme: useTheme()
         }
     },
@@ -99,6 +108,9 @@ export default {
         setTheme(themeName: string) {
             // TODO: This doesn't seem to work
             this.globalTheme.name = themeName;
+        },
+        setFieldBoundaryVisibility() {
+            this.state.graphicState.fieldContainer.getChildByName("fieldBoundary").visible = this.fieldBoundaryVisible;
         }
     }
 }

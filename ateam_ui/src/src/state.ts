@@ -44,6 +44,7 @@ export class WorldState {
 
 export class GraphicState {
     fieldUpdateFunction: () => void
+    fieldContainer: PIXI.Container
     overlayContainer: PIXI.Container
     underlayContainer: PIXI.Container
     sslVisionContainers: Map<string, PIXI.Graphics> = new Map<string, PIXI.Graphics>;

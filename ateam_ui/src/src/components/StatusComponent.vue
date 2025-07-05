@@ -1,6 +1,11 @@
 <template>
     <v-col style="max-width: 11vw; min-width: 11vw">
-        <v-card variant="outlined" class="mb-4 pl-4 pt-3 pb-1 justify-space-around" v-for="robot of state.world.teams.get(state.world.team).robots.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" @click.stop="state.setJoystickRobot(robot.id)">
+        <v-card variant="outlined" class="mb-4 pl-4 pt-3 pb-1 justify-space-around"
+            v-for="robot of state.world.teams.get(state.world.team).robots.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" 
+            @click.left.stop="state.setJoystickRobot(robot.id)"
+            @contextmenu.prevent="changeDetailedStatusMenu(robot)"
+        >
+            
             <v-row>
                 {{robot.id}}
                 <canvas :ref="'canvas' + robot.id" height=100 width=100 style="width:90px; height:90px;"/>
@@ -11,6 +16,29 @@
                     <v-icon :icon="batteryIcon(robot.status.battery_percent)" class="mx-0 pl-1 justify-center" size="small"/>
                 </v-btn>
             </v-row>
+
+            <v-menu
+                activator="parent"
+                :open-on-hover="false"
+                :open-on-click="false"
+                :model-value="activeDetailedMenuId==robot.id"
+                location-strategy="connected"
+                location="end top"
+                origin="top start"
+                :offset-x="20"
+                scroll-strategy="reposition"
+                @contextmenu.prevent="changeDetailedStatusMenu(robot)"
+            >
+                <v-row>
+                    <v-btn :ref="'restart' + robot.id" dense class="mx-1" style="max-width: 50;"
+                        @mousedown="startHold('restart', robot)" 
+                        @mouseup="stopHold('restart', robot)"
+                        @mouseleave="stopHold('restart', robot)"
+                    >
+                        <v-icon icon="mdi-restart"/>
+                    </v-btn>
+                </v-row>
+            </v-menu>
         </v-card>
     </v-col>
 </template>
@@ -26,7 +54,10 @@ export default {
     data() {
         return {
             state: inject('state') as AppState,
-            isValid: isValid
+            isValid: isValid,
+            activeDetailedMenuId: null,
+            holdStartTime: null,
+            timeoutId: null
         }
     },
     mounted() {
@@ -218,6 +249,39 @@ export default {
             }
 
             return ""
+        },
+        changeDetailedStatusMenu: function(robot: Robot) {
+            this.activeDetailedMenuId = (this.activeDetailedMenuId==robot.id) ? null : robot.id;
+        },
+        startHold: function(type: string, robot: Robot) {
+            if (this.holdStartTime === null) {
+                this.holdStartTime = performance.now();
+            }
+
+            if (this.timeoutId){
+                clearTimeout(this.timeoutId);
+            }
+
+            const object = this;
+            this.timeoutId = setTimeout(function() {
+                object.holdStartTime = null;
+                object.timeoutId = null;
+                console.log("TIMEOUT COMPLETE");
+
+                if (type == 'restart'){
+                    // Call restart service
+                    // object.state.restartRobot(robot.id);
+                } else if (type = 'shutdown') {
+                    // Call shutdown service
+                    // object.state.shutdownRobot(robot.id);
+                }
+            }, 1000);
+        },
+        stopHold: function(type: string, robot: Robot) {
+            this.holdStartTime = null;
+            if (this.timeoutId){
+                clearTimeout(this.timeoutId);
+            }
         }
     },
     computed: {
