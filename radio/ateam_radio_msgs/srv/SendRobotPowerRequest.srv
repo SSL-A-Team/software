@@ -1,0 +1,13 @@
+# Request
+int8 robot_id
+uint8 request_type
+
+int8 ROBOT_ID_ALL = -1
+
+uint8 REQUEST_TYPE_REBOOT = 0
+uint8 REQUEST_TYPE_SHUTDOWN = 1
+
+---
+# Response
+bool success
+string reason

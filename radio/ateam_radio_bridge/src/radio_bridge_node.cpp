@@ -31,6 +31,7 @@
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
 #include <ateam_radio_msgs/srv/get_firmware_parameter.hpp>
 #include <ateam_radio_msgs/srv/set_firmware_parameter.hpp>
+#include <ateam_radio_msgs/srv/send_robot_power_request.hpp>
 #include <ateam_radio_msgs/conversion.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
@@ -66,9 +67,9 @@ public:
     firmware_parameter_server_(*this, connections_)
   {
     declare_parameters<bool>("controls_enabled", {
-      {"body_vel", true},
-      {"wheel_vel", true},
-      {"wheel_torque", false}
+        {"body_vel", true},
+        {"wheel_vel", true},
+        {"wheel_torque", false}
     });
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
@@ -96,6 +97,11 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
+    power_request_service_ = create_service<ateam_radio_msgs::srv::SendRobotPowerRequest>(
+      "~/send_power_request",
+      std::bind(&RadioBridgeNode::SendPowerRequestCallback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
     connection_check_timer_ =
       create_wall_timer(
       std::chrono::duration<double>(
@@ -117,6 +123,8 @@ private:
   std::mutex mutex_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
+  std::array<bool, 16> shutdown_requested_;
+  std::array<bool, 16> reboot_requested_;
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
@@ -128,6 +136,7 @@ private:
     16> motion_feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
   FirmwareParameterServer firmware_parameter_server_;
+  rclcpp::Service<ateam_radio_msgs::srv::SendRobotPowerRequest>::SharedPtr power_request_service_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
   std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
@@ -177,6 +186,8 @@ private:
         ateam_radio_msgs::msg::ConnectionStatus connection_message;
         connection_message.radio_connected = false;
         connection_publishers_[i]->publish(connection_message);
+        shutdown_requested_[i] = false;
+        reboot_requested_[i] = false;
         continue;
       }
       const auto & last_heartbeat_time = last_heartbeat_timestamp_[i];
@@ -206,12 +217,15 @@ private:
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
       }
       BasicControl control_msg;
-      control_msg.request_shutdown = false;
-      control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() == ateam_common::GameCommand::Stop;
+      control_msg.request_shutdown = shutdown_requested_[id];
+      control_msg.reboot_robot = reboot_requested_[id];
+      control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
+        ateam_common::GameCommand::Stop;
       control_msg.emergency_stop = false;
       control_msg.body_vel_controls_enabled = get_parameter("controls_enabled.body_vel").as_bool();
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
-      control_msg.wheel_torque_control_enabled = get_parameter("controls_enabled.wheel_torque").as_bool();
+      control_msg.wheel_torque_control_enabled =
+        get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.play_song = 0;
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
@@ -289,7 +303,8 @@ private:
       discovery_receiver_.SendTo(
         sender_address, sender_port,
         reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
-      RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Robot ID already connected: %d", robot_id);
+      RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Robot ID already connected: %d",
+          robot_id);
       return;
     }
 
@@ -397,6 +412,49 @@ private:
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);
     }
+  }
+
+  void SendPowerRequestCallback(
+    const std::shared_ptr<ateam_radio_msgs::srv::SendRobotPowerRequest::Request> request,
+    std::shared_ptr<ateam_radio_msgs::srv::SendRobotPowerRequest::Response> response)
+  {
+    const auto robot_id = request->robot_id;
+
+    if(robot_id == ateam_radio_msgs::srv::SendRobotPowerRequest::Request::ROBOT_ID_ALL) {
+      switch (request->request_type) {
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_SHUTDOWN:
+          std::fill(shutdown_requested_.begin(), shutdown_requested_.end(), true);
+          break;
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_REBOOT:
+          std::fill(reboot_requested_.begin(), reboot_requested_.end(), true);
+          break;
+        default:
+          response->success = false;
+          response->reason = "Invalid request type";
+          return;
+      }
+    } else {
+      if ((robot_id >= (int8_t)connections_.size() || robot_id < 0)) {
+        response->success = false;
+        response->reason = "Invalid robot ID";
+        return;
+      }
+
+      switch (request->request_type) {
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_SHUTDOWN:
+          shutdown_requested_[robot_id] = true;
+          break;
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_REBOOT:
+          reboot_requested_[robot_id] = true;
+          break;
+        default:
+          response->success = false;
+          response->reason = "Invalid request type";
+          return;
+      }
+    }
+
+    response->success = true;
   }
 
 };
