@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <vector>
 #include <ateam_geometry/normalize.hpp>
+#include <ateam_common/angle.hpp>
 #include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::skills
@@ -207,12 +208,22 @@ ateam_msgs::msg::RobotMotionCommand Capture::runIntercept(const World & world, c
   //planner_options.footprint_inflation = kBallRadius + kRobotRadius + 0.09;
   planner_options.footprint_inflation = kBallRadius + kRobotRadius + 0.01;
 
-  if (world.ball.vel * (world.ball.pos - robot.pos) > 0) {
-    getPlayInfo()["avoid_ball"] = "true";
-    planner_options.avoid_ball = true;
-  } else {
+  double in_front_of_ball = world.ball.vel * (world.ball.pos - robot.pos) <= 0;
+  double ball_to_robot_angle = ateam_common::geometry::VectorToAngle(robot.pos - world.ball.pos);
+  double intercept_angle = ateam_common::geometry::VectorToAngle(target_point_to_ball); 
+
+  double target_angle = intercept_angle;
+  // Not sure which way to face yet
+  if (!in_front_of_ball && abs(intercept_angle - ball_to_robot_angle) < M_PI / 12.0) {
+    target_angle = robot.theta;
+  }
+
+  if (in_front_of_ball) {
     getPlayInfo()["avoid_ball"] = "false";
     planner_options.avoid_ball = false;
+  } else {
+    getPlayInfo()["avoid_ball"] = "true";
+    planner_options.avoid_ball = true;
   }
 
   easy_move_to_.setPlannerOptions(planner_options);
@@ -220,10 +231,9 @@ ateam_msgs::msg::RobotMotionCommand Capture::runIntercept(const World & world, c
   easy_move_to_.setMaxAngularVelocity(4.0);
   easy_move_to_.setMaxAccel(6.0); // TODO: Figure out how to improve tracking without doing this
   easy_move_to_.setMaxDecel(6.0); // TODO: Figure out how to improve tracking without doing this
-  easy_move_to_.face_absolute(std::atan2(target_point_to_ball.y(), target_point_to_ball.x()));
+
+  easy_move_to_.face_absolute(target_angle);
   easy_move_to_.setTargetPosition(approach_point, world.ball.vel);
-  // easy_move_to_.face_point(world.ball.pos);
-  // easy_move_to_.setTargetPosition(world.ball.pos + (0.1 * ateam_geometry::normalize(world.ball.vel)), world.ball.vel); // TODO: TESTING REMOVE THIS
 
   auto command = easy_move_to_.runFrame(robot, world);
 

@@ -43,6 +43,7 @@ ateam_geometry::Point PivotKick::GetAssignmentPoint(const World & world)
 ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, const Robot & robot)
 {
   getOverlays().drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
+  getPlayInfo()["PIVOT STATE"] = "";
 
   if (done_) {
     return ateam_msgs::msg::RobotMotionCommand{};
@@ -88,6 +89,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Capture(
   const Robot & robot)
 {
 
+  getPlayInfo()["PIVOT STATE"] = "CAPTURE";
   auto motion_command = capture_.runFrame(world, robot);
   getPlayInfo()["Capture"] = capture_.getPlayInfo();
   return motion_command;
@@ -95,6 +97,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Capture(
 
 ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 {
+  getPlayInfo()["PIVOT STATE"] = "PIVOT";
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
 
@@ -128,6 +131,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 
 ateam_msgs::msg::RobotMotionCommand PivotKick::KickBall(const World & world, const Robot & robot)
 {
+  getPlayInfo()["PIVOT STATE"] = "KICK";
   easy_move_to_.setTargetPosition(robot.pos);
   easy_move_to_.face_point(target_point_);
   path_planning::PlannerOptions planner_options;
