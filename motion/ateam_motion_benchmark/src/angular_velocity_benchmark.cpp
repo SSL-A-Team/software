@@ -287,6 +287,8 @@ private:
         return;
       }
 
+      starting_angle_ = yaw;
+
       RCLCPP_INFO(get_logger(), "Running benchmark...");
       start_time_ = std::chrono::steady_clock::now();
       timer_ = create_wall_timer(kTimerDuration,
@@ -341,7 +343,7 @@ private:
     command_speed_ = speed;
 
     command.twist.angular.z = command_speed_;
-    command.twist.linear.y = command_speed_ * options_.radius;
+    command.twist.linear.y = -1 * command_speed_ * options_.radius;
 
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
 
@@ -567,13 +569,17 @@ private:
       normalized_current_angle = -normalized_current_angle;
     }
 
+    if (std::abs(normalized_current_angle) < 1e-2) {
+      normalized_current_angle = 0.0;
+    }
+
     if (passed_halfway_) {
-      if (prev_angle_ < 0.0 && normalized_current_angle > 0.0) {
+      if (prev_angle_ < 0.0 && normalized_current_angle >= 0.0) {
         rotation_count_++;
         passed_halfway_ = false;
       }
     } else {
-      if (prev_angle_ > 0.0 && normalized_current_angle < 0.0) {
+      if (prev_angle_ > 0.0 && normalized_current_angle <= 0.0) {
         passed_halfway_ = true;
       }
     }
