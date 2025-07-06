@@ -425,7 +425,7 @@ private:
         case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_SHUTDOWN:
           std::fill(shutdown_requested_.begin(), shutdown_requested_.end(), true);
           break;
-        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_POWER_ON:
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_REBOOT:
           std::fill(reboot_requested_.begin(), reboot_requested_.end(), true);
           break;
         default:
@@ -444,7 +444,7 @@ private:
         case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_SHUTDOWN:
           shutdown_requested_[robot_id] = true;
           break;
-        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_POWER_ON:
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_REBOOT:
           reboot_requested_[robot_id] = true;
           break;
         default:
