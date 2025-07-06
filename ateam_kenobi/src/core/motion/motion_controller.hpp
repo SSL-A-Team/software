@@ -120,6 +120,18 @@ private:
   control_toolbox::Pid x_controller;
   control_toolbox::Pid y_controller;
   control_toolbox::Pid t_controller;
+
+  static auto DefaultAWS()
+  {
+    /* This is a workaround for control_toolbox's terrible new AntiWindupStrategy interface.
+     * This allows us to initialize MotionController without printing a ton irrelevant of warnings.
+     */
+    control_toolbox::AntiWindupStrategy aws;
+    aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
+    aws.i_max = 0.3;
+    aws.i_min = -0.3;
+    return aws;
+  }
 };
 
 #endif  // CORE__MOTION__MOTION_CONTROLLER_HPP_
