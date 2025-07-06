@@ -47,9 +47,9 @@ CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 
 
 MotionController::MotionController()
-: x_controller(0.0, 0.0, 0.0, 0.0, 0.0, control_toolbox::AntiWindupStrategy()),
-  y_controller(0.0, 0.0, 0.0, 0.0, 0.0, control_toolbox::AntiWindupStrategy()),
-  t_controller(0.0, 0.0, 0.0, 0.0, 0.0, control_toolbox::AntiWindupStrategy())
+: x_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
+  y_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
+  t_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS())
 {
   this->reset();
 }
@@ -329,7 +329,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     double t_command = this->t_controller.compute_command(t_error, dt);
 
     if (trajectory_complete && xy_slow) {
-      double theta_min = 0.6;
+      double theta_min = 0.0;
       if (abs(t_command) < theta_min) {
         if (t_command > 0) {
           t_command = std::clamp(t_command, theta_min, this->t_max);

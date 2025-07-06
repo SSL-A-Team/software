@@ -149,7 +149,7 @@ public:
 
 private:
   const double kPreKickOffset = kRobotRadius + kBallRadius + 0.06;
-  KickType kick_type_ = KickType::Chip;
+  KickType kick_type_ = KickType::Kick;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 
