@@ -66,10 +66,13 @@ public:
     firmware_parameter_server_(*this, connections_)
   {
     declare_parameters<bool>("controls_enabled", {
-      {"body_vel", true},
+      {"body_vel", false},
       {"wheel_vel", true},
       {"wheel_torque", false}
     });
+
+    declare_parameter<bool>("shut_down_robots", false);
+    declare_parameter<bool>("reboot_robots", false);
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
@@ -206,7 +209,8 @@ private:
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
       }
       BasicControl control_msg;
-      control_msg.request_shutdown = false;
+      control_msg.request_shutdown = get_parameter("shut_down_robots").as_bool();
+      control_msg.reboot_robot = get_parameter("reboot_robots").as_bool();
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() == ateam_common::GameCommand::Stop;
       control_msg.emergency_stop = false;
       control_msg.body_vel_controls_enabled = get_parameter("controls_enabled.body_vel").as_bool();
