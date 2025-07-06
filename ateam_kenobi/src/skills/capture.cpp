@@ -40,7 +40,6 @@ void Capture::Reset()
   done_ = false;
   ball_detected_filter_ = 0;
   easy_move_to_.reset();
-  getPlayInfo() = nlohmann::json();
 }
 
 ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const Robot & robot)
@@ -99,8 +98,6 @@ void Capture::chooseState(const World & world, const Robot & robot)
 
   calculateApproachPoint(world, robot);
   getOverlays().drawCircle("approach_point", ateam_geometry::makeCircle(approach_point, 0.025), "#0000FFFF");
-
-
   getOverlays().drawLine("ballvel_line", {world.ball.pos, world.ball.pos + (0.3 * world.ball.vel)}, "#FF00007F");
 
   const bool ballDetected = filteredBallSense(robot);
@@ -123,8 +120,6 @@ void Capture::chooseState(const World & world, const Robot & robot)
     ); 
     getPlayInfo()["robot_approach_offset"] = robot_approach_angle_offset;
     // TODO: the above angle is super janky???
-
-
 
   // Prioritize handling intercepting a moving ball
   // TODO: May need some hysteresis at the capture/intercept level to avoid vision filter issues
@@ -154,7 +149,6 @@ void Capture::chooseState(const World & world, const Robot & robot)
   // TODO: May need some hysteresis at the capture/intercept level to avoid vision filter issues
   else if (ateam_geometry::norm(world.ball.vel) > 0.15) {
     getPlayInfo()["reason"] = "setting intercept: bv>0.15";
-    getPlayInfo()["howtf"] = "set intercept";
     state_ = State::Intercept;
   }
 
@@ -210,7 +204,8 @@ ateam_msgs::msg::RobotMotionCommand Capture::runIntercept(const World & world, c
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
-  planner_options.footprint_inflation = kBallRadius + kRobotRadius + 0.09;
+  //planner_options.footprint_inflation = kBallRadius + kRobotRadius + 0.09;
+  planner_options.footprint_inflation = kBallRadius + kRobotRadius + 0.01;
 
   if (world.ball.vel * (world.ball.pos - robot.pos) > 0) {
     getPlayInfo()["avoid_ball"] = "true";
@@ -272,6 +267,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
    */
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.avoid_ball = false;
+  planner_options.footprint_inflation = -0.04;
   easy_move_to_.setPlannerOptions(planner_options);
 
   MotionOptions motion_options;

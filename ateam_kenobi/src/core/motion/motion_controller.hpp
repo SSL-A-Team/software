@@ -117,9 +117,7 @@ public:
   double face_angle = 0;
   std::optional<ateam_geometry::Point> face_towards;
 
-  // DEBUGGING - REMOVE THIS
-  ateam_geometry::Point debug_target;
-  std::string debug_string;
+  ateam_geometry::Point target_point;
 
 private:
   double prev_time;
@@ -130,16 +128,6 @@ private:
   ateam_geometry::Vector target_velocity;
 
   AngleMode angle_mode = AngleMode::face_travel;  // This mode should have the best performance
-
-  int prev_point;  // last point used in the trajectory
-  double progress;
-  double total_dist;
-
-  // Might not actually be doing this although it could generate a nicer acceleration profile:
-  // This controller acts on our progress along the trajectory
-  // This enables it to smoothly ramp up to its velocity limit and then ramp back down at the end
-  // of the trajectory while helping us choose what point on the trajectory to actually compare
-  // our position against control_toolbox::Pid progress_controller;
 
   control_toolbox::Pid x_controller;
   control_toolbox::Pid y_controller;

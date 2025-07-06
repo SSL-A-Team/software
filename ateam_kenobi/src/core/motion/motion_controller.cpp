@@ -94,12 +94,7 @@ void MotionController::reset_trajectory(const std::vector<ateam_geometry::Point>
 {
   this->trajectory = trajectory;
   this->target_velocity = target_velocity;
-
-  this->prev_point = 0;
-
-  this->progress = 0;
-  // TODO(anon): get total distance along the trajectory
-  this->total_dist = 0;
+  this->target_point = trajectory[0];
 }
 
 void MotionController::calculate_trajectory_velocity_limits()
@@ -108,8 +103,8 @@ void MotionController::calculate_trajectory_velocity_limits()
 
   // Generate a maximum allowed speed at each trajectory point for the trajectory segment that it starts.
   // Must meet two requirements at each trajectory point:
-  //  1. Be slow enough to decelerate to the next points limit by the time the robot reaches it
-  //  2. Be slow enough to reasonably turn as sharply as required at the next point
+  //  1. Be slow enough to decelerate to the next point's limit by the time the robot reaches it
+  //  2. Be slow enough to reasonably turn as sharply as required at the current point
 
   trajectory_velocity_limits[trajectory.size() - 1] = target_velocity;
   for (int i = trajectory.size() - 2; i >= 0; i--) {
@@ -119,18 +114,22 @@ void MotionController::calculate_trajectory_velocity_limits()
     const ateam_geometry::Vector next_vel = trajectory_velocity_limits[i+1]; 
 
     const ateam_geometry::Vector direction = ateam_geometry::normalize(next_point - point);
-    // const ateam_geometry::Vector velocity = v_max * ateam_geometry::normalize(next_point - point);
 
     // Max velocity robot could linearly decelerate to the next velocity from
     double distance = ateam_geometry::norm(next_point - point);
     double max_decel_velocity = sqrt(std::pow(ateam_geometry::norm(next_vel), 2) + 2*decel_limit*distance);
     
-    // Max velocity robot can make turn
-    double angle = ateam_geometry::ShortestAngleBetween(direction, next_vel);
-    double max_turn_velocity = (angle > M_PI/4.0) ? 0.5 : v_max;
+    // Max velocity robot can make turn (also have to account for next_vel being (0,0))
+    double max_turn_velocity = v_max;
+    if (i > 0) {
+      const ateam_geometry::Point prev_point = trajectory[i-1];
+      const ateam_geometry::Vector prev_direction = point - prev_point; 
+
+      double angle = ateam_geometry::ShortestAngleBetween(direction, prev_direction);
+      max_turn_velocity = (abs(angle) > M_PI/4.0) ? 0.5 : v_max;
+    }
 
     double selected_velocity = std::clamp(std::min(max_decel_velocity, max_turn_velocity), 0.0, v_max);
-
     trajectory_velocity_limits[i] = selected_velocity * direction;
   }
 }
@@ -138,7 +137,7 @@ void MotionController::calculate_trajectory_velocity_limits()
 double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robot& robot, ateam_geometry::Point target, size_t target_index, double dt) {
 
   // TODO: because this uses vector norms it doesn't really handle when the target velocity is towards the robot
-  // TODO: Maybe handle when we are past the end of the final target point
+  // TODO: make this smarter about the angle calculation when we are off the trajectory
 
   double vel = ateam_geometry::norm(robot.vel);
   // // Prefer to use the previously commanded velocity for smoothness unless it is very wrong
@@ -147,33 +146,21 @@ double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robo
   // }
 
   vel = this->prev_command_vel;
-  ateam_geometry::Vector direction = ateam_geometry::normalize(target_velocity);
 
-  double distance_to_next_trajectory_point = 0.0;
-  if (target_index < trajectory.size() - 1) {
-    direction = ateam_geometry::normalize(trajectory[target_index + 1] - trajectory[target_index]);
-    distance_to_next_trajectory_point += ateam_geometry::norm(trajectory[target_index + 1] - target);
+  double distance_to_next_trajectory_point = ateam_geometry::norm(trajectory[target_index] - target);
+  if (distance_to_next_trajectory_point == 0.0) {
+    distance_to_next_trajectory_point = ateam_geometry::norm(target - robot.pos);
   }
 
-  // double target_vel = ateam_geometry::norm(target_velocity);
   double target_vel = ateam_geometry::norm(trajectory_velocity_limits[target_index]);
   double deceleration_to_reach_target = ((vel*vel) - (target_vel * target_vel)) / (2 * distance_to_next_trajectory_point);
 
   // Cruise
   double trapezoidal_vel = this->v_max;
 
-  // debug_string = std::format("target_vel #{}:{} | dist: {} | tvel: {}", 
-  //   target_index, target_vel, distance_to_next_trajectory_point, trapezoidal_vel);
-
-  // debug_string = std::format("target_vel #{}:{} | dcel: {} | dcel limit: {}", 
-  //   target_index, target_vel, deceleration_to_reach_target, decel_limit);
-
-
   // Decelerate to target velocity
   if (deceleration_to_reach_target > decel_limit * 0.95) {
     trapezoidal_vel = vel - (deceleration_to_reach_target * dt);
-    // debug_string = std::format("target_vel #{}:{} | dcel: {} | DECELING", 
-      // target_index, target_vel, deceleration_to_reach_target);
 
   // Accelerate to speed
   } else if (vel < this->v_max) {
@@ -181,8 +168,6 @@ double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robo
   }
 
   return std::clamp(trapezoidal_vel, 0.0, this->v_max);
-
-  // return std::clamp(trapezoidal_vel, 0.0, this->v_max) * direction;
 }
 
 ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
@@ -204,16 +189,11 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     dt = 1/100.0; // TODO: set this dynamically
   }
 
-  debug_string = "";
-
-  double dist_along_trajectory = 0;
-  double total_calculated_dist_along_trajectory = 0;
-
   size_t target_index = this->trajectory.size() - 1;
   ateam_geometry::Point target = this->trajectory[target_index];
   ateam_geometry::Vector target_direction = ateam_geometry::normalize(target - robot.pos);
+
   const double lookahead_distance = this->v_max * dt;
-  // const double lookahead_distance = kRobotRadius;
   const auto lookahead = ateam_geometry::makeCircle(robot.pos, lookahead_distance);
 
   u_int64_t closest_index = this->trajectory.size() - 1;
@@ -221,16 +201,12 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   double closest_distance = ateam_geometry::norm(closest_point - robot.pos);
 
   // Only search if we aren't near the final target point of the trajectory
-  if (ateam_geometry::norm(target - robot.pos) <= lookahead_distance) {
-    dist_along_trajectory = ateam_geometry::norm(target - robot.pos);
-  } else {
+  if (ateam_geometry::norm(target - robot.pos) > lookahead_distance) {
 
-    // This loop is calculating 4 things at the same time:
+    // This loop is calculating 3 things at the same time:
     //  1: Checking for the best target point using a lookahead distance
-    //  2: Calculating the distance along the trajectory to the target point
-    //  3: Tracking the closest point on the trajectory and its along trajectory
-    //      distance in case the lookahead fails to find a target
-    //  4: A unit vector pointing along the trajectory of the chosen target point
+    //  2: Tracking the closest point on the trajectory in case the lookahead fails to find a target
+    //  3: A unit vector pointing along the trajectory of the chosen target point
 
     for (int i = this->trajectory.size() - 1; i > 0; i--) {
       const auto a = this->trajectory[i-1];
@@ -245,10 +221,12 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
         if (std::holds_alternative<ateam_geometry::Point>(maybe_intersection.value())) {
           const auto intersection_point = std::get<ateam_geometry::Point>(maybe_intersection.value());
           target = intersection_point;
+
         } else if (std::holds_alternative<std::pair<ateam_geometry::Point, ateam_geometry::Point>>(maybe_intersection.value())) {
           const auto intersection_pair = std::get<std::pair<ateam_geometry::Point, 
             ateam_geometry::Point>>(maybe_intersection.value());
 
+          // Pick the point further along the segment
           if ((b-a) * (intersection_pair.second - intersection_pair.first) > 0) {
             target = intersection_pair.second;
           } else {
@@ -257,28 +235,20 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
         }
 
         // We've found the best target point
-        target_index = i - 1;
+        target_index = i;
         target_direction = ateam_geometry::normalize(b - target);
-        dist_along_trajectory = total_calculated_dist_along_trajectory
-          + ateam_geometry::norm(b - target) + lookahead_distance;
         break;
       }
-      RCLCPP_INFO(rclcpp::get_logger("kenobi_stp_default"), "seg %d failed check", i);
-
-      total_calculated_dist_along_trajectory += sqrt(CGAL::squared_distance(a, b));
 
       const auto point = ateam_geometry::nearestPointOnSegment(s, robot.pos);
       const double segment_distance = ateam_geometry::norm(point - robot.pos);
-      if (segment_distance <= closest_distance) {
+      if (segment_distance < closest_distance) {
         closest_index = i;
         closest_distance = segment_distance;
 
         target = point;
-        target_index = (target == b) ? i : i-1;
+        target_index = (target == a) ? i-1 : i;
         target_direction = ateam_geometry::normalize(b - a);
-
-        dist_along_trajectory = total_calculated_dist_along_trajectory
-          + ateam_geometry::norm(target - robot.pos);
       }
     }
   }
@@ -291,15 +261,18 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   double x_error = error.x();
   double y_error = error.y();
 
-  if (target_index < trajectory.size() - 1) {
-    auto trajectory_line = ateam_geometry::Segment(trajectory[target_index+1], trajectory[target_index]).supporting_line();
-    ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
-    ateam_geometry::Vector along_track_error = error - cross_track_error;
+  auto trajectory_line = ateam_geometry::Segment(trajectory[target_index], robot.pos).supporting_line();
 
-    if (ateam_geometry::norm(along_track_error) < 2 * lookahead_distance) {
-      x_error = cross_track_error.x();
-      y_error = cross_track_error.y();
-    }
+  if (target_index > 0) {
+    trajectory_line = ateam_geometry::Segment(trajectory[target_index], trajectory[target_index-1]).supporting_line();
+  }
+
+  ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
+  ateam_geometry::Vector along_track_error = error - cross_track_error;
+
+  if (ateam_geometry::norm(along_track_error) < 2 * lookahead_distance) {
+    x_error = cross_track_error.x();
+    y_error = cross_track_error.y();
   }
 
   bool xy_slow = false;
@@ -309,27 +282,13 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     double x_feedback = this->x_controller.compute_command(x_error, dt);
     double y_feedback = this->y_controller.compute_command(y_error, dt);
 
-    auto feedback_vector = ateam_geometry::Vector(x_feedback, y_feedback);
-
     calculate_trajectory_velocity_limits();
-
     double calculated_velocity = calculate_trapezoidal_velocity(robot, target, target_index, dt);
 
-    auto vel_vector = feedback_vector;
-    if (dist <= 2*kRobotRadius) {
+    auto vel_vector = ateam_geometry::Vector(x_feedback, y_feedback);
+    if (dist <= 2*kRobotRadius && target!=trajectory[trajectory.size()-1]) {
       vel_vector += (calculated_velocity * target_direction);
     }
-
-    // debug_target = target;
-    debug_target = trajectory[target_index];
-    // debug_string = std::format("fb: \n{}\n{})", feedback_vector.x(), feedback_vector.y());
-
-    RCLCPP_INFO(rclcpp::get_logger("kenobi_stp_default"), "traj_dist: %f", dist_along_trajectory);
-    RCLCPP_INFO(rclcpp::get_logger("kenobi_stp_default"), "calc_vel: %f", calculated_velocity);
-    // RCLCPP_INFO(rclcpp::get_logger("kenobi_stp_default"), "target: (%f, %f), actual_vel: %f", target.x(), target.y(), ateam_geometry::norm(feedback_vector));
-    // RCLCPP_INFO(rclcpp::get_logger("kenobi_stp_default"), "target_direction: (%f, %f)", target_direction.x(), target_direction.y());
-    // RCLCPP_INFO(rclcpp::get_logger("kenobi_stp_default"), "distance: %f, calc_vel: %f", dist, calculated_velocity);
-
 
     // clamp to max/min velocity
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
@@ -361,7 +320,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       [[fallthrough]];
     // otherwise default to face travel
     case AngleMode::face_travel:
-      target_angle = atan2(y_error, x_error);
+      target_angle = atan2(target_direction.y(), target_direction.x());
       break;
   }
 
@@ -382,7 +341,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
   }
 
-  //this->prev_point = index;
+  this->target_point = target;
   this->prev_time = current_time;
 
   return motion_command;
@@ -396,20 +355,19 @@ void MotionController::reset()
   x_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   x_aws.i_max = 0.3;
   x_aws.i_min = -0.3;
-  this->x_controller.initialize(2.8, 0.0, 0.002, u_max, u_min, x_aws);
+  this->x_controller.initialize(4.0, 0.0, 0.001, u_max, u_min, x_aws);
   control_toolbox::AntiWindupStrategy y_aws;
   y_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   y_aws.i_max = 0.15;
   y_aws.i_min = -0.15;
-  this->y_controller.initialize(2.8, 0.0, 0.002, u_max, u_min, y_aws);
+  this->y_controller.initialize(4.0, 0.0, 0.001, u_max, u_min, y_aws);
   control_toolbox::AntiWindupStrategy t_aws;
   t_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   t_aws.i_max = 0.5;
   t_aws.i_min = -0.5;
   this->t_controller.initialize(2.5, 0.0, 0.0, u_max, u_min, t_aws);
 
-  this->progress = 0;
-  this->total_dist = 0;
+  this->target_point = ateam_geometry::Point(0, 0);
 
   this->prev_command_vel = 0.0;
   this->prev_time = NAN;
