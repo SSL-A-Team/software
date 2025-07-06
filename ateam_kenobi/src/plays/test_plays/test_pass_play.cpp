@@ -70,8 +70,14 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay:
   const auto kicker = *kicker_assignment;
   const auto receiver = *receiver_assignment;
 
+  getPlayInfo()["kicker_id"] = kicker.id;
+  getPlayInfo()["receiver_id"] = receiver.id;
+  getPlayInfo()["pass_done"] = pass_tactic_.isDone();
+  getPlayInfo()["target"]["x"] = targets_[target_ind_].x();
+  getPlayInfo()["target"]["y"] = targets_[target_ind_].y();
+
   auto & kicker_command = maybe_motion_commands.at(kicker.id).emplace();
-  auto & receiver_command = maybe_motion_commands.at(kicker.id).emplace();
+  auto & receiver_command = maybe_motion_commands.at(receiver.id).emplace();
   pass_tactic_.runFrame(world, kicker, receiver, kicker_command, receiver_command);
 
   return maybe_motion_commands;
