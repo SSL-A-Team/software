@@ -97,7 +97,7 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
-    power_request_service_ = create_service<ateam_msgs::srv::SendRobotPowerRequest>(
+    power_request_service_ = create_service<ateam_radio_msgs::srv::SendRobotPowerRequest>(
       "~/send_power_request",
       std::bind(&RadioBridgeNode::SendPowerRequestCallback, this, std::placeholders::_1,
         std::placeholders::_2));
@@ -136,7 +136,7 @@ private:
     16> motion_feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
   FirmwareParameterServer firmware_parameter_server_;
-  rclcpp::Service<ateam_msgs::srv::SendRobotPowerRequest>::SharedPtr power_request_service_;
+  rclcpp::Service<ateam_radio_msgs::srv::SendRobotPowerRequest>::SharedPtr power_request_service_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
   std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
@@ -415,17 +415,17 @@ private:
   }
 
   void SendPowerRequestCallback(
-    const std::shared_ptr<ateam_msgs::srv::SendRobotPowerRequest::Request> request,
-    std::shared_ptr<ateam_msgs::srv::SendRobotPowerRequest::Response> response)
+    const std::shared_ptr<ateam_radio_msgs::srv::SendRobotPowerRequest::Request> request,
+    std::shared_ptr<ateam_radio_msgs::srv::SendRobotPowerRequest::Response> response)
   {
     const auto robot_id = request->robot_id;
 
-    if(robot_id == ateam_msgs::srv::SendRobotPowerRequest::Request::ROBOT_ID_ALL) {
+    if(robot_id == ateam_radio_msgs::srv::SendRobotPowerRequest::Request::ROBOT_ID_ALL) {
       switch (request->request_type) {
-        case ateam_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_SHUTDOWN:
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_SHUTDOWN:
           std::fill(shutdown_requested_.begin(), shutdown_requested_.end(), true);
           break;
-        case ateam_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_POWER_ON:
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_POWER_ON:
           std::fill(reboot_requested_.begin(), reboot_requested_.end(), true);
           break;
         default:
@@ -434,20 +434,17 @@ private:
           return;
       }
     } else {
-      if ((robot_id >= connections_.size() || robot_id < 0)) {
+      if ((robot_id >= (int8_t)connections_.size() || robot_id < 0)) {
         response->success = false;
         response->reason = "Invalid robot ID";
         return;
       }
 
-      const auto all_robots = request->robot_id ==
-        ateam_msgs::srv::SendRobotPowerRequest::Request::ROBOT_ID_ALL;
-
       switch (request->request_type) {
-        case ateam_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_SHUTDOWN:
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_SHUTDOWN:
           shutdown_requested_[robot_id] = true;
           break;
-        case ateam_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_POWER_ON:
+        case ateam_radio_msgs::srv::SendRobotPowerRequest::Request::REQUEST_TYPE_POWER_ON:
           reboot_requested_[robot_id] = true;
           break;
         default:
