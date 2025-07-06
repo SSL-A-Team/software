@@ -52,6 +52,7 @@ rosidl_generate_interfaces(${MSG_TARGET}
   msg/ConnectionStatus.msg
 
   srv/GetFirmwareParameter.srv
+  srv/SendRobotPowerRequest.srv
   srv/SetFirmwareParameter.srv
 
   ADD_LINTER_TESTS
