@@ -94,7 +94,10 @@ void MotionController::reset_trajectory(const std::vector<ateam_geometry::Point>
 {
   this->trajectory = trajectory;
   this->target_velocity = target_velocity;
-  this->target_point = trajectory[0];
+
+  if (trajectory.size()) {
+    this->target_point = trajectory[0];
+  }
 }
 
 void MotionController::calculate_trajectory_velocity_limits()
@@ -247,46 +250,57 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
         closest_distance = segment_distance;
 
         target = point;
-        target_index = (target == a) ? i-1 : i;
-        target_direction = ateam_geometry::normalize(b - a);
+        // This should only happen at the start of the trajectory
+        if (target == a) {
+          target_index = i-1;
+          target_direction = ateam_geometry::normalize(a - robot.pos);
+        } else {
+          target_index = i;
+          target_direction = ateam_geometry::normalize(b - a);
+        }
       }
     }
   }
 
+  double distance_to_end = sqrt(CGAL::squared_distance(robot.pos, trajectory.back()));
+  bool target_is_last_point = (target_index == this->trajectory.size() - 1);
+  bool zero_target_vel = ateam_geometry::norm(target_velocity) < 0.01;
+  bool trajectory_complete = (distance_to_end <= options.completion_threshold)
+    && target_is_last_point
+    && zero_target_vel;
 
-  double dist = sqrt(CGAL::squared_distance(robot.pos, target));
-  bool trajectory_complete = (dist <= options.completion_threshold) && (target_index == this->trajectory.size() - 1);
+  if (!trajectory_complete) {
 
-  ateam_geometry::Vector error = target - robot.pos;
-  double x_error = error.x();
-  double y_error = error.y();
+    ateam_geometry::Vector error = target - robot.pos;
+    double x_error = error.x();
+    double y_error = error.y();
 
-  auto trajectory_line = ateam_geometry::Segment(trajectory[target_index], robot.pos).supporting_line();
 
-  if (target_index > 0) {
-    trajectory_line = ateam_geometry::Segment(trajectory[target_index], trajectory[target_index-1]).supporting_line();
-  }
+    auto trajectory_line = ateam_geometry::Segment(trajectory[target_index], robot.pos).supporting_line();
+    if (target_index > 0) {
+      trajectory_line = ateam_geometry::Segment(trajectory[target_index], trajectory[target_index - 1]).supporting_line();
+    }
 
-  ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
-  ateam_geometry::Vector along_track_error = error - cross_track_error;
+    ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
+    // ateam_geometry::Vector along_track_error = error - cross_track_error;
 
-  if (ateam_geometry::norm(along_track_error) < 2 * lookahead_distance) {
-    x_error = cross_track_error.x();
-    y_error = cross_track_error.y();
-  }
+    bool should_use_full_pid_control = target_is_last_point && zero_target_vel && distance_to_end < 1.5*kRobotRadius;
+    if (!should_use_full_pid_control) {
+      x_error = cross_track_error.x();
+      y_error = cross_track_error.y();
+    } else {
+    }
 
-  bool xy_slow = false;
-  if (ateam_geometry::norm(target_velocity) > 0.01 || !trajectory_complete) {
-
-    // Calculate translational movement commands
+    // Calculate pid feedback
     double x_feedback = this->x_controller.compute_command(x_error, dt);
     double y_feedback = this->y_controller.compute_command(y_error, dt);
 
+    // Calculate trapezoidal velocity feedforward
     calculate_trajectory_velocity_limits();
     double calculated_velocity = calculate_trapezoidal_velocity(robot, target, target_index, dt);
 
     auto vel_vector = ateam_geometry::Vector(x_feedback, y_feedback);
-    if (dist <= 2*kRobotRadius && target!=trajectory[trajectory.size()-1]) {
+    if (!should_use_full_pid_control) {
       vel_vector += (calculated_velocity * target_direction);
     }
 
@@ -328,7 +342,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
     double t_command = this->t_controller.compute_command(t_error, dt);
 
-    if (trajectory_complete && xy_slow) {
+    if (trajectory_complete) {
       double theta_min = 0.0;
       if (abs(t_command) < theta_min) {
         if (t_command > 0) {
