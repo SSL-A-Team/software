@@ -271,11 +271,6 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
   if (!trajectory_complete) {
 
-    ateam_geometry::Vector error = target - robot.pos;
-    double x_error = error.x();
-    double y_error = error.y();
-
-
     auto trajectory_line = ateam_geometry::Segment(trajectory[target_index], robot.pos).supporting_line();
     if (target_index > 0) {
       trajectory_line = ateam_geometry::Segment(trajectory[target_index], trajectory[target_index - 1]).supporting_line();
@@ -284,11 +279,17 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
     // ateam_geometry::Vector along_track_error = error - cross_track_error;
 
-    bool should_use_full_pid_control = target_is_last_point && zero_target_vel && distance_to_end < 1.5*kRobotRadius;
+    double x_error = 0.0;
+    double y_error = 0.0;
+
+    bool should_use_full_pid_control = target_is_last_point && zero_target_vel && distance_to_end < 3.0*kRobotRadius;
     if (!should_use_full_pid_control) {
       x_error = cross_track_error.x();
       y_error = cross_track_error.y();
     } else {
+      ateam_geometry::Vector error = trajectory[target_index] - robot.pos;
+      x_error = error.x();
+      y_error = error.y();
     }
 
     // Calculate pid feedback
@@ -369,12 +370,12 @@ void MotionController::reset()
   x_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   x_aws.i_max = 0.3;
   x_aws.i_min = -0.3;
-  this->x_controller.initialize(4.0, 0.0, 0.001, u_max, u_min, x_aws);
+  this->x_controller.initialize(4.5, 0.0, 0.005, u_max, u_min, x_aws);
   control_toolbox::AntiWindupStrategy y_aws;
   y_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   y_aws.i_max = 0.15;
   y_aws.i_min = -0.15;
-  this->y_controller.initialize(4.0, 0.0, 0.001, u_max, u_min, y_aws);
+  this->y_controller.initialize(4.5, 0.0, 0.005, u_max, u_min, y_aws);
   control_toolbox::AntiWindupStrategy t_aws;
   t_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   t_aws.i_max = 0.5;
