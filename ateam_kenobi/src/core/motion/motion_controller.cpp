@@ -47,7 +47,8 @@ CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 
 
 MotionController::MotionController()
-: x_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
+: cross_track_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
+  x_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
   y_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
   t_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS())
 {
@@ -276,39 +277,45 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       trajectory_line = ateam_geometry::Segment(trajectory[target_index], trajectory[target_index - 1]).supporting_line();
     }
 
+    ateam_geometry::Vector error = trajectory[target_index] - robot.pos;
     ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
     // ateam_geometry::Vector along_track_error = error - cross_track_error;
 
-    double x_error = 0.0;
-    double y_error = 0.0;
-
-    bool should_use_full_pid_control = target_is_last_point && zero_target_vel && distance_to_end < 3.0*kRobotRadius;
-    if (!should_use_full_pid_control) {
-      x_error = cross_track_error.x();
-      y_error = cross_track_error.y();
-    } else {
-      ateam_geometry::Vector error = trajectory[target_index] - robot.pos;
-      x_error = error.x();
-      y_error = error.y();
-    }
 
     // Calculate pid feedback
-    double x_feedback = this->x_controller.compute_command(x_error, dt);
-    double y_feedback = this->y_controller.compute_command(y_error, dt);
+    double cross_track_feedback = this->cross_track_controller.compute_command(
+      ateam_geometry::norm(cross_track_error), dt);
+    double x_feedback = this->x_controller.compute_command(error.x(), dt);
+    double y_feedback = this->y_controller.compute_command(error.y(), dt);
 
     // Calculate trapezoidal velocity feedforward
     calculate_trajectory_velocity_limits();
     double calculated_velocity = calculate_trapezoidal_velocity(robot, target, target_index, dt);
 
-    auto vel_vector = ateam_geometry::Vector(x_feedback, y_feedback);
-    if (!should_use_full_pid_control) {
-      vel_vector += (calculated_velocity * target_direction);
+    ateam_geometry::Vector vel_vector;
+
+    bool should_use_full_pid_control = target_is_last_point && zero_target_vel && distance_to_end < 3.0*kRobotRadius;
+    if (should_use_full_pid_control) {
+      vel_vector = ateam_geometry::Vector(x_feedback, y_feedback);
+    } else {
+      vel_vector = cross_track_feedback * ateam_geometry::normalize(cross_track_error)
+        + (calculated_velocity * target_direction);
     }
 
     // clamp to max/min velocity
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
     }
+
+    // Rotate the commanded vector to account for delay
+    if (abs(robot.omega) > 0.5) {
+      double angle_offset = -robot.omega * 5 * dt;
+      double new_x = vel_vector.x() * cos(angle_offset) - vel_vector.y() * sin(angle_offset);
+      double new_y = vel_vector.x() * sin(angle_offset) + vel_vector.y() * cos(angle_offset);
+
+      vel_vector = ateam_geometry::Vector(new_x, new_y);
+    }
+
     motion_command.twist.linear.x = vel_vector.x();
     motion_command.twist.linear.y = vel_vector.y();
     this->prev_command_vel = ateam_geometry::norm(vel_vector);
@@ -366,6 +373,13 @@ void MotionController::reset()
 {
   const auto u_max = std::numeric_limits<double>::infinity();
   const auto u_min = -std::numeric_limits<double>::infinity();
+
+  control_toolbox::AntiWindupStrategy cross_track_aws;
+  cross_track_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
+  cross_track_aws.i_max = 0.3;
+  cross_track_aws.i_min = -0.3;
+  this->cross_track_controller.initialize(3.0, 0.0, 0.005, u_max, u_min, cross_track_aws);
+
   control_toolbox::AntiWindupStrategy x_aws;
   x_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   x_aws.i_max = 0.3;

@@ -129,6 +129,8 @@ private:
 
   AngleMode angle_mode = AngleMode::face_travel;  // This mode should have the best performance
 
+  control_toolbox::Pid cross_track_controller;
+
   control_toolbox::Pid x_controller;
   control_toolbox::Pid y_controller;
   control_toolbox::Pid t_controller;
