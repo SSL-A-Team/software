@@ -156,6 +156,13 @@ export class RosManager {
         })
         this.services.set("sendSimulatorControlPacket", sendSimulatorControlPacketService);
 
+        let sendPowerRequestService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/radio_bridge/send_power_request',
+            serviceType: 'ateam_msgs/srv/SendRobotPowerRequest'
+        })
+        this.services.set("sendPowerRequest", sendPowerRequestService);
+
         if (appState.useKenobi) {
             this.enableKenobiTopic(appState);
         } else {
