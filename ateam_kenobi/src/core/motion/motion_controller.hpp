@@ -70,14 +70,25 @@ class MotionController
 public:
   MotionController();
 
+  // Update the current trajectory (usually just moves the last point a bit)
+  void update_trajectory(const std::vector<ateam_geometry::Point> & trajectory,
+    ateam_geometry::Vector target_velocity = ateam_geometry::Vector(0, 0));
   // Load a new trajectory into the motion controller resetting its progress along the old one
-  void set_trajectory(const std::vector<ateam_geometry::Point> & trajectory);
+  void reset_trajectory(const std::vector<ateam_geometry::Point> & trajectory,
+    ateam_geometry::Vector target_velocity = ateam_geometry::Vector(0, 0));
 
   void face_point(std::optional<ateam_geometry::Point> point);
   void face_absolute(double angle);
   void face_travel();
   void no_face();
 
+  void calculate_trajectory_velocity_limits();
+
+  double calculate_trapezoidal_velocity(
+    const ateam_kenobi::Robot& robot,
+    ateam_geometry::Point target,
+    size_t target_index,
+    double dt);
 
   // Generate a robot motion command to follow a trajectory
   ateam_msgs::msg::RobotMotionCommand get_command(
@@ -95,27 +106,30 @@ public:
   void set_y_pid_gains(double p, double i, double d);
   void set_t_pid_gains(double p, double i, double d);
 
-// Velocity limits
-  double v_max = 1.5;
+  // Velocity limits
+  double v_max = 2.0;
   double t_max = 2;
+
+  // Acceleration limits
+  double accel_limit = 3.0;
+  double decel_limit = 2.0;
 
   double face_angle = 0;
   std::optional<ateam_geometry::Point> face_towards;
 
+  ateam_geometry::Point target_point;
+
 private:
   double prev_time;
+  double prev_command_vel;
+  double prev_command;
   std::vector<ateam_geometry::Point> trajectory;
+  std::vector<ateam_geometry::Vector> trajectory_velocity_limits;
+  ateam_geometry::Vector target_velocity;
+
   AngleMode angle_mode = AngleMode::face_travel;  // This mode should have the best performance
 
-  int prev_point;  // last point used in the trajectory
-  double progress;
-  double total_dist;
-
-  // Might not actually be doing this although it could generate a nicer acceleration profile:
-  // This controller acts on our progress along the trajectory
-  // This enables it to smoothly ramp up to its velocity limit and then ramp back down at the end
-  // of the trajectory while helping us choose what point on the trajectory to actually compare
-  // our position against control_toolbox::Pid progress_controller;
+  control_toolbox::Pid cross_track_controller;
 
   control_toolbox::Pid x_controller;
   control_toolbox::Pid y_controller;
