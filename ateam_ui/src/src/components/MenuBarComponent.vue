@@ -10,6 +10,7 @@
             <v-list-item @click.stop=loadPlaybook()> Load Playbook </v-list-item>
         </v-list>
     </v-menu>
+
     <v-menu style="color: rgb(var(--v-theme-ateam-color))" location="bottom"> 
         <template v-slot:activator="{ props }">
             <v-btn class="px-0 ml-3" v-bind="props">
@@ -61,19 +62,52 @@
             </v-list-item>
         </v-list>
     </v-menu>
+
+    <v-menu style="color: rgb(var(--v-theme-ateam-color))" location="bottom"> 
+        <template v-slot:activator="{ props }">
+            <v-btn class="px-0 ml-3" v-bind="props">
+                Power
+            </v-btn>
+        </template>
+        <v-list style="background-color: rgb(var(--v-theme-ateam-color));">
+            <v-list-item>
+                <v-btn
+                    @mousedown="startHold('restart')" 
+                    @mouseup="stopHold('restart')"
+                    @mouseleave="stopHold('restart')"
+                > 
+                    Restart All Robots
+                </v-btn>
+            </v-list-item>
+            <v-list-item>
+                <v-btn
+                    @mousedown="startHold('shutdown')" 
+                    @mouseup="stopHold('shutdown')"
+                    @mouseleave="stopHold('shutdown')"
+                > 
+                    Shut Down All Robots
+                </v-btn>
+            </v-list-item>
+        </v-list>
+    </v-menu>
+
 </template>
 
 <script lang="ts">
+import { AppState } from "@/state";
+import { inject } from "vue";
 import { useTheme } from "vuetify";
 import "@mdi/font/css/materialdesignicons.css";
-import { arrayBuffer } from "stream/consumers";
 
 export default {
     inject: ['state'],
     data() {
         return {
+            state: inject('state') as AppState,
             useKenobiTopic: true,
             fieldBoundaryVisible: true,
+            holdStartTime: null,
+            timeoutId: null,
             globalTheme: useTheme()
         }
     },
@@ -111,7 +145,30 @@ export default {
         },
         setFieldBoundaryVisibility() {
             this.state.graphicState.fieldContainer.getChildByName("fieldBoundary").visible = this.fieldBoundaryVisible;
-        }
+        },
+        startHold: function(type: string) {
+            if (this.holdStartTime === null) {
+                this.holdStartTime = performance.now();
+            }
+
+            if (this.timeoutId){
+                clearTimeout(this.timeoutId);
+            }
+
+            const object = this;
+            this.timeoutId = setTimeout(function() {
+                object.holdStartTime = null;
+                object.timeoutId = null;
+
+                object.state.sendPowerRequest(-1, type);
+            }, 1000);
+        },
+        stopHold: function(type: string) {
+            this.holdStartTime = null;
+            if (this.timeoutId){
+                clearTimeout(this.timeoutId);
+            }
+        },
     }
 }
 </script>
