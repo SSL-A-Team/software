@@ -17,28 +17,10 @@
                 </v-btn>
             </v-row>
 
-            <v-menu
-                activator="parent"
-                :open-on-hover="false"
-                :open-on-click="false"
-                :model-value="activeDetailedMenuId==robot.id"
-                location-strategy="connected"
-                location="end top"
-                origin="top start"
-                :offset-x="20"
-                scroll-strategy="reposition"
-                @contextmenu.prevent="changeDetailedStatusMenu(robot)"
-            >
-                <v-row>
-                    <v-btn :ref="'restart' + robot.id" dense class="mx-1" style="max-width: 50;"
-                        @mousedown="startHold('restart', robot)" 
-                        @mouseup="stopHold('restart', robot)"
-                        @mouseleave="stopHold('restart', robot)"
-                    >
-                        <v-icon icon="mdi-restart"/>
-                    </v-btn>
-                </v-row>
-            </v-menu>
+            <robot-detailed-menu-component
+                :robot="robot"
+                :activeDetailedMenuId="activeDetailedMenuId"
+            />
         </v-card>
     </v-col>
 </template>
@@ -48,6 +30,7 @@
 import { AppState } from "@/state";
 import { Robot, ErrorLevel, isValid,  getErrorLevel } from "@/robot";
 import { inject } from "vue";
+import RobotDetailedMenuComponent from "./RobotDetailedMenuComponent.vue";
 
 export default {
     inject: ['state'],
@@ -252,36 +235,6 @@ export default {
         },
         changeDetailedStatusMenu: function(robot: Robot) {
             this.activeDetailedMenuId = (this.activeDetailedMenuId==robot.id) ? null : robot.id;
-        },
-        startHold: function(type: string, robot: Robot) {
-            if (this.holdStartTime === null) {
-                this.holdStartTime = performance.now();
-            }
-
-            if (this.timeoutId){
-                clearTimeout(this.timeoutId);
-            }
-
-            const object = this;
-            this.timeoutId = setTimeout(function() {
-                object.holdStartTime = null;
-                object.timeoutId = null;
-                console.log("TIMEOUT COMPLETE");
-
-                if (type == 'restart'){
-                    // Call restart service
-                    // object.state.restartRobot(robot.id);
-                } else if (type = 'shutdown') {
-                    // Call shutdown service
-                    // object.state.shutdownRobot(robot.id);
-                }
-            }, 1000);
-        },
-        stopHold: function(type: string, robot: Robot) {
-            this.holdStartTime = null;
-            if (this.timeoutId){
-                clearTimeout(this.timeoutId);
-            }
         }
     },
     computed: {
@@ -304,6 +257,9 @@ export default {
             },
             deep: true
         }
+    },
+    components: {
+        RobotDetailedMenuComponent
     }
 }
 </script>
