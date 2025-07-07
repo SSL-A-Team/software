@@ -384,12 +384,12 @@ void MotionController::reset()
   x_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   x_aws.i_max = 0.3;
   x_aws.i_min = -0.3;
-  this->x_controller.initialize(4.5, 0.0, 0.005, u_max, u_min, x_aws);
+  this->x_controller.initialize(4.5, 0.0, 0.01, u_max, u_min, x_aws);
   control_toolbox::AntiWindupStrategy y_aws;
   y_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   y_aws.i_max = 0.15;
   y_aws.i_min = -0.15;
-  this->y_controller.initialize(4.5, 0.0, 0.005, u_max, u_min, y_aws);
+  this->y_controller.initialize(4.5, 0.0, 0.01, u_max, u_min, y_aws);
   control_toolbox::AntiWindupStrategy t_aws;
   t_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
   t_aws.i_max = 0.5;
