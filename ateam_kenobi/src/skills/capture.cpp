@@ -76,7 +76,9 @@ ateam_geometry::Point Capture::calculateApproachPoint(const World & world, const
   }
 
   // If ball moving: use intercept
-  if (ateam_geometry::norm(world.ball.vel) > 0.15) {
+  // Require a higher ball vel if capturing so we don't accidentally trigger intercept
+  const double ball_vel = ateam_geometry::norm(world.ball.vel);
+  if ((ball_vel > 0.15 && state_ != State::Capture) || (ball_vel > capture_speed_)) {
     approach_point = calculateInterceptPoint(world, robot);
     return approach_point;
   }
@@ -113,6 +115,9 @@ void Capture::chooseState(const World & world, const Robot & robot)
   const auto robot_to_ball = world.ball.pos - robot.pos;
   const double robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
 
+  const double ball_distance = ateam_geometry::norm(robot_to_ball);
+  const double ball_vel = ateam_geometry::norm(world.ball.vel);
+
   // TODO: REMOVE THIS TESTING ONLY
     const auto ball_to_approach = approach_point - world.ball.pos;
     // const double ball_to_approach_angle = std::atan2(ball_to_approach.y(), ball_to_approach.x());
@@ -148,7 +153,8 @@ void Capture::chooseState(const World & world, const Robot & robot)
   }
 
   // TODO: May need some hysteresis at the capture/intercept level to avoid vision filter issues
-  else if (ateam_geometry::norm(world.ball.vel) > 0.15) {
+  // Require a higher ball vel if capturing so we don't accidentally trigger intercept
+  else if ((ball_vel > 0.15 && state_ != State::Capture) || (ball_vel > capture_speed_)) {
     getPlayInfo()["reason"] = "setting intercept: bv>0.15";
     state_ = State::Intercept;
   }
@@ -174,12 +180,14 @@ void Capture::chooseState(const World & world, const Robot & robot)
       //   / (ateam_geometry::norm(robot_to_ball) * ateam_geometry::norm(ball_to_approach))       
       // ); 
 
-      const bool can_bypass_approach = !always_approach_first_ && !ballTooCloseToObstacle;
 
-      const bool robot_near_ball = ateam_geometry::norm(robot_to_ball) <= approach_radius_;
+      const bool robot_near_ball = ball_distance <= approach_radius_;
       const bool robot_already_in_position = robot_near_ball
         && abs(robot_approach_angle_offset) < 0.3
         && abs(robot_to_ball_angle - robot.theta) < 0.1;
+
+      const bool can_bypass_approach = !ballTooCloseToObstacle && (!always_approach_first_ || robot_near_ball);
+
 
       // the ball is clear of obstacles, just use capture directly
       if (can_bypass_approach || robot_already_in_position) {
@@ -192,39 +200,86 @@ void Capture::chooseState(const World & world, const Robot & robot)
       }
     }
 
-    // Don't need to handle state_ == State::Capture since that ends when breakbeam detects the ball
-    // TODO: Should this transition back into approach point if the ball gets too far away or something?
+    // Only need to handle the ball moving away since capture also ends above when breakbeam detects the ball
+    else if (ball_distance > 2 * approach_radius_){
+      state_ = State::MoveToApproachPoint;
+    }
   }
 }
 
 ateam_msgs::msg::RobotMotionCommand Capture::runIntercept(const World & world, const Robot & robot)
 {
-  const auto target_point_to_ball = world.ball.pos - approach_point;
 
   MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
-  //planner_options.footprint_inflation = kBallRadius + kRobotRadius + 0.09;
-  planner_options.footprint_inflation = kBallRadius + kRobotRadius + 0.01;
+  planner_options.footprint_inflation = 0.06;
+  planner_options.avoid_ball = true;
+  planner_options.force_replan = true;
+  planner_options.draw_obstacles = true;
 
-  double in_front_of_ball = world.ball.vel * (world.ball.pos - robot.pos) <= 0;
-  double ball_to_robot_angle = ateam_common::geometry::VectorToAngle(robot.pos - world.ball.pos);
-  double intercept_angle = ateam_common::geometry::VectorToAngle(target_point_to_ball); 
+  // This angle seems likes its flipped 180?
+  // double angle = atan2(world.ball.vel.y(), world.ball.vel.x());
+  std::vector<ateam_geometry::AnyShape> obstacles;
 
-  double target_angle = intercept_angle;
-  // Not sure which way to face yet
-  if (!in_front_of_ball && abs(intercept_angle - ball_to_robot_angle) < M_PI / 12.0) {
-    target_angle = robot.theta;
-  }
 
-  if (in_front_of_ball) {
-    getPlayInfo()["avoid_ball"] = "false";
+  const auto target_point_to_ball = world.ball.pos - approach_point;
+  const auto robot_to_ball = world.ball.pos - robot.pos;
+
+  double target_angle = ateam_common::geometry::VectorToAngle(target_point_to_ball);
+
+  getPlayInfo()["intercept angle mode"] = "";
+  // Aligned in front of the ball
+  if (abs(ateam_geometry::ShortestAngleBetween(target_point_to_ball, robot_to_ball)) < M_PI / 8.0) {
+    getPlayInfo()["intercept angle mode"] = "aligned";
+    target_angle = ateam_common::geometry::VectorToAngle(world.ball.pos - robot.pos);
     planner_options.avoid_ball = false;
   } else {
-    getPlayInfo()["avoid_ball"] = "true";
-    planner_options.avoid_ball = true;
+    // Still directly behind the ball, not sure which way to face yet
+    if (abs(ateam_geometry::ShortestAngleBetween(target_point_to_ball, robot_to_ball)) > 7 * M_PI / 8.0) {
+      getPlayInfo()["intercept angle mode"] = "dont know";
+      // target_angle = robot.theta;
+      target_angle = ateam_common::geometry::VectorToAngle(world.ball.pos - robot.pos);
+    } else {
+      getPlayInfo()["intercept angle mode"] = "looping around";
+    }
+
+    // // Front Obstacle
+    // obstacles.push_back(
+    //   ateam_geometry::makeDisk(
+    //     world.ball.pos - kBallDiameter * ateam_geometry::Vector(
+    //       std::cos(angle),
+    //       std::sin(angle)),
+    //     kBallRadius * 1.5
+    // ));
+
+    // // Left Obstacle
+    // obstacles.push_back(
+    //   ateam_geometry::makeDisk(
+    //     world.ball.pos + 0.5 * kBallDiameter * ateam_geometry::Vector(
+    //       std::cos(angle + M_PI / 2),
+    //       std::sin(angle + M_PI / 2)),
+    //     kBallRadius * 1.5
+    // ));
+
+    // // Right Obstacle
+    // obstacles.push_back(
+    //   ateam_geometry::makeDisk(
+    //     world.ball.pos + 0.5 * kBallDiameter * ateam_geometry::Vector(
+    //       std::cos(angle - M_PI / 2),
+    //       std::sin(angle - M_PI / 2)),
+    //     kBallRadius * 1.5
+    // ));
   }
+
+  // if (in_front_of_ball) {
+  //   getPlayInfo()["avoid_ball"] = "false";
+  //   planner_options.avoid_ball = false;
+  // } else {
+  //   getPlayInfo()["avoid_ball"] = "true";
+  //   planner_options.avoid_ball = true;
+  // }
 
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setMaxVelocity(2.5);
@@ -235,7 +290,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runIntercept(const World & world, c
   easy_move_to_.face_absolute(target_angle);
   easy_move_to_.setTargetPosition(approach_point, world.ball.vel);
 
-  auto command = easy_move_to_.runFrame(robot, world);
+  auto command = easy_move_to_.runFrame(robot, world, obstacles);
 
   const double offset_ball_dist = kBallRadius + kRobotRadius + 0.05; // TODO be smarter about where to calculate this
   if (intercept_result_.h < 0.03 && intercept_result_.d >= -offset_ball_dist) {
@@ -298,7 +353,9 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
     easy_move_to_.face_absolute(robot.theta);
   }
 
-  easy_move_to_.setTargetPosition(world.ball.pos);
+  // Put the dribbler on the ball, not the center of the robot
+  const auto target_pos = world.ball.pos + 0.7 * kRobotRadius * (robot.pos - world.ball.pos);
+  easy_move_to_.setTargetPosition(target_pos);
   auto command = easy_move_to_.runFrame(robot, world);
 
   command.dribbler_speed = 300;
@@ -337,8 +394,7 @@ ateam_geometry::Point Capture::calculateInterceptPoint(const World & world, cons
 
   const double vb = ateam_geometry::norm(world.ball.vel);
 
-  // const double offset_ball_dist = kBallRadius + kRobotRadius + 0.05;
-  const double offset_ball_dist = kBallRadius + kRobotRadius + 0.1;
+  const double offset_ball_dist = kBallRadius + kRobotRadius + 0.25;
 
   intercept_result_ = play_helpers::calculateIntercept(world, robot, offset_ball_dist);
   
@@ -356,8 +412,11 @@ ateam_geometry::Point Capture::calculateInterceptPoint(const World & world, cons
   getPlayInfo()["Intercept"]["d"] = intercept_result_.d;
   getPlayInfo()["Intercept"]["h"] = intercept_result_.h;
 
+  const bool facing_ball = abs(angles::shortest_angular_distance(ateam_geometry::ToHeading(world.ball.pos - robot.pos), robot.theta)) < 0.1;
+  const bool aligned_perpindicularly = intercept_result_.h < 0.03;
+
   // Already aligned to receive the ball and are in front of it, capture it
-  if (intercept_result_.h < 0.03 && intercept_result_.d >= -offset_ball_dist) {
+  if (aligned_perpindicularly && facing_ball && intercept_result_.d >= -offset_ball_dist) {
     // Go to the ball
     if (vb < 0.5 || intercept_result_.d >= 0.3) {
       getPlayInfo()["Intercept"]["direction"] = "GO TO CAPTURE";
@@ -466,7 +525,10 @@ std::optional<ateam_geometry::Vector> Capture::calculateObstacleOffset(const Wor
 bool Capture::filteredBallSense(const Robot & robot) {
   if (robot.breakbeam_ball_detected) {
     ball_detected_filter_ += 1;
-    if (ball_detected_filter_ >= 20) {
+    if (ball_detected_filter_ > 80) {
+      ball_detected_filter_ = 80;
+    }
+    if (ball_detected_filter_ >= 30) {
       return true;
     }
   } else {

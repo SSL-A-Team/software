@@ -49,13 +49,15 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
     return ateam_msgs::msg::RobotMotionCommand{};
   }
 
+  const bool ballDetected = filteredBallSense(robot);
+
   if (prev_state_ == State::Capture) {
     if (!capture_.isDone()) {
       return Capture(world, robot);
     }
   }
 
-  if (!robot.breakbeam_ball_detected) {
+  if (!ballDetected) {
     easy_move_to_.reset();
     prev_state_ = State::Capture;
     return Capture(world, robot);
@@ -153,4 +155,24 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::KickBall(const World & world, con
 
   return command;
 }
+
+bool PivotKick::filteredBallSense(const Robot & robot) {
+  if (robot.breakbeam_ball_detected) {
+    ball_detected_filter_ += 1;
+    if (ball_detected_filter_ > 80) {
+      ball_detected_filter_ = 80;
+    }
+    if (ball_detected_filter_ >= 20) {
+      return true;
+    }
+  } else {
+    ball_detected_filter_ -= 2;
+    if (ball_detected_filter_ < 0) {
+      ball_detected_filter_ = 0;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace ateam_kenobi::skills

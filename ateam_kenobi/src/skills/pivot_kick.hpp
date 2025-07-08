@@ -98,6 +98,10 @@ private:
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
   skills::Capture capture_;
+
+
+  int ball_detected_filter_ = 0;
+
   bool done_ = false;
   double pivot_speed_ = 3.5;  // rad/s
 
@@ -114,6 +118,8 @@ private:
   ateam_msgs::msg::RobotMotionCommand Pivot(const Robot & robot);
 
   ateam_msgs::msg::RobotMotionCommand KickBall(const World & world, const Robot & robot);
+
+  bool filteredBallSense(const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills

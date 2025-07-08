@@ -97,7 +97,7 @@ private:
   int ball_detected_filter_ = 0;
   double approach_radius_ = kRobotRadius + kBallRadius + 0.15;  // m
 
-  double capture_speed_ = 2.0;  // m/s
+  double capture_speed_ = 0.35;  // m/s
 
   double max_speed_ = 2.0;  // m/s
   double extract_accel_limit_ = 1.0;  // for extracting ball m/s/s
