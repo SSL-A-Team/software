@@ -80,9 +80,11 @@ void EasyMoveTo::reset()
   motion_controller_.reset();
 }
 
-void EasyMoveTo::setTargetPosition(ateam_geometry::Point target_position)
+void EasyMoveTo::setTargetPosition(ateam_geometry::Point target_position,
+  ateam_geometry::Vector target_velocity)
 {
   target_position_ = target_position;
+  target_velocity_ = target_velocity;
 }
 
 const path_planning::PlannerOptions & EasyMoveTo::getPlannerOptions() const
@@ -136,6 +138,24 @@ void EasyMoveTo::setMaxAngularVelocity(double velocity)
   motion_controller_.t_max = velocity;
 }
 
+void EasyMoveTo::setMaxAccel(double accel)
+{
+  if (accel > 8.0) {
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE ACCELERATION GIVEN TO SET MAX ACCELERATION");
+    return;
+  }
+  motion_controller_.accel_limit = accel;
+}
+
+void EasyMoveTo::setMaxDecel(double decel)
+{
+  if (decel > 8.0) {
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE DECELERATION GIVEN TO SET MAX DECELERATION");
+    return;
+  }
+  motion_controller_.decel_limit = decel;
+}
+
 ateam_msgs::msg::RobotMotionCommand EasyMoveTo::runFrame(
   const Robot & robot, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles)
@@ -162,7 +182,13 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::getMotionCommand(
 {
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
-  motion_controller_.set_trajectory(path);
+
+  const bool used_cached_path = path_planner_.usedCachedPath();
+  if (used_cached_path) {
+    motion_controller_.update_trajectory(path);
+  } else {
+    motion_controller_.reset_trajectory(path);
+  }
   return motion_controller_.get_command(robot, current_time, motion_options_);
 }
 
