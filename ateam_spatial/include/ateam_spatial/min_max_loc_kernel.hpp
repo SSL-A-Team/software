@@ -72,6 +72,12 @@ __global__ void max_loc_kernel(const float * buffer, const uint32_t buffer_size,
 {
   const auto idx = blockDim.x * blockIdx.x + threadIdx.x;
   __shared__ uint32_t shared_index_data[blockSize];
+  if (threadIdx.x == 0) {
+    for(size_t i = 0; i < blockSize; ++i) {
+      shared_index_data[i] = 0;
+    }
+  }
+  __syncthreads();
   if (idx < buffer_size){
 
     /*copy to shared memory*/
