@@ -98,7 +98,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   // TODO(chachmu): Should we filter this over a few frames to make sure we have the ball settled?
   if (robot.breakbeam_ball_detected) {
     ball_detected_filter_ += 1;
-    if (ball_detected_filter_ >= 8) {
+    if (ball_detected_filter_ >= 30) {
       done_ = true;
     }
   } else {
