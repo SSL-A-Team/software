@@ -77,6 +77,23 @@ export function drawSideIgnoreOverlay(state: AppState, fieldUI: PIXI.Container) 
 
 }
 
+export function drawFieldBoundary(state: AppState, fieldBoundary: PIXI.Graphics) {
+    const field = state.world.field;
+    const scale = state.renderConfig.scale;
+
+    fieldBoundary.clear();
+
+    // Draw the Field Boundaries
+    const boundaryStrokeWidth = 8;
+    fieldBoundary.lineStyle(boundaryStrokeWidth, 0x000000);
+    // Field Outline
+    fieldBoundary.drawRect(-(boundaryStrokeWidth / 2) - scale * (field.fieldDimensions.border + (field.fieldDimensions.length / 2)),
+        -(boundaryStrokeWidth / 2) - scale * (field.fieldDimensions.border + (field.fieldDimensions.width / 2)),
+        boundaryStrokeWidth + ((field.fieldDimensions.length + 2 * field.fieldDimensions.border) * scale),
+        boundaryStrokeWidth + ((field.fieldDimensions.width + 2 * field.fieldDimensions.border) * scale)
+    );
+}
+
 export function drawFieldLines(state: AppState, fieldLines: PIXI.Graphics) {
     const field = state.world.field;
     const scale = state.renderConfig.scale;
@@ -170,6 +187,8 @@ export function initializePixi(app: PIXI.Application, state: AppState): PIXI.Con
     ballVelLine.name = "ballVelLine";
     app.stage.addChild(ballVelLine);
 
+    const fieldBoundary = new PIXI.Graphics();
+    fieldBoundary.name = "fieldBoundary";
 
     const fieldLines = new PIXI.Graphics();
     fieldLines.name = "fieldLines";
@@ -193,6 +212,9 @@ export function initializePixi(app: PIXI.Application, state: AppState): PIXI.Con
     // Field Lines
     drawFieldLines(state, fieldLines);
 
+    // Field Boundary Walls
+    drawFieldBoundary(state, fieldBoundary);
+
     // Rectangle that covers the ignored side of the field
     drawSideIgnoreOverlay(state, fieldUI);
 
@@ -203,6 +225,7 @@ export function initializePixi(app: PIXI.Application, state: AppState): PIXI.Con
     drawBall(state.world.ball, ball, state.renderConfig);
 
     fieldContainer.addChild(fieldLines);
+    fieldContainer.addChild(fieldBoundary);
     fieldContainer.addChild(underlay);
     fieldContainer.addChild(robots);
     fieldContainer.addChild(ball);

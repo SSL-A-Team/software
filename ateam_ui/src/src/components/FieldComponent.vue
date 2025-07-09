@@ -9,7 +9,7 @@ import * as PIXI from 'pixi.js';
 import { Viewport } from "pixi-viewport";
 import { AppState } from "@/state";
 import { TeamColor } from "@/team";
-import { initializePixi, updateField, drawFieldLines, drawSideIgnoreOverlay, drawRobots } from "@/field";
+import { initializePixi, updateField, drawFieldBoundary, drawFieldLines, drawSideIgnoreOverlay, drawRobots } from "@/field";
 
 export default {
     inject: ['state'],
@@ -47,6 +47,7 @@ export default {
             }
         }, false);
 
+        this.state.graphicState.fieldContainer = this.fieldContainer;
         this.state.graphicState.updateField = this.update;
     },
     methods: {
@@ -55,6 +56,7 @@ export default {
         },
         redraw: function() {
             drawFieldLines(this.state, this.fieldContainer.getChildByName("fieldLines"));
+            drawFieldBoundary(this.state, this.fieldContainer.getChildByName("fieldBoundary"));
             drawRobots(this.state, this.fieldContainer.getChildByName("robots"));
             drawSideIgnoreOverlay(this.state, this.fieldContainer.getChildByName("fieldUI"));
         },
