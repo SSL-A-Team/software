@@ -248,7 +248,7 @@ private:
     if(robot_ready) {
       command_pub_ =
         create_publisher<ateam_msgs::msg::RobotMotionCommand>(std::string(
-        Topics::kRobotMotionCommandPrefix) + std::to_string(robot_id_), 1);
+        Topics::kRobotMotionCommandPrefix) + std::to_string(robot_id_), rclcpp::SystemDefaultsQoS().keep_last(1));
       RCLCPP_INFO(get_logger(), "Robot %d is ready.", robot_id_);
       RCLCPP_INFO(get_logger(), "Waiting for field info...");
       timer_ = create_wall_timer(kTimerDuration,
