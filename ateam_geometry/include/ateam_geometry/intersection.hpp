@@ -40,6 +40,10 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
   const Line & line);
 
 std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Circle & circle,
+  const Segment & segment);
+
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
   const Arc & arc,
   const Line & line);
 

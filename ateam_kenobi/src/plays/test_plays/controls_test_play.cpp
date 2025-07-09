@@ -46,6 +46,8 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 
   motion_controller_.v_max = 2.0;
   motion_controller_.t_max = 20.0;
+  motion_controller_.accel_limit = 3.0;
+  motion_controller_.decel_limit = 3.0;
 }
 
 void ControlsTestPlay::reset()
@@ -80,7 +82,14 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   }
 
 
-  motion_controller_.set_trajectory(std::vector<ateam_geometry::Point> {waypoints[index].position});
+  auto waypoint_vel = ateam_geometry::Vector(0.0, 0.0);
+  const auto prev_index = index == 0 ? waypoints.size() - 1 : index - 1;
+  std::vector<ateam_geometry::Point> path{
+    waypoints[prev_index].position,
+    waypoints[index].position
+  };
+  motion_controller_.reset_trajectory(path, waypoint_vel);
+
   switch (waypoints[index].angle_mode) {
     case AngleMode::face_absolute:
       motion_controller_.face_absolute(waypoints[index].heading);
@@ -104,7 +113,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
     robot, current_time,
     motion_options);
 
-  const std::vector<ateam_geometry::Point> viz_path = {robot.pos, waypoints[index].position};
+  const std::vector<ateam_geometry::Point> viz_path = path;
   getOverlays().drawLine("controls_test_path", viz_path, "purple");
 
   getPlayInfo()["robot"]["id"] = robot.id;
@@ -124,12 +133,18 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   getPlayInfo()["robot"]["vel"]["y"] = robot.vel.y();
   getPlayInfo()["robot"]["vel"]["t"] = robot.omega;
 
+  getPlayInfo()["robot"]["cmd_vel"]["x"] = maybe_motion_commands[robot.id].value().twist.linear.x;
+  getPlayInfo()["robot"]["cmd_vel"]["y"] = maybe_motion_commands[robot.id].value().twist.linear.y;
+
+  getPlayInfo()["error"]["x"] = waypoints[index].position.x() - robot.pos.x();
+  getPlayInfo()["error"]["y"] = waypoints[index].position.y() - robot.pos.y();
+
   for (std::size_t i = 0; i < waypoints.size(); i++) {
     getOverlays().drawCircle(
       "controls_test_point" + std::to_string(i),
-      ateam_geometry::makeCircle(waypoints[i].position, .05),
-      "blue",
-      "blue");
+      ateam_geometry::makeCircle(waypoints[i].position, .01),
+      "red",
+      "red");
   }
 
   return maybe_motion_commands;
