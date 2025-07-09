@@ -117,7 +117,7 @@ void MotionController::calculate_trajectory_velocity_limits()
     const ateam_geometry::Point point = trajectory[i];
 
     const ateam_geometry::Point next_point = trajectory[i + 1];
-    const ateam_geometry::Vector next_vel = trajectory_velocity_limits[i + 1]; 
+    const ateam_geometry::Vector next_vel = trajectory_velocity_limits[i + 1];
 
     const ateam_geometry::Vector direction = ateam_geometry::normalize(next_point - point);
 
@@ -125,12 +125,12 @@ void MotionController::calculate_trajectory_velocity_limits()
     double distance = ateam_geometry::norm(next_point - point);
     double max_decel_velocity = sqrt(std::pow(ateam_geometry::norm(next_vel),
       2) + 2 * decel_limit * distance);
-    
+
     // Max velocity robot can make turn (also have to account for next_vel being (0,0))
     double max_turn_velocity = v_max;
     if (i > 0) {
       const ateam_geometry::Point prev_point = trajectory[i - 1];
-      const ateam_geometry::Vector prev_direction = point - prev_point; 
+      const ateam_geometry::Vector prev_direction = point - prev_point;
 
       double angle = ateam_geometry::ShortestAngleBetween(direction, prev_direction);
       max_turn_velocity = (abs(angle) > M_PI / 4.0) ? 0.5 : v_max;
@@ -143,7 +143,10 @@ void MotionController::calculate_trajectory_velocity_limits()
   }
 }
 
-double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robot& robot, ateam_geometry::Point target, size_t target_index, double dt) {
+double MotionController::calculate_trapezoidal_velocity(
+  const ateam_kenobi::Robot & robot,
+  ateam_geometry::Point target, size_t target_index, double dt)
+{
 
   // TODO: because this uses vector norms it doesn't really handle when the target velocity is towards the robot
   // TODO: make this smarter about the angle calculation when we are off the trajectory
@@ -163,9 +166,9 @@ double MotionController::calculate_trapezoidal_velocity(const ateam_kenobi::Robo
     distance_to_next_trajectory_point = ateam_geometry::norm(target - robot.pos);
   }
 
-  double target_vel = ateam_geometry::norm(trajectory_velocity_lim;its[target_index]);
-  double deceleration_to_reach_target = ((vel * vel) - (target_vel * target_vel))
-    / (2 * distance_to_next_trajectory_point);
+  double target_vel = ateam_geometry::norm(trajectory_velocity_limits[target_index]);
+  double deceleration_to_reach_target = ((vel * vel) - (target_vel * target_vel)) /
+    (2 * distance_to_next_trajectory_point);
 
   // Cruise
   double trapezoidal_vel = this->v_max;
@@ -236,10 +239,11 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
           target = intersection_point;
 
         } else if (std::holds_alternative<std::pair<ateam_geometry::Point,
-            ateam_geometry::Point>>(maybe_intersection.value())) {
+          ateam_geometry::Point>>(maybe_intersection.value()))
+        {
 
-          const auto intersection_pair = std::get<std::pair<ateam_geometry::Point, 
-            ateam_geometry::Point>>(maybe_intersection.value());
+          const auto intersection_pair = std::get<std::pair<ateam_geometry::Point,
+              ateam_geometry::Point>>(maybe_intersection.value());
 
           // Pick the point further along the segment
           if ((b - a) * (intersection_pair.second - intersection_pair.first) > 0) {
@@ -283,7 +287,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
   if (!trajectory_complete) {
 
-    auto trajectory_line = ateam_geometry::Segment(trajectory[target_index], robot.pos).supporting_line();
+    auto trajectory_line = ateam_geometry::Segment(trajectory[target_index],
+      robot.pos).supporting_line();
     if (target_index > 0) {
       trajectory_line = ateam_geometry::Segment(trajectory[target_index],
         trajectory[target_index - 1]).supporting_line();
@@ -307,7 +312,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     ateam_geometry::Vector vel_vector;
 
     bool should_use_full_pid_control = target_is_last_point && zero_target_vel &&
-      distance_to_end < 3.0*kRobotRadius;
+      distance_to_end < 3.0 * kRobotRadius;
 
     if (should_use_full_pid_control) {
       vel_vector = ateam_geometry::Vector(x_feedback, y_feedback);
