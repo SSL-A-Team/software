@@ -33,7 +33,7 @@ namespace ateam_spatial
 
 SpatialEvaluator::SpatialEvaluator()
 {
-  settings_.resolution = 1e-2; // TODO(barulicm): parameterize this
+  settings_.resolution = 5e-2; // TODO(barulicm): parameterize this
   cuda_device_available_ = IsCudaDeviceAvailable();
   if(!cuda_device_available_) {
     std::cerr << "Could not detect CUDA device. GPU-accelerated spatial code is disabled." << std::endl;
