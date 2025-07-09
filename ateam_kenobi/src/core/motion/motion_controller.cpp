@@ -26,6 +26,7 @@
 #include <cmath>
 #include <limits>
 #include <vector>
+#include <utility>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_common/parameters.hpp>
@@ -107,7 +108,8 @@ void MotionController::calculate_trajectory_velocity_limits()
 {
   trajectory_velocity_limits.reserve(trajectory.size());
 
-  // Generate a maximum allowed speed at each trajectory point for the trajectory segment that it starts.
+  // Generate a maximum allowed speed at each trajectory point
+  // for the trajectory segment that it starts.
   // Must meet two requirements at each trajectory point:
   //  1. Be slow enough to decelerate to the next point's limit by the time the robot reaches it
   //  2. Be slow enough to reasonably turn as sharply as required at the current point
@@ -147,9 +149,10 @@ double MotionController::calculate_trapezoidal_velocity(
   const ateam_kenobi::Robot & robot,
   ateam_geometry::Point target, size_t target_index, double dt)
 {
-
-  // TODO: because this uses vector norms it doesn't really handle when the target velocity is towards the robot
-  // TODO: make this smarter about the angle calculation when we are off the trajectory
+  // TODO(chachmu): because this uses vector norms it doesn't really handle
+  // when the target velocity is towards the robot
+  // TODO(chachmu): make this smarter about the angle calculation
+  // when we are off the trajectory
 
   double vel = ateam_geometry::norm(robot.vel);
   // // Prefer to use the previously commanded velocity for smoothness unless it is very wrong
@@ -199,9 +202,10 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
 
   double dt = current_time - this->prev_time;
+
   // If we don't have a valid dt just assume we are running at standard loop rate
   if (std::isnan(this->prev_time)) {
-    dt = 1 / 100.0; // TODO: set this dynamically
+    dt = 1 / 100.0;  // TODO(chachmu): set this dynamically
   }
 
   size_t target_index = this->trajectory.size() - 1;
@@ -217,12 +221,10 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
   // Only search if we aren't near the final target point of the trajectory
   if (ateam_geometry::norm(target - robot.pos) > lookahead_distance) {
-
     // This loop is calculating 3 things at the same time:
     //  1: Checking for the best target point using a lookahead distance
     //  2: Tracking the closest point on the trajectory in case the lookahead fails to find a target
     //  3: A unit vector pointing along the trajectory of the chosen target point
-
     for (int i = this->trajectory.size() - 1; i > 0; i--) {
       const auto a = this->trajectory[i - 1];
       const auto b = this->trajectory[i];
@@ -231,17 +233,14 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
       // Check if lookahead lands on the trajectory
       const auto maybe_intersection = ateam_geometry::intersection(lookahead, s);
+      using ptPair = std::pair<ateam_geometry::Point, ateam_geometry::Point>;
       if (maybe_intersection.has_value()) {
-
         if (std::holds_alternative<ateam_geometry::Point>(maybe_intersection.value())) {
           const auto intersection_point =
             std::get<ateam_geometry::Point>(maybe_intersection.value());
           target = intersection_point;
 
-        } else if (std::holds_alternative<std::pair<ateam_geometry::Point,
-          ateam_geometry::Point>>(maybe_intersection.value()))
-        {
-
+        } else if (std::holds_alternative<ptPair>(maybe_intersection.value())) {
           const auto intersection_pair = std::get<std::pair<ateam_geometry::Point,
               ateam_geometry::Point>>(maybe_intersection.value());
 
@@ -286,7 +285,6 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     zero_target_vel;
 
   if (!trajectory_complete) {
-
     auto trajectory_line = ateam_geometry::Segment(trajectory[target_index],
       robot.pos).supporting_line();
     if (target_index > 0) {
