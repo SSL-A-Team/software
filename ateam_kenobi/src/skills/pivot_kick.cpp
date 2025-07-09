@@ -99,11 +99,11 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 
   ateam_msgs::msg::RobotMotionCommand command;
 
-  const auto k_p = 3.0;
+  const auto k_p = 2.5;
 
   command.twist.angular.z = std::clamp(k_p * angle_error, -pivot_speed_, pivot_speed_);
 
-  const auto min_angular_vel = 0.6;
+  const auto min_angular_vel = 1.0;
   if(std::abs(command.twist.angular.z) < min_angular_vel) {
     command.twist.angular.z = std::copysign(min_angular_vel, command.twist.angular.z);
   }
@@ -113,13 +113,15 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
    * circumference of 0.6996 meters in a full rotation.
    * Calculate m/rev * rev/s to get linear m/s
    */
-  double diameter = kBallDiameter + kRobotDiameter;
+  // double diameter = kBallDiameter + kRobotDiameter;
+  double diameter = 2*.095;
   double circumference = M_PI * diameter;
   double velocity = circumference * (command.twist.angular.z / (2 * M_PI));
 
-  command.twist.linear.x = std::sin(robot.theta) * velocity;
-  command.twist.linear.y = -std::cos(robot.theta) * velocity;
-  command.dribbler_speed = 300;
+  command.twist.linear.x = 0.0;
+  command.twist.linear.y = -velocity;
+  command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+  command.dribbler_speed = 250;
   return command;
 }
 

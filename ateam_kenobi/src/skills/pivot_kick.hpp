@@ -99,7 +99,7 @@ private:
   play_helpers::EasyMoveTo easy_move_to_;
   skills::Capture capture_;
   bool done_ = false;
-  double pivot_speed_ = 3.5;  // rad/s
+  double pivot_speed_ = 2.5;  // rad/s
 
   enum class State
   {
