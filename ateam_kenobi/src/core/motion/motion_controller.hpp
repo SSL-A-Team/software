@@ -71,10 +71,12 @@ public:
   MotionController();
 
   // Update the current trajectory (usually just moves the last point a bit)
-  void update_trajectory(const std::vector<ateam_geometry::Point> & trajectory,
+  void update_trajectory(
+    const std::vector<ateam_geometry::Point> & trajectory,
     ateam_geometry::Vector target_velocity = ateam_geometry::Vector(0, 0));
   // Load a new trajectory into the motion controller resetting its progress along the old one
-  void reset_trajectory(const std::vector<ateam_geometry::Point> & trajectory,
+  void reset_trajectory(
+    const std::vector<ateam_geometry::Point> & trajectory,
     ateam_geometry::Vector target_velocity = ateam_geometry::Vector(0, 0));
 
   void face_point(std::optional<ateam_geometry::Point> point);
@@ -85,7 +87,7 @@ public:
   void calculate_trajectory_velocity_limits();
 
   double calculate_trapezoidal_velocity(
-    const ateam_kenobi::Robot& robot,
+    const ateam_kenobi::Robot & robot,
     ateam_geometry::Point target,
     size_t target_index,
     double dt);

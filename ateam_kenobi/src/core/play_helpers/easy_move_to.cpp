@@ -80,7 +80,8 @@ void EasyMoveTo::reset()
   motion_controller_.reset();
 }
 
-void EasyMoveTo::setTargetPosition(ateam_geometry::Point target_position,
+void EasyMoveTo::setTargetPosition(
+  ateam_geometry::Point target_position,
   ateam_geometry::Vector target_velocity)
 {
   target_position_ = target_position;

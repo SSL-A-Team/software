@@ -96,24 +96,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 
 
   auto waypoint_vel = ateam_geometry::Vector(0.0, 0.0);
-  // auto waypoint_vel = ateam_geometry::Vector(0.0, -0.8);
   const auto prev_index = index == 0 ? waypoints.size() - 1 : index - 1;
   std::vector<ateam_geometry::Point> path{
     waypoints[prev_index].position,
     waypoints[index].position
   };
   motion_controller_.reset_trajectory(path, waypoint_vel);
-  // motion_controller_.reset_trajectory(std::vector<ateam_geometry::Point> {waypoints[index].position}, waypoint_vel);
-  // motion_controller_.reset_trajectory(std::vector<ateam_geometry::Point> {
-  //   ateam_geometry::Point(1.0, 0.0),
-  //   ateam_geometry::Point(0.0, 0.0),
-  //   ateam_geometry::Point(0.0, -1.0),
-  // }, waypoint_vel);
-  // motion_controller_.reset_trajectory(std::vector<ateam_geometry::Point> {
-  //   ateam_geometry::Point(-2.0, -2.0),
-  //   ateam_geometry::Point(2.0, 2.0),
-  // });
-  // waypoints[0].position += ateam_geometry::Vector(0.8 * (1.0/100.0), 0.0);
+
   switch (waypoints[index].angle_mode) {
     case AngleMode::face_absolute:
       motion_controller_.face_absolute(waypoints[index].heading);
@@ -137,17 +126,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
     robot, current_time,
     motion_options);
 
-  // const std::vector<ateam_geometry::Point> viz_path = {robot.pos, waypoints[index].position};
   const std::vector<ateam_geometry::Point> viz_path = path;
-  // const std::vector<ateam_geometry::Point> viz_path = {
-  //   ateam_geometry::Point(1.0, 0.0),
-  //   ateam_geometry::Point(0.0, 0.0),
-  //   ateam_geometry::Point(0.0, -1.0),
-  // };
-  // const std::vector<ateam_geometry::Point> viz_path = {
-  //   ateam_geometry::Point(-2.0, -2.0),
-  //   ateam_geometry::Point(2.0, 2.0),
-  // };
   getOverlays().drawLine("controls_test_path", viz_path, "purple");
 
   getPlayInfo()["robot"]["id"] = robot.id;

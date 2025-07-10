@@ -57,7 +57,8 @@ public:
 
   void reset();
 
-  void setTargetPosition(ateam_geometry::Point target_position,
+  void setTargetPosition(
+    ateam_geometry::Point target_position,
     ateam_geometry::Vector target_velocity = ateam_geometry::Vector(0, 0));
 
   const path_planning::PlannerOptions & getPlannerOptions() const;

@@ -223,6 +223,25 @@ export class AppState {
             });
     }
 
+    sendPowerRequest(robot_id: number, request_type: string): void {
+        let request_int = 0;
+        if (request_type == 'shutdown') {
+            request_int = 1;
+        }
+
+        const request = new ROSLIB.ServiceRequest({
+            robot_id: robot_id,
+            request_type: request_int
+        });
+
+        this.rosManager.services.get("sendPowerRequest").callService(request,
+            function(result: any): void {
+                if(!result.success) {
+                    console.log("Failed to send power request packet: ", result.reason);
+                }
+            });
+    }
+
     setUseKenobiTopic(enable: boolean) {
         if (enable != this.useKenobi) {
             if (enable) {
