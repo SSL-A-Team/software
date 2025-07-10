@@ -139,7 +139,8 @@ private:
         topic.replace(placeholder_pos, 2, std::to_string(robot_id));
       }
       control_publisher_ =
-        create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic, rclcpp::SystemDefaultsQoS().keep_last(1));
+        create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic,
+          rclcpp::SystemDefaultsQoS().keep_last(1));
       status_msg.is_active = true;
       status_msg.active_id = robot_id;
     }

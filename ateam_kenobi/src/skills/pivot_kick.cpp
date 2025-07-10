@@ -114,7 +114,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
    * Calculate m/rev * rev/s to get linear m/s
    */
   // double diameter = kBallDiameter + kRobotDiameter;
-  double diameter = 2*.095;
+  double diameter = 2 * .095;
   double circumference = M_PI * diameter;
   double velocity = circumference * (command.twist.angular.z / (2 * M_PI));
 
