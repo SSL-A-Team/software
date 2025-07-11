@@ -72,7 +72,7 @@ stp::PlayScore SpatialPassPlay::getScore(const World & world)
       their_robots);
   const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
   if(!largest_window) {
-    return stp::PlayScore::NaN();
+    return stp::PlayScore::Min();
   }
   return stp::PlayScore::Max() * (largest_window->squared_length() / goal_segment.squared_length());
 }
