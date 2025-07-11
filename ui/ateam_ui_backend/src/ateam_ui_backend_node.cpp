@@ -40,7 +40,9 @@
 #include <ateam_msgs/msg/world.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
-#include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
+#include <ateam_radio_msgs/msg/extended_telemetry.hpp>
+#include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_msgs/msg/behavior_executor_state.hpp>
 #include <ateam_msgs/msg/overlay_array.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
@@ -63,6 +65,7 @@
 namespace ateam_ui_backend_node
 {
 
+using ateam_ui_backend_node::message_conversions::fromMsg;
 using ateam_common::indexed_topic_helpers::create_indexed_subscribers;
 
 using namespace std::literals::chrono_literals;
@@ -104,6 +107,12 @@ public:
       &KenobiNode::robot_feedback_callback,
       this);
     */
+
+    // world_subscription_ =
+    //   create_subscription<ateam_msgs::msg::World>(
+    //   "kenobi_node/world",
+    //   10,
+    //   std::bind(&AteamUIBackendNode::world_callback, this, std::placeholders::_1));
   }
 
   //const std::lock_guard<std::mutex> lock(world_mutex_);
@@ -122,8 +131,14 @@ private:
     16> blue_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> yellow_robots_subscriptions_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotFeedback>::SharedPtr,
-    16> robot_feedback_subscriptions_;
+  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
+    16> basic_telemetry_subscriptions_;
+  // std::array<rclcpp::Subscription<ateam_radio_msgs::msg::ExtendedTelemetry>::SharedPtr,
+  //   16> extended_telemetry_subscriptions_;
+  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
+    16> connection_status_subscriptions_;
+
+  rclcpp::Subscription<ateam_msgs::msg::World>::SharedPtr world_subscription_;
 
 
   void poll_new_connections() {
@@ -145,7 +160,7 @@ private:
       while (true)
       {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        ws.write(net::buffer("Data every 10ms"));
+        ws.write(net::buffer(json_.dump()));
       }
     }
     catch (std::exception const &e)
@@ -154,9 +169,8 @@ private:
     }
   }
 
-  /*
   void world_callback(
-    const ateam_msgs::msg::World::SharedPtr msg)
+    const ateam_msgs::msg::World & world_msg)
   {
     const auto our_color = game_controller_listener_.GetTeamColor();
 
@@ -166,8 +180,12 @@ private:
     }
 
     const auto are_we_blue = our_color == ateam_common::TeamColor::Blue;
+
+    std::lock_guard<std::mutex> lock(json_mutex_);
+    json_ = fromMsg(world_msg);
   }
 
+  /*
   void blue_robot_state_callback(
     const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
     int id)
@@ -211,23 +229,19 @@ private:
 
   void reset_json_object() {
     // Mimics a default WorldState typescript object
-    std::string Data{R"(
-      {
-        "teamName": "A-Team",
-        "team": "unkown",
-        "teams": [],
-        "ball": null,
-        "field": null,
-        "referee": null,
-        "ai": {
-          "name": "No Play Specified",
-          "description": "{'No Play Specified':''}",
-        },
-        "timestamp": 0
-      }
-    )"};
-
-    json_ = nlohmann::json::parse(Data);
+    json_ = {
+        {"teamName", "A-Team"},
+        {"team", "unkown"},
+        {"teams", {}},
+        {"ball", nullptr},
+        {"field", nullptr},
+        {"referee", nullptr},
+        {"ai", {
+          {"name", "No Play Specified"},
+          {"description", "{'No Play Specified': ''}"}
+        }},
+        {"timestamp", 0}
+      };
 
     // Fill robot array
     for (std::string color : {"blue", "yellow"}) {
@@ -236,7 +250,7 @@ private:
         robot_json["id"] = i;
         robot_json["team"] = color;
         robot_json["visible"] = false;
-        robot_json["status"] = message_conversions::fromMsg(ateam_msgs::msg::RobotFeedback());
+        robot_json["status"] = message_conversions::fromMsg(ateam_radio_msgs::msg::BasicTelemetry());
 
         json_["teams"][color][i] = robot_json;
       }

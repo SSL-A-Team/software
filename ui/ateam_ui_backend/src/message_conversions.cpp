@@ -107,17 +107,19 @@ nlohmann::json fromMsg(
 }
 
 nlohmann::json fromMsg(
-  const ateam_msgs::msg::RobotFeedback & ros_msg){
+  const ateam_radio_msgs::msg::BasicTelemetry & ros_msg) {
 
   nlohmann::json json;
 
-  json["radio_connected"] = ros_msg.radio_connected;
   json["sequence_number"] = ros_msg.sequence_number;
   json["robot_revision_major"] = ros_msg.robot_revision_major;
   json["robot_revision_minor"] = ros_msg.robot_revision_minor;
-  json["battery_level"] = ros_msg.battery_level;
-  json["battery_temperature"] = ros_msg.battery_temperature;
   json["power_error"] = ros_msg.power_error;
+  json["power_board_error"] = ros_msg.power_board_error;
+  json["battery_error"] = ros_msg.battery_error;
+  json["battery_low"] = ros_msg.battery_low;
+  json["battery_crit"] = ros_msg.battery_crit;
+  json["shutdown_pending"] = ros_msg.shutdown_pending;
   json["tipped_error"] = ros_msg.tipped_error;
   json["breakbream_error"] = ros_msg.breakbeam_error;
   json["breakbeam_ball_detected"] = ros_msg.breakbeam_ball_detected;
@@ -125,24 +127,41 @@ nlohmann::json fromMsg(
   json["accelerometer_1_error"] = ros_msg.accelerometer_1_error;
   json["gyroscope_0_error"] = ros_msg.gyroscope_0_error;
   json["gyroscope_1_error"] = ros_msg.gyroscope_1_error;
-  json["motor_0_general_error"] = ros_msg.motor_0_general_error;
-  json["motor_0_hall_error"] = ros_msg.motor_0_hall_error;
-  json["motor_1_general_error"] = ros_msg.motor_1_general_error;
-  json["motor_1_hall_error"] = ros_msg.motor_1_hall_error;
-  json["motor_2_general_error"] = ros_msg.motor_2_general_error;
-  json["motor_2_hall_error"] = ros_msg.motor_2_hall_error;
-  json["motor_3_general_error"] = ros_msg.motor_3_general_error;
-  json["motor_3_hall_error"] = ros_msg.motor_3_hall_error;
-  json["motor_4_general_error"] = ros_msg.motor_4_general_error;
-  json["motor_4_hall_error"] = ros_msg.motor_4_hall_error;
+  json["motor_fl_general_error"] = ros_msg.motor_fl_general_error;
+  json["motor_fl_hall_error"] = ros_msg.motor_fl_hall_error;
+  json["motor_bl_general_error"] = ros_msg.motor_bl_general_error;
+  json["motor_bl_hall_error"] = ros_msg.motor_bl_hall_error;
+  json["motor_br_general_error"] = ros_msg.motor_br_general_error;
+  json["motor_br_hall_error"] = ros_msg.motor_br_hall_error;
+  json["motor_fr_general_error"] = ros_msg.motor_fr_general_error;
+  json["motor_fr_hall_error"] = ros_msg.motor_fr_hall_error;
+  json["motor_drib_general_error"] = ros_msg.motor_drib_general_error;
+  json["motor_drib_hall_error"] = ros_msg.motor_drib_hall_error;
   json["chipper_available"] = ros_msg.chipper_available;
   json["kicker_available"] = ros_msg.kicker_available;
-  json["motor_0_temperature"] = ros_msg.motor_0_temperature;
-  json["motor_1_temperature"] = ros_msg.motor_1_temperature;
-  json["motor_2_temperature"] = ros_msg.motor_2_temperature;
-  json["motor_3_temperature"] = ros_msg.motor_3_temperature;
-  json["motor_4_temperature"] = ros_msg.motor_4_temperature;
-  json["kicker_charge_level"] = ros_msg.kicker_charge_level;
+  json["body_vel_control_enabled"] = ros_msg.body_vel_control_enabled;
+  json["wheel_vel_control_enabled"] = ros_msg.wheel_vel_control_enabled;
+  json["wheel_torque_control_enabled"] = ros_msg.wheel_torque_control_enabled;
+  json["battery_percent"] = ros_msg.battery_percent;
+  json["kicker_charge_percent"] = ros_msg.kicker_charge_percent;
+
+  return json;
+}
+
+nlohmann::json fromMsg(
+  const ateam_radio_msgs::msg::ExtendedTelemetry & ros_msg) {
+
+  nlohmann::json json;
+  json["WARNING"] = "ExtendedTelemetry not implemented";
+
+  return json;
+}
+
+nlohmann::json fromMsg(
+  const ateam_radio_msgs::msg::ConnectionStatus & ros_msg) {
+
+  nlohmann::json json;
+  json["radio_connected"] = ros_msg.radio_connected;
 
   return json;
 }

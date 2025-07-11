@@ -29,7 +29,9 @@
 #include <ateam_msgs/msg/world.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
-#include <ateam_msgs/msg/robot_feedback.hpp>
+#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
+#include <ateam_radio_msgs/msg/extended_telemetry.hpp>
+#include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_msgs/msg/behavior_executor_state.hpp>
 #include <ateam_msgs/msg/trajectory.hpp>
 #include <ateam_msgs/msg/sample3d.hpp>
@@ -88,7 +90,13 @@ nlohmann::json fromMsg(
   const ateam_msgs::msg::RobotState & ros_msg);
 
 nlohmann::json fromMsg(
-  const ateam_msgs::msg::RobotFeedback & ros_msg);
+  const ateam_radio_msgs::msg::BasicTelemetry & ros_msg);
+
+nlohmann::json fromMsg(
+  const ateam_radio_msgs::msg::ExtendedTelemetry & ros_msg);
+
+nlohmann::json fromMsg(
+  const ateam_radio_msgs::msg::ConnectionStatus & ros_msg);
 
 nlohmann::json fromMsg(
   const ateam_msgs::msg::BehaviorExecutorState & ros_msg);

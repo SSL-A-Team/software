@@ -92,7 +92,7 @@ export function getErrorLevel(robot: Robot, sim: boolean): ErrorLevel {
     if (!sim && (robot.status.power_error || robot.status.power_board_error || robot.status.battery_error)) {
         return ErrorLevel.Critical;
     }
-    
+
     if (!sim && (robot.status.battery_crit)) {
         return ErrorLevel.Critical;
     }

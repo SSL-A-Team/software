@@ -14,6 +14,15 @@ export class RosManager {
 
     constructor(appState: AppState) {
 
+        console.log(appState);
+        console.log("Connecting to 9001")
+        const ws = new WebSocket('ws://' + location.hostname + ':9001');
+
+        ws.onopen = function(event) {console.log("Connected", event)};
+        ws.onmessage = function(event) { console.log("Received:", event.data)};
+
+        return;
+
         // Configure ROS
         this.ros = new ROSLIB.Ros({
             url : 'ws://' + location.hostname + ':9090'
