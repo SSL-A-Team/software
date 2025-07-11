@@ -27,12 +27,13 @@
 #include <limits>
 #include <vector>
 #include <utility>
+#include <format>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_common/parameters.hpp>
 #include "ateam_geometry/ateam_geometry.hpp"
 #include "ateam_common/robot_constants.hpp"
-#include "control_toolbox/pid.hpp"
+#include "pid.hpp"
 
 /*
 // PID gains
@@ -48,10 +49,6 @@ CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 
 
 MotionController::MotionController()
-: cross_track_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
-  x_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
-  y_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
-  t_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS())
 {
   this->reset();
 }
@@ -149,8 +146,6 @@ double MotionController::calculate_trapezoidal_velocity(
   const ateam_kenobi::Robot & robot,
   ateam_geometry::Point target, size_t target_index, double dt)
 {
-  // TODO(chachmu): because this uses vector norms it doesn't really handle
-  // when the target velocity is towards the robot
   // TODO(chachmu): make this smarter about the angle calculation
   // when we are off the trajectory
 
@@ -162,14 +157,21 @@ double MotionController::calculate_trapezoidal_velocity(
 
   vel = this->prev_command_vel;
 
+  const auto target_to_next_trajectory_point = trajectory[target_index] - target;
   double distance_to_next_trajectory_point =
-    ateam_geometry::norm(trajectory[target_index] - target);
+    ateam_geometry::norm(target_to_next_trajectory_point);
 
   if (distance_to_next_trajectory_point == 0.0) {
     distance_to_next_trajectory_point = ateam_geometry::norm(target - robot.pos);
   }
 
-  double target_vel = ateam_geometry::norm(trajectory_velocity_limits[target_index]);
+  // Project target velocity onto the trajectory
+  double target_vel = 0;
+  if (ateam_geometry::norm(target_velocity) > 0.0) {
+    target_vel = (target_velocity * target_to_next_trajectory_point) / 
+      ateam_geometry::norm(target_velocity);
+  }
+
   double deceleration_to_reach_target = ((vel * vel) - (target_vel * target_vel)) /
     (2 * distance_to_next_trajectory_point);
 
@@ -185,7 +187,7 @@ double MotionController::calculate_trapezoidal_velocity(
     trapezoidal_vel = vel + (accel_limit * dt);
   }
 
-  return std::clamp(trapezoidal_vel, 0.0, this->v_max);
+  return std::clamp(trapezoidal_vel, -this->v_max, this->v_max);
 }
 
 ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
@@ -294,8 +296,11 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
     ateam_geometry::Vector error = trajectory[target_index] - robot.pos;
     ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
+    // If the line segment is degenerate then the projection can have nan values
+    if (std::isnan(cross_track_error.x()) || std::isnan(cross_track_error.y())) { 
+      cross_track_error = ateam_geometry::Vector(0, 0);
+    }
     // ateam_geometry::Vector along_track_error = error - cross_track_error;
-
 
     // Calculate pid feedback
     double cross_track_feedback = this->cross_track_controller.compute_command(
@@ -388,30 +393,10 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
 void MotionController::reset()
 {
-  const auto u_max = std::numeric_limits<double>::infinity();
-  const auto u_min = -std::numeric_limits<double>::infinity();
-
-  control_toolbox::AntiWindupStrategy cross_track_aws;
-  cross_track_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
-  cross_track_aws.i_max = 0.3;
-  cross_track_aws.i_min = -0.3;
-  this->cross_track_controller.initialize(3.0, 0.0, 0.005, u_max, u_min, cross_track_aws);
-
-  control_toolbox::AntiWindupStrategy x_aws;
-  x_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
-  x_aws.i_max = 0.3;
-  x_aws.i_min = -0.3;
-  this->x_controller.initialize(4.5, 0.0, 0.01, u_max, u_min, x_aws);
-  control_toolbox::AntiWindupStrategy y_aws;
-  y_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
-  y_aws.i_max = 0.15;
-  y_aws.i_min = -0.15;
-  this->y_controller.initialize(4.5, 0.0, 0.01, u_max, u_min, y_aws);
-  control_toolbox::AntiWindupStrategy t_aws;
-  t_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
-  t_aws.i_max = 0.5;
-  t_aws.i_min = -0.5;
-  this->t_controller.initialize(2.5, 0.0, 0.0, u_max, u_min, t_aws);
+  cross_track_controller.set_gains(3.0, 0.0, 0.005, 0.31, -0.31);
+  x_controller.set_gains(4.5, 0.0, 0.01, 0.3, -0.3);
+  y_controller.set_gains(4.5, 0.0, 0.01, 0.3, -0.3);
+  t_controller.set_gains(2.5, 0.0, 0.0, 0.5, -0.5);
 
   this->target_point = ateam_geometry::Point(0, 0);
 
@@ -423,80 +408,24 @@ void MotionController::reset()
   this->face_angle = 0;
 }
 
-void MotionController::set_x_pid_gain(GainType gain, double value)
+void MotionController::set_cross_track_pid_gains(
+  double p, double i, double d, double i_max,
+  double i_min)
 {
-  control_toolbox::Pid::Gains gains = this->x_controller.get_gains();
-  switch (gain) {
-    case GainType::p:
-      gains.p_gain_ = value;
-      break;
-    case GainType::i:
-      gains.i_gain_ = value;
-      break;
-    case GainType::d:
-      gains.d_gain_ = value;
-      break;
-  }
-  this->x_controller.set_gains(gains);
+  cross_track_controller.set_gains(p, i, d, i_max, i_min);
 }
 
-void MotionController::set_y_pid_gain(GainType gain, double value)
+void MotionController::set_x_pid_gains(double p, double i, double d, double i_max, double i_min)
 {
-  control_toolbox::Pid::Gains gains = this->y_controller.get_gains();
-  switch (gain) {
-    case GainType::p:
-      gains.p_gain_ = value;
-      break;
-    case GainType::i:
-      gains.i_gain_ = value;
-      break;
-    case GainType::d:
-      gains.d_gain_ = value;
-      break;
-  }
-  this->y_controller.set_gains(gains);
+  x_controller.set_gains(p, i, d, i_max, i_min);
 }
 
-void MotionController::set_t_pid_gain(GainType gain, double value)
+void MotionController::set_y_pid_gains(double p, double i, double d, double i_max, double i_min)
 {
-  control_toolbox::Pid::Gains gains = this->t_controller.get_gains();
-  switch (gain) {
-    case GainType::p:
-      gains.p_gain_ = value;
-      break;
-    case GainType::i:
-      gains.i_gain_ = value;
-      break;
-    case GainType::d:
-      gains.d_gain_ = value;
-      break;
-  }
-  this->t_controller.set_gains(gains);
+  y_controller.set_gains(p, i, d, i_max, i_min);
 }
 
-void MotionController::set_x_pid_gains(double p, double i, double d)
+void MotionController::set_t_pid_gains(double p, double i, double d, double i_min, double i_max)
 {
-  control_toolbox::Pid::Gains gains = this->x_controller.get_gains();
-  gains.p_gain_ = p;
-  gains.i_gain_ = i;
-  gains.d_gain_ = d;
-  this->x_controller.set_gains(gains);
-}
-
-void MotionController::set_y_pid_gains(double p, double i, double d)
-{
-  control_toolbox::Pid::Gains gains = this->y_controller.get_gains();
-  gains.p_gain_ = p;
-  gains.i_gain_ = i;
-  gains.d_gain_ = d;
-  this->y_controller.set_gains(gains);
-}
-
-void MotionController::set_t_pid_gains(double p, double i, double d)
-{
-  control_toolbox::Pid::Gains gains = this->t_controller.get_gains();
-  gains.p_gain_ = p;
-  gains.i_gain_ = i;
-  gains.d_gain_ = d;
-  this->t_controller.set_gains(gains);
+  t_controller.set_gains(p, i, d, i_max, i_min);
 }

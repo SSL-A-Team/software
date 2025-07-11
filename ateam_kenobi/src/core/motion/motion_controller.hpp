@@ -27,15 +27,11 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
-
-// TODO(barulicm) Remove when control_toolbox no longer uses deprecated realtime_tools headers
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcpp"
-#include <control_toolbox/pid.hpp>
-#pragma GCC diagnostic pop
-
 #include "core/types/robot.hpp"
 #include "core/types/world.hpp"
+#include "pid.hpp"
+
+#include "nlohmann/json.hpp" // REMOVE THIS
 
 // cause the robot to: always face a point, face in the direction of travel, or stay facing the
 // same direction
@@ -45,13 +41,6 @@ enum class AngleMode
   face_absolute,
   face_travel,
   no_face
-};
-
-enum class GainType
-{
-  p,
-  i,
-  d
 };
 
 struct MotionOptions
@@ -68,6 +57,7 @@ struct MotionOptions
 class MotionController
 {
 public:
+  nlohmann::json debug_json; // REMOVE THIS
   MotionController();
 
   // Update the current trajectory (usually just moves the last point a bit)
@@ -101,12 +91,10 @@ public:
   void reset();
 
   // Set gains for individual PID controllers
-  void set_x_pid_gain(GainType gain, double value);
-  void set_y_pid_gain(GainType gain, double value);
-  void set_t_pid_gain(GainType gain, double value);
-  void set_x_pid_gains(double p, double i, double d);
-  void set_y_pid_gains(double p, double i, double d);
-  void set_t_pid_gains(double p, double i, double d);
+  void set_cross_track_pid_gains(double p, double i, double d, double i_max, double i_min);
+  void set_x_pid_gains(double p, double i, double d, double i_max, double i_min);
+  void set_y_pid_gains(double p, double i, double d, double i_max, double i_min);
+  void set_t_pid_gains(double p, double i, double d, double i_max, double i_min);
 
   // Velocity limits
   double v_max = 2.0;
@@ -131,23 +119,11 @@ private:
 
   AngleMode angle_mode = AngleMode::face_travel;  // This mode should have the best performance
 
-  control_toolbox::Pid cross_track_controller;
+  PID cross_track_controller;
 
-  control_toolbox::Pid x_controller;
-  control_toolbox::Pid y_controller;
-  control_toolbox::Pid t_controller;
-
-  static auto DefaultAWS()
-  {
-    /* This is a workaround for control_toolbox's terrible new AntiWindupStrategy interface.
-     * This allows us to initialize MotionController without printing a ton irrelevant of warnings.
-     */
-    control_toolbox::AntiWindupStrategy aws;
-    aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
-    aws.i_max = 0.3;
-    aws.i_min = -0.3;
-    return aws;
-  }
+  PID x_controller;
+  PID y_controller;
+  PID t_controller;
 };
 
 #endif  // CORE__MOTION__MOTION_CONTROLLER_HPP_
