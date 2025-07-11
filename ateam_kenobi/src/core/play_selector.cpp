@@ -44,6 +44,10 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
     node.get_node_parameters_interface());
   halt_play_ = addPlay<HaltPlay>(stp_options);
   addPlay<TestPlay>(stp_options);
+  addPlay<CornerLineupPlay>("TheirLeftLineup", stp_options, 1.0, 1.0);
+  addPlay<CornerLineupPlay>("TheirRightLineup", stp_options, 1.0, -1.0);
+  addPlay<CornerLineupPlay>("OurLeftLineup", stp_options, -1.0, 1.0);
+  addPlay<CornerLineupPlay>("OurRightLineup", stp_options, -1.0, -1.0);
   addPlay<DefaultStopPlay>(stp_options);
   addPlay<OffensiveStopPlay>(stp_options);
   addPlay<DefensiveStopPlay>(stp_options);
