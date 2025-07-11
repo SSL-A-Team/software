@@ -120,6 +120,7 @@ public:
   std::optional<ateam_geometry::Point> face_towards;
 
   ateam_geometry::Point target_point;
+  size_t target_index_ = 0;
 
 private:
   double prev_time;
