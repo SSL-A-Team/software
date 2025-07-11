@@ -69,20 +69,21 @@ public:
     pivot_kick_skill_.SetTargetPoint(target);
     onetouch_kick_skill_.SetTargetPoint(target);
 
-    // const auto use_pivot_kick = getParamInterface().getParameter<bool>(kUsePivotKickParam);
+    const auto use_pivot_kick = getParamInterface().getParameter<bool>(kUsePivotKickParam);
 
-    // motion_commands[robot.id] =
-    //   use_pivot_kick ? pivot_kick_skill_.RunFrame(world, robot) : line_kick_skill_.RunFrame(
-    //   world,
-    //   robot);
-    motion_commands[robot.id] = onetouch_kick_skill_.RunFrame(world, robot);
+    motion_commands[robot.id] =
+      use_pivot_kick ? pivot_kick_skill_.RunFrame(world, robot) : line_kick_skill_.RunFrame(
+      world,
+      robot);
 
-    // if (use_pivot_kick) {
-    //   getPlayInfo()["pivot kick"] = pivot_kick_skill_.getPlayInfo();
-    // } else {
-    //   getPlayInfo()["line kick"] = line_kick_skill_.getPlayInfo();
-    // }
-    getPlayInfo()["onetouch kick"] = onetouch_kick_skill_.getPlayInfo();
+    if (use_pivot_kick) {
+      getPlayInfo()["pivot kick"] = pivot_kick_skill_.getPlayInfo();
+    } else {
+      getPlayInfo()["line kick"] = line_kick_skill_.getPlayInfo();
+    }
+
+    // motion_commands[robot.id] = onetouch_kick_skill_.RunFrame(world, robot);
+    // getPlayInfo()["onetouch kick"] = onetouch_kick_skill_.getPlayInfo();
 
     return motion_commands;
   }

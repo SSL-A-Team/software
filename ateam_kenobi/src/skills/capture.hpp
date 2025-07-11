@@ -106,7 +106,8 @@ private:
   // Ball should have enough room for the robot to fit between it and the obstacle with a bit of extra space
   double ball_distance_from_obstacle_ = kRobotDiameter + kBallRadius + 0.03;
 
-  ateam_geometry::Point approach_point;
+  ateam_geometry::Point approach_point_;
+  ateam_geometry::Vector intercept_velocity_;
 
   enum class State
   {
