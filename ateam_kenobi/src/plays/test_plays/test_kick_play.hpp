@@ -25,6 +25,7 @@
 #include "core/stp/play.hpp"
 #include "skills/pivot_kick.hpp"
 #include "skills/line_kick.hpp"
+#include "skills/onetouch_kick.hpp"
 #include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
@@ -38,7 +39,8 @@ public:
   explicit TestKickPlay(stp::Options stp_options)
   : stp::Play(kPlayName, stp_options),
     pivot_kick_skill_(createChild<skills::PivotKick>("pivot_kick")),
-    line_kick_skill_(createChild<skills::LineKick>("line_kick"))
+    line_kick_skill_(createChild<skills::LineKick>("line_kick")),
+    onetouch_kick_skill_(createChild<skills::OnetouchKick>("onetouch_kick"))
   {
     getParamInterface().declareParameter(kUsePivotKickParam, true);
   }
@@ -47,6 +49,7 @@ public:
   {
     line_kick_skill_.Reset();
     pivot_kick_skill_.Reset();
+    onetouch_kick_skill_.Reset();
   }
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
@@ -64,19 +67,23 @@ public:
 
     line_kick_skill_.SetTargetPoint(target);
     pivot_kick_skill_.SetTargetPoint(target);
+    onetouch_kick_skill_.SetTargetPoint(target);
 
-    const auto use_pivot_kick = getParamInterface().getParameter<bool>(kUsePivotKickParam);
+    // const auto use_pivot_kick = getParamInterface().getParameter<bool>(kUsePivotKickParam);
 
-    motion_commands[robot.id] =
-      use_pivot_kick ? pivot_kick_skill_.RunFrame(world, robot) : line_kick_skill_.RunFrame(
-      world,
-      robot);
+    // motion_commands[robot.id] =
+    //   use_pivot_kick ? pivot_kick_skill_.RunFrame(world, robot) : line_kick_skill_.RunFrame(
+    //   world,
+    //   robot);
+    motion_commands[robot.id] = onetouch_kick_skill_.RunFrame(world, robot);
 
-    if (use_pivot_kick) {
-      getPlayInfo()["pivot kick"] = pivot_kick_skill_.getPlayInfo();
-    } else {
-      getPlayInfo()["line kick"] = line_kick_skill_.getPlayInfo();
-    }
+    // if (use_pivot_kick) {
+    //   getPlayInfo()["pivot kick"] = pivot_kick_skill_.getPlayInfo();
+    // } else {
+    //   getPlayInfo()["line kick"] = line_kick_skill_.getPlayInfo();
+    // }
+    getPlayInfo()["onetouch kick"] = onetouch_kick_skill_.getPlayInfo();
+
     return motion_commands;
   }
 
@@ -84,6 +91,7 @@ private:
   char const * const kUsePivotKickParam = "use_pivot_kick";
   skills::PivotKick pivot_kick_skill_;
   skills::LineKick line_kick_skill_;
+  skills::OnetouchKick onetouch_kick_skill_;
 };
 
 }  // namespace ateam_kenobi::plays

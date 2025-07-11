@@ -90,13 +90,13 @@ public:
     enable_escape_velocities_ = enabled;
   }
 
+  MotionController motion_controller_; // MOVE THIS BACK
 private:
   bool enable_escape_velocities_ = true;
   ateam_geometry::Point target_position_;
   ateam_geometry::Vector target_velocity_;
   path_planning::PlannerOptions planner_options_;
   path_planning::PathPlanner path_planner_;
-  MotionController motion_controller_;
   MotionOptions motion_options_;
 
   path_planning::PathPlanner::Path planPath(

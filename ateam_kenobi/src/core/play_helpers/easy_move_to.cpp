@@ -186,9 +186,9 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::getMotionCommand(
 
   const bool used_cached_path = path_planner_.usedCachedPath();
   if (used_cached_path) {
-    motion_controller_.update_trajectory(path);
+    motion_controller_.update_trajectory(path, target_velocity_);
   } else {
-    motion_controller_.reset_trajectory(path);
+    motion_controller_.reset_trajectory(path, target_velocity_);
   }
   return motion_controller_.get_command(robot, current_time, motion_options_);
 }
