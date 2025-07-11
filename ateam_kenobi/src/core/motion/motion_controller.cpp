@@ -208,8 +208,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     dt = 1 / 100.0;  // TODO(chachmu): set this dynamically
   }
 
-  size_t target_index = this->trajectory.size() - 1;
-  ateam_geometry::Point target = this->trajectory[target_index];
+  target_index_ = this->trajectory.size() - 1;
+  ateam_geometry::Point target = this->trajectory[target_index_];
   ateam_geometry::Vector target_direction = ateam_geometry::normalize(target - robot.pos);
 
   const double lookahead_distance = this->v_max * dt;
@@ -253,7 +253,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
         }
 
         // We've found the best target point
-        target_index = i;
+        target_index_ = i;
         target_direction = ateam_geometry::normalize(b - target);
         break;
       }
@@ -267,10 +267,10 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
         target = point;
         // This should only happen at the start of the trajectory
         if (target == a) {
-          target_index = i - 1;
+          target_index_ = i - 1;
           target_direction = ateam_geometry::normalize(a - robot.pos);
         } else {
-          target_index = i;
+          target_index_ = i;
           target_direction = ateam_geometry::normalize(b - a);
         }
       }
@@ -278,21 +278,21 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
 
   double distance_to_end = sqrt(CGAL::squared_distance(robot.pos, trajectory.back()));
-  bool target_is_last_point = (target_index == this->trajectory.size() - 1);
+  bool target_is_last_point = (target_index_ == this->trajectory.size() - 1);
   bool zero_target_vel = ateam_geometry::norm(target_velocity) < 0.01;
   bool trajectory_complete = (distance_to_end <= options.completion_threshold) &&
     target_is_last_point &&
     zero_target_vel;
 
   if (!trajectory_complete) {
-    auto trajectory_line = ateam_geometry::Segment(trajectory[target_index],
+    auto trajectory_line = ateam_geometry::Segment(trajectory[target_index_],
       robot.pos).supporting_line();
-    if (target_index > 0) {
-      trajectory_line = ateam_geometry::Segment(trajectory[target_index],
-        trajectory[target_index - 1]).supporting_line();
+    if (target_index_ > 0) {
+      trajectory_line = ateam_geometry::Segment(trajectory[target_index_],
+        trajectory[target_index_ - 1]).supporting_line();
     }
 
-    ateam_geometry::Vector error = trajectory[target_index] - robot.pos;
+    ateam_geometry::Vector error = trajectory[target_index_] - robot.pos;
     ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
     // ateam_geometry::Vector along_track_error = error - cross_track_error;
 
@@ -305,7 +305,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
     // Calculate trapezoidal velocity feedforward
     calculate_trajectory_velocity_limits();
-    double calculated_velocity = calculate_trapezoidal_velocity(robot, target, target_index, dt);
+    double calculated_velocity = calculate_trapezoidal_velocity(robot, target, target_index_, dt);
 
     ateam_geometry::Vector vel_vector;
 
@@ -414,6 +414,7 @@ void MotionController::reset()
   this->t_controller.initialize(2.5, 0.0, 0.0, u_max, u_min, t_aws);
 
   this->target_point = ateam_geometry::Point(0, 0);
+  this->target_index_ = 0;
 
   this->prev_command_vel = 0.0;
   this->prev_time = NAN;

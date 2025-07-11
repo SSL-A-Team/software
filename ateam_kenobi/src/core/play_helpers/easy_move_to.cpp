@@ -184,11 +184,18 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::getMotionCommand(
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
 
+  // Robot should stop at the end of the path
+  // if the plan doesn't reach the target point due to an obstacle
+  auto velocity = ateam_geometry::Vector(0, 0);
+  if (CGAL::squared_distance(path.back(), target_position_) < kRobotRadius * kRobotRadius) {
+    velocity = target_velocity_;
+  }
+
   const bool used_cached_path = path_planner_.usedCachedPath();
   if (used_cached_path) {
-    motion_controller_.update_trajectory(path);
+    motion_controller_.update_trajectory(path, velocity);
   } else {
-    motion_controller_.reset_trajectory(path);
+    motion_controller_.reset_trajectory(path, velocity);
   }
   return motion_controller_.get_command(robot, current_time, motion_options_);
 }
@@ -204,7 +211,11 @@ void EasyMoveTo::drawTrajectoryOverlay(
     };
     getOverlays().drawLine("path", points, "red");
   } else {
-    getOverlays().drawLine("path", path, "purple");
+    auto path_to_draw = std::vector<ateam_geometry::Point>(
+      path.begin() + motion_controller_.target_index_, path.end()
+    );
+    path_to_draw.insert(path_to_draw.begin(), robot.pos);
+    getOverlays().drawLine("path", path_to_draw, "purple");
     if (CGAL::squared_distance(path.back(), target_position_) > kRobotRadius * kRobotRadius) {
       getOverlays().drawLine("afterpath", {path.back(), target_position_}, "red");
     }
