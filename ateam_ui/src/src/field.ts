@@ -187,9 +187,6 @@ export function initializePixi(app: PIXI.Application, state: AppState): PIXI.Con
     ballVelLine.name = "ballVelLine";
     app.stage.addChild(ballVelLine);
 
-    const fieldBoundary = new PIXI.Graphics();
-    fieldBoundary.name = "fieldBoundary";
-
     const fieldLines = new PIXI.Graphics();
     fieldLines.name = "fieldLines";
 
