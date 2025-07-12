@@ -60,6 +60,8 @@ void Pass::runFrame(
 {
   kicker_id_ = kicker_bot.id;
 
+  getPlayInfo()["kicker"] = kicker_id_;
+
   if (ateam_geometry::norm(world.ball.vel) < 0.01) {
     receiver_.setTarget(target_);
     kick_.SetTargetPoint(target_);
@@ -70,8 +72,12 @@ void Pass::runFrame(
   const bool is_stalled = kick_.IsDone() && !receiver_.isDone() && ateam_geometry::norm(
     world.ball.vel) < 0.02;
 
+  getPlayInfo()["is_stalled"] = is_stalled;
+
   const bool is_in_receiver_territory =
     std::sqrt(CGAL::squared_distance(world.ball.pos, receiver_bot.pos)) < 0.25;
+
+  getPlayInfo()["is_in_receiver_territory"] = is_in_receiver_territory;
 
   if (is_stalled && !is_in_receiver_territory) {
     kick_.Reset();
@@ -84,8 +90,10 @@ void Pass::runFrame(
   // }
   if (ateam_geometry::norm(receiver_bot.pos, target_) <= receiver_threshold) {
     kick_.AllowKicking();
+    getPlayInfo()["kicking_allowed"] = "yes";
   } else {
     kick_.DisallowKicking();
+    getPlayInfo()["kicking_allowed"] = "no";
   }
 
   if (speed_) {
@@ -93,6 +101,8 @@ void Pass::runFrame(
   } else {
     kick_.SetKickSpeed(calculateDefaultKickSpeed(world));
   }
+
+  //TODO(barulicm): The kicker should make sure it's out of the way if the ball is in receiver territory
   if (!is_in_receiver_territory) {
     kicker_command = kick_.RunFrame(world, kicker_bot);
   }
