@@ -471,6 +471,15 @@ private:
       const auto & maybe_motion_command = robot_motion_commands.at(id);
       if (maybe_motion_command.has_value()) {
         robot_commands_publishers_.at(id)->publish(maybe_motion_command.value());
+        world_.our_robots.at(id).prev_command_vel = ateam_geometry::Vector(
+          maybe_motion_command.value().twist.linear.x,
+          maybe_motion_command.value().twist.linear.y
+        );
+
+        world_.our_robots.at(id).prev_command_omega = maybe_motion_command.value().twist.angular.z;
+      } else {
+        world_.our_robots.at(id).prev_command_vel = ateam_geometry::Vector(0, 0);
+        world_.our_robots.at(id).prev_command_omega = 0;
       }
     }
   }
