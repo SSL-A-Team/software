@@ -30,7 +30,7 @@
 namespace ateam_kenobi::path_planning
 {
 
-constexpr double kSafeEscapeVelocity = 0.5;  // m/s
+constexpr double kSafeEscapeVelocity = 0.3;  // m/s
 
 /**
  * @brief Creates a low velocity in the quickest direction to escape the given obstacle.

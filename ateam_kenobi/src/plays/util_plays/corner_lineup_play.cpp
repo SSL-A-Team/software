@@ -28,7 +28,7 @@ namespace ateam_kenobi::plays
 {
 
 CornerLineupPlay::CornerLineupPlay(stp::Options stp_options, double x_mult, double y_mult)
-: stp::Play(kPlayName, stp_options),
+: stp::Play(stp_options.name, stp_options),
   x_mult_(x_mult),
   y_mult_(y_mult)
 {
@@ -53,19 +53,26 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> CornerLineupP
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
 
-  auto current_available_robots = play_helpers::getAvailableRobots(world);
-
   const ateam_geometry::Point start_point(x_mult_ * world.field.field_length / 2.0,
     y_mult_ * world.field.field_width / 2.0);
   const auto x_dir = -1.0 * std::copysign(1.0, x_mult_);
   const ateam_geometry::Vector direction(x_dir * 2 * kRobotDiameter, 0.0);
 
-  for (auto ind = 0ul; ind < current_available_robots.size(); ++ind) {
-    const auto & robot = current_available_robots[ind];
-    auto & easy_move_to = easy_move_tos_.at(robot.id);
-    easy_move_to.setTargetPosition(start_point + direction * ind);
-    easy_move_to.face_absolute(0.0);
-    maybe_motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
+  auto spot_counter = 0;
+  for (auto & robot : world.our_robots) {
+    if (!robot.visible && !robot.radio_connected) {
+      continue;
+    }
+
+    const auto spot = start_point + (direction * spot_counter);
+    spot_counter++;
+
+    if (robot.IsAvailable()) {
+      auto & easy_move_to = easy_move_tos_.at(robot.id);
+      easy_move_to.setTargetPosition(spot);
+      easy_move_to.face_absolute(0.0);
+      maybe_motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
+    }
   }
 
   return maybe_motion_commands;

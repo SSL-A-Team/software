@@ -43,17 +43,6 @@ PathPlanner::Path PathPlanner::getPath(
 {
   const auto start_time = std::chrono::steady_clock::now();
 
-  // TODO(barulicm): Add ability to cache timedout paths and continue planning on next frame
-  if(!shouldReplan(start, goal, world, obstacles, options)) {
-    if (!cached_path_truncated_) {
-      cached_path_.back() = goal;
-    }
-    used_cached_path_ = true;
-    return cached_path_;
-  }
-
-  used_cached_path_ = false;
-
   std::vector<ateam_geometry::AnyShape> augmented_obstacles = obstacles;
 
   AddRobotObstacles(world.our_robots, start, augmented_obstacles);
@@ -66,6 +55,22 @@ PathPlanner::Path PathPlanner::getPath(
   if (options.avoid_ball) {
     augmented_obstacles.push_back(ateam_geometry::makeDisk(world.ball.pos, kBallRadius));
   }
+
+  const auto goal_is_valid = isStateValid(goal, world, augmented_obstacles, options);
+
+  if(!shouldReplan(start, goal, world, obstacles, options)) {
+    if(cached_path_truncated_ && goal_is_valid) {
+      used_cached_path_ = false;
+    } else {
+      if (!cached_path_truncated_) {
+        cached_path_.back() = goal;
+      }
+      used_cached_path_ = true;
+      return cached_path_;
+    }
+  }
+
+  used_cached_path_ = false;
 
   if (!IsPointInBounds(start, world, false)) {
     cached_path_valid_ = false;
@@ -85,7 +90,7 @@ PathPlanner::Path PathPlanner::getPath(
 
   Path path = {start, goal};
 
-  if (!isStateValid(goal, world, augmented_obstacles, options)) {
+  if (!goal_is_valid) {
     const auto maybe_new_goal = findLastCollisionFreePoint(
       start, goal, world, augmented_obstacles,
       options);
@@ -99,7 +104,7 @@ PathPlanner::Path PathPlanner::getPath(
     cached_path_truncated_ = false;
   }
 
-  bool timed_out = false;
+  timed_out_ = false;
 
   while (true) {
     const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(
@@ -107,7 +112,7 @@ PathPlanner::Path PathPlanner::getPath(
     if (elapsed_time > options.search_time_limit) {
       RCLCPP_WARN(getLogger(), "Path planning timed out.");
       trimPathAfterCollision(path, world, augmented_obstacles, options);
-      timed_out = true;
+      timed_out_ = true;
       break;
     }
     bool had_to_split = false;
@@ -134,7 +139,7 @@ PathPlanner::Path PathPlanner::getPath(
   removeLoops(path);
   removeSkippablePoints(path, world, augmented_obstacles, options);
 
-  if (!timed_out) {
+  if (!timed_out_) {
     cached_path_ = path;
     cached_path_goal_ = goal;
     cached_path_valid_ = true;
@@ -382,8 +387,6 @@ bool PathPlanner::shouldReplan(
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
-  // TODO(barulicm): re-enable after motion controller is compatible
-  return true;
   if (options.force_replan) {
     return true;
   }
