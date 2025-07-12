@@ -113,8 +113,6 @@ public:
 
 private:
   double prev_time;
-  double prev_command_vel;
-  double prev_command;
   std::vector<ateam_geometry::Point> trajectory;
   std::vector<ateam_geometry::Vector> trajectory_velocity_limits;
   ateam_geometry::Vector target_velocity;

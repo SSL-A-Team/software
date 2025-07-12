@@ -149,13 +149,7 @@ double MotionController::calculate_trapezoidal_velocity(
   // TODO(chachmu): make this smarter about the angle calculation
   // when we are off the trajectory
 
-  double vel = ateam_geometry::norm(robot.vel);
-  // // Prefer to use the previously commanded velocity for smoothness unless it is very wrong
-  // if (prev_command_vel < 1.2 * vel && prev_command_vel > 0.8 * prev_command_vel) {
-  //   vel = this->prev_command_vel;
-  // }
-
-  vel = this->prev_command_vel;
+  double vel = ateam_geometry::norm(robot.prev_command_vel);
 
   const auto target_to_next_trajectory_point = trajectory[target_index] - target;
   double distance_to_next_trajectory_point =
@@ -295,6 +289,10 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     }
 
     ateam_geometry::Vector error = trajectory[target_index] - robot.pos;
+    CGAL::Aff_transformation_2<ateam_geometry::Kernel> transformation(CGAL::ROTATION,
+      std::sin(-robot.theta), std::cos(-robot.theta));
+    const auto error_body_frame = error.transform(transformation);
+
     ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
     // If the line segment is degenerate then the projection can have nan values
     if (std::isnan(cross_track_error.x()) || std::isnan(cross_track_error.y())) { 
@@ -302,11 +300,13 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     }
     // ateam_geometry::Vector along_track_error = error - cross_track_error;
 
-    // Calculate pid feedback
+    // Calculate pid feedback (in robot body frame)
     double cross_track_feedback = this->cross_track_controller.compute_command(
       ateam_geometry::norm(cross_track_error), dt);
-    double x_feedback = this->x_controller.compute_command(error.x(), dt);
-    double y_feedback = this->y_controller.compute_command(error.y(), dt);
+    double x_feedback = this->x_controller.compute_command(error_body_frame.x(), dt);
+    double y_feedback = this->y_controller.compute_command(error_body_frame.y(), dt);
+    ateam_geometry::Vector body_feedback = ateam_geometry::Vector(x_feedback, y_feedback);
+    const auto world_feedback = body_feedback.transform(transformation.inverse());
 
     // Calculate trapezoidal velocity feedforward
     calculate_trajectory_velocity_limits();
@@ -318,7 +318,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       distance_to_end < 3.0 * kRobotRadius;
 
     if (should_use_full_pid_control) {
-      vel_vector = ateam_geometry::Vector(x_feedback, y_feedback);
+      vel_vector = world_feedback;
     } else {
       vel_vector = cross_track_feedback * ateam_geometry::normalize(cross_track_error) +
         (calculated_velocity * target_direction);
@@ -329,20 +329,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
     }
 
-    // Rotate the commanded vector to account for delay
-    if (abs(robot.omega) > 0.5) {
-      double angle_offset = -robot.omega * 5 * dt;
-      double new_x = vel_vector.x() * cos(angle_offset) - vel_vector.y() * sin(angle_offset);
-      double new_y = vel_vector.x() * sin(angle_offset) + vel_vector.y() * cos(angle_offset);
-
-      vel_vector = ateam_geometry::Vector(new_x, new_y);
-    }
-
     motion_command.twist.linear.x = vel_vector.x();
     motion_command.twist.linear.y = vel_vector.y();
-    this->prev_command_vel = ateam_geometry::norm(vel_vector);
-  } else {
-    this->prev_command_vel = 0.0;
   }
 
   // calculate angle movement commands
@@ -390,6 +378,14 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     }
   }
 
+  // Rotate the commanded vector to account for delay
+  if (abs(robot.prev_command_omega) > 0.5) {
+    double angle_offset = -robot.prev_command_omega * 4 * dt;
+    const auto cmd_vel = ateam_geometry::Vector(motion_command.twist.linear.x, motion_command.twist.linear.y);
+    motion_command.twist.linear.x = cmd_vel.x() * cos(angle_offset) - cmd_vel.y() * sin(angle_offset);
+    motion_command.twist.linear.y = cmd_vel.x() * sin(angle_offset) + cmd_vel.y() * cos(angle_offset);
+  }
+
   this->target_point = target;
   this->prev_time = current_time;
 
@@ -405,7 +401,6 @@ void MotionController::reset()
 
   this->target_point = ateam_geometry::Point(0, 0);
 
-  this->prev_command_vel = 0.0;
   this->prev_time = NAN;
 
   this->angle_mode = AngleMode::face_travel;
