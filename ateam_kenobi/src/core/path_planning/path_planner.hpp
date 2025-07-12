@@ -93,10 +93,21 @@ public:
     return used_cached_path_;
   }
 
+  bool didTimeOut() const
+  {
+    return timed_out_;
+  }
+
+  bool isPathTruncated() const
+  {
+    return cached_path_truncated_;
+  }
+
 private:
   visualization::Overlays overlays_;
   bool cached_path_valid_ = false;
   bool cached_path_truncated_ = false;
+  bool timed_out_ = false;
   Path cached_path_;
   Position cached_path_goal_;
   bool used_cached_path_ = false;

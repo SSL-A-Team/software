@@ -362,19 +362,20 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
   if (this->angle_mode != AngleMode::no_face) {
     double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
-    double t_command = this->t_controller.compute_command(t_error, dt);
-
-    if (trajectory_complete) {
-      double theta_min = 0.0;
-      if (abs(t_command) < theta_min) {
-        if (t_command > 0) {
-          t_command = std::clamp(t_command, theta_min, this->t_max);
-        } else {
-          t_command = std::clamp(t_command, -theta_min, -this->t_max);
+    if (std::abs(t_error) > options.angular_completion_threshold) {
+      double t_command = this->t_controller.compute_command(t_error, dt);
+      if (trajectory_complete) {
+        double theta_min = 0.0;
+        if (abs(t_command) < theta_min) {
+          if (t_command > 0) {
+            t_command = std::clamp(t_command, theta_min, this->t_max);
+          } else {
+            t_command = std::clamp(t_command, -theta_min, -this->t_max);
+          }
         }
       }
+      motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
     }
-    motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
   }
 
   // Rotate the commanded vector to account for delay
@@ -394,9 +395,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   cross_track_controller.set_gains(3.0, 0.0, 0.005, 0.31, -0.31);
-  x_controller.set_gains(4.5, 0.0, 0.01, 0.3, -0.3);
-  y_controller.set_gains(4.5, 0.0, 0.01, 0.3, -0.3);
-  t_controller.set_gains(2.5, 0.0, 0.0, 0.5, -0.5);
+  x_controller.set_gains(4.5, 0.0, 0.5, 0.3, -0.3);
+  y_controller.set_gains(4.5, 0.0, 0.5, 0.3, -0.3);
+  t_controller.set_gains(3.5, 0.0, 0.05, 0.5, -0.5);
 
   this->target_point = ateam_geometry::Point(0, 0);
 

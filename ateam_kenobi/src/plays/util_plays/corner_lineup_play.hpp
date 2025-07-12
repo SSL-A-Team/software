@@ -36,8 +36,6 @@ namespace ateam_kenobi::plays
 class CornerLineupPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "CornerLineupPlay";
-
   explicit CornerLineupPlay(stp::Options stp_options, double x_mult, double y_mult);
 
   stp::PlayScore getScore(const World & world) override;

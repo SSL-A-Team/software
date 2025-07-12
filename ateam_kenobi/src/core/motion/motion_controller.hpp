@@ -45,10 +45,11 @@ enum class AngleMode
 
 struct MotionOptions
 {
-  /**
-   * @brief radius around the end point that will be considered completed
-   */
+  /// @brief radius around the end point that will be considered completed
   double completion_threshold = .02;  // meters
+
+  /// @brief angle around the end point that will be considered completed
+  double angular_completion_threshold = 0.035;  // radians
 };
 
 /**
@@ -98,7 +99,7 @@ public:
 
   // Velocity limits
   double v_max = 2.0;
-  double t_max = 2;
+  double t_max = 4.0;
 
   // Acceleration limits
   double accel_limit = 3.0;

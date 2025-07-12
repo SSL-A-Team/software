@@ -343,7 +343,7 @@ private:
     std::string error;
     const auto packet = ParsePacket(udp_packet_data, udp_packet_size, error);
     if (!error.empty()) {
-      RCLCPP_WARN(get_logger(), "Ignoring telemetry message. %s", error.c_str());
+      RCLCPP_WARN(get_logger(), "Ignoring incoming message from robot %d. %s", robot_id, error.c_str());
       return;
     }
 
@@ -359,7 +359,7 @@ private:
           last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
-            RCLCPP_WARN(get_logger(), "Ignoring telemetry message. %s", error.c_str());
+            RCLCPP_WARN(get_logger(), "Ignoring basic telemetry message from robot %d. %s", robot_id, error.c_str());
             return;
           }
           if (std::holds_alternative<BasicTelemetry>(data_var)) {
@@ -375,7 +375,7 @@ private:
         {
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
-            RCLCPP_WARN(get_logger(), "Ignoring control debug message. %s", error.c_str());
+            RCLCPP_WARN(get_logger(), "Ignoring extended telemetry message from robot %d. %s", robot_id, error.c_str());
             return;
           }
 
@@ -389,8 +389,8 @@ private:
         {
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
-            RCLCPP_WARN(get_logger(), "Ignoring parameter command response message. %s",
-              error.c_str());
+            RCLCPP_WARN(get_logger(), "Ignoring parameter command response message from robot %d. %s",
+              robot_id, error.c_str());
             return;
           }
           if(std::holds_alternative<ParameterCommand>(data_var)) {
@@ -404,8 +404,8 @@ private:
         break;
       default:
         RCLCPP_WARN(
-          get_logger(), "Ignoring telemetry message. Unsupported command code: %d",
-          packet.command_code);
+          get_logger(), "Ignoring telemetry message from robot %d. Unsupported command code: %d",
+          robot_id, packet.command_code);
         return;
     }
   }
