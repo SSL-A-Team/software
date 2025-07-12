@@ -379,12 +379,12 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
 
   // Rotate the commanded vector to account for delay
-  if (abs(robot.prev_command_omega) > 0.5) {
-    double angle_offset = -robot.prev_command_omega * 4 * dt;
-    const auto cmd_vel = ateam_geometry::Vector(motion_command.twist.linear.x, motion_command.twist.linear.y);
-    motion_command.twist.linear.x = cmd_vel.x() * cos(angle_offset) - cmd_vel.y() * sin(angle_offset);
-    motion_command.twist.linear.y = cmd_vel.x() * sin(angle_offset) + cmd_vel.y() * cos(angle_offset);
-  }
+  // if (abs(robot.prev_command_omega) > 0.5) {
+  //   double angle_offset = -robot.prev_command_omega * 4 * dt;
+  //   const auto cmd_vel = ateam_geometry::Vector(motion_command.twist.linear.x, motion_command.twist.linear.y);
+  //   motion_command.twist.linear.x = cmd_vel.x() * cos(angle_offset) - cmd_vel.y() * sin(angle_offset);
+  //   motion_command.twist.linear.y = cmd_vel.x() * sin(angle_offset) + cmd_vel.y() * cos(angle_offset);
+  // }
 
   this->target_point = target;
   this->prev_time = current_time;
