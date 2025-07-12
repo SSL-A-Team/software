@@ -11,8 +11,8 @@ CUDA_HOSTDEV float WidthOfShotOnGoal(const float x, const float y, const Robot *
   const auto real_x = x;
   const auto real_y = y;
 
-  const auto goal_x = field_dims.field_length / 2.0;
-  const auto goal_y_start = -field_dims.goal_width / 2.0;
+  const auto goal_x = field_dims.field_length / 2.0f;
+  const auto goal_y_start = -field_dims.goal_width / 2.0f;
 
   const auto step_size = field_dims.goal_width / kNumSteps;
 
