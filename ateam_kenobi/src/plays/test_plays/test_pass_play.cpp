@@ -46,10 +46,18 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay:
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
 
-  if(pass_tactic_.isDone()) {
-    target_ind_ = (target_ind_ + 1) % targets_.size();
-    pass_tactic_.reset();
+  const auto is_done = pass_tactic_.isDone();
+  const auto done_time = std::chrono::duration_cast<std::chrono::seconds>(world.current_time - done_time_).count();
+  if(is_done) {
+    if (!prev_done_) {
+      done_time_ = world.current_time;
+    }
+    if (done_time > 5) {
+      target_ind_ = (target_ind_ + 1) % targets_.size();
+      pass_tactic_.reset();
+    }
   }
+  prev_done_ = is_done;
 
   pass_tactic_.setTarget(targets_[target_ind_]);
 
@@ -72,7 +80,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay:
 
   getPlayInfo()["kicker_id"] = kicker.id;
   getPlayInfo()["receiver_id"] = receiver.id;
-  getPlayInfo()["pass_done"] = pass_tactic_.isDone();
+  getPlayInfo()["pass_done"] = is_done;
+  getPlayInfo()["done_time"] = done_time;
   getPlayInfo()["target"]["x"] = targets_[target_ind_].x();
   getPlayInfo()["target"]["y"] = targets_[target_ind_].y();
   getPlayInfo()["pass_info"] = pass_tactic_.getPlayInfo();

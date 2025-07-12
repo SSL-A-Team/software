@@ -43,6 +43,8 @@ private:
   tactics::Pass pass_tactic_;
   std::vector<ateam_geometry::Point> targets_;
   size_t target_ind_ = 0;
+  bool prev_done_ = false;
+  std::chrono::steady_clock::time_point done_time_;
 };
 }  // namespace ateam_kenobi::plays
 #endif  // PLAYS__TEST_PLAYS__TEST_PASS_PLAY_HPP_
