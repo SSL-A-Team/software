@@ -47,15 +47,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay:
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
 
   const auto is_done = pass_tactic_.isDone();
-  const auto done_time = std::chrono::duration_cast<std::chrono::seconds>(world.current_time - done_time_).count();
-  if(is_done) {
-    if (!prev_done_) {
+  if(is_done && !prev_done_) {
       done_time_ = world.current_time;
-    }
-    if (done_time > 5) {
-      target_ind_ = (target_ind_ + 1) % targets_.size();
-      pass_tactic_.reset();
-    }
+  }
+  const auto done_time = std::chrono::duration_cast<std::chrono::seconds>(world.current_time - done_time_).count();
+  if (is_done && done_time > 5) {
+    target_ind_ = (target_ind_ + 1) % targets_.size();
+    pass_tactic_.reset();
   }
   prev_done_ = is_done;
 
