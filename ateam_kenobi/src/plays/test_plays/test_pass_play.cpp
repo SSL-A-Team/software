@@ -86,7 +86,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay:
 
   auto & kicker_command = maybe_motion_commands.at(kicker.id).emplace();
   auto & receiver_command = maybe_motion_commands.at(receiver.id).emplace();
-  pass_tactic_.runFrame(world, kicker, receiver, kicker_command, receiver_command);
+  if(!is_done) {
+    pass_tactic_.runFrame(world, kicker, receiver, kicker_command, receiver_command);
+  }
 
   return maybe_motion_commands;
 }

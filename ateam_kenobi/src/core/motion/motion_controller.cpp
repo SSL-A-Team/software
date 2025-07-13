@@ -395,8 +395,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 void MotionController::reset()
 {
   cross_track_controller.set_gains(3.0, 0.0, 0.005, 0.31, -0.31);
-  x_controller.set_gains(4.5, 0.0, 0.5, 0.3, -0.3);
-  y_controller.set_gains(4.5, 0.0, 0.5, 0.3, -0.3);
+  x_controller.set_gains(3.0, 0.0, 0.2, 0.3, -0.3);
+  y_controller.set_gains(5.5, 0.0, 0.0, 0.3, -0.3);
   t_controller.set_gains(3.5, 0.0, 0.05, 0.5, -0.5);
 
   this->target_point = ateam_geometry::Point(0, 0);

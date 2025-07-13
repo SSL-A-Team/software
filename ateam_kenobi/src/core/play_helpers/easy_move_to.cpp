@@ -214,7 +214,7 @@ void EasyMoveTo::drawTrajectoryOverlay(
     auto path_to_draw = std::vector<ateam_geometry::Point>(
       path.begin() + motion_controller_.target_index_, path.end()
     );
-    path_to_draw.insert(path_to_draw.begin(), robot.pos);
+    // path_to_draw.insert(path_to_draw.begin(), robot.pos);
     getOverlays().drawLine("path", path_to_draw, "purple");
     if (path_planner_.didTimeOut()) {
       getOverlays().drawLine("afterpath", {path.back(), target_position_}, "LightSkyBlue");

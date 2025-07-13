@@ -281,13 +281,15 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, c
 
   // Handle robot angle
   // easy_move_to_.face_point(target_point_);
+  const auto ball_to_target = target_point_ - world.ball.pos;
   easy_move_to_.face_point(world.ball.pos);
-  easy_move_to_.setTargetPosition(world.ball.pos);
+  easy_move_to_.setTargetPosition(world.ball.pos + 0.1 * ateam_geometry::normalize(
+    ball_to_target), kick_drive_velocity * ateam_geometry::normalize(ball_to_target));
   auto command = easy_move_to_.runFrame(robot, world);
 
   // Override the velocity to move directly into the ball
-  command.twist.linear.x = std::cos(robot.theta) * kick_drive_velocity;
-  command.twist.linear.y = std::sin(robot.theta) * kick_drive_velocity;
+  // command.twist.linear.x = std::cos(robot.theta) * kick_drive_velocity;
+  // command.twist.linear.y = std::sin(robot.theta) * kick_drive_velocity;
   if(kick_type_ == KickType::Kick) {
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
   } else {

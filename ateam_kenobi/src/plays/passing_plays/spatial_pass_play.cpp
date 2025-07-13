@@ -43,6 +43,12 @@ SpatialPassPlay::SpatialPassPlay(stp::Options stp_options)
 
 stp::PlayScore SpatialPassPlay::getScore(const World & world)
 {
+  if (!world.in_play && (
+      world.referee_info.prev_command == ateam_common::GameCommand::PrepareKickoffOurs ||
+      world.referee_info.prev_command == ateam_common::GameCommand::PrepareKickoffTheirs))
+  {
+    return stp::PlayScore::NaN();
+  }
   if (!world.in_play &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
     world.referee_info.running_command != ateam_common::GameCommand::NormalStart)
