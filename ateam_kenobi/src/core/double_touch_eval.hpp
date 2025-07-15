@@ -110,8 +110,11 @@ private:
         if (!robot.visible) {
           return false;
         }
-        const auto ball_bot_distance = std::sqrt(CGAL::squared_distance(robot.pos, world.ball.pos));
-        if (robot.breakbeam_ball_detected_filtered && ball_bot_distance <= kStartTouchBallsenseThreshold) {
+        const auto ball_bot_distance = std::sqrt(
+          CGAL::squared_distance(robot.pos, world.ball.pos));
+        if (robot.breakbeam_ball_detected_filtered &&
+        ball_bot_distance <= kStartTouchBallsenseThreshold)
+        {
           return true;
         }
         if (prev_touching_id_.value_or(-1) == robot.id) {

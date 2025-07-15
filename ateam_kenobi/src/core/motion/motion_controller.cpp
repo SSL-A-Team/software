@@ -27,7 +27,6 @@
 #include <limits>
 #include <vector>
 #include <utility>
-#include <format>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
 #include <ateam_common/parameters.hpp>
@@ -162,7 +161,7 @@ double MotionController::calculate_trapezoidal_velocity(
   // Project target velocity onto the trajectory
   double target_vel = 0;
   if (ateam_geometry::norm(target_velocity) > 0.0) {
-    target_vel = (target_velocity * target_to_next_trajectory_point) / 
+    target_vel = (target_velocity * target_to_next_trajectory_point) /
       ateam_geometry::norm(target_velocity);
   }
 
@@ -295,7 +294,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
     ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
     // If the line segment is degenerate then the projection can have nan values
-    if (std::isnan(cross_track_error.x()) || std::isnan(cross_track_error.y())) { 
+    if (std::isnan(cross_track_error.x()) || std::isnan(cross_track_error.y())) {
       cross_track_error = ateam_geometry::Vector(0, 0);
     }
     // ateam_geometry::Vector along_track_error = error - cross_track_error;
@@ -381,9 +380,12 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   // Rotate the commanded vector to account for delay
   // if (abs(robot.prev_command_omega) > 0.5) {
   //   double angle_offset = -robot.prev_command_omega * 4 * dt;
-  //   const auto cmd_vel = ateam_geometry::Vector(motion_command.twist.linear.x, motion_command.twist.linear.y);
-  //   motion_command.twist.linear.x = cmd_vel.x() * cos(angle_offset) - cmd_vel.y() * sin(angle_offset);
-  //   motion_command.twist.linear.y = cmd_vel.x() * sin(angle_offset) + cmd_vel.y() * cos(angle_offset);
+  //   const auto cmd_vel = ateam_geometry::Vector(motion_command.twist.linear.x,
+  //     motion_command.twist.linear.y);
+  //   motion_command.twist.linear.x = cmd_vel.x() * cos(angle_offset) - cmd_vel.y() *
+  //     sin(angle_offset);
+  //   motion_command.twist.linear.y = cmd_vel.x() * sin(angle_offset) + cmd_vel.y() *
+  //     cos(angle_offset);
   // }
 
   this->target_point = target;

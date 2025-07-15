@@ -78,7 +78,8 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
   planner_options.avoid_ball = false;
 
   easy_move_to_.setPlannerOptions(planner_options);
-  easy_move_to_.setTargetPosition(world.ball.pos, capture_speed_ * ateam_geometry::normalize(world.ball.pos - robot.pos));
+  easy_move_to_.setTargetPosition(world.ball.pos,
+      capture_speed_ * ateam_geometry::normalize(world.ball.pos - robot.pos));
 
   const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
       world.ball.pos));

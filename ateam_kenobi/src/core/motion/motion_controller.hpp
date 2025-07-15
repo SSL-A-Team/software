@@ -31,8 +31,6 @@
 #include "core/types/world.hpp"
 #include "pid.hpp"
 
-#include "nlohmann/json.hpp" // REMOVE THIS
-
 // cause the robot to: always face a point, face in the direction of travel, or stay facing the
 // same direction
 enum class AngleMode
@@ -58,7 +56,6 @@ struct MotionOptions
 class MotionController
 {
 public:
-  nlohmann::json debug_json; // REMOVE THIS
   MotionController();
 
   // Update the current trajectory (usually just moves the last point a bit)

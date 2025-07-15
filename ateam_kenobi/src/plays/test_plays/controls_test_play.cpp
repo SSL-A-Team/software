@@ -160,8 +160,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 bool ControlsTestPlay::isGoalHit(const Robot & robot)
 {
   const auto target_index = (index) % waypoints.size();
-  const bool position_goal_hit = ateam_geometry::norm(waypoints[target_index].position - robot.pos) <
-    position_threshold;
+  const bool position_goal_hit = ateam_geometry::norm(waypoints[target_index].position -
+      robot.pos) < position_threshold;
   const bool heading_goal_hit = [&]() {
       if (waypoints[target_index].angle_mode == AngleMode::face_absolute) {
         return std::abs(

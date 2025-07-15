@@ -187,7 +187,9 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::getMotionCommand(
   // Robot should stop at the end of the path
   // if the plan doesn't reach the target point due to an obstacle
   auto velocity = ateam_geometry::Vector(0, 0);
-  if (!path.empty() && (CGAL::squared_distance(path.back(), target_position_) < kRobotRadius * kRobotRadius)) {
+  if (!path.empty() && (CGAL::squared_distance(path.back(),
+      target_position_) < kRobotRadius * kRobotRadius))
+  {
     velocity = target_velocity_;
   }
 

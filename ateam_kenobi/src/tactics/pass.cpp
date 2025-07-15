@@ -102,7 +102,9 @@ void Pass::runFrame(
     kick_.SetKickSpeed(calculateDefaultKickSpeed(world));
   }
 
-  //TODO(barulicm): The kicker should make sure it's out of the way if the ball is in receiver territory
+  /* TODO(barulicm): The kicker should make sure it's out of the way if the ball is in receiver
+   * territory
+   */
   if (!is_in_receiver_territory) {
     kicker_command = kick_.RunFrame(world, kicker_bot);
   }

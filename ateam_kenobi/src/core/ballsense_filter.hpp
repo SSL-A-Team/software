@@ -81,4 +81,4 @@ private:
 
 }  // namespace ateam_kenobi
 
-#endif  // CORE__BALLSENSE_EMULATOR_HPP_
+#endif  // CORE__BALLSENSE_FILTER_HPP_
