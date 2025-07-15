@@ -77,6 +77,12 @@ public:
     const std::string & stroke_color = "white", const uint8_t stroke_width = 5,
     const uint32_t lifetime = kDefaultLifetime);
 
+  void drawArrows(
+    const std::string & name, 
+    const std::vector<std::pair<ateam_geometry::Point, ateam_geometry::Vector>> & arrows,
+    const std::string & stroke_color = "blue", const uint8_t stroke_width = 5,
+    const uint32_t lifetime = kDefaultLifetime);
+
   void drawHeatmap(
     const std::string & name, const ateam_geometry::Rectangle & bounds,
     const cv::Mat & data, const uint8_t alpha = 255, const uint32_t lifetime = kDefaultLifetime);

@@ -10,6 +10,7 @@ uint8 TEXT=5
 uint8 HEATMAP=6
 uint8 CUSTOM=7
 uint8 ARC=8
+uint8 ARROWS=9
 
 # Type of Command
 uint8 REPLACE=0 # Replaces overlay with matching name or creates it if none exist
@@ -48,8 +49,11 @@ uint8 stroke_width 1
 # lifetime of overlay in milliseconds, 0 for infinite
 uint32 lifetime 0
 
-# List of points for the LINE and POLYGON types (relative to the center position point)
+# List of points for the LINE POLYGON, and ARROWS types (relative to the center position point)
 geometry_msgs/Point[] points
+
+# List of vector scale/directions ARROWS types (3rd value is ignored)
+geometry_msgs/Vector3[] scales
 
 # when using the HEATMAP type specify the boundaries of the mesh as a rectangle using the position and scale values
 uint8[] heatmap_data
