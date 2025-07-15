@@ -49,6 +49,7 @@
 #include "core/in_play_eval.hpp"
 #include "core/double_touch_eval.hpp"
 #include "core/ballsense_emulator.hpp"
+#include "core/ballsense_filter.hpp"
 #include "core/motion/world_to_body_vel.hpp"
 #include "plays/halt_play.hpp"
 #include "core/defense_area_enforcement.hpp"
@@ -176,6 +177,7 @@ private:
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
+  BallSenseFilter ballsense_filter_;
   std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
@@ -407,6 +409,7 @@ private:
     if (get_parameter("use_emulated_ballsense").as_bool()) {
       ballsense_emulator_.Update(world_);
     }
+    ballsense_filter_.Update(world_);
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
       auto & clk = *this->get_clock();
       RCLCPP_WARN_THROTTLE(

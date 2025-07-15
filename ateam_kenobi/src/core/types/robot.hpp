@@ -41,6 +41,7 @@ struct Robot
   double prev_command_omega = 0.0;
 
   bool breakbeam_ball_detected = false;
+  bool breakbeam_ball_detected_filtered = false;
 
   bool kicker_available = true;
   bool chipper_available = false;
