@@ -99,7 +99,7 @@ void EasyMoveTo::setPlannerOptions(path_planning::PlannerOptions options)
   planner_options_ = options;
 }
 
-void EasyMoveTo::setMotionOptions(MotionOptions options)
+void EasyMoveTo::setMotionOptions(motion::MotionOptions options)
 {
   motion_options_ = options;
 }
@@ -186,7 +186,7 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::runFrame(
   return motion_command;
 }
 
-path_planning::PathPlanner::Path EasyMoveTo::planPath(
+path_planning::Path EasyMoveTo::planPath(
   const Robot & robot, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles)
 {
@@ -194,7 +194,7 @@ path_planning::PathPlanner::Path EasyMoveTo::planPath(
 }
 
 ateam_msgs::msg::RobotMotionCommand EasyMoveTo::getMotionCommand(
-  const path_planning::PathPlanner::Path & path, const Robot & robot, const World & world)
+  const path_planning::Path & path, const Robot & robot, const World & world)
 {
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
@@ -218,7 +218,7 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::getMotionCommand(
 }
 
 void EasyMoveTo::drawTrajectoryOverlay(
-  const path_planning::PathPlanner::Path & path,
+  const path_planning::Path & path,
   const Robot & robot)
 {
   auto & overlays = getOverlays();

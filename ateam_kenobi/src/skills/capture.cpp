@@ -73,7 +73,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
 {
   easy_move_to_.face_point(world.ball.pos);
 
-  MotionOptions motion_options;
+  motion::MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
@@ -120,7 +120,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   // planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
 
-  MotionOptions motion_options;
+  motion::MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
 

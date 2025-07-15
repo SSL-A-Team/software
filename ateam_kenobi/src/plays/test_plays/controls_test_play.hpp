@@ -46,13 +46,13 @@ private:
   struct Waypoint
   {
     ateam_geometry::Point position;
-    AngleMode angle_mode;
+    motion::AngleMode angle_mode;
     double heading;
     double hold_time_sec;
   };
 
-  MotionController motion_controller_;
-  MotionOptions motion_options_;
+  motion::MotionController motion_controller_;
+  motion::MotionOptions motion_options_;
 
   int index = 0;
   std::vector<Waypoint> waypoints;

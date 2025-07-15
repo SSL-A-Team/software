@@ -34,6 +34,8 @@
 #include "ateam_common/robot_constants.hpp"
 #include "pid.hpp"
 
+namespace ateam_kenobi::motion {
+
 /*
 // PID gains
 CREATE_PARAM(double, "motion/pid/x_kp", x_kp, 2);
@@ -478,3 +480,5 @@ void MotionController::set_t_pid_gains(double p, double i, double d, double i_mi
 {
   t_controller.set_gains(p, i, d, i_max, i_min);
 }
+
+}  // namespace ateam_kenobi::motion

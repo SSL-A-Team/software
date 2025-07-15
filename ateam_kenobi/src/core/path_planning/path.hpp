@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,29 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__HALT_PLAY_HPP_
-#define PLAYS__HALT_PLAY_HPP_
 
-#include "core/stp/play.hpp"
+#ifndef CORE__PATH_PLANNING__PATH_HPP_
+#define CORE__PATH_PLANNING__PATH_HPP_
 
-namespace ateam_kenobi::plays
+#include <vector>
+#include <ateam_geometry/types.hpp>
+
+namespace ateam_kenobi::path_planning
 {
-class HaltPlay : public stp::Play
-{
-public:
-  static constexpr const char * kPlayName = "HaltPlay";
 
-  explicit HaltPlay(stp::Options stp_options);
+using Position = ateam_geometry::Point;
+using Path = std::vector<Position>;
 
-  stp::PlayScore getScore(const World & world) override;
+}  // namespace ateam_kenobi::path_planning
 
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
-
-private:
-};
-}  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__HALT_PLAY_HPP_
+#endif  // CORE__PATH_PLANNING__PATH_HPP_

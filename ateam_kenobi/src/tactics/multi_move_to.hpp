@@ -50,23 +50,23 @@ public:
 
   void SetFaceNone()
   {
-    angle_mode_ = AngleMode::no_face;
+    angle_mode_ = motion::AngleMode::no_face;
   }
 
   void SetFaceTravel()
   {
-    angle_mode_ = AngleMode::face_travel;
+    angle_mode_ = motion::AngleMode::face_travel;
   }
 
   void SetFaceAbsolue(double angle)
   {
-    angle_mode_ = AngleMode::face_absolute;
+    angle_mode_ = motion::AngleMode::face_absolute;
     absolute_angle_reference_ = angle;
   }
 
   void SetFacePoint(const ateam_geometry::Point & point)
   {
-    angle_mode_ = AngleMode::face_point;
+    angle_mode_ = motion::AngleMode::face_point;
     point_angle_reference_ = point;
   }
 
@@ -81,7 +81,7 @@ public:
   }
 
 private:
-  AngleMode angle_mode_ = AngleMode::no_face;
+  motion::AngleMode angle_mode_ = motion::AngleMode::no_face;
   double absolute_angle_reference_ = 0.0;
   ateam_geometry::Point point_angle_reference_;
 
