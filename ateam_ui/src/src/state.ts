@@ -242,6 +242,18 @@ export class AppState {
             });
     }
 
+    sendRebootKenobiRequest(): void {
+
+        const request = new ROSLIB.ServiceRequest({});
+
+        this.rosManager.services.get("sendRebootKenobiRequest").callService(request,
+            function(result: any): void {
+                if(!result.success) {
+                    console.log("General Kenobi has escaped: ", result.reason);
+                }
+            });
+    }
+
     setUseKenobiTopic(enable: boolean) {
         if (enable != this.useKenobi) {
             if (enable) {

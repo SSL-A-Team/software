@@ -163,6 +163,13 @@ export class RosManager {
         })
         this.services.set("sendPowerRequest", sendPowerRequestService);
 
+        let sendRebootKenobiRequestService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/strike_him_down',
+            serviceType: 'std_msgs/srv/Trigger'
+        })
+        this.services.set("sendRebootKenobiRequest", sendRebootKenobiRequestService);
+
         if (appState.useKenobi) {
             this.enableKenobiTopic(appState);
         } else {
