@@ -18,4 +18,5 @@
     <param name="gc_team_name" value="$(var team_name)"/>
     <param name="playbook" value="$(var kenobi_playbook)"/>
   </node>
+  <node name="vader" pkg="ateam_bringup" exec="vader.py" respawn="True"/>
 </launch>
