@@ -105,15 +105,19 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   std::ranges::transform(defenders, std::back_inserter(getPlayInfo()["Defenders"]),
     [](const auto & r){return r.id;});
 
-  assignments.RunPositionIfAssigned("idler1", [this, &world, &motion_commands](const auto & robot){
-      motion_commands[robot.id] = idler_1_.RunFrame(world, robot);
-      getPlayInfo()["Idlers"].push_back(robot.id);
-  });
+  if(available_robots.size() > 3) {
+    assignments.RunPositionIfAssigned("idler1", [this, &world, &motion_commands](const auto & robot){
+        motion_commands[robot.id] = idler_1_.RunFrame(world, robot);
+        getPlayInfo()["Idlers"].push_back(robot.id);
+    });
+  }
 
-  assignments.RunPositionIfAssigned("idler2", [this, &world, &motion_commands](const auto & robot){
-      motion_commands[robot.id] = idler_2_.RunFrame(world, robot);
-      getPlayInfo()["Idlers"].push_back(robot.id);
-  });
+  if(available_robots.size() > 4) {
+    assignments.RunPositionIfAssigned("idler2", [this, &world, &motion_commands](const auto & robot){
+        motion_commands[robot.id] = idler_2_.RunFrame(world, robot);
+        getPlayInfo()["Idlers"].push_back(robot.id);
+    });
+  }
 
   return motion_commands;
 }
