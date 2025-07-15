@@ -76,8 +76,8 @@ public:
       }
     }
 
-    if (prev_touching_id_ && !maybe_toucher) {
-      // A robot has stopped touching the ball
+    if (prev_touching_id_ && (!maybe_toucher || world.in_play)) {
+      // A robot has stopped touching the ball, or moved the ball enough to put it in play
       if (!forbidden_id_) {
         // This was the first robot to touch the ball, it can't touch it again
         forbidden_id_ = prev_touching_id_;
@@ -94,6 +94,9 @@ public:
   }
 
 private:
+  static constexpr double kStartTouchBallsenseThreshold = kRobotRadius + 0.1;
+  static constexpr double kStartTouchVisionThreshold = kRobotRadius + kBallRadius + 0.01;
+  static constexpr double kEndTouchVisionThreshold = kRobotRadius + kBallRadius + 0.04;
   bool double_touch_rule_applies_ = false;
   std::optional<int> forbidden_id_;
   // tracking the frame when command changes, different from RefereeInfo.prev_command
@@ -103,14 +106,19 @@ private:
   std::optional<Robot> GetRobotTouchingBall(const World & world)
   {
     auto found_iter = std::ranges::find_if(
-      world.our_robots, [&world](const Robot & robot) {
+      world.our_robots, [this, &world](const Robot & robot) {
         if (!robot.visible) {
           return false;
         }
-        return std::sqrt(
-          CGAL::squared_distance(
-            robot.pos,
-            world.ball.pos)) < (kRobotRadius + 0.025);
+        const auto ball_bot_distance = std::sqrt(CGAL::squared_distance(robot.pos, world.ball.pos));
+        if (robot.breakbeam_ball_detected_filtered && ball_bot_distance <= kStartTouchBallsenseThreshold) {
+          return true;
+        }
+        if (prev_touching_id_.value_or(-1) == robot.id) {
+          return ball_bot_distance <= kEndTouchVisionThreshold;
+        } else {
+          return ball_bot_distance <= kStartTouchVisionThreshold;
+        }
       });
     if (found_iter == world.our_robots.end()) {
       return {};
