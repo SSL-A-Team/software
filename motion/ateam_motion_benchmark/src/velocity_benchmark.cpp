@@ -171,7 +171,7 @@ public:
 
 private:
   const std::chrono::milliseconds kTimerDuration = std::chrono::milliseconds(10);
-  const double kPerpendicularDistanceAllowance = 0.5;
+  const double kPerpendicularDistanceAllowance = 2.0;
 
   Options options_;
   std::optional<ateam_msgs::msg::FieldInfo> field_;

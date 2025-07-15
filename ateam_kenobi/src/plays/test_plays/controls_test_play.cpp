@@ -38,10 +38,10 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 
   // Drive in square
   waypoints = {
-    {ateam_geometry::Point(1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
     {ateam_geometry::Point(-1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-3.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-3.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
     {ateam_geometry::Point(-1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
   };
 
   // waypoints = {
@@ -51,8 +51,8 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 
   motion_controller_.v_max = 2.0;
   motion_controller_.t_max = 20.0;
-  motion_controller_.accel_limit = 3.0;
-  motion_controller_.decel_limit = 3.0;
+  motion_controller_.accel_limit = 2.0;
+  motion_controller_.decel_limit = 2.0;
 }
 
 void ControlsTestPlay::reset()
