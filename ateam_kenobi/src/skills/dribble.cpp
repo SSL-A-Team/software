@@ -153,7 +153,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
 {
   easy_move_to_.face_point(target_);
 
-  MotionOptions motion_options;
+  motion::MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options;

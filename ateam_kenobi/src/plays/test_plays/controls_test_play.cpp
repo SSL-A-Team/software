@@ -38,10 +38,10 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 
   // Drive in square
   waypoints = {
-    {ateam_geometry::Point(1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(-1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(-1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(1.0, -1.0), motion::AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.0, -1.0), motion::AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.0, 1.0), motion::AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(1.0, 1.0), motion::AngleMode::face_absolute, 0.0, 3.0},
   };
 
   // waypoints = {
@@ -98,23 +98,23 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   motion_controller_.reset_trajectory(path, waypoint_vel);
 
   switch (waypoints[index].angle_mode) {
-    case AngleMode::face_absolute:
+    case motion::AngleMode::face_absolute:
       motion_controller_.face_absolute(waypoints[index].heading);
       break;
-    case AngleMode::face_travel:
+    case motion::AngleMode::face_travel:
       motion_controller_.face_travel();
       break;
-    case AngleMode::face_point:
+    case motion::AngleMode::face_point:
       // WARNING: face_point not supported in this play. Defaulting to no face.
       [[fallthrough]];
-    case AngleMode::no_face:
+    case motion::AngleMode::no_face:
       motion_controller_.no_face();
       break;
   }
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
 
-  MotionOptions motion_options;
+  motion::MotionOptions motion_options;
   motion_options.completion_threshold = position_threshold;
   maybe_motion_commands[robot.id] = motion_controller_.get_command(
     robot, current_time,
@@ -163,7 +163,7 @@ bool ControlsTestPlay::isGoalHit(const Robot & robot)
   const bool position_goal_hit = ateam_geometry::norm(waypoints[target_index].position -
       robot.pos) < position_threshold;
   const bool heading_goal_hit = [&]() {
-      if (waypoints[target_index].angle_mode == AngleMode::face_absolute) {
+      if (waypoints[target_index].angle_mode == motion::AngleMode::face_absolute) {
         return std::abs(
           angles::shortest_angular_distance(
             waypoints[target_index].heading,

@@ -63,7 +63,7 @@ public:
 
   const path_planning::PlannerOptions & getPlannerOptions() const;
   void setPlannerOptions(path_planning::PlannerOptions options);
-  void setMotionOptions(MotionOptions options);
+  void setMotionOptions(motion::MotionOptions options);
 
   void face_point(std::optional<ateam_geometry::Point> point);
   void face_absolute(double angle);
@@ -96,17 +96,17 @@ private:
   ateam_geometry::Vector target_velocity_;
   path_planning::PlannerOptions planner_options_;
   path_planning::PathPlanner path_planner_;
-  MotionController motion_controller_;
-  MotionOptions motion_options_;
+  motion::MotionController motion_controller_;
+  motion::MotionOptions motion_options_;
 
-  path_planning::PathPlanner::Path planPath(
+  path_planning::Path planPath(
     const Robot & robot, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles);
 
   ateam_msgs::msg::RobotMotionCommand getMotionCommand(
-    const path_planning::PathPlanner::Path & path, const Robot & robot, const World & world);
+    const path_planning::Path & path, const Robot & robot, const World & world);
 
-  void drawTrajectoryOverlay(const path_planning::PathPlanner::Path & path, const Robot & robot);
+  void drawTrajectoryOverlay(const path_planning::Path & path, const Robot & robot);
 
   std::optional<ateam_msgs::msg::RobotMotionCommand> generateEscapeVelocity(
     const World & world,

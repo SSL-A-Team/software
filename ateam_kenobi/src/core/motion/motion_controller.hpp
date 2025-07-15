@@ -30,6 +30,9 @@
 #include "core/types/robot.hpp"
 #include "core/types/world.hpp"
 #include "pid.hpp"
+#include "motion_options.hpp"
+
+namespace ateam_kenobi::motion {
 
 // cause the robot to: always face a point, face in the direction of travel, or stay facing the
 // same direction
@@ -39,15 +42,6 @@ enum class AngleMode
   face_absolute,
   face_travel,
   no_face
-};
-
-struct MotionOptions
-{
-  /// @brief radius around the end point that will be considered completed
-  double completion_threshold = .02;  // meters
-
-  /// @brief angle around the end point that will be considered completed
-  double angular_completion_threshold = 0.035;  // radians
 };
 
 /**
@@ -122,5 +116,7 @@ private:
   PID y_controller;
   PID t_controller;
 };
+
+}  // namespace ateam_kenobi::motion
 
 #endif  // CORE__MOTION__MOTION_CONTROLLER_HPP_

@@ -44,7 +44,7 @@ protected:
   std::chrono::nanoseconds execution_time;
   ateam_geometry::Point start;
   ateam_geometry::Point goal;
-  PathPlanner::Path expected_path;
+  Path expected_path;
 
   void SetUp() override
   {
@@ -80,7 +80,7 @@ protected:
     expected_path.clear();
   }
 
-  PathPlanner::Path getPath()
+  Path getPath()
   {
     const auto start_time = std::chrono::steady_clock::now();
     const auto path = path_planner.getPath(start, goal, world, obstacles, planner_options);
@@ -97,7 +97,7 @@ protected:
       "PathPlanner took too long to find its path.";
   }
 
-  void printPath(const ateam_kenobi::path_planning::PathPlanner::Path & path)
+  void printPath(const ateam_kenobi::path_planning::Path & path)
   {
     std::cout << "Path:\n";
     for (const auto & p : path) {

@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,29 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__HALT_PLAY_HPP_
-#define PLAYS__HALT_PLAY_HPP_
+#ifndef CORE__TYPES_ROBOT_COMMAND_HPP_
+#define CORE__TYPES_ROBOT_COMMAND_HPP_
 
-#include "core/stp/play.hpp"
+#include "motion/motion_target.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi
 {
-class HaltPlay : public stp::Play
+
+enum class KickState : uint8_t
 {
-public:
-  static constexpr const char * kPlayName = "HaltPlay";
-
-  explicit HaltPlay(stp::Options stp_options);
-
-  stp::PlayScore getScore(const World & world) override;
-
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
-
-private:
+  Arm = 0,
+  Disable = 1,
+  KickNow = 2,
+  KickOnTouch = 3,
+  KickOnCaptured = 4,
+  ChipNow = 5,
+  ChipOnTouch = 6,
+  ChipOnCaptured = 7
 };
-}  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__HALT_PLAY_HPP_
+struct RobotCommand
+{
+  motion::MotionTarget motion_target;
+  
+  KickState kick;
+  double kick_speed;
+
+  double dribbler_speed;
+};
+
+}  // namespace ateam_kenobi
+
+#endif  // CORE__TYPES_ROBOT_COMMAND_HPP_

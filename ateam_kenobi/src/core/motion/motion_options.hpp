@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,29 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__HALT_PLAY_HPP_
-#define PLAYS__HALT_PLAY_HPP_
+#ifndef CORE__MOTION__MOTION_OPTIONS_HPP_
+#define CORE__MOTION__MOTION_OPTIONS_HPP_
 
-#include "core/stp/play.hpp"
-
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::motion
 {
-class HaltPlay : public stp::Play
+
+struct MotionOptions
 {
-public:
-  static constexpr const char * kPlayName = "HaltPlay";
+  /// @brief radius around the end point that will be considered completed
+  double completion_threshold = .02;  // meters
 
-  explicit HaltPlay(stp::Options stp_options);
-
-  stp::PlayScore getScore(const World & world) override;
-
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
-
-private:
+  /// @brief angle around the end point that will be considered completed
+  double angular_completion_threshold = 0.035;  // radians
 };
-}  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__HALT_PLAY_HPP_
+}  // namespace ateam_kenobi::motion
+
+#endif  // CORE__MOTION__MOTION_OPTIONS_HPP_
