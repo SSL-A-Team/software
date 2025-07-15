@@ -47,14 +47,16 @@ void HaltPlay::reset()
 {
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> HaltPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> HaltPlay::runFrame(
   const World &)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> halt_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> halt_motion_commands;
+  RobotCommand command;
+  command.motion_intent.linear = motion::intents::linear::VelocityIntent{ateam_geometry::Vector{0.0, 0.0}};
+  command.motion_intent.angular = motion::intents::angular::VelocityIntent{0.0};
   for (size_t i = 0; i < 16; ++i) {
-    halt_motion_commands[i] = ateam_msgs::msg::RobotMotionCommand{};
+    halt_motion_commands[i] = command;
   }
-
   return halt_motion_commands;
 }
 }  // namespace ateam_kenobi::plays

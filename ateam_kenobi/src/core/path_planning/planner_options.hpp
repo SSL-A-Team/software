@@ -22,6 +22,7 @@
 #ifndef CORE__PATH_PLANNING__PLANNER_OPTIONS_HPP_
 #define CORE__PATH_PLANNING__PLANNER_OPTIONS_HPP_
 
+#include <ateam_common/robot_constants.hpp>
 namespace ateam_kenobi::path_planning
 {
 

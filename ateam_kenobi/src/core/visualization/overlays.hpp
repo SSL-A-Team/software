@@ -46,6 +46,8 @@ public:
 
   void clear();
 
+  void merge(const Overlays & other);
+
   void drawLine(
     const std::string & name, const std::vector<ateam_geometry::Point> & points,
     const std::string & color = "white", const uint8_t stroke_width = 5,
