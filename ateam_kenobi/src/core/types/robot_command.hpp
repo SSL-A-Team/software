@@ -21,7 +21,7 @@
 #ifndef CORE__TYPES_ROBOT_COMMAND_HPP_
 #define CORE__TYPES_ROBOT_COMMAND_HPP_
 
-#include "motion/motion_target.hpp"
+#include "core/motion/motion_intent.hpp"
 
 namespace ateam_kenobi
 {
@@ -40,12 +40,12 @@ enum class KickState : uint8_t
 
 struct RobotCommand
 {
-  motion::MotionTarget motion_target;
+  motion::MotionIntent motion_intent;
   
-  KickState kick;
-  double kick_speed;
+  KickState kick = KickState::Arm;
+  double kick_speed = 0.0;
 
-  double dribbler_speed;
+  double dribbler_speed = 0.0;
 };
 
 }  // namespace ateam_kenobi
