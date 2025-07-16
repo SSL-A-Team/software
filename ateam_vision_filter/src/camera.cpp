@@ -220,7 +220,7 @@ std::vector<Eigen::VectorXd> Camera::robot_measurements_to_vector(
     robot_measurements.begin(), robot_measurements.end(),
     std::back_inserter(vectored_measurements),
     [](const RobotMeasurement & original) {
-      return Eigen::Vector3d{original.position.x(), original.position.y(), original.theta};
+      return Eigen::Vector3d{original.position.x() - 0.025, original.position.y() - 0.025, original.theta};
     });
 
   return vectored_measurements;
