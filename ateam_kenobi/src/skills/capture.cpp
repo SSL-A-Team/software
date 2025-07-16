@@ -132,7 +132,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   command.twist.linear.y = 0.0;
   command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
 
-  command.dribbler_speed = 360;
+  command.dribbler_speed = kDefaultDribblerSpeed;
 
   return command;
 }

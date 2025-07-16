@@ -157,7 +157,7 @@ ateam_msgs::msg::RobotMotionCommand Intercept::runIntercept(
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.dribbler_speed = 300;
+  command.dribbler_speed = kDefaultDribblerSpeed;
 
   return command;
 }

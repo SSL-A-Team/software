@@ -264,11 +264,8 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
 
   kick_.SetTargetPoint(target_point);
 
-  if constexpr (std::is_same_v<decltype(kick_), skills::PivotKick>)
-  {
-    kick_.SetKickType(goalie.chipper_available ? skills::PivotKick::KickType::Chip :
-        skills::PivotKick::KickType::Kick);
-  }
+  // kick_.SetKickType(goalie.chipper_available ? skills::PivotKick::KickType::Chip :
+  //     skills::PivotKick::KickType::Kick);
 
   return kick_.RunFrame(world, goalie);
 }
