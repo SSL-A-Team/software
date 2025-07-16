@@ -53,7 +53,7 @@ export default {
             const totalSeconds = Math.floor(this.state.world.referee.stage_time_left / (1e6));
 
             let minutes = Math.floor(totalSeconds / 60);
-            let seconds = Math.floor(totalSeconds % 60);
+            let seconds = Math.abs(Math.floor(totalSeconds % 60));
 
             return minutes + ":" + seconds.toString().padStart(2, '0');
         }

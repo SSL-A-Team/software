@@ -29,7 +29,7 @@ export default {
             const totalSeconds = Math.floor(this.team.timeout_time / (1e6));
 
             let minutes = Math.floor(totalSeconds / 60);
-            let seconds = Math.floor(totalSeconds % 60);
+            let seconds = Math.abs(Math.floor(totalSeconds % 60));
 
             return minutes + ":" + seconds.toString().padStart(2, '0');
 
@@ -48,7 +48,7 @@ export default {
             const totalSeconds = Math.floor(shortestYellow / (1e6));
 
             let minutes = Math.floor(totalSeconds / 60);
-            let seconds = Math.floor(totalSeconds % 60);
+            let seconds = Math.abs(Math.floor(totalSeconds % 60));
 
             return minutes + ":" + seconds.toString().padStart(2, '0');
         }
