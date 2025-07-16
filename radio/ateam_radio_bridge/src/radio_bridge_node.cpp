@@ -145,12 +145,23 @@ private:
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
 
+  void ReplaceNanWithZero(double & val) {
+    if (std::isnan(val)) {
+      RCLCPP_WARN(get_logger(), "Radio bridge is replacing NaNs!");
+      val = 0.0;
+    }
+  }
+
   void MotionCommandCallback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr command_msg,
     int robot_id)
   {
     const std::lock_guard lock(mutex_);
     motion_commands_[robot_id] = *command_msg;
+    auto & command = motion_commands_[robot_id];
+    ReplaceNanWithZero(command.twist.linear.x);
+    ReplaceNanWithZero(command.twist.linear.y);
+    ReplaceNanWithZero(command.twist.angular.z);
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
