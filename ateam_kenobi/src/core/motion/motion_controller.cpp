@@ -200,8 +200,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   double dt = current_time - this->prev_time;
 
   // If we don't have a valid dt just assume we are running at standard loop rate
-  if (std::isnan(this->prev_time) || abs(dt) < 0.0001) {
-    RCLCPP_WARN(logger_, "Invalid dt. Did you run MotionController twice in one frame?");
+  const auto is_dt_zero = abs(dt) < 1e-4;
+  if (std::isnan(this->prev_time) || is_dt_zero) {
+    RCLCPP_WARN_EXPRESSION(logger_, is_dt_zero, "Zero dt. Did you run MotionController twice in one frame?");
     dt = 1 / 100.0;  // TODO(chachmu): set this dynamically
   }
 
