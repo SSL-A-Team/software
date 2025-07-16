@@ -30,6 +30,12 @@ CUDA_HOSTDEV float WidthOfShotOnGoal(const float x, const float y, const Robot *
   }
   result = max(result, counter);
 
+  // Avoid shots at shallow angles
+  const auto angle_to_goal = atan2(fabs(goal_x - real_x), fabs(real_y));
+  if (angle_to_goal < 0.7f) {
+    return 0.0f;
+  }
+
   return result * step_size;
 }
   
