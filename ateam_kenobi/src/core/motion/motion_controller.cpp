@@ -199,7 +199,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   double dt = current_time - this->prev_time;
 
   // If we don't have a valid dt just assume we are running at standard loop rate
-  if (std::isnan(this->prev_time)) {
+  if (std::isnan(this->prev_time) || abs(dt) < 0.0001) {
     dt = 1 / 100.0;  // TODO(chachmu): set this dynamically
   }
 
@@ -321,6 +321,24 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     } else {
       vel_vector = cross_track_feedback * ateam_geometry::normalize(cross_track_error) +
         (calculated_velocity * target_direction);
+    }
+
+    if (std::isnan(vel_vector.x())) {
+      std::cerr << target_index << " index: "<< target.x() <<", " <<target.y() << std::endl;
+      std::cerr << "robot: "<< robot.pos.x() <<", " <<robot.pos.y() << std::endl;
+      std::cerr << "dt: "<< dt << std::endl;
+      std::cerr << "error: "<< error.x() <<", " <<error.y() << std::endl;
+      std::cerr << "error_body: "<< error_body_frame.x() <<", " <<error_body_frame.y() << std::endl;
+      std::cerr << "world feedback: "<< world_feedback.x() <<", " <<world_feedback.y() << std::endl;
+      std::cerr << "xy feedback: "<< x_feedback <<", " <<y_feedback << std::endl;
+      std::cerr << "crosstrack error: "<< cross_track_error << std::endl;
+      std::cerr << "crosstrack feedback: "<< cross_track_feedback << std::endl;
+      std::cerr << "target_direction: "<< target_direction.x() <<", " <<target_direction.y() << std::endl;
+      std::cerr << "calculated_velocity "<< calculated_velocity << std::endl;
+
+      std::cerr << "--------------------" << std::endl;
+      // std::cerr << target_position.x() <<", " <<target_position.y() << std::endl;
+
     }
 
     // clamp to max/min velocity
