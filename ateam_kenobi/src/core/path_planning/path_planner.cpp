@@ -58,7 +58,7 @@ PathPlanner::Path PathPlanner::getPath(
 
   const auto goal_is_valid = isStateValid(goal, world, augmented_obstacles, options);
 
-  if(!shouldReplan(start, goal, world, obstacles, options)) {
+  if(!shouldReplan(start, goal, world, augmented_obstacles, options)) {
     if(cached_path_truncated_ && goal_is_valid) {
       used_cached_path_ = false;
     } else {
