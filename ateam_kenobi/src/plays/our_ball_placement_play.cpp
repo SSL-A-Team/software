@@ -86,6 +86,14 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
       placement_point_,
       0.15), "green");
 
+  if (state_ != State::Placing &&
+    world.ball.visible &&
+    ball_dist < 0.12 &&
+    ball_speed < 0.04) {
+
+    state_ = State::Done;
+  }
+
   switch (state_) {
     case State::Passing:
       if (pass_tactic_.isDone() ||
@@ -100,7 +108,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
       break;
     case State::Placing:
       // Ball must be placed in a 0.15m radius
-      if (ball_dist < 0.13 && ball_speed < 0.08) {
+      // if (ball_dist < 0.13 && ball_speed < 0.08) {
+      if (dribble_.isDone()
+        || (false && ball_dist < 0.08 && ball_speed < 0.04)) {
         state_ = State::Done;
 
         // Can try to pass if the ball is far away and we have enough robots
@@ -113,6 +123,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
       break;
     case State::Done:
       if (ball_dist > 0.14) {
+        dribble_.reset();
         state_ = State::Placing;
       }
       runDone(available_robots, world, maybe_motion_commands);
