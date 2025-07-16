@@ -105,6 +105,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
 
         // Can try to pass if the ball is far away and we have enough robots
       } else if (ball_dist > 1.1 && available_robots.size() >= 2) {
+        pass_tactic_.reset();
         state_ = State::Passing;
       }
       runPlacing(available_robots, world, maybe_motion_commands);
@@ -205,6 +206,8 @@ void OurBallPlacementPlay::runPassing(
     *(motion_commands[receiver_robot.id] = ateam_msgs::msg::RobotMotionCommand{});
 
   pass_tactic_.runFrame(world, kicker_robot, receiver_robot, kicker_command, receiver_command);
+
+  getPlayInfo()["Pass Tactic"] = pass_tactic_.getPlayInfo();
 }
 
 void OurBallPlacementPlay::runPlacing(
