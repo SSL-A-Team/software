@@ -73,38 +73,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
       }
     }();
 
+  DrawKeepoutArea(world.ball.pos, placement_point_);
+
   const auto point_to_ball = world.ball.pos - placement_point_;
   const auto angle = std::atan2(point_to_ball.y(), point_to_ball.x());
 
   const auto ball_dist = ateam_geometry::norm(point_to_ball);
   const auto ball_speed = ateam_geometry::norm(world.ball.vel);
-
-
-  ateam_geometry::Polygon polygon_points;
-  polygon_points.push_back(
-    placement_point_ +
-    0.5 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2)));
-  polygon_points.push_back(
-    placement_point_ +
-    0.5 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2)));
-  polygon_points.push_back(
-    world.ball.pos +
-    0.5 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2)));
-  polygon_points.push_back(
-    world.ball.pos +
-    0.5 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2)));
-
-  getOverlays().drawCircle(
-    "placement_avoid_point", ateam_geometry::makeCircle(
-      placement_point_,
-      0.5), "red",
-    "00000000");
-  getOverlays().drawCircle(
-    "placement_avoid_ball", ateam_geometry::makeCircle(
-      world.ball.pos,
-      0.5), "red",
-    "00000000");
-  getOverlays().drawPolygon("placement_avoid_zone", polygon_points, "red", "00000000");
 
   getOverlays().drawCircle(
     "placement_pos", ateam_geometry::makeCircle(
@@ -279,6 +254,37 @@ void OurBallPlacementPlay::runDone(
   emt.face_point(world.ball.pos);
   auto command = emt.runFrame(place_robot, world);
   motion_commands[place_robot.id] = command;
+}
+
+void OurBallPlacementPlay::DrawKeepoutArea(
+  const ateam_geometry::Point & ball_pos,
+  const ateam_geometry::Point & placement_point)
+{
+  const auto point_to_ball = ball_pos - placement_point;
+  const auto angle = std::atan2(point_to_ball.y(), point_to_ball.x());
+
+  auto & overlays = getOverlays();
+
+  const auto keepout_radius = 0.5;
+  const ateam_geometry::Vector pos_offset{keepout_radius * std::cos(angle + M_PI_2),
+    keepout_radius * std::sin(angle + M_PI_2)};
+  const ateam_geometry::Vector neg_offset{keepout_radius * std::cos(angle - M_PI_2),
+    keepout_radius * std::sin(angle - M_PI_2)};
+
+  const ateam_geometry::Arc ball_side_arc{ball_pos, keepout_radius, neg_offset.direction(),
+    pos_offset.direction()};
+  const ateam_geometry::Arc point_side_arc{placement_point, keepout_radius, pos_offset.direction(),
+    neg_offset.direction()};
+  const ateam_geometry::Segment pos_segment{placement_point + pos_offset, ball_pos + pos_offset};
+  const ateam_geometry::Segment neg_segment{placement_point + neg_offset, ball_pos + neg_offset};
+
+
+  overlays.drawArc("placement_avoid_ball_arc", ball_side_arc, "Cyan");
+  overlays.drawArc("placement_avoid_place_arc", point_side_arc, "Cyan");
+  overlays.drawLine("placement_avoid_pos_line", {pos_segment.source(), pos_segment.target()},
+      "Cyan");
+  overlays.drawLine("placement_avoid_neg_line", {neg_segment.source(), neg_segment.target()},
+      "Cyan");
 }
 
 }  // namespace ateam_kenobi::plays

@@ -72,6 +72,10 @@ private:
     const std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
+
+  void DrawKeepoutArea(
+    const ateam_geometry::Point & ball_pos,
+    const ateam_geometry::Point & placement_point);
 };
 
 }  // namespace ateam_kenobi::plays
