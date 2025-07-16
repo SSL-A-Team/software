@@ -58,6 +58,20 @@ void Overlays::clear()
   }
 }
 
+void Overlays::merge(const Overlays & other)
+{
+  if (!overlay_array_) {
+    return;
+  }
+  if (!other.overlay_array_) {
+    return;
+  }
+  overlay_array_->overlays.insert(
+    overlay_array_->overlays.end(),
+    other.overlay_array_->overlays.begin(),
+    other.overlay_array_->overlays.end());
+}
+
 void Overlays::drawLine(
   const std::string & name, const std::vector<ateam_geometry::Point> & points,
   const std::string & color, const uint8_t stroke_width,

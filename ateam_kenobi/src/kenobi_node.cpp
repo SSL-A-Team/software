@@ -70,6 +70,7 @@ public:
   : rclcpp::Node("kenobi_node", options),
     play_selector_(*this),
     joystick_enforcer_(*this),
+    overlays_(""),
     game_controller_listener_(*this)
   {
     world_.spatial_evaluator = &spatial_evaluator_;
@@ -180,6 +181,7 @@ private:
   BallSenseFilter ballsense_filter_;
   std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
+  visualization::Overlays overlays_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
@@ -404,7 +406,7 @@ private:
       world_.referee_info.their_goalie_id = game_controller_listener_.GetTheirGoalieID().value();
     }
     in_play_eval_.Update(world_);
-    double_touch_eval_.update(world_);
+    double_touch_eval_.update(world_, overlays_);
     UpdateSpatialEvaluator();
     if (get_parameter("use_emulated_ballsense").as_bool()) {
       ballsense_emulator_.Update(world_);
@@ -453,7 +455,10 @@ private:
     }
     const auto motion_commands = play->runFrame(world);
 
-    overlay_publisher_->publish(play->getOverlays().getMsg());
+    overlays_.merge(play->getOverlays());
+
+    overlay_publisher_->publish(overlays_.getMsg());
+    overlays_.clear();
     play->getOverlays().clear();
 
 

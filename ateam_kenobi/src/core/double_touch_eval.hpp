@@ -26,6 +26,7 @@
 #include <ateam_common/robot_constants.hpp>
 #include <boost/scope_exit.hpp>
 #include "core/types/world.hpp"
+#include "core/visualization/overlays.hpp"
 
 namespace ateam_kenobi
 {
@@ -33,7 +34,7 @@ namespace ateam_kenobi
 class DoubleTouchEval
 {
 public:
-  void update(World & world)
+  void update(World & world, visualization::Overlays & overlays)
   {
     const auto running_command = world.referee_info.running_command;
     BOOST_SCOPE_EXIT(&running_command, this_) {
@@ -91,6 +92,8 @@ public:
     } else {
       prev_touching_id_ = maybe_toucher.value().id;
     }
+
+    DrawForbiddenBotOverlay(world, overlays);
   }
 
 private:
@@ -127,6 +130,31 @@ private:
       return {};
     }
     return *found_iter;
+  }
+
+  void DrawForbiddenBotOverlay(const World & world, visualization::Overlays & overlays)
+  {
+    if(!world.double_touch_forbidden_id_) {
+      return;
+    }
+    const auto forbidden_id = world.double_touch_forbidden_id_.value();
+    const auto & forbidden_bot = world.our_robots[forbidden_id];
+    const auto & bot_pos = forbidden_bot.pos;
+    const auto side_len = kRobotDiameter;
+    const auto small_dim = side_len / 2.0;
+    const auto big_dim = small_dim + (side_len * std::cos(M_PI/4.0));
+    std::vector<ateam_geometry::Point> points {
+      bot_pos + ateam_geometry::Vector{big_dim, small_dim},
+      bot_pos + ateam_geometry::Vector{small_dim, big_dim},
+      bot_pos + ateam_geometry::Vector{-small_dim, big_dim},
+      bot_pos + ateam_geometry::Vector{-big_dim, small_dim},
+      bot_pos + ateam_geometry::Vector{-big_dim, -small_dim},
+      bot_pos + ateam_geometry::Vector{-small_dim, -big_dim},
+      bot_pos + ateam_geometry::Vector{small_dim, -big_dim},
+      bot_pos + ateam_geometry::Vector{big_dim, -small_dim}
+    };
+    ateam_geometry::Polygon octagon{points.begin(), points.end()};
+    overlays.drawPolygon("double_touch_forbidden_bot", octagon, "DarkRed", "#00000000");
   }
 };
 
