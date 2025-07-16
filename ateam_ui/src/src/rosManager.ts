@@ -401,9 +401,18 @@ export class RosManager {
 
     getRefereeCallback(world: WorldState): (msg: any) => void {
 	    return function(msg: any): void {
-            for (const member of Object.getOwnPropertyNames(world.referee)) {
-                world.referee[member] = msg[member];
-            }
+            world.referee.stage = msg.stage;
+            world.referee.stage_time_left = msg.stage_time_left;
+            world.referee.command = msg.command;
+            world.referee.command_counter = msg.command_counter;
+            world.referee.command_timestamp = msg.command_timestamp;
+
+            world.referee.yellow = msg.yellow;
+            world.referee.blue = msg.blue;
+
+            world.referee.designatedPosition = msg.designatedPosition;
+            world.referee.next_command = msg.next_command;
+            world.referee.current_action_time_remaining = msg.current_action_time_remaining;
 
             if (msg.blue_team_on_positive_half.length != 0) {
                 world.teams.get(TeamColor.Blue).defending = msg.blue_team_on_positive_half[0] ? 1 : -1;
