@@ -72,6 +72,7 @@ public:
       world,
       robot);
 
+    getPlayInfo()["pivot kick"] = pivot_kick_skill_.getPlayInfo();
     getPlayInfo()["line kick"] = line_kick_skill_.getPlayInfo();
     return motion_commands;
   }
