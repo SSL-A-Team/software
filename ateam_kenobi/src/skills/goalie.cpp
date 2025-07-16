@@ -25,6 +25,7 @@
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/nearest_point.hpp>
+#include <ateam_geometry/angles.hpp>
 #include "core/play_helpers/window_evaluation.hpp"
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/possession.hpp"
@@ -55,6 +56,21 @@ void Goalie::runFrame(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
+  Ball ball_state = world.ball;
+  if(world.ball.visible) {
+    const auto maybe_closest_enemy = getClosestEnemyRobotToBall(world);
+    if(maybe_closest_enemy) {
+      last_enemy_id_closest_to_ball_ = maybe_closest_enemy->id;
+    }
+  } else if (last_enemy_id_closest_to_ball_) {
+    glueBallToLastClosestEnemy(ball_state, world);
+  }
+
+  if(!world.ball.visible) {
+    getOverlays().drawCircle("ball", ateam_geometry::makeCircle(ball_state.pos, kRobotRadius),
+        "orange", "#00000000");
+  }
+
   const auto robot_id = world.referee_info.our_goalie_id;
   const auto & robot = world.our_robots.at(robot_id);
   if (!robot.IsAvailable()) {
@@ -64,14 +80,14 @@ void Goalie::runFrame(
 
   ateam_msgs::msg::RobotMotionCommand motion_command;
 
-  if (isBallHeadedTowardsGoal(world)) {
-    motion_command = runBlockBall(world, robot);
+  if (isBallHeadedTowardsGoal(world, ball_state)) {
+    motion_command = runBlockBall(world, robot, ball_state);
   } else if (doesOpponentHavePossesion(world)) {
-    motion_command = runBlockShot(world, robot);
-  } else if (isBallInDefenseArea(world)) {
-    motion_command = runClearBall(world, robot);
+    motion_command = runBlockShot(world, robot, ball_state);
+  } else if (isBallInDefenseArea(world, ball_state)) {
+    motion_command = runClearBall(world, robot, ball_state);
   } else {
-    motion_command = runDefaultBehavior(world, robot);
+    motion_command = runDefaultBehavior(world, robot, ball_state);
   }
 
   motion_commands[robot_id] = motion_command;
@@ -82,13 +98,13 @@ bool Goalie::doesOpponentHavePossesion(const World & world)
   return play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs;
 }
 
-bool Goalie::isBallHeadedTowardsGoal(const World & world)
+bool Goalie::isBallHeadedTowardsGoal(const World & world, const Ball & ball_state)
 {
-  if (world.ball.vel.x() >= -0.1) {
+  if (ball_state.vel.x() >= -0.1) {
     return false;
   }
 
-  const ateam_geometry::Ray ball_vel_ray(world.ball.pos, world.ball.vel);
+  const ateam_geometry::Ray ball_vel_ray(ball_state.pos, ball_state.vel);
 
   const auto goal_inflation = 1.1;
 
@@ -104,7 +120,7 @@ bool Goalie::isBallHeadedTowardsGoal(const World & world)
   return CGAL::do_intersect(ball_vel_ray, goal_segment);
 }
 
-bool Goalie::isBallInDefenseArea(const World & world)
+bool Goalie::isBallInDefenseArea(const World & world, const Ball & ball_state)
 {
   ateam_geometry::Rectangle our_defense_area(
     *CGAL::top_vertex_2(
@@ -114,12 +130,12 @@ bool Goalie::isBallInDefenseArea(const World & world)
       world.field.ours.defense_area_corners.begin(),
       world.field.ours.defense_area_corners.end()));
 
-  return CGAL::do_intersect(world.ball.pos, our_defense_area);
+  return CGAL::do_intersect(ball_state.pos, our_defense_area);
 }
 
 ateam_msgs::msg::RobotMotionCommand Goalie::runDefaultBehavior(
   const World & world,
-  const Robot & goalie)
+  const Robot & goalie, const Ball & ball_state)
 {
   auto goal_line_offset = 0.25;
   if (world.referee_info.running_command == ateam_common::GameCommand::PreparePenaltyTheirs ||
@@ -139,14 +155,16 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runDefaultBehavior(
   easy_move_to_.setTargetPosition(
     ateam_geometry::nearestPointOnSegment(
       goalie_line,
-      world.ball.pos));
+      ball_state.pos));
   easy_move_to_.face_absolute(M_PI_2);
   return easy_move_to_.runFrame(goalie, world, getCustomObstacles(world));
 }
 
-ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, const Robot & goalie)
+ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(
+  const World & world, const Robot & goalie,
+  const Ball & ball_state)
 {
-  const auto & ball_pos = world.ball.pos;
+  const auto & ball_pos = ball_state.pos;
   std::array<double, 16> distances;
   std::transform(
     world.their_robots.begin(), world.their_robots.end(), distances.begin(),
@@ -159,11 +177,11 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, co
   const auto min_distance_iter = std::min_element(distances.begin(), distances.end());
   if (std::isinf(*min_distance_iter)) {
     // Should only be true if there are no opponent robots
-    return runDefaultBehavior(world, goalie);
+    return runDefaultBehavior(world, goalie, ball_state);
   }
   const auto opponent_id = std::distance(distances.begin(), min_distance_iter);
   const auto opponent_pos = world.their_robots[opponent_id].pos;
-  const auto opponent_ball_vector = world.ball.pos - opponent_pos;
+  const auto opponent_ball_vector = ball_state.pos - opponent_pos;
 
   const ateam_geometry::Ray shot_ray(opponent_pos, opponent_ball_vector);
 
@@ -180,7 +198,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, co
   const auto maybe_intersection = CGAL::intersection(shot_ray, goalie_line_extended);
 
   if (!maybe_intersection) {
-    return runDefaultBehavior(world, goalie);
+    return runDefaultBehavior(world, goalie, ball_state);
   }
 
   ateam_geometry::Point shot_point_on_extended_goalie_line;
@@ -200,9 +218,11 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(const World & world, co
   return easy_move_to_.runFrame(goalie, world, getCustomObstacles(world));
 }
 
-ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(const World & world, const Robot & goalie)
+ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(
+  const World & world, const Robot & goalie,
+  const Ball & ball_state)
 {
-  const ateam_geometry::Ray ball_vel_ray(world.ball.pos, world.ball.vel);
+  const ateam_geometry::Ray ball_vel_ray(ball_state.pos, ball_state.vel);
 
   const auto goalie_line_x = -(world.field.field_length / 2) + kRobotRadius;
 
@@ -213,7 +233,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(const World & world, co
   const auto maybe_intersection = CGAL::intersection(ball_vel_ray, goalie_line);
 
   if (!maybe_intersection) {
-    return runDefaultBehavior(world, goalie);
+    return runDefaultBehavior(world, goalie, ball_state);
   }
 
   ateam_geometry::Point target_point;
@@ -230,7 +250,9 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(const World & world, co
   return easy_move_to_.runFrame(goalie, world, getCustomObstacles(world));
 }
 
-ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, const Robot & goalie)
+ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(
+  const World & world, const Robot & goalie,
+  const Ball & ball_state)
 {
   const ateam_geometry::Segment target_seg(ateam_geometry::Point(0, -world.field.field_width / 2),
     ateam_geometry::Point(0, world.field.field_width / 2));
@@ -240,10 +262,10 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
   std::ranges::copy(play_helpers::getVisibleRobots(world.their_robots), std::back_inserter(robots));
 
   const auto windows = play_helpers::window_evaluation::getWindows(
-    target_seg, world.ball.pos,
+    target_seg, ball_state.pos,
     robots);
   play_helpers::window_evaluation::drawWindows(
-    windows, world.ball.pos, getOverlays().getChild(
+    windows, ball_state.pos, getOverlays().getChild(
       "windows"));
   const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
 
@@ -254,8 +276,8 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
   } else {
     // If no window exists, just kick away from the goal
     const ateam_geometry::Point goal_center(-world.field.field_length / 2, 0);
-    const auto kick_vector = world.ball.pos - goal_center;
-    target_point = world.ball.pos + (kick_vector * 3);
+    const auto kick_vector = ball_state.pos - goal_center;
+    target_point = ball_state.pos + (kick_vector * 3);
   }
 
   if (kick_.IsDone()) {
@@ -295,6 +317,38 @@ std::vector<ateam_geometry::AnyShape> Goalie::getCustomObstacles(const World & w
     });
 
   return obstacles;
+}
+
+std::optional<Robot> Goalie::getClosestEnemyRobotToBall(const World & world)
+{
+  if(!world.ball.visible) {
+    return std::nullopt;
+  }
+  const auto enemy_bots = play_helpers::getVisibleRobots(world.their_robots);
+  if(enemy_bots.empty()) {
+    return std::nullopt;
+  }
+  const auto closest_bot = play_helpers::getClosestRobot(enemy_bots, world.ball.pos);
+  if(CGAL::squared_distance(closest_bot.pos, world.ball.pos) > 1.0) {
+    return std::nullopt;
+  }
+  return closest_bot;
+}
+
+void Goalie::glueBallToLastClosestEnemy(Ball & ball, const World & world)
+{
+  if(!last_enemy_id_closest_to_ball_) {
+    return;
+  }
+  const auto bot_id = *last_enemy_id_closest_to_ball_;
+  const auto & bot = world.their_robots[bot_id];
+  if(!bot.visible) {
+    return;
+  }
+  const auto direction = ateam_geometry::directionFromAngle(bot.theta);
+  const auto vec = direction.to_vector() * (kRobotRadius + kBallRadius);
+  ball.pos = bot.pos + vec;
+  ball.vel = bot.vel;
 }
 
 }  // namespace ateam_kenobi::skills

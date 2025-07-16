@@ -45,36 +45,39 @@ public:
 private:
   play_helpers::EasyMoveTo easy_move_to_;
   LineKick kick_;
+  std::optional<int> last_enemy_id_closest_to_ball_;
 
   bool doesOpponentHavePossesion(const World & world);
-  bool isBallHeadedTowardsGoal(const World & world);
-  bool isBallInDefenseArea(const World & world);
+  bool isBallHeadedTowardsGoal(const World & world, const Ball & ball_state);
+  bool isBallInDefenseArea(const World & world, const Ball & ball_state);
 
   /**
    * @brief Default behavior of robot staying in line with ball
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runDefaultBehavior(const World & world, const Robot & goalie);
+  ateam_msgs::msg::RobotMotionCommand runDefaultBehavior(const World & world, const Robot & goalie, const Ball & ball_state);
 
   /**
    * @brief Block a possible shot when opponents have the ball
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runBlockShot(const World & world, const Robot & goalie);
+  ateam_msgs::msg::RobotMotionCommand runBlockShot(const World & world, const Robot & goalie, const Ball & ball_state);
 
   /**
    * @brief Block ball when headed towards goal
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runBlockBall(const World & world, const Robot & goalie);
+  ateam_msgs::msg::RobotMotionCommand runBlockBall(const World & world, const Robot & goalie, const Ball & ball_state);
 
   /**
    * @brief Kick ball out of defense area
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie);
+  ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie, const Ball & ball_state);
 
   std::vector<ateam_geometry::AnyShape> getCustomObstacles(const World & world);
+  std::optional<Robot> getClosestEnemyRobotToBall(const World & world);
+  void glueBallToLastClosestEnemy(Ball & ball, const World & world);
 };
 
 }  // namespace ateam_kenobi::skills
