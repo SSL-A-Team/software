@@ -83,10 +83,9 @@ void Pass::runFrame(
   }
 
   auto receiver_threshold = kReceiverPositionThreshold;
-  // TODO(barulicm): This was too aggressive on the small lab field
-  // if (std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) > 3.0) {
-  //   receiver_threshold = 5.0;
-  // }
+  if (std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) > 3.0) {
+    receiver_threshold = 0.3;
+  }
   if (ateam_geometry::norm(receiver_bot.pos, target_) <= receiver_threshold) {
     kick_.AllowKicking();
     getPlayInfo()["kicking_allowed"] = "yes";

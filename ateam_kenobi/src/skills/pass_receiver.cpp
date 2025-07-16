@@ -84,13 +84,20 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
   play_helpers::removeRobotWithId(available_robots, robot.id);
-  if (!available_robots.empty()) {
+  const auto squared_pass_length = CGAL::squared_distance(world.ball.pos, target_);
+
+  const auto long_pass_threshold = std::pow(1.5, 2);
+  const auto excessive_error_threshold = 1.0;
+
+  if (!available_robots.empty() && squared_pass_length > long_pass_threshold) {
     const auto likely_kicker = play_helpers::getClosestRobot(available_robots, world.ball.pos);
     const auto kicker_ball_ray = ateam_geometry::Ray(world.ball.pos, likely_kicker.pos);
     const auto projected_target_pos = kicker_ball_ray.supporting_line().projection(target_);
     const auto target_proj_vector = projected_target_pos - target_;
-    // Roughly, 90% pull towards target & 10% pull towards kick line
-    destination += target_proj_vector * 0.1;
+    if(target_proj_vector.squared_length() < excessive_error_threshold) {
+      // Roughly, 90% pull towards target & 10% pull towards kick line
+      destination += target_proj_vector * 0.1;
+    }
   }
 
   easy_move_to_.setTargetPosition(destination);

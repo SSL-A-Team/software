@@ -65,7 +65,7 @@ public:
   }
 
 private:
-  const double kReceiverPositionThreshold = 0.1;
+  const double kReceiverPositionThreshold = 0.15;
   std::optional<double> speed_;
   ateam_geometry::Point target_;
   skills::PassReceiver receiver_;
