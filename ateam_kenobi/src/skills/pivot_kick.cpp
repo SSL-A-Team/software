@@ -138,7 +138,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
   command.twist.linear.x = 0.0;
   command.twist.linear.y = -velocity;
   command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
-  command.dribbler_speed = 360;
+  command.dribbler_speed = kDefaultDribblerSpeed;
   return command;
 }
 
@@ -152,7 +152,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::KickBall(const World & world, con
   planner_options.use_default_obstacles = false;
   easy_move_to_.setPlannerOptions(planner_options);
   auto command = easy_move_to_.runFrame(robot, world);
-  command.dribbler_speed = 360;
+  command.dribbler_speed = kDefaultDribblerSpeed;
 
   if (IsAllowedToKick()) {
     if(kick_type_ == KickType::Kick) {

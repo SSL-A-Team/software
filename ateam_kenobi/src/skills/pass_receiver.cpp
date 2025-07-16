@@ -125,7 +125,7 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
   easy_move_to_.setPlannerOptions(planner_options);
   ateam_msgs::msg::RobotMotionCommand motion_command;
   motion_command = easy_move_to_.runFrame(robot, world);
-  motion_command.dribbler_speed = 300;
+  motion_command.dribbler_speed = kDefaultDribblerSpeed;
   const auto dist_to_ball = ateam_geometry::norm(robot.pos - world.ball.pos);
   if (dist_to_ball < 0.5) {
     ateam_geometry::Vector robot_vel(motion_command.twist.linear.x, motion_command.twist.linear.y);
@@ -139,7 +139,7 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runPostPass()
 {
   ateam_msgs::msg::RobotMotionCommand command;
-  command.dribbler_speed = 360;
+  command.dribbler_speed = kDefaultDribblerSpeed;
   command.twist.linear.x = 0;
   command.twist.linear.y = 0;
   command.twist.angular.z = 0;
