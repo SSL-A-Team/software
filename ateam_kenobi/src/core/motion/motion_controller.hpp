@@ -56,7 +56,7 @@ struct MotionOptions
 class MotionController
 {
 public:
-  MotionController();
+  MotionController(rclcpp::Logger logger = rclcpp::get_logger("MotionController"));
 
   // Update the current trajectory (usually just moves the last point a bit)
   void update_trajectory(
@@ -109,6 +109,7 @@ public:
   size_t target_index_ = 0;
 
 private:
+  rclcpp::Logger logger_;
   double prev_time;
   std::vector<ateam_geometry::Point> trajectory;
   std::vector<ateam_geometry::Vector> trajectory_velocity_limits;

@@ -47,7 +47,8 @@ CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 */
 
 
-MotionController::MotionController()
+MotionController::MotionController(rclcpp::Logger logger)
+  : logger_(logger)
 {
   this->reset();
 }
@@ -200,6 +201,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
   // If we don't have a valid dt just assume we are running at standard loop rate
   if (std::isnan(this->prev_time) || abs(dt) < 0.0001) {
+    RCLCPP_WARN(logger_, "Invalid dt. Did you run MotionController twice in one frame?");
     dt = 1 / 100.0;  // TODO(chachmu): set this dynamically
   }
 
