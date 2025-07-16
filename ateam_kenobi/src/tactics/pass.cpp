@@ -59,7 +59,7 @@ void Pass::runFrame(
 {
   kicker_id_ = kicker_bot.id;
 
-  getPlayInfo()["kicker"] = kicker_id_;
+  getPlayInfo()["Kicker"]["Robot"] = kicker_id_;
 
   if (ateam_geometry::norm(world.ball.vel) < 0.01) {
     receiver_.setTarget(target_);
@@ -106,6 +106,8 @@ void Pass::runFrame(
   if (!is_in_receiver_territory) {
     kicker_command = kick_.RunFrame(world, kicker_bot);
   }
+
+  getPlayInfo()["Receiver"] = receiver_.getPlayInfo();
 }
 
 bool Pass::isDone()

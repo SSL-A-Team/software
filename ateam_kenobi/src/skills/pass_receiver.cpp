@@ -40,18 +40,24 @@ void PassReceiver::reset()
 
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runFrame(const World & world, const Robot & robot)
 {
+  getPlayInfo()["Robot"] = robot.id;
   if (done_) {
+    getPlayInfo()["State"] = "Done";
     return runPostPass();
   }
   const ateam_geometry::Vector text_pos_offset(0.5, 0);
   if (isBallFast(world)) {
+    getPlayInfo()["State"] = "Pass";
     return runPass(world, robot);
   } else if (isBallClose(world, robot)) {
     done_ = true;
+    getPlayInfo()["State"] = "Post";
     return runPostPass();
   } else if (isBallStalledAndReachable(world, robot)) {
+    getPlayInfo()["State"] = "Capture";
     return capture_.runFrame(world, robot);
   } else {
+    getPlayInfo()["State"] = "Pre";
     return runPrePass(world, robot);
   }
 }

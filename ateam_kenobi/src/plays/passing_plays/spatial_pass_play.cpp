@@ -173,15 +173,14 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
       started_ = true;
     }
 
-    getPlayInfo()["kicker"] = maybe_kicker->id;
-    getPlayInfo()["receiver"] = maybe_receiver->id;
-
     pass_tactic_.runFrame(world, *maybe_kicker, *maybe_receiver, kicker_command, receiver_command);
+
+    getPlayInfo()["Pass Tactic"] = pass_tactic_.getPlayInfo();
   }
 
   std::string play_state;
   if(!started_) {
-    play_state = "Prep";
+    play_state = "Not Started";
   } else if(!pass_tactic_.isDone()) {
     play_state = "Passing";
   } else {
