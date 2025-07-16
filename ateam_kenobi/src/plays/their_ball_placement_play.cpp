@@ -23,6 +23,7 @@
 #include <angles/angles.h>
 #include <ateam_common/robot_constants.hpp>
 #include "core/play_helpers/available_robots.hpp"
+#include <ateam_geometry/ateam_geometry.hpp>
 
 namespace ateam_kenobi::plays
 {
@@ -87,11 +88,23 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlac
       const auto alternate_position = nearest_point +
         0.7 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2));
 
-
-      if (ateam_geometry::norm(target_position - robot.pos) >
-        ateam_geometry::norm(alternate_position - robot.pos))
-      {
+      const auto offset = kRobotRadius * 0.95;
+      const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - offset;
+      const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - offset;
+      ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
+        ateam_geometry::Point(x_bound, y_bound));
+      
+      if (!CGAL::do_intersect(target_position, pathable_region)) {
         target_position = alternate_position;
+      } else if (!CGAL::do_intersect(alternate_position, pathable_region)) {
+        // Stick with target_position
+      } else {
+        // Use the shorter path
+        if (ateam_geometry::norm(target_position - robot.pos) >
+          ateam_geometry::norm(alternate_position - robot.pos))
+        {
+          target_position = alternate_position;
+        }
       }
 
       getPlayInfo()["Robots"][std::to_string(robot.id)] = "MOVING";
