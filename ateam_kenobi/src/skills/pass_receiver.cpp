@@ -139,7 +139,7 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
 ateam_msgs::msg::RobotMotionCommand PassReceiver::runPostPass()
 {
   ateam_msgs::msg::RobotMotionCommand command;
-  command.dribbler_speed = 200;
+  command.dribbler_speed = 360;
   command.twist.linear.x = 0;
   command.twist.linear.y = 0;
   command.twist.angular.z = 0;
