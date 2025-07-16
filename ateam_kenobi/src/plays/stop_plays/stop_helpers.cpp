@@ -253,6 +253,9 @@ void moveBotsTooCloseToBall(
       continue;
     }
     const auto & bot = *maybe_bot;
+    if(motion_commands[bot.id]) {
+      continue;
+    }
     auto & emt = easy_move_tos.at(bot.id);
     emt.setTargetPosition(spot);
     emt.face_point(world.ball.pos);

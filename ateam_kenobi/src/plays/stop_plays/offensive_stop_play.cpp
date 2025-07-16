@@ -83,10 +83,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OffensiveStop
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
+  runPrepBot(world, motion_commands);
+
   helpers::moveBotsTooCloseToBall(world, added_obstacles, motion_commands, easy_move_tos_,
     getOverlays(), getPlayInfo());
-
-  runPrepBot(world, motion_commands);
 
   helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo());
 
@@ -126,9 +126,13 @@ void OffensiveStopPlay::runPrepBot(
 
   auto & emt = easy_move_tos_[closest_bot.id];
 
+  std::vector<ateam_geometry::AnyShape> obstacles {
+    ateam_geometry::makeDisk(world.ball.pos, stop_plays::stop_helpers::kKeepoutRadiusRules)
+  };
+
   emt.setTargetPosition(target_position);
   emt.face_point(world.ball.pos);
-  maybe_motion_commands[closest_bot.id] = emt.runFrame(closest_bot, world);
+  maybe_motion_commands[closest_bot.id] = emt.runFrame(closest_bot, world, obstacles);
 }
 
 }  // namespace ateam_kenobi::plays
