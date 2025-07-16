@@ -129,7 +129,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
         state_ = State::Done;
 
         // Can try to pass if the ball is far away and we have enough robots
-      } else if (ball_dist > 1.0 && available_robots.size() >= 2) {
+      } else if (ball_dist > 1.1 && available_robots.size() >= 2) {
         state_ = State::Passing;
       }
       runPlacing(available_robots, world, maybe_motion_commands);
