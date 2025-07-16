@@ -5,6 +5,7 @@
            <p style="text-align:center"> Yellow: {{team.yellow_card_times.length}} | {{ yellowCardTimer }} </p>
            <p style="text-align:center"> Red: {{team.red_cards}} </p>
            <p style="text-align:center"> Timeout({{team.timeouts}}): {{timeoutTimer}} </p>
+           <p style="text-align:center"> #Allowed Robots:{{numberAllowedRobots}} </p>
         </v-card>
 </template>
 
@@ -51,6 +52,12 @@ export default {
             let seconds = Math.abs(Math.floor(totalSeconds % 60));
 
             return minutes + ":" + seconds.toString().padStart(2, '0');
+        },
+        numberAllowedRobots: function() {
+            if (!this.team.yellow_card_times) {
+                return 6;
+            }
+            return 6 - (this.team.red_cards + this.team.yellow_card_times.length);
         }
     },
     watch: {
