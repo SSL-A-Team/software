@@ -99,14 +99,31 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
 
   ateam_msgs::msg::RobotMotionCommand command;
 
-  const auto k_p = 2.0;
+  const double vel = robot.prev_command_omega;
+  const double dt = 0.01;
 
-  command.twist.angular.z = std::clamp(k_p * angle_error, -pivot_speed_, pivot_speed_);
+  double deceleration_to_reach_target = (vel * vel) / (2 * angle_error);
+
+  // Cruise
+  double trapezoidal_vel = pivot_speed_;
+  const double error_direction = std::copysign(1, angle_error);
+  const double decel_direction = std::copysign(1, vel * angle_error);
+
+  // Decelerate to target velocity
+  if (decel_direction > 0 && abs(deceleration_to_reach_target) > pivot_accel_ * 0.95) {
+    trapezoidal_vel = vel - (error_direction * deceleration_to_reach_target * dt);
+
+  // Accelerate to speed
+  } else if (abs(vel) < pivot_speed_) {
+    trapezoidal_vel = vel + (error_direction * pivot_accel_ * dt);
+  }
 
   const auto min_angular_vel = 1.0;
-  if(std::abs(command.twist.angular.z) < min_angular_vel) {
-    command.twist.angular.z = std::copysign(min_angular_vel, command.twist.angular.z);
+  if (abs(trapezoidal_vel) < min_angular_vel) {
+    trapezoidal_vel = std::copysign(min_angular_vel, angle_error);
   }
+
+  command.twist.angular.z = std::clamp(trapezoidal_vel, -pivot_speed_, pivot_speed_);
 
   /* rotate in a circle with diameter 0.0427 + 0.18 = 0.2227 (This might be tunable to use 8cm for
    * real robots)
