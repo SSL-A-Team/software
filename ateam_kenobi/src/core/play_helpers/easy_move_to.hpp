@@ -112,6 +112,10 @@ private:
     const World & world,
     const Robot & robot,
     std::vector<ateam_geometry::AnyShape> obstacles);
+
+  std::pair<size_t, ateam_geometry::Point> ProjectRobotOnPath(
+    const path_planning::PathPlanner::Path & path,
+    const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::play_helpers
