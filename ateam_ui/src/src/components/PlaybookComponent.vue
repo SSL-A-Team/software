@@ -112,9 +112,9 @@ export default {
         },
         getColor(name: string) {
             if (name.toLowerCase().includes("test")) {
-                return "#212130FF";
+                return "#212150FF";
             } else if (name.toLowerCase().includes("pass")) {
-                return "#213021FF";
+                return "#502150FF";
             } else {
                 return "#212121FF";
             }
