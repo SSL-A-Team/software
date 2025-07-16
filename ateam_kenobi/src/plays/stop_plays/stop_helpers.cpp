@@ -285,6 +285,9 @@ void moveBotsInObstacles(
     if(!robot.IsAvailable()) {
       continue;
     }
+    if(motion_commands[i]) {
+      continue;
+    }
     const auto opt_escape_vel = path_planning::GenerateEscapeVelocity(robot, added_obstacles);
     if(!opt_escape_vel) {
       continue;

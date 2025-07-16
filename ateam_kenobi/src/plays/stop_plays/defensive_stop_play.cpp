@@ -117,6 +117,11 @@ void DefensiveStopPlay::runPrepBot(
   }
   const auto closest_bot = play_helpers::getClosestRobot(available_robots, target_position);
 
+  // Wait for the closest bot to be out of the ball keepout circle before giving it new commands
+  if(maybe_motion_commands[closest_bot.id]) {
+    return;
+  }
+
   auto & emt = easy_move_tos_[closest_bot.id];
 
   emt.setTargetPosition(target_position);
