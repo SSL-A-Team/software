@@ -259,6 +259,7 @@ export class RosManager {
         return function(msg: any): void {
             // Convert timestamp to millis
             appState.realtimeWorld.timestamp = (msg.current_time.sec * 1e3) + (msg.current_time.nanosec / 1e6);
+            appState.lastTimeReceivedKenobi = Date.now();
 
             if (msg.balls.length > 0) {
                 appState.realtimeWorld.ball.pose = msg.balls[0].pose;

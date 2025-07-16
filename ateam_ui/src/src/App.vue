@@ -3,6 +3,10 @@
         <v-app-bar app ref="Top Bar" color="ateam-color" density="compact">
             <v-app-bar-title class="flex-0-0" v-text="'Ateam UI'" style="text-wrap-mode:nowrap;"/>
             <MenuBarComponent/>
+            <v-spacer></v-spacer>
+            <v-card class="d-flex justify-center mr-2 pa-1" :style="'color: ' + kenobiStatusStyle">
+                {{ kenobiStatus }}
+            </v-card>
         </v-app-bar>
         <v-main>
             <v-container fluid class="d-inline-flex justify-space-between">
@@ -69,6 +73,8 @@ export default {
                 scale: 75, // Pixels per meter (in the rendering canvas)
                 factor: 1 // Field Scaling Factor (applied to the canvas when it's added to the UI)
             },
+            kenobiStatus: "Hello There",
+            kenobiStatusStyle: "green",
             tab: null
         }
     },
@@ -94,6 +100,14 @@ export default {
         },
         updateStatus: function() {
             this.$refs.robotStatus.update();
+
+            if (Date.now() - this.state.lastTimeReceivedKenobi > 200) {
+                this.kenobiStatusStyle = 'red';
+                this.kenobiStatus = "That's a name I've not heard in a long time";
+            } else {
+                this.kenobiStatusStyle = 'green';
+                this.kenobiStatus = "Hello There"
+            }
         }
     },
     beforeUnmount() {

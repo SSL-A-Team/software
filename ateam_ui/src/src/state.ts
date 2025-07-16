@@ -56,6 +56,7 @@ export class AppState {
     renderConfig: RenderConfig;
     graphicState: GraphicState;
 
+    lastTimeReceivedKenobi: number;
     realtimeWorld: WorldState; // World that is constantly kept up to date by ROS callbacks
     world: WorldState; // World to be displayed, can be set to a world state in the past history buffer
 
@@ -87,6 +88,8 @@ export class AppState {
 
         this.realtimeWorld = new WorldState();
         this.world = this.realtimeWorld;
+
+        this.lastTimeReceivedKenobi = Date.now();
     }
 
     connectToRos(): void {
