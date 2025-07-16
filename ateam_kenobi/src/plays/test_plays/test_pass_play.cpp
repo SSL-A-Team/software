@@ -30,8 +30,8 @@ TestPassPlay::TestPassPlay(stp::Options stp_options)
   pass_tactic_(createChild<tactics::Pass>("pass"))
 {
   targets_ = {
-    ateam_geometry::Point{-1, -1},
-    ateam_geometry::Point{1, 1}
+    ateam_geometry::Point{-1, -1.5},
+    ateam_geometry::Point{-1, 1.5}
   };
 }
 

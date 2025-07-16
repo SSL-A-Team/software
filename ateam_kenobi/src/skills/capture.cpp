@@ -128,6 +128,10 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
 
+  command.twist.linear.x = 0.3;
+  command.twist.linear.y = 0.0;
+  command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+
   command.dribbler_speed = 360;
 
   return command;

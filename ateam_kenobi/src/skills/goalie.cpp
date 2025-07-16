@@ -35,7 +35,7 @@ namespace ateam_kenobi::skills
 Goalie::Goalie(stp::Options stp_options)
 : stp::Skill(stp_options),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo")),
-  kick_(createChild<skills::PivotKick>("Kick"))
+  kick_(createChild<skills::LineKick>("Kick"))
 {
   reset();
   kick_.SetUseDefaultObstacles(false);
@@ -264,8 +264,11 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(const World & world, co
 
   kick_.SetTargetPoint(target_point);
 
-  kick_.SetKickType(goalie.chipper_available ? skills::PivotKick::KickType::Chip :
-      skills::PivotKick::KickType::Kick);
+  if constexpr (std::is_same_v<decltype(kick_), skills::PivotKick>)
+  {
+    kick_.SetKickType(goalie.chipper_available ? skills::PivotKick::KickType::Chip :
+        skills::PivotKick::KickType::Kick);
+  }
 
   return kick_.RunFrame(world, goalie);
 }

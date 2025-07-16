@@ -67,7 +67,7 @@ protected:
 private:
   WaitType wait_type_ = WaitType::KickWhenReady;
   bool kicking_allowed_ = true;
-  double kick_speed_ = 5.0;
+  double kick_speed_ = 4.0;
 };
 
 }  // namespace ateam_kenobi::skills
