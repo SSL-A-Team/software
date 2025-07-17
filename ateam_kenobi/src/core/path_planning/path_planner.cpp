@@ -56,6 +56,10 @@ PathPlanner::Path PathPlanner::getPath(
     augmented_obstacles.push_back(ateam_geometry::makeDisk(world.ball.pos, kBallRadius));
   }
 
+  if (options.draw_obstacles) {
+    drawObstacles(augmented_obstacles);
+  }
+
   const auto goal_is_valid = isStateValid(goal, world, augmented_obstacles, options);
 
   if(!shouldReplan(start, goal, world, augmented_obstacles, options)) {
@@ -82,10 +86,6 @@ PathPlanner::Path PathPlanner::getPath(
   } else if (!isStateValid(start, world, augmented_obstacles, options, BoundaryStrategy::OffsetIn)) {
     cached_path_valid_ = false;
     return {};
-  }
-
-  if (options.draw_obstacles) {
-    drawObstacles(augmented_obstacles);
   }
 
   Path path = {start, goal};
