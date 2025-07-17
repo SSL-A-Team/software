@@ -44,6 +44,11 @@ stp::PlayScore FreeKickOnGoalPlay::getScore(const World & world)
     return stp::PlayScore::NaN();
   }
 
+  if((world.in_play || striker_.IsDone()) && world.ball.vel.x() < 0.01) {
+    // Ball is stopped or moving up field
+    return stp::PlayScore::NaN();
+  }
+
   const auto largest_window = GetLargestWindowOnGoal(world);
   if (!largest_window) {
     return stp::PlayScore::Min();

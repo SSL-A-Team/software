@@ -51,7 +51,8 @@ stp::PlayScore SpatialPassPlay::getScore(const World & world)
   }
   if (!world.in_play &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::NormalStart)
+    world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
+    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
   {
     return stp::PlayScore::NaN();
   }
