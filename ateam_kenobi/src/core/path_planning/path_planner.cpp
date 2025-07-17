@@ -41,7 +41,7 @@ PathPlanner::Path PathPlanner::getPath(
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)
 {
-  const auto start_time = std::chrono::steady_clock::now();
+  start_time_ = std::chrono::steady_clock::now();
 
   std::vector<ateam_geometry::AnyShape> augmented_obstacles = obstacles;
 
@@ -83,7 +83,9 @@ PathPlanner::Path PathPlanner::getPath(
 
   if (options.ignore_start_obstacle) {
     removeCollidingObstacles(augmented_obstacles, start, options);
-  } else if (!isStateValid(start, world, augmented_obstacles, options, BoundaryStrategy::OffsetIn)) {
+  } else if (!isStateValid(start, world, augmented_obstacles, options,
+      BoundaryStrategy::OffsetIn))
+  {
     cached_path_valid_ = false;
     return {};
   }
@@ -107,9 +109,7 @@ PathPlanner::Path PathPlanner::getPath(
   timed_out_ = false;
 
   while (true) {
-    const auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-      std::chrono::steady_clock::now() - start_time).count();
-    if (elapsed_time > options.search_time_limit) {
+    if (isTimeUp()) {
       RCLCPP_WARN(getLogger(), "Path planning timed out.");
       trimPathAfterCollision(path, world, augmented_obstacles, options);
       timed_out_ = true;
@@ -138,6 +138,7 @@ PathPlanner::Path PathPlanner::getPath(
 
   removeLoops(path);
   removeSkippablePoints(path, world, augmented_obstacles, options);
+  smoothCorners(path, world, augmented_obstacles, options);
 
   if (!timed_out_) {
     cached_path_ = path;
@@ -146,6 +147,12 @@ PathPlanner::Path PathPlanner::getPath(
   }
 
   return path;
+}
+
+bool PathPlanner::isTimeUp(const PlannerOptions & options)
+{
+  return (std::chrono::steady_clock::now() - start_time_) >=
+         std::chrono::duration<double>(options.search_time_limit);
 }
 
 void PathPlanner::removeCollidingObstacles(
@@ -428,6 +435,38 @@ bool PathPlanner::shouldReplan(
   }
 
   return false;
+}
+
+
+void PathPlanner::smoothCorners(
+  Path & path, const World & world,
+  const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options)
+{
+  if(path.size() < 3) {
+    return;
+  }
+  while(!isTimeUp(options)) {
+    bool corner_smoothed = false;
+    for(auto i = 1; i < path.size() - 1; ++i) {
+      if(isTimeUp(options)) {
+        return;
+      }
+      const auto before_point = path[i - 1];
+      const auto curr_point = path[i];
+      const auto next_point = path[i + 1];
+      const auto corner_angle = ateam_geometry::AngleBetweenPoints(before_point, curr_point,
+          next_point);
+      if(corner_angle >= options.corner_smoothing_angle_threshold) {
+        continue;
+      }
+      corner_smoothed = true;
+      const auto new_segment_angle = corner_angle * 2.0;
+      
+    }
+    if(!corner_smoothed) {
+      break;
+    }
+  }
 }
 
 }  // namespace ateam_kenobi::path_planning

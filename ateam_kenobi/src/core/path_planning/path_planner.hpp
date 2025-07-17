@@ -72,6 +72,11 @@ struct PlannerOptions
 
   bool force_replan = false;
 
+  /**
+   * Any corners sharper than this angle will attempt to be smoothed, time permitting
+   */
+  double corner_smoothing_angle_threshold = 2.36;
+
   ReplanThresholds replan_thresholds;
 };
 
@@ -111,6 +116,9 @@ private:
   Path cached_path_;
   Position cached_path_goal_;
   bool used_cached_path_ = false;
+  std::chrono::steady_clock::time_point start_time_;
+
+  bool isTimeUp(const PlannerOptions & options);
 
   void removeCollidingObstacles(
     std::vector<ateam_geometry::AnyShape> & obstacles,
@@ -171,6 +179,10 @@ private:
     const Position & start, const Position & goal, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
+
+  void smoothCorners(
+    Path & path, const World & world,
+    const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options);
 };
 
 }  // namespace ateam_kenobi::path_planning
