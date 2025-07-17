@@ -177,7 +177,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
-  planner_options.footprint_inflation = std::min(0.04, pre_kick_offset);
+  planner_options.footprint_inflation = std::min(0.015, pre_kick_offset);
 
   // planner_options.draw_obstacles = true;
 
@@ -192,7 +192,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
       world.ball.pos + kBallDiameter * ateam_geometry::Vector(
         std::cos(angle / 2),
         std::sin(angle / 2)),
-      kBallRadius * 1.5
+      kBallRadius * 1.8
   ));
 
   // Left Obstacle
@@ -201,7 +201,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
       world.ball.pos + kBallDiameter * ateam_geometry::Vector(
         std::cos(angle + M_PI / 2),
         std::sin(angle + M_PI / 2)),
-      kBallRadius * 1.5
+      kBallRadius * 1.8
   ));
 
   // Right Obstacle
@@ -210,7 +210,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
       world.ball.pos + kBallDiameter * ateam_geometry::Vector(
         std::cos(angle - M_PI / 2),
         std::sin(angle - M_PI / 2)),
-      kBallRadius * 1.5
+      kBallRadius * 1.8
   ));
 
   easy_move_to_.setMaxVelocity(move_to_ball_velocity);

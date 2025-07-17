@@ -129,7 +129,7 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
   const auto dist_to_ball = ateam_geometry::norm(robot.pos - world.ball.pos);
   if (dist_to_ball < 0.5) {
     ateam_geometry::Vector robot_vel(motion_command.twist.linear.x, motion_command.twist.linear.y);
-    robot_vel += ateam_geometry::normalize(world.ball.vel) * 0.4;
+    robot_vel += ateam_geometry::normalize(world.ball.vel) * 0.8;
     motion_command.twist.linear.x = robot_vel.x();
     motion_command.twist.linear.y = robot_vel.y();
   }

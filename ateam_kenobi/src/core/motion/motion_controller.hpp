@@ -96,7 +96,7 @@ public:
 
   // Velocity limits
   double v_max = 2.0;
-  double t_max = 4.0;
+  double t_max = 3.0;
 
   // Acceleration limits
   double accel_limit = 2.0;
