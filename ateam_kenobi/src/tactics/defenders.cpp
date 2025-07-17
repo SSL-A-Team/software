@@ -56,7 +56,8 @@ void Defenders::runFrame(
     const auto & defender_point = defender_points[i];
     auto & emt = easy_move_tos_[robot.id];
     emt.setTargetPosition(defender_point);
-    emt.face_point(world.ball.pos);
+    // emt.face_point(world.ball.pos);
+    emt.face_absolute(0.0);
     path_planning::PlannerOptions planner_options;
     planner_options.avoid_ball = false;
     planner_options.footprint_inflation = 0.03;

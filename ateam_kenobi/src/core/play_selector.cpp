@@ -230,8 +230,8 @@ stp::Play * PlaySelector::selectRankedPlay(
         // 15% bonus to previous play as hysteresis
         score_multiplier = 1.15;
         if (play->getCompletionState() == stp::PlayCompletionState::Busy) {
-          // +90% if previous play should not be interrupted
-          score_multiplier += 0.9;
+          // +50% if previous play should not be interrupted
+          score_multiplier += 0.5;
         }
       }
       if (!play->isEnabled()) {

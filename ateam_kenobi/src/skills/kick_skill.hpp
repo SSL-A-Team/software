@@ -61,6 +61,8 @@ public:
 
   double GetKickSpeed() const;
 
+  virtual bool IsReady() const = 0;
+
 protected:
   bool IsAllowedToKick() const;
 

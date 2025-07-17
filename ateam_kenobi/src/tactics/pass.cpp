@@ -21,6 +21,7 @@
 
 #include "pass.hpp"
 #include <algorithm>
+#include <ateam_common/time.hpp>
 
 namespace ateam_kenobi::tactics
 {
@@ -28,7 +29,7 @@ namespace ateam_kenobi::tactics
 Pass::Pass(stp::Options stp_options)
 : stp::Tactic(stp_options),
   receiver_(createChild<skills::PassReceiver>("receiver")),
-  kick_(createChild<skills::PivotKick>("kicker", skills::KickSkill::WaitType::WaitToKick))
+  kick_(createChild<skills::LineKick>("kicker", skills::KickSkill::WaitType::WaitToKick))
 {
 }
 
@@ -66,6 +67,12 @@ void Pass::runFrame(
     kick_.SetTargetPoint(target_);
   }
 
+  const auto kicker_ready = kick_.IsReady();
+  if(kicker_ready && !prev_kicker_ready_) {
+    kicker_ready_start_time_ = world.current_time;
+  }
+  prev_kicker_ready_ = kicker_ready;
+
   receiver_command = receiver_.runFrame(world, receiver_bot);
 
   const bool is_stalled = kick_.IsDone() && !receiver_.isDone() && ateam_geometry::norm(
@@ -82,22 +89,26 @@ void Pass::runFrame(
     kick_.Reset();
   }
 
+  const auto kicker_ready_time = ateam_common::TimeDiffSeconds(kicker_ready_start_time_,
+      world.current_time);
+
   auto receiver_threshold = kReceiverPositionThreshold;
   if (std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) > 3.0) {
     receiver_threshold = 0.3;
   }
+
+  const auto kick_speed = speed_.value_or(calculateDefaultKickSpeed(world));
   if (ateam_geometry::norm(receiver_bot.pos, target_) <= receiver_threshold) {
     kick_.AllowKicking();
+    kick_.SetKickSpeed(kick_speed);
     getPlayInfo()["kicking_allowed"] = "yes";
+  } else if (kicker_ready && kicker_ready_time > 3.0) {
+    kick_.AllowKicking();
+    kick_.SetKickSpeed(kick_speed / 2.0);
+    getPlayInfo()["kicking_allowed"] = "yes (time)";
   } else {
     kick_.DisallowKicking();
     getPlayInfo()["kicking_allowed"] = "no";
-  }
-
-  if (speed_) {
-    kick_.SetKickSpeed(*speed_);
-  } else {
-    kick_.SetKickSpeed(calculateDefaultKickSpeed(world));
   }
 
   /* TODO(barulicm): The kicker should make sure it's out of the way if the ball is in receiver

@@ -52,8 +52,9 @@ public:
 
   void SetTargetPoint(ateam_geometry::Point point)
   {
-    if (state_ != State::KickBall && state_ != State::FaceBall) {
+    if (state_ != State::KickBall) {
       target_point_ = point;
+      state_ = State::MoveBehindBall;
     }
   }
 
@@ -79,6 +80,10 @@ public:
   void SetKickType(KickType type)
   {
     kick_type_ = type;
+  }
+
+  bool IsReady() const override {
+    return state_ == State::FaceBall || state_ == State::KickBall;
   }
 
   double move_to_ball_velocity = 2.0;

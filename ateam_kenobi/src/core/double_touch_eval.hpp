@@ -99,7 +99,7 @@ public:
 private:
   static constexpr double kStartTouchBallsenseThreshold = kRobotRadius + 0.1;
   static constexpr double kStartTouchVisionThreshold = kRobotRadius + kBallRadius + 0.01;
-  static constexpr double kEndTouchVisionThreshold = kRobotRadius + kBallRadius + 0.04;
+  static constexpr double kEndTouchVisionThreshold = kRobotRadius + kBallRadius + 0.045;
   bool double_touch_rule_applies_ = false;
   std::optional<int> forbidden_id_;
   // tracking the frame when command changes, different from RefereeInfo.prev_command

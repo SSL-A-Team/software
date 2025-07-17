@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2021 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,38 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__KICK_ON_GOAL_PLAY_HPP_
-#define PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#ifndef ATEAM_COMMON__TIME_HPP_
+#define ATEAM_COMMON__TIME_HPP_
 
-#include "core/stp/play.hpp"
-#include "tactics/standard_defense.hpp"
-#include "skills/line_kick.hpp"
-#include "skills/lane_idler.hpp"
+#include <chrono>
 
-namespace ateam_kenobi::plays
+namespace ateam_common {
+
+template <typename Duration, typename Clock>
+double TimeDiff(const typename Clock::time_point & a, const typename Clock::time_point & b)
 {
+  using DestDurationType = std::chrono::duration<double, typename Duration::period>;
+  return std::chrono::duration_cast<DestDurationType>(a - b).count();
+}
 
-class KickOnGoalPlay : public stp::Play
+double TimeDiffSeconds(const std::chrono::steady_clock::time_point & a, const std::chrono::steady_clock::time_point & b)
 {
-public:
-  static constexpr const char * kPlayName = "KickOnGoalPlay";
+  return TimeDiff<std::chrono::seconds, std::chrono::steady_clock>(a, b);
+}
 
-  explicit KickOnGoalPlay(stp::Options stp_options);
+}  // namespace ateam_common
 
-  stp::PlayScore getScore(const World & world) override;
-
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) override;
-
-private:
-  tactics::StandardDefense defense_;
-  skills::LineKick striker_;
-  skills::LaneIdler lane_idler_a_;
-  skills::LaneIdler lane_idler_b_;
-};
-
-}  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__KICK_ON_GOAL_PLAY_HPP_
+#endif  // ATEAM_COMMON__TIME_HPP_
