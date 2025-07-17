@@ -30,7 +30,11 @@ enum class PossessionResult
 {
   Ours,
   Theirs,
-  Neither
+  Neither,
+  Tied,
+  TiedWeak,
+  OursWeak,
+  TheirsWeak
 };
 
 PossessionResult WhoHasPossession(const World & world);
