@@ -296,6 +296,12 @@ void OurBallPlacementPlay::runExtracting(
   if (extract_robot.breakbeam_ball_detected_filtered) {
     getPlayInfo()["ExtractState"] = "extracting ball";
 
+    const bool robot_has_ball_clear_of_obstacles =
+      ateam_geometry::norm(extract_robot.pos - approach_point_) < 0.03;
+    if (robot_has_ball_clear_of_obstacles) {
+      state_ = State::Placing;
+    }
+
     motion_command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
     motion_command.twist.linear.x = -0.35;
     motion_command.twist.linear.y = 0.0;
