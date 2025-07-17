@@ -105,7 +105,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
   double deceleration_to_reach_target = (vel * vel) / (2 * angle_error);
 
   // Cruise
-  double trapezoidal_vel = pivot_speed_;
+  double trapezoidal_vel = std::copysign(pivot_speed_, angle_error);
   const double error_direction = std::copysign(1, angle_error);
   const double decel_direction = std::copysign(1, vel * angle_error);
 
