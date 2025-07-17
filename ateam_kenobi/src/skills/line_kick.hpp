@@ -90,8 +90,8 @@ public:
   double angle_threshold = 0.1;
   double kick_drive_velocity = 0.2;
 
-  // Allow the robot to push up against obstacles / other robots (slowly)
-  bool cowabunga = false;
+  // Allow the robot to push up against obstacles / other robots
+  const bool cowabunga = true;
 
 /*
                                           #@%%%%%%%%%%%%%=
