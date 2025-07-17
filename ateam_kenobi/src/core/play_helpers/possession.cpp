@@ -31,7 +31,9 @@ namespace ateam_kenobi::play_helpers
 PossessionResult WhoHasPossession(const World & world)
 {
   const auto possession_threshold = 0.01 + kRobotRadius + kBallRadius;
+  const auto weak_possession_threshold = 0.5 + kRobotRadius + kBallRadius;
   const auto possession_threhold_sq = possession_threshold * possession_threshold;
+  const auto weak_possession_threshold_sq = weak_possession_threshold * weak_possession_threshold;
   const auto & ball_pos = world.ball.pos;
 
   double closest_our_bot_sq_distance = std::numeric_limits<double>::infinity();
@@ -57,11 +59,17 @@ PossessionResult WhoHasPossession(const World & world)
   const auto they_are_closer = closest_our_bot_sq_distance > closest_their_bot_sq_distance;
   const auto we_are_close_enough = closest_our_bot_sq_distance < possession_threhold_sq;
   const auto they_are_close_enough = closest_their_bot_sq_distance < possession_threhold_sq;
+  const auto we_are_weakly_close_enough = closest_our_bot_sq_distance < weak_possession_threshold_sq;
+  const auto they_are_weakly_close_enough = closest_their_bot_sq_distance < weak_possession_threshold_sq;
 
   if (we_are_closer && we_are_close_enough) {
     return PossessionResult::Ours;
   } else if (they_are_closer && they_are_close_enough) {
     return PossessionResult::Theirs;
+  } else if (we_are_closer && we_are_weakly_close_enough) {
+    return PossessionResult::OursWeak;
+  } else if (they_are_closer && they_are_weakly_close_enough) {
+    return PossessionResult::TheirsWeak;
   } else {
     return PossessionResult::Neither;
   }

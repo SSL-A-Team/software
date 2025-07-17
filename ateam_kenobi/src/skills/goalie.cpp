@@ -100,7 +100,11 @@ void Goalie::runFrame(
 
 bool Goalie::doesOpponentHavePossesion(const World & world)
 {
-  return play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs;
+  const auto possession = play_helpers::WhoHasPossession(world);
+  return possession == play_helpers::PossessionResult::Theirs ||
+         possession == play_helpers::PossessionResult::TheirsWeak ||
+         possession == play_helpers::PossessionResult::Tied ||
+         possession == play_helpers::PossessionResult::TiedWeak;
 }
 
 bool Goalie::isBallHeadedTowardsGoal(const World & world, const Ball & ball_state)
