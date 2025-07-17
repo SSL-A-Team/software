@@ -221,8 +221,8 @@ std::vector<Eigen::VectorXd> Camera::robot_measurements_to_vector(
   double x_offset = 0.0;
   double y_offset = 0.0;
   if(params_interface != nullptr) {
-    x_offset = params_interface->get_parameter("offset.robots.x").as_double();
-    y_offset = params_interface->get_parameter("offset.robots.y").as_double();
+    x_offset = params_interface->get_parameter("offsets.robots.x").as_double();
+    y_offset = params_interface->get_parameter("offsets.robots.y").as_double();
   }
 
   std::transform(
