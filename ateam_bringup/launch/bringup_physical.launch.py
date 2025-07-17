@@ -76,8 +76,8 @@ def generate_launch_description():
                                               'autonomy.launch.xml')),
             launch_arguments={
                 'team_name': LaunchConfiguration('team_name'),
-                'vision_offset_robot_x': '-0.025',
-                'vision_offset_robot_y': '-0.025',
+                'vision_offset_robot_x': '0.0',
+                'vision_offset_robot_y': '0.0',
             }.items()
         ),
 
