@@ -79,7 +79,7 @@ PathPlanner::Path PathPlanner::getPath(
 
   if (options.ignore_start_obstacle) {
     removeCollidingObstacles(augmented_obstacles, start, options);
-  } else if (!isStateValid(start, world, augmented_obstacles, options, false)) {
+  } else if (!isStateValid(start, world, augmented_obstacles, options, BoundaryStrategy::OffsetIn)) {
     cached_path_valid_ = false;
     return {};
   }
@@ -170,10 +170,22 @@ bool PathPlanner::isStateValid(
   const ateam_geometry::Point & state,
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
-  const PlannerOptions & options, const bool offset_field_bounds)
+  const PlannerOptions & options, const BoundaryStrategy bounds_strat)
 {
-  if (!IsPointInBounds(state, world, offset_field_bounds)) {
-    return false;
+  if(bounds_strat != BoundaryStrategy::Ignore) {
+    double offset = 0.0;
+    switch(bounds_strat) {
+      case BoundaryStrategy::OffsetIn:
+        offset = kRobotRadius * 0.95;
+        break;
+      case BoundaryStrategy::OffsetOut:
+        break;
+      default:
+        break;
+    }
+    if (!IsPointInBounds(state, world, offset)) {
+      return false;
+    }
   }
 
   auto robot_footprint = ateam_geometry::makeDisk(

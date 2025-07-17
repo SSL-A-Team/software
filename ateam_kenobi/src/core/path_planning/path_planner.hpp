@@ -116,11 +116,19 @@ private:
     std::vector<ateam_geometry::AnyShape> & obstacles,
     const ateam_geometry::Point & point, const PlannerOptions & options);
 
+  enum class BoundaryStrategy
+  {
+    Strict,
+    Ignore,
+    OffsetIn,
+    OffsetOut
+  };
+
   bool isStateValid(
     const ateam_geometry::Point & state,
     const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
-    const PlannerOptions & options, const bool offset_field_bounds = true);
+    const PlannerOptions & options, const BoundaryStrategy bounds_strat = BoundaryStrategy::Strict);
 
   std::optional<ateam_geometry::Point> getCollisionPoint(
     const ateam_geometry::Point & p1, const ateam_geometry::Point & p2,
