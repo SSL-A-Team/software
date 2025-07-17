@@ -190,6 +190,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
   path_planning::PlannerOptions planner_options;
   planner_options.footprint_inflation = 0.06;
   planner_options.draw_obstacles = true;
+  planner_options.ignore_start_obstacle = false;
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(getStartPosition(world));
   easy_move_to_.setMaxVelocity(1.5);
