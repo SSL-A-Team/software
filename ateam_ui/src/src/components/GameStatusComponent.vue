@@ -6,10 +6,14 @@
         <v-row v-if="state.world.referee.blue.name || state.world.referee.yellow.name" class="nowrap justify-center ms-2 ps-2 mb-2 pb-2" align="center">
             <TeamGameComponent v-bind:team="state.world.referee.blue" style="background: blue"/>
                     <v-card variant="outlined" class="ma-2 pa-2 align-centered" :style="'color: ' + stageProperty.color">
-                        {{stageProperty.name}}
+                        <v-card-title :class="'text-' + stageProperty.color + '-lighten-4'">
+                            <b>{{stageProperty.name}}</b>
+                        </v-card-title>
                     </v-card>
                     <v-card variant="outlined" class="ma-2 pa-2" :style="'color: ' + commandProperty.color">
-                        {{commandProperty.name}}
+                        <v-card-title :class="'text-' + commandProperty.color + '-lighten-4'">
+                            <b>{{commandProperty.name}}</b>
+                        </v-card-title>
                     </v-card>
             <TeamGameComponent v-bind:team="state.world.referee.yellow" style="background: yellow; color: black"/>
         </v-row>
