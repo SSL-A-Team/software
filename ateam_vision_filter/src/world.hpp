@@ -27,6 +27,8 @@
 #include <map>
 #include <memory>
 
+#include <rclcpp/node_interfaces/node_parameters_interface.hpp>
+
 #include <ateam_msgs/msg/vision_world_state.hpp>
 
 #include "camera.hpp"
@@ -44,7 +46,7 @@ class World
 public:
   using CameraID = int;
 
-  World();
+  World(rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface = nullptr);
 
   /**
    * Updates the world with a specific camera's measurement
@@ -80,6 +82,7 @@ public:
   ateam_msgs::msg::VisionWorldState get_vision_world_state() const;
 
 private:
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface_;
   std::shared_ptr<ModelInputGenerator> model_input_generator;
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;
   std::map<CameraID, Camera> cameras;

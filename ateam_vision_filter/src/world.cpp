@@ -30,14 +30,15 @@
 namespace ateam_vision_filter
 {
 
-World::World()
-: model_input_generator(std::make_shared<ModelInputGenerator>()),
+World::World(rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface)
+: params_interface_(params_interface),
+  model_input_generator(std::make_shared<ModelInputGenerator>()),
   transmission_probability_generator(std::make_shared<TransmissionProbabilityGenerator>()) {}
 
 void World::update_camera(const CameraID & cameraID, const CameraMeasurement & measurement)
 {
   // Add camera if it doesn't exist yet
-  cameras.try_emplace(cameraID, Camera(model_input_generator, transmission_probability_generator));
+  cameras.try_emplace(cameraID, Camera(model_input_generator, transmission_probability_generator, params_interface_));
 
   // Update the specific camera
   cameras.at(cameraID).update(measurement);
