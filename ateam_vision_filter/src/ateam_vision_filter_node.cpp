@@ -48,8 +48,8 @@ public:
     world_(get_node_parameters_interface())
   {
     declare_parameters<double>("offsets", {
-      {"robots.x", -0.025},
-      {"robots.y", -0.025}
+      {"robots.x", 0.0},
+      {"robots.y", 0.0}
     });
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
