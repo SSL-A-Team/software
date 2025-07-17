@@ -70,20 +70,31 @@ void Defenders::runFrame(
 
 std::vector<ateam_geometry::Point> Defenders::getDefenderPoints(const World & world)
 {
-  const auto first_position = getBallBlockPoint(world);
-  const auto visible_oponent_robots = play_helpers::getVisibleRobots(world.their_robots);
-  ateam_geometry::Point second_position;
-  const auto min_opponent_bots = 2;
-  if (visible_oponent_robots.size() >= min_opponent_bots) {
-    second_position = getPassBlockPoint(world);
-  }
+  if(isBallInDefenseArea(world)) {
 
-  if (visible_oponent_robots.size() < min_opponent_bots ||
-    CGAL::squared_distance(second_position, first_position) < kRobotDiameter * kRobotDiameter)
-  {
-    second_position = getAdjacentBlockPoint(world, first_position);
+    const auto x = -((world.field.field_length / 2.0) -
+      world.field.defense_area_depth) + kDefenseSegmentOffset;
+    const auto y = (world.field.defense_area_width / 2.0) + kDefenseSegmentOffset;
+    return {
+      ateam_geometry::Point{x, -y},
+      ateam_geometry::Point{x, y}
+    };
+  } else {
+    const auto first_position = getBallBlockPoint(world);
+    const auto visible_oponent_robots = play_helpers::getVisibleRobots(world.their_robots);
+    ateam_geometry::Point second_position;
+    const auto min_opponent_bots = 2;
+    if (visible_oponent_robots.size() >= min_opponent_bots) {
+      second_position = getPassBlockPoint(world);
+    }
+
+    if (visible_oponent_robots.size() < min_opponent_bots ||
+      CGAL::squared_distance(second_position, first_position) < kRobotDiameter * kRobotDiameter)
+    {
+      second_position = getAdjacentBlockPoint(world, first_position);
+    }
+    return {first_position, second_position};
   }
-  return {first_position, second_position};
 }
 
 ateam_geometry::Point Defenders::getBallBlockPoint(const World & world)
@@ -169,13 +180,10 @@ std::vector<ateam_geometry::Segment> Defenders::getDefenseSegments(const World &
 {
   std::vector<ateam_geometry::Segment> segments;
 
-  const auto margin = 0.05;
-
-  const auto pos_y_extent = (world.field.defense_area_width / 2.0) + kRobotRadius + margin;
+  const auto pos_y_extent = (world.field.defense_area_width / 2.0) + kDefenseSegmentOffset;
   const auto neg_y_extent = -pos_y_extent;
   const auto x_front = (-world.field.field_length / 2.0) + world.field.defense_area_depth +
-    kRobotRadius +
-    margin;
+    kDefenseSegmentOffset;
   const auto x_back = -world.field.field_length / 2.0;
 
   segments.push_back(
@@ -209,6 +217,18 @@ void Defenders::drawDefenseSegments(const World & world)
       "blue");
     i++;
   }
+}
+
+bool Defenders::isBallInDefenseArea(const World & world)
+{
+  const auto def_area_front_x = -((world.field.field_length / 2.0) -
+    world.field.defense_area_depth);
+  const auto def_area_half_width = world.field.defense_area_width / 2.0;
+  ateam_geometry::Rectangle def_area{
+    ateam_geometry::Point{def_area_front_x, -def_area_half_width},
+    ateam_geometry::Point{-world.field.field_length / 2.0, def_area_half_width}
+  };
+  return ateam_geometry::doIntersect(world.ball.pos, def_area);
 }
 
 }  // namespace ateam_kenobi::tactics

@@ -54,7 +54,6 @@ public:
   {
     if (state_ != State::KickBall) {
       target_point_ = point;
-      state_ = State::MoveBehindBall;
     }
   }
 
@@ -152,8 +151,13 @@ public:
                                   .:--==+++++++=-.
 */
 
+  void setPreKickOffset(double val) {
+    pre_kick_offset = val;
+  }
+
 private:
-  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.06;
+  const double kDefaultPreKickOffset = kRobotRadius + kBallRadius + 0.06;
+  double pre_kick_offset = kDefaultPreKickOffset;
   KickType kick_type_ = KickType::Kick;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;

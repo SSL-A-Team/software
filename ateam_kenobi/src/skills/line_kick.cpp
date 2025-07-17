@@ -67,7 +67,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunFrame(const World & world, cons
 
 ateam_geometry::Point LineKick::GetPreKickPosition(const World & world)
 {
-  return world.ball.pos + (kPreKickOffset * ateam_geometry::normalize(
+  return world.ball.pos + (pre_kick_offset * ateam_geometry::normalize(
            world.ball.pos - target_point_));
 }
 
@@ -77,6 +77,7 @@ void LineKick::ChooseState(const World & world, const Robot & robot)
   getPlayInfo()["IsRobotBehindBall"] = IsRobotBehindBall(world, robot, 1.0);
   getPlayInfo()["IsRobotSettled"] = IsRobotSettled(world, robot);
   getPlayInfo()["IsRobotFacingBall"] = IsRobotFacingBall(robot);
+  getPlayInfo()["IsAllowedToKick"] = IsAllowedToKick();
   switch (state_) {
     case State::MoveBehindBall:
       if (IsRobotBehindBall(world, robot, 1.0) && IsRobotSettled(world, robot)) {
@@ -153,6 +154,8 @@ bool LineKick::IsRobotFacingBall(const Robot & robot)
 {
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
+  getPlayInfo()["Target angle"] = robot_to_target_angle;
+  getPlayInfo()["Robot angle"] = robot.theta;
   return std::abs(
     angles::shortest_angular_distance(
       robot.theta,
@@ -174,7 +177,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
-  planner_options.footprint_inflation = 0.04;
+  planner_options.footprint_inflation = std::min(0.04, pre_kick_offset);
 
   // planner_options.draw_obstacles = true;
 

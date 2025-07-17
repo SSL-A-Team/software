@@ -76,6 +76,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefensePlay::
     world, assignments.GetGroupFilledAssignments("defense"),
     motion_commands);
 
+  getPlayInfo()["defense"] = defense_tactic_.getPlayInfo();
+
   std::vector<Robot> blockers = assignments.GetGroupFilledAssignments("blockers");
   const auto blocker_commands =
     blockers_.runFrame(world, assignments.GetGroupFilledAssignments("blockers"));

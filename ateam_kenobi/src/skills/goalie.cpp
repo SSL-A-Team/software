@@ -40,6 +40,7 @@ Goalie::Goalie(stp::Options stp_options)
 {
   reset();
   kick_.SetUseDefaultObstacles(false);
+  // kick_.setPreKickOffset(kRobotRadius + kBallRadius + 0.04);
 }
 
 void Goalie::reset()
@@ -81,12 +82,16 @@ void Goalie::runFrame(
   ateam_msgs::msg::RobotMotionCommand motion_command;
 
   if (isBallHeadedTowardsGoal(world, ball_state)) {
+    getPlayInfo()["State"] = "Block Ball";
     motion_command = runBlockBall(world, robot, ball_state);
   } else if (doesOpponentHavePossesion(world)) {
+    getPlayInfo()["State"] = "Block Shot";
     motion_command = runBlockShot(world, robot, ball_state);
   } else if (isBallInDefenseArea(world, ball_state)) {
+    getPlayInfo()["State"] = "Clear Ball";
     motion_command = runClearBall(world, robot, ball_state);
   } else {
+    getPlayInfo()["State"] = "Default";
     motion_command = runDefaultBehavior(world, robot, ball_state);
   }
 
@@ -286,10 +291,9 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(
 
   kick_.SetTargetPoint(target_point);
 
-  // kick_.SetKickType(goalie.chipper_available ? skills::PivotKick::KickType::Chip :
-  //     skills::PivotKick::KickType::Kick);
-
-  return kick_.RunFrame(world, goalie);
+  const auto command = kick_.RunFrame(world, goalie);
+  getPlayInfo()["Kick"] = kick_.getPlayInfo();
+  return command;
 }
 
 

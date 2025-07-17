@@ -73,6 +73,8 @@ void Pass::runFrame(
   }
   prev_kicker_ready_ = kicker_ready;
 
+  getPlayInfo()["Kicker Ready"] = kicker_ready;
+
   receiver_command = receiver_.runFrame(world, receiver_bot);
 
   const bool is_stalled = kick_.IsDone() && !receiver_.isDone() && ateam_geometry::norm(
@@ -89,8 +91,9 @@ void Pass::runFrame(
     kick_.Reset();
   }
 
-  const auto kicker_ready_time = ateam_common::TimeDiffSeconds(kicker_ready_start_time_,
-      world.current_time);
+  const auto kicker_ready_time = ateam_common::TimeDiffSeconds(world.current_time, kicker_ready_start_time_);
+
+  getPlayInfo()["Ready Time"] = kicker_ready_time;
 
   auto receiver_threshold = kReceiverPositionThreshold;
   if (std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) > 3.0) {

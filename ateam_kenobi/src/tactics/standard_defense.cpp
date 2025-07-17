@@ -47,7 +47,9 @@ void StandardDefense::runFrame(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
 {
   goalie_.runFrame(world, motion_commands);
+  getPlayInfo()["goalie"] = goalie_.getPlayInfo();
   defenders_.runFrame(world, defender_bots, motion_commands);
+  getPlayInfo()["defenders"] = defenders_.getPlayInfo();
 }
 
 }  // namespace ateam_kenobi::tactics
