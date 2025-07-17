@@ -51,7 +51,7 @@ private:
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   ateam_geometry::Point placement_point_;
 
-  double approach_radius_ = kRobotRadius + kBallRadius + 0.15;  // m
+  double approach_radius_ = kRobotRadius + kBallRadius + 0.3;  // m
   ateam_geometry::Point approach_point_;
 
   // Ball should have enough room for the robot to fit between it and the obstacle with a bit of extra space

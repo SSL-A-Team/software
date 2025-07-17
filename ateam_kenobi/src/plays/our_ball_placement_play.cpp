@@ -98,7 +98,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
     state_ = State::Done;
 
   // detect ball near goal/walls
-  } else if (use_extract && ball_dist > 0.2 && maybe_offset_vector.has_value()) {
+  } else if (use_extract && world.ball.visible && ball_dist > 0.2 && maybe_offset_vector.has_value()) {
     approach_point_ = world.ball.pos + maybe_offset_vector.value();
     state_ = State::Extracting;
     getOverlays().drawCircle("approach_point", ateam_geometry::makeCircle(approach_point_, 0.025), "#0000FFFF");
@@ -296,15 +296,36 @@ void OurBallPlacementPlay::runExtracting(
   if (extract_robot.breakbeam_ball_detected_filtered) {
     getPlayInfo()["ExtractState"] = "extracting ball";
 
-    const bool robot_has_ball_clear_of_obstacles =
-      ateam_geometry::norm(extract_robot.pos - approach_point_) < 0.03;
-    if (robot_has_ball_clear_of_obstacles) {
+    getPlayInfo()["extract bot approach dist"] = ateam_geometry::norm(extract_robot.pos - approach_point_);
+    if (ateam_geometry::norm(extract_robot.pos - approach_point_) < 0.03) {
       state_ = State::Placing;
     }
 
-    motion_command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
-    motion_command.twist.linear.x = -0.35;
-    motion_command.twist.linear.y = 0.0;
+    MotionOptions motion_options;
+    motion_options.completion_threshold = 0;
+    emt.setMotionOptions(motion_options);
+    path_planning::PlannerOptions planner_options = emt.getPlannerOptions();
+    planner_options.avoid_ball = false;
+    planner_options.footprint_inflation = -0.9 * kRobotRadius;
+    emt.setPlannerOptions(planner_options);
+
+    emt.setTargetPosition(approach_point_);
+    emt.setMaxVelocity(0.2);
+    emt.setMaxAccel(1.0);
+    emt.setMaxDecel(1.0);
+    if (world.ball.visible) {
+      emt.face_point(world.ball.pos);
+
+    // If the ball is occluded we sometimes drive past its previous position and try to turn around
+    // so its better to just keep facing the same direction if we lose track of it
+    } else {
+      emt.face_absolute(extract_robot.theta);
+    }
+
+    motion_command = emt.runFrame(extract_robot, world);
+    // motion_command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+    // motion_command.twist.linear.x = -0.1;
+    // motion_command.twist.linear.y = 0.0;
 
   } else if (robot_already_in_position || robot_near_approach_point) {
     getPlayInfo()["ExtractState"] = "capturing ball";
@@ -316,6 +337,7 @@ void OurBallPlacementPlay::runExtracting(
     planner_options.footprint_inflation = -0.9 * kRobotRadius;
     emt.setPlannerOptions(planner_options);
 
+    emt.setMaxVelocity(0.35);
     emt.setMaxAccel(2.0);
     emt.setMaxDecel(2.0);
     if (world.ball.visible) {
@@ -333,6 +355,7 @@ void OurBallPlacementPlay::runExtracting(
     motion_command.twist.linear.y = 0.0;
   } else {
     getPlayInfo()["ExtractState"] = "moving to approach point";
+    emt.setMaxVelocity(1.5);
     emt.setMaxAccel(2.0);
     emt.setMaxDecel(2.0);
     emt.face_absolute(ateam_geometry::ToHeading(world.ball.pos - approach_point_));
