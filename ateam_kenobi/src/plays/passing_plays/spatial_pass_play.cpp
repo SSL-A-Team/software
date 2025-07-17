@@ -175,7 +175,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
 
     pass_tactic_.runFrame(world, *maybe_kicker, *maybe_receiver, kicker_command, receiver_command);
 
-    getPlayInfo()["Pass Tactic"] = pass_tactic_.getPlayInfo();
+    ForwardPlayInfo(pass_tactic_);
   }
 
   std::string play_state;

@@ -254,7 +254,7 @@ void OurBallPlacementPlay::runPassing(
 
   pass_tactic_.runFrame(world, kicker_robot, receiver_robot, kicker_command, receiver_command);
 
-  getPlayInfo()["Pass Tactic"] = pass_tactic_.getPlayInfo();
+  ForwardPlayInfo(pass_tactic_);
 }
 
 void OurBallPlacementPlay::runExtracting(
@@ -389,7 +389,7 @@ void OurBallPlacementPlay::runPlacing(
 
   dribble_.setTarget(placement_point_);
   motion_commands[place_robot.id] = dribble_.runFrame(world, place_robot);
-  getPlayInfo()["Dribbler"] = dribble_.getPlayInfo();
+  ForwardPlayInfo(dribble_);
 }
 
 void OurBallPlacementPlay::runDone(

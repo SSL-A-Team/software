@@ -121,7 +121,7 @@ void Pass::runFrame(
     kicker_command = kick_.RunFrame(world, kicker_bot);
   }
 
-  getPlayInfo()["Receiver"] = receiver_.getPlayInfo();
+  ForwardPlayInfo(receiver_);
 }
 
 bool Pass::isDone()

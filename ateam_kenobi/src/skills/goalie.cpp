@@ -292,7 +292,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(
   kick_.SetTargetPoint(target_point);
 
   const auto command = kick_.RunFrame(world, goalie);
-  getPlayInfo()["Kick"] = kick_.getPlayInfo();
+  ForwardPlayInfo(kick_);
   return command;
 }
 

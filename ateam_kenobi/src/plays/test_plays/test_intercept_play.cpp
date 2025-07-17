@@ -80,7 +80,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestIntercept
     }
 
     if (ball_has_been_kicked_) {
-      getPlayInfo()["Capture"] = capture_skill_.getPlayInfo();
+      ForwardPlayInfo(capture_skill_);
       receiver_command = capture_skill_.runFrame(world, receiver);
     } else {
       getPlayInfo()["ball sensed"] = ball_has_been_sensed_;

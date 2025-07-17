@@ -83,7 +83,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay:
   getPlayInfo()["done_time"] = done_time;
   getPlayInfo()["target"]["x"] = targets_[target_ind_].x();
   getPlayInfo()["target"]["y"] = targets_[target_ind_].y();
-  getPlayInfo()["pass_info"] = pass_tactic_.getPlayInfo();
+  ForwardPlayInfo(pass_tactic_);
 
   auto & kicker_command = maybe_motion_commands.at(kicker.id).emplace();
   auto & receiver_command = maybe_motion_commands.at(receiver.id).emplace();
