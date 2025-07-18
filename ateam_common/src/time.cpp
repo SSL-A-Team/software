@@ -18,25 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__TIME_HPP_
-#define ATEAM_COMMON__TIME_HPP_
-
-#include <chrono>
+#include "ateam_common/time.hpp"
 
 namespace ateam_common
 {
 
-template<typename Duration, typename Clock>
-double TimeDiff(const typename Clock::time_point & a, const typename Clock::time_point & b)
-{
-  using DestDurationType = std::chrono::duration<double, typename Duration::period>;
-  return std::chrono::duration_cast<DestDurationType>(a - b).count();
-}
-
 double TimeDiffSeconds(
   const std::chrono::steady_clock::time_point & a,
-  const std::chrono::steady_clock::time_point & b);
+  const std::chrono::steady_clock::time_point & b)
+{
+  return TimeDiff<std::chrono::seconds, std::chrono::steady_clock>(a, b);
+}
 
-}  // namespace ateam_common
-
-#endif  // ATEAM_COMMON__TIME_HPP_
+} // namespace ateam_common
