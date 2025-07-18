@@ -132,7 +132,7 @@ void MotionController::calculate_trajectory_velocity_limits()
       const ateam_geometry::Vector prev_direction = point - prev_point;
 
       double angle = ateam_geometry::ShortestAngleBetween(direction, prev_direction);
-      max_turn_velocity = (abs(angle) > M_PI / 4.0) ? 0.5 : v_max;
+      max_turn_velocity = (abs(angle) > max_allowed_turn_angle) ? 0.5 : v_max;
     }
 
     double selected_velocity = std::clamp(std::min(max_decel_velocity, max_turn_velocity),
@@ -417,8 +417,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   if (this->angle_mode != AngleMode::no_face) {
     double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
     if (std::abs(t_error) > options.angular_completion_threshold) {
-      double t_command = this->t_controller.compute_command(t_error, dt);
-      // double t_command = this->calculate_trapezoidal_angular_vel(robot, target_angle, dt);
+      // double t_command = this->t_controller.compute_command(t_error, dt);
+      double t_command = this->calculate_trapezoidal_angular_vel(robot, target_angle, dt);
 
       if (trajectory_complete) {
         double theta_min = 0.0;
