@@ -292,6 +292,11 @@ private:
       world_.ball.vel = ateam_geometry::Vector(
         ball_state_msg->twist.linear.x,
         ball_state_msg->twist.linear.y);
+      world_.ball.last_visible_time = world_.current_time;
+    } else if(ateam_common::TimeDiffSeconds(world_.current_time, world_.ball.last_visible_time) >
+      0.5)
+    {
+      world_.ball.vel = ateam_geometry::Vector{0.0, 0.0};
     }
   }
 
@@ -428,7 +433,7 @@ private:
     }
 
     fps_tracker_.update(world_);
-    
+
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 
     auto motion_commands = runPlayFrame(world_);
