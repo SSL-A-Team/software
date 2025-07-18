@@ -299,6 +299,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(
     kick_.Reset();
   }
 
+  kick_.SetKickSpeed(2.0);
   kick_.SetTargetPoint(target_point);
 
   const auto command = kick_.RunFrame(world, goalie);
