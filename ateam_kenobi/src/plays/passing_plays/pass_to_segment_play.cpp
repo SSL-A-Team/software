@@ -71,7 +71,8 @@ stp::PlayScore PassToSegmentPlay::getScore(const World & world)
   const auto pass_chance_multiplier =
     std::clamp(
     largest_window->squared_length() / (ideal_target_length * ideal_target_length), 0.0, 1.0);
-  return pass_chance_multiplier * goal_chance_multiplier * stp::PlayScore::Max();
+  const auto FACTOR = (started_ && ateam_geometry::norm(world.ball.vel) < 0.1) ? 0.6 : 1.0;
+  return (pass_chance_multiplier * goal_chance_multiplier * stp::PlayScore::Max()) * FACTOR;
 }
 
 stp::PlayCompletionState PassToSegmentPlay::getCompletionState()

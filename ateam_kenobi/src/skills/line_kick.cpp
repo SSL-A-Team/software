@@ -226,7 +226,13 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
 
   easy_move_to_.setMaxVelocity(move_to_ball_velocity);
   easy_move_to_.setPlannerOptions(planner_options);
-  easy_move_to_.setTargetPosition(GetPreKickPosition(world), world.ball.vel);
+  easy_move_to_.setMaxAccel(1.5);
+  easy_move_to_.setMaxDecel(1.5);
+  auto vel = ateam_geometry::Vector(0.002, 0);
+  if (ateam_geometry::norm(world.ball.vel) > 0) {
+    vel = world.ball.vel;
+  }
+  easy_move_to_.setTargetPosition(GetPreKickPosition(world) + (0.1 * world.ball.vel), vel);
 
   auto command = easy_move_to_.runFrame(robot, world, obstacles);
   return command;
@@ -259,11 +265,12 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, c
   auto command = easy_move_to_.runFrame(robot, world);
 
   // Override the velocity to move directly into the ball
-  // command.twist.linear.x = std::cos(robot.theta) * kick_drive_velocity;
-  // command.twist.linear.y = std::sin(robot.theta) * kick_drive_velocity;
-  command.twist.linear.x = kick_drive_velocity;
-  command.twist.linear.y = 0;
-  command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+  command.twist.linear.x = std::cos(robot.theta) * kick_drive_velocity;
+  command.twist.linear.y = std::sin(robot.theta) * kick_drive_velocity;
+    command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_WORLD;
+  // command.twist.linear.x = kick_drive_velocity;
+  // command.twist.linear.y = 0;
+  // command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
   if(KickOrChip() == KickSkill::KickChip::Kick) {
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
   } else {

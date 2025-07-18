@@ -50,6 +50,10 @@ stp::PlayScore FreeKickOnGoalPlay::getScore(const World & world)
     return stp::PlayScore::NaN();
   }
 
+  if(world.ball.pos.x() < 0.0) {
+    return stp::PlayScore::NaN();
+  }
+
   const auto largest_window = GetLargestWindowOnGoal(world);
   if (!largest_window) {
     return stp::PlayScore::Min();

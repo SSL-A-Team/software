@@ -72,6 +72,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
+  if(striker_.IsDone()) {
+    striker_.Reset();
+  }
 
   const ateam_geometry::Segment their_goal_segment{
     ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width / 2.0},
