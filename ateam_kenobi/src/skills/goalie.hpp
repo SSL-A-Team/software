@@ -46,6 +46,8 @@ private:
   play_helpers::EasyMoveTo easy_move_to_;
   LineKick kick_;
   std::optional<int> last_enemy_id_closest_to_ball_;
+  std::chrono::steady_clock::time_point ball_entered_def_area_time_;
+  bool prev_ball_in_def_area_ = false;
 
   bool doesOpponentHavePossesion(const World & world);
   bool isBallHeadedTowardsGoal(const World & world, const Ball & ball_state);
@@ -74,6 +76,8 @@ private:
    * @return ateam_msgs::msg::RobotMotionCommand
    */
   ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie, const Ball & ball_state);
+
+  ateam_msgs::msg::RobotMotionCommand runSideEjectBall(const World & world, const Robot & goalie);
 
   std::vector<ateam_geometry::AnyShape> getCustomObstacles(const World & world);
   std::optional<Robot> getClosestEnemyRobotToBall(const World & world);

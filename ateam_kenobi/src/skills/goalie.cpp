@@ -24,6 +24,7 @@
 #include <limits>
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
+#include <ateam_common/time.hpp>
 #include <ateam_geometry/nearest_point.hpp>
 #include <ateam_geometry/angles.hpp>
 #include "core/play_helpers/window_evaluation.hpp"
@@ -50,6 +51,7 @@ void Goalie::reset()
   planner_options.avoid_ball = false;
   planner_options.use_default_obstacles = false;
   easy_move_to_.setPlannerOptions(planner_options);
+  prev_ball_in_def_area_ = false;
 }
 
 void Goalie::runFrame(
@@ -81,13 +83,24 @@ void Goalie::runFrame(
 
   ateam_msgs::msg::RobotMotionCommand motion_command;
 
+  const auto ball_in_def_area = isBallInDefenseArea(world, ball_state);
+  if(ball_in_def_area && !prev_ball_in_def_area_) {
+    ball_entered_def_area_time_ = world.current_time;
+  }
+  prev_ball_in_def_area_ = ball_in_def_area;
+  const auto time_in_def_area = ateam_common::TimeDiffSeconds(world.current_time,
+      ball_entered_def_area_time_);
+
   if (isBallHeadedTowardsGoal(world, ball_state)) {
     getPlayInfo()["State"] = "Block Ball";
     motion_command = runBlockBall(world, robot, ball_state);
   } else if (doesOpponentHavePossesion(world)) {
     getPlayInfo()["State"] = "Block Shot";
     motion_command = runBlockShot(world, robot, ball_state);
-  } else if (isBallInDefenseArea(world, ball_state)) {
+  } else if (ball_in_def_area && time_in_def_area > 5.5) {
+    getPlayInfo()["State"] = "Side Eject";
+    motion_command = runSideEjectBall(world, robot);
+  } else if (ball_in_def_area) {
     getPlayInfo()["State"] = "Clear Ball";
     motion_command = runClearBall(world, robot, ball_state);
   } else {
@@ -191,7 +204,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(
   }
   const auto opponent_id = std::distance(distances.begin(), min_distance_iter);
   const auto opponent_bot = world.their_robots[opponent_id];
-    const auto opponent_pos = world.their_robots[opponent_id].pos;
+  const auto opponent_pos = world.their_robots[opponent_id].pos;
   // const auto opponent_ball_vector = ball_state.pos - opponent_pos;
   const auto opponent_ball_vector = ateam_geometry::directionFromAngle(opponent_bot.theta).vector();
 
@@ -307,6 +320,31 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(
   return command;
 }
 
+
+ateam_msgs::msg::RobotMotionCommand Goalie::runSideEjectBall(
+  const World & world, const Robot & goalie)
+{
+  auto left_count = 0;
+  auto right_count = 0;
+  for(const auto & bot : world.their_robots) {
+    if(!bot.visible) {continue;}
+    if(bot.pos.y() < 0.0) {
+      ++right_count;
+    } else {
+      ++left_count;
+    }
+  }
+
+  const bool eject_left = left_count < right_count;
+  ateam_geometry::Vector shoot_vec{0.0, eject_left ? 1 : -1};
+
+  kick_.SetKickSpeed(0.3);
+  kick_.SetTargetPoint(world.ball.pos + shoot_vec);
+
+  const auto command = kick_.RunFrame(world, goalie);
+  ForwardPlayInfo(kick_);
+  return command;
+}
 
 std::vector<ateam_geometry::AnyShape> Goalie::getCustomObstacles(const World & world)
 {
