@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,45 +19,43 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__TYPES__WORLD_HPP_
-#define CORE__TYPES__WORLD_HPP_
+#ifndef CORE__FPS_TRACKER_HPP_
+#define CORE__FPS_TRACKER_HPP_
 
-#include <optional>
-#include <array>
-#include <chrono>
-#include <ateam_spatial/spatial_evaluator.hpp>
-
-#include "core/types/ball.hpp"
-#include "core/types/field.hpp"
-#include "core/types/referee_info.hpp"
-#include "core/types/robot.hpp"
+#include <ateam_common/time.hpp>
+#include "core/types/world.hpp"
 
 namespace ateam_kenobi
 {
-struct World
+
+class FpsTracker
 {
-  std::chrono::steady_clock::time_point current_time;
+public:
+  FpsTracker() {
+    std::fill(buffer_.begin(), buffer_.end(), average_fps_ / kWindowWidth);
+  }
 
-  Field field;
-  RefereeInfo referee_info;
+  void update(World & world)
+  {
+    const auto dt = ateam_common::TimeDiffSeconds(world.current_time, prev_time_);
+    prev_time_ = world.current_time;
+    const auto current_fps = 1.0 / dt;
+    average_fps_ -= buffer_[buffer_index_];
+    buffer_[buffer_index_] = current_fps / kWindowWidth;
+    average_fps_ += buffer_[buffer_index_];
+    buffer_index_ = (buffer_index_ + 1) % kWindowWidth;
+    world.fps = average_fps_;
+  }
 
-  Ball ball;
-  std::array<Robot, 16> our_robots;
-  std::array<Robot, 16> their_robots;
-
-  bool in_play = false;
-  bool our_penalty = false;
-  bool their_penalty = false;
-
-  int ignore_side = 0;
-
-  double fps = 100.0;
-
-  // Holds the ID of the robot not allowed to touch the ball, if any
-  std::optional<int> double_touch_forbidden_id_;
-
-  ateam_spatial::SpatialEvaluator * spatial_evaluator;
+private:
+  static constexpr size_t kWindowWidth = 100;
+  std::chrono::steady_clock::time_point prev_time_;
+  std::array<double, kWindowWidth> buffer_;
+  size_t buffer_index_ = 0;
+  double average_fps_ = 100.0;  // Assume everything's fine at the start
+  
 };
+
 }  // namespace ateam_kenobi
 
-#endif  // CORE__TYPES__WORLD_HPP_
+#endif  // CORE__FPS_TRACKER_HPP_

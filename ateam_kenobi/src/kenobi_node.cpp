@@ -55,6 +55,7 @@
 #include "core/defense_area_enforcement.hpp"
 #include "core/joystick_enforcer.hpp"
 #include <ateam_spatial/spatial_evaluator.hpp>
+#include "core/fps_tracker.hpp"
 
 namespace ateam_kenobi
 {
@@ -182,6 +183,7 @@ private:
   std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
   visualization::Overlays overlays_;
+  FpsTracker fps_tracker_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
@@ -425,6 +427,8 @@ private:
         "DETECTED TEAM SIDE WAS UNKNOWN");
     }
 
+    fps_tracker_.update(world_);
+    
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 
     auto motion_commands = runPlayFrame(world_);
