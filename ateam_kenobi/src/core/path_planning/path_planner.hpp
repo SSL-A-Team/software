@@ -77,6 +77,8 @@ struct PlannerOptions
    */
   double corner_smoothing_angle_threshold = 2.36;
 
+  double corner_smoothing_step_size = 0.01;
+
   ReplanThresholds replan_thresholds;
 };
 
@@ -182,6 +184,10 @@ private:
 
   void smoothCorners(
     Path & path, const World & world,
+    const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options);
+
+  void smoothCorner(
+    Path & path, const size_t corner_point_index, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options);
 };
 

@@ -109,7 +109,7 @@ PathPlanner::Path PathPlanner::getPath(
   timed_out_ = false;
 
   while (true) {
-    if (isTimeUp()) {
+    if (isTimeUp(options)) {
       RCLCPP_WARN(getLogger(), "Path planning timed out.");
       trimPathAfterCollision(path, world, augmented_obstacles, options);
       timed_out_ = true;
@@ -445,28 +445,55 @@ void PathPlanner::smoothCorners(
   if(path.size() < 3) {
     return;
   }
-  while(!isTimeUp(options)) {
-    bool corner_smoothed = false;
-    for(auto i = 1; i < path.size() - 1; ++i) {
-      if(isTimeUp(options)) {
-        return;
-      }
-      const auto before_point = path[i - 1];
-      const auto curr_point = path[i];
-      const auto next_point = path[i + 1];
-      const auto corner_angle = ateam_geometry::AngleBetweenPoints(before_point, curr_point,
-          next_point);
-      if(corner_angle >= options.corner_smoothing_angle_threshold) {
-        continue;
-      }
-      corner_smoothed = true;
-      const auto new_segment_angle = corner_angle * 2.0;
-      
+  for(auto i = 1ul; i < path.size() - 1;) {
+    if(isTimeUp(options)) {
+      return;
     }
-    if(!corner_smoothed) {
+    const auto before_point = path[i - 1];
+    const auto curr_point = path[i];
+    const auto next_point = path[i + 1];
+    const auto corner_angle = ateam_geometry::AngleBetweenPoints(before_point, curr_point,
+        next_point);
+    if(corner_angle >= options.corner_smoothing_angle_threshold) {
+      ++i;
+    } else {
+      smoothCorner(path, i, world, obstacles, options);
+      // Do not increment index as newly created corner might still be sharp
+    }
+  }
+}
+
+void PathPlanner::smoothCorner(
+  Path & path, const size_t corner_point_index, const World & world,
+  const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options)
+{
+  const auto step_size = options.corner_smoothing_step_size;
+  const auto before_point = path[corner_point_index - 1];
+  const auto curr_point = path[corner_point_index];
+  const auto after_point = path[corner_point_index + 1];
+  const auto max_cut_side_length = std::min(ateam_geometry::norm(curr_point - before_point),
+      ateam_geometry::norm(after_point, curr_point));
+  const auto num_steps = static_cast<int>(max_cut_side_length / step_size);
+  const auto before_vec = ateam_geometry::normalize(before_point - curr_point);
+  const auto after_vec = ateam_geometry::normalize(after_point - curr_point);
+  ateam_geometry::Point cut_point_before;
+  ateam_geometry::Point cut_point_after;
+  for(auto cut_step = 0; cut_step < num_steps; ++cut_step) {
+    if(isTimeUp(options)) {
+      break;
+    }
+    const auto cut_side_length = cut_step * step_size;
+    const auto cut_point_before_candidate = curr_point + (cut_side_length * before_vec);
+    const auto cut_point_after_candidate = curr_point + (cut_side_length * after_vec);
+    if(!getCollisionPoint(cut_point_before_candidate, cut_point_after_candidate, world, obstacles, options)) {
+      cut_point_before = cut_point_before_candidate;
+      cut_point_after = cut_point_after_candidate;
+    } else {
       break;
     }
   }
+  path[corner_point_index] = cut_point_before;
+  path.insert(path.begin() + corner_point_index + 1, cut_point_after);
 }
 
 }  // namespace ateam_kenobi::path_planning
