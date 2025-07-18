@@ -37,6 +37,7 @@ KickoffPassPlay::KickoffPassPlay(stp::Options stp_options)
   pass_(createChild<tactics::Pass>("pass"))
 {
   pass_.setCaptureSpeed(0.3);
+  pass_.SetPreferredKickType(skills::UniversalKick::KickType::Line);
 }
 
 stp::PlayScore KickoffPassPlay::getScore(const World & world)

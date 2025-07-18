@@ -31,7 +31,9 @@ KickoffOnGoalPlay::KickoffOnGoalPlay(stp::Options stp_options)
   defense_(createChild<tactics::StandardDefense>("defense")),
   kick_(createChild<skills::UniversalKick>("kick")),
   multi_move_to_(createChild<tactics::MultiMoveTo>("support"))
-{}
+{
+  kick_.SetPreferredKickType(skills::UniversalKick::KickType::Line);
+}
 
 stp::PlayScore KickoffOnGoalPlay::getScore(const World & world)
 {

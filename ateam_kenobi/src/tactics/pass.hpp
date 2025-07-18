@@ -65,6 +65,10 @@ public:
     // kick_.SetCaptureSpeed(speed);
   }
 
+  void SetPreferredKickType(skills::UniversalKick::KickType type) {
+    kick_.SetPreferredKickType(type);
+  }
+
 private:
   const double kReceiverPositionThreshold = 0.15;
   std::optional<double> speed_;

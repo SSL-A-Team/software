@@ -36,6 +36,7 @@ FreeKickOnGoalPlay::FreeKickOnGoalPlay(stp::Options stp_options)
   idler_2_(createChild<skills::LaneIdler>("idler2")),
   defense_(createChild<tactics::StandardDefense>("defense"))
 {
+  striker_.SetPreferredKickType(skills::UniversalKick::KickType::Line);
 }
 
 stp::PlayScore FreeKickOnGoalPlay::getScore(const World & world)
