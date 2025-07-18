@@ -184,6 +184,40 @@ double MotionController::calculate_trapezoidal_velocity(
   return std::clamp(trapezoidal_vel, -this->v_max, this->v_max);
 }
 
+double MotionController::calculate_trapezoidal_angular_vel(
+  const ateam_kenobi::Robot & robot,
+  double target_angle, double dt)
+{
+  const auto angle_error = angles::shortest_angular_distance(robot.theta, target_angle);
+
+  ateam_msgs::msg::RobotMotionCommand command;
+
+  const double vel = robot.prev_command_omega;
+
+  double deceleration_to_reach_target = (vel * vel) / (2 * angle_error);
+
+  // Cruise
+  double trapezoidal_vel = std::copysign(t_max, angle_error);
+  const double error_direction = std::copysign(1, angle_error);
+  const double decel_direction = std::copysign(1, vel * angle_error);
+
+  // Decelerate to target velocity
+  if (decel_direction > 0 && abs(deceleration_to_reach_target) > t_accel_limit * 0.95) {
+    trapezoidal_vel = vel - (error_direction * deceleration_to_reach_target * dt);
+
+  // Accelerate to speed
+  } else if (abs(vel) < t_max) {
+    trapezoidal_vel = vel + (error_direction * t_accel_limit * dt);
+  }
+
+  // const auto min_angular_vel = 1.0;
+  // if (abs(trapezoidal_vel) < min_angular_vel) {
+  //   trapezoidal_vel = std::copysign(min_angular_vel, angle_error);
+  // }
+
+  return std::clamp(trapezoidal_vel, -t_max, t_max);
+}
+
 ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   ateam_kenobi::Robot robot,
   double current_time,
@@ -384,6 +418,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
     if (std::abs(t_error) > options.angular_completion_threshold) {
       double t_command = this->t_controller.compute_command(t_error, dt);
+      // double t_command = this->calculate_trapezoidal_angular_vel(robot, target_angle, dt);
+
       if (trajectory_complete) {
         double theta_min = 0.0;
         if (abs(t_command) < theta_min) {
