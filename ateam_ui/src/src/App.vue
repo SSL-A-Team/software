@@ -4,11 +4,11 @@
             <v-app-bar-title class="flex-0-0" v-text="'Ateam UI'" style="text-wrap-mode:nowrap;"/>
             <MenuBarComponent/>
             <v-spacer></v-spacer>
-            <v-card class="d-flex justify-center mr-2 pa-1" :style="'color: ' + kenobiFPSStyle">
-                {{ kenobiFPS }}
-            </v-card>
             <v-card class="d-flex justify-center mr-2 pa-1" :style="'color: ' + kenobiStatusStyle">
                 {{ kenobiStatus }}
+            </v-card>
+            <v-card class="d-flex justify-center mr-2 pa-1" :style="'color: ' + kenobiFPSStyle">
+                {{ kenobiFPS }}
             </v-card>
         </v-app-bar>
         <v-main>
