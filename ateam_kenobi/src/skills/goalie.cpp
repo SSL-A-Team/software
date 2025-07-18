@@ -272,6 +272,10 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(
     target_point = segment->source();
   }
 
+  path_planning::PlannerOptions planner_options;
+  planner_options.footprint_inflation = -0.05;
+  easy_move_to_.setPlannerOptions(planner_options);
+
   easy_move_to_.setTargetPosition(target_point);
   easy_move_to_.face_absolute(M_PI_2);
 
