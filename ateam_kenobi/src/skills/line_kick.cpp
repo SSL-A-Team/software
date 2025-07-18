@@ -145,7 +145,7 @@ bool LineKick::IsRobotSettled(const World & world, const Robot & robot)
   const auto robot_vel_perp = robot.vel - robot_vel_proj;
   const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
 
-  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.2;
+  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.4;
   return robot_vel_is_good;
 }
 
