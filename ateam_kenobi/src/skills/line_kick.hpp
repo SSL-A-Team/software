@@ -61,7 +61,7 @@ public:
 
   ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
 
-  bool IsDone()
+  bool IsDone() const
   {
     return state_ == State::Done;
   }
@@ -74,11 +74,6 @@ public:
     path_planning::PlannerOptions options = easy_move_to_.getPlannerOptions();
     options.use_default_obstacles = use_obstacles;
     easy_move_to_.setPlannerOptions(options);
-  }
-
-  void SetKickType(KickType type)
-  {
-    kick_type_ = type;
   }
 
   bool IsReady() const override {
@@ -158,7 +153,6 @@ public:
 private:
   const double kDefaultPreKickOffset = kRobotRadius + kBallRadius + 0.06;
   double pre_kick_offset = kDefaultPreKickOffset;
-  KickType kick_type_ = KickType::Kick;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 

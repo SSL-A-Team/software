@@ -31,7 +31,7 @@ namespace ateam_kenobi::plays
 KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   defense_(createChild<tactics::StandardDefense>("defense")),
-  striker_(createChild<skills::LineKick>("striker")),
+  striker_(createChild<skills::UniversalKick>("striker")),
   lane_idler_a_(createChild<skills::LaneIdler>("lane_idler_a")),
   lane_idler_b_(createChild<skills::LaneIdler>("lane_idler_b"))
 {

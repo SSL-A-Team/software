@@ -24,6 +24,7 @@
 #include <vector>
 #include "core/stp/play.hpp"
 #include "tactics/pass.hpp"
+#include "skills/universal_kick.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -41,7 +42,7 @@ public:
 
 private:
   skills::Capture capture_skill_;
-  skills::PivotKick kick_skill_;
+  skills::UniversalKick kick_skill_;
   bool ball_has_been_sensed_ = false;
   bool ball_has_been_kicked_ = false;
 };

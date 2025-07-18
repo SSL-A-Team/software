@@ -29,7 +29,7 @@ namespace ateam_kenobi::plays
 KickoffOnGoalPlay::KickoffOnGoalPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   defense_(createChild<tactics::StandardDefense>("defense")),
-  kick_(createChild<skills::LineKick>("kick")),
+  kick_(createChild<skills::UniversalKick>("kick")),
   multi_move_to_(createChild<tactics::MultiMoveTo>("support"))
 {}
 

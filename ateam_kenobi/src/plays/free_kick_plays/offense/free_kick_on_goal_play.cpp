@@ -31,7 +31,7 @@ namespace ateam_kenobi::plays
 
 FreeKickOnGoalPlay::FreeKickOnGoalPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  striker_(createChild<skills::LineKick>("striker")),
+  striker_(createChild<skills::UniversalKick>("striker")),
   idler_1_(createChild<skills::LaneIdler>("idler1")),
   idler_2_(createChild<skills::LaneIdler>("idler2")),
   defense_(createChild<tactics::StandardDefense>("defense"))

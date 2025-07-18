@@ -109,6 +109,7 @@ target_sources(kenobi_node_component PRIVATE
   src/skills/dribble.cpp
   src/skills/extract.cpp
   src/skills/capture.cpp
+  src/skills/universal_kick.cpp
 )
 
 target_include_directories(kenobi_node_component PUBLIC

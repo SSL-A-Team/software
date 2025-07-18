@@ -25,7 +25,7 @@
 #include "core/stp/play.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 #include "tactics/standard_defense.hpp"
-#include "skills/line_kick.hpp"
+#include "skills/universal_kick.hpp"
 #include "skills/lane_idler.hpp"
 
 namespace ateam_kenobi::plays
@@ -44,7 +44,7 @@ public:
     16> runFrame(const World & world) override;
 
 private:
-  skills::LineKick striker_;
+  skills::UniversalKick striker_;
   skills::LaneIdler idler_1_;
   skills::LaneIdler idler_2_;
   tactics::StandardDefense defense_;

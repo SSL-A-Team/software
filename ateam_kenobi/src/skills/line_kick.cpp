@@ -263,7 +263,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, c
   command.twist.linear.x = kick_drive_velocity;
   command.twist.linear.y = 0;
   command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
-  if(kick_type_ == KickType::Kick) {
+  if(KickOrChip() == KickSkill::KickChip::Kick) {
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
   } else {
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_CHIP_TOUCH;

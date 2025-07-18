@@ -155,7 +155,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::KickBall(const World & world, con
   command.dribbler_speed = kDefaultDribblerSpeed;
 
   if (IsAllowedToKick()) {
-    if(kick_type_ == KickType::Kick) {
+    if(KickOrChip() == KickSkill::KickChip::Kick) {
       command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
     } else {
       command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_CHIP_TOUCH;

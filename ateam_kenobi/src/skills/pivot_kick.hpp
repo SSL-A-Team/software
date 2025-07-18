@@ -88,17 +88,11 @@ public:
     pivot_speed_ = speed;
   }
 
-  void SetKickType(KickType type)
-  {
-    kick_type_ = type;
-  }
-
   bool IsReady() const override {
     return prev_state_ == State::Pivot;
   }
 
 private:
-  KickType kick_type_ = KickType::Kick;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
   skills::Capture capture_;
