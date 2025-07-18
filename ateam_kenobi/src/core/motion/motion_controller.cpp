@@ -420,7 +420,12 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
     if (std::abs(t_error) > options.angular_completion_threshold) {
       // double t_command = this->t_controller.compute_command(t_error, dt);
-      double t_command = this->calculate_trapezoidal_angular_vel(robot, target_angle, dt);
+      double t_command = 0.0;
+      if(std::abs(t_error) < M_PI / 12.0) {
+        t_command = this->t_controller.compute_command(t_error, dt);
+      } else {
+        t_command = this->calculate_trapezoidal_angular_vel(robot, target_angle, dt);
+      }
 
       if (trajectory_complete) {
         double theta_min = 0.0;

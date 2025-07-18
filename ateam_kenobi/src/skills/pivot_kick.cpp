@@ -45,11 +45,13 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
   getOverlays().drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
 
   if (done_) {
+    getPlayInfo()["State"] = "Done";
     return ateam_msgs::msg::RobotMotionCommand{};
   }
 
   if (prev_state_ == State::Capture) {
     if (!capture_.isDone()) {
+      getPlayInfo()["State"] = "Capture";
       return Capture(world, robot);
     }
   }
@@ -57,16 +59,18 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
   if (!robot.breakbeam_ball_detected) {
     easy_move_to_.reset();
     prev_state_ = State::Capture;
+    getPlayInfo()["State"] = "Capture";
     return Capture(world, robot);
   }
 
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
-  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.1) {
+  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.05) {
     if (prev_state_ != State::Pivot) {
       easy_move_to_.reset();
       prev_state_ = State::Pivot;
     }
+    getPlayInfo()["State"] = "Pivot";
     return Pivot(robot);
   }
 
@@ -77,9 +81,11 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
 
   if (ateam_geometry::norm(world.ball.vel) > 0.1 * GetKickSpeed()) {
     done_ = true;
+    getPlayInfo()["State"] = "Done";
     return ateam_msgs::msg::RobotMotionCommand{};
   }
 
+  getPlayInfo()["State"] = "Kick";
   return KickBall(world, robot);
 }
 
@@ -131,7 +137,7 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
    * Calculate m/rev * rev/s to get linear m/s
    */
   // double diameter = kBallDiameter + kRobotDiameter;
-  double diameter = 2 * .095;
+  double diameter = (2 * .095) * 1.05;
   double circumference = M_PI * diameter;
   double velocity = circumference * (command.twist.angular.z / (2 * M_PI));
 

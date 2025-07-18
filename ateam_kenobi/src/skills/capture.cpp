@@ -79,7 +79,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
 
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(world.ball.pos,
-      capture_speed_ * ateam_geometry::normalize(world.ball.pos - robot.pos));
+      capture_speed_ * 0.8 * ateam_geometry::normalize(world.ball.pos - robot.pos));
 
   const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
       world.ball.pos));
@@ -123,12 +123,16 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   easy_move_to_.setMotionOptions(motion_options);
 
   easy_move_to_.setMaxVelocity(capture_speed_);
-  easy_move_to_.face_point(world.ball.pos);
+  if(world.ball.visible) {
+    easy_move_to_.face_point(world.ball.pos);
+  } else {
+    easy_move_to_.face_absolute(robot.theta);
+  }
 
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.twist.linear.x = 0.3;
+  command.twist.linear.x = capture_speed_;
   command.twist.linear.y = 0.0;
   command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
 

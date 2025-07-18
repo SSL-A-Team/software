@@ -106,7 +106,7 @@ public:
   // Acceleration limits
   double accel_limit = 2.0;
   double decel_limit = 2.0;
-  double t_accel_limit = 3.0;
+  double t_accel_limit = 5.0;
 
   double max_allowed_turn_angle = M_PI / 4.0;
 
