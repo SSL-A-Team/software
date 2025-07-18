@@ -178,7 +178,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(
   std::transform(
     world.their_robots.begin(), world.their_robots.end(), distances.begin(),
     [&ball_pos](const auto & robot) {
-      if (!robot.IsAvailable()) {
+      if (!robot.visible) {
         return std::numeric_limits<double>::infinity();
       }
       return CGAL::approximate_sqrt(CGAL::squared_distance(ball_pos, robot.pos));
@@ -186,11 +186,17 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(
   const auto min_distance_iter = std::min_element(distances.begin(), distances.end());
   if (std::isinf(*min_distance_iter)) {
     // Should only be true if there are no opponent robots
+    getPlayInfo()["DEFAULT BEHAVIOR"] = "FALLTHROUGH";
     return runDefaultBehavior(world, goalie, ball_state);
   }
   const auto opponent_id = std::distance(distances.begin(), min_distance_iter);
-  const auto opponent_pos = world.their_robots[opponent_id].pos;
-  const auto opponent_ball_vector = ball_state.pos - opponent_pos;
+  const auto opponent_bot = world.their_robots[opponent_id];
+    const auto opponent_pos = world.their_robots[opponent_id].pos;
+  // const auto opponent_ball_vector = ball_state.pos - opponent_pos;
+  const auto opponent_ball_vector = ateam_geometry::directionFromAngle(opponent_bot.theta).vector();
+
+  getOverlays().drawLine("Shot Line",
+    {opponent_bot.pos, opponent_bot.pos + (10.0 * opponent_ball_vector)}, "DarkOrange");
 
   const ateam_geometry::Ray shot_ray(opponent_pos, opponent_ball_vector);
 
