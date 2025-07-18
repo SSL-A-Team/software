@@ -160,11 +160,13 @@ double MotionController::calculate_trapezoidal_velocity(
   }
 
   // Project target velocity onto the trajectory
-  double target_vel = 0;
-  if (ateam_geometry::norm(target_velocity) > 0.0) {
-    target_vel = (target_velocity * target_to_next_trajectory_point) /
-      ateam_geometry::norm(target_velocity);
-  }
+  const ateam_geometry::Vector current_target_velocity = trajectory_velocity_limits[target_index];
+  // double target_vel = 0;
+  // if (ateam_geometry::norm(current_target_velocity) > 0.0) {
+  //   target_vel = (current_target_velocity * target_to_next_trajectory_point) /
+  //     ateam_geometry::norm(current_target_velocity);
+  // }
+  double target_vel = ateam_geometry::norm(current_target_velocity);
 
   double deceleration_to_reach_target = ((vel * vel) - (target_vel * target_vel)) /
     (2 * distance_to_next_trajectory_point);
