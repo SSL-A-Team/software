@@ -186,7 +186,7 @@ private:
     Path & path, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options);
 
-  void smoothCorner(
+  bool smoothCorner(
     Path & path, const size_t corner_point_index, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options);
 };

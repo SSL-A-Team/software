@@ -445,7 +445,7 @@ void PathPlanner::smoothCorners(
   if(path.size() < 3) {
     return;
   }
-  for(auto i = 1ul; i < path.size() - 1;) {
+  for(auto i = 1ul; i < path.size() - 1; ) {
     if(isTimeUp(options)) {
       return;
     }
@@ -454,16 +454,16 @@ void PathPlanner::smoothCorners(
     const auto next_point = path[i + 1];
     const auto corner_angle = ateam_geometry::AngleBetweenPoints(before_point, curr_point,
         next_point);
-    if(corner_angle >= options.corner_smoothing_angle_threshold) {
+    // If smooth corner succeeds, don't increment index as newly created corner might still be sharp
+    if(corner_angle <= options.corner_smoothing_angle_threshold ||
+      !smoothCorner(path, i, world, obstacles, options))
+    {
       ++i;
-    } else {
-      smoothCorner(path, i, world, obstacles, options);
-      // Do not increment index as newly created corner might still be sharp
     }
   }
 }
 
-void PathPlanner::smoothCorner(
+bool PathPlanner::smoothCorner(
   Path & path, const size_t corner_point_index, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options)
 {
@@ -478,22 +478,30 @@ void PathPlanner::smoothCorner(
   const auto after_vec = ateam_geometry::normalize(after_point - curr_point);
   ateam_geometry::Point cut_point_before;
   ateam_geometry::Point cut_point_after;
-  for(auto cut_step = 0; cut_step < num_steps; ++cut_step) {
+  auto cut_step = 1;
+  for(; cut_step < num_steps; ++cut_step) {
     if(isTimeUp(options)) {
       break;
     }
     const auto cut_side_length = cut_step * step_size;
     const auto cut_point_before_candidate = curr_point + (cut_side_length * before_vec);
     const auto cut_point_after_candidate = curr_point + (cut_side_length * after_vec);
-    if(!getCollisionPoint(cut_point_before_candidate, cut_point_after_candidate, world, obstacles, options)) {
+    if(!getCollisionPoint(cut_point_before_candidate, cut_point_after_candidate, world, obstacles,
+        options))
+    {
       cut_point_before = cut_point_before_candidate;
       cut_point_after = cut_point_after_candidate;
     } else {
       break;
     }
   }
+  if(cut_step == 1) {
+    // Could not cut corner at all
+    return false;
+  }
   path[corner_point_index] = cut_point_before;
   path.insert(path.begin() + corner_point_index + 1, cut_point_after);
+  return true;
 }
 
 }  // namespace ateam_kenobi::path_planning
