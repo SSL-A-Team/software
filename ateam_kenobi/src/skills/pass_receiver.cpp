@@ -118,7 +118,7 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
 {
   const ateam_geometry::Ray ball_ray(world.ball.pos, world.ball.vel);
   const auto destination = ball_ray.supporting_line().projection(robot.pos);
-  easy_move_to_.setTargetPosition(destination);
+  easy_move_to_.setTargetPosition(destination, ateam_geometry::Vector(-0.001, 0));
   easy_move_to_.face_point(world.ball.pos);
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
@@ -127,9 +127,10 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
   motion_command = easy_move_to_.runFrame(robot, world);
   motion_command.dribbler_speed = kDefaultDribblerSpeed;
   const auto dist_to_ball = ateam_geometry::norm(robot.pos - world.ball.pos);
-  if (dist_to_ball < 0.5) {
+  const auto time_to_ball = dist_to_ball / ateam_geometry::norm(world.ball.vel);
+  if (time_to_ball < 0.5) {
     ateam_geometry::Vector robot_vel(motion_command.twist.linear.x, motion_command.twist.linear.y);
-    robot_vel += ateam_geometry::normalize(world.ball.vel) * 0.8;
+    robot_vel += ateam_geometry::normalize(world.ball.vel) * 0.9;
     motion_command.twist.linear.x = robot_vel.x();
     motion_command.twist.linear.y = robot_vel.y();
   }
