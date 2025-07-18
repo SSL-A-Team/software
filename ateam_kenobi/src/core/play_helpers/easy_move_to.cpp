@@ -157,6 +157,20 @@ void EasyMoveTo::setMaxDecel(double decel)
   motion_controller_.decel_limit = decel;
 }
 
+void EasyMoveTo::setMaxThetaAccel(double accel)
+{
+  if (accel > 8.0) {
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE ACCELERATION GIVEN TO SET MAX THETA ACCELERATION");
+    return;
+  }
+  motion_controller_.t_accel_limit = accel;
+}
+
+void EasyMoveTo::setMaxAllowedTurnAngle(double angle)
+{
+  motion_controller_.max_allowed_turn_angle = angle;
+}
+
 ateam_msgs::msg::RobotMotionCommand EasyMoveTo::runFrame(
   const Robot & robot, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles)

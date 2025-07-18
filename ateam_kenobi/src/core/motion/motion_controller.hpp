@@ -80,6 +80,11 @@ public:
     size_t target_index,
     double dt);
 
+  double calculate_trapezoidal_angular_vel(
+    const ateam_kenobi::Robot & robot,
+    double target_angle,
+    double dt);
+
   // Generate a robot motion command to follow a trajectory
   ateam_msgs::msg::RobotMotionCommand get_command(
     ateam_kenobi::Robot robot, double current_time,
@@ -101,6 +106,9 @@ public:
   // Acceleration limits
   double accel_limit = 2.0;
   double decel_limit = 2.0;
+  double t_accel_limit = 3.0;
+
+  double max_allowed_turn_angle = M_PI / 4.0;
 
   double face_angle = 0;
   std::optional<ateam_geometry::Point> face_towards;

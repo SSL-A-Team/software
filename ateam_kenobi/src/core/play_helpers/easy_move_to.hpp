@@ -75,6 +75,8 @@ public:
 
   void setMaxAccel(double accel);
   void setMaxDecel(double decel);
+  void setMaxThetaAccel(double accel);
+  void setMaxAllowedTurnAngle(double angle);
 
   ateam_msgs::msg::RobotMotionCommand runFrame(
     const Robot & robot, const World & world,
