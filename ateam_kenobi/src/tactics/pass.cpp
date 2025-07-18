@@ -97,7 +97,7 @@ void Pass::runFrame(
 
   auto receiver_threshold = kReceiverPositionThreshold;
   if (std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) > 3.0) {
-    receiver_threshold = 0.3;
+    receiver_threshold = 0.5;
   }
 
   const auto kick_speed = speed_.value_or(calculateDefaultKickSpeed(world));

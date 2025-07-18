@@ -312,7 +312,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(
     kick_.Reset();
   }
 
-  kick_.SetKickSpeed(2.0);
+  kick_.SetKickSpeed(1.3);
   kick_.SetTargetPoint(target_point);
 
   const auto command = kick_.RunFrame(world, goalie);
@@ -338,7 +338,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runSideEjectBall(
   const bool eject_left = left_count < right_count;
   ateam_geometry::Vector shoot_vec{0.0, eject_left ? 1 : -1};
 
-  kick_.SetKickSpeed(0.3);
+  kick_.SetKickSpeed(0.2);
   kick_.SetTargetPoint(world.ball.pos + shoot_vec);
 
   const auto command = kick_.RunFrame(world, goalie);

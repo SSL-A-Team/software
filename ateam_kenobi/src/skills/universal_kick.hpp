@@ -74,7 +74,7 @@ public:
   void SetPreKickOffset(double val);
 
 private:
-  static constexpr bool kPivotAllowed = true;
+  static constexpr bool kPivotAllowed = false;
   static constexpr bool kLineAllowed = true;
 
   PivotKick pivot_kick_;
