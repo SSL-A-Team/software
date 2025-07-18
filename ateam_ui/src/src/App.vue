@@ -1,9 +1,12 @@
 <template>
     <v-app>
-        <v-app-bar app ref="Top Bar" color="ateam-color" density="compact">
+        <v-app-bar app ref="Top Bar" :color="kenobiFPSALERT" density="compact">
             <v-app-bar-title class="flex-0-0" v-text="'Ateam UI'" style="text-wrap-mode:nowrap;"/>
             <MenuBarComponent/>
             <v-spacer></v-spacer>
+            <v-card class="d-flex justify-center mr-2 pa-1" :style="'color: ' + kenobiFPSStyle">
+                {{ kenobiFPS }}
+            </v-card>
             <v-card class="d-flex justify-center mr-2 pa-1" :style="'color: ' + kenobiStatusStyle">
                 {{ kenobiStatus }}
             </v-card>
@@ -75,6 +78,9 @@ export default {
             },
             kenobiStatus: "Hello There",
             kenobiStatusStyle: "green",
+            kenobiFPS: 100,
+            kenobiFPSStyle: "green",
+            kenobiFPSALERT: "ateam-color",
             tab: null
         }
     },
@@ -107,6 +113,18 @@ export default {
             } else {
                 this.kenobiStatusStyle = 'green';
                 this.kenobiStatus = "Hello There"
+            }
+
+            this.kenobiFPS = Math.round(this.state.realtimeWorld.fps);
+            if (this.kenobiFPS >= 95) {
+                this.kenobiFPSALERT =  'ateam-color';
+                this.kenobiFPSStyle = "green";
+            } else if (this.kenobiFPS > 90) {
+                this.kenobiFPSALERT =  'ateam-color';
+                this.kenobiFPSStyle = "yellow";
+            } else {
+                this.kenobiFPSALERT =  'status-error';
+                this.kenobiFPSStyle = "red";
             }
         }
     },

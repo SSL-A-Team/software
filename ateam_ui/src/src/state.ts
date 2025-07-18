@@ -23,6 +23,7 @@ export class WorldState {
     ai: AIState;
     ignoreSide: number;
     timestamp: number;
+    fps: number;
 
     constructor() {
         this.teamName = "A-Team";
@@ -39,6 +40,7 @@ export class WorldState {
         this.ignoreSide = 0;
 
         this.timestamp = Date.now();
+        this.fps = 100;
     }
 }
 
