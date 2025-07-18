@@ -210,33 +210,18 @@ void OurBallPlacementPlay::runPassing(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
-  auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
-      return CGAL::compare_distance_to_point(world.ball.pos, lhs.pos, rhs.pos) == CGAL::SMALLER;
-    };
-
-  auto byDistToPlacement = [this](const Robot & lhs, const Robot & rhs) {
-      return CGAL::compare_distance_to_point(placement_point_, lhs.pos, rhs.pos) == CGAL::SMALLER;
-    };
-
-  auto kicker_robot_iter = std::min_element(
-    available_robots.begin(),
-    available_robots.end(), byDistToBall);
-
-  const auto receiver_robot_iter = std::min_element(
-    available_robots.begin(),
-    available_robots.end(), byDistToPlacement);
-
-  // Might be better to prioritize kicker being closer to ball instead
-  // that way if we have a smart passing tactic it can kick the ball earlier
-  if (receiver_robot_iter == kicker_robot_iter) {
-    kicker_robot_iter++;
-    if (kicker_robot_iter >= available_robots.end()) {
-      kicker_robot_iter = available_robots.begin();
-    }
+  if(available_robots.size() < 2) {
+    RCLCPP_ERROR(getLogger(), "Cannot pass with fewer than 2 robots.");
+    return;
   }
 
-  const auto & receiver_robot = *receiver_robot_iter;
-  const auto & kicker_robot = *kicker_robot_iter;
+  std::vector<Robot> candidate_robots{available_robots.begin(), available_robots.end()};
+
+  const auto kicker_robot = play_helpers::getClosestRobot(candidate_robots, world.ball.pos);
+
+  play_helpers::removeRobotWithId(candidate_robots, kicker_robot.id);
+
+  const auto receiver_robot = play_helpers::getClosestRobot(candidate_robots, placement_point_);
 
   getPlayInfo()["Assignments"]["Receiver"] = receiver_robot.id;
   getPlayInfo()["Assignments"]["Kicker"] = kicker_robot.id;
