@@ -44,6 +44,7 @@ private:
   std::vector<ateam_geometry::Point> targets_;
   size_t target_ind_ = 0;
   bool prev_done_ = false;
+  bool first_frame_ = true;
   std::chrono::steady_clock::time_point done_time_;
 };
 }  // namespace ateam_kenobi::plays

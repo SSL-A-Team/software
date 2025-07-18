@@ -57,9 +57,10 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunFrame(const World & world, cons
       getPlayInfo()["state"] = "Kick Ball";
       return RunKickBall(world, robot);
     case State::Done:
+      getPlayInfo()["state"] = "Done";
       return ateam_msgs::msg::RobotMotionCommand{};
     default:
-      RCLCPP_WARN(getLogger(), "Unhandled state in line kick!");
+      RCLCPP_ERROR(getLogger(), "Unhandled state in line kick!");
       return ateam_msgs::msg::RobotMotionCommand{};
   }
 }

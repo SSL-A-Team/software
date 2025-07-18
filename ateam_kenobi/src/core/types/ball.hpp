@@ -22,6 +22,7 @@
 #ifndef CORE__TYPES__BALL_HPP_
 #define CORE__TYPES__BALL_HPP_
 
+#include <chrono>
 #include <ateam_geometry/types.hpp>
 
 namespace ateam_kenobi
@@ -31,6 +32,7 @@ struct Ball
   ateam_geometry::Point pos;
   ateam_geometry::Vector vel;
   bool visible = false;
+  std::chrono::steady_clock::time_point last_visible_time;
 };
 }  // namespace ateam_kenobi
 

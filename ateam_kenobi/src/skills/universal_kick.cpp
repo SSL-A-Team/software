@@ -115,11 +115,14 @@ ateam_msgs::msg::RobotMotionCommand UniversalKick::RunFrame(
   line_kick_.SetKickChip(KickOrChip());
   switch(ChooseType()) {
     case KickType::Pivot:
+      last_used_ = KickType::Pivot;
       return pivot_kick_.RunFrame(world, robot);
     case KickType::Line:
+      last_used_ = KickType::Line;
       return line_kick_.RunFrame(world, robot);
     case KickType::Unset:
     default:
+      last_used_ = KickType::Unset;
       return ateam_msgs::msg::RobotMotionCommand{};
   }
 }

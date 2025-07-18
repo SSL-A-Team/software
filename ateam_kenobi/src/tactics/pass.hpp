@@ -78,6 +78,7 @@ private:
   int kicker_id_ = -1;
   std::chrono::steady_clock::time_point kicker_ready_start_time_;
   bool prev_kicker_ready_ = false;
+  bool missed_ = false;
 
   double calculateDefaultKickSpeed(const World & world);
 };

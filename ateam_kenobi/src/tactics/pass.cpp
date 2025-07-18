@@ -38,6 +38,7 @@ void Pass::reset()
   receiver_.reset();
   kick_.Reset();
   kicker_id_ = -1;
+  missed_ = false;
 }
 
 ateam_geometry::Point Pass::getKickerAssignmentPoint(const World & world)
@@ -67,6 +68,16 @@ void Pass::runFrame(
     kick_.SetTargetPoint(target_);
   }
 
+  if (kick_.IsDone()) {
+    const ateam_geometry::Segment pass_segment{kicker_bot.pos, receiver_bot.pos};
+    const auto missed_dist_threshold = 0.5;
+    const auto ball_to_segment_dist = CGAL::approximate_sqrt(CGAL::squared_distance(pass_segment, world.ball.pos));
+    if(ball_to_segment_dist > missed_dist_threshold) {
+      // Missed or intercepted
+      missed_ = true;
+    }
+  }
+
   const auto kicker_ready = kick_.IsReady();
   if(kicker_ready && !prev_kicker_ready_) {
     kicker_ready_start_time_ = world.current_time;
@@ -75,10 +86,16 @@ void Pass::runFrame(
 
   getPlayInfo()["Kicker Ready"] = kicker_ready;
 
-  receiver_command = receiver_.runFrame(world, receiver_bot);
+  const auto ball_speed = ateam_geometry::norm(world.ball.vel);
+  getPlayInfo()["Ball Speed"] = ball_speed;
 
-  const bool is_stalled = kick_.IsDone() && !receiver_.isDone() && ateam_geometry::norm(
-    world.ball.vel) < 0.02;
+  receiver_command = receiver_.runFrame(world, receiver_bot);
+  ForwardPlayInfo(receiver_);
+
+  getPlayInfo()["Kicker Done"] = kick_.IsDone();
+  getPlayInfo()["Receiver Done"] = receiver_.isDone();
+
+  const bool is_stalled = kick_.IsDone() && !receiver_.isDone() && ball_speed < 0.02;
 
   getPlayInfo()["is_stalled"] = is_stalled;
 
@@ -104,10 +121,12 @@ void Pass::runFrame(
   if (ateam_geometry::norm(receiver_bot.pos, target_) <= receiver_threshold) {
     kick_.AllowKicking();
     kick_.SetKickSpeed(kick_speed);
+    receiver_.setExpectedKickSpeed(kick_speed);
     getPlayInfo()["kicking_allowed"] = "yes";
   } else if (kicker_ready && kicker_ready_time > 3.0) {
     kick_.AllowKicking();
     kick_.SetKickSpeed(kick_speed / 2.0);
+    receiver_.setExpectedKickSpeed(kick_speed);
     getPlayInfo()["kicking_allowed"] = "yes (time)";
   } else {
     kick_.DisallowKicking();
@@ -120,13 +139,11 @@ void Pass::runFrame(
   if (!is_in_receiver_territory) {
     kicker_command = kick_.RunFrame(world, kicker_bot);
   }
-
-  ForwardPlayInfo(receiver_);
 }
 
 bool Pass::isDone()
 {
-  return receiver_.isDone();
+  return missed_ || receiver_.isDone();
 }
 
 double Pass::calculateDefaultKickSpeed(const World & world)
