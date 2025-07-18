@@ -298,35 +298,47 @@ void OurBallPlacementPlay::runExtracting(
 
     getPlayInfo()["extract bot approach dist"] = ateam_geometry::norm(extract_robot.pos - approach_point_);
     if (ateam_geometry::norm(extract_robot.pos - approach_point_) < 0.03) {
-      state_ = State::Placing;
-    }
+      const bool use_pivot = true;
+      if (use_pivot && !world.ball.visible) {
+        getPlayInfo()["ExtractState"] = "pivoting";
 
-    MotionOptions motion_options;
-    motion_options.completion_threshold = 0;
-    emt.setMotionOptions(motion_options);
-    path_planning::PlannerOptions planner_options = emt.getPlannerOptions();
-    planner_options.avoid_ball = false;
-    planner_options.footprint_inflation = -0.9 * kRobotRadius;
-    emt.setPlannerOptions(planner_options);
+        // This vector feels backwards but it works I guess
+        const double direction = angles::shortest_angular_distance(
+          ateam_geometry::ToHeading(extract_robot.pos - ateam_geometry::Point(0,0)),
+          extract_robot.theta
+        );
 
-    emt.setTargetPosition(approach_point_);
-    emt.setMaxVelocity(0.2);
-    emt.setMaxAccel(1.0);
-    emt.setMaxDecel(1.0);
-    if (world.ball.visible) {
-      emt.face_point(world.ball.pos);
-
-    // If the ball is occluded we sometimes drive past its previous position and try to turn around
-    // so its better to just keep facing the same direction if we lose track of it
+        motion_command.twist.angular.z = std::copysign(0.8, direction);
+      } else {
+        state_ = State::Placing;
+      }
     } else {
-      emt.face_absolute(extract_robot.theta);
+      MotionOptions motion_options;
+      motion_options.completion_threshold = 0;
+      emt.setMotionOptions(motion_options);
+      path_planning::PlannerOptions planner_options = emt.getPlannerOptions();
+      planner_options.avoid_ball = false;
+      planner_options.footprint_inflation = -0.9 * kRobotRadius;
+      emt.setPlannerOptions(planner_options);
+
+      emt.setTargetPosition(approach_point_);
+      emt.setMaxVelocity(0.2);
+      emt.setMaxAccel(1.0);
+      emt.setMaxDecel(1.0);
+      if (world.ball.visible) {
+        emt.face_point(world.ball.pos);
+
+      // If the ball is occluded we sometimes drive past its previous position and try to turn around
+      // so its better to just keep facing the same direction if we lose track of it
+      } else {
+        emt.face_absolute(extract_robot.theta);
+      }
+
+      motion_command = emt.runFrame(extract_robot, world);
+      // motion_command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+      // motion_command.twist.linear.x = -0.1;
+      // motion_command.twist.linear.y = 0.0;
     }
-
-    motion_command = emt.runFrame(extract_robot, world);
-    // motion_command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
-    // motion_command.twist.linear.x = -0.1;
-    // motion_command.twist.linear.y = 0.0;
-
   } else if (robot_already_in_position || robot_near_approach_point) {
     getPlayInfo()["ExtractState"] = "capturing ball";
     MotionOptions motion_options;
