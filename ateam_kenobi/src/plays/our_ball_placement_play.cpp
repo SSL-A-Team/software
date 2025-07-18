@@ -218,13 +218,13 @@ void OurBallPlacementPlay::runPassing(
       return CGAL::compare_distance_to_point(placement_point_, lhs.pos, rhs.pos) == CGAL::SMALLER;
     };
 
-  const auto receiver_robot_iter = std::min_element(
-    available_robots.begin(),
-    available_robots.end(), byDistToPlacement);
-
   auto kicker_robot_iter = std::min_element(
     available_robots.begin(),
     available_robots.end(), byDistToBall);
+
+  const auto receiver_robot_iter = std::min_element(
+    available_robots.begin(),
+    available_robots.end(), byDistToPlacement);
 
   // Might be better to prioritize kicker being closer to ball instead
   // that way if we have a smart passing tactic it can kick the ball earlier
