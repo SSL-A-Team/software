@@ -77,7 +77,7 @@ struct PlannerOptions
    */
   double corner_smoothing_angle_threshold = 2.36;
 
-  double corner_smoothing_step_size = 0.01;
+  double corner_smoothing_step_size = 0.005;
 
   ReplanThresholds replan_thresholds;
 };
