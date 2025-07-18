@@ -18,25 +18,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__TIME_HPP_
-#define ATEAM_COMMON__TIME_HPP_
 
-#include <chrono>
+#ifndef CORE__FPS_TRACKER_HPP_
+#define CORE__FPS_TRACKER_HPP_
 
-namespace ateam_common
+#include <ateam_common/time.hpp>
+#include "core/types/world.hpp"
+
+namespace ateam_kenobi
 {
 
-template<typename Duration, typename Clock>
-double TimeDiff(const typename Clock::time_point & a, const typename Clock::time_point & b)
+class FpsTracker
 {
-  using DestDurationType = std::chrono::duration<double, typename Duration::period>;
-  return std::chrono::duration_cast<DestDurationType>(a - b).count();
-}
+public:
+  FpsTracker() {
+    std::fill(buffer_.begin(), buffer_.end(), average_fps_ / kWindowWidth);
+  }
 
-double TimeDiffSeconds(
-  const std::chrono::steady_clock::time_point & a,
-  const std::chrono::steady_clock::time_point & b);
+  void update(World & world)
+  {
+    const auto dt = ateam_common::TimeDiffSeconds(world.current_time, prev_time_);
+    prev_time_ = world.current_time;
+    const auto current_fps = 1.0 / dt;
+    average_fps_ -= buffer_[buffer_index_];
+    buffer_[buffer_index_] = current_fps / kWindowWidth;
+    average_fps_ += buffer_[buffer_index_];
+    buffer_index_ = (buffer_index_ + 1) % kWindowWidth;
+    world.fps = average_fps_;
+  }
 
-}  // namespace ateam_common
+private:
+  static constexpr size_t kWindowWidth = 100;
+  std::chrono::steady_clock::time_point prev_time_;
+  std::array<double, kWindowWidth> buffer_;
+  size_t buffer_index_ = 0;
+  double average_fps_ = 100.0;  // Assume everything's fine at the start
+  
+};
 
-#endif  // ATEAM_COMMON__TIME_HPP_
+}  // namespace ateam_kenobi
+
+#endif  // CORE__FPS_TRACKER_HPP_
