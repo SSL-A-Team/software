@@ -89,8 +89,8 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<PassToLanePlay>(
     "PassRightBackwardPlay", stp_options, play_helpers::lanes::Lane::Right,
     PassToLanePlay::PassDirection::Backward);
-  addPlay<TestSpatialMapPlay>(stp_options);
-  addPlay<SpatialPassPlay>(stp_options);
+  // addPlay<TestSpatialMapPlay>(stp_options);
+  // addPlay<SpatialPassPlay>(stp_options);
   addPlay<FreeKickOnGoalPlay>(stp_options);
   addPlay<TestPassPlay>(stp_options);
   addPlay<TestPivotPlay>(stp_options);
