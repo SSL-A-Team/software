@@ -53,6 +53,10 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
     return cached_score_;
   }
 
+  if(world.ball.pos.x() > 0.0) {
+    return stp::PlayScore::Min();
+  }
+
   if (play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore::Min();
   }

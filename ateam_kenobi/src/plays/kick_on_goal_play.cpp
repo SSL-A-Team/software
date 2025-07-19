@@ -46,12 +46,17 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
 
   if (world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
+    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs &&
+    !(world.in_play && world.referee_info.running_command == ateam_common::GameCommand::DirectFreeTheirs))
   {
     return stp::PlayScore::NegativeInfinity();
   }
 
   if (world.ball.pos.x() < 0.0) {
+    return stp::PlayScore::Min();
+  }
+
+  if (world.ball.pos.x() > (world.field.field_length / 2.0) - world.field.defense_area_depth) {
     return stp::PlayScore::Min();
   }
 
@@ -88,7 +93,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
   if (largest_window) {
     striker_.SetTargetPoint(CGAL::midpoint(*largest_window));
   } else {
-    const ateam_geometry::Point opp_goal_center{world.field.field_length / 2.0, 0};
+    const ateam_geometry::Point opp_goal_center{(world.field.field_length / 2.0) - 0.5, 0};
     striker_.SetTargetPoint(opp_goal_center);
   }
 

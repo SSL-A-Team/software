@@ -150,8 +150,8 @@ double Pass::calculateDefaultKickSpeed(const World & world)
 {
   const auto distance = CGAL::approximate_sqrt(CGAL::squared_distance(world.ball.pos, target_));
   const auto ball_friction_acceleration = 0.4;
-  const auto max_kick_speed = 4.0;
-  const auto velocity_at_receiver = 0.1;
+  const auto max_kick_speed = 1.75;
+  const auto velocity_at_receiver = 0.05;
   const auto stop_at_receiver_velocity = std::sqrt(2.0 * ball_friction_acceleration * distance);
   return std::min(velocity_at_receiver + stop_at_receiver_velocity, max_kick_speed);
 }

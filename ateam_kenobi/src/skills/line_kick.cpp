@@ -183,6 +183,9 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   const auto robot_to_prekick = GetPreKickPosition(world) - robot.pos;
   double obstacle_radius_multiplier = 1.8;
 
+
+  const auto ball_to_target = target_point_ - world.ball.pos;
+
   // Cowabunga it is
   if (this->cowabunga && ateam_geometry::norm(robot_to_prekick) < 2.5 * kRobotDiameter){
     planner_options.footprint_inflation = -0.1;
@@ -193,7 +196,6 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   }
 
   // Add additional obstacles to better avoid ball
-  const auto ball_to_target = target_point_ - world.ball.pos;
   const auto angle = std::atan2(ball_to_target.y(), ball_to_target.x());
   std::vector<ateam_geometry::AnyShape> obstacles;
 

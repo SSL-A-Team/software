@@ -68,11 +68,11 @@ void AddDefaultObstacles(const World & world, std::vector<ateam_geometry::AnySha
     ateam_geometry::Rectangle{
       ateam_geometry::Point{
         back_x,
-        -half_defense_area_width
+        -(half_defense_area_width + kRobotDiameter)
       },
       ateam_geometry::Point{
-        defense_area_front_x,
-        half_defense_area_width
+        (defense_area_front_x - kRobotDiameter),
+        (half_defense_area_width + kRobotDiameter)
       }
     }
   );
