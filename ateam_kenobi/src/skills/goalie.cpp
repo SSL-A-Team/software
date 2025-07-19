@@ -41,16 +41,14 @@ Goalie::Goalie(stp::Options stp_options)
 {
   reset();
   kick_.SetUseDefaultObstacles(false);
+  default_planner_options_.avoid_ball = false;
+  default_planner_options_.use_default_obstacles = false;
   // kick_.setPreKickOffset(kRobotRadius + kBallRadius + 0.04);
 }
 
 void Goalie::reset()
 {
   easy_move_to_.reset();
-  path_planning::PlannerOptions planner_options;
-  planner_options.avoid_ball = false;
-  planner_options.use_default_obstacles = false;
-  easy_move_to_.setPlannerOptions(planner_options);
   prev_ball_in_def_area_ = false;
 }
 
@@ -59,6 +57,7 @@ void Goalie::runFrame(
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> & motion_commands)
 {
+  easy_move_to_.setPlannerOptions(default_planner_options_);
   Ball ball_state = world.ball;
   if(world.ball.visible) {
     const auto maybe_closest_enemy = getClosestEnemyRobotToBall(world);
@@ -272,7 +271,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(
     target_point = segment->source();
   }
 
-  path_planning::PlannerOptions planner_options;
+  auto planner_options = default_planner_options_;
   planner_options.footprint_inflation = -0.05;
   easy_move_to_.setPlannerOptions(planner_options);
 

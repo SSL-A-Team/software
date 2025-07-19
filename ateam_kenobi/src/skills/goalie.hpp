@@ -48,6 +48,7 @@ private:
   std::optional<int> last_enemy_id_closest_to_ball_;
   std::chrono::steady_clock::time_point ball_entered_def_area_time_;
   bool prev_ball_in_def_area_ = false;
+  path_planning::PlannerOptions default_planner_options_;
 
   bool doesOpponentHavePossesion(const World & world);
   bool isBallHeadedTowardsGoal(const World & world, const Ball & ball_state);
