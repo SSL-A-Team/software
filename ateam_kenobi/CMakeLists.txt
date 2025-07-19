@@ -78,6 +78,7 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/their_ball_placement_play.cpp
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
+  src/plays/defenders_only_play.cpp
   src/plays/our_penalty_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/defense_play.cpp

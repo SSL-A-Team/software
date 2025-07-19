@@ -94,6 +94,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<FreeKickOnGoalPlay>(stp_options);
   addPlay<TestPassPlay>(stp_options);
   addPlay<TestPivotPlay>(stp_options);
+  addPlay<DefendersOnlyPlay>(stp_options);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg)
