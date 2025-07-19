@@ -51,8 +51,31 @@ void Defenders::runFrame(
   const auto defender_points = getDefenderPoints(world);
   const auto num_defenders = std::min(defender_points.size(), robots.size());
 
+  if(isBallStoppedInFrontOfADefender(world, robots)) {
+    const auto & closest_bot = play_helpers::getClosestRobot(robots, world.ball.pos);
+    const auto enemy_bots = play_helpers::getVisibleRobots(world.their_robots);
+    const auto & closest_enemy_bot = play_helpers::getClosestRobot(enemy_bots, world.ball.pos);
+    const auto dist_to_enemy_bot = ateam_geometry::norm(closest_bot.pos - closest_enemy_bot.pos);
+    if(dist_to_enemy_bot > 0.5) {
+      auto & emt = easy_move_tos_[closest_bot.id];
+      emt.setTargetPosition(world.ball.pos);
+      emt.face_point(world.ball.pos);
+      path_planning::PlannerOptions planner_options;
+      planner_options.avoid_ball = false;
+      planner_options.footprint_inflation = 0.03;
+      emt.setPlannerOptions(planner_options);
+      auto command = emt.runFrame(closest_bot, world);
+      command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
+      command.kick_speed = 0.5;
+      motion_commands[closest_bot.id] = command;
+    }
+  }
+
   for (auto i = 0ul; i < num_defenders; ++i) {
     const auto & robot = robots[i];
+    if(motion_commands[robot.id]) {
+      continue;
+    }
     const auto & defender_point = defender_points[i];
     auto & emt = easy_move_tos_[robot.id];
     emt.setTargetPosition(defender_point);
@@ -229,6 +252,26 @@ bool Defenders::isBallInDefenseArea(const World & world)
     ateam_geometry::Point{-world.field.field_length / 2.0, def_area_half_width}
   };
   return ateam_geometry::doIntersect(world.ball.pos, def_area);
+}
+
+bool Defenders::isBallStoppedInFrontOfADefender(
+  const World & world,
+  const std::vector<Robot> & robots)
+{
+  const auto vel_threshold = 0.01;
+  if(ateam_geometry::norm(world.ball.vel) > vel_threshold) {
+    return false;
+  }
+
+  const auto dist_threshold = kRobotRadius + kBallRadius + 0.20;
+  for(const auto & bot : robots) {
+    const auto dist_to_ball = ateam_geometry::norm(world.ball.pos, bot.pos);
+    if(dist_to_ball < dist_threshold) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 }  // namespace ateam_kenobi::tactics

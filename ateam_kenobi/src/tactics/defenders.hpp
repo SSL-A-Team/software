@@ -67,6 +67,8 @@ private:
   void drawDefenseSegments(const World & world);
 
   bool isBallInDefenseArea(const World & world);
+  
+  bool isBallStoppedInFrontOfADefender(const World & world, const std::vector<Robot> & robots);
 };
 
 }  // namespace ateam_kenobi::tactics
