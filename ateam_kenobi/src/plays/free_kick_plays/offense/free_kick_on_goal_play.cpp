@@ -63,6 +63,11 @@ stp::PlayScore FreeKickOnGoalPlay::getScore(const World & world)
   return stp::PlayScore::Max() * fraction_of_goal_width;
 }
 
+void FreeKickOnGoalPlay::enter()
+{
+  striker_.Reset();
+}
+
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   16> FreeKickOnGoalPlay::runFrame(const World & world)
 {
