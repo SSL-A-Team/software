@@ -145,7 +145,7 @@ void EasyMoveTo::setMaxAccel(double accel)
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE ACCELERATION GIVEN TO SET MAX ACCELERATION");
     return;
   }
-  motion_controller_.accel_limit = accel;
+  motion_controller_.accel_limit = 1.5;
 }
 
 void EasyMoveTo::setMaxDecel(double decel)
@@ -154,7 +154,7 @@ void EasyMoveTo::setMaxDecel(double decel)
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE DECELERATION GIVEN TO SET MAX DECELERATION");
     return;
   }
-  motion_controller_.decel_limit = decel;
+  motion_controller_.decel_limit = 1.5;
 }
 
 void EasyMoveTo::setMaxThetaAccel(double accel)

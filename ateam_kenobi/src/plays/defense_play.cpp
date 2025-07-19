@@ -68,13 +68,13 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefensePlay::
   play_helpers::removeGoalie(available_robots, world);
 
   play_helpers::GroupAssignmentSet groups;
-  groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
+  // groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
   groups.AddGroup("blockers", blockers_.getAssignmentPoints(world));
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  defense_tactic_.runFrame(
-    world, assignments.GetGroupFilledAssignments("defense"),
-    motion_commands);
+  // defense_tactic_.runFrame(
+  //   world, assignments.GetGroupFilledAssignments("defense"),
+  //   motion_commands);
 
   ForwardPlayInfo(defense_tactic_);
 

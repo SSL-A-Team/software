@@ -40,6 +40,9 @@ stp::PlayScore TheirBallPlacementPlay::getScore(const World & world)
   if (cmd == ateam_common::GameCommand::BallPlacementTheirs) {
     return stp::PlayScore::Max();
   }
+  if (cmd == ateam_common::GameCommand::BallPlacementOurs) {
+    return stp::PlayScore::Max();
+  }
   return stp::PlayScore::NaN();
 }
 

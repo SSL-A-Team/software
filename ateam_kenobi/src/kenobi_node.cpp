@@ -492,7 +492,7 @@ private:
 
         const auto vel_max = 1.0;
         const auto acc_max = 6.0;
-        const auto kick_max = 1.5f;  // Officially 2.0f;
+        const auto kick_max = 1.0f;  // Officially 2.0f;
 
         auto command_vel = ateam_geometry::Vector(
           command.twist.linear.x,
