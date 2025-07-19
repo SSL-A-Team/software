@@ -55,6 +55,7 @@ public:
     {
       // Entering state where double-touch rule applies
       forbidden_id_.reset();
+      prev_touching_id_.reset();
       double_touch_rule_applies_ = true;
     }
 
