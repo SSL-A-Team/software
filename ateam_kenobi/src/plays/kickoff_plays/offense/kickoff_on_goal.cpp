@@ -87,10 +87,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffOnGoal
   play_helpers::GroupAssignmentSet groups;
   groups.AddPosition("kicker", kick_.GetAssignmentPoint(world));
 
-  const auto enough_bots_for_defense = available_robots.size() >= 3;
-  if (enough_bots_for_defense) {
-    groups.AddGroup("defense", defense_.getAssignmentPoints(world));
-  }
+  // const auto enough_bots_for_defense = available_robots.size() >= 3;
+  // if (enough_bots_for_defense) {
+  //   groups.AddGroup("defense", defense_.getAssignmentPoints(world));
+  // }
 
   const auto enough_bots_for_supports = available_robots.size() >= 5;
   if (enough_bots_for_supports) {
@@ -104,8 +104,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffOnGoal
       motion_commands[robot.id] = kick_.RunFrame(world, robot);
     });
 
-  defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
-      motion_commands);
+  // defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
+  //     motion_commands);
 
   if (enough_bots_for_supports) {
     multi_move_to_.RunFrame(world, assignments.GetGroupAssignments("supports"), motion_commands);

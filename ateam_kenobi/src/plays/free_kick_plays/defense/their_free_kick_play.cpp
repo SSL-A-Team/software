@@ -63,12 +63,12 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   const auto blocker_points = getBlockerPoints(world);
 
   play_helpers::GroupAssignmentSet groups;
-  groups.AddGroup("defense", defense_.getAssignmentPoints(world));
+  // groups.AddGroup("defense", defense_.getAssignmentPoints(world));
   groups.AddGroup("blockers", blocker_points);
 
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
+  // defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
 
   runBlockers(
     world, assignments.GetGroupFilledAssignments(

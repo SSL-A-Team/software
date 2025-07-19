@@ -98,13 +98,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
 
   play_helpers::GroupAssignmentSet groups;
   groups.AddPosition("striker", striker_.GetAssignmentPoint(world));
-  groups.AddGroup("defense", defense_.getAssignmentPoints(world));
-  if(available_robots.size() > 3) {
-    groups.AddPosition("idler1", idler_1_.GetAssignmentPoint(world));
-  }
-  if(available_robots.size() > 4) {
-    groups.AddPosition("idler2", idler_2_.GetAssignmentPoint(world));
-  }
+  // groups.AddGroup("defense", defense_.getAssignmentPoints(world));
+  groups.AddPosition("idler1", idler_1_.GetAssignmentPoint(world));
+  groups.AddPosition("idler2", idler_2_.GetAssignmentPoint(world));
 
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
@@ -115,24 +111,20 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
       getPlayInfo()["Striker"] = robot.id;
   });
 
-  const auto defenders = assignments.GetGroupFilledAssignmentsOrEmpty("defense");
-  defense_.runFrame(world, defenders, motion_commands);
-  std::ranges::transform(defenders, std::back_inserter(getPlayInfo()["Defenders"]),
-    [](const auto & r){return r.id;});
+  // const auto defenders = assignments.GetGroupFilledAssignmentsOrEmpty("defense");
+  // defense_.runFrame(world, defenders, motion_commands);
+  // std::ranges::transform(defenders, std::back_inserter(getPlayInfo()["Defenders"]),
+  //   [](const auto & r){return r.id;});
 
-  if(available_robots.size() > 3) {
-    assignments.RunPositionIfAssigned("idler1", [this, &world, &motion_commands](const auto & robot){
-        motion_commands[robot.id] = idler_1_.RunFrame(world, robot);
-        getPlayInfo()["Idlers"].push_back(robot.id);
-    });
-  }
+  assignments.RunPositionIfAssigned("idler1", [this, &world, &motion_commands](const auto & robot){
+      motion_commands[robot.id] = idler_1_.RunFrame(world, robot);
+      getPlayInfo()["Idlers"].push_back(robot.id);
+  });
 
-  if(available_robots.size() > 4) {
-    assignments.RunPositionIfAssigned("idler2", [this, &world, &motion_commands](const auto & robot){
-        motion_commands[robot.id] = idler_2_.RunFrame(world, robot);
-        getPlayInfo()["Idlers"].push_back(robot.id);
-    });
-  }
+  assignments.RunPositionIfAssigned("idler2", [this, &world, &motion_commands](const auto & robot){
+      motion_commands[robot.id] = idler_2_.RunFrame(world, robot);
+      getPlayInfo()["Idlers"].push_back(robot.id);
+  });
 
   return motion_commands;
 }

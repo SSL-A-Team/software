@@ -139,10 +139,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
   }
   groups.AddPosition("kicker", pass_tactic_.getKickerAssignmentPoint(world), disallowed_strikers);
   groups.AddPosition("receiver", pass_tactic_.getReceiverAssignmentPoint(world));
-  const auto enough_bots_for_defense = available_robots.size() >= 4;
-  if (enough_bots_for_defense) {
-    groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
-  }
+  // const auto enough_bots_for_defense = available_robots.size() >= 4;
+  // if (enough_bots_for_defense) {
+  //   groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
+  // }
   const auto enough_bots_for_idler = available_robots.size() >= 5;
   if (enough_bots_for_idler) {
     groups.AddPosition("idler", idler_skill_.GetAssignmentPoint(world));
@@ -150,8 +150,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
 
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  defense_tactic_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
-      motion_commands);
+  // defense_tactic_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
+  //     motion_commands);
 
   const auto maybe_kicker = assignments.GetPositionAssignment("kicker");
   const auto maybe_receiver = assignments.GetPositionAssignment("receiver");

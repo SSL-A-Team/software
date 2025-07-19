@@ -72,14 +72,14 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPre
 
   play_helpers::GroupAssignmentSet groups;
   groups.AddGroup("movers", multi_move_to_.GetAssignmentPoints());
-  const auto enough_bots_for_defense = available_robots.size() >= 4;
-  if (enough_bots_for_defense) {
-    groups.AddGroup("defense", defense_.getAssignmentPoints(world));
-  }
+  // const auto enough_bots_for_defense = available_robots.size() >= 4;
+  // if (enough_bots_for_defense) {
+  //   groups.AddGroup("defense", defense_.getAssignmentPoints(world));
+  // }
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-  defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
-      motion_commands);
+  // defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
+  //     motion_commands);
   multi_move_to_.RunFrame(world, assignments.GetGroupAssignments("movers"), motion_commands);
 
   return motion_commands;
