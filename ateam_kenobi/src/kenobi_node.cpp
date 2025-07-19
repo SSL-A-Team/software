@@ -485,13 +485,34 @@ private:
     16> & robot_motion_commands)
   {
     for (std::size_t id = 0; id < robot_commands_publishers_.size(); id++) {
-      const auto & maybe_motion_command = robot_motion_commands.at(id);
+      auto & maybe_motion_command = robot_motion_commands.at(id);
       if (maybe_motion_command.has_value()) {
-        robot_commands_publishers_.at(id)->publish(maybe_motion_command.value());
-        world_.our_robots.at(id).prev_command_vel = ateam_geometry::Vector(
-          maybe_motion_command.value().twist.linear.x,
-          maybe_motion_command.value().twist.linear.y
+
+        auto command = *maybe_motion_command;
+
+        const auto vel_max = 1.0;
+        const auto acc_max = 6.0;
+        const auto kick_max = 2.0f;
+
+        auto command_vel = ateam_geometry::Vector(
+          command.twist.linear.x,
+          command.twist.linear.y
         );
+
+        const auto prev_vel_norm = ateam_geometry::norm(world_.our_robots[id].prev_command_vel);
+        const auto max_new_vel = std::min(vel_max, prev_vel_norm + (acc_max * 0.01));
+
+        if(ateam_geometry::norm(command_vel) > max_new_vel) {
+          command_vel = vel_max * ateam_geometry::normalize(command_vel);
+        }
+
+        command.twist.linear.x = command_vel.x();
+        command.twist.linear.y = command_vel.y();
+        
+        command.kick_speed = std::min(command.kick_speed, kick_max);
+
+        robot_commands_publishers_.at(id)->publish(command);
+        world_.our_robots.at(id).prev_command_vel = command_vel;
 
         world_.our_robots.at(id).prev_command_omega = maybe_motion_command.value().twist.angular.z;
       } else {
