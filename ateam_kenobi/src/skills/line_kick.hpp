@@ -86,7 +86,7 @@ public:
   double kick_drive_velocity = 0.4;
 
   // Allow the robot to push up against obstacles / other robots
-  const bool cowabunga = true;
+  const bool cowabunga = false;
 
 /*
                                           #@%%%%%%%%%%%%%=

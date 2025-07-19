@@ -51,12 +51,13 @@ void Defenders::runFrame(
   const auto defender_points = getDefenderPoints(world);
   const auto num_defenders = std::min(defender_points.size(), robots.size());
 
-  if(isBallStoppedInFrontOfADefender(world, robots)) {
+  if(world.ball.pos.x() > world.field.defense_area_depth && isBallStoppedInFrontOfADefender(world, robots)) {
     const auto & closest_bot = play_helpers::getClosestRobot(robots, world.ball.pos);
     const auto enemy_bots = play_helpers::getVisibleRobots(world.their_robots);
     const auto & closest_enemy_bot = play_helpers::getClosestRobot(enemy_bots, world.ball.pos);
     const auto dist_to_enemy_bot = ateam_geometry::norm(closest_bot.pos - closest_enemy_bot.pos);
     if(dist_to_enemy_bot > 0.5) {
+      getPlayInfo()["Nudging ball"] = "";
       auto & emt = easy_move_tos_[closest_bot.id];
       emt.setTargetPosition(world.ball.pos);
       emt.face_point(world.ball.pos);
