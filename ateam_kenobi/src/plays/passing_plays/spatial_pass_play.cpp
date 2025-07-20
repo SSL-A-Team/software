@@ -81,7 +81,7 @@ stp::PlayScore SpatialPassPlay::getScore(const World & world)
   if(!largest_window) {
     return stp::PlayScore::Min();
   }
-  return stp::PlayScore::Max() * (largest_window->squared_length() / goal_segment.squared_length());
+  return std::min(90.0, stp::PlayScore::Max() * (largest_window->squared_length() / goal_segment.squared_length()));
 }
 
 stp::PlayCompletionState SpatialPassPlay::getCompletionState()

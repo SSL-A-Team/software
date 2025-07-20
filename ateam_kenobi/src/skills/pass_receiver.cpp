@@ -147,14 +147,16 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
 {
   const ateam_geometry::Ray ball_ray(world.ball.pos, world.ball.vel);
   const auto destination = ball_ray.supporting_line().projection(robot.pos);
-  easy_move_to_.setTargetPosition(destination, ateam_geometry::Vector(-0.001, 0));
+  // const auto vel_bump_vec = 0.07 * ateam_geometry::normalize(destination - robot.pos);
+  easy_move_to_.setTargetPosition(destination/*, ateam_geometry::Vector(-0.001, 0.0) + vel_bump_vec*/);
   easy_move_to_.face_point(world.ball.pos);
+  easy_move_to_.setMaxDecel(4.0);
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   easy_move_to_.setPlannerOptions(planner_options);
   ateam_msgs::msg::RobotMotionCommand motion_command;
   motion_command = easy_move_to_.runFrame(robot, world);
-  motion_command.dribbler_speed = kDefaultDribblerSpeed;
+  motion_command.dribbler_speed = kDefaultDribblerSpeed * 1.2;
   const auto dist_to_ball = ateam_geometry::norm(robot.pos - world.ball.pos);
   const auto time_to_ball = dist_to_ball / ateam_geometry::norm(world.ball.vel);
   if (time_to_ball < 0.5) {
@@ -165,7 +167,7 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
     if(std::abs(angle_between_vecs) < M_PI_2) {
       ateam_geometry::Vector robot_vel(motion_command.twist.linear.x,
         motion_command.twist.linear.y);
-      const auto multiplier = robot.breakbeam_ball_detected_filtered ? 0.2 : 0.9;
+      const auto multiplier = robot.breakbeam_ball_detected_filtered ? 0.2 : 0.6;
       robot_vel += ateam_geometry::normalize(world.ball.vel) * multiplier;
       motion_command.twist.linear.x = robot_vel.x();
       motion_command.twist.linear.y = robot_vel.y();

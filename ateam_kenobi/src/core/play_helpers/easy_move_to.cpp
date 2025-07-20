@@ -145,7 +145,7 @@ void EasyMoveTo::setMaxAccel(double accel)
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE ACCELERATION GIVEN TO SET MAX ACCELERATION");
     return;
   }
-  motion_controller_.accel_limit = accel;
+  motion_controller_.accel_limit = std::min(accel, 1.5);
 }
 
 void EasyMoveTo::setMaxDecel(double decel)

@@ -463,7 +463,7 @@ void MotionController::reset()
   cross_track_controller.set_gains(2.8, 0.0, 0.05, 0.31, -0.31);
   x_controller.set_gains(2.5, 0.0, 0.2, 0.3, -0.3);
   y_controller.set_gains(4.0, 0.0, 0.2, 0.3, -0.3);
-  t_controller.set_gains(3.0, 0.0, 0.1, 0.5, -0.5);
+  t_controller.set_gains(4.5, 0.0, 0.1, 0.5, -0.5);
 
   this->target_point = ateam_geometry::Point(0, 0);
 
