@@ -73,6 +73,10 @@ private:
     const std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
+
+  void runIdlers(
+    const std::vector<Robot> & robots, const World & world,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
 };
 
 }  // namespace ateam_kenobi::plays

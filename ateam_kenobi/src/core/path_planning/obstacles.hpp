@@ -59,7 +59,7 @@ std::optional<ateam_geometry::AnyShape> GetCollidingObstacle(
  */
 bool IsPointInBounds(
   const ateam_geometry::Point & state, const World & world,
-  const bool apply_offset = true);
+  const double bounds_offset = 0.0);
 
 }  // namespace ateam_kenobi::path_planning
 

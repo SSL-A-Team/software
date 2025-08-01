@@ -62,9 +62,19 @@ double KickSkill::GetKickSpeed() const
   return kick_speed_;
 }
 
+void KickSkill::SetKickChip(KickChip kc)
+{
+  kick_chip_ = kc;
+}
+
 bool KickSkill::IsAllowedToKick() const
 {
   return kicking_allowed_;
+}
+
+KickSkill::KickChip KickSkill::KickOrChip() const
+{
+  return kick_chip_;
 }
 
 }  // namespace ateam_kenobi::skills

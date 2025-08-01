@@ -49,11 +49,13 @@
 #include "core/in_play_eval.hpp"
 #include "core/double_touch_eval.hpp"
 #include "core/ballsense_emulator.hpp"
+#include "core/ballsense_filter.hpp"
 #include "core/motion/world_to_body_vel.hpp"
 #include "plays/halt_play.hpp"
 #include "core/defense_area_enforcement.hpp"
 #include "core/joystick_enforcer.hpp"
 #include <ateam_spatial/spatial_evaluator.hpp>
+#include "core/fps_tracker.hpp"
 
 namespace ateam_kenobi
 {
@@ -69,6 +71,7 @@ public:
   : rclcpp::Node("kenobi_node", options),
     play_selector_(*this),
     joystick_enforcer_(*this),
+    overlays_(""),
     game_controller_listener_(*this)
   {
     world_.spatial_evaluator = &spatial_evaluator_;
@@ -176,8 +179,11 @@ private:
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
+  BallSenseFilter ballsense_filter_;
   std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
+  visualization::Overlays overlays_;
+  FpsTracker fps_tracker_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
@@ -286,6 +292,11 @@ private:
       world_.ball.vel = ateam_geometry::Vector(
         ball_state_msg->twist.linear.x,
         ball_state_msg->twist.linear.y);
+      world_.ball.last_visible_time = world_.current_time;
+    } else if(ateam_common::TimeDiffSeconds(world_.current_time, world_.ball.last_visible_time) >
+      0.5)
+    {
+      world_.ball.vel = ateam_geometry::Vector{0.0, 0.0};
     }
   }
 
@@ -402,11 +413,12 @@ private:
       world_.referee_info.their_goalie_id = game_controller_listener_.GetTheirGoalieID().value();
     }
     in_play_eval_.Update(world_);
-    double_touch_eval_.update(world_);
+    double_touch_eval_.update(world_, overlays_);
     UpdateSpatialEvaluator();
     if (get_parameter("use_emulated_ballsense").as_bool()) {
       ballsense_emulator_.Update(world_);
     }
+    ballsense_filter_.Update(world_);
     if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
       auto & clk = *this->get_clock();
       RCLCPP_WARN_THROTTLE(
@@ -419,6 +431,8 @@ private:
         this->get_logger(), clk, 3000,
         "DETECTED TEAM SIDE WAS UNKNOWN");
     }
+
+    fps_tracker_.update(world_);
 
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
 
@@ -450,7 +464,10 @@ private:
     }
     const auto motion_commands = play->runFrame(world);
 
-    overlay_publisher_->publish(play->getOverlays().getMsg());
+    overlays_.merge(play->getOverlays());
+
+    overlay_publisher_->publish(overlays_.getMsg());
+    overlays_.clear();
     play->getOverlays().clear();
 
 
@@ -471,6 +488,15 @@ private:
       const auto & maybe_motion_command = robot_motion_commands.at(id);
       if (maybe_motion_command.has_value()) {
         robot_commands_publishers_.at(id)->publish(maybe_motion_command.value());
+        world_.our_robots.at(id).prev_command_vel = ateam_geometry::Vector(
+          maybe_motion_command.value().twist.linear.x,
+          maybe_motion_command.value().twist.linear.y
+        );
+
+        world_.our_robots.at(id).prev_command_omega = maybe_motion_command.value().twist.angular.z;
+      } else {
+        world_.our_robots.at(id).prev_command_vel = ateam_geometry::Vector(0, 0);
+        world_.our_robots.at(id).prev_command_omega = 0;
       }
     }
   }

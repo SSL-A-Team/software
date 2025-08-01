@@ -39,4 +39,6 @@ const Eigen::Vector3d kMaxRobotAccel = Eigen::Vector3d(3, 3, 36);
 constexpr double kBallDiameter = 0.04267;
 constexpr double kBallRadius = kBallDiameter / 2;
 
+constexpr double kDefaultDribblerSpeed = 300;
+
 #endif  // ATEAM_COMMON__ROBOT_CONSTANTS_HPP_

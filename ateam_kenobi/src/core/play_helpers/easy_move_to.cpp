@@ -157,6 +157,20 @@ void EasyMoveTo::setMaxDecel(double decel)
   motion_controller_.decel_limit = decel;
 }
 
+void EasyMoveTo::setMaxThetaAccel(double accel)
+{
+  if (accel > 8.0) {
+    RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE ACCELERATION GIVEN TO SET MAX THETA ACCELERATION");
+    return;
+  }
+  motion_controller_.t_accel_limit = accel;
+}
+
+void EasyMoveTo::setMaxAllowedTurnAngle(double angle)
+{
+  motion_controller_.max_allowed_turn_angle = angle;
+}
+
 ateam_msgs::msg::RobotMotionCommand EasyMoveTo::runFrame(
   const Robot & robot, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles)
@@ -184,11 +198,20 @@ ateam_msgs::msg::RobotMotionCommand EasyMoveTo::getMotionCommand(
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
 
+  // Robot should stop at the end of the path
+  // if the plan doesn't reach the target point due to an obstacle
+  auto velocity = ateam_geometry::Vector(0, 0);
+  if (!path.empty() && (CGAL::squared_distance(path.back(),
+      target_position_) < kRobotRadius * kRobotRadius))
+  {
+    velocity = target_velocity_;
+  }
+
   const bool used_cached_path = path_planner_.usedCachedPath();
   if (used_cached_path) {
-    motion_controller_.update_trajectory(path);
+    motion_controller_.update_trajectory(path, velocity);
   } else {
-    motion_controller_.reset_trajectory(path);
+    motion_controller_.reset_trajectory(path, velocity);
   }
   return motion_controller_.get_command(robot, current_time, motion_options_);
 }
@@ -197,16 +220,25 @@ void EasyMoveTo::drawTrajectoryOverlay(
   const path_planning::PathPlanner::Path & path,
   const Robot & robot)
 {
-  if (path.empty()) {
-    const std::vector<ateam_geometry::Point> points = {
-      robot.pos,
-      target_position_
-    };
-    getOverlays().drawLine("path", points, "red");
+  auto & overlays = getOverlays();
+  if(path.empty()) {
+    overlays.drawLine("path", {robot.pos, target_position_}, "Red");
+  } else if(path.size() == 1) {
+    overlays.drawLine("path", {robot.pos, target_position_}, "Purple");
   } else {
-    getOverlays().drawLine("path", path, "purple");
-    if (CGAL::squared_distance(path.back(), target_position_) > kRobotRadius * kRobotRadius) {
-      getOverlays().drawLine("afterpath", {path.back(), target_position_}, "red");
+    const auto [closest_index, closest_point] = ProjectRobotOnPath(path, robot);
+    std::vector<ateam_geometry::Point> path_done(path.begin(), path.begin() + (closest_index));
+    path_done.push_back(closest_point);
+    std::vector<ateam_geometry::Point> path_remaining(path.begin() + (closest_index),
+      path.end());
+    path_remaining.insert(path_remaining.begin(), closest_point);
+    const auto translucent_purple = "#8000805F";
+    overlays.drawLine("path_done", path_done, translucent_purple);
+    overlays.drawLine("path_remaining", path_remaining, "Purple");
+    if (path_planner_.didTimeOut()) {
+      overlays.drawLine("afterpath", {path.back(), target_position_}, "LightSkyBlue");
+    } else if (path_planner_.isPathTruncated()) {
+      overlays.drawLine("afterpath", {path.back(), target_position_}, "LightPink");
     }
   }
 }
@@ -232,6 +264,32 @@ std::optional<ateam_msgs::msg::RobotMotionCommand> EasyMoveTo::generateEscapeVel
   ateam_msgs::msg::RobotMotionCommand command;
   command.twist = *twist;
   return command;
+}
+
+std::pair<size_t, ateam_geometry::Point> EasyMoveTo::ProjectRobotOnPath(
+  const path_planning::PathPlanner::Path & path, const Robot & robot)
+{
+  if (path.empty()) {
+    return {0, robot.pos};
+  }
+  if (path.size() == 1) {
+    return {0, path[0]};
+  }
+  auto closest_point = ateam_geometry::nearestPointOnSegment(ateam_geometry::Segment(path[0],
+      path[1]), robot.pos);
+  size_t closest_index = 1;
+  double min_distance = CGAL::squared_distance(closest_point, robot.pos);
+  for (size_t i = 1; i < path.size() - 1; ++i) {
+    const auto segment = ateam_geometry::Segment(path[i], path[i + 1]);
+    const auto point_on_segment = ateam_geometry::nearestPointOnSegment(segment, robot.pos);
+    const auto distance = CGAL::squared_distance(point_on_segment, robot.pos);
+    if (distance <= min_distance) {
+      min_distance = distance;
+      closest_point = point_on_segment;
+      closest_index = i + 1;
+    }
+  }
+  return {closest_index, closest_point};
 }
 
 }  // namespace ateam_kenobi::play_helpers

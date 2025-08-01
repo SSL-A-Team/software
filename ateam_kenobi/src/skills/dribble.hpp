@@ -44,9 +44,10 @@ public:
     return getStartPosition(world);
   }
 
-  void setTarget(ateam_geometry::Point target)
+  void setTarget(ateam_geometry::Point target, double target_threshold = 0.1)
   {
     target_ = target;
+    target_threshold_ = target_threshold;
   }
 
   bool isDone()
@@ -60,14 +61,20 @@ public:
 private:
   const double kOffset = kRobotRadius + kBallRadius + 0.07;
   ateam_geometry::Point target_;
+  double target_threshold_ = 0.1;
   play_helpers::EasyMoveTo easy_move_to_;
   int ball_detected_filter_ = 0;
   bool done_ = false;
 
+  std::optional<std::chrono::steady_clock::duration> back_away_duration_;
+  std::chrono::steady_clock::time_point back_away_start_;
+
+
   enum class State
   {
     MoveBehindBall,
-    Dribble
+    Dribble,
+    BackAway
   };
   State state_ = State::MoveBehindBall;
 
@@ -81,6 +88,7 @@ private:
 
   ateam_msgs::msg::RobotMotionCommand runMoveBehindBall(const World & world, const Robot & robot);
   ateam_msgs::msg::RobotMotionCommand runDribble(const World & world, const Robot & robot);
+  ateam_msgs::msg::RobotMotionCommand runBackAway(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills

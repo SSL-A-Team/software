@@ -72,6 +72,9 @@ public:
         {"wheel_torque", false}
     });
 
+    declare_parameter<bool>("shut_down_robots", false);
+    declare_parameter<bool>("reboot_robots", false);
+
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
       "~/robot_motion_commands/robot",
@@ -142,12 +145,23 @@ private:
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
 
+  void ReplaceNanWithZero(double & val) {
+    if (std::isnan(val)) {
+      RCLCPP_WARN(get_logger(), "Radio bridge is replacing NaNs!");
+      val = 0.0;
+    }
+  }
+
   void MotionCommandCallback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr command_msg,
     int robot_id)
   {
     const std::lock_guard lock(mutex_);
     motion_commands_[robot_id] = *command_msg;
+    auto & command = motion_commands_[robot_id];
+    ReplaceNanWithZero(command.twist.linear.x);
+    ReplaceNanWithZero(command.twist.linear.y);
+    ReplaceNanWithZero(command.twist.angular.z);
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
@@ -231,6 +245,7 @@ private:
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
+      control_msg.dribbler_multiplier = 55;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
@@ -340,7 +355,7 @@ private:
     std::string error;
     const auto packet = ParsePacket(udp_packet_data, udp_packet_size, error);
     if (!error.empty()) {
-      RCLCPP_WARN(get_logger(), "Ignoring telemetry message. %s", error.c_str());
+      RCLCPP_WARN(get_logger(), "Ignoring incoming message from robot %d. %s", robot_id, error.c_str());
       return;
     }
 
@@ -356,7 +371,7 @@ private:
           last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
-            RCLCPP_WARN(get_logger(), "Ignoring telemetry message. %s", error.c_str());
+            RCLCPP_WARN(get_logger(), "Ignoring basic telemetry message from robot %d. %s", robot_id, error.c_str());
             return;
           }
           if (std::holds_alternative<BasicTelemetry>(data_var)) {
@@ -372,7 +387,7 @@ private:
         {
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
-            RCLCPP_WARN(get_logger(), "Ignoring control debug message. %s", error.c_str());
+            RCLCPP_WARN(get_logger(), "Ignoring extended telemetry message from robot %d. %s", robot_id, error.c_str());
             return;
           }
 
@@ -386,8 +401,8 @@ private:
         {
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
-            RCLCPP_WARN(get_logger(), "Ignoring parameter command response message. %s",
-              error.c_str());
+            RCLCPP_WARN(get_logger(), "Ignoring parameter command response message from robot %d. %s",
+              robot_id, error.c_str());
             return;
           }
           if(std::holds_alternative<ParameterCommand>(data_var)) {
@@ -401,8 +416,8 @@ private:
         break;
       default:
         RCLCPP_WARN(
-          get_logger(), "Ignoring telemetry message. Unsupported command code: %d",
-          packet.command_code);
+          get_logger(), "Ignoring telemetry message from robot %d. Unsupported command code: %d",
+          robot_id, packet.command_code);
         return;
     }
   }

@@ -75,6 +75,8 @@ public:
 
   void setMaxAccel(double accel);
   void setMaxDecel(double decel);
+  void setMaxThetaAccel(double accel);
+  void setMaxAllowedTurnAngle(double angle);
 
   ateam_msgs::msg::RobotMotionCommand runFrame(
     const Robot & robot, const World & world,
@@ -112,6 +114,10 @@ private:
     const World & world,
     const Robot & robot,
     std::vector<ateam_geometry::AnyShape> obstacles);
+
+  std::pair<size_t, ateam_geometry::Point> ProjectRobotOnPath(
+    const path_planning::PathPlanner::Path & path,
+    const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::play_helpers

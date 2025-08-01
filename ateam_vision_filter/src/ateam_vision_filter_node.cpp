@@ -44,8 +44,13 @@ class VisionFilterNode : public rclcpp::Node
 public:
   explicit VisionFilterNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ateam_vision_filter", options),
-    game_controller_listener_(*this)
+    game_controller_listener_(*this),
+    world_(get_node_parameters_interface())
   {
+    declare_parameters<double>("offsets", {
+      {"robots.x", 0.0},
+      {"robots.y", 0.0}
+    });
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
     ball_publisher_ = create_publisher<ateam_msgs::msg::BallState>(

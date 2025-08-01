@@ -71,12 +71,14 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/test_plays/test_play.cpp
   src/plays/test_plays/triangle_pass_play.cpp
   src/plays/test_plays/waypoints_play.cpp
+  src/plays/util_plays/corner_lineup_play.cpp
   src/plays/halt_play.cpp
   src/plays/kick_on_goal_play.cpp
   src/plays/our_ball_placement_play.cpp
   src/plays/their_ball_placement_play.cpp
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
+  src/plays/defenders_only_play.cpp
   src/plays/our_penalty_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/defense_play.cpp
@@ -108,6 +110,7 @@ target_sources(kenobi_node_component PRIVATE
   src/skills/dribble.cpp
   src/skills/extract.cpp
   src/skills/capture.cpp
+  src/skills/universal_kick.cpp
 )
 
 target_include_directories(kenobi_node_component PUBLIC

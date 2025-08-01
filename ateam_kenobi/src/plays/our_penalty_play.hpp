@@ -24,7 +24,7 @@
 
 #include "core/stp/play.hpp"
 #include "skills/goalie.hpp"
-#include "skills/line_kick.hpp"
+#include "skills/universal_kick.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
@@ -46,7 +46,7 @@ public:
 
 private:
   skills::Goalie goalie_skill_;
-  skills::LineKick line_kick_skill_;
+  skills::UniversalKick kick_skill_;
   std::array<play_helpers::EasyMoveTo, 16> move_tos_;
   std::chrono::steady_clock::time_point kick_time_ = std::chrono::steady_clock::time_point::max();
 

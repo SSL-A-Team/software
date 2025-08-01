@@ -27,6 +27,7 @@
 #include "core/types/world.hpp"
 #include "core/stp/skill.hpp"
 #include "pivot_kick.hpp"
+#include "line_kick.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -43,37 +44,45 @@ public:
 
 private:
   play_helpers::EasyMoveTo easy_move_to_;
-  PivotKick kick_;
+  LineKick kick_;
+  std::optional<int> last_enemy_id_closest_to_ball_;
+  std::chrono::steady_clock::time_point ball_entered_def_area_time_;
+  bool prev_ball_in_def_area_ = false;
+  path_planning::PlannerOptions default_planner_options_;
 
   bool doesOpponentHavePossesion(const World & world);
-  bool isBallHeadedTowardsGoal(const World & world);
-  bool isBallInDefenseArea(const World & world);
+  bool isBallHeadedTowardsGoal(const World & world, const Ball & ball_state);
+  bool isBallInDefenseArea(const World & world, const Ball & ball_state);
 
   /**
    * @brief Default behavior of robot staying in line with ball
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runDefaultBehavior(const World & world, const Robot & goalie);
+  ateam_msgs::msg::RobotMotionCommand runDefaultBehavior(const World & world, const Robot & goalie, const Ball & ball_state);
 
   /**
    * @brief Block a possible shot when opponents have the ball
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runBlockShot(const World & world, const Robot & goalie);
+  ateam_msgs::msg::RobotMotionCommand runBlockShot(const World & world, const Robot & goalie, const Ball & ball_state);
 
   /**
    * @brief Block ball when headed towards goal
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runBlockBall(const World & world, const Robot & goalie);
+  ateam_msgs::msg::RobotMotionCommand runBlockBall(const World & world, const Robot & goalie, const Ball & ball_state);
 
   /**
    * @brief Kick ball out of defense area
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie);
+  ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie, const Ball & ball_state);
+
+  ateam_msgs::msg::RobotMotionCommand runSideEjectBall(const World & world, const Robot & goalie);
 
   std::vector<ateam_geometry::AnyShape> getCustomObstacles(const World & world);
+  std::optional<Robot> getClosestEnemyRobotToBall(const World & world);
+  void glueBallToLastClosestEnemy(Ball & ball, const World & world);
 };
 
 }  // namespace ateam_kenobi::skills

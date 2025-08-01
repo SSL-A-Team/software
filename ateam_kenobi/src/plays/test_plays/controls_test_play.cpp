@@ -38,16 +38,21 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 
   // Drive in square
   waypoints = {
-    {ateam_geometry::Point(1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
     {ateam_geometry::Point(-1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-3.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-3.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
     {ateam_geometry::Point(-1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
   };
+
+  // waypoints = {
+  //   {ateam_geometry::Point(-0.5, -kRobotRadius), AngleMode::face_absolute, M_PI / 2, 3.0},
+  //   {ateam_geometry::Point(-0.5, kRobotRadius), AngleMode::face_absolute, M_PI / 2, 3.0}
+  // };
 
   motion_controller_.v_max = 2.0;
   motion_controller_.t_max = 20.0;
-  motion_controller_.accel_limit = 3.0;
-  motion_controller_.decel_limit = 3.0;
+  motion_controller_.accel_limit = 2.0;
+  motion_controller_.decel_limit = 2.0;
 }
 
 void ControlsTestPlay::reset()
@@ -84,9 +89,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 
   auto waypoint_vel = ateam_geometry::Vector(0.0, 0.0);
   const auto prev_index = index == 0 ? waypoints.size() - 1 : index - 1;
+  // const auto next_index = (index + 1) % waypoints.size();
   std::vector<ateam_geometry::Point> path{
     waypoints[prev_index].position,
-    waypoints[index].position
+    waypoints[index].position,
+    // waypoints[next_index].position
   };
   motion_controller_.reset_trajectory(path, waypoint_vel);
 
@@ -152,13 +159,14 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 
 bool ControlsTestPlay::isGoalHit(const Robot & robot)
 {
-  const bool position_goal_hit = ateam_geometry::norm(waypoints[index].position - robot.pos) <
-    position_threshold;
+  const auto target_index = (index) % waypoints.size();
+  const bool position_goal_hit = ateam_geometry::norm(waypoints[target_index].position -
+      robot.pos) < position_threshold;
   const bool heading_goal_hit = [&]() {
-      if (waypoints[index].angle_mode == AngleMode::face_absolute) {
+      if (waypoints[target_index].angle_mode == AngleMode::face_absolute) {
         return std::abs(
           angles::shortest_angular_distance(
-            waypoints[index].heading,
+            waypoints[target_index].heading,
             robot.theta)) < angles::from_degrees(angle_threshold);
       } else {
         return true;
