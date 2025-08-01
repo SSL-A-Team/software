@@ -12,14 +12,36 @@ export class RosManager {
     services: Map<string, ROSLIB.Service> = new Map<string, ROSLIB.Service>;
     params: Map<string, ROSLIB.Param> = new Map<string, ROSLIB.Param>;
 
+    websocket: WebSocket;
+    numReceived: number;
+    time: number;
+
     constructor(appState: AppState) {
 
         console.log(appState);
         console.log("Connecting to 9001")
-        const ws = new WebSocket('ws://' + location.hostname + ':9001');
+        this.websocket = new WebSocket('ws://' + location.hostname + ':9001');
 
-        ws.onopen = function(event) {console.log("Connected", event)};
-        ws.onmessage = function(event) { console.log("Received:", event.data)};
+        let numReceived = this.numReceived;
+        let time = this.time;
+
+        const f = this.getKenobiCallback(appState);
+
+        this.websocket.onopen = function(event) {
+            console.log("Connected", event);
+            time = Date.now();
+            numReceived = 0;
+        };
+        this.websocket.onmessage = function(event) {
+            // console.log("received: ", event.data);
+            numReceived++;
+            const obj = JSON.parse(event.data);
+            console.log("Received:", obj);
+            f(obj);
+        };
+        this.websocket.onclose = function(event) {
+            console.log("Disconnected from websocket", event);
+        };
 
         return;
 
@@ -201,6 +223,10 @@ export class RosManager {
     }
 
     enableStateTopics(appState: AppState) {
+        this.websocket.send("COMMAND: enableStateTopics");
+        console.log("sent enable");
+        return; // TODO: REMOVE ALL OF THIS
+
         let ballTopic = this.subscriptions.get("ball");
         if (!ballTopic) {
             ballTopic = new ROSLIB.Topic({
@@ -230,6 +256,10 @@ export class RosManager {
     }
 
     disableStateTopics(appState: AppState) {
+        this.websocket.send("COMMAND: disableStateTopics");
+        console.log("sent disable");
+        return; // TODO: REMOVE ALL OF THIS
+
         for (var i = 0; i < 16; i++) {
             for (const team of appState.realtimeWorld.teams.keys()) {
                 let robotTopic = this.subscriptions.get("/" + team + "_team/robot" + i);

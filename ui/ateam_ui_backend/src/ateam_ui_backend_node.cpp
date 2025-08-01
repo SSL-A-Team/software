@@ -20,22 +20,25 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <std_msgs/msg/string.hpp>
 
+#include <boost/beast.hpp>
+#include <boost/asio.hpp>
 #include <nlohmann/json.hpp>
 
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/asio.hpp>
-#include <iostream>
-#include <thread>
+#include <set>
 #include <chrono>
 #include <mutex>
+#include <memory>
+#include <thread>
+#include <optional>
+#include <functional>
+
+#include "message_conversions.hpp"
 
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
-
-#include "message_conversions.hpp"
 
 #include <ateam_msgs/msg/world.hpp>
 #include <ateam_msgs/msg/ball_state.hpp>
@@ -71,19 +74,103 @@ using ateam_common::indexed_topic_helpers::create_indexed_subscribers;
 using namespace std::literals::chrono_literals;
 namespace beast = boost::beast;
 namespace websocket = beast::websocket;
-namespace net = boost::asio;
-using tcp = net::ip::tcp;
+namespace asio = boost::asio;
+using tcp = asio::ip::tcp;
+
+// ---------------------- WebSocket Session ----------------------
+class WebSocketSession : public std::enable_shared_from_this<WebSocketSession> {
+public:
+  using Ptr = std::shared_ptr<WebSocketSession>;
+
+  WebSocketSession(tcp::socket socket,
+                  std::function<void(const std::string&)> on_msg_cb,
+                  std::function<void(Ptr)> on_close_cb)
+    : ws_(std::move(socket)),
+    on_msg_cb_(std::move(on_msg_cb)),
+    on_close_cb_(std::move(on_close_cb)) {}
+
+  void start() {
+    ws_.accept();
+    do_read();
+  }
+
+  void send(const std::string& message) {
+    if (ws_.is_open()) {
+      beast::error_code ec;
+      ws_.write(asio::buffer(message), ec);
+      if (ec) {
+        std::cerr << "WebSocket write failed: " << ec.message() << "\n";
+      }
+    }
+  }
+
+  void do_read() {
+    ws_.async_read(buffer_, [self = shared_from_this()](beast::error_code ec, std::size_t) {
+      if (ec) {
+        self->on_close_cb_(self);
+        return;
+      }
+
+      std::string msg = beast::buffers_to_string(self->buffer_.data());
+      self->buffer_.consume(self->buffer_.size());
+
+      self->on_msg_cb_(msg);
+      self->do_read();
+    });
+  }
+
+  void close() {
+    if (ws_.is_open()) {
+      beast::error_code ec;
+      ws_.close(websocket::close_code::normal, ec);
+      if (ec) {
+        std::cerr << "WebSocket close error: " << ec.message() << "\n";
+      }
+    }
+  }
+
+  websocket::stream<tcp::socket> ws_;
+  beast::flat_buffer buffer_;
+  std::function<void(const std::string&)> on_msg_cb_;
+  std::function<void(Ptr)> on_close_cb_;
+};
+
+
 
 class AteamUIBackendNode : public rclcpp::Node
 {
 public:
-  explicit AteamUIBackendNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions())
-      : rclcpp::Node("ateam_ui_backend_node", options),
-      io_context_(), acceptor_{io_context_, {tcp::v4(), 9001}},
+  AteamUIBackendNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+    : Node("ateam_ui_backend_node", options),
+      ioc_(1),
+      acceptor_(ioc_),
       game_controller_listener_(*this)
   {
 
     reset_json_object();
+
+    world_subscription_ =
+      create_subscription<ateam_msgs::msg::World>(
+      "kenobi_node/world",
+      10,
+      std::bind(&AteamUIBackendNode::world_callback, this, std::placeholders::_1));
+
+    timer_ = create_wall_timer(10ms, std::bind(&AteamUIBackendNode::send_latest_message, this));
+
+    latest_msg_ = "default message";
+
+    // WebSocket Acceptor Setup
+    tcp::endpoint endpoint(tcp::v4(), 9001);
+    acceptor_.open(endpoint.protocol());
+    acceptor_.set_option(asio::socket_base::reuse_address(true));
+    acceptor_.bind(endpoint);
+    acceptor_.listen();
+    do_accept();
+
+    // Start IO thread
+    ws_thread_ = std::thread([this]() {
+        ioc_.run();
+    });
 
     /*
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
@@ -108,24 +195,36 @@ public:
       this);
     */
 
-    // world_subscription_ =
-    //   create_subscription<ateam_msgs::msg::World>(
-    //   "kenobi_node/world",
-    //   10,
-    //   std::bind(&AteamUIBackendNode::world_callback, this, std::placeholders::_1));
   }
 
-  //const std::lock_guard<std::mutex> lock(world_mutex_);
+  ~AteamUIBackendNode() override {
+      RCLCPP_INFO(get_logger(), "SHUTTING DOWN");
+      shutdown();
+      ioc_.stop();
+      if (ws_thread_.joinable()) {
+          ws_thread_.join();
+      }
+  }
 
 private:
   nlohmann::json json_;
+  std::optional<std::string> latest_msg_;
   std::mutex json_mutex_;
 
-  net::io_context io_context_;
+  // ROS 2
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_;
+  rclcpp::TimerBase::SharedPtr timer_;
+
+  // Boost.Asio / WebSocket
+  asio::io_context ioc_;
   tcp::acceptor acceptor_;
+  std::thread ws_thread_;
+
+  // Sessions
+  std::set<std::shared_ptr<WebSocketSession>> sessions_;
+  std::mutex sessions_mutex_;
 
   ateam_common::GameControllerListener game_controller_listener_;
-  rclcpp::TimerBase::SharedPtr timer_;
 
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
     16> blue_robots_subscriptions_;
@@ -140,47 +239,86 @@ private:
 
   rclcpp::Subscription<ateam_msgs::msg::World>::SharedPtr world_subscription_;
 
+  void do_accept() {
+    acceptor_.async_accept([this](beast::error_code ec, tcp::socket socket) {
+      if (!ec) {
+        auto session = std::make_shared<WebSocketSession>(
+          std::move(socket),
+          [this](const std::string& msg) { handle_incoming_message(msg); },
+          [this](std::shared_ptr<WebSocketSession> s) { remove_session(s); });
 
-  void poll_new_connections() {
-    std::cout<<"polling new connections"<<std::endl;
-    tcp::socket socket{io_context_};
-    acceptor_.accept(socket);
-    std::thread([this, s = std::move(socket)]() mutable
-                { this->do_session(std::move(s)); })
-        .detach();
+        {
+          std::lock_guard<std::mutex> lock(sessions_mutex_);
+          sessions_.insert(session);
+          RCLCPP_INFO(get_logger(), "adding session, total: '%ld'", sessions_.size());
+        }
+
+        session->start();
+      }
+      do_accept();  // Accept next client
+    });
   }
 
-  void do_session(tcp::socket socket)
-  {
-    try
-    {
-      websocket::stream<tcp::socket> ws(std::move(socket));
-      ws.accept();
+  void send_latest_message() {
 
-      while (true)
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        ws.write(net::buffer(json_.dump()));
-      }
+    const auto our_color = game_controller_listener_.GetTeamColor();
+    std::string color;
+
+    switch(our_color) {
+      case ateam_common::TeamColor::Blue:
+        color = "blue";
+        break;
+      case ateam_common::TeamColor::Yellow:
+        color = "yellow";
+        break;
+      default:
+        color = "unkown";
+        break;
     }
-    catch (std::exception const &e)
+
+    nlohmann::json json_copy;
     {
-      std::cerr << "Error: " << e.what() << "\n";
+      std::lock_guard<std::mutex> lock(json_mutex_);
+      json_["team"] = color;
+      json_copy = json_;
+    }
+
+    std::string json_dump = json_copy.dump();
+    std::lock_guard<std::mutex> lock(sessions_mutex_);
+    for (auto& session : sessions_) {
+      session->send(json_dump);
+    }
+  }
+
+  void handle_incoming_message(const std::string &msg) {
+    RCLCPP_INFO(get_logger(), "Received from WS client: '%s'", msg.c_str());
+  }
+
+  void remove_session(std::shared_ptr<WebSocketSession> session) {
+    std::lock_guard<std::mutex> lock(sessions_mutex_);
+    sessions_.erase(session);
+    RCLCPP_INFO(get_logger(), "Closed session, remaining: '%ld'", sessions_.size());
+  }
+
+  void shutdown() {
+    {
+      std::lock_guard<std::mutex> lock(sessions_mutex_);
+      for (auto& session : sessions_) {
+        session->close();
+      }
+      sessions_.clear();
+    }
+
+    beast::error_code ec;
+    acceptor_.close(ec);
+    if (ec) {
+      RCLCPP_WARN(get_logger(), "Error closing acceptor: %s", ec.message().c_str());
     }
   }
 
   void world_callback(
     const ateam_msgs::msg::World & world_msg)
   {
-    const auto our_color = game_controller_listener_.GetTeamColor();
-
-    // TODO: Handle this better
-    if(our_color == ateam_common::TeamColor::Unknown) {
-      return;
-    }
-
-    const auto are_we_blue = our_color == ateam_common::TeamColor::Blue;
-
     std::lock_guard<std::mutex> lock(json_mutex_);
     json_ = fromMsg(world_msg);
   }

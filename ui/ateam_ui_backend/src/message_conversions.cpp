@@ -33,7 +33,7 @@ nlohmann::json fromMsg(
 
     nlohmann::json json;
 
-    json["time"] = fromMsg(ros_msg.current_time);
+    json["current_time"] = fromMsg(ros_msg.current_time);
 
     json["field"] = fromMsg(ros_msg.field);
     json["referee_info"] = fromMsg(ros_msg.referee_info);
