@@ -3,10 +3,11 @@ import ROSLIB from "roslib";
 import * as PIXI from "pixi.js";
 
 export class Ball {
-    visible: boolean = true;
     pose: Pose;
     twist: Twist;
     accel: Accel;
+
+    visible: boolean = true;
 
     constructor() {
         this.pose = new ROSLIB.Pose({

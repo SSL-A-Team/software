@@ -5,7 +5,7 @@ import { Ball } from "@/ball";
 import { Field } from "@/field";
 import { AIState } from "@/AI";
 import { Play } from "@/play";
-import { RosManager } from "./rosManager";
+import { BackendManager, MessageType } from "./backendManager";
 import * as PIXI from "pixi.js";
 
 export class RenderConfig {
@@ -21,7 +21,11 @@ export class WorldState {
     field: Field;
     referee: Referee;
     ai: AIState;
-    ignoreSide: number;
+    overridePlay: string;
+    ball_in_play: boolean;
+    double_touch_enforced: boolean;
+    double_touch_id: number;
+
     timestamp: number;
     fps: number;
 
@@ -36,8 +40,10 @@ export class WorldState {
 
         this.referee = new Referee();
         this.ai = new AIState();
-
-        this.ignoreSide = 0;
+        this.overridePlay = null;
+        this.ball_in_play = false;
+        this.double_touch_enforced = false;
+        this.double_touch_id = -1;
 
         this.timestamp = Date.now();
         this.fps = 100;
@@ -53,7 +59,7 @@ export class GraphicState {
 }
 
 export class AppState {
-    rosManager: RosManager;
+    backendManager: BackendManager;
 
     renderConfig: RenderConfig;
     graphicState: GraphicState;
@@ -95,7 +101,7 @@ export class AppState {
     }
 
     connectToRos(): void {
-        this.rosManager = new RosManager(this);
+        this.backendManager = new BackendManager(this);
     }
 
     updateHistory(): void {
@@ -118,24 +124,26 @@ export class AppState {
     setGoalie(goalieId: number): void {
         const state = this;
 
-        const request = new ROSLIB.ServiceRequest({
+        const request = {
+            msg_type: MessageType.SetDesiredKeeper,
             desired_keeper: goalieId
-        });
+        };
 
-        this.rosManager.services.get("setGoalie").callService(request,
-            // Service Response Callback
-            function(result: any): void {
-                if(!result.success) {
-                    state.goalieServiceStatus = [false, result.reason];
-                } else {
-                    state.goalieServiceStatus = [true, ""];
-                }
-            },
-            // Failed to call service callback
-            function(result: any): void {
-                state.goalieServiceStatus = [false, result];
-            }
-        );
+        this.backendManager.sendBackendCommand(request);
+        // this.backendManager.services.get("setGoalie").callService(request,
+        //     // Service Response Callback
+        //     function(result: any): void {
+        //         if(!result.success) {
+        //             state.goalieServiceStatus = [false, result.reason];
+        //         } else {
+        //             state.goalieServiceStatus = [true, ""];
+        //         }
+        //     },
+        //     // Failed to call service callback
+        //     function(result: any): void {
+        //         state.goalieServiceStatus = [false, result];
+        //     }
+        // );
     }
 
     getGoalie(): string {
@@ -159,40 +167,49 @@ export class AppState {
         } else {
             this.controlledRobot = id;
         }
-        this.rosManager.params.get("joystick_param").set(this.controlledRobot,
-            function(result: any): void {}
-        );
+
+        this.backendManager.sendBackendCommand({
+            msg_type: MessageType.SetJoystickRobot,
+            robot_id: this.controlledRobot
+        });
+        // this.backendManager.params.get("joystick_param").set(this.controlledRobot,
+        //     function(result: any): void {}
+        // );
     }
 
     setPlayEnabled(play: Play): void {
         const state = this;
-        const request = new ROSLIB.ServiceRequest({
+        const request = {
+            msg_type: MessageType.SetPlayEnabled,
             play_name: play.name,
             enabled: play.enabled
-        });
+        };
 
-        this.rosManager.services.get("setPlayEnabled").callService(request,
-            function(result: any): void {
-                if(!result.success) {
-                    console.log("Failed to enable/disable ", play.name, ": ", result.reason);
-                }
-            });
+        this.backendManager.sendBackendCommand(request);
+        // this.backendManager.services.get("setPlayEnabled").callService(request,
+        //     function(result: any): void {
+        //         if(!result.success) {
+        //             console.log("Failed to enable/disable ", play.name, ": ", result.reason);
+        //         }
+        //     });
     }
 
     setOverridePlay(playName: string): void {
         const state = this;
-        const request = new ROSLIB.ServiceRequest({
+        const request = {
+            msg_type: MessageType.SetOverridePlay,
             play_name: playName
-        });
+        };
 
         state.overridePlayInProgress = playName;
-        this.rosManager.services.get("setOverridePlay").callService(request,
-            function(result: any): void {
-                state.overridePlayInProgress = null;
-                if(!result.success) {
-                    console.log("Failed to set override play to ", playName, ": ", result.reason);
-                }
-            });
+        this.backendManager.sendBackendCommand(request);
+        // this.backendManager.services.get("setOverridePlay").callService(request,
+        //     function(result: any): void {
+        //         state.overridePlayInProgress = null;
+        //         if(!result.success) {
+        //             console.log("Failed to set override play to ", playName, ": ", result.reason);
+        //         }
+        //     });
     }
 
     setIgnoreFieldSide(ignoreSide: number): void {
@@ -203,29 +220,33 @@ export class AppState {
             intSide = -1;
         }
 
-        const request = new ROSLIB.ServiceRequest({
+        const request = {
+            msg_type: MessageType.SetIgnoreFieldSide,
             ignore_side: intSide
-        });
+        };
 
-        this.rosManager.services.get("setIgnoreFieldSide").callService(request,
-            function(result: any): void {
-                if(!result.success) {
-                    console.error("Failed to set ignore side: ", result.reason);
-                }
-            });
+        this.backendManager.sendBackendCommand(request);
+        // this.backendManager.services.get("setIgnoreFieldSide").callService(request,
+        //     function(result: any): void {
+        //         if(!result.success) {
+        //             console.error("Failed to set ignore side: ", result.reason);
+        //         }
+        //     });
     }
 
     sendSimulatorControlPacket(simulatorControlPacket: any): void {
-        const request = new ROSLIB.ServiceRequest({
+        const request = {
+            msg_type: MessageType.SendSimulatorControlPacket,
             simulator_control: simulatorControlPacket
-        });
+        };
 
-        this.rosManager.services.get("sendSimulatorControlPacket").callService(request,
-            function(result: any): void {
-                if(!result.success) {
-                    console.log("Failed to send simulator packet: ", result.reason);
-                }
-            });
+        this.backendManager.sendBackendCommand(request);
+        // this.backendManager.services.get("sendSimulatorControlPacket").callService(request,
+        //     function(result: any): void {
+        //         if(!result.success) {
+        //             console.log("Failed to send simulator packet: ", result.reason);
+        //         }
+        //     });
     }
 
     sendPowerRequest(robot_id: number, request_type: string): void {
@@ -234,39 +255,44 @@ export class AppState {
             request_int = 1;
         }
 
-        const request = new ROSLIB.ServiceRequest({
+        const request = {
+            msg_type: MessageType.SendPowerRequest,
             robot_id: robot_id,
             request_type: request_int
-        });
+        };
 
-        this.rosManager.services.get("sendPowerRequest").callService(request,
-            function(result: any): void {
-                if(!result.success) {
-                    console.log("Failed to send power request packet: ", result.reason);
-                }
-            });
+        this.backendManager.sendBackendCommand(request);
+        // this.backendManager.services.get("sendPowerRequest").callService(request,
+        //     function(result: any): void {
+        //         if(!result.success) {
+        //             console.log("Failed to send power request packet: ", result.reason);
+        //         }
+        //     });
     }
 
     sendRebootKenobiRequest(): void {
 
-        const request = new ROSLIB.ServiceRequest({});
+        const request = {
+            msg_type: MessageType.SendRebootKenobiRequest
+        };
 
-        this.rosManager.services.get("sendRebootKenobiRequest").callService(request,
-            function(result: any): void {
-                if(!result.success) {
-                    console.log("General Kenobi has escaped: ", result.reason);
-                }
-            });
+        this.backendManager.sendBackendCommand(request);
+        // this.backendManager.services.get("sendRebootKenobiRequest").callService(request,
+        //     function(result: any): void {
+        //         if(!result.success) {
+        //             console.log("General Kenobi has escaped: ", result.reason);
+        //         }
+        //     });
     }
 
     setUseKenobiTopic(enable: boolean) {
         if (enable != this.useKenobi) {
             if (enable) {
-                this.rosManager.disableStateTopics(this);
-                this.rosManager.enableKenobiTopic(this);
+                // this.backendManager.disableStateTopics(this);
+                // this.backendManager.enableKenobiTopic(this);
             } else {
-                this.rosManager.disableKenobiTopic(this);
-                this.rosManager.enableStateTopics(this);
+                // this.backendManager.disableKenobiTopic(this);
+                // this.backendManager.enableStateTopics(this);
             }
         }
 

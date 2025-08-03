@@ -7,21 +7,18 @@ import { drawRobot, updateRobot } from "@/robot";
 
 // Types used for field data and overlays
 
-export class FieldDimensions {
-    length: number = 12;
-    width: number = 9;
-    border: number = 0.7;
-    lineWidth: number = 0.01;
-    goalWidth: number = 1.8;
-    goalDepth: number = 0.18;
-    goalHeight: number = 0.16;
-    penaltyShort: number = 1.8;
-    penaltyLong: number = 3.6;
-    centerRadius: number = 0.5;
-    centerDiameter: number = 1;
-    goalFlat: number = 0.5;
-    floorLength: number = 13.4;
-    floorWidth: number = 10.4
+export class FieldInfo {
+    field_length: number = 12;
+    field_width: number = 9;
+    goal_width: number = 1.8;
+    goal_depth: number = 0.18;
+    boundary_width: number = 0.7;
+    line_width: number = 0.01;
+    goal_height: number = 0.16;
+    defense_area_depth: number = 1.8;
+    defense_area_width: number = 3.6;
+    center_circle_radius: number = 0.5;
+    ignore_side: number = 0;
 }
 
 export class FieldSidedInfo {
@@ -30,11 +27,11 @@ export class FieldSidedInfo {
 }
 
 export class Field {
-    fieldDimensions: FieldDimensions;
+    fieldInfo: FieldInfo;
     overlays: Map<string, Overlay> = new Map<string, Overlay>;
 
     constructor() {
-        this.fieldDimensions = new FieldDimensions();
+        this.fieldInfo = new FieldInfo();
     }
 }
 
@@ -53,9 +50,9 @@ export function drawSideIgnoreOverlay(state: AppState, fieldUI: PIXI.Container) 
     ignoreOverlay.clear();
     ignoreOverlay.beginFill("#3b3b3bFF");
     ignoreOverlay.drawRect(0,
-                    -scale * (field.fieldDimensions.width/2 + field.fieldDimensions.border),
-                    scale * (field.fieldDimensions.length/2 + field.fieldDimensions.border),
-                    scale * (field.fieldDimensions.width + 2*field.fieldDimensions.border),
+                    -scale * (field.fieldInfo.field_width/2 + field.fieldInfo.boundary_width),
+                    scale * (field.fieldInfo.field_length/2 + field.fieldInfo.boundary_width),
+                    scale * (field.fieldInfo.field_width + 2*field.fieldInfo.boundary_width),
                     );
 
 
@@ -70,9 +67,9 @@ export function drawSideIgnoreOverlay(state: AppState, fieldUI: PIXI.Container) 
     hoverOverlay.clear();
     hoverOverlay.beginFill("#3b3b3bBF");
     hoverOverlay.drawRect(0,
-                    -scale * (field.fieldDimensions.width/2 + field.fieldDimensions.border),
-                    scale * (field.fieldDimensions.length/2 + field.fieldDimensions.border),
-                    scale * (field.fieldDimensions.width + 2*field.fieldDimensions.border),
+                    -scale * (field.fieldInfo.field_width/2 + field.fieldInfo.boundary_width),
+                    scale * (field.fieldInfo.field_length/2 + field.fieldInfo.boundary_width),
+                    scale * (field.fieldInfo.field_width + 2*field.fieldInfo.boundary_width),
                     );
 
 }
@@ -87,10 +84,10 @@ export function drawFieldBoundary(state: AppState, fieldBoundary: PIXI.Graphics)
     const boundaryStrokeWidth = 8;
     fieldBoundary.lineStyle(boundaryStrokeWidth, 0x000000);
     // Field Outline
-    fieldBoundary.drawRect(-(boundaryStrokeWidth / 2) - scale * (field.fieldDimensions.border + (field.fieldDimensions.length / 2)),
-        -(boundaryStrokeWidth / 2) - scale * (field.fieldDimensions.border + (field.fieldDimensions.width / 2)),
-        boundaryStrokeWidth + ((field.fieldDimensions.length + 2 * field.fieldDimensions.border) * scale),
-        boundaryStrokeWidth + ((field.fieldDimensions.width + 2 * field.fieldDimensions.border) * scale)
+    fieldBoundary.drawRect(-(boundaryStrokeWidth / 2) - scale * (field.fieldInfo.boundary_width + (field.fieldInfo.field_length / 2)),
+        -(boundaryStrokeWidth / 2) - scale * (field.fieldInfo.boundary_width + (field.fieldInfo.field_width / 2)),
+        boundaryStrokeWidth + ((field.fieldInfo.field_length + 2 * field.fieldInfo.boundary_width) * scale),
+        boundaryStrokeWidth + ((field.fieldInfo.field_width + 2 * field.fieldInfo.boundary_width) * scale)
     );
 }
 
@@ -104,42 +101,42 @@ export function drawFieldLines(state: AppState, fieldLines: PIXI.Graphics) {
     fieldLines.lineStyle(4, 0xFFFFFF);
 
     // Field Outline
-    fieldLines.drawRect(-scale * field.fieldDimensions.length / 2,
-        -scale * field.fieldDimensions.width / 2,
-        field.fieldDimensions.length * scale,
-        field.fieldDimensions.width * scale
+    fieldLines.drawRect(-scale * field.fieldInfo.field_length / 2,
+        -scale * field.fieldInfo.field_width / 2,
+        field.fieldInfo.field_length * scale,
+        field.fieldInfo.field_width * scale
     );
 
     // Center Circle
-    fieldLines.drawCircle(0, 0, scale * field.fieldDimensions.centerRadius);
+    fieldLines.drawCircle(0, 0, scale * field.fieldInfo.center_circle_radius);
 
     // Width Center Line
-    fieldLines.moveTo(0, -scale * field.fieldDimensions.width / 2);
-    fieldLines.lineTo(0, scale * field.fieldDimensions.width / 2);
+    fieldLines.moveTo(0, -scale * field.fieldInfo.field_width / 2);
+    fieldLines.lineTo(0, scale * field.fieldInfo.field_width / 2);
 
     // Length Center Line
-    fieldLines.moveTo(-scale * field.fieldDimensions.length / 2, 0);
-    fieldLines.lineTo(scale * field.fieldDimensions.length / 2, 0);
+    fieldLines.moveTo(-scale * field.fieldInfo.field_length / 2, 0);
+    fieldLines.lineTo(scale * field.fieldInfo.field_length / 2, 0);
 
     // Team Goal Boxes
     for (const color of state.world.teams.keys()) {
         const team = state.world.teams.get(color);
         const direction = (color == state.world.team ? -1 : 1); // always draw our goal on the left
-        const goalX = direction * scale * field.fieldDimensions.length / 2
+        const goalX = direction * scale * field.fieldInfo.field_length / 2
 
         // Goal Box
         fieldLines.lineStyle(4, 0xFFFFFF);
-        fieldLines.moveTo(goalX, -scale * field.fieldDimensions.penaltyLong / 2);
-        fieldLines.lineTo(goalX - direction * scale * field.fieldDimensions.penaltyShort, -scale * field.fieldDimensions.penaltyLong / 2);
-        fieldLines.lineTo(goalX - direction * scale * field.fieldDimensions.penaltyShort, scale * field.fieldDimensions.penaltyLong / 2);
-        fieldLines.lineTo(goalX, scale * field.fieldDimensions.penaltyLong / 2);
+        fieldLines.moveTo(goalX, -scale * field.fieldInfo.defense_area_width / 2);
+        fieldLines.lineTo(goalX - direction * scale * field.fieldInfo.defense_area_depth, -scale * field.fieldInfo.defense_area_width / 2);
+        fieldLines.lineTo(goalX - direction * scale * field.fieldInfo.defense_area_depth, scale * field.fieldInfo.defense_area_width / 2);
+        fieldLines.lineTo(goalX, scale * field.fieldInfo.defense_area_width / 2);
 
         // Goal
         fieldLines.lineStyle(4, color);
-        fieldLines.moveTo(goalX, -scale * field.fieldDimensions.goalWidth / 2);
-        fieldLines.lineTo(goalX + direction * scale * field.fieldDimensions.goalDepth, -scale * field.fieldDimensions.goalWidth / 2);
-        fieldLines.lineTo(goalX + direction * scale * field.fieldDimensions.goalDepth, scale * field.fieldDimensions.goalWidth / 2);
-        fieldLines.lineTo(goalX, scale * field.fieldDimensions.goalWidth / 2);
+        fieldLines.moveTo(goalX, -scale * field.fieldInfo.goal_width / 2);
+        fieldLines.lineTo(goalX + direction * scale * field.fieldInfo.goal_depth, -scale * field.fieldInfo.goal_width / 2);
+        fieldLines.lineTo(goalX + direction * scale * field.fieldInfo.goal_depth, scale * field.fieldInfo.goal_width / 2);
+        fieldLines.lineTo(goalX, scale * field.fieldInfo.goal_width / 2);
     }
 }
 
@@ -252,7 +249,7 @@ export function updateField(state: AppState, fieldContainer: PIXI.Container) {
     updateBall(state.world.ball, fieldContainer.getChildByName("ball") as PIXI.Container, state.renderConfig);
 
     for (const [id, overlay] of field.overlays) {
-        const shouldDelete = updateOverlay(overlay, state.world.timestamp, fieldContainer.getChildByName("overlay"), fieldContainer.getChildByName("underlay"), state.renderConfig);
+        const shouldDelete = updateOverlay(overlay, state.world.current_time, fieldContainer.getChildByName("overlay"), fieldContainer.getChildByName("underlay"), state.renderConfig);
 
         if (shouldDelete) {
             field.overlays.delete(id);

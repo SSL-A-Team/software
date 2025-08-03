@@ -24,6 +24,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <iostream>
 
 namespace ateam_ui_backend_node::message_conversions
 {
@@ -33,7 +34,7 @@ nlohmann::json fromMsg(
 
     nlohmann::json json;
 
-    json["current_time"] = fromMsg(ros_msg.current_time);
+    json["timestamp"] = fromMsg(ros_msg.current_time);
 
     json["field"] = fromMsg(ros_msg.field);
     json["referee_info"] = fromMsg(ros_msg.referee_info);
@@ -456,32 +457,32 @@ nlohmann::json fromMsg(
 
 // Services:
 
-ateam_msgs::srv::SetDesiredKeeper::Request toSetDesiredKeeperRequest(
+ssl_ros_bridge_msgs::srv::SetDesiredKeeper::Request::SharedPtr toSetDesiredKeeperRequest(
   const nlohmann::json json) {
 
-  ateam_msgs::srv::SetDesiredKeeper::Request request;
-  request.desired_keeper = json["desired_keeper"];
+  auto request = std::make_shared<ssl_ros_bridge_msgs::srv::SetDesiredKeeper::Request>();
+  request->desired_keeper = json["desired_keeper"];
   
   return request;
 }
 
 nlohmann::json fromSrvResponse(
-  const ateam_msgs::srv::SetDesiredKeeper::Response & ros_response) {
+  const ssl_ros_bridge_msgs::srv::SetDesiredKeeper::Response & ros_response) {
 
   nlohmann::json json;
-
+  json["msg_type"] = MessageType::SetDesiredKeeper;
   json["success"] = ros_response.success;
   json["reason"] = ros_response.reason;
 
   return json;
 }
 
-ateam_msgs::srv::SetPlayEnabled::Request toSetPlayEnabledRequest(
+ateam_msgs::srv::SetPlayEnabled::Request::SharedPtr toSetPlayEnabledRequest(
   const nlohmann::json json) {
 
-  ateam_msgs::srv::SetPlayEnabled::Request request;
-  request.play_name = json["play_name"];
-  request.enabled = json["enabled"];
+  auto request = std::make_shared<ateam_msgs::srv::SetPlayEnabled::Request>();
+  request->play_name = json["play_name"];
+  request->enabled = json["enabled"];
   
   return request;
 }
@@ -491,17 +492,18 @@ nlohmann::json fromSrvResponse(
 
   nlohmann::json json;
 
+  json["msg_type"] = MessageType::SetPlayEnabled;
   json["success"] = ros_response.success;
   json["reason"] = ros_response.reason;
 
   return json;
 }
 
-ateam_msgs::srv::SetOverridePlay::Request toSetOverridePlayRequest(
+ateam_msgs::srv::SetOverridePlay::Request::SharedPtr toSetOverridePlayRequest(
   const nlohmann::json json) {
 
-  ateam_msgs::srv::SetOverridePlay::Request request;
-  request.play_name = json["play_name"];
+  auto request = std::make_shared<ateam_msgs::srv::SetOverridePlay::Request>();
+  request->play_name = json["play_name"];
   
   return request;
 }
@@ -511,17 +513,18 @@ nlohmann::json fromSrvResponse(
 
   nlohmann::json json;
 
+  json["msg_type"] = MessageType::SetOverridePlay;
   json["success"] = ros_response.success;
   json["reason"] = ros_response.reason;
 
   return json;
 }
 
-ateam_msgs::srv::SetIgnoreFieldSide::Request toSetIgnoreFieldSideRequest(
+ateam_msgs::srv::SetIgnoreFieldSide::Request::SharedPtr toIgnoreFieldSideRequest(
   const nlohmann::json json) {
 
-  ateam_msgs::srv::SetIgnoreFieldSide::Request request;
-  request.ignore_side = json["ignore_side"];
+  auto request = std::make_shared<ateam_msgs::srv::SetIgnoreFieldSide::Request>();
+  request->ignore_side = json["ignore_side"];
   
   return request;
 }
@@ -531,18 +534,61 @@ nlohmann::json fromSrvResponse(
 
   nlohmann::json json;
 
+  json["msg_type"] = MessageType::SetIgnoreFieldSide;
   json["success"] = ros_response.success;
   json["reason"] = ros_response.reason;
 
   return json;
 }
 
-ateam_msgs::srv::SendSimulatorControlPacket::Request toSendSimulatorControlPacketRequest(
+ateam_radio_msgs::srv::SendRobotPowerRequest::Request::SharedPtr toSendRobotPowerRequest(
   const nlohmann::json json) {
 
-  ateam_msgs::srv::SendSimulatorControlPacket::Request request;
-  request.simulator_control = toSimulatorControlMsg(json["simulator_control"]);
+  auto request = std::make_shared<ateam_radio_msgs::srv::SendRobotPowerRequest::Request>();
+  request->robot_id = json["robot_id"];
+  request->request_type = json["request_type"];
+
+  return request;
+}
+
+nlohmann::json fromSrvResponse(
+  const ateam_radio_msgs::srv::SendRobotPowerRequest::Response & ros_response) {
+
+  nlohmann::json json;
+
+  json["msg_type"] = MessageType::SendPowerRequest;
+  json["success"] = ros_response.success;
+  json["reason"] = ros_response.reason;
+
+  return json;
+}
+
+std_srvs::srv::Trigger::Request::SharedPtr toSendRebootKenobiRequest(
+  const nlohmann::json json) {
+
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
   
+  return request;
+  }
+
+nlohmann::json fromSrvResponse(
+  const std_srvs::srv::Trigger::Response & ros_response) {
+
+  nlohmann::json json;
+
+  json["msg_type"] = MessageType::SendRebootKenobiRequest;
+  json["success"] = ros_response.success;
+
+  return json;
+}
+
+
+ateam_msgs::srv::SendSimulatorControlPacket::Request::SharedPtr toSendSimulatorControlPacketRequest(
+  const nlohmann::json json) {
+
+  auto request = std::make_shared<ateam_msgs::srv::SendSimulatorControlPacket::Request>();
+  request->simulator_control = toSimulatorControlMsg(json["simulator_control"]);
+
   return request;
 }
 
@@ -624,6 +670,7 @@ nlohmann::json fromSrvResponse(
 
   nlohmann::json json;
   
+  json["msg_type"] = MessageType::SendSimulatorControlPacket;
   json["success"] = ros_response.success;
   json["reason"] = ros_response.reason;
 

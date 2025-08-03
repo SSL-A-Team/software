@@ -50,13 +50,17 @@ export class RobotStatus {
 
 export class Robot {
     id: number;
-    visible: boolean;
     team: TeamColor;
+    status: RobotStatus;
+    radio_connected: boolean = false;
+
     pose: Pose;
     twist: Twist;
     accel: Accel;
-    radio_connected: boolean = false;
-    status: RobotStatus;
+
+    twist_body: Twist;
+
+    visible: boolean;
 
     constructor(id: number, visible: boolean, team: TeamColor, pose: Pose) {
         this.id = id;

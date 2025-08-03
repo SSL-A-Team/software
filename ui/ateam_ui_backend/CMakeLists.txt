@@ -10,7 +10,9 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
+find_package(ssl_ros_bridge_msgs REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 find_package(Boost REQUIRED)
 find_package(nlohmann_json REQUIRED)
@@ -32,7 +34,9 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp_components
   ateam_common
   ateam_msgs
+  ssl_ros_bridge_msgs
   ateam_radio_msgs
+  std_srvs
   ssl_league_msgs
   nlohmann_json
 )

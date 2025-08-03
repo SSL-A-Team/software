@@ -260,7 +260,7 @@ export default {
             return this.state.world.teams.get(this.state.world.team).defending;
         },
         getIgnoreFieldSide: function() {
-            return this.state.world.ignoreSide * -this.getDefending;
+            return this.state.world.field.ignore_side * -this.getDefending;
         },
         getHoverIgnoreSide: function() {
             return this.state.hoveredFieldIgnoreSide * -this.getDefending;
@@ -285,7 +285,7 @@ export default {
                 let hoverOverlay = this.fieldContainer.getChildByName("fieldUI").getChildByName("hoverOverlay");
                 hoverOverlay.visible = false;
 
-                if (this.state.world.ignoreSide == 0) {
+                if (this.state.world.field.ignore_side == 0) {
                     ignoreOverlay.visible = false;
                 } else{
                     ignoreOverlay.visible = true;
@@ -302,7 +302,7 @@ export default {
 
                 if (this.state.hoveredFieldIgnoreSide == 0) {
                     hoverOverlay.visible = false;
-                    if (this.state.world.ignoreSide != 0) {
+                    if (this.state.world.field.ignore_side != 0) {
                         ignoreOverlay.visible = true;
                     }
                 } else {

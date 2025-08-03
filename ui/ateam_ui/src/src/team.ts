@@ -26,6 +26,9 @@ export class TeamInfo {
     max_allowed_bots: number
     bot_substitution_intent: boolean
     ball_placement_failures_reached: boolean
+    bot_substitution_allowed: boolean
+    bot_substitutions_left: number
+    bot_substituion_time_left: number
 }
 
 export class Team {

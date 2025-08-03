@@ -45,10 +45,12 @@
 #include <ateam_msgs/msg/playbook_state.hpp>
 #include <ateam_msgs/msg/joystick_control_status.hpp>
 
-#include <ateam_msgs/srv/set_desired_keeper.hpp>
+#include <ssl_ros_bridge_msgs/srv/set_desired_keeper.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
 #include <ateam_msgs/srv/set_override_play.hpp>
 #include <ateam_msgs/srv/set_ignore_field_side.hpp>
+#include <ateam_radio_msgs/srv/send_robot_power_request.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 #include <ateam_msgs/srv/send_simulator_control_packet.hpp>
 #include <ssl_league_msgs/msg/simulator_control.hpp>
@@ -76,6 +78,22 @@
 
 namespace ateam_ui_backend_node::message_conversions
 {
+
+enum MessageType {
+  // Internal UI Backend commands
+  SetUseKenobiTopic,
+  // Params
+  SetJoystickRobot,
+  // Services
+  SetDesiredKeeper,
+  SetPlayEnabled,
+  SetOverridePlay,
+  SetIgnoreFieldSide,
+  SendPowerRequest,
+  SendRebootKenobiRequest,
+  SendSimulatorControlPacket
+};
+
 
 nlohmann::json fromMsg(
   const ateam_msgs::msg::World & ros_msg);
@@ -137,31 +155,43 @@ nlohmann::json fromMsg(
 
 // Services:
 
-ateam_msgs::srv::SetDesiredKeeper::Request toSetDesiredKeeperRequest(
+ssl_ros_bridge_msgs::srv::SetDesiredKeeper::Request::SharedPtr toSetDesiredKeeperRequest(
   const nlohmann::json json);
 
 nlohmann::json fromSrvResponse(
-  const ateam_msgs::srv::SetDesiredKeeper::Response & ros_msg);
+  const ssl_ros_bridge_msgs::srv::SetDesiredKeeper::Response & ros_response);
 
-ateam_msgs::srv::SetPlayEnabled::Request toSetPlayEnabledRequest(
+ateam_msgs::srv::SetPlayEnabled::Request::SharedPtr toSetPlayEnabledRequest(
   const nlohmann::json json);
 
 nlohmann::json fromSrvResponse(
-  const ateam_msgs::srv::SetPlayEnabled::Response & ros_msg);
+  const ateam_msgs::srv::SetPlayEnabled::Response & ros_response);
 
-ateam_msgs::srv::SetOverridePlay::Request toSetOverridePlayRequest(
+ateam_msgs::srv::SetOverridePlay::Request::SharedPtr toSetOverridePlayRequest(
   const nlohmann::json json);
 
 nlohmann::json fromSrvResponse(
-  const ateam_msgs::srv::SetOverridePlay::Response & ros_msg);
+  const ateam_msgs::srv::SetOverridePlay::Response & ros_response);
 
-ateam_msgs::srv::SetIgnoreFieldSide::Request toIgnoreFieldSideRequest(
+ateam_msgs::srv::SetIgnoreFieldSide::Request::SharedPtr toIgnoreFieldSideRequest(
   const nlohmann::json json);
 
 nlohmann::json fromSrvResponse(
-  const ateam_msgs::srv::SetIgnoreFieldSide::Response & ros_msg);
+  const ateam_msgs::srv::SetIgnoreFieldSide::Response & ros_response);
 
-ateam_msgs::srv::SendSimulatorControlPacket::Request toSendSimulatorControlPacketRequest(
+ateam_radio_msgs::srv::SendRobotPowerRequest::Request::SharedPtr toSendRobotPowerRequest(
+  const nlohmann::json json);
+
+nlohmann::json fromSrvResponse(
+  const ateam_radio_msgs::srv::SendRobotPowerRequest::Response & ros_response);
+
+std_srvs::srv::Trigger::Request::SharedPtr toSendRebootKenobiRequest(
+  const nlohmann::json json);
+
+nlohmann::json fromSrvResponse(
+  const std_srvs::srv::Trigger::Response & ros_response);
+
+ateam_msgs::srv::SendSimulatorControlPacket::Request::SharedPtr toSendSimulatorControlPacketRequest(
   const nlohmann::json json);
 
 ssl_league_msgs::msg::SimulatorControl toSimulatorControlMsg(
@@ -180,7 +210,7 @@ ssl_league_msgs::msg::Team toTeamMsg(
   const nlohmann::json json);
 
 nlohmann::json fromSrvResponse(
-  const ateam_msgs::srv::SendSimulatorControlPacket::Response & ros_msg);
+  const ateam_msgs::srv::SendSimulatorControlPacket::Response & ros_response);
 
 
 // Standard ROS Messages

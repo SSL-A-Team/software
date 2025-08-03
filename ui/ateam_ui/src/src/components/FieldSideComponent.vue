@@ -63,16 +63,16 @@ export default {
     },
     computed: {
         getIgnoreSide: function() {
-            return this.state.world.ignoreSide;
+            return this.state.world.field.ignore_side;
         }
     },
     watch: {
         getIgnoreSide: {
             handler() {
-                if (this.state.world.ignoreSide < 0) {
+                if (this.state.world.field.ignore_side < 0) {
                     this.negativeSide = true;
                     this.positiveSide = false;
-                } else if (this.state.world.ignoreSide > 0) {
+                } else if (this.state.world.field.ignore_side > 0) {
                     this.negativeSide = false;
                     this.positiveSide = true;
                 } else {
