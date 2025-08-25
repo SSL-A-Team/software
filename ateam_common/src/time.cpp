@@ -30,4 +30,4 @@ double TimeDiffSeconds(
   return TimeDiff<std::chrono::seconds, std::chrono::steady_clock>(a, b);
 }
 
-} // namespace ateam_common
+}  // namespace ateam_common
