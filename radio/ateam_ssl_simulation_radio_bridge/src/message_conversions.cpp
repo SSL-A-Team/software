@@ -42,13 +42,25 @@ ateam_radio_msgs::msg::BasicTelemetry fromProto(const RobotFeedback & proto_msg)
   return robot_feedback;
 }
 
-RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id)
+double ReplaceNanWithZero(const double val, rclcpp::Logger logger)
+{
+  if (std::isnan(val)) {
+    RCLCPP_WARN(logger, "Radio bridge is replacing NaNs!");
+    return 0.0;
+  }
+  return val;
+}
+
+RobotControl fromMsg(
+  const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id,
+  rclcpp::Logger logger)
 {
   RobotControl robots_control;
   RobotCommand * proto_robot_command = robots_control.add_robot_commands();
 
   proto_robot_command->set_id(robot_id);
-  proto_robot_command->set_dribbler_speed(9.5492968 * ros_msg.dribbler_speed);
+  proto_robot_command->set_dribbler_speed(ReplaceNanWithZero(9.5492968 * ros_msg.dribbler_speed,
+      logger));
 
   switch (ros_msg.kick_request) {
     case ateam_msgs::msg::RobotMotionCommand::KR_ARM:
@@ -61,16 +73,16 @@ RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int ro
     case ateam_msgs::msg::RobotMotionCommand::KR_CHIP_NOW:
     case ateam_msgs::msg::RobotMotionCommand::KR_CHIP_TOUCH:
     case ateam_msgs::msg::RobotMotionCommand::KR_CHIP_CAPTURED:
-      proto_robot_command->set_kick_speed(ros_msg.kick_speed * 3.0);
+      proto_robot_command->set_kick_speed(ReplaceNanWithZero(ros_msg.kick_speed * 3.0, logger));
       break;
   }
 
   RobotMoveCommand * robot_move_command = proto_robot_command->mutable_move_command();
   MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
 
-  local_velocity_command->set_forward(ros_msg.twist.linear.x);
-  local_velocity_command->set_left(ros_msg.twist.linear.y);
-  local_velocity_command->set_angular(ros_msg.twist.angular.z);
+  local_velocity_command->set_forward(ReplaceNanWithZero(ros_msg.twist.linear.x, logger));
+  local_velocity_command->set_left(ReplaceNanWithZero(ros_msg.twist.linear.y, logger));
+  local_velocity_command->set_angular(ReplaceNanWithZero(ros_msg.twist.angular.z, logger));
 
   return robots_control;
 }
