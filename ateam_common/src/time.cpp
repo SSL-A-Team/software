@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,27 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
-#define ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
+#include "ateam_common/time.hpp"
 
-#include <Eigen/Dense>
+namespace ateam_common
+{
 
-// All of the below are in meters
-// Matches the size of the robots from the SSL rulebook
-constexpr double kRobotDiameter = 0.18;
-constexpr double kRobotRadius = kRobotDiameter / 2;
-constexpr double kRobotHeight = 0.15;
+double TimeDiffSeconds(
+  const std::chrono::steady_clock::time_point & a,
+  const std::chrono::steady_clock::time_point & b)
+{
+  return TimeDiff<std::chrono::seconds, std::chrono::steady_clock>(a, b);
+}
 
-// Physical limitations - used in trajectory generation
-// Units are m/s and rad/s for velocity
-// m/s^2 and rad/s^2 for acceleration
-// This should match what the limits are set to in the firmware.
-const Eigen::Vector3d kMaxRobotVel = Eigen::Vector3d(3, 3, 18);
-const Eigen::Vector3d kMaxRobotAccel = Eigen::Vector3d(3, 3, 36);
-
-constexpr double kBallDiameter = 0.04267;
-constexpr double kBallRadius = kBallDiameter / 2;
-
-constexpr double kDefaultDribblerSpeed = 300;
-
-#endif  // ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
+}  // namespace ateam_common
