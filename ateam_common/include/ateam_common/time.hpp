@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,27 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
-#define ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
+#ifndef ATEAM_COMMON__TIME_HPP_
+#define ATEAM_COMMON__TIME_HPP_
 
-#include <Eigen/Dense>
+#include <chrono>
 
-// All of the below are in meters
-// Matches the size of the robots from the SSL rulebook
-constexpr double kRobotDiameter = 0.18;
-constexpr double kRobotRadius = kRobotDiameter / 2;
-constexpr double kRobotHeight = 0.15;
+namespace ateam_common
+{
 
-// Physical limitations - used in trajectory generation
-// Units are m/s and rad/s for velocity
-// m/s^2 and rad/s^2 for acceleration
-// This should match what the limits are set to in the firmware.
-const Eigen::Vector3d kMaxRobotVel = Eigen::Vector3d(3, 3, 18);
-const Eigen::Vector3d kMaxRobotAccel = Eigen::Vector3d(3, 3, 36);
+template<typename Duration, typename Clock>
+double TimeDiff(const typename Clock::time_point & a, const typename Clock::time_point & b)
+{
+  using DestDurationType = std::chrono::duration<double, typename Duration::period>;
+  return std::chrono::duration_cast<DestDurationType>(a - b).count();
+}
 
-constexpr double kBallDiameter = 0.04267;
-constexpr double kBallRadius = kBallDiameter / 2;
+double TimeDiffSeconds(
+  const std::chrono::steady_clock::time_point & a,
+  const std::chrono::steady_clock::time_point & b);
 
-constexpr double kDefaultDribblerSpeed = 300;
+}  // namespace ateam_common
 
-#endif  // ATEAM_COMMON__ROBOT_CONSTANTS_HPP_
+#endif  // ATEAM_COMMON__TIME_HPP_
