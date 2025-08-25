@@ -55,7 +55,7 @@ inline double AngleBetweenPoints(
   const ateam_geometry::Point & a, const ateam_geometry::Point & b,
   const ateam_geometry::Point & c)
 {
-  return ShortestAngleBetween(b-a, c-b);
+  return ShortestAngleBetween(b - a, c - b);
 }
 
 /**

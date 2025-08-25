@@ -42,7 +42,8 @@ ateam_radio_msgs::msg::BasicTelemetry fromProto(const RobotFeedback & proto_msg)
   return robot_feedback;
 }
 
-double ReplaceNanWithZero(const double val, rclcpp::Logger logger) {
+double ReplaceNanWithZero(const double val, rclcpp::Logger logger)
+{
   if (std::isnan(val)) {
     RCLCPP_WARN(logger, "Radio bridge is replacing NaNs!");
     return 0.0;
@@ -50,13 +51,16 @@ double ReplaceNanWithZero(const double val, rclcpp::Logger logger) {
   return val;
 }
 
-RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id, rclcpp::Logger logger)
+RobotControl fromMsg(
+  const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id,
+  rclcpp::Logger logger)
 {
   RobotControl robots_control;
   RobotCommand * proto_robot_command = robots_control.add_robot_commands();
 
   proto_robot_command->set_id(robot_id);
-  proto_robot_command->set_dribbler_speed(ReplaceNanWithZero(9.5492968 * ros_msg.dribbler_speed, logger));
+  proto_robot_command->set_dribbler_speed(ReplaceNanWithZero(9.5492968 * ros_msg.dribbler_speed,
+      logger));
 
   switch (ros_msg.kick_request) {
     case ateam_msgs::msg::RobotMotionCommand::KR_ARM:
