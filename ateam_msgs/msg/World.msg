@@ -14,3 +14,5 @@ ateam_msgs/BehaviorExecutorState behavior_executor_state
 bool ball_in_play
 bool double_touch_enforced
 int32 double_touch_id
+
+float64 fps

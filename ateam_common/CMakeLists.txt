@@ -27,6 +27,7 @@ add_library(${PROJECT_NAME} SHARED
   src/status.cpp
   src/game_controller_listener.cpp
   src/km_assignment.cpp
+  src/time.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME}
