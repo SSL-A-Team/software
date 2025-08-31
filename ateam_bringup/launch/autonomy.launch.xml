@@ -4,9 +4,13 @@
   <arg name="team_name" default="A-Team"/>
   <arg name="kenobi_debug" default="false"/>
   <arg name="kenobi_playbook" default=""/>
+  <arg name="vision_offset_robot_x" default="0.0"/>
+  <arg name="vision_offset_robot_y" default="0.0"/>
 
   <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True">
     <param name="gc_team_name" value="$(var team_name)"/>
+    <param name="offsets.robots.x" value="$(var vision_offset_robot_x)"/>
+    <param name="offsets.robots.y" value="$(var vision_offset_robot_y)"/>
   </node>
   <node name="field_manager" pkg="ateam_field_manager" exec="ateam_field_manager_node" respawn="True">
     <param name="gc_team_name" value="$(var team_name)"/>
@@ -18,4 +22,5 @@
     <param name="gc_team_name" value="$(var team_name)"/>
     <param name="playbook" value="$(var kenobi_playbook)"/>
   </node>
+  <node name="vader" pkg="ateam_bringup" exec="vader.py" respawn="True"/>
 </launch>

@@ -28,6 +28,8 @@
 #include <utility>
 #include <vector>
 
+#include <rclcpp/node_interfaces/node_parameters_interface.hpp>
+
 #include <ateam_msgs/msg/vision_camera_state.hpp>
 
 #include "filters/multiple_hypothesis_tracker.hpp"
@@ -46,7 +48,8 @@ public:
 
   Camera(
     std::shared_ptr<ModelInputGenerator> model_input_generator,
-    std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator);
+    std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator,
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface = nullptr);
 
   /**
    * Updates the camera with a specific frame's measurement
@@ -96,7 +99,8 @@ private:
     std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator);
 
   static std::vector<Eigen::VectorXd> robot_measurements_to_vector(
-    const std::vector<RobotMeasurement> & robot_measurements);
+    const std::vector<RobotMeasurement> & robot_measurements,
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface);
 
   static std::vector<Eigen::VectorXd> ball_measurements_to_vector(
     const std::vector<BallMeasurement> & ball_measurements);
@@ -104,6 +108,7 @@ private:
   static std::array<std::optional<RobotWithScore>, 16> get_robot_estimates_with_score(
     const std::array<MultipleHypothesisTracker, 16> robot_team);
 
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface_;
   std::array<MultipleHypothesisTracker, 16> yellow_team;
   std::array<MultipleHypothesisTracker, 16> blue_team;
   MultipleHypothesisTracker ball;
