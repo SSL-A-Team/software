@@ -72,6 +72,13 @@ struct PlannerOptions
 
   bool force_replan = false;
 
+  /**
+   * Any corners sharper than this angle will attempt to be smoothed, time permitting
+   */
+  double corner_smoothing_angle_threshold = 2.36;
+
+  double corner_smoothing_step_size = 0.005;
+
   ReplanThresholds replan_thresholds;
 };
 
@@ -93,23 +100,45 @@ public:
     return used_cached_path_;
   }
 
+  bool didTimeOut() const
+  {
+    return timed_out_;
+  }
+
+  bool isPathTruncated() const
+  {
+    return cached_path_truncated_;
+  }
+
 private:
   visualization::Overlays overlays_;
   bool cached_path_valid_ = false;
   bool cached_path_truncated_ = false;
+  bool timed_out_ = false;
   Path cached_path_;
   Position cached_path_goal_;
   bool used_cached_path_ = false;
+  std::chrono::steady_clock::time_point start_time_;
+
+  bool isTimeUp(const PlannerOptions & options);
 
   void removeCollidingObstacles(
     std::vector<ateam_geometry::AnyShape> & obstacles,
     const ateam_geometry::Point & point, const PlannerOptions & options);
 
+  enum class BoundaryStrategy
+  {
+    Strict,
+    Ignore,
+    OffsetIn,
+    OffsetOut
+  };
+
   bool isStateValid(
     const ateam_geometry::Point & state,
     const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
-    const PlannerOptions & options, const bool offset_field_bounds = true);
+    const PlannerOptions & options, const BoundaryStrategy bounds_strat = BoundaryStrategy::Strict);
 
   std::optional<ateam_geometry::Point> getCollisionPoint(
     const ateam_geometry::Point & p1, const ateam_geometry::Point & p2,
@@ -152,6 +181,14 @@ private:
     const Position & start, const Position & goal, const World & world,
     const std::vector<ateam_geometry::AnyShape> & obstacles,
     const PlannerOptions & options);
+
+  void smoothCorners(
+    Path & path, const World & world,
+    const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options);
+
+  bool smoothCorner(
+    Path & path, const size_t corner_point_index, const World & world,
+    const std::vector<ateam_geometry::AnyShape> & obstacles, const PlannerOptions & options);
 };
 
 }  // namespace ateam_kenobi::path_planning

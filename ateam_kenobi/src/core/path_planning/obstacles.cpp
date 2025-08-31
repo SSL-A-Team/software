@@ -68,11 +68,11 @@ void AddDefaultObstacles(const World & world, std::vector<ateam_geometry::AnySha
     ateam_geometry::Rectangle{
       ateam_geometry::Point{
         back_x,
-        -half_defense_area_width
+        -(half_defense_area_width + kRobotDiameter)
       },
       ateam_geometry::Point{
-        defense_area_front_x,
-        half_defense_area_width
+        (defense_area_front_x - kRobotDiameter),
+        (half_defense_area_width + kRobotDiameter)
       }
     }
   );
@@ -162,11 +162,11 @@ std::optional<ateam_geometry::AnyShape> GetCollidingObstacle(
 
 bool IsPointInBounds(
   const ateam_geometry::Point & state, const World & world,
-  const bool apply_offset)
+  const double bounds_offset)
 {
-  const auto offset = apply_offset ? (kRobotRadius * 0.95) : -0.2;
-  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - offset;
-  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - offset;
+  // const auto offset = apply_offset ? (kRobotRadius * 0.95) : -0.2;
+  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width + bounds_offset;
+  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width + bounds_offset;
   ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
     ateam_geometry::Point(x_bound, y_bound));
 

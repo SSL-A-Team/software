@@ -141,6 +141,8 @@ ateam_msgs::msg::World toMsg(const World & obj)
   world_msg.double_touch_enforced = obj.double_touch_forbidden_id_.has_value();
   world_msg.double_touch_id = obj.double_touch_forbidden_id_.value_or(-1);
 
+  world_msg.fps = obj.fps;
+
   return world_msg;
 }
 

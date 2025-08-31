@@ -120,6 +120,11 @@ public:
     return parameter_interface_;
   }
 
+  template<typename T>
+  void ForwardPlayInfo(T & child) {
+    getPlayInfo()[child.getName()] = child.getPlayInfo();
+  }
+
 private:
   std::string name_;
   visualization::Overlays overlays_;
