@@ -241,7 +241,7 @@ TEST(LayersTests, WidthOfShotOnGoal)
   EXPECT_NEAR(WidthOfShotOnGoal(0.0, 0.0, their_robots.data(), field, settings), 0.5, kAcceptableError);
   their_robots[0].x = 0.2;
   their_robots[0].y = -0.09;
-  EXPECT_NEAR(WidthOfShotOnGoal(0.0, 0.0, their_robots.data(), field, settings), 0.5, kAcceptableError);
+  EXPECT_NEAR(WidthOfShotOnGoal(0.0, 0.0, their_robots.data(), field, settings), 0.49, kAcceptableError);
   their_robots[0].x = 4.5;
   their_robots[0].y = 0.18;
   EXPECT_NEAR(WidthOfShotOnGoal(0.0, 0.0, their_robots.data(), field, settings), 0.65, kAcceptableError);

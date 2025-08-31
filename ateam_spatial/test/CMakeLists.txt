@@ -19,3 +19,9 @@ target_include_directories(ateam_spatial_tests PUBLIC
 target_link_libraries(ateam_spatial_tests
   ${PROJECT_NAME}
 )
+
+set_target_properties(ateam_spatial_tests PROPERTIES
+  CUDA_SEPARABLE_COMPILATION ON
+  CUDA_STANDARD 17
+  CUDA_ARCHITECTURES native
+)
