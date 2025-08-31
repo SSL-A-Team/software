@@ -23,6 +23,7 @@
 #define CORE__DOUBLE_TOUCH_EVAL_HPP_
 
 #include <algorithm>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <boost/scope_exit.hpp>
 #include "core/types/world.hpp"
@@ -143,7 +144,7 @@ private:
     const auto & bot_pos = forbidden_bot.pos;
     const auto side_len = kRobotDiameter;
     const auto small_dim = side_len / 2.0;
-    const auto big_dim = small_dim + (side_len * std::cos(M_PI/4.0));
+    const auto big_dim = small_dim + (side_len * std::cos(M_PI / 4.0));
     std::vector<ateam_geometry::Point> points {
       bot_pos + ateam_geometry::Vector{big_dim, small_dim},
       bot_pos + ateam_geometry::Vector{small_dim, big_dim},

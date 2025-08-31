@@ -31,7 +31,8 @@ namespace ateam_kenobi
 class FpsTracker
 {
 public:
-  FpsTracker() {
+  FpsTracker()
+  {
     std::fill(buffer_.begin(), buffer_.end(), average_fps_ / kWindowWidth);
   }
 
@@ -53,7 +54,6 @@ private:
   std::array<double, kWindowWidth> buffer_;
   size_t buffer_index_ = 0;
   double average_fps_ = 100.0;  // Assume everything's fine at the start
-  
 };
 
 }  // namespace ateam_kenobi

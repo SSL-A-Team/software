@@ -121,7 +121,8 @@ public:
   }
 
   template<typename T>
-  void ForwardPlayInfo(T & child) {
+  void ForwardPlayInfo(T & child)
+  {
     getPlayInfo()[child.getName()] = child.getPlayInfo();
   }
 

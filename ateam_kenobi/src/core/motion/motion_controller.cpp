@@ -48,7 +48,7 @@ CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 
 
 MotionController::MotionController(rclcpp::Logger logger)
-  : logger_(logger)
+: logger_(logger)
 {
   this->reset();
 }
@@ -238,7 +238,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   // If we don't have a valid dt just assume we are running at standard loop rate
   const auto is_dt_zero = abs(dt) < 1e-4;
   if (std::isnan(this->prev_time) || is_dt_zero) {
-    RCLCPP_WARN_EXPRESSION(logger_, is_dt_zero, "Zero dt. Did you run MotionController twice in one frame?");
+    RCLCPP_WARN_EXPRESSION(logger_, is_dt_zero,
+      "Zero dt. Did you run MotionController twice in one frame?");
     dt = 1 / 100.0;  // TODO(chachmu): set this dynamically
   }
 
@@ -363,21 +364,22 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     }
 
     if (std::isnan(vel_vector.x())) {
-      std::cerr << target_index << " index: "<< target.x() <<", " <<target.y() << std::endl;
-      std::cerr << "robot: "<< robot.pos.x() <<", " <<robot.pos.y() << std::endl;
-      std::cerr << "dt: "<< dt << std::endl;
-      std::cerr << "error: "<< error.x() <<", " <<error.y() << std::endl;
-      std::cerr << "error_body: "<< error_body_frame.x() <<", " <<error_body_frame.y() << std::endl;
-      std::cerr << "world feedback: "<< world_feedback.x() <<", " <<world_feedback.y() << std::endl;
-      std::cerr << "xy feedback: "<< x_feedback <<", " <<y_feedback << std::endl;
-      std::cerr << "crosstrack error: "<< cross_track_error << std::endl;
-      std::cerr << "crosstrack feedback: "<< cross_track_feedback << std::endl;
-      std::cerr << "target_direction: "<< target_direction.x() <<", " <<target_direction.y() << std::endl;
-      std::cerr << "calculated_velocity "<< calculated_velocity << std::endl;
+      std::cerr << target_index << " index: " << target.x() << ", " << target.y() << std::endl;
+      std::cerr << "robot: " << robot.pos.x() << ", " << robot.pos.y() << std::endl;
+      std::cerr << "dt: " << dt << std::endl;
+      std::cerr << "error: " << error.x() << ", " << error.y() << std::endl;
+      std::cerr << "error_body: " << error_body_frame.x() << ", " << error_body_frame.y() <<
+        std::endl;
+      std::cerr << "world feedback: " << world_feedback.x() << ", " << world_feedback.y() <<
+        std::endl;
+      std::cerr << "xy feedback: " << x_feedback << ", " << y_feedback << std::endl;
+      std::cerr << "crosstrack error: " << cross_track_error << std::endl;
+      std::cerr << "crosstrack feedback: " << cross_track_feedback << std::endl;
+      std::cerr << "target_direction: " << target_direction.x() << ", " << target_direction.y() <<
+        std::endl;
+      std::cerr << "calculated_velocity " << calculated_velocity << std::endl;
 
       std::cerr << "--------------------" << std::endl;
-      // std::cerr << target_position.x() <<", " <<target_position.y() << std::endl;
-
     }
 
     // clamp to max/min velocity
