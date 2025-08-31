@@ -52,6 +52,12 @@ rclcpp_components_register_node(
 )
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
+install(DIRECTORY
+  scripts/
+  DESTINATION lib/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
