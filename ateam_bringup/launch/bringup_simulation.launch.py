@@ -72,7 +72,9 @@ def generate_launch_description():
                                               'autonomy.launch.xml')),
             launch_arguments={
                 'team_name': LaunchConfiguration('team_name'),
-                'use_emulated_ballsense': 'False'
+                'use_emulated_ballsense': 'False',
+                'vision_offset_robot_x': '0.0',
+                'vision_offset_robot_y': '0.0',
             }.items()
         ),
 
