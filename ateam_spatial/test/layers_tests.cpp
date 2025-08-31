@@ -199,7 +199,7 @@ TEST(LayersTests, OutsideTheirDefenseArea)
   EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(-8.3, -4.8, field, settings), 1.0);
   EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(7.199, 0.0, field, settings), 0.0);
   EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(7.199, -3.8, field, settings), 1.0);
-  EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(7.199, 1.2, field, settings), 1.0);
+  EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(7.199, 1.6, field, settings), 1.0);
   EXPECT_FLOAT_EQ(OutsideTheirDefenseArea(-7.8, 0.0, field, settings), 1.0);
 }
 
