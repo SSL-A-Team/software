@@ -75,16 +75,16 @@ export const GameCommandProperties: GameProperty[] = [
     {name: "Indirect Free Blue", color:"blue"},
     {name: "Timeout Yellow", color:"yellow"},
     {name: "Timeout Blue", color:"blue"},
-    {name: "Ball Placement Yellow", color:"yellow"},
-    {name: "Ball Placement Blue", color:"blue"},
     {name: "Goal Yellow", color:"yellow"},
-    {name: "Goal Blue", color:"blue"}
+    {name: "Goal Blue", color:"blue"},
+    {name: "Ball Placement Yellow", color:"yellow"},
+    {name: "Ball Placement Blue", color:"blue"}
 ];
 
 // TODO: Add game_events[]
 export class Referee {
     stage: GameStage = GameStage.STAGE_NORMAL_FIRST_HALF_PRE;
-    stage_time_left: number;
+    stage_time_left: number[];
     command: GameCommand = GameCommand.COMMAND_HALT;
     command_counter: number = 0;
     command_timestamp: number = 0;
