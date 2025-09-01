@@ -30,7 +30,7 @@ namespace ateam_kenobi::plays
 OurPenaltyPlay::OurPenaltyPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   goalie_skill_(createChild<skills::Goalie>("goalie")),
-  line_kick_skill_(createChild<skills::LineKick>("line_kick"))
+  kick_skill_(createChild<skills::UniversalKick>("kick"))
 {
   createIndexedChildren<play_helpers::EasyMoveTo>(move_tos_, "EasyMoveTo");
 }
@@ -90,8 +90,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   {
     // Stage for kick
     getPlayInfo()["State"] = "Preparing";
-    line_kick_skill_.SetTargetPoint(chooseKickTarget(world));
-    const auto destination = line_kick_skill_.GetAssignmentPoint(world);
+    kick_skill_.SetTargetPoint(chooseKickTarget(world));
+    const auto destination = kick_skill_.GetAssignmentPoint(world);
     auto & move_to = move_tos_[kicking_robot.id];
     move_to.setTargetPosition(destination);
     move_to.face_point(world.ball.pos);
@@ -100,10 +100,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   } else {
     // Kick ball
     getPlayInfo()["State"] = "Kicking";
-    if (line_kick_skill_.IsDone()) {
-      line_kick_skill_.Reset();
+    if (kick_skill_.IsDone()) {
+      kick_skill_.Reset();
     }
-    motion_commands[kicking_robot.id] = line_kick_skill_.RunFrame(world, kicking_robot);
+    motion_commands[kicking_robot.id] = kick_skill_.RunFrame(world, kicking_robot);
   }
 
   ateam_geometry::Point pattern_point(kRobotDiameter - (world.field.field_length / 2.0),

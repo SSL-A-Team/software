@@ -42,7 +42,7 @@ TrianglePassPlay::TrianglePassPlay(stp::Options stp_options)
   positions.push_back(positions.back().transform(rotate_transform));
   positions.push_back(positions.back().transform(rotate_transform));
   for (auto & p : positions) {
-    p += ateam_geometry::Vector(0, 2);
+    p += ateam_geometry::Vector(0, 0);
   }
 }
 
@@ -67,7 +67,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TrianglePassP
   }
 
   if (available_robots.size() > 3) {
-    available_robots.erase(available_robots.begin() + 3, available_robots.end());
+    std::vector<Robot> idlers;
+    std::move(
+      available_robots.begin() + 3, available_robots.end(),
+      std::back_inserter(idlers));
+    runIdlers(idlers, world, maybe_motion_commands);
   }
 
   switch (state_) {
@@ -198,6 +202,22 @@ void TrianglePassPlay::runBackOff(
     ateam_msgs::msg::RobotMotionCommand{};
   motion_command->twist.linear.x = vel.x();
   motion_command->twist.linear.y = vel.y();
+}
+
+void TrianglePassPlay::runIdlers(
+  const std::vector<Robot> & robots, const World & world,
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+{
+  const ateam_geometry::Point first_pos(-world.field.field_length / 2.0,
+    -world.field.field_width / 2.0);
+  const ateam_geometry::Vector step(kRobotDiameter * 1.5, 0);
+  for( auto i = 0ul; i < robots.size(); ++i) {
+    auto & robot = robots[i];
+    auto & emt = easy_move_tos_[robot.id];
+    emt.setTargetPosition(first_pos + step * i);
+    emt.face_absolute(0.0);
+    motion_commands[robot.id] = emt.runFrame(robot, world);
+  }
 }
 
 }  // namespace ateam_kenobi::plays

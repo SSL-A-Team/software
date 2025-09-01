@@ -22,6 +22,7 @@
 #include <ranges>
 #include <algorithm>
 #include <limits>
+#include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/normalize.hpp>
@@ -83,10 +84,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OffensiveStop
 
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
 
+  runPrepBot(world, motion_commands);
+
   helpers::moveBotsTooCloseToBall(world, added_obstacles, motion_commands, easy_move_tos_,
     getOverlays(), getPlayInfo());
-
-  runPrepBot(world, motion_commands);
 
   helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo());
 
@@ -119,11 +120,20 @@ void OffensiveStopPlay::runPrepBot(
   }
   const auto closest_bot = play_helpers::getClosestRobot(available_robots, target_position);
 
+  // Wait for the closest bot to be out of the ball keepout circle before giving it new commands
+  if(maybe_motion_commands[closest_bot.id]) {
+    return;
+  }
+
   auto & emt = easy_move_tos_[closest_bot.id];
+
+  std::vector<ateam_geometry::AnyShape> obstacles {
+    ateam_geometry::makeDisk(world.ball.pos, stop_plays::stop_helpers::kKeepoutRadiusRules)
+  };
 
   emt.setTargetPosition(target_position);
   emt.face_point(world.ball.pos);
-  maybe_motion_commands[closest_bot.id] = emt.runFrame(closest_bot, world);
+  maybe_motion_commands[closest_bot.id] = emt.runFrame(closest_bot, world, obstacles);
 }
 
 }  // namespace ateam_kenobi::plays

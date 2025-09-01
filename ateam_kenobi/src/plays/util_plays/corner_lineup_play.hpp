@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,24 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef PLAYS__UTIL_PLAYS__CORNER_LINEUP_PLAY_HPP_
+#define PLAYS__UTIL_PLAYS__CORNER_LINEUP_PLAY_HPP_
 
-#ifndef PLAYS__OUR_PENALTY_PLAY_HPP_
-#define PLAYS__OUR_PENALTY_PLAY_HPP_
+#include <vector>
+#include <optional>
+#include <array>
 
+#include "ateam_geometry/types.hpp"
+#include "core/types/robot.hpp"
 #include "core/stp/play.hpp"
-#include "skills/goalie.hpp"
-#include "skills/universal_kick.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class OurPenaltyPlay : public stp::Play
+class CornerLineupPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "OurPenaltyPlay";
-
-  explicit OurPenaltyPlay(stp::Options stp_options);
+  explicit CornerLineupPlay(stp::Options stp_options, double x_mult, double y_mult);
 
   stp::PlayScore getScore(const World & world) override;
 
@@ -45,14 +46,10 @@ public:
     16> runFrame(const World & world) override;
 
 private:
-  skills::Goalie goalie_skill_;
-  skills::UniversalKick kick_skill_;
-  std::array<play_helpers::EasyMoveTo, 16> move_tos_;
-  std::chrono::steady_clock::time_point kick_time_ = std::chrono::steady_clock::time_point::max();
-
-  ateam_geometry::Point chooseKickTarget(const World & world);
+  const double x_mult_;
+  const double y_mult_;
+  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 };
-
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__OUR_PENALTY_PLAY_HPP_
+#endif  // PLAYS__UTIL_PLAYS__CORNER_LINEUP_PLAY_HPP_

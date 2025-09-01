@@ -44,6 +44,10 @@ public:
 
 private:
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+
+  void DrawKeepoutArea(
+    const ateam_geometry::Point & ball_pos,
+    const ateam_geometry::Point & placement_point);
 };
 
 }  // namespace ateam_kenobi::plays

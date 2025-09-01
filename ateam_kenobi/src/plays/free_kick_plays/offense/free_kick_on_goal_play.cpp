@@ -31,16 +31,26 @@ namespace ateam_kenobi::plays
 
 FreeKickOnGoalPlay::FreeKickOnGoalPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  striker_(createChild<skills::PivotKick>("striker")),
+  striker_(createChild<skills::UniversalKick>("striker")),
   idler_1_(createChild<skills::LaneIdler>("idler1")),
   idler_2_(createChild<skills::LaneIdler>("idler2")),
   defense_(createChild<tactics::StandardDefense>("defense"))
 {
+  striker_.SetPreferredKickType(skills::UniversalKick::KickType::Line);
 }
 
 stp::PlayScore FreeKickOnGoalPlay::getScore(const World & world)
 {
   if(world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs) {
+    return stp::PlayScore::NaN();
+  }
+
+  if((world.in_play || striker_.IsDone()) && world.ball.vel.x() < 0.01) {
+    // Ball is stopped or moving up field
+    return stp::PlayScore::NaN();
+  }
+
+  if(world.ball.pos.x() < 0.0) {
     return stp::PlayScore::NaN();
   }
 
@@ -51,6 +61,11 @@ stp::PlayScore FreeKickOnGoalPlay::getScore(const World & world)
   const auto squared_goal_width = world.field.goal_width * world.field.goal_width;
   const auto fraction_of_goal_width = largest_window->squared_length() / squared_goal_width;
   return stp::PlayScore::Max() * fraction_of_goal_width;
+}
+
+void FreeKickOnGoalPlay::enter()
+{
+  striker_.Reset();
 }
 
 std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
@@ -105,15 +120,21 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   std::ranges::transform(defenders, std::back_inserter(getPlayInfo()["Defenders"]),
     [](const auto & r){return r.id;});
 
-  assignments.RunPositionIfAssigned("idler1", [this, &world, &motion_commands](const auto & robot){
-      motion_commands[robot.id] = idler_1_.RunFrame(world, robot);
-      getPlayInfo()["Idlers"].push_back(robot.id);
-  });
+  if(available_robots.size() > 3) {
+    assignments.RunPositionIfAssigned("idler1",
+      [this, &world, &motion_commands](const auto & robot){
+        motion_commands[robot.id] = idler_1_.RunFrame(world, robot);
+        getPlayInfo()["Idlers"].push_back(robot.id);
+    });
+  }
 
-  assignments.RunPositionIfAssigned("idler2", [this, &world, &motion_commands](const auto & robot){
-      motion_commands[robot.id] = idler_2_.RunFrame(world, robot);
-      getPlayInfo()["Idlers"].push_back(robot.id);
-  });
+  if(available_robots.size() > 4) {
+    assignments.RunPositionIfAssigned("idler2",
+      [this, &world, &motion_commands](const auto & robot){
+        motion_commands[robot.id] = idler_2_.RunFrame(world, robot);
+        getPlayInfo()["Idlers"].push_back(robot.id);
+    });
+  }
 
   return motion_commands;
 }

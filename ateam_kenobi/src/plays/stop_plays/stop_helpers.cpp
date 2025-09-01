@@ -253,6 +253,9 @@ void moveBotsTooCloseToBall(
       continue;
     }
     const auto & bot = *maybe_bot;
+    if(motion_commands[bot.id]) {
+      continue;
+    }
     auto & emt = easy_move_tos.at(bot.id);
     emt.setTargetPosition(spot);
     emt.face_point(world.ball.pos);
@@ -283,6 +286,9 @@ void moveBotsInObstacles(
   for(auto i = 0ul; i < motion_commands.size(); ++i) {
     const auto & robot = world.our_robots[i];
     if(!robot.IsAvailable()) {
+      continue;
+    }
+    if(motion_commands[i]) {
       continue;
     }
     const auto opt_escape_vel = path_planning::GenerateEscapeVelocity(robot, added_obstacles);

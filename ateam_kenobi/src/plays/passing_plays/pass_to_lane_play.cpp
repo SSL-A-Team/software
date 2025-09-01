@@ -53,6 +53,10 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
     return cached_score_;
   }
 
+  if(world.ball.pos.x() > 0.0) {
+    return stp::PlayScore::Min();
+  }
+
   if (play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore::Min();
   }
@@ -90,8 +94,9 @@ ateam_geometry::Segment PassToLanePlay::getTargetSegment(const World & world)
 {
   const auto lane_segment = play_helpers::lanes::GetLaneLongitudinalMidSegment(world, lane_);
   const auto max_center_x = (world.field.field_length / 2.0) - world.field.defense_area_depth;
-  const auto max_x = lane_ ==
-    play_helpers::lanes::Lane::Center ? max_center_x : std::numeric_limits<double>::infinity();
+  // const auto max_x = lane_ ==
+  //   play_helpers::lanes::Lane::Center ? max_center_x : std::numeric_limits<double>::infinity();
+  const auto max_x = max_center_x;
   const auto ball_x = std::min(world.ball.pos.x(), max_x);
   if (direction_ == PassDirection::Forward) {
     return ateam_geometry::Segment{
@@ -101,10 +106,13 @@ ateam_geometry::Segment PassToLanePlay::getTargetSegment(const World & world)
         lane_segment.target().y()}
     };
   } else {
+    const auto lookback = 3.0;
     return ateam_geometry::Segment{
-      ateam_geometry::Point{std::min(lane_segment.source().x(), ball_x),
+      ateam_geometry::Point{std::min(std::max(lane_segment.source().x(), ball_x - lookback),
+            ball_x),
         lane_segment.source().y()},
-      ateam_geometry::Point{std::min(lane_segment.target().x(), ball_x),
+      ateam_geometry::Point{std::min(std::max(lane_segment.target().x(), ball_x - lookback),
+            ball_x),
         lane_segment.target().y()}
     };
   }
