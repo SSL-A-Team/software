@@ -65,7 +65,8 @@ public:
     // kick_.SetCaptureSpeed(speed);
   }
 
-  void SetPreferredKickType(skills::UniversalKick::KickType type) {
+  void SetPreferredKickType(skills::UniversalKick::KickType type)
+  {
     kick_.SetPreferredKickType(type);
   }
 

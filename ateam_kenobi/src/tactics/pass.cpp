@@ -71,7 +71,8 @@ void Pass::runFrame(
   if (kick_.IsDone()) {
     const ateam_geometry::Segment pass_segment{kicker_bot.pos, receiver_bot.pos};
     const auto missed_dist_threshold = 0.5;
-    const auto ball_to_segment_dist = CGAL::approximate_sqrt(CGAL::squared_distance(pass_segment, world.ball.pos));
+    const auto ball_to_segment_dist = CGAL::approximate_sqrt(CGAL::squared_distance(pass_segment,
+        world.ball.pos));
     if(ball_to_segment_dist > missed_dist_threshold) {
       // Missed or intercepted
       missed_ = true;
@@ -108,7 +109,8 @@ void Pass::runFrame(
     kick_.Reset();
   }
 
-  const auto kicker_ready_time = ateam_common::TimeDiffSeconds(world.current_time, kicker_ready_start_time_);
+  const auto kicker_ready_time = ateam_common::TimeDiffSeconds(world.current_time,
+      kicker_ready_start_time_);
 
   getPlayInfo()["Ready Time"] = kicker_ready_time;
 

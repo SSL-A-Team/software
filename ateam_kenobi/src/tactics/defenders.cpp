@@ -71,7 +71,6 @@ void Defenders::runFrame(
 std::vector<ateam_geometry::Point> Defenders::getDefenderPoints(const World & world)
 {
   if(isBallInDefenseArea(world)) {
-
     const auto x = -((world.field.field_length / 2.0) -
       world.field.defense_area_depth) + kDefenseSegmentOffset;
     const auto y = (world.field.defense_area_width / 2.0) + kDefenseSegmentOffset;
