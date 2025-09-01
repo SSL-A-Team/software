@@ -103,11 +103,15 @@ public:
   template<typename PositionFunc>
   void RunPositionIfAssigned(const std::string & name, PositionFunc func) const
   {
-    const auto & maybe_robot = GetPositionAssignment(name);
-    if (!maybe_robot) {
-      return;
+    try {
+      const auto & maybe_robot = GetPositionAssignment(name);
+      if (!maybe_robot) {
+        return;
+      }
+      func(*maybe_robot);
+    } catch(std::invalid_argument & e) {
+      std::cerr << "WARNING: " << e.what() << '\n';
     }
-    func(*maybe_robot);
   }
 
 private:

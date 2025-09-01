@@ -24,6 +24,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 #include <ateam_msgs/msg/overlay_array.hpp>
 #include <ateam_geometry/arc.hpp>
 #include <ateam_geometry/types.hpp>
@@ -44,6 +45,8 @@ public:
   const ateam_msgs::msg::OverlayArray & getMsg() const;
 
   void clear();
+
+  void merge(const Overlays & other);
 
   void drawLine(
     const std::string & name, const std::vector<ateam_geometry::Point> & points,
@@ -75,6 +78,12 @@ public:
   void drawArc(
     const std::string & name, const ateam_geometry::Arc & arc,
     const std::string & stroke_color = "white", const uint8_t stroke_width = 5,
+    const uint32_t lifetime = kDefaultLifetime);
+
+  void drawArrows(
+    const std::string & name,
+    const std::vector<std::pair<ateam_geometry::Point, ateam_geometry::Vector>> & arrows,
+    const std::string & stroke_color = "blue", const uint8_t stroke_width = 5,
     const uint32_t lifetime = kDefaultLifetime);
 
   void drawHeatmap(

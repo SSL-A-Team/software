@@ -23,9 +23,11 @@
 #define CORE__DOUBLE_TOUCH_EVAL_HPP_
 
 #include <algorithm>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <boost/scope_exit.hpp>
 #include "core/types/world.hpp"
+#include "core/visualization/overlays.hpp"
 
 namespace ateam_kenobi
 {
@@ -33,7 +35,7 @@ namespace ateam_kenobi
 class DoubleTouchEval
 {
 public:
-  void update(World & world)
+  void update(World & world, visualization::Overlays & overlays)
   {
     const auto running_command = world.referee_info.running_command;
     BOOST_SCOPE_EXIT(&running_command, this_) {
@@ -54,6 +56,7 @@ public:
     {
       // Entering state where double-touch rule applies
       forbidden_id_.reset();
+      prev_touching_id_.reset();
       double_touch_rule_applies_ = true;
     }
 
@@ -76,8 +79,8 @@ public:
       }
     }
 
-    if (prev_touching_id_ && !maybe_toucher) {
-      // A robot has stopped touching the ball
+    if (prev_touching_id_ && (!maybe_toucher || world.in_play)) {
+      // A robot has stopped touching the ball, or moved the ball enough to put it in play
       if (!forbidden_id_) {
         // This was the first robot to touch the ball, it can't touch it again
         forbidden_id_ = prev_touching_id_;
@@ -91,9 +94,14 @@ public:
     } else {
       prev_touching_id_ = maybe_toucher.value().id;
     }
+
+    DrawForbiddenBotOverlay(world, overlays);
   }
 
 private:
+  static constexpr double kStartTouchBallsenseThreshold = kRobotRadius + 0.1;
+  static constexpr double kStartTouchVisionThreshold = kRobotRadius + kBallRadius + 0.01;
+  static constexpr double kEndTouchVisionThreshold = kRobotRadius + kBallRadius + 0.045;
   bool double_touch_rule_applies_ = false;
   std::optional<int> forbidden_id_;
   // tracking the frame when command changes, different from RefereeInfo.prev_command
@@ -103,19 +111,52 @@ private:
   std::optional<Robot> GetRobotTouchingBall(const World & world)
   {
     auto found_iter = std::ranges::find_if(
-      world.our_robots, [&world](const Robot & robot) {
+      world.our_robots, [this, &world](const Robot & robot) {
         if (!robot.visible) {
           return false;
         }
-        return std::sqrt(
-          CGAL::squared_distance(
-            robot.pos,
-            world.ball.pos)) < (kRobotRadius + 0.025);
+        const auto ball_bot_distance = std::sqrt(
+          CGAL::squared_distance(robot.pos, world.ball.pos));
+        if (robot.breakbeam_ball_detected_filtered &&
+        ball_bot_distance <= kStartTouchBallsenseThreshold)
+        {
+          return true;
+        }
+        if (prev_touching_id_.value_or(-1) == robot.id) {
+          return ball_bot_distance <= kEndTouchVisionThreshold;
+        } else {
+          return ball_bot_distance <= kStartTouchVisionThreshold;
+        }
       });
     if (found_iter == world.our_robots.end()) {
       return {};
     }
     return *found_iter;
+  }
+
+  void DrawForbiddenBotOverlay(const World & world, visualization::Overlays & overlays)
+  {
+    if(!world.double_touch_forbidden_id_) {
+      return;
+    }
+    const auto forbidden_id = world.double_touch_forbidden_id_.value();
+    const auto & forbidden_bot = world.our_robots[forbidden_id];
+    const auto & bot_pos = forbidden_bot.pos;
+    const auto side_len = kRobotDiameter;
+    const auto small_dim = side_len / 2.0;
+    const auto big_dim = small_dim + (side_len * std::cos(M_PI / 4.0));
+    std::vector<ateam_geometry::Point> points {
+      bot_pos + ateam_geometry::Vector{big_dim, small_dim},
+      bot_pos + ateam_geometry::Vector{small_dim, big_dim},
+      bot_pos + ateam_geometry::Vector{-small_dim, big_dim},
+      bot_pos + ateam_geometry::Vector{-big_dim, small_dim},
+      bot_pos + ateam_geometry::Vector{-big_dim, -small_dim},
+      bot_pos + ateam_geometry::Vector{-small_dim, -big_dim},
+      bot_pos + ateam_geometry::Vector{small_dim, -big_dim},
+      bot_pos + ateam_geometry::Vector{big_dim, -small_dim}
+    };
+    ateam_geometry::Polygon octagon{points.begin(), points.end()};
+    overlays.drawPolygon("double_touch_forbidden_bot", octagon, "DarkRed", "#00000000");
   }
 };
 

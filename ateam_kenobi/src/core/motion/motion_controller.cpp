@@ -32,7 +32,7 @@
 #include <ateam_common/parameters.hpp>
 #include "ateam_geometry/ateam_geometry.hpp"
 #include "ateam_common/robot_constants.hpp"
-#include "control_toolbox/pid.hpp"
+#include "pid.hpp"
 
 /*
 // PID gains
@@ -47,11 +47,8 @@ CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
 */
 
 
-MotionController::MotionController()
-: cross_track_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
-  x_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
-  y_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS()),
-  t_controller(0.0, 0.0, 0.0, 0.1, -0.1, DefaultAWS())
+MotionController::MotionController(rclcpp::Logger logger)
+: logger_(logger)
 {
   this->reset();
 }
@@ -135,7 +132,7 @@ void MotionController::calculate_trajectory_velocity_limits()
       const ateam_geometry::Vector prev_direction = point - prev_point;
 
       double angle = ateam_geometry::ShortestAngleBetween(direction, prev_direction);
-      max_turn_velocity = (abs(angle) > M_PI / 4.0) ? 0.5 : v_max;
+      max_turn_velocity = (abs(angle) > max_allowed_turn_angle) ? 0.5 : v_max;
     }
 
     double selected_velocity = std::clamp(std::min(max_decel_velocity, max_turn_velocity),
@@ -149,27 +146,28 @@ double MotionController::calculate_trapezoidal_velocity(
   const ateam_kenobi::Robot & robot,
   ateam_geometry::Point target, size_t target_index, double dt)
 {
-  // TODO(chachmu): because this uses vector norms it doesn't really handle
-  // when the target velocity is towards the robot
   // TODO(chachmu): make this smarter about the angle calculation
   // when we are off the trajectory
 
-  double vel = ateam_geometry::norm(robot.vel);
-  // // Prefer to use the previously commanded velocity for smoothness unless it is very wrong
-  // if (prev_command_vel < 1.2 * vel && prev_command_vel > 0.8 * prev_command_vel) {
-  //   vel = this->prev_command_vel;
-  // }
+  double vel = ateam_geometry::norm(robot.prev_command_vel);
 
-  vel = this->prev_command_vel;
-
+  const auto target_to_next_trajectory_point = trajectory[target_index] - target;
   double distance_to_next_trajectory_point =
-    ateam_geometry::norm(trajectory[target_index] - target);
+    ateam_geometry::norm(target_to_next_trajectory_point);
 
   if (distance_to_next_trajectory_point == 0.0) {
     distance_to_next_trajectory_point = ateam_geometry::norm(target - robot.pos);
   }
 
-  double target_vel = ateam_geometry::norm(trajectory_velocity_limits[target_index]);
+  // Project target velocity onto the trajectory
+  const ateam_geometry::Vector current_target_velocity = trajectory_velocity_limits[target_index];
+  // double target_vel = 0;
+  // if (ateam_geometry::norm(current_target_velocity) > 0.0) {
+  //   target_vel = (current_target_velocity * target_to_next_trajectory_point) /
+  //     ateam_geometry::norm(current_target_velocity);
+  // }
+  double target_vel = ateam_geometry::norm(current_target_velocity);
+
   double deceleration_to_reach_target = ((vel * vel) - (target_vel * target_vel)) /
     (2 * distance_to_next_trajectory_point);
 
@@ -185,7 +183,41 @@ double MotionController::calculate_trapezoidal_velocity(
     trapezoidal_vel = vel + (accel_limit * dt);
   }
 
-  return std::clamp(trapezoidal_vel, 0.0, this->v_max);
+  return std::clamp(trapezoidal_vel, -this->v_max, this->v_max);
+}
+
+double MotionController::calculate_trapezoidal_angular_vel(
+  const ateam_kenobi::Robot & robot,
+  double target_angle, double dt)
+{
+  const auto angle_error = angles::shortest_angular_distance(robot.theta, target_angle);
+
+  ateam_msgs::msg::RobotMotionCommand command;
+
+  const double vel = robot.prev_command_omega;
+
+  double deceleration_to_reach_target = (vel * vel) / (2 * angle_error);
+
+  // Cruise
+  double trapezoidal_vel = std::copysign(t_max, angle_error);
+  const double error_direction = std::copysign(1, angle_error);
+  const double decel_direction = std::copysign(1, vel * angle_error);
+
+  // Decelerate to target velocity
+  if (decel_direction > 0 && abs(deceleration_to_reach_target) > t_accel_limit * 0.95) {
+    trapezoidal_vel = vel - (error_direction * deceleration_to_reach_target * dt);
+
+  // Accelerate to speed
+  } else if (abs(vel) < t_max) {
+    trapezoidal_vel = vel + (error_direction * t_accel_limit * dt);
+  }
+
+  // const auto min_angular_vel = 1.0;
+  // if (abs(trapezoidal_vel) < min_angular_vel) {
+  //   trapezoidal_vel = std::copysign(min_angular_vel, angle_error);
+  // }
+
+  return std::clamp(trapezoidal_vel, -t_max, t_max);
 }
 
 ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
@@ -204,12 +236,15 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   double dt = current_time - this->prev_time;
 
   // If we don't have a valid dt just assume we are running at standard loop rate
-  if (std::isnan(this->prev_time)) {
+  const auto is_dt_zero = abs(dt) < 1e-4;
+  if (std::isnan(this->prev_time) || is_dt_zero) {
+    RCLCPP_WARN_EXPRESSION(logger_, is_dt_zero,
+      "Zero dt. Did you run MotionController twice in one frame?");
     dt = 1 / 100.0;  // TODO(chachmu): set this dynamically
   }
 
-  target_index_ = this->trajectory.size() - 1;
-  ateam_geometry::Point target = this->trajectory[target_index_];
+  size_t target_index = this->trajectory.size() - 1;
+  ateam_geometry::Point target = this->trajectory[target_index];
   ateam_geometry::Vector target_direction = ateam_geometry::normalize(target - robot.pos);
 
   const double lookahead_distance = this->v_max * dt;
@@ -253,7 +288,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
         }
 
         // We've found the best target point
-        target_index_ = i;
+        target_index = i;
         target_direction = ateam_geometry::normalize(b - target);
         break;
       }
@@ -267,10 +302,10 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
         target = point;
         // This should only happen at the start of the trajectory
         if (target == a) {
-          target_index_ = i - 1;
+          target_index = i - 1;
           target_direction = ateam_geometry::normalize(a - robot.pos);
         } else {
-          target_index_ = i;
+          target_index = i;
           target_direction = ateam_geometry::normalize(b - a);
         }
       }
@@ -278,34 +313,43 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   }
 
   double distance_to_end = sqrt(CGAL::squared_distance(robot.pos, trajectory.back()));
-  bool target_is_last_point = (target_index_ == this->trajectory.size() - 1);
+  bool target_is_last_point = (target_index == this->trajectory.size() - 1);
   bool zero_target_vel = ateam_geometry::norm(target_velocity) < 0.01;
   bool trajectory_complete = (distance_to_end <= options.completion_threshold) &&
     target_is_last_point &&
     zero_target_vel;
 
   if (!trajectory_complete) {
-    auto trajectory_line = ateam_geometry::Segment(trajectory[target_index_],
+    auto trajectory_line = ateam_geometry::Segment(trajectory[target_index],
       robot.pos).supporting_line();
-    if (target_index_ > 0) {
-      trajectory_line = ateam_geometry::Segment(trajectory[target_index_],
-        trajectory[target_index_ - 1]).supporting_line();
+    if (target_index > 0) {
+      trajectory_line = ateam_geometry::Segment(trajectory[target_index],
+        trajectory[target_index - 1]).supporting_line();
     }
 
-    ateam_geometry::Vector error = trajectory[target_index_] - robot.pos;
+    ateam_geometry::Vector error = trajectory[target_index] - robot.pos;
+    CGAL::Aff_transformation_2<ateam_geometry::Kernel> transformation(CGAL::ROTATION,
+      std::sin(-robot.theta), std::cos(-robot.theta));
+    const auto error_body_frame = error.transform(transformation);
+
     ateam_geometry::Vector cross_track_error = trajectory_line.projection(robot.pos) - robot.pos;
+    // If the line segment is degenerate then the projection can have nan values
+    if (std::isnan(cross_track_error.x()) || std::isnan(cross_track_error.y())) {
+      cross_track_error = ateam_geometry::Vector(0, 0);
+    }
     // ateam_geometry::Vector along_track_error = error - cross_track_error;
 
-
-    // Calculate pid feedback
+    // Calculate pid feedback (in robot body frame)
     double cross_track_feedback = this->cross_track_controller.compute_command(
       ateam_geometry::norm(cross_track_error), dt);
-    double x_feedback = this->x_controller.compute_command(error.x(), dt);
-    double y_feedback = this->y_controller.compute_command(error.y(), dt);
+    double x_feedback = this->x_controller.compute_command(error_body_frame.x(), dt);
+    double y_feedback = this->y_controller.compute_command(error_body_frame.y(), dt);
+    ateam_geometry::Vector body_feedback = ateam_geometry::Vector(x_feedback, y_feedback);
+    const auto world_feedback = body_feedback.transform(transformation.inverse());
 
     // Calculate trapezoidal velocity feedforward
     calculate_trajectory_velocity_limits();
-    double calculated_velocity = calculate_trapezoidal_velocity(robot, target, target_index_, dt);
+    double calculated_velocity = calculate_trapezoidal_velocity(robot, target, target_index, dt);
 
     ateam_geometry::Vector vel_vector;
 
@@ -313,7 +357,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       distance_to_end < 3.0 * kRobotRadius;
 
     if (should_use_full_pid_control) {
-      vel_vector = ateam_geometry::Vector(x_feedback, y_feedback);
+      vel_vector = world_feedback;
     } else {
       vel_vector = cross_track_feedback * ateam_geometry::normalize(cross_track_error) +
         (calculated_velocity * target_direction);
@@ -324,20 +368,8 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
     }
 
-    // Rotate the commanded vector to account for delay
-    if (abs(robot.omega) > 0.5) {
-      double angle_offset = -robot.omega * 5 * dt;
-      double new_x = vel_vector.x() * cos(angle_offset) - vel_vector.y() * sin(angle_offset);
-      double new_y = vel_vector.x() * sin(angle_offset) + vel_vector.y() * cos(angle_offset);
-
-      vel_vector = ateam_geometry::Vector(new_x, new_y);
-    }
-
     motion_command.twist.linear.x = vel_vector.x();
     motion_command.twist.linear.y = vel_vector.y();
-    this->prev_command_vel = ateam_geometry::norm(vel_vector);
-  } else {
-    this->prev_command_vel = 0.0;
   }
 
   // calculate angle movement commands
@@ -359,26 +391,49 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       [[fallthrough]];
     // otherwise default to face travel
     case AngleMode::face_travel:
-      target_angle = atan2(target_direction.y(), target_direction.x());
+      if (trajectory_complete) {
+        target_angle = robot.theta;
+      } else {
+        target_angle = atan2(target_direction.y(), target_direction.x());
+      }
       break;
   }
 
   if (this->angle_mode != AngleMode::no_face) {
     double t_error = angles::shortest_angular_distance(robot.theta, target_angle);
-    double t_command = this->t_controller.compute_command(t_error, dt);
+    if (std::abs(t_error) > options.angular_completion_threshold) {
+      // double t_command = this->t_controller.compute_command(t_error, dt);
+      double t_command = 0.0;
+      if(std::abs(t_error) < M_PI / 12.0) {
+        t_command = this->t_controller.compute_command(t_error, dt);
+      } else {
+        t_command = this->calculate_trapezoidal_angular_vel(robot, target_angle, dt);
+      }
 
-    if (trajectory_complete) {
-      double theta_min = 0.0;
-      if (abs(t_command) < theta_min) {
-        if (t_command > 0) {
-          t_command = std::clamp(t_command, theta_min, this->t_max);
-        } else {
-          t_command = std::clamp(t_command, -theta_min, -this->t_max);
+      if (trajectory_complete) {
+        double theta_min = 0.0;
+        if (abs(t_command) < theta_min) {
+          if (t_command > 0) {
+            t_command = std::clamp(t_command, theta_min, this->t_max);
+          } else {
+            t_command = std::clamp(t_command, -theta_min, -this->t_max);
+          }
         }
       }
+      motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
     }
-    motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
   }
+
+  // Rotate the commanded vector to account for delay
+  // if (abs(robot.prev_command_omega) > 0.5) {
+  //   double angle_offset = -robot.prev_command_omega * 4 * dt;
+  //   const auto cmd_vel = ateam_geometry::Vector(motion_command.twist.linear.x,
+  //     motion_command.twist.linear.y);
+  //   motion_command.twist.linear.x = cmd_vel.x() * cos(angle_offset) - cmd_vel.y() *
+  //     sin(angle_offset);
+  //   motion_command.twist.linear.y = cmd_vel.x() * sin(angle_offset) + cmd_vel.y() *
+  //     cos(angle_offset);
+  // }
 
   this->target_point = target;
   this->prev_time = current_time;
@@ -388,35 +443,13 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
 
 void MotionController::reset()
 {
-  const auto u_max = std::numeric_limits<double>::infinity();
-  const auto u_min = -std::numeric_limits<double>::infinity();
-
-  control_toolbox::AntiWindupStrategy cross_track_aws;
-  cross_track_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
-  cross_track_aws.i_max = 0.3;
-  cross_track_aws.i_min = -0.3;
-  this->cross_track_controller.initialize(3.0, 0.0, 0.005, u_max, u_min, cross_track_aws);
-
-  control_toolbox::AntiWindupStrategy x_aws;
-  x_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
-  x_aws.i_max = 0.3;
-  x_aws.i_min = -0.3;
-  this->x_controller.initialize(4.5, 0.0, 0.01, u_max, u_min, x_aws);
-  control_toolbox::AntiWindupStrategy y_aws;
-  y_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
-  y_aws.i_max = 0.15;
-  y_aws.i_min = -0.15;
-  this->y_controller.initialize(4.5, 0.0, 0.01, u_max, u_min, y_aws);
-  control_toolbox::AntiWindupStrategy t_aws;
-  t_aws.type = control_toolbox::AntiWindupStrategy::LEGACY;
-  t_aws.i_max = 0.5;
-  t_aws.i_min = -0.5;
-  this->t_controller.initialize(2.5, 0.0, 0.0, u_max, u_min, t_aws);
+  cross_track_controller.set_gains(2.8, 0.0, 0.05, 0.31, -0.31);
+  x_controller.set_gains(2.5, 0.0, 0.2, 0.3, -0.3);
+  y_controller.set_gains(4.0, 0.0, 0.2, 0.3, -0.3);
+  t_controller.set_gains(4.5, 0.0, 0.1, 0.5, -0.5);
 
   this->target_point = ateam_geometry::Point(0, 0);
-  this->target_index_ = 0;
 
-  this->prev_command_vel = 0.0;
   this->prev_time = NAN;
 
   this->angle_mode = AngleMode::face_travel;
@@ -424,80 +457,24 @@ void MotionController::reset()
   this->face_angle = 0;
 }
 
-void MotionController::set_x_pid_gain(GainType gain, double value)
+void MotionController::set_cross_track_pid_gains(
+  double p, double i, double d, double i_max,
+  double i_min)
 {
-  control_toolbox::Pid::Gains gains = this->x_controller.get_gains();
-  switch (gain) {
-    case GainType::p:
-      gains.p_gain_ = value;
-      break;
-    case GainType::i:
-      gains.i_gain_ = value;
-      break;
-    case GainType::d:
-      gains.d_gain_ = value;
-      break;
-  }
-  this->x_controller.set_gains(gains);
+  cross_track_controller.set_gains(p, i, d, i_max, i_min);
 }
 
-void MotionController::set_y_pid_gain(GainType gain, double value)
+void MotionController::set_x_pid_gains(double p, double i, double d, double i_max, double i_min)
 {
-  control_toolbox::Pid::Gains gains = this->y_controller.get_gains();
-  switch (gain) {
-    case GainType::p:
-      gains.p_gain_ = value;
-      break;
-    case GainType::i:
-      gains.i_gain_ = value;
-      break;
-    case GainType::d:
-      gains.d_gain_ = value;
-      break;
-  }
-  this->y_controller.set_gains(gains);
+  x_controller.set_gains(p, i, d, i_max, i_min);
 }
 
-void MotionController::set_t_pid_gain(GainType gain, double value)
+void MotionController::set_y_pid_gains(double p, double i, double d, double i_max, double i_min)
 {
-  control_toolbox::Pid::Gains gains = this->t_controller.get_gains();
-  switch (gain) {
-    case GainType::p:
-      gains.p_gain_ = value;
-      break;
-    case GainType::i:
-      gains.i_gain_ = value;
-      break;
-    case GainType::d:
-      gains.d_gain_ = value;
-      break;
-  }
-  this->t_controller.set_gains(gains);
+  y_controller.set_gains(p, i, d, i_max, i_min);
 }
 
-void MotionController::set_x_pid_gains(double p, double i, double d)
+void MotionController::set_t_pid_gains(double p, double i, double d, double i_min, double i_max)
 {
-  control_toolbox::Pid::Gains gains = this->x_controller.get_gains();
-  gains.p_gain_ = p;
-  gains.i_gain_ = i;
-  gains.d_gain_ = d;
-  this->x_controller.set_gains(gains);
-}
-
-void MotionController::set_y_pid_gains(double p, double i, double d)
-{
-  control_toolbox::Pid::Gains gains = this->y_controller.get_gains();
-  gains.p_gain_ = p;
-  gains.i_gain_ = i;
-  gains.d_gain_ = d;
-  this->y_controller.set_gains(gains);
-}
-
-void MotionController::set_t_pid_gains(double p, double i, double d)
-{
-  control_toolbox::Pid::Gains gains = this->t_controller.get_gains();
-  gains.p_gain_ = p;
-  gains.i_gain_ = i;
-  gains.d_gain_ = d;
-  this->t_controller.set_gains(gains);
+  t_controller.set_gains(p, i, d, i_max, i_min);
 }
