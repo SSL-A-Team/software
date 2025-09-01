@@ -51,6 +51,8 @@ struct World
 
   int ignore_side = 0;
 
+  double fps = 100.0;
+
   // Holds the ID of the robot not allowed to touch the ball, if any
   std::optional<int> double_touch_forbidden_id_;
 
