@@ -81,11 +81,11 @@ PathPlanner::Path PathPlanner::getPath(
     return {};
   }
 
+  const auto is_start_valid = isStateValid(start, world, augmented_obstacles, options,
+      BoundaryStrategy::OffsetIn);
   if (options.ignore_start_obstacle) {
     removeCollidingObstacles(augmented_obstacles, start, options);
-  } else if (!isStateValid(start, world, augmented_obstacles, options,
-      BoundaryStrategy::OffsetIn))
-  {
+  } else if (!is_start_valid) {
     cached_path_valid_ = false;
     return {};
   }

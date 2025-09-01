@@ -46,7 +46,8 @@ class World
 public:
   using CameraID = int;
 
-  World(rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface = nullptr);
+  explicit World(
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface = nullptr);
 
   /**
    * Updates the world with a specific camera's measurement

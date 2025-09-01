@@ -38,7 +38,8 @@ World::World(rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_
 void World::update_camera(const CameraID & cameraID, const CameraMeasurement & measurement)
 {
   // Add camera if it doesn't exist yet
-  cameras.try_emplace(cameraID, Camera(model_input_generator, transmission_probability_generator, params_interface_));
+  cameras.try_emplace(cameraID,
+      Camera(model_input_generator, transmission_probability_generator, params_interface_));
 
   // Update the specific camera
   cameras.at(cameraID).update(measurement);

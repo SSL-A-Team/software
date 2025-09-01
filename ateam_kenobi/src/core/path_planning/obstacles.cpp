@@ -165,7 +165,8 @@ bool IsPointInBounds(
   const double bounds_offset)
 {
   // const auto offset = apply_offset ? (kRobotRadius * 0.95) : -0.2;
-  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width + bounds_offset;
+  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width +
+    bounds_offset;
   const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width + bounds_offset;
   ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
     ateam_geometry::Point(x_bound, y_bound));

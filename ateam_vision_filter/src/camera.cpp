@@ -37,7 +37,7 @@ Camera::Camera(
   std::shared_ptr<ModelInputGenerator> model_input_generator,
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator,
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface)
-  : params_interface_(params_interface)
+: params_interface_(params_interface)
 {
   setup_ball_interacting_multiple_model_filter(
     model_input_generator,
@@ -52,7 +52,8 @@ void Camera::update(const CameraMeasurement & camera_measurement)
   for (size_t robot_id = 0; robot_id < 16; robot_id++) {
     if (!camera_measurement.yellow_robots.at(robot_id).empty()) {
       std::vector<Eigen::VectorXd> vectored_measurements =
-        robot_measurements_to_vector(camera_measurement.yellow_robots.at(robot_id), params_interface_);
+        robot_measurements_to_vector(camera_measurement.yellow_robots.at(robot_id),
+          params_interface_);
       removeMeasurementsOnIngoredHalf(vectored_measurements);
       if (!vectored_measurements.empty()) {
         yellow_team.at(robot_id).update(vectored_measurements);
@@ -61,7 +62,8 @@ void Camera::update(const CameraMeasurement & camera_measurement)
 
     if (!camera_measurement.blue_robots.at(robot_id).empty()) {
       std::vector<Eigen::VectorXd> vectored_measurements =
-        robot_measurements_to_vector(camera_measurement.blue_robots.at(robot_id), params_interface_);
+        robot_measurements_to_vector(camera_measurement.blue_robots.at(robot_id),
+          params_interface_);
       removeMeasurementsOnIngoredHalf(vectored_measurements);
       if (!vectored_measurements.empty()) {
         blue_team.at(robot_id).update(vectored_measurements);
@@ -214,7 +216,8 @@ void Camera::setup_robot_interacting_multiple_model_filter(
 }
 
 std::vector<Eigen::VectorXd> Camera::robot_measurements_to_vector(
-  const std::vector<RobotMeasurement> & robot_measurements, rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface)
+  const std::vector<RobotMeasurement> & robot_measurements,
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface)
 {
   std::vector<Eigen::VectorXd> vectored_measurements;
 
@@ -228,8 +231,9 @@ std::vector<Eigen::VectorXd> Camera::robot_measurements_to_vector(
   std::transform(
     robot_measurements.begin(), robot_measurements.end(),
     std::back_inserter(vectored_measurements),
-    [&x_offset,&y_offset](const RobotMeasurement & original) {
-      return Eigen::Vector3d{original.position.x() + x_offset, original.position.y() + y_offset, original.theta};
+    [&x_offset, &y_offset](const RobotMeasurement & original) {
+      return Eigen::Vector3d{original.position.x() + x_offset, original.position.y() + y_offset,
+        original.theta};
     });
 
   return vectored_measurements;

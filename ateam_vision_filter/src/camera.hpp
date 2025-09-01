@@ -99,7 +99,8 @@ private:
     std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator);
 
   static std::vector<Eigen::VectorXd> robot_measurements_to_vector(
-    const std::vector<RobotMeasurement> & robot_measurements, rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface);
+    const std::vector<RobotMeasurement> & robot_measurements,
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface);
 
   static std::vector<Eigen::VectorXd> ball_measurements_to_vector(
     const std::vector<BallMeasurement> & ball_measurements);

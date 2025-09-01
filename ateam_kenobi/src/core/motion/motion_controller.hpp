@@ -56,7 +56,7 @@ struct MotionOptions
 class MotionController
 {
 public:
-  MotionController(rclcpp::Logger logger = rclcpp::get_logger("MotionController"));
+  explicit MotionController(rclcpp::Logger logger = rclcpp::get_logger("MotionController"));
 
   // Update the current trajectory (usually just moves the last point a bit)
   void update_trajectory(

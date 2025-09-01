@@ -59,8 +59,10 @@ PossessionResult WhoHasPossession(const World & world)
   const auto they_are_closer = closest_our_bot_sq_distance > closest_their_bot_sq_distance;
   const auto we_are_close_enough = closest_our_bot_sq_distance < possession_threhold_sq;
   const auto they_are_close_enough = closest_their_bot_sq_distance < possession_threhold_sq;
-  const auto we_are_weakly_close_enough = closest_our_bot_sq_distance < weak_possession_threshold_sq;
-  const auto they_are_weakly_close_enough = closest_their_bot_sq_distance < weak_possession_threshold_sq;
+  const auto we_are_weakly_close_enough = closest_our_bot_sq_distance <
+    weak_possession_threshold_sq;
+  const auto they_are_weakly_close_enough = closest_their_bot_sq_distance <
+    weak_possession_threshold_sq;
 
   if (we_are_closer && we_are_close_enough) {
     return PossessionResult::Ours;

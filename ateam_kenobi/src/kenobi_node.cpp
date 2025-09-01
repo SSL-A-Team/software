@@ -285,6 +285,8 @@ private:
   void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
   {
     world_.ball.visible = ball_state_msg->visible;
+    const auto ball_visibility_timed_out = ateam_common::TimeDiffSeconds(world_.current_time,
+        world_.ball.last_visible_time) > 0.5;
     if (ball_state_msg->visible) {
       world_.ball.pos = ateam_geometry::Point(
         ball_state_msg->pose.position.x,
@@ -293,9 +295,7 @@ private:
         ball_state_msg->twist.linear.x,
         ball_state_msg->twist.linear.y);
       world_.ball.last_visible_time = world_.current_time;
-    } else if(ateam_common::TimeDiffSeconds(world_.current_time, world_.ball.last_visible_time) >
-      0.5)
-    {
+    } else if(ball_visibility_timed_out) {
       world_.ball.vel = ateam_geometry::Vector{0.0, 0.0};
     }
   }
