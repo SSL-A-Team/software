@@ -25,7 +25,6 @@
 #include "core/play_helpers/easy_move_to.hpp"
 #include "core/stp/skill.hpp"
 #include "core/types/world.hpp"
-#include "capture.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -54,19 +53,28 @@ public:
     return done_;
   }
 
+  void setExpectedKickSpeed(double val) {
+    expected_kick_speed_ = val;
+  }
+
 private:
   ateam_geometry::Point target_;
   play_helpers::EasyMoveTo easy_move_to_;
-  skills::Capture capture_;
   bool done_ = false;
+  bool kick_happened_ = false;
+  double expected_kick_speed_ = 6.5;
 
   bool isBallFast(const World & world);
   bool isBallClose(const World & world, const Robot & robot);
   bool isBallStalledAndReachable(const World & world, const Robot & robot);
+  bool isBallVelMatchingBotVel(const World & world, const Robot & robot);
+  bool isBotCloseToTarget(const Robot & robot);
+  bool hasBallBeenKicked(const World & world);
 
   ateam_msgs::msg::RobotMotionCommand runPrePass(const World & world, const Robot & robot);
   ateam_msgs::msg::RobotMotionCommand runPass(const World & world, const Robot & robot);
   ateam_msgs::msg::RobotMotionCommand runPostPass();
+  ateam_msgs::msg::RobotMotionCommand runApproachBall(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills
