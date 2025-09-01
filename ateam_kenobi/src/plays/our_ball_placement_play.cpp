@@ -169,7 +169,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
 
       ateam_geometry::Point target_position = robot.pos;
       if (ateam_geometry::norm(robot.pos - nearest_point) < 0.6 + kRobotRadius) {
-
         target_position = nearest_point +
           0.7 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2));
 
