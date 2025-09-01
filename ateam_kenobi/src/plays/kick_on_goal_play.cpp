@@ -31,7 +31,7 @@ namespace ateam_kenobi::plays
 KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   defense_(createChild<tactics::StandardDefense>("defense")),
-  striker_(createChild<skills::PivotKick>("striker")),
+  striker_(createChild<skills::UniversalKick>("striker")),
   lane_idler_a_(createChild<skills::LaneIdler>("lane_idler_a")),
   lane_idler_b_(createChild<skills::LaneIdler>("lane_idler_b"))
 {
@@ -46,7 +46,8 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
 
   if (world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
+    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs &&
+    !(world.in_play && world.referee_info.running_command == ateam_common::GameCommand::DirectFreeTheirs))
   {
     return stp::PlayScore::NegativeInfinity();
   }
@@ -55,7 +56,11 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
     return stp::PlayScore::Min();
   }
 
-  return play_helpers::GetShotSuccessChance(world, world.ball.pos) + 20.0;
+  if (world.ball.pos.x() > (world.field.field_length / 2.0) - world.field.defense_area_depth) {
+    return stp::PlayScore::Min();
+  }
+
+  return play_helpers::GetShotSuccessChance(world, world.ball.pos) + 35.0;
 }
 
 void KickOnGoalPlay::reset()
@@ -72,6 +77,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
+  if(striker_.IsDone()) {
+    striker_.Reset();
+  }
 
   const ateam_geometry::Segment their_goal_segment{
     ateam_geometry::Point{world.field.field_length / 2.0, -world.field.goal_width / 2.0},
@@ -85,7 +93,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickOnGoalPla
   if (largest_window) {
     striker_.SetTargetPoint(CGAL::midpoint(*largest_window));
   } else {
-    const ateam_geometry::Point opp_goal_center{world.field.field_length / 2.0, 0};
+    const ateam_geometry::Point opp_goal_center{(world.field.field_length / 2.0) - 0.5, 0};
     striker_.SetTargetPoint(opp_goal_center);
   }
 

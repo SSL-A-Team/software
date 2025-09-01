@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,41 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
-#ifndef PLAYS__OUR_PENALTY_PLAY_HPP_
-#define PLAYS__OUR_PENALTY_PLAY_HPP_
+#ifndef PLAYS__DEFENDERS_ONLY_PLAY_HPP_
+#define PLAYS__DEFENDERS_ONLY_PLAY_HPP_
 
 #include "core/stp/play.hpp"
-#include "skills/goalie.hpp"
-#include "skills/universal_kick.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
+#include "tactics/standard_defense.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-class OurPenaltyPlay : public stp::Play
+class DefendersOnlyPlay : public stp::Play
 {
 public:
-  static constexpr const char * kPlayName = "OurPenaltyPlay";
+  static constexpr const char * kPlayName = "DefendersOnlyPlay";
 
-  explicit OurPenaltyPlay(stp::Options stp_options);
+  explicit DefendersOnlyPlay(stp::Options stp_options);
 
   stp::PlayScore getScore(const World & world) override;
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> runFrame(const World & world) override;
+  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+    const World & world) override;
 
 private:
-  skills::Goalie goalie_skill_;
-  skills::UniversalKick kick_skill_;
-  std::array<play_helpers::EasyMoveTo, 16> move_tos_;
-  std::chrono::steady_clock::time_point kick_time_ = std::chrono::steady_clock::time_point::max();
-
-  ateam_geometry::Point chooseKickTarget(const World & world);
+  tactics::StandardDefense defense_tactic_;
 };
 
 }  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__OUR_PENALTY_PLAY_HPP_
+
+#endif  // PLAYS__DEFENDERS_ONLY_PLAY_HPP_
