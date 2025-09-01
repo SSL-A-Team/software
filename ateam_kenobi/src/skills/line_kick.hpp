@@ -76,7 +76,8 @@ public:
     easy_move_to_.setPlannerOptions(options);
   }
 
-  bool IsReady() const override {
+  bool IsReady() const override
+  {
     return state_ == State::FaceBall || state_ == State::KickBall;
   }
 
@@ -146,7 +147,8 @@ public:
                                   .:--==+++++++=-.
 */
 
-  void setPreKickOffset(double val) {
+  void setPreKickOffset(double val)
+  {
     pre_kick_offset = val;
   }
 

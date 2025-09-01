@@ -46,28 +46,29 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runFrame(const World & world, 
     return runPostPass();
   }
   const ateam_geometry::Vector text_pos_offset(0.5, 0);
-  if (isBotCloseToTarget(robot) && isBallVelMatchingBotVel(world, robot) && isBallClose(world,
-      robot))
-  {
+  const auto bot_close_to_target = isBotCloseToTarget(robot);
+  const auto ball_vel_matching_bot_vel = isBallVelMatchingBotVel(world, robot);
+  const auto ball_close = isBallClose(world, robot);
+  const auto ball_fast = isBallFast(world);
+  const auto ball_was_kicked = hasBallBeenKicked(world);
+  const auto ball_stalled_and_reachable = isBallStalledAndReachable(world, robot);
+
+  if (bot_close_to_target && ball_vel_matching_bot_vel && ball_close) {
     done_ = true;
     getPlayInfo()["State"] = "Done";
     return runPostPass();
-  } else if (hasBallBeenKicked(world) && isBallClose(world, robot) && !isBallFast(world)) {
+  } else if (ball_was_kicked && ball_close && !ball_fast) {
     done_ = true;
     getPlayInfo()["State"] = "Done";
     return runPostPass();
-  } else if (hasBallBeenKicked(world) && isBallFast(world) && !isBallVelMatchingBotVel(world,
-      robot))
-  {
+  } else if (ball_was_kicked && ball_fast && !ball_vel_matching_bot_vel) {
     getPlayInfo()["State"] = "Pass";
     return runPass(world, robot);
-  } else if (hasBallBeenKicked(world) && isBallClose(world, robot) && isBallVelMatchingBotVel(world,
-      robot))
-  {
+  } else if (ball_was_kicked && ball_close && ball_vel_matching_bot_vel) {
     done_ = true;
     getPlayInfo()["State"] = "Post";
     return runPostPass();
-  } else if (isBallStalledAndReachable(world, robot)) {
+  } else if (ball_stalled_and_reachable) {
     getPlayInfo()["State"] = "Capture";
     return runApproachBall(world, robot);
   } else {
@@ -148,7 +149,8 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
   const ateam_geometry::Ray ball_ray(world.ball.pos, world.ball.vel);
   const auto destination = ball_ray.supporting_line().projection(robot.pos);
   // const auto vel_bump_vec = 0.07 * ateam_geometry::normalize(destination - robot.pos);
-  easy_move_to_.setTargetPosition(destination/*, ateam_geometry::Vector(-0.001, 0.0) + vel_bump_vec*/);
+  easy_move_to_.setTargetPosition(
+      destination/*, ateam_geometry::Vector(-0.001, 0.0) + vel_bump_vec*/);
   easy_move_to_.face_point(world.ball.pos);
   easy_move_to_.setMaxDecel(4.0);
   path_planning::PlannerOptions planner_options;
@@ -191,7 +193,8 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runApproachBall(
   const Robot & robot)
 {
   const auto ball_to_bot_vector = robot.pos - world.ball.pos;
-  const auto target = world.ball.pos + ateam_geometry::normalize(ball_to_bot_vector) * kRobotDiameter * 1.05;
+  const auto target = world.ball.pos + ateam_geometry::normalize(ball_to_bot_vector) *
+    kRobotDiameter * 1.05;
   easy_move_to_.setTargetPosition(target);
   easy_move_to_.setMaxVelocity(1.0);
   return easy_move_to_.runFrame(robot, world);

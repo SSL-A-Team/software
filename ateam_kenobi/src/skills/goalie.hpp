@@ -58,25 +58,33 @@ private:
    * @brief Default behavior of robot staying in line with ball
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runDefaultBehavior(const World & world, const Robot & goalie, const Ball & ball_state);
+  ateam_msgs::msg::RobotMotionCommand runDefaultBehavior(
+    const World & world, const Robot & goalie,
+    const Ball & ball_state);
 
   /**
    * @brief Block a possible shot when opponents have the ball
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runBlockShot(const World & world, const Robot & goalie, const Ball & ball_state);
+  ateam_msgs::msg::RobotMotionCommand runBlockShot(
+    const World & world, const Robot & goalie,
+    const Ball & ball_state);
 
   /**
    * @brief Block ball when headed towards goal
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runBlockBall(const World & world, const Robot & goalie, const Ball & ball_state);
+  ateam_msgs::msg::RobotMotionCommand runBlockBall(
+    const World & world, const Robot & goalie,
+    const Ball & ball_state);
 
   /**
    * @brief Kick ball out of defense area
    * @return ateam_msgs::msg::RobotMotionCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runClearBall(const World & world, const Robot & goalie, const Ball & ball_state);
+  ateam_msgs::msg::RobotMotionCommand runClearBall(
+    const World & world, const Robot & goalie,
+    const Ball & ball_state);
 
   ateam_msgs::msg::RobotMotionCommand runSideEjectBall(const World & world, const Robot & goalie);
 

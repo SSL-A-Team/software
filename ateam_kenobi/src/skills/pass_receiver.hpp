@@ -53,7 +53,8 @@ public:
     return done_;
   }
 
-  void setExpectedKickSpeed(double val) {
+  void setExpectedKickSpeed(double val)
+  {
     expected_kick_speed_ = val;
   }
 
