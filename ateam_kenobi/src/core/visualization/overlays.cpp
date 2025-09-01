@@ -22,6 +22,7 @@
 #include "overlays.hpp"
 #include <algorithm>
 #include <memory>
+#include <utility>
 #include <opencv2/opencv.hpp>
 
 namespace ateam_kenobi::visualization
@@ -55,6 +56,20 @@ void Overlays::clear()
   if (overlay_array_) {
     overlay_array_->overlays.clear();
   }
+}
+
+void Overlays::merge(const Overlays & other)
+{
+  if (!overlay_array_) {
+    return;
+  }
+  if (!other.overlay_array_) {
+    return;
+  }
+  overlay_array_->overlays.insert(
+    overlay_array_->overlays.end(),
+    other.overlay_array_->overlays.begin(),
+    other.overlay_array_->overlays.end());
 }
 
 void Overlays::drawLine(
@@ -199,6 +214,42 @@ void Overlays::drawArc(
   msg.scale.y = msg.scale.x;
   msg.start_angle = std::atan2(arc.start().dy(), arc.start().dx());
   msg.end_angle = std::atan2(arc.end().dy(), arc.end().dx());
+  msg.stroke_color = stroke_color;
+  msg.stroke_width = stroke_width;
+  msg.lifetime = lifetime;
+  msg.depth = 1;
+  addOverlay(msg);
+}
+
+void Overlays::drawArrows(
+  const std::string & name,
+  const std::vector<std::pair<ateam_geometry::Point, ateam_geometry::Vector>> & arrows,
+  const std::string & stroke_color, const uint8_t stroke_width,
+  const uint32_t lifetime)
+{
+  ateam_msgs::msg::Overlay msg;
+  msg.ns = ns_;
+  msg.name = name;
+  msg.visible = true;
+  msg.type = ateam_msgs::msg::Overlay::ARROWS;
+  msg.command = ateam_msgs::msg::Overlay::REPLACE;
+  std::transform(arrows.begin(), arrows.end(),
+    std::back_inserter(msg.points),
+    [](const std::pair<ateam_geometry::Point, ateam_geometry::Vector> & pair) {
+      geometry_msgs::msg::Point point_msg;
+      point_msg.x = pair.first.x();
+      point_msg.y = pair.first.y();
+      return point_msg;
+    });
+  std::transform(arrows.begin(), arrows.end(),
+    std::back_inserter(msg.scales),
+    [](const std::pair<ateam_geometry::Point, ateam_geometry::Vector> & pair) {
+      geometry_msgs::msg::Vector3 vector_msg;
+      vector_msg.x = pair.second.x();
+      vector_msg.y = pair.second.y();
+      return vector_msg;
+    });
+
   msg.stroke_color = stroke_color;
   msg.stroke_width = stroke_width;
   msg.lifetime = lifetime;

@@ -24,6 +24,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_common/topic_names.hpp>
+#include <ateam_common/robot_constants.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/joystick_control_status.hpp>
 #include <sensor_msgs/msg/joy.hpp>
@@ -100,7 +101,7 @@ private:
   using TriggerFunction = std::function<bool(const sensor_msgs::msg::Joy & )>;
 
   std::string command_topic_template_;
-  float dribbler_speed_ = 0.0f;
+  float dribbler_speed_ = kDefaultDribblerSpeed;
   sensor_msgs::msg::Joy prev_joy_msg_;
 
   TriggerFunction kick_trigger_;
@@ -139,7 +140,8 @@ private:
         topic.replace(placeholder_pos, 2, std::to_string(robot_id));
       }
       control_publisher_ =
-        create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic, rclcpp::QoS{1});
+        create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic,
+          rclcpp::SystemDefaultsQoS().keep_last(1));
       status_msg.is_active = true;
       status_msg.active_id = robot_id;
     }

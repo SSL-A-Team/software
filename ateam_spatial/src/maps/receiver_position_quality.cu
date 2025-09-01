@@ -15,10 +15,10 @@ CUDA_HOSTDEV float ReceiverPositionQuality(const int spatial_x, const int spatia
 {
   const auto x = SpatialToRealX(spatial_x, field_dims, settings);
   const auto y = SpatialToRealY(spatial_y, field_dims, settings);
-  const auto max_edge_dist = 0.75;
+  const auto max_edge_dist = 1.25f;
   const auto edge_dist_multiplier = min(layers::DistanceFromFieldEdge(x, y, field_dims, settings), max_edge_dist) / max_edge_dist;
   const auto shot_width_multiplier = layers::WidthOfShotOnGoal(x, y, their_bots, field_dims, settings) / field_dims.goal_width;
-  const auto robot_distance_multiplier = min(layers::DistanceToTheirBots(x, y, their_bots, field_dims, settings), 1.0);
+  const auto robot_distance_multiplier = min(layers::DistanceToTheirBots(x, y, their_bots, field_dims, settings), 1.0f);
   return layers::InField(x, y, field_dims, settings)
          * layers::OutsideTheirDefenseArea(x, y, field_dims, settings)
          * layers::LineOfSightBall(x, y, ball, their_bots, field_dims, settings)

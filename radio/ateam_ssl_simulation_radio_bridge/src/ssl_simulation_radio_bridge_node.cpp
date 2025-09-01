@@ -165,7 +165,7 @@ public:
     if (!udp_robot_control_) {
       return;
     }
-    RobotControl robots_control = message_conversions::fromMsg(msg, robot_id);
+    RobotControl robots_control = message_conversions::fromMsg(msg, robot_id, get_logger());
     std::vector<uint8_t> buffer;
     buffer.resize(robots_control.ByteSizeLong());
     if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {

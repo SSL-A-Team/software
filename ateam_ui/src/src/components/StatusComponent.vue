@@ -1,6 +1,11 @@
 <template>
     <v-col style="max-width: 11vw; min-width: 11vw">
-        <v-card variant="outlined" class="mb-4 pl-4 pt-3 pb-1 justify-space-around" v-for="robot of state.world.teams.get(state.world.team).robots.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" @click.stop="state.setJoystickRobot(robot.id)">
+        <v-card variant="outlined" class="mb-4 pl-4 pt-3 pb-1 justify-space-around"
+            v-for="robot of state.world.teams.get(state.world.team).robots.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" 
+            @click.left.stop="state.setJoystickRobot(robot.id)"
+            @contextmenu.prevent="changeDetailedStatusMenu(robot)"
+        >
+            
             <v-row>
                 {{robot.id}}
                 <canvas :ref="'canvas' + robot.id" height=100 width=100 style="width:90px; height:90px;"/>
@@ -11,6 +16,11 @@
                     <v-icon :icon="batteryIcon(robot.status.battery_percent)" class="mx-0 pl-1 justify-center" size="small"/>
                 </v-btn>
             </v-row>
+
+            <robot-detailed-menu-component
+                :robot="robot"
+                :activeDetailedMenuId="activeDetailedMenuId"
+            />
         </v-card>
     </v-col>
 </template>
@@ -20,13 +30,17 @@
 import { AppState } from "@/state";
 import { Robot, ErrorLevel, isValid,  getErrorLevel } from "@/robot";
 import { inject } from "vue";
+import RobotDetailedMenuComponent from "./RobotDetailedMenuComponent.vue";
 
 export default {
     inject: ['state'],
     data() {
         return {
             state: inject('state') as AppState,
-            isValid: isValid
+            isValid: isValid,
+            activeDetailedMenuId: null,
+            holdStartTime: null,
+            timeoutId: null
         }
     },
     mounted() {
@@ -205,7 +219,7 @@ export default {
         batteryIcon: function(percentage) {
             if (!percentage || percentage <= 5) {
                 return "mdi-battery-alert-variant-outline";
-            } else if (percentage >= 100) {
+            } else if (percentage >= 95) {
                 return "mdi-battery";
             }
 
@@ -218,6 +232,9 @@ export default {
             }
 
             return ""
+        },
+        changeDetailedStatusMenu: function(robot: Robot) {
+            this.activeDetailedMenuId = (this.activeDetailedMenuId==robot.id) ? null : robot.id;
         }
     },
     computed: {
@@ -240,6 +257,9 @@ export default {
             },
             deep: true
         }
+    },
+    components: {
+        RobotDetailedMenuComponent
     }
 }
 </script>

@@ -51,6 +51,13 @@ inline double ShortestAngleBetween(
   return ShortestAngleBetween(source.direction(), target.direction());
 }
 
+inline double AngleBetweenPoints(
+  const ateam_geometry::Point & a, const ateam_geometry::Point & b,
+  const ateam_geometry::Point & c)
+{
+  return ShortestAngleBetween(b - a, c - b);
+}
+
 /**
  * @brief Checks if the angle @c a is in the clockwise range from @c start to @c end
  *

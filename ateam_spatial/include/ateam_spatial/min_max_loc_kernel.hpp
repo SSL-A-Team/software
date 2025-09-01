@@ -72,28 +72,30 @@ __global__ void max_loc_kernel(const float * buffer, const uint32_t buffer_size,
 {
   const auto idx = blockDim.x * blockIdx.x + threadIdx.x;
   __shared__ uint32_t shared_index_data[blockSize];
-  if (idx < buffer_size){
+  shared_index_data[threadIdx.x] = idx;
+  __syncthreads();
 
-    /*copy to shared memory*/
-    shared_index_data[threadIdx.x] = idx;
-    __syncthreads();
-
-    for(int stride=1; stride < blockDim.x; stride *= 2) {
+  for(int stride=1; stride < blockDim.x; stride *= 2) {
+    if (idx < buffer_size) {
       if (threadIdx.x % (2*stride) == 0) {
         const auto lhs_block_index = threadIdx.x;
         const auto rhs_block_index = threadIdx.x + stride;
         const auto lhs_index = shared_index_data[lhs_block_index];
         const auto rhs_index = shared_index_data[rhs_block_index];
-        const float lhs_value = buffer[lhs_index];
-        const float rhs_value = buffer[rhs_index];
-        if(lhs_value > rhs_value) {
-          shared_index_data[lhs_block_index] = lhs_index;
+        if (rhs_block_index < buffer_size) {
+          const float lhs_value = buffer[lhs_index];
+          const float rhs_value = buffer[rhs_index];
+          if(lhs_value > rhs_value) {
+            shared_index_data[lhs_block_index] = lhs_index;
+          } else {
+            shared_index_data[lhs_block_index] = rhs_index;
+          }
         } else {
-          shared_index_data[lhs_block_index] = rhs_index;
+          shared_index_data[lhs_block_index] = lhs_index;
         }
       }
-      __syncthreads();
     }
+    __syncthreads();
   }
   if (threadIdx.x == 0) {
     atomicMax(loc_out, shared_index_data[0], buffer);
@@ -105,28 +107,30 @@ __global__ void min_loc_kernel(const float * buffer, const uint32_t buffer_size,
 {
   const auto idx = blockDim.x * blockIdx.x + threadIdx.x;
   __shared__ uint32_t shared_index_data[blockSize];
-  if (idx < buffer_size){
+  shared_index_data[threadIdx.x] = idx;
+  __syncthreads();
 
-    /*copy to shared memory*/
-    shared_index_data[threadIdx.x] = idx;
-    __syncthreads();
-
-    for(int stride=1; stride < blockDim.x; stride *= 2) {
+  for(int stride=1; stride < blockDim.x; stride *= 2) {
+    if (idx < buffer_size) {
       if (threadIdx.x % (2*stride) == 0) {
         const auto lhs_block_index = threadIdx.x;
         const auto rhs_block_index = threadIdx.x + stride;
         const auto lhs_index = shared_index_data[lhs_block_index];
         const auto rhs_index = shared_index_data[rhs_block_index];
-        const float lhs_value = buffer[lhs_index];
-        const float rhs_value = buffer[rhs_index];
-        if(lhs_value < rhs_value) {
-          shared_index_data[lhs_block_index] = lhs_index;
+        if (rhs_block_index < buffer_size) {
+          const float lhs_value = buffer[lhs_index];
+          const float rhs_value = buffer[rhs_index];
+          if(lhs_value < rhs_value) {
+            shared_index_data[lhs_block_index] = lhs_index;
+          } else {
+            shared_index_data[lhs_block_index] = rhs_index;
+          }
         } else {
-          shared_index_data[lhs_block_index] = rhs_index;
+          shared_index_data[lhs_block_index] = lhs_index;
         }
       }
-      __syncthreads();
     }
+    __syncthreads();
   }
   if (threadIdx.x == 0) {
     atomicMin(loc_out, shared_index_data[0], buffer);

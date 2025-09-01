@@ -25,6 +25,8 @@
 #include <ssl_league_protobufs/ssl_simulation_robot_feedback.pb.h>
 #include <ssl_league_protobufs/ssl_simulation_control.pb.h>
 
+#include <rclcpp/logger.hpp>
+
 #include <ssl_league_msgs/msg/simulator_control.hpp>
 
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
@@ -35,7 +37,9 @@ namespace ateam_ssl_simulation_radio_bridge::message_conversions
 
 ateam_radio_msgs::msg::BasicTelemetry fromProto(const RobotFeedback & proto_msg);
 
-RobotControl fromMsg(const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id);
+RobotControl fromMsg(
+  const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id,
+  rclcpp::Logger logger);
 
 SimulatorControl fromMsg(const ssl_league_msgs::msg::SimulatorControl & ros_msg);
 

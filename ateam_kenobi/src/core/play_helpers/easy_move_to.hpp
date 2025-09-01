@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <string>
+#include <utility>
 #include <ateam_geometry/types.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "core/path_planning/path_planner.hpp"
@@ -57,7 +58,9 @@ public:
 
   void reset();
 
-  void setTargetPosition(ateam_geometry::Point target_position);
+  void setTargetPosition(
+    ateam_geometry::Point target_position,
+    ateam_geometry::Vector target_velocity = ateam_geometry::Vector(0, 0));
 
   const path_planning::PlannerOptions & getPlannerOptions() const;
   void setPlannerOptions(path_planning::PlannerOptions options);
@@ -69,8 +72,12 @@ public:
   void no_face();
 
   void setMaxVelocity(double velocity);
-
   void setMaxAngularVelocity(double velocity);
+
+  void setMaxAccel(double accel);
+  void setMaxDecel(double decel);
+  void setMaxThetaAccel(double accel);
+  void setMaxAllowedTurnAngle(double angle);
 
   ateam_msgs::msg::RobotMotionCommand runFrame(
     const Robot & robot, const World & world,
@@ -89,6 +96,7 @@ public:
 private:
   bool enable_escape_velocities_ = true;
   ateam_geometry::Point target_position_;
+  ateam_geometry::Vector target_velocity_;
   path_planning::PlannerOptions planner_options_;
   path_planning::PathPlanner path_planner_;
   MotionController motion_controller_;
@@ -107,6 +115,10 @@ private:
     const World & world,
     const Robot & robot,
     std::vector<ateam_geometry::AnyShape> obstacles);
+
+  std::pair<size_t, ateam_geometry::Point> ProjectRobotOnPath(
+    const path_planning::PathPlanner::Path & path,
+    const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::play_helpers

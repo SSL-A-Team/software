@@ -85,6 +85,46 @@ TEST(IntersectionTests, CircleToLine)
           PointIsNear(ag::Point(3, 2))))));
 }
 
+TEST(IntersectionTests, CircleToSegment)
+{
+  const auto circle = ag::makeCircle(ag::Point(1, 2), 2);
+
+  const auto segment_no_intersect = ag::Segment(ag::Point(5, 0), ag::Point(5, 1));
+  EXPECT_THAT(ag::intersection(circle, segment_no_intersect), Eq(std::nullopt));
+
+  const auto segment_inside_no_intersect = ag::Segment(ag::Point(1, 1), ag::Point(1, 3));
+  EXPECT_THAT(ag::intersection(circle, segment_inside_no_intersect), Eq(std::nullopt));
+
+  const auto segment_tangent = ag::Segment(ag::Point(-4, 4), ag::Point(4, 4));
+  EXPECT_THAT(
+    ag::intersection(circle, segment_tangent),
+    Optional(VariantWith<ag::Point>(PointIsNear(ag::Point(1, 4)))));
+
+  const auto segment_tangent_outside = ag::Segment(ag::Point(5, 4), ag::Point(6, 4));
+  EXPECT_THAT(ag::intersection(circle, segment_tangent_outside), Eq(std::nullopt));
+
+  const auto segment_secant_outside = ag::Segment(ag::Point(5, 0), ag::Point(6, 0));
+  EXPECT_THAT(ag::intersection(circle, segment_secant_outside), Eq(std::nullopt));
+
+  const auto segment_secant = ag::Segment(ag::Point(-5, -3.5), ag::Point(5, 6.5));
+  EXPECT_THAT(
+    ag::intersection(circle, segment_secant),
+    Optional(
+      VariantWith<PointPair>(
+        Pair(
+          PointIsNear(ag::Point(-0.6419409, 0.8580589)),
+          PointIsNear(ag::Point(2.1419411, 3.6419411))))));
+
+  const auto segment_secant_2 = ag::Segment(ag::Point(-5, 2), ag::Point(5, 2));
+  EXPECT_THAT(
+    ag::intersection(circle, segment_secant_2),
+    Optional(
+      VariantWith<PointPair>(
+        Pair(
+          PointIsNear(ag::Point(-1, 2)),
+          PointIsNear(ag::Point(3, 2))))));
+}
+
 TEST(IntersectionTests, ArcToLine)
 {
   const auto arc = ag::Arc(

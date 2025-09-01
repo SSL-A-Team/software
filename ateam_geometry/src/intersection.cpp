@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "ateam_geometry/intersection.hpp"
+#include "ateam_geometry/do_intersect.hpp"
 #include "ateam_geometry/comparisons.hpp"
 #include "ateam_geometry/epsilon.hpp"
 #include "ateam_geometry/orientation.hpp"
@@ -73,6 +74,50 @@ std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
     return std::nullopt;
   }
 }
+
+std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
+  const Circle & circle,
+  const Segment & segment)
+{
+  const auto maybe_intersection = intersection(circle, segment.supporting_line());
+
+  if (!maybe_intersection.has_value()) {
+    return std::nullopt;
+  }
+
+  // Not using Segment::has_on() because it does not account for small floating point mismatch
+  auto point_on_segment = [&segment](const auto & p) {
+      return CGAL::squared_distance(p, segment) < kDistanceEpsilon;
+    };
+
+  const auto intersection = maybe_intersection.value();
+
+  if (std::holds_alternative<Point>(intersection)) {
+    const auto intersection_point = std::get<Point>(intersection);
+
+    if (point_on_segment(intersection_point)) {
+      return intersection_point;
+    }
+
+  } else if (std::holds_alternative<std::pair<Point, Point>>(intersection)) {
+    const auto intersection_points = std::get<std::pair<Point, Point>>(intersection);
+
+
+    bool point1_in_segment = point_on_segment(intersection_points.first);
+    bool point2_in_segment = point_on_segment(intersection_points.second);
+    if (point1_in_segment && point2_in_segment) {
+      return intersection_points;
+    } else if (point1_in_segment) {
+      return intersection_points.first;
+    } else if (point2_in_segment) {
+      return intersection_points.second;
+    }
+  }
+
+  // Intersection point/s lie outside the segment
+  return std::nullopt;
+}
+
 
 std::optional<std::variant<Point, std::pair<Point, Point>>> intersection(
   const Arc & arc,

@@ -10,6 +10,7 @@
             <v-list-item @click.stop=loadPlaybook()> Load Playbook </v-list-item>
         </v-list>
     </v-menu>
+
     <v-menu style="color: rgb(var(--v-theme-ateam-color))" location="bottom"> 
         <template v-slot:activator="{ props }">
             <v-btn class="px-0 ml-3" v-bind="props">
@@ -21,6 +22,14 @@
                 label="Use Kenobi World Topic" 
                 v-model="useKenobiTopic"
                 @change="setUseKenobiTopic()"
+                density="compact"
+                hide-details
+                class="px-2"
+            />
+            <v-checkbox
+                label="Display Field Walls"
+                v-model="fieldBoundaryVisible"
+                @change="setFieldBoundaryVisibility()"
                 density="compact"
                 hide-details
                 class="px-2"
@@ -53,18 +62,55 @@
             </v-list-item>
         </v-list>
     </v-menu>
+
+    <v-menu style="color: rgb(var(--v-theme-ateam-color))" location="bottom"> 
+        <template v-slot:activator="{ props }">
+            <v-btn class="px-0 ml-3" v-bind="props">
+                Power
+            </v-btn>
+        </template>
+        <v-list style="background-color: rgb(var(--v-theme-ateam-color));">
+            <v-list-item :key="rebootKenobi" @click.stop=rebootKenobi()>
+                <v-list-item-title> Reboot Kenobi </v-list-item-title>
+            </v-list-item>
+            <v-list-item>
+                <v-btn
+                    @mousedown="startHold('restart')" 
+                    @mouseup="stopHold('restart')"
+                    @mouseleave="stopHold('restart')"
+                > 
+                    Restart All Robots
+                </v-btn>
+            </v-list-item>
+            <v-list-item>
+                <v-btn
+                    @mousedown="startHold('shutdown')" 
+                    @mouseup="stopHold('shutdown')"
+                    @mouseleave="stopHold('shutdown')"
+                > 
+                    Shut Down All Robots
+                </v-btn>
+            </v-list-item>
+        </v-list>
+    </v-menu>
+
 </template>
 
 <script lang="ts">
+import { AppState } from "@/state";
+import { inject } from "vue";
 import { useTheme } from "vuetify";
 import "@mdi/font/css/materialdesignicons.css";
-import { arrayBuffer } from "stream/consumers";
 
 export default {
     inject: ['state'],
     data() {
         return {
+            state: inject('state') as AppState,
             useKenobiTopic: true,
+            fieldBoundaryVisible: true,
+            holdStartTime: null,
+            timeoutId: null,
             globalTheme: useTheme()
         }
     },
@@ -99,7 +145,36 @@ export default {
         setTheme(themeName: string) {
             // TODO: This doesn't seem to work
             this.globalTheme.name = themeName;
-        }
+        },
+        setFieldBoundaryVisibility() {
+            this.state.graphicState.fieldContainer.getChildByName("fieldBoundary").visible = this.fieldBoundaryVisible;
+        },
+        rebootKenobi() {
+            this.state.sendRebootKenobiRequest();
+        },
+        startHold: function(type: string) {
+            if (this.holdStartTime === null) {
+                this.holdStartTime = performance.now();
+            }
+
+            if (this.timeoutId){
+                clearTimeout(this.timeoutId);
+            }
+
+            const object = this;
+            this.timeoutId = setTimeout(function() {
+                object.holdStartTime = null;
+                object.timeoutId = null;
+
+                object.state.sendPowerRequest(-1, type);
+            }, 1000);
+        },
+        stopHold: function(type: string) {
+            this.holdStartTime = null;
+            if (this.timeoutId){
+                clearTimeout(this.timeoutId);
+            }
+        },
     }
 }
 </script>

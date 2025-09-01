@@ -23,6 +23,7 @@ export class WorldState {
     ai: AIState;
     ignoreSide: number;
     timestamp: number;
+    fps: number;
 
     constructor() {
         this.teamName = "A-Team";
@@ -39,11 +40,13 @@ export class WorldState {
         this.ignoreSide = 0;
 
         this.timestamp = Date.now();
+        this.fps = 100;
     }
 }
 
 export class GraphicState {
     fieldUpdateFunction: () => void
+    fieldContainer: PIXI.Container
     overlayContainer: PIXI.Container
     underlayContainer: PIXI.Container
     sslVisionContainers: Map<string, PIXI.Graphics> = new Map<string, PIXI.Graphics>;
@@ -55,6 +58,7 @@ export class AppState {
     renderConfig: RenderConfig;
     graphicState: GraphicState;
 
+    lastTimeReceivedKenobi: number;
     realtimeWorld: WorldState; // World that is constantly kept up to date by ROS callbacks
     world: WorldState; // World to be displayed, can be set to a world state in the past history buffer
 
@@ -86,6 +90,8 @@ export class AppState {
 
         this.realtimeWorld = new WorldState();
         this.world = this.realtimeWorld;
+
+        this.lastTimeReceivedKenobi = Date.now();
     }
 
     connectToRos(): void {
@@ -218,6 +224,37 @@ export class AppState {
             function(result: any): void {
                 if(!result.success) {
                     console.log("Failed to send simulator packet: ", result.reason);
+                }
+            });
+    }
+
+    sendPowerRequest(robot_id: number, request_type: string): void {
+        let request_int = 0;
+        if (request_type == 'shutdown') {
+            request_int = 1;
+        }
+
+        const request = new ROSLIB.ServiceRequest({
+            robot_id: robot_id,
+            request_type: request_int
+        });
+
+        this.rosManager.services.get("sendPowerRequest").callService(request,
+            function(result: any): void {
+                if(!result.success) {
+                    console.log("Failed to send power request packet: ", result.reason);
+                }
+            });
+    }
+
+    sendRebootKenobiRequest(): void {
+
+        const request = new ROSLIB.ServiceRequest({});
+
+        this.rosManager.services.get("sendRebootKenobiRequest").callService(request,
+            function(result: any): void {
+                if(!result.success) {
+                    console.log("General Kenobi has escaped: ", result.reason);
                 }
             });
     }

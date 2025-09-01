@@ -8,6 +8,7 @@
             v-on:start="startSlider"
             class="px-10 pt-2 pb-n5 mb-n5"
             align="center"
+            :color="historyWarningStyle"
         />
         <v-row class="nowrap justify-center mx-3 my-0 px-1 py-0" align="center">
             <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "rewind()">
@@ -25,7 +26,7 @@
             <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "fastforward()">
                 <v-icon icon="mdi-fast-forward"/>
             </v-btn>
-            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "goToRealTime()">
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "goToRealTime()" :color="historyWarningStyle">
                 <v-icon icon="mdi-clock-end"/>
             </v-btn>
         </v-row>
@@ -79,6 +80,7 @@ export default {
         },
         rewind: function() {
             if (this.state.selectedHistoryFrame == -1) {
+                this.playbackSpeed = 1.0;
                 this.state.selectedHistoryFrame = this.state.worldHistory.length - 1;
             }
             if (this.playbackSpeed >= 0) {
@@ -176,6 +178,13 @@ export default {
     computed: {
         selectedHistoryFrame: function() {
             return this.state.selectedHistoryFrame;
+        },
+        historyWarningStyle: function() {
+            if (this.state.selectedHistoryFrame == -1) {
+                return "";
+            } else {
+                return "red"
+            }
         }
     },
     watch: {
