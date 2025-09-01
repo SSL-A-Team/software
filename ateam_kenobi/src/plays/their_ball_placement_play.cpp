@@ -93,7 +93,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlac
       const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - offset;
       ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
         ateam_geometry::Point(x_bound, y_bound));
-      
+
       if (!CGAL::do_intersect(target_position, pathable_region)) {
         target_position = alternate_position;
       } else if (!CGAL::do_intersect(alternate_position, pathable_region)) {

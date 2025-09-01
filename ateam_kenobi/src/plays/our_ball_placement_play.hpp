@@ -54,7 +54,8 @@ private:
   double approach_radius_ = kRobotRadius + kBallRadius + 0.3;  // m
   ateam_geometry::Point approach_point_;
 
-  // Ball should have enough room for the robot to fit between it and the obstacle with a bit of extra space
+  // Ball should have enough room for the robot to fit between it and the obstacle with a bit of
+  // extra space
   double ball_distance_from_obstacle_ = kRobotDiameter + kBallRadius + 0.03;
 
   std::optional<ateam_geometry::Vector> calculateObstacleOffset(const World & world);

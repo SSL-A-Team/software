@@ -47,7 +47,8 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
   if (world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
     world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs &&
-    !(world.in_play && world.referee_info.running_command == ateam_common::GameCommand::DirectFreeTheirs))
+    !(world.in_play &&
+    world.referee_info.running_command == ateam_common::GameCommand::DirectFreeTheirs))
   {
     return stp::PlayScore::NegativeInfinity();
   }
