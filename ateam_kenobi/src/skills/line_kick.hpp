@@ -52,7 +52,7 @@ public:
 
   void SetTargetPoint(ateam_geometry::Point point)
   {
-    if (state_ != State::KickBall && state_ != State::FaceBall) {
+    if (state_ != State::KickBall) {
       target_point_ = point;
     }
   }
@@ -61,7 +61,7 @@ public:
 
   ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
 
-  bool IsDone()
+  bool IsDone() const
   {
     return state_ == State::Done;
   }
@@ -76,18 +76,18 @@ public:
     easy_move_to_.setPlannerOptions(options);
   }
 
-  void SetKickType(KickType type)
+  bool IsReady() const override
   {
-    kick_type_ = type;
+    return state_ == State::FaceBall || state_ == State::KickBall;
   }
 
-  double move_to_ball_velocity = 1.8;
-  double robot_perp_dist_to_ball_threshold = 0.008;
+  double move_to_ball_velocity = 2.0;
+  double robot_perp_dist_to_ball_threshold = 0.015;
   double angle_threshold = 0.1;
   double kick_drive_velocity = 0.4;
 
-  // Allow the robot to push up against obstacles / other robots (slowly)
-  bool cowabunga = false;
+  // Allow the robot to push up against obstacles / other robots
+  const bool cowabunga = true;
 
 /*
                                           #@%%%%%%%%%%%%%=
@@ -147,9 +147,14 @@ public:
                                   .:--==+++++++=-.
 */
 
+  void setPreKickOffset(double val)
+  {
+    pre_kick_offset = val;
+  }
+
 private:
-  const double kPreKickOffset = kRobotRadius + kBallRadius + 0.06;
-  KickType kick_type_ = KickType::Chip;
+  const double kDefaultPreKickOffset = kRobotRadius + kBallRadius + 0.06;
+  double pre_kick_offset = kDefaultPreKickOffset;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
 

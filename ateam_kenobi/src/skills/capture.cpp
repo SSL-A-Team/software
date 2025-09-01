@@ -58,7 +58,9 @@ ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const
 
 void Capture::chooseState(const World & world, const Robot & robot)
 {
-  if (ateam_geometry::norm(world.ball.pos - robot.pos) < approach_radius_) {
+  if(state_ == State::Capture && !world.ball.visible) {
+    state_ = State::Capture;
+  } else if (ateam_geometry::norm(world.ball.pos - robot.pos) < approach_radius_) {
     state_ = State::Capture;
   } else {
     state_ = State::MoveToBall;
@@ -78,7 +80,8 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
   planner_options.avoid_ball = false;
 
   easy_move_to_.setPlannerOptions(planner_options);
-  easy_move_to_.setTargetPosition(world.ball.pos);
+  easy_move_to_.setTargetPosition(world.ball.pos,
+      capture_speed_ * 0.8 * ateam_geometry::normalize(world.ball.pos - robot.pos));
 
   const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
       world.ball.pos));
@@ -98,7 +101,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   // TODO(chachmu): Should we filter this over a few frames to make sure we have the ball settled?
   if (robot.breakbeam_ball_detected) {
     ball_detected_filter_ += 1;
-    if (ball_detected_filter_ >= 8) {
+    if (ball_detected_filter_ >= 30) {
       done_ = true;
     }
   } else {
@@ -113,6 +116,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
    */
   path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
   planner_options.avoid_ball = false;
+  planner_options.footprint_inflation = 0.0;
   // planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
 
@@ -121,12 +125,20 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
   easy_move_to_.setMotionOptions(motion_options);
 
   easy_move_to_.setMaxVelocity(capture_speed_);
-  easy_move_to_.face_point(world.ball.pos);
+  if(world.ball.visible) {
+    easy_move_to_.face_point(world.ball.pos);
+  } else {
+    easy_move_to_.face_absolute(robot.theta);
+  }
 
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.dribbler_speed = 300;
+  command.twist.linear.x = capture_speed_;
+  command.twist.linear.y = 0.0;
+  command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+
+  command.dribbler_speed = kDefaultDribblerSpeed;
 
   return command;
 }

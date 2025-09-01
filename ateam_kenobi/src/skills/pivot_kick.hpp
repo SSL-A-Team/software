@@ -88,18 +88,18 @@ public:
     pivot_speed_ = speed;
   }
 
-  void SetKickType(KickType type)
+  bool IsReady() const override
   {
-    kick_type_ = type;
+    return prev_state_ == State::Pivot;
   }
 
 private:
-  KickType kick_type_ = KickType::Kick;
   ateam_geometry::Point target_point_;
   play_helpers::EasyMoveTo easy_move_to_;
   skills::Capture capture_;
   bool done_ = false;
-  double pivot_speed_ = 4.0;  // rad/s
+  double pivot_speed_ = 2.0;  // rad/s
+  double pivot_accel_ = 1.5;  // rad/s^2
 
   enum class State
   {

@@ -21,6 +21,7 @@
 
 #include "dribble.hpp"
 #include <angles/angles.h>
+#include <chrono>
 #include <vector>
 #include <ateam_geometry/normalize.hpp>
 #include "core/play_helpers/available_robots.hpp"
@@ -31,7 +32,9 @@ namespace ateam_kenobi::skills
 Dribble::Dribble(stp::Options stp_options)
 : stp::Skill(stp_options),
   easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
-{}
+{
+  back_away_duration_ = std::chrono::seconds(1);
+}
 
 void Dribble::reset()
 {
@@ -55,6 +58,10 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runFrame(const World & world, const
     case State::Dribble:
       getPlayInfo()["State"] = "Dribble to Point";
       return runDribble(world, robot);
+    case State::BackAway:
+      getPlayInfo()["State"] = "Back Away";
+      return runBackAway(world, robot);
+
     default:
       std::cerr << "Unhandled state in dribble!\n";
       return ateam_msgs::msg::RobotMotionCommand{};
@@ -70,16 +77,43 @@ ateam_geometry::Point Dribble::getStartPosition(const World & world)
 
 void Dribble::chooseState(const World & world, const Robot & robot)
 {
+  const bool robot_has_ball = robotHasBall(robot);
+
+  const double hysteresis = (state_ == State::BackAway) ? 1.0 : 0.5;
+
+  const bool ball_in_zone = world.ball.visible &&
+    ateam_geometry::norm(target_ - world.ball.pos) < hysteresis * target_threshold_;
+
+  const auto robot_target_point = target_ -
+    (kRobotRadius * ateam_geometry::normalize(target_ - robot.pos));
+  const bool robot_has_ball_in_zone = robot_has_ball &&
+    ateam_geometry::norm(robot_target_point - robot.pos) < hysteresis * target_threshold_;
+
+  const auto dist_to_ball = ateam_geometry::norm(world.ball.pos - robot.pos);
+
   switch (state_) {
     case State::MoveBehindBall:
-      if (isRobotBehindBall(world, robot, 1.0) && isRobotSettled(world, robot)) {
+      if (robot_has_ball ||
+        (isRobotBehindBall(world, robot, 1.0) && isRobotSettled(world, robot)))
+      {
         state_ = State::Dribble;
       }
       break;
     case State::Dribble:
-      // Can eventually replace this with breakbeam
-      if (!robotHasBall(robot) && !isRobotBehindBall(world, robot, 3.8)) {
+      if (ball_in_zone || robot_has_ball_in_zone) {
+        state_ = State::BackAway;
+        back_away_start_ = std::chrono::steady_clock::now();
+      } else if (!robot_has_ball && !isRobotBehindBall(world, robot, 3.8)) {
         state_ = State::MoveBehindBall;
+      }
+      break;
+    case State::BackAway:
+      if (world.ball.visible && !ball_in_zone) {
+        if (!robot_has_ball && !isRobotBehindBall(world, robot, 3.8)) {
+          state_ = State::MoveBehindBall;
+        }
+      } else if (ball_in_zone && dist_to_ball > kRobotDiameter) {
+        done_ = true;
       }
       break;
   }
@@ -159,6 +193,7 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
   path_planning::PlannerOptions planner_options;
   planner_options.footprint_inflation = 0.06;
   planner_options.draw_obstacles = true;
+  planner_options.ignore_start_obstacle = false;
   easy_move_to_.setPlannerOptions(planner_options);
   easy_move_to_.setTargetPosition(getStartPosition(world));
   easy_move_to_.setMaxVelocity(1.5);
@@ -172,9 +207,6 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
 
 ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, const Robot & robot)
 {
-  /* TODO(chachmu): If we disable default obstacles do we need to check if the target is off the
-   * field?
-   */
   path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   planner_options.footprint_inflation = 0.0;
@@ -188,11 +220,43 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, con
   // Offset the robot position so the ball is on the target point
   const auto robot_to_target = target_ - robot.pos;
   easy_move_to_.setTargetPosition(
-    target_ +
+    target_ -
     (kRobotRadius * ateam_geometry::normalize(robot_to_target)));
   auto command = easy_move_to_.runFrame(robot, world);
 
   command.dribbler_speed = 130;
+
+  return command;
+}
+
+ateam_msgs::msg::RobotMotionCommand Dribble::runBackAway(const World & world, const Robot & robot)
+{
+  path_planning::PlannerOptions planner_options;
+  planner_options.avoid_ball = false;
+  planner_options.footprint_inflation = 0.0;
+  planner_options.use_default_obstacles = false;
+  planner_options.draw_obstacles = true;
+  easy_move_to_.setPlannerOptions(planner_options);
+
+  auto command = ateam_msgs::msg::RobotMotionCommand();
+  command.dribbler_speed = 0;
+
+  easy_move_to_.setMaxVelocity(0.35);
+  easy_move_to_.face_absolute(robot.theta);
+
+  const auto ball_to_robot = robot.pos - world.ball.pos;
+  easy_move_to_.setTargetPosition(robot.pos +
+    (0.2 * ateam_geometry::normalize(ball_to_robot)));
+
+  // Wait for the dribbler to wind down before moving
+  if ((std::chrono::steady_clock::now() - back_away_duration_.value()) > back_away_start_) {
+    if (!world.ball.visible) {
+      command.twist.linear.x = -0.35;
+      command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+    } else {
+      command = easy_move_to_.runFrame(robot, world);
+    }
+  }
 
   return command;
 }
