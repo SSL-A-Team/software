@@ -48,6 +48,8 @@ public:
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
 
 private:
+  static constexpr double kMargin = 0.05;
+  static constexpr double kDefenseSegmentOffset = kRobotRadius + kMargin;
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
   std::vector<ateam_geometry::Point> getDefenderPoints(const World & world);
@@ -63,6 +65,8 @@ private:
   std::vector<ateam_geometry::Segment> getDefenseSegments(const World & world);
 
   void drawDefenseSegments(const World & world);
+
+  bool isBallInDefenseArea(const World & world);
 };
 
 }  // namespace ateam_kenobi::tactics

@@ -21,6 +21,7 @@
 
 #include "pass.hpp"
 #include <algorithm>
+#include <ateam_common/time.hpp>
 
 namespace ateam_kenobi::tactics
 {
@@ -28,9 +29,8 @@ namespace ateam_kenobi::tactics
 Pass::Pass(stp::Options stp_options)
 : stp::Tactic(stp_options),
   receiver_(createChild<skills::PassReceiver>("receiver")),
-  kick_(createChild<skills::PivotKick>("kicker", skills::KickSkill::WaitType::WaitToKick))
+  kick_(createChild<skills::UniversalKick>("kicker", skills::KickSkill::WaitType::WaitToKick))
 {
-  kick_.SetPivotSpeed(1.75);
 }
 
 void Pass::reset()
@@ -38,6 +38,7 @@ void Pass::reset()
   receiver_.reset();
   kick_.Reset();
   kicker_id_ = -1;
+  missed_ = false;
 }
 
 ateam_geometry::Point Pass::getKickerAssignmentPoint(const World & world)
@@ -60,38 +61,81 @@ void Pass::runFrame(
 {
   kicker_id_ = kicker_bot.id;
 
+  getPlayInfo()["Kicker"]["Robot"] = kicker_id_;
+
   if (ateam_geometry::norm(world.ball.vel) < 0.01) {
     receiver_.setTarget(target_);
     kick_.SetTargetPoint(target_);
   }
 
-  receiver_command = receiver_.runFrame(world, receiver_bot);
+  if (kick_.IsDone()) {
+    const ateam_geometry::Segment pass_segment{kicker_bot.pos, receiver_bot.pos};
+    const auto missed_dist_threshold = 0.5;
+    const auto ball_to_segment_dist = CGAL::approximate_sqrt(CGAL::squared_distance(pass_segment, world.ball.pos));
+    if(ball_to_segment_dist > missed_dist_threshold) {
+      // Missed or intercepted
+      missed_ = true;
+    }
+  }
 
-  const bool is_stalled = kick_.IsDone() && !receiver_.isDone() && ateam_geometry::norm(
-    world.ball.vel) < 0.02;
+  const auto kicker_ready = kick_.IsReady();
+  if(kicker_ready && !prev_kicker_ready_) {
+    kicker_ready_start_time_ = world.current_time;
+  }
+  prev_kicker_ready_ = kicker_ready;
+
+  getPlayInfo()["Kicker Ready"] = kicker_ready;
+
+  const auto ball_speed = ateam_geometry::norm(world.ball.vel);
+  getPlayInfo()["Ball Speed"] = ball_speed;
+
+  receiver_command = receiver_.runFrame(world, receiver_bot);
+  ForwardPlayInfo(receiver_);
+
+  getPlayInfo()["Kicker Done"] = kick_.IsDone();
+  getPlayInfo()["Receiver Done"] = receiver_.isDone();
+
+  const bool is_stalled = kick_.IsDone() && !receiver_.isDone() && ball_speed < 0.02;
+
+  getPlayInfo()["is_stalled"] = is_stalled;
 
   const bool is_in_receiver_territory =
-    std::sqrt(CGAL::squared_distance(world.ball.pos, receiver_bot.pos)) < 0.25;
+    std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) < 0.25;
+
+  getPlayInfo()["is_in_receiver_territory"] = is_in_receiver_territory;
 
   if (is_stalled && !is_in_receiver_territory) {
     kick_.Reset();
   }
 
+  const auto kicker_ready_time = ateam_common::TimeDiffSeconds(world.current_time, kicker_ready_start_time_);
+
+  getPlayInfo()["Ready Time"] = kicker_ready_time;
+
   auto receiver_threshold = kReceiverPositionThreshold;
   if (std::sqrt(CGAL::squared_distance(world.ball.pos, target_)) > 3.0) {
-    receiver_threshold = 5.0;
-  }
-  if (ateam_geometry::norm(receiver_bot.pos, target_) <= receiver_threshold) {
-    kick_.AllowKicking();
-  } else {
-    kick_.DisallowKicking();
+    receiver_threshold = 0.5;
   }
 
-  if (speed_) {
-    kick_.SetKickSpeed(*speed_);
+  const auto kick_speed = speed_.value_or(calculateDefaultKickSpeed(world));
+  if (ateam_geometry::norm(receiver_bot.pos, target_) <= receiver_threshold) {
+    kick_.AllowKicking();
+    kick_.SetKickSpeed(kick_speed);
+    receiver_.setExpectedKickSpeed(kick_speed);
+    getPlayInfo()["kicking_allowed"] = "yes";
+  } else if (kicker_ready && kicker_ready_time > 3.0) {
+    kick_.AllowKicking();
+    kick_.SetKickSpeed(kick_speed / 2.0);
+    receiver_.setExpectedKickSpeed(kick_speed);
+    getPlayInfo()["kicking_allowed"] = "yes (time)";
   } else {
-    kick_.SetKickSpeed(calculateDefaultKickSpeed(world));
+    kick_.DisallowKicking();
+    getPlayInfo()["kicking_allowed"] = "no";
   }
+
+  /* TODO(barulicm): The kicker should make sure it's out of the way if the ball is in receiver
+   * territory
+   */
   if (!is_in_receiver_territory) {
     kicker_command = kick_.RunFrame(world, kicker_bot);
   }
@@ -99,17 +143,17 @@ void Pass::runFrame(
 
 bool Pass::isDone()
 {
-  return receiver_.isDone();
+  return missed_ || receiver_.isDone();
 }
 
 double Pass::calculateDefaultKickSpeed(const World & world)
 {
   const auto distance = CGAL::approximate_sqrt(CGAL::squared_distance(world.ball.pos, target_));
-  const auto ball_friction_acceleration = 1.0;
-  const auto max_kick_speed = 5.0;
-  const auto velocity_at_receiver = 1.0;
+  const auto ball_friction_acceleration = 0.4;
+  const auto max_kick_speed = 3.0;
+  const auto velocity_at_receiver = 0.1;
   const auto stop_at_receiver_velocity = std::sqrt(2.0 * ball_friction_acceleration * distance);
-  return std::min((velocity_at_receiver + stop_at_receiver_velocity) / 3.0, max_kick_speed);
+  return std::min(velocity_at_receiver + stop_at_receiver_velocity, max_kick_speed);
 }
 
 }  // namespace ateam_kenobi::tactics
