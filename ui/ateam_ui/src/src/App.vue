@@ -115,6 +115,7 @@ export default {
                 this.kenobiStatus = "Hello There"
             }
 
+            console.log(this.state.realtimeWorld.fps)
             this.kenobiFPS = Math.round(this.state.realtimeWorld.fps);
             if (this.kenobiFPS >= 95) {
                 this.kenobiFPSALERT =  'ateam-color';

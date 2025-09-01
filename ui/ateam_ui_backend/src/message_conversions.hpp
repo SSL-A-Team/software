@@ -45,6 +45,8 @@
 #include <ateam_msgs/msg/playbook_state.hpp>
 #include <ateam_msgs/msg/joystick_control_status.hpp>
 
+#include <rcl_interfaces/srv/set_parameters.hpp>
+#include <rcl_interfaces/msg/parameter.hpp>
 #include <ssl_ros_bridge_msgs/srv/set_desired_keeper.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
 #include <ateam_msgs/srv/set_override_play.hpp>
@@ -154,6 +156,8 @@ nlohmann::json fromMsg(
 
 
 // Services:
+rcl_interfaces::srv::SetParameters::Request::SharedPtr toSetJoystickRobotRequest(
+  const nlohmann::json json);
 
 ssl_ros_bridge_msgs::srv::SetDesiredKeeper::Request::SharedPtr toSetDesiredKeeperRequest(
   const nlohmann::json json);
@@ -184,9 +188,6 @@ ateam_radio_msgs::srv::SendRobotPowerRequest::Request::SharedPtr toSendRobotPowe
 
 nlohmann::json fromSrvResponse(
   const ateam_radio_msgs::srv::SendRobotPowerRequest::Response & ros_response);
-
-std_srvs::srv::Trigger::Request::SharedPtr toSendRebootKenobiRequest(
-  const nlohmann::json json);
 
 nlohmann::json fromSrvResponse(
   const std_srvs::srv::Trigger::Response & ros_response);

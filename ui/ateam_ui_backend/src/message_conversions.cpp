@@ -60,6 +60,8 @@ nlohmann::json fromMsg(
     json["double_touch_enforced"] = ros_msg.double_touch_enforced;
     json["double_touch_id"] = ros_msg.double_touch_id;
 
+    json["fps"] = ros_msg.fps;
+
     return json;
 }
 
@@ -457,6 +459,22 @@ nlohmann::json fromMsg(
 
 // Services:
 
+
+rcl_interfaces::srv::SetParameters::Request::SharedPtr toSetJoystickRobotRequest(
+  const nlohmann::json json) {
+
+  auto request = std::make_shared<rcl_interfaces::srv::SetParameters::Request>();
+
+  auto param = rcl_interfaces::msg::Parameter();
+  param.name = "robot_id";
+  param.value.type = 2;
+  param.value.integer_value = json["robot_id"];
+
+  request->parameters.push_back(param);
+
+  return request;
+}
+
 ssl_ros_bridge_msgs::srv::SetDesiredKeeper::Request::SharedPtr toSetDesiredKeeperRequest(
   const nlohmann::json json) {
 
@@ -563,14 +581,6 @@ nlohmann::json fromSrvResponse(
   return json;
 }
 
-std_srvs::srv::Trigger::Request::SharedPtr toSendRebootKenobiRequest(
-  const nlohmann::json json) {
-
-  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  
-  return request;
-  }
-
 nlohmann::json fromSrvResponse(
   const std_srvs::srv::Trigger::Response & ros_response) {
 
@@ -597,15 +607,21 @@ ssl_league_msgs::msg::SimulatorControl toSimulatorControlMsg(
 
   ssl_league_msgs::msg::SimulatorControl msg;
 
-  for (auto teleport_ball_command : json["teleport_ball"]) {
-    msg.teleport_ball.push_back(toTeleportBallCommandMsg(teleport_ball_command));
+  if (json.contains("teleport_ball")) {
+    for (auto teleport_ball_command : json["teleport_ball"]) {
+      msg.teleport_ball.push_back(toTeleportBallCommandMsg(teleport_ball_command));
+    }
   }
 
-  for (auto teleport_robot_command : json["teleport_robot"]) {
-    msg.teleport_robot.push_back(toTeleportRobotCommandMsg(teleport_robot_command));
+  if (json.contains("teleport_robot")) {
+    for (auto teleport_robot_command : json["teleport_robot"]) {
+      msg.teleport_robot.push_back(toTeleportRobotCommandMsg(teleport_robot_command));
+    }
   }
 
-  msg.simulation_speed = json["simulation_speed"];
+  if (json.contains("simulation_speed")) {
+    msg.simulation_speed = json["simulation_speed"];
+  }
 
   return msg;
 }
@@ -614,13 +630,24 @@ ssl_league_msgs::msg::TeleportBallCommand toTeleportBallCommandMsg(
   const nlohmann::json json) {
 
   ssl_league_msgs::msg::TeleportBallCommand msg;
-  msg.pose = toPoseMsg(json["pose"]);
-  msg.twist = toTwistMsg(json["twist"]);
+  if (json.contains("pose")) {
+    msg.pose = toPoseMsg(json["pose"]);
+  }
+  if (json.contains("twist")) {
+    msg.twist = toTwistMsg(json["twist"]);
+  }
 
-  msg.teleport_safely = json["teleport_safely"];
-  msg.roll = json["roll"];
+  if (json.contains("teleport_safely")) {
+    msg.teleport_safely = json["teleport_safely"];
+  }
 
-  msg.by_force = json["by_force"];
+  if (json.contains("roll")) {
+    msg.roll = json["roll"];
+  }
+
+  if (json.contains("by_force")) {
+    msg.by_force = json["by_force"];
+  }
 
   return msg;
 }
@@ -631,11 +658,21 @@ ssl_league_msgs::msg::TeleportRobotCommand toTeleportRobotCommandMsg(
   ssl_league_msgs::msg::TeleportRobotCommand msg;
   msg.id = toRobotIdMsg(json["id"]);
 
-  msg.pose = toPoseMsg(json["pose"]);
-  msg.twist = toTwistMsg(json["twist"]);
+  if (json.contains("pose")) {
+    msg.pose = toPoseMsg(json["pose"]);
+  }
 
-  msg.present = json["present"];
-  msg.by_force = json["by_force"];
+  if (json.contains("twist")) {
+    msg.twist = toTwistMsg(json["twist"]);
+  }
+
+  if (json.contains("present")) {
+    msg.present = json["present"];
+  }
+
+  if (json.contains("by_force")) {
+    msg.by_force = json["by_force"];
+  }
 
   return msg;
 }
@@ -719,9 +756,15 @@ geometry_msgs::msg::Point toPointMsg(
 
   geometry_msgs::msg::Point msg;
 
-  msg.x = json["x"];
-  msg.y = json["y"];
-  msg.z = json["z"];
+  if (json.contains("x")) {
+    msg.x = json["x"];
+  }
+  if (json.contains("y")) {
+    msg.y = json["y"];
+  }
+  if (json.contains("z")) {
+    msg.z = json["z"];
+  }
 
   return msg;
 }
@@ -731,9 +774,9 @@ nlohmann::json fromMsg(
 
   nlohmann::json json;
 
-  json["x"] = ros_msg.x;
-  json["y"] = ros_msg.y;
-  json["z"] = ros_msg.z;
+    json["x"] = ros_msg.x;
+    json["y"] = ros_msg.y;
+    json["z"] = ros_msg.z;
 
   return json;
 }
@@ -743,9 +786,15 @@ geometry_msgs::msg::Vector3 toVector3Msg(
 
   geometry_msgs::msg::Vector3 msg;
 
-  msg.x = json["x"];
-  msg.y = json["y"];
-  msg.z = json["z"];
+  if (json.contains("x")) {
+    msg.x = json["x"];
+  }
+  if (json.contains("y")) {
+    msg.y = json["y"];
+  }
+  if (json.contains("z")) {
+    msg.z = json["z"];
+  }
 
   return msg;
 }
@@ -768,10 +817,19 @@ geometry_msgs::msg::Quaternion toQuaternionMsg(
 
   geometry_msgs::msg::Quaternion msg;
 
-  msg.w = json["w"];
-  msg.x = json["x"];
-  msg.y = json["y"];
-  msg.z = json["z"];
+  if (json.contains("w")) {
+    msg.w = json["w"];
+  }
+
+  if (json.contains("x")) {
+    msg.x = json["x"];
+  }
+  if (json.contains("y")) {
+    msg.y = json["y"];
+  }
+  if (json.contains("z")) {
+    msg.z = json["z"];
+  }
 
   return msg;
 }
@@ -792,8 +850,13 @@ geometry_msgs::msg::Pose toPoseMsg(
 
   geometry_msgs::msg::Pose msg;
 
-  msg.position = toPointMsg(json["position"]);
-  msg.orientation = toQuaternionMsg(json["orientation"]);
+  if (json.contains("position")) {
+    msg.position = toPointMsg(json["position"]);
+  }
+
+  if (json.contains("orientation")) {
+    msg.orientation = toQuaternionMsg(json["orientation"]);
+  }
 
   return msg;
 }
@@ -813,8 +876,15 @@ geometry_msgs::msg::Twist toTwistMsg(
   const nlohmann::json json){
 
   geometry_msgs::msg::Twist msg;
-  msg.linear = toVector3Msg(json["linear"]);
-  msg.angular = toVector3Msg(json["angular"]);
+
+
+  if (json.contains("linear")) {
+    msg.linear = toVector3Msg(json["linear"]);
+  }
+
+  if (json.contains("angular")) {
+    msg.angular = toVector3Msg(json["angular"]);
+  }
 
   return msg;
 }

@@ -66,12 +66,12 @@ export default {
     methods: {
         selectPlayOverride(selection) {
             if (selection.value) {
-                this.state.selectedPlayName = selection.id;
+                this.state.world.selectedPlayName = selection.id;
             } else {
-                this.state.selectedPlayName = "";
+                this.state.world.selectedPlayName = "";
             }
 
-            this.state.setOverridePlay(this.state.selectedPlayName);
+            this.state.setOverridePlay(this.state.world.selectedPlayName);
         },
         setPlayEnabled(play: Play) {
             this.state.setPlayEnabled(play)
@@ -98,10 +98,10 @@ export default {
             }
         },
         setListSelectedPlay() {
-            if (this.state.selectedPlayName == "") {
+            if (this.state.world.selectedPlayName == "") {
                 this.selectedPlay = [];
             } else {
-                this.selectedPlay = [this.state.selectedPlayName];
+                this.selectedPlay = [this.state.world.selectedPlayName];
             }
         },
         setAllPlayEnabledValue(value: boolean) {
@@ -122,10 +122,10 @@ export default {
     },
     computed: {
         getPlays: function() {
-            return this.state.plays;
+            return this.state.world.plays;
         },
         getSelectedPlayName: function() {
-            return this.state.selectedPlayName
+            return this.state.world.selectedPlayName
         }
     },
     watch: {
@@ -136,7 +136,9 @@ export default {
         },
         getSelectedPlayName: {
             handler() {
-                this.setListSelectedPlay();
+                if (!this.state.historyReplayIsPaused) {
+                    this.setListSelectedPlay();
+                }
             },
             deep: true
         }

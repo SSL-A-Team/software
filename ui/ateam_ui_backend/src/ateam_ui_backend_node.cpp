@@ -54,6 +54,7 @@
 #include <ateam_msgs/msg/playbook_state.hpp>
 #include <ateam_msgs/msg/joystick_control_status.hpp>
 
+#include <rcl_interfaces/srv/set_parameters.hpp>
 #include <ssl_ros_bridge_msgs/srv/set_desired_keeper.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
 #include <ateam_msgs/srv/set_override_play.hpp>
@@ -172,8 +173,38 @@ public:
       10,
       std::bind(&AteamUIBackendNode::world_callback, this, std::placeholders::_1));
 
+    playbook_subscription_ =
+      create_subscription<ateam_msgs::msg::PlaybookState>(
+      "kenobi_node/playbook_state",
+      10,
+      std::bind(&AteamUIBackendNode::playbook_callback, this, std::placeholders::_1));
+
+    referee_subscription_ =
+      create_subscription<ssl_league_msgs::msg::Referee>(
+      "/referee_messages",
+      10,
+      std::bind(&AteamUIBackendNode::referee_callback, this, std::placeholders::_1));
+
+    playinfo_subscription_ =
+      create_subscription<ateam_msgs::msg::PlayInfo>(
+      "/play_info",
+      10,
+      std::bind(&AteamUIBackendNode::playinfo_callback, this, std::placeholders::_1));
+
+    overlay_subscription_ =
+      create_subscription<ateam_msgs::msg::OverlayArray>(
+      "/overlays",
+      10,
+      std::bind(&AteamUIBackendNode::overlay_callback, this, std::placeholders::_1));
+
 
     // Alternate world status subscriptions
+
+    field_subscription_ =
+      create_subscription<ateam_msgs::msg::FieldInfo>(
+      "/field",
+      10,
+      std::bind(&AteamUIBackendNode::field_callback, this, std::placeholders::_1));
 
     /*
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
@@ -199,11 +230,13 @@ public:
     */
 
     // Params
-    // SetJoystickRobot,
-    // declare_parameter<int>("joystick_param", -1);
-
+    // declare_parameter("joystick_param", -1);
+    declare_parameter<int>("/joystick_control_node:robot_id", -1);
+    // joystick_param_ = rclcpp::Parameter("joystick_param", -1);
 
     // Services
+    set_joystick_robot_client_ =
+      create_client<rcl_interfaces::srv::SetParameters>("/joystick_control_node/set_parameters");
     set_desired_keeper_client_ =
       create_client<ssl_ros_bridge_msgs::srv::SetDesiredKeeper>("/team_client_node/set_desired_keeper");
     set_play_enabled_client_ =
@@ -254,6 +287,7 @@ private:
   // Kenobi World and required subscriptions
   rclcpp::Subscription<ateam_msgs::msg::World>::SharedPtr world_subscription_;
   rclcpp::Subscription<ateam_msgs::msg::PlaybookState>::SharedPtr playbook_subscription_;
+  rclcpp::Subscription<ssl_league_msgs::msg::Referee>::SharedPtr referee_subscription_;
   rclcpp::Subscription<ateam_msgs::msg::PlayInfo>::SharedPtr playinfo_subscription_;
   rclcpp::Subscription<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_subscription_;
   rclcpp::Subscription<ateam_msgs::msg::JoystickControlStatus>::SharedPtr joystick_subscription_;
@@ -274,6 +308,7 @@ private:
     16> connection_status_subscriptions_;
 
   // Services
+  rclcpp::Client<rcl_interfaces::srv::SetParameters>::SharedPtr set_joystick_robot_client_;
   rclcpp::Client<ssl_ros_bridge_msgs::srv::SetDesiredKeeper>::SharedPtr set_desired_keeper_client_;
   rclcpp::Client<ateam_msgs::srv::SetPlayEnabled>::SharedPtr set_play_enabled_client_;
   rclcpp::Client<ateam_msgs::srv::SetOverridePlay>::SharedPtr set_override_play_client_;
@@ -326,6 +361,10 @@ private:
 
       json_copy = json_;
 
+      json_["referee"] = nullptr;
+      json_["play_info"] = nullptr;
+      json_["overlays"] = nlohmann::json::array();
+      json_["field"] = nullptr;
       json_["responses"] = nlohmann::json::array();
     }
 
@@ -337,27 +376,38 @@ private:
   }
 
   void handle_incoming_message(const std::string &msg) {
-    RCLCPP_INFO(get_logger(), "Received from WS client: '%s'", msg.c_str());
+    // RCLCPP_INFO(get_logger(), "Received from WS client: '%s'", msg.c_str());
 
     nlohmann::json json_msg = nlohmann::json::parse(msg);
 
+    if (!json_msg.contains("msg_type")) {
+      return;
+    }
     MessageType msg_type = json_msg["msg_type"];
     switch(msg_type) {
       case MessageType::SetUseKenobiTopic:
-        RCLCPP_INFO(this->get_logger(), "CALLING setUseKenobiTopic");
+        // RCLCPP_INFO(this->get_logger(), "CALLING setUseKenobiTopic");
         return;
       case MessageType::SetJoystickRobot:
-        RCLCPP_INFO(this->get_logger(), "CALLING setJoystickRobot");
+        if (json_msg.contains("robot_id")) {
+          auto request = toSetJoystickRobotRequest(json_msg);
+
+          set_joystick_robot_client_->async_send_request(request,
+            [&](rclcpp::Client<rcl_interfaces::srv::SetParameters>::SharedFuture future) {
+              // auto response = future.get();
+
+              // std::lock_guard<std::mutex> lock(json_mutex_);
+              // json_["responses"].push_back(fromSrvResponse(*response));
+            }
+          );
+        }
         break;
       case MessageType::SetDesiredKeeper: {
         auto request = toSetDesiredKeeperRequest(json_msg);
-        RCLCPP_INFO(this->get_logger(), "CALLING setDesiredKeeperRequest: '%d'", request->desired_keeper);
 
         set_desired_keeper_client_->async_send_request(request,
           [&](rclcpp::Client<ssl_ros_bridge_msgs::srv::SetDesiredKeeper>::SharedFuture future) {
             auto response = future.get();
-            std::cerr << "DESIRED KEEPER CALLBACK: " << response->reason << std::endl;
-            RCLCPP_INFO(get_logger(), "RESPONSE: '%d: %s'", response->success, response->reason.c_str());
 
             std::lock_guard<std::mutex> lock(json_mutex_);
             json_["responses"].push_back(fromSrvResponse(*response));
@@ -367,12 +417,10 @@ private:
       }
       case MessageType::SetPlayEnabled: {
         auto request = toSetPlayEnabledRequest(json_msg);
-        RCLCPP_INFO(this->get_logger(), "CALLING setPlayEnabled");
 
         set_play_enabled_client_->async_send_request(request,
           [&](rclcpp::Client<ateam_msgs::srv::SetPlayEnabled>::SharedFuture future) {
             auto response = future.get();
-            std::cerr << "SET PLAY ENABLED CALLBACK: " << response->reason << std::endl;
 
             std::lock_guard<std::mutex> lock(json_mutex_);
             json_["responses"].push_back(fromSrvResponse(*response));
@@ -382,12 +430,10 @@ private:
       }
       case MessageType::SetOverridePlay: {
         auto request = toSetOverridePlayRequest(json_msg);
-        RCLCPP_INFO(this->get_logger(), "CALLING setOverridePlay");
 
         set_override_play_client_->async_send_request(request,
           [&](rclcpp::Client<ateam_msgs::srv::SetOverridePlay>::SharedFuture future) {
             auto response = future.get();
-            std::cerr << "SET OVERRIDE PLAY CALLBACK: " << response->reason << std::endl;
 
             std::lock_guard<std::mutex> lock(json_mutex_);
             json_["responses"].push_back(fromSrvResponse(*response));
@@ -397,12 +443,10 @@ private:
       }
       case MessageType::SetIgnoreFieldSide: {
         auto request = toIgnoreFieldSideRequest(json_msg);
-        RCLCPP_INFO(this->get_logger(), "CALLING setIgnoreFieldSide");
 
         set_ignore_field_side_client_->async_send_request(request,
           [&](rclcpp::Client<ateam_msgs::srv::SetIgnoreFieldSide>::SharedFuture future) {
             auto response = future.get();
-            std::cerr << "SET IGNORE FIELD SIDE CALLBACK: " << response->reason << std::endl;
 
             std::lock_guard<std::mutex> lock(json_mutex_);
             json_["responses"].push_back(fromSrvResponse(*response));
@@ -412,12 +456,10 @@ private:
       }
       case MessageType::SendPowerRequest: {
         auto request = toSendRobotPowerRequest(json_msg);
-        RCLCPP_INFO(this->get_logger(), "CALLING sendPowerRequest");
 
         send_robot_power_request_client_->async_send_request(request,
           [&](rclcpp::Client<ateam_radio_msgs::srv::SendRobotPowerRequest>::SharedFuture future) {
             auto response = future.get();
-            std::cerr << "SEND ROBOT POWER REQUEST CALLBACK: " << response->reason << std::endl;
 
             std::lock_guard<std::mutex> lock(json_mutex_);
             json_["responses"].push_back(fromSrvResponse(*response));
@@ -426,13 +468,11 @@ private:
         break;
       }
       case MessageType::SendRebootKenobiRequest: {
-        auto request = toSendRebootKenobiRequest(json_msg);
-        RCLCPP_INFO(this->get_logger(), "CALLING sendRebootKenobiRequest");
+        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
 
         send_reboot_kenobi_request_client_->async_send_request(request,
           [&](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future) {
             auto response = future.get();
-            std::cerr << "SEND REBOOT KENOBI REQUEST CALLBACK: " << response->success << std::endl;
 
             std::lock_guard<std::mutex> lock(json_mutex_);
             json_["responses"].push_back(fromSrvResponse(*response));
@@ -442,12 +482,10 @@ private:
       }
       case MessageType::SendSimulatorControlPacket: {
         auto request = toSendSimulatorControlPacketRequest(json_msg);
-        RCLCPP_INFO(this->get_logger(), "CALLING sendSimulatorControlPacket");
 
         send_simulator_control_packet_client_->async_send_request(request,
           [&](rclcpp::Client<ateam_msgs::srv::SendSimulatorControlPacket>::SharedFuture future) {
             auto response = future.get();
-            std::cerr << "SEND SIMULATOR CONTROL PACKET CALLBACK: " << response->reason << std::endl;
 
             std::lock_guard<std::mutex> lock(json_mutex_);
             json_["responses"].push_back(fromSrvResponse(*response));
@@ -489,6 +527,41 @@ private:
   {
     std::lock_guard<std::mutex> lock(json_mutex_);
     json_["world"] = fromMsg(world_msg);
+  }
+
+  void playbook_callback(
+    const ateam_msgs::msg::PlaybookState & playbook_msg)
+  {
+    std::lock_guard<std::mutex> lock(json_mutex_);
+    json_["playbook"] = fromMsg(playbook_msg);
+  }
+
+  void referee_callback(
+    const ssl_league_msgs::msg::Referee & referee_msg)
+  {
+    std::lock_guard<std::mutex> lock(json_mutex_);
+    json_["referee"] = fromMsg(referee_msg);
+  }
+
+  void playinfo_callback(
+    const ateam_msgs::msg::PlayInfo & play_info_msg)
+  {
+    std::lock_guard<std::mutex> lock(json_mutex_);
+    json_["play_info"] = fromMsg(play_info_msg);
+  }
+
+  void overlay_callback(
+    const ateam_msgs::msg::OverlayArray & overlay_msg)
+  {
+    std::lock_guard<std::mutex> lock(json_mutex_);
+    json_["overlays"].push_back(fromMsg(overlay_msg));
+  }
+
+  void field_callback(
+    const ateam_msgs::msg::FieldInfo & field_msg)
+  {
+    std::lock_guard<std::mutex> lock(json_mutex_);
+    json_["field"] = fromMsg(field_msg);
   }
 
   /*
@@ -543,10 +616,6 @@ private:
         {"ball", nullptr},
         {"field", nullptr},
         {"referee", nullptr},
-        {"ai", {
-          {"name", "No Play Specified"},
-          {"description", "{'No Play Specified': ''}"}
-        }},
         {"overridePlay", ""},
         {"ball_in_play", false},
         {"double_touch_envored", false},
@@ -555,6 +624,11 @@ private:
         {"fps", 0},
         }
       },
+      {"playbook", nullptr},
+      {"referee", nullptr},
+      {"play_info", nullptr},
+      {"overlays", nlohmann::json::array()},
+      {"field", nullptr},
       {"responses", nlohmann::json::array()}
     };
 
@@ -573,7 +647,6 @@ private:
 
     json_["world"]["ball"] = message_conversions::fromMsg(ateam_msgs::msg::BallState());
     json_["world"]["field"] = message_conversions::fromMsg(ateam_msgs::msg::FieldInfo());
-    json_["world"]["referee"] = message_conversions::fromMsg(ssl_league_msgs::msg::Referee());
 
     auto timestamp = rclcpp::Time(
     std::chrono::duration_cast<std::chrono::nanoseconds>(

@@ -249,7 +249,7 @@ export function updateField(state: AppState, fieldContainer: PIXI.Container) {
     updateBall(state.world.ball, fieldContainer.getChildByName("ball") as PIXI.Container, state.renderConfig);
 
     for (const [id, overlay] of field.overlays) {
-        const shouldDelete = updateOverlay(overlay, state.world.current_time, fieldContainer.getChildByName("overlay"), fieldContainer.getChildByName("underlay"), state.renderConfig);
+        const shouldDelete = updateOverlay(overlay, state.world.timestamp, fieldContainer.getChildByName("overlay"), fieldContainer.getChildByName("underlay"), state.renderConfig);
 
         if (shouldDelete) {
             field.overlays.delete(id);

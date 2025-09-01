@@ -254,13 +254,13 @@ export default {
     },
     computed: {
         getFieldDimensions: function() {
-            return this.state.world.field.fieldDimensions;
+            return this.state.world.field.fieldInfo;
         },
         getDefending: function() {
             return this.state.world.teams.get(this.state.world.team).defending;
         },
         getIgnoreFieldSide: function() {
-            return this.state.world.field.ignore_side * -this.getDefending;
+            return this.state.world.field.fieldInfo.ignore_side * -this.getDefending;
         },
         getHoverIgnoreSide: function() {
             return this.state.hoveredFieldIgnoreSide * -this.getDefending;

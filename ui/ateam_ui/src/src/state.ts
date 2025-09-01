@@ -21,6 +21,8 @@ export class WorldState {
     field: Field;
     referee: Referee;
     ai: AIState;
+    plays: Map<string, Play> = new Map<string, Play>;
+    selectedPlayName: string = null;
     overridePlay: string;
     ball_in_play: boolean;
     double_touch_enforced: boolean;
@@ -81,8 +83,6 @@ export class AppState {
 
     controlledRobot: number = null;
 
-    plays: Map<string, Play> = new Map<string, Play>;
-    selectedPlayName: string = null;
     overridePlayInProgress: string = null;
 
     hoveredFieldIgnoreSide: number = 0;

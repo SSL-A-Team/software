@@ -34,6 +34,9 @@ ateam_msgs::msg::FieldInfo toMsg(const Field & obj)
   field_msg.goal_width = obj.goal_width;
   field_msg.goal_depth = obj.goal_depth;
   field_msg.boundary_width = obj.boundary_width;
+  field_msg.defense_area_width = obj.defense_area_width;
+  field_msg.defense_area_depth = obj.defense_area_depth;
+  field_msg.center_circle_radius = obj.center_circle_radius;
 
   auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
       std::transform(

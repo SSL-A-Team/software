@@ -37,8 +37,6 @@ export class BackendMessage {
 
 export class BackendManager {
     websocket: WebSocket;
-    numReceived: number;
-    time: number;
 
     constructor(state: AppState) {
 
@@ -47,12 +45,8 @@ export class BackendManager {
         this.websocket = new WebSocket('ws://' + location.hostname + ':9001');
 
 
-        let numReceived = this.numReceived;
-        let time = this.time;
         this.websocket.onopen = function(event) {
             console.log("Connected", event);
-            time = Date.now();
-            numReceived = 0;
         };
 
         this.websocket.onmessage = this.getReceiveBackendMessage(state);
@@ -287,14 +281,37 @@ export class BackendManager {
         let world = state.realtimeWorld;
 
         const worldUpdate = this.getKenobiCallback(state);
+        const fieldUpdate = this.getFieldDimensionCallback(state.realtimeWorld);
+        const playbookUpdate = this.getPlaybookCallback(state);
+        const playInfoUpdate = this.getPlayInfoCallback(state.realtimeWorld);
+        const overlayUpdate = this.getOverlayCallback(state);
+        const refereeUpdate = this.getRefereeCallback(state.realtimeWorld);
 
         return function (event: MessageEvent) {
-            backendManager.numReceived++;
             // const msg: BackendMessage = JSON.parse(event.data);
             const msg = JSON.parse(event.data);
-            console.log(msg);
+
             worldUpdate(msg.world);
-            state.realtimeWorld.fps = 1000 * backendManager.numReceived / (Date.now() - backendManager.time);
+
+            if (msg.playbook != null) {
+                playbookUpdate(msg.playbook);
+            }
+            if (msg.referee != null) {
+                refereeUpdate(msg.referee);
+            }
+            if (msg.play_info != null) {
+                playInfoUpdate(msg.play_info);
+            }
+
+            for (const overlay of msg.overlays) {
+                overlayUpdate(overlay);
+            }
+
+            if (msg.field != null) {
+                fieldUpdate(msg.field);
+            }
+
+            state.lastTimeReceivedKenobi = Date.now();
 
             if (msg.responses.length > 0) {
                 console.log("responses["+ msg.responses.length+ "]:");
@@ -341,7 +358,6 @@ export class BackendManager {
             // Convert timestamp to millis
             appState.realtimeWorld.timestamp = (msg.timestamp.sec * 1e3) + (msg.timestamp.nanosec / 1e6);
             appState.realtimeWorld.fps = msg.fps;
-            appState.lastTimeReceivedKenobi = Date.now();
 
             if (msg.balls.length > 0) {
                 appState.realtimeWorld.ball.pose = msg.balls[0].pose;
@@ -439,10 +455,11 @@ export class BackendManager {
 	    const state = this; // fix dumb javascript things
 	    return function(msg: any): void {
 
-            let field_info = world.field;
+            let newFieldInfo = new FieldInfo();
             for (const member of Object.getOwnPropertyNames(msg)) {
-                field_info[member] = msg[member];
+                newFieldInfo[member] = msg[member];
             }
+            world.field.fieldInfo = newFieldInfo;
 
             // Don't accidentally trigger field dimension update callbacks in vue
             // let newFieldDimensions = new FieldInfo();
@@ -529,17 +546,17 @@ export class BackendManager {
             // Handle the transition time between overriding the play and
             // it showing up in the kenobi message
             if (appState.overridePlayInProgress == null) {
-                appState.selectedPlayName = msg.override_name;
+                appState.world.selectedPlayName = msg.override_name;
             } else {
-                appState.selectedPlayName = appState.overridePlayInProgress;
+                appState.world.selectedPlayName = appState.overridePlayInProgress;
             }
 
             if (msg.names.length > 0) {
-                appState.plays.clear();
+                appState.world.plays.clear();
                 for (let i = 0; i < msg.names.length; i++) {
-                    if (msg.names[i] in appState.plays) {
-                        appState.plays.get(msg.names[i]).enabled = msg.enableds[i]
-                        appState.plays.get(msg.names[i]).score = msg.scores[i]
+                    if (msg.names[i] in appState.world.plays) {
+                        appState.world.plays.get(msg.names[i]).enabled = msg.enableds[i]
+                        appState.world.plays.get(msg.names[i]).score = msg.scores[i]
                     } else {
                         let play = new Play(
                             msg.names[i],
@@ -547,7 +564,7 @@ export class BackendManager {
                             msg.scores[i]
                         )
 
-                        appState.plays.set(play.name, play);
+                        appState.world.plays.set(play.name, play);
                     }
                 }
             }
