@@ -23,7 +23,7 @@
 
 #include "core/stp/play.hpp"
 #include "tactics/standard_defense.hpp"
-#include "skills/line_kick.hpp"
+#include "skills/universal_kick.hpp"
 #include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
@@ -45,7 +45,7 @@ public:
 
 private:
   tactics::StandardDefense defense_;
-  skills::LineKick kick_;
+  skills::UniversalKick kick_;
   tactics::MultiMoveTo multi_move_to_;
 
   std::optional<ateam_geometry::Segment> getLargestWindowOnGoal(const World & world);

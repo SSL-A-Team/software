@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,48 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "defense_play.hpp"
+#include "defenders_only_play.hpp"
 #include <vector>
-#include "core/play_helpers/possession.hpp"
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 
 namespace ateam_kenobi::plays
 {
 
-DefensePlay::DefensePlay(stp::Options stp_options)
+DefendersOnlyPlay::DefendersOnlyPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  defense_tactic_(createChild<tactics::StandardDefense>("defense")),
-  blockers_(createChild<tactics::Blockers>("blockers"))
+  defense_tactic_(createChild<tactics::StandardDefense>("defense"))
 {
-  // setEnabled(false);
-  blockers_.setMaxBlockerCount(3);
+  setEnabled(false);
 }
 
-stp::PlayScore DefensePlay::getScore(const World & world)
+stp::PlayScore DefendersOnlyPlay::getScore(const World & world)
 {
-  if (!world.in_play &&
-    world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
+  if (world.referee_info.running_command == ateam_common::GameCommand::ForceStart ||
+    world.referee_info.running_command == ateam_common::GameCommand::NormalStart ||
+    world.referee_info.running_command == ateam_common::GameCommand::DirectFreeOurs ||
+    world.referee_info.running_command == ateam_common::GameCommand::DirectFreeTheirs ||
+    world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffOurs ||
+    world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffTheirs)
   {
-    return stp::PlayScore::NaN();
-  }
-
-  if (play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore::Max();
-  } else {
-    return stp::PlayScore::Min();
   }
+  return stp::PlayScore::NaN();
 }
 
-void DefensePlay::reset()
+void DefendersOnlyPlay::reset()
 {
   defense_tactic_.reset();
-  blockers_.reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefensePlay::runFrame(
+std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefendersOnlyPlay::runFrame(
   const World & world)
 {
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
@@ -69,7 +62,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefensePlay::
 
   play_helpers::GroupAssignmentSet groups;
   groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
-  groups.AddGroup("blockers", blockers_.getAssignmentPoints(world));
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
   defense_tactic_.runFrame(
@@ -77,13 +69,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefensePlay::
     motion_commands);
 
   ForwardPlayInfo(defense_tactic_);
-
-  std::vector<Robot> blockers = assignments.GetGroupFilledAssignments("blockers");
-  const auto blocker_commands =
-    blockers_.runFrame(world, assignments.GetGroupFilledAssignments("blockers"));
-  for (auto robot_ind = 0ul; robot_ind < blockers.size(); ++robot_ind) {
-    motion_commands[blockers[robot_ind].id] = blocker_commands[robot_ind];
-  }
 
   return motion_commands;
 }

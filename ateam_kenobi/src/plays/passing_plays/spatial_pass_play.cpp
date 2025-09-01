@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "spatial_pass_play.hpp"
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
@@ -43,9 +44,16 @@ SpatialPassPlay::SpatialPassPlay(stp::Options stp_options)
 
 stp::PlayScore SpatialPassPlay::getScore(const World & world)
 {
+  if (!world.in_play && (
+      world.referee_info.prev_command == ateam_common::GameCommand::PrepareKickoffOurs ||
+      world.referee_info.prev_command == ateam_common::GameCommand::PrepareKickoffTheirs))
+  {
+    return stp::PlayScore::NaN();
+  }
   if (!world.in_play &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::NormalStart)
+    world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
+    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
   {
     return stp::PlayScore::NaN();
   }
@@ -72,9 +80,10 @@ stp::PlayScore SpatialPassPlay::getScore(const World & world)
       their_robots);
   const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
   if(!largest_window) {
-    return stp::PlayScore::NaN();
+    return stp::PlayScore::Min();
   }
-  return stp::PlayScore::Max() * (largest_window->squared_length() / goal_segment.squared_length());
+  return std::min(90.0,
+      stp::PlayScore::Max() * (largest_window->squared_length() / goal_segment.squared_length()));
 }
 
 stp::PlayCompletionState SpatialPassPlay::getCompletionState()
@@ -167,15 +176,14 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
       started_ = true;
     }
 
-    getPlayInfo()["kicker"] = maybe_kicker->id;
-    getPlayInfo()["receiver"] = maybe_receiver->id;
-
     pass_tactic_.runFrame(world, *maybe_kicker, *maybe_receiver, kicker_command, receiver_command);
+
+    ForwardPlayInfo(pass_tactic_);
   }
 
   std::string play_state;
   if(!started_) {
-    play_state = "Prep";
+    play_state = "Not Started";
   } else if(!pass_tactic_.isDone()) {
     play_state = "Passing";
   } else {

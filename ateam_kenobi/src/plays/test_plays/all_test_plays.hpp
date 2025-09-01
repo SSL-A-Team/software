@@ -25,6 +25,7 @@
 #include "spinning_a_play.hpp"
 #include "test_kick_play.hpp"
 #include "test_pass_play.hpp"
+#include "test_pivot_play.hpp"
 #include "test_play.hpp"
 #include "test_spatial_map_play.hpp"
 #include "test_window_eval.hpp"

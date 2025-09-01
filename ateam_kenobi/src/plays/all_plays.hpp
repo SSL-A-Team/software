@@ -28,6 +28,7 @@
 #include "their_ball_placement_play.hpp"
 #include "wall_play.hpp"
 #include "basic_122.hpp"
+#include "defenders_only_play.hpp"
 #include "our_penalty_play.hpp"
 #include "their_penalty_play.hpp"
 #include "defense_play.hpp"
@@ -37,5 +38,6 @@
 #include "kickoff_plays/all_kickoff_plays.hpp"
 #include "stop_plays/all_stop_plays.hpp"
 #include "test_plays/all_test_plays.hpp"
+#include "util_plays/all_util_plays.hpp"
 
 #endif  // PLAYS__ALL_PLAYS_HPP_

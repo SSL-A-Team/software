@@ -51,12 +51,28 @@ private:
   std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   ateam_geometry::Point placement_point_;
 
+  double approach_radius_ = kRobotRadius + kBallRadius + 0.3;  // m
+  ateam_geometry::Point approach_point_;
+
+  // Ball should have enough room for the robot to fit between it and the obstacle with a bit of
+  // extra space
+  double ball_distance_from_obstacle_ = kRobotDiameter + kBallRadius + 0.03;
+
+  std::optional<ateam_geometry::Vector> calculateObstacleOffset(const World & world);
+
+
   enum class State
   {
+    Extracting,
     Passing,
     Placing,
     Done
   } state_ = State::Passing;
+
+  void runExtracting(
+    const std::vector<Robot> & available_robots, const World & world,
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    16> & motion_commands);
 
   void runPassing(
     const std::vector<Robot> & available_robots, const World & world,
@@ -72,6 +88,10 @@ private:
     const std::vector<Robot> & available_robots, const World & world,
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
     16> & motion_commands);
+
+  void DrawKeepoutArea(
+    const ateam_geometry::Point & ball_pos,
+    const ateam_geometry::Point & placement_point);
 };
 
 }  // namespace ateam_kenobi::plays
