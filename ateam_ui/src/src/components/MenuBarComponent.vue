@@ -70,6 +70,9 @@
             </v-btn>
         </template>
         <v-list style="background-color: rgb(var(--v-theme-ateam-color));">
+            <v-list-item :key="rebootKenobi" @click.stop=rebootKenobi()>
+                <v-list-item-title> Reboot Kenobi </v-list-item-title>
+            </v-list-item>
             <v-list-item>
                 <v-btn
                     @mousedown="startHold('restart')" 
@@ -145,6 +148,9 @@ export default {
         },
         setFieldBoundaryVisibility() {
             this.state.graphicState.fieldContainer.getChildByName("fieldBoundary").visible = this.fieldBoundaryVisible;
+        },
+        rebootKenobi() {
+            this.state.sendRebootKenobiRequest();
         },
         startHold: function(type: string) {
             if (this.holdStartTime === null) {

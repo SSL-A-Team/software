@@ -219,7 +219,7 @@ export default {
         batteryIcon: function(percentage) {
             if (!percentage || percentage <= 5) {
                 return "mdi-battery-alert-variant-outline";
-            } else if (percentage >= 100) {
+            } else if (percentage >= 95) {
                 return "mdi-battery";
             }
 
