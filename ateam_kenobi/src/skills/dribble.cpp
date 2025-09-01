@@ -21,10 +21,10 @@
 
 #include "dribble.hpp"
 #include <angles/angles.h>
+#include <chrono>
 #include <vector>
 #include <ateam_geometry/normalize.hpp>
 #include "core/play_helpers/available_robots.hpp"
-#include <chrono>
 
 namespace ateam_kenobi::skills
 {
@@ -89,10 +89,13 @@ void Dribble::chooseState(const World & world, const Robot & robot)
   const bool robot_has_ball_in_zone = robot_has_ball &&
     ateam_geometry::norm(robot_target_point - robot.pos) < hysteresis * target_threshold_;
 
+  const auto dist_to_ball = ateam_geometry::norm(world.ball.pos - robot.pos);
+
   switch (state_) {
     case State::MoveBehindBall:
       if (robot_has_ball ||
-        (isRobotBehindBall(world, robot, 1.0) && isRobotSettled(world, robot))) {
+        (isRobotBehindBall(world, robot, 1.0) && isRobotSettled(world, robot)))
+      {
         state_ = State::Dribble;
       }
       break;
@@ -109,7 +112,7 @@ void Dribble::chooseState(const World & world, const Robot & robot)
         if (!robot_has_ball && !isRobotBehindBall(world, robot, 3.8)) {
           state_ = State::MoveBehindBall;
         }
-      } else if (ball_in_zone && ateam_geometry::norm(world.ball.pos - robot.pos) > kRobotDiameter) {
+      } else if (ball_in_zone && dist_to_ball > kRobotDiameter) {
         done_ = true;
       }
       break;

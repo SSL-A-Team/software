@@ -83,7 +83,6 @@ private:
   KickType last_used_ = KickType::Unset;
 
   KickType ChooseType() const;
-
 };
 
 }  // namespace ateam_kenobi::skills

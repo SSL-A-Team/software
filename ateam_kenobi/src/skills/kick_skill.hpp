@@ -29,7 +29,8 @@ namespace ateam_kenobi::skills
 class KickSkill : public stp::Skill
 {
 public:
-  enum class KickChip {
+  enum class KickChip
+  {
     Kick,
     Chip
   };

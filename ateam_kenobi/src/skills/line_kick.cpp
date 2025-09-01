@@ -21,6 +21,7 @@
 
 #include "line_kick.hpp"
 #include <angles/angles.h>
+#include <algorithm>
 #include <vector>
 #include <ateam_geometry/normalize.hpp>
 
@@ -187,7 +188,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunMoveBehindBall(
   const auto ball_to_target = target_point_ - world.ball.pos;
 
   // Cowabunga it is
-  if (this->cowabunga && ateam_geometry::norm(robot_to_prekick) < 2.5 * kRobotDiameter){
+  if (this->cowabunga && ateam_geometry::norm(robot_to_prekick) < 2.5 * kRobotDiameter) {
     planner_options.footprint_inflation = -0.1;
     obstacle_radius_multiplier = 5.0;
     getPlayInfo()["COWABUNGA MODE"] = "COWABUNGA";
@@ -269,7 +270,7 @@ ateam_msgs::msg::RobotMotionCommand LineKick::RunKickBall(const World & world, c
   // Override the velocity to move directly into the ball
   command.twist.linear.x = std::cos(robot.theta) * kick_drive_velocity;
   command.twist.linear.y = std::sin(robot.theta) * kick_drive_velocity;
-    command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_WORLD;
+  command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_WORLD;
   // command.twist.linear.x = kick_drive_velocity;
   // command.twist.linear.y = 0;
   // command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;

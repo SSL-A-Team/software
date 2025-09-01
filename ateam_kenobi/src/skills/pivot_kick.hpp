@@ -88,7 +88,8 @@ public:
     pivot_speed_ = speed;
   }
 
-  bool IsReady() const override {
+  bool IsReady() const override
+  {
     return prev_state_ == State::Pivot;
   }
 
