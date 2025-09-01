@@ -36,6 +36,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   CUDA_ARCHITECTURES native
 )
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--maxrregcount 62>)
+if(ATEAM_SPATIAL_CUDA_DEBUG)
+  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-g -G>)
+endif()
 if(ATEAM_SPATIAL_CUDA_COMPILE_STATS)
   target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xptxas="-v">)
 endif()

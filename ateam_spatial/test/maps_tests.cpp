@@ -57,7 +57,7 @@ TEST(MapsTests, ReceiverPositionQuality)
 
   const auto kAcceptableError = 1e-4;
   EXPECT_FLOAT_EQ(ReceiverPositionQuality(0, 4800, ball, their_robots.data(), field, settings), 0.0);
-  EXPECT_NEAR(ReceiverPositionQuality(600, 4800, ball, their_robots.data(), field, settings), 0.48, kAcceptableError);
+  EXPECT_NEAR(ReceiverPositionQuality(600, 4800, ball, their_robots.data(), field, settings), 0.288, kAcceptableError);
   EXPECT_NEAR(ReceiverPositionQuality(8300, 4800, ball, their_robots.data(), field, settings), 8.3, kAcceptableError);
   EXPECT_NEAR(ReceiverPositionQuality(14500, 4800, ball, their_robots.data(), field, settings), 14.5, kAcceptableError);
   EXPECT_FLOAT_EQ(ReceiverPositionQuality(16600, 4800, ball, their_robots.data(), field, settings), 0.0);

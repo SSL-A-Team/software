@@ -50,10 +50,15 @@ TEST(SpatialEvaluatorTests, Basic)
 
   eval.CopyMapBuffer(MapId::ReceiverPositionQuality, buffer_out);
 
-  EXPECT_EQ(buffer_out.size(), 1'593'600);
+  const auto resolution = eval.GetSettings().resolution;
+  const auto expected_width = (field.field_width + (2 * field.boundary_width)) / resolution;
+  const auto expected_length = (field.field_length + (2 * field.boundary_width)) / resolution;
+  const auto expected_size = expected_length * expected_width;
+
+  EXPECT_EQ(buffer_out.size(), expected_size);
 
   std::vector<uint8_t> rendered_buffer;
   eval.RenderMapBuffer(MapId::ReceiverPositionQuality, rendered_buffer);
 
-  EXPECT_EQ(rendered_buffer.size(), 1'593'600);
+  EXPECT_EQ(rendered_buffer.size(), expected_size);
 }
