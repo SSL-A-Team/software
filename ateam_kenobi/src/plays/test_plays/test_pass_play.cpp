@@ -48,8 +48,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay:
   std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
 
   if(first_frame_) {
-    const auto furthest_target_iter = std::max_element(targets_.begin(), targets_.end(), [&world](const auto & t1, const auto & t2) {
-      return CGAL::squared_distance(world.ball.pos, t1) < CGAL::squared_distance(world.ball.pos, t2);
+    const auto furthest_target_iter = std::max_element(targets_.begin(), targets_.end(),
+        [&world](const auto & t1, const auto & t2) {
+          return CGAL::squared_distance(world.ball.pos, t1) < CGAL::squared_distance(world.ball.pos,
+          t2);
     });
     target_ind_ = std::distance(targets_.begin(), furthest_target_iter);
     first_frame_ = false;
@@ -73,14 +75,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay:
   pass_tactic_.setTarget(targets_[target_ind_]);
 
   play_helpers::GroupAssignmentSet groups;
-  
+
   const auto kicker_assignment_point = pass_tactic_.getKickerAssignmentPoint(world);
   groups.AddPosition("kicker", kicker_assignment_point);
-  getOverlays().drawCircle("kick_assignment_pt", ateam_geometry::makeCircle(kicker_assignment_point, 0.05), "#00000000", "LightGreen");
+  getOverlays().drawCircle("kick_assignment_pt",
+      ateam_geometry::makeCircle(kicker_assignment_point, 0.05), "#00000000", "LightGreen");
 
   const auto receiver_assignment_point = pass_tactic_.getReceiverAssignmentPoint();
   groups.AddPosition("receiver", receiver_assignment_point);
-  getOverlays().drawCircle("receive_assignment_pt", ateam_geometry::makeCircle(receiver_assignment_point, 0.05), "#00000000", "red");
+  getOverlays().drawCircle("receive_assignment_pt",
+      ateam_geometry::makeCircle(receiver_assignment_point, 0.05), "#00000000", "red");
 
   const auto available_robots = play_helpers::getAvailableRobots(world);
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
@@ -95,8 +99,10 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay:
   const auto kicker = *kicker_assignment;
   const auto receiver = *receiver_assignment;
 
-  getOverlays().drawCircle("kicker_halo", ateam_geometry::makeCircle(kicker.pos, kRobotRadius + 0.1), "LightGreen", "#00000000");
-  getOverlays().drawCircle("receiver_halo", ateam_geometry::makeCircle(receiver.pos, kRobotRadius + 0.1), "red", "#00000000");
+  getOverlays().drawCircle("kicker_halo",
+      ateam_geometry::makeCircle(kicker.pos, kRobotRadius + 0.1), "LightGreen", "#00000000");
+  getOverlays().drawCircle("receiver_halo",
+      ateam_geometry::makeCircle(receiver.pos, kRobotRadius + 0.1), "red", "#00000000");
 
   getPlayInfo()["kicker_id"] = kicker.id;
   getPlayInfo()["receiver_id"] = receiver.id;

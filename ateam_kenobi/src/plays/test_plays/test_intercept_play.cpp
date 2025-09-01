@@ -49,7 +49,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestIntercept
 
   const auto available_robots = play_helpers::getAvailableRobots(world);
   if (available_robots.size() >= 2) {
-
     const auto receiver = available_robots[0];
     const auto kicker = available_robots[1];
 
@@ -74,8 +73,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestIntercept
       ball_has_been_sensed_ = true;
     }
 
-    if (ball_has_been_sensed_ && !ball_has_been_kicked_
-      &&  ball_speed > 0.3 * kick_speed){
+    if (ball_has_been_sensed_ && !ball_has_been_kicked_ &&
+      ball_speed > 0.3 * kick_speed)
+    {
       ball_has_been_kicked_ = true;
     }
 
@@ -95,7 +95,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestIntercept
       double t_error = angles::shortest_angular_distance(receiver.theta, target_angle);
       receiver_command.twist.angular.z = 1.5 * t_error;
     }
-  } 
+  }
 
   return maybe_motion_commands;
 }

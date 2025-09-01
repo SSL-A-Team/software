@@ -108,9 +108,11 @@ ateam_geometry::Segment PassToLanePlay::getTargetSegment(const World & world)
   } else {
     const auto lookback = 3.0;
     return ateam_geometry::Segment{
-      ateam_geometry::Point{std::min(std::max(lane_segment.source().x(), ball_x - lookback), ball_x),
+      ateam_geometry::Point{std::min(std::max(lane_segment.source().x(), ball_x - lookback),
+            ball_x),
         lane_segment.source().y()},
-      ateam_geometry::Point{std::min(std::max(lane_segment.target().x(), ball_x - lookback), ball_x),
+      ateam_geometry::Point{std::min(std::max(lane_segment.target().x(), ball_x - lookback),
+            ball_x),
         lane_segment.target().y()}
     };
   }

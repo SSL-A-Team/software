@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "spatial_pass_play.hpp"
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
@@ -81,7 +82,8 @@ stp::PlayScore SpatialPassPlay::getScore(const World & world)
   if(!largest_window) {
     return stp::PlayScore::Min();
   }
-  return std::min(90.0, stp::PlayScore::Max() * (largest_window->squared_length() / goal_segment.squared_length()));
+  return std::min(90.0,
+      stp::PlayScore::Max() * (largest_window->squared_length() / goal_segment.squared_length()));
 }
 
 stp::PlayCompletionState SpatialPassPlay::getCompletionState()

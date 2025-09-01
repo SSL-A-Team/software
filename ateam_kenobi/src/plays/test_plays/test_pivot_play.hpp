@@ -70,7 +70,9 @@ public:
       if(!prev_at_target_) {
         arrival_time_ = world.current_time;
       }
-      const auto seconds_at_target = std::chrono::duration_cast<std::chrono::duration<double>>(world.current_time - arrival_time_).count();
+      const auto seconds_at_target =
+        std::chrono::duration_cast<std::chrono::duration<double>>(world.current_time -
+          arrival_time_).count();
       play_info["Time At Target"] = seconds_at_target;
       if(seconds_at_target > wait_time_) {
         target_angle_ += target_step_;
@@ -85,10 +87,9 @@ public:
 
     play_info["Y Cmd"] = motion_commands[robot.id]->twist.linear.y;
     play_info["Omega Cmd"] = motion_commands[robot.id]->twist.angular.z;
-    
+
     return motion_commands;
   }
-
 
 private:
   static constexpr double target_step_ = M_PI / 2.0;
@@ -155,7 +156,6 @@ private:
     command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
     return command;
   }
-
 };
 
 }  // namespace ateam_kenobi::plays
