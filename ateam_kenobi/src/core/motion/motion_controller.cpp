@@ -363,24 +363,6 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
         (calculated_velocity * target_direction);
     }
 
-    if (std::isnan(vel_vector.x())) {
-      std::cerr << target_index << " index: "<< target.x() <<", " <<target.y() << std::endl;
-      std::cerr << "robot: "<< robot.pos.x() <<", " <<robot.pos.y() << std::endl;
-      std::cerr << "dt: "<< dt << std::endl;
-      std::cerr << "error: "<< error.x() <<", " <<error.y() << std::endl;
-      std::cerr << "error_body: "<< error_body_frame.x() <<", " <<error_body_frame.y() << std::endl;
-      std::cerr << "world feedback: "<< world_feedback.x() <<", " <<world_feedback.y() << std::endl;
-      std::cerr << "xy feedback: "<< x_feedback <<", " <<y_feedback << std::endl;
-      std::cerr << "crosstrack error: "<< cross_track_error << std::endl;
-      std::cerr << "crosstrack feedback: "<< cross_track_feedback << std::endl;
-      std::cerr << "target_direction: "<< target_direction.x() <<", " <<target_direction.y() << std::endl;
-      std::cerr << "calculated_velocity "<< calculated_velocity << std::endl;
-
-      std::cerr << "--------------------" << std::endl;
-      // std::cerr << target_position.x() <<", " <<target_position.y() << std::endl;
-
-    }
-
     // clamp to max/min velocity
     if (ateam_geometry::norm(vel_vector) > this->v_max) {
       vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);

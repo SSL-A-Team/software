@@ -194,11 +194,6 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurBallPlacem
             target_position = alternate_position;
           }
         }
-      }
-
-        emt.setTargetPosition(target_position);
-        emt.face_point(world.ball.pos);
-        maybe_motion_commands[robot.id] = emt.runFrame(robot, world);
 
         emt.setTargetPosition(target_position);
         emt.face_point(world.ball.pos);
