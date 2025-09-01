@@ -42,7 +42,7 @@ TrianglePassPlay::TrianglePassPlay(stp::Options stp_options)
   positions.push_back(positions.back().transform(rotate_transform));
   positions.push_back(positions.back().transform(rotate_transform));
   for (auto & p : positions) {
-    p += ateam_geometry::Vector(0, 0);
+    p += ateam_geometry::Vector(0, 2);
   }
 }
 
