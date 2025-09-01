@@ -1,6 +1,7 @@
 import { GraphicState, RenderConfig } from "@/state";
 import * as PIXI from "pixi.js";
 import { Buffer } from "buffer";
+import { Vector3 } from "roslib";
 
 export enum OverlayType {
     Point = 0,
@@ -12,6 +13,7 @@ export enum OverlayType {
     Heatmap,
     Custom,
     Arc,
+    Arrows,
 }
 
 // Overlay Types
@@ -24,6 +26,7 @@ export class Overlay {
     command: number
     position: Point
     scale: Point
+    scales: ROSLIB.Vector3[]
     stroke_color: string = "black"
     fill_color: string = "black"
     stroke_width: number = 20
@@ -199,6 +202,36 @@ export function drawOverlay(overlay: Overlay, container: PIXI.Container, renderC
             graphic.beginFill(0, 0);
             graphic.lineStyle(overlay.stroke_width, overlay.stroke_color);
             graphic.arc(0, 0, scale * overlay.scale.x / 2, -overlay.start_angle + renderConfig.angle, -overlay.end_angle + renderConfig.angle, true);
+            graphic.endFill();
+            break;
+        case OverlayType.Arrows:
+            graphic.beginFill(0, 0);
+            graphic.lineStyle(overlay.stroke_width, overlay.stroke_color);
+            for(let i = 0; i < overlay.points.length; i++) {
+                const startPoint = overlay.points[i];
+                let endPoint = new Vector3;
+                const vector = overlay.scales[i];
+                endPoint.x = startPoint.x + vector.x;
+                endPoint.y = startPoint.y + vector.y;
+
+                graphic.moveTo(scale * startPoint.x, -scale * startPoint.y);
+                graphic.lineTo(scale * endPoint.x, -scale * endPoint.y);
+
+                const length = 0.1 * Math.sqrt(vector.x**2 + vector.y**2);
+                const vector_angle = Math.atan2(vector.y, vector.x);
+                const angle1 = vector_angle + (Math.PI/8) - (Math.PI/4);
+                const angle2 = vector_angle - (Math.PI/8) - (Math.PI/4);
+                graphic.moveTo(scale * endPoint.x, -scale * endPoint.y);
+                graphic.lineTo(
+                    scale * (endPoint.x - (length * Math.cos(angle1) - length * Math.sin(angle1))),
+                    -scale * (endPoint.y - (length * Math.cos(angle1) + length * Math.sin(angle1)))
+                );
+                graphic.moveTo(scale * endPoint.x, -scale * endPoint.y);
+                graphic.lineTo(
+                    scale * (endPoint.x - (length * Math.cos(angle2) - length * Math.sin(angle2))),
+                    -scale * (endPoint.y - (length * Math.cos(angle2) + length * Math.sin(angle2)))
+                );
+            }
             graphic.endFill();
             break;
     }

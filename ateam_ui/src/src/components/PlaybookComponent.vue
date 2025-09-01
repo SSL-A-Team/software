@@ -21,6 +21,7 @@
                     v-for="[name, play] of getPlays"
                         :key="name"
                         :value="name"
+                        :style="{'background-color': getColor(name)}"
                 >
                     <v-container class="flex-grow-1 flex-shrink-0 overflow-hidden" style="max-width:11em;">
                         <v-row justify="space-between" style="flex-wrap: nowrap;">
@@ -109,6 +110,15 @@ export default {
                 this.setPlayEnabled(play);
             }
         },
+        getColor(name: string) {
+            if (name.toLowerCase().includes("test")) {
+                return "#212150FF";
+            } else if (name.toLowerCase().includes("pass")) {
+                return "#502150FF";
+            } else {
+                return "#212121FF";
+            }
+        }
     },
     computed: {
         getPlays: function() {

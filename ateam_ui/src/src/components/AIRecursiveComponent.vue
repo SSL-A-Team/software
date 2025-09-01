@@ -54,7 +54,7 @@ export default {
         },
         isLeaf: function() {
             return !Array.isArray(this.node) &&
-                (typeof this.node === "string" || typeof this.node=== "number" || typeof this.node === "boolean")
+                (typeof this.node === "string" || typeof this.node=== "number" || typeof this.node === "boolean" || this.node === null)
         },
         isArray: function() {
             return Array.isArray(this.node)
