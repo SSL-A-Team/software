@@ -347,7 +347,7 @@ std::vector<int> km_assignment(
     }
   }
 
-  for (size_t x = 0; x < cost.rows(); ++x) {
+  for (auto x = 0l; x < cost.rows(); ++x) {
     // If we assign an x a y that did not exist in the original,
     // (or vice versa) set it to not assigned (-1)
     if (xy[x] >= static_cast<int>(cost_matrix.cols())) {
