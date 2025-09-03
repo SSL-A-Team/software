@@ -22,6 +22,7 @@
 #include <ateam_geometry/nearest_point.hpp>
 #include "core/path_planning/obstacles.hpp"
 #include "core/path_planning/escape_velocity.hpp"
+#include "world_to_body_vel.hpp"
 
 namespace ateam_kenobi::motion
 {
@@ -116,9 +117,10 @@ std::array<std::optional<BodyVelocity>,
 
     if(!path.empty()) {
       // TODO(barulicm) change return type of get_command to BodyVelocity
-      const auto controller_vel = controller.get_command(robot, current_time,
+      auto controller_vel = controller.get_command(robot, current_time,
           intent.motion_options);
       if (use_controller_linvel) {
+        ConvertWorldVelsToBodyVels(controller_vel, robot);
         body_velocity.linear = {
           controller_vel.twist.linear.x,
           controller_vel.twist.linear.y

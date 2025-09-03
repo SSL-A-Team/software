@@ -262,7 +262,7 @@ RobotCommand Goalie::runBlockBall(
     return runDefaultBehavior(world, goalie, ball_state);
   }
 
-  ateam_geometry::Point target_point;
+  ateam_geometry::Point target_point{0.0, 0.0};
 
   if (const auto * point = boost::get<ateam_geometry::Point>(&*maybe_intersection)) {
     target_point = *point;
