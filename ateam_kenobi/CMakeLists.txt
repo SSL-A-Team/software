@@ -17,9 +17,7 @@ find_package(ateam_geometry REQUIRED)
 find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
-find_package(OpenCV REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(ateam_spatial REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/kenobi_node.cpp
@@ -60,7 +58,6 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/kickoff_plays/offense/our_kickoff_prep_play.cpp
   src/plays/passing_plays/pass_to_lane_play.cpp
   src/plays/passing_plays/pass_to_segment_play.cpp
-  src/plays/passing_plays/spatial_pass_play.cpp
   src/plays/stop_plays/default_stop_play.cpp
   src/plays/stop_plays/defensive_stop_play.cpp
   src/plays/stop_plays/offensive_stop_play.cpp
@@ -131,9 +128,7 @@ ament_target_dependencies(
   "control_toolbox"
   "OMPL"
   "angles"
-  OpenCV
   nlohmann_json
-  ateam_spatial
 )
 rclcpp_components_register_node(
   kenobi_node_component

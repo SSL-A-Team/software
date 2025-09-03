@@ -54,7 +54,6 @@
 #include "plays/halt_play.hpp"
 #include "core/defense_area_enforcement.hpp"
 #include "core/joystick_enforcer.hpp"
-#include <ateam_spatial/spatial_evaluator.hpp>
 #include "core/fps_tracker.hpp"
 
 namespace ateam_kenobi
@@ -74,8 +73,6 @@ public:
     overlays_(""),
     game_controller_listener_(*this)
   {
-    world_.spatial_evaluator = &spatial_evaluator_;
-
     initialize_robot_ids();
 
     declare_parameter<bool>("use_world_velocities", false);
@@ -173,7 +170,6 @@ public:
   }
 
 private:
-  ateam_spatial::SpatialEvaluator spatial_evaluator_;
   World world_;
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
@@ -414,7 +410,6 @@ private:
     }
     in_play_eval_.Update(world_);
     double_touch_eval_.update(world_, overlays_);
-    UpdateSpatialEvaluator();
     if (get_parameter("use_emulated_ballsense").as_bool()) {
       ballsense_emulator_.Update(world_);
     }
@@ -504,41 +499,6 @@ private:
   std::filesystem::path getCacheDirectory()
   {
     return ateam_common::getCacheDirectory() / "kenobi";
-  }
-
-  void UpdateSpatialEvaluator()
-  {
-    ateam_spatial::FieldDimensions field{
-      world_.field.field_width,
-      world_.field.field_length,
-      world_.field.goal_width,
-      world_.field.goal_depth,
-      world_.field.boundary_width,
-      world_.field.defense_area_width,
-      world_.field.defense_area_depth
-    };
-    ateam_spatial::Ball ball{
-      static_cast<float>(world_.ball.pos.x()),
-      static_cast<float>(world_.ball.pos.y()),
-      static_cast<float>(world_.ball.vel.x()),
-      static_cast<float>(world_.ball.vel.y())
-    };
-    auto make_spatial_robot = [](const Robot & robot){
-        return ateam_spatial::Robot{
-        robot.visible,
-        static_cast<float>(robot.pos.x()),
-        static_cast<float>(robot.pos.y()),
-        static_cast<float>(robot.theta),
-        static_cast<float>(robot.vel.x()),
-        static_cast<float>(robot.vel.y()),
-        static_cast<float>(robot.omega)
-        };
-      };
-    std::array<ateam_spatial::Robot, 16> our_robots;
-    std::ranges::transform(world_.our_robots, our_robots.begin(), make_spatial_robot);
-    std::array<ateam_spatial::Robot, 16> their_robots;
-    std::ranges::transform(world_.their_robots, their_robots.begin(), make_spatial_robot);
-    spatial_evaluator_.UpdateMaps(field, ball, our_robots, their_robots);
   }
 };
 
