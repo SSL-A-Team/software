@@ -26,7 +26,7 @@
 // #include "kick_on_goal_play.hpp"
 // #include "our_ball_placement_play.hpp"
 // #include "their_ball_placement_play.hpp"
-// #include "wall_play.hpp"
+#include "wall_play.hpp"
 // #include "basic_122.hpp"
 // #include "defenders_only_play.hpp"
 // #include "our_penalty_play.hpp"

@@ -74,7 +74,7 @@ target_sources(kenobi_node_component PRIVATE
   # src/plays/kick_on_goal_play.cpp
   # src/plays/our_ball_placement_play.cpp
   # src/plays/their_ball_placement_play.cpp
-  # src/plays/wall_play.cpp
+  src/plays/wall_play.cpp
   # src/plays/basic_122.cpp
   # src/plays/defenders_only_play.cpp
   # src/plays/our_penalty_play.cpp
@@ -87,12 +87,12 @@ target_sources(kenobi_node_component PRIVATE
 # Tactic Sources
 #
 target_sources(kenobi_node_component PRIVATE
-  src/tactics/blockers.cpp
-  src/tactics/defenders.cpp
-  src/tactics/multi_move_to.cpp
-  src/tactics/pass_to_segment.cpp
-  src/tactics/pass.cpp
-  src/tactics/standard_defense.cpp
+  # src/tactics/blockers.cpp
+  # src/tactics/defenders.cpp
+  # src/tactics/multi_move_to.cpp
+  # src/tactics/pass_to_segment.cpp
+  # src/tactics/pass.cpp
+  # src/tactics/standard_defense.cpp
 )
 
 #
@@ -101,14 +101,14 @@ target_sources(kenobi_node_component PRIVATE
 target_sources(kenobi_node_component PRIVATE
   src/skills/goalie.cpp
   src/skills/kick_skill.cpp
-  src/skills/lane_idler.cpp
+  # src/skills/lane_idler.cpp
   src/skills/line_kick.cpp
-  src/skills/pass_receiver.cpp
-  src/skills/pivot_kick.cpp
-  src/skills/dribble.cpp
-  src/skills/extract.cpp
-  src/skills/capture.cpp
-  src/skills/universal_kick.cpp
+  # src/skills/pass_receiver.cpp
+  # src/skills/pivot_kick.cpp
+  # src/skills/dribble.cpp
+  # src/skills/extract.cpp
+  # src/skills/capture.cpp
+  # src/skills/universal_kick.cpp
 )
 
 target_include_directories(kenobi_node_component PUBLIC

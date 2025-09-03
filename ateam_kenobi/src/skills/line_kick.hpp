@@ -22,10 +22,10 @@
 #ifndef SKILLS__LINE_KICK_HPP_
 #define SKILLS__LINE_KICK_HPP_
 
-#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
 #include "kick_skill.hpp"
 #include "core/types/world.hpp"
+#include "core/types/robot_command.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::skills
@@ -59,7 +59,7 @@ public:
 
   ateam_geometry::Point GetAssignmentPoint(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+  RobotCommand RunFrame(const World & world, const Robot & robot);
 
   bool IsDone() const
   {
@@ -176,9 +176,9 @@ private:
   bool IsRobotFacingBall(const Robot & robot);
   bool IsBallMoving(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand RunMoveBehindBall(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand RunFaceBall(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand RunKickBall(const World & world, const Robot & robot);
+  RobotCommand RunMoveBehindBall(const World & world, const Robot & robot);
+  RobotCommand RunFaceBall(const World & world, const Robot & robot);
+  RobotCommand RunKickBall(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills
