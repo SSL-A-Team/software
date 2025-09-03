@@ -1,0 +1,1 @@
+// Some sort of basic (non?)linear model to predict the expected trajectory of a chip that leaves the ground

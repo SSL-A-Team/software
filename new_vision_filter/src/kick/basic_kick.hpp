@@ -1,0 +1,1 @@
+// Some sort of basic linear model to predict the expected trajectory of a kick on the ground
