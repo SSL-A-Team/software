@@ -28,7 +28,6 @@
 #include <ateam_msgs/msg/overlay_array.hpp>
 #include <ateam_geometry/arc.hpp>
 #include <ateam_geometry/types.hpp>
-#include <opencv2/core/mat.hpp>
 
 namespace ateam_kenobi::visualization
 {
@@ -85,14 +84,6 @@ public:
     const std::vector<std::pair<ateam_geometry::Point, ateam_geometry::Vector>> & arrows,
     const std::string & stroke_color = "blue", const uint8_t stroke_width = 5,
     const uint32_t lifetime = kDefaultLifetime);
-
-  void drawHeatmap(
-    const std::string & name, const ateam_geometry::Rectangle & bounds,
-    const cv::Mat & data, const uint8_t alpha = 255, const uint32_t lifetime = kDefaultLifetime);
-
-  void drawHeatmap(
-    const std::string & name, const ateam_geometry::Rectangle & bounds,
-    const cv::Mat & data, const cv::Mat & alpha, const uint32_t lifetime = kDefaultLifetime);
 
   void drawHeatmap(
     const std::string & name, const ateam_geometry::Rectangle & bounds,
