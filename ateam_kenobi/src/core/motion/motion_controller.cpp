@@ -29,25 +29,11 @@
 #include <utility>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/robot_state.hpp>
-#include <ateam_common/parameters.hpp>
 #include "ateam_geometry/ateam_geometry.hpp"
 #include "ateam_common/robot_constants.hpp"
 #include "pid.hpp"
 
 namespace ateam_kenobi::motion {
-
-/*
-// PID gains
-CREATE_PARAM(double, "motion/pid/x_kp", x_kp, 2);
-CREATE_PARAM(double, "motion/pid/y_kp", y_kp, 2);
-CREATE_PARAM(double, "motion/pid/t_kp", t_kp, 3);
-
-// PID velocity limits
-CREATE_PARAM(double, "motion/pid/x_max", x_max, 2);
-CREATE_PARAM(double, "motion/pid/y_max", y_max, 2);
-CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
-*/
-
 
 MotionController::MotionController(rclcpp::Logger logger)
 : logger_(logger)
