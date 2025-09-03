@@ -18,13 +18,10 @@ find_package(angles REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
-  src/assignment.cpp
   src/bi_directional_udp.cpp
   src/cache_directory.cpp
   src/get_ip_addresses.cpp
   src/multicast_receiver.cpp
-  src/parameters.cpp
-  src/status.cpp
   src/game_controller_listener.cpp
   src/km_assignment.cpp
   src/time.cpp
