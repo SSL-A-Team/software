@@ -268,7 +268,7 @@ std::optional<ateam_msgs::msg::RobotMotionCommand> EasyMoveTo::generateEscapeVel
 }
 
 std::pair<size_t, ateam_geometry::Point> EasyMoveTo::ProjectRobotOnPath(
-  const path_planning::PathPlanner::Path & path, const Robot & robot)
+  const path_planning::Path & path, const Robot & robot)
 {
   if (path.empty()) {
     return {0, robot.pos};

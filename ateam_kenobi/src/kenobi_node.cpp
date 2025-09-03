@@ -183,7 +183,6 @@ private:
   visualization::Overlays overlays_;
   FpsTracker fps_tracker_;
   motion::MotionExecutor motion_executor_;
-  visualization::Overlays overlays_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
