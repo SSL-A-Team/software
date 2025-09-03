@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(ateam_common)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -26,7 +22,8 @@ add_library(${PROJECT_NAME} SHARED
   src/km_assignment.cpp
   src/time.cpp
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra -Wpedantic)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components

@@ -82,12 +82,8 @@ void BiDirectionalUDP::send(const uint8_t * const data, const size_t length)
   // With the if statement above, this should never happen
   memcpy(send_buffer_.data(), data, std::min(send_buffer_.size(), length));
 
-  udp_socket_.async_send_to(
-    boost::asio::buffer(send_buffer_, length),
-    endpoint_,
-    boost::bind(
-      &BiDirectionalUDP::HandleUDPSendTo, this,
-      boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+  udp_socket_.async_send_to(boost::asio::buffer(send_buffer_, length), endpoint_,
+      boost::bind(&BiDirectionalUDP::HandleUDPSendTo, this, boost::asio::placeholders::error));
 }
 
 
@@ -111,9 +107,7 @@ std::string BiDirectionalUDP::GetRemoteIPAddress() const
   return endpoint_.address().to_string();
 }
 
-void BiDirectionalUDP::HandleUDPSendTo(
-  const boost::system::error_code & error,
-  std::size_t bytes_transferred)
+void BiDirectionalUDP::HandleUDPSendTo(const boost::system::error_code & error)
 {
   if (error) {
     // RCLCPP_ERROR(get_logger(), "Error during udp send");

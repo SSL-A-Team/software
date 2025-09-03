@@ -59,7 +59,7 @@ private:
   std::array<uint8_t, 1024> receive_buffer_;
   std::thread io_service_thread_;
 
-  void HandleUDPSendTo(const boost::system::error_code & error, std::size_t bytes_transferred);
+  void HandleUDPSendTo(const boost::system::error_code & error);
   void HandleUDPReceiveFrom(const boost::system::error_code & error, std::size_t bytes_transferred);
 };
 
