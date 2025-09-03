@@ -193,9 +193,9 @@ void MotionExecutor::DrawOverlays(
         [](const auto &){return ateam_geometry::Point();}
     }, intent.linear);
     if(path.empty()) {
-      overlays.drawLine("path", {robot.pos, target_point}, "Red");
+      overlays.drawLine(name_prefix + "path", {robot.pos, target_point}, "Red");
     } else if(path.size() == 1) {
-      overlays.drawLine("path", {robot.pos, target_point}, "Purple");
+      overlays.drawLine(name_prefix + "path", {robot.pos, target_point}, "Purple");
     } else {
       const auto [closest_index, closest_point] = ProjectRobotOnPath(path, robot);
       std::vector<ateam_geometry::Point> path_done(path.begin(), path.begin() + (closest_index));
@@ -204,13 +204,13 @@ void MotionExecutor::DrawOverlays(
         path.end());
       path_remaining.insert(path_remaining.begin(), closest_point);
       const auto translucent_purple = "#8000805F";
-      overlays.drawLine("path_done", path_done, translucent_purple);
-      overlays.drawLine("path_remaining", path_remaining, "Purple");
+      overlays.drawLine(name_prefix + "path_done", path_done, translucent_purple);
+      overlays.drawLine(name_prefix + "path_remaining", path_remaining, "Purple");
       const auto & planner = planners_[robot.id];
       if (planner.didTimeOut()) {
-        overlays.drawLine("afterpath", {path.back(), target_point}, "LightSkyBlue");
+        overlays.drawLine(name_prefix + "afterpath", {path.back(), target_point}, "LightSkyBlue");
       } else if (planner.isPathTruncated()) {
-        overlays.drawLine("afterpath", {path.back(), target_point}, "LightPink");
+        overlays.drawLine(name_prefix + "afterpath", {path.back(), target_point}, "LightPink");
       }
     }
   }
