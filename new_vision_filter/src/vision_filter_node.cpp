@@ -20,11 +20,10 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include "camera.hpp"
+
 class VisionFilterNode : public rclcpp::Node
 {
-    // Subscribe to vision info from our processed messages
-    // in ssl_vision_bridge_node.cpp
-    
     // Important things this needs to do, which could be broken out into objects that this holds 
     // and uses when the node is ticked...
 
@@ -32,4 +31,28 @@ class VisionFilterNode : public rclcpp::Node
     // Keep track of individual cameras - can be 1 - many
     // Fuse the info from those cameras into tracks
     // Output final prediction for robots and ball(s)
+
+    public:
+    // Subscribe to vision info from our processed messages
+    // in ssl_vision_bridge_node.cpp
+    ssl_vision_subscription_ =
+      create_subscription<ssl_league_msgs::msg::VisionWrapper>(
+      std::string(Topics::kVisionMessages),
+      10,
+      std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
+
+    // Will also need to add publishers here... but want to determine whether we keep existing
+    // approach that is in the old Vision Filter or do something else.
+    
+    private:
+        std::map<int, Camera> cameras;
+
+        void vision_callback(const ssl_league_msgs::msg::VisionWrapper vision_wrapper_msg) {
+            // Add vision data to the queue for each camera
+        }
+
+        void timer_callback() {
+            // Publish the updated vision info
+            // Similar to the publish() method in TIGERs
+        }
 }
