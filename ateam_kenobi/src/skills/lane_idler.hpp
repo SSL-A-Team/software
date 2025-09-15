@@ -24,7 +24,7 @@
 #include <vector>
 #include <ateam_geometry/any_shape.hpp>
 #include "core/stp/skill.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
+#include "core/types/robot_command.hpp"
 #include "core/play_helpers/lanes.hpp"
 
 namespace ateam_kenobi::skills
@@ -35,11 +35,9 @@ class LaneIdler : public stp::Skill
 public:
   explicit LaneIdler(stp::Options stp_options);
 
-  void Reset();
-
   ateam_geometry::Point GetAssignmentPoint(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+  RobotCommand RunFrame(const World & world);
 
   void SetLane(play_helpers::lanes::Lane lane)
   {
@@ -53,7 +51,6 @@ public:
 
 private:
   play_helpers::lanes::Lane lane_ = play_helpers::lanes::Lane::Center;
-  play_helpers::EasyMoveTo easy_move_to_;
   std::vector<ateam_geometry::AnyShape> extra_obstacles_;
 
   ateam_geometry::Point GetIdlingPosition(const World & world);
