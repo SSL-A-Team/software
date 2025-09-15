@@ -40,13 +40,13 @@ ateam_geometry::Point PivotKick::GetAssignmentPoint(const World & world)
   return world.ball.pos;
 }
 
-ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, const Robot & robot)
+RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
 {
   getOverlays().drawLine("PivotKick_line", {world.ball.pos, target_point_}, "#FFFF007F");
 
   if (done_) {
     getPlayInfo()["State"] = "Done";
-    return ateam_msgs::msg::RobotMotionCommand{};
+    return RobotCommand{};
   }
 
   if (prev_state_ == State::Capture) {
@@ -82,28 +82,28 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::RunFrame(const World & world, con
   if (ateam_geometry::norm(world.ball.vel) > 0.1 * GetKickSpeed()) {
     done_ = true;
     getPlayInfo()["State"] = "Done";
-    return ateam_msgs::msg::RobotMotionCommand{};
+    return RobotCommand{};
   }
 
   getPlayInfo()["State"] = "Kick";
-  return KickBall(world, robot);
+  return KickBall();
 }
 
-ateam_msgs::msg::RobotMotionCommand PivotKick::Capture(
+RobotCommand PivotKick::Capture(
   const World & world,
   const Robot & robot)
 {
   return capture_.runFrame(world, robot);
 }
 
-ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
+RobotCommand PivotKick::Pivot(const Robot & robot)
 {
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
 
   const auto angle_error = angles::shortest_angular_distance(robot.theta, robot_to_target_angle);
 
-  ateam_msgs::msg::RobotMotionCommand command;
+  RobotCommand command;
 
   const double vel = robot.prev_command_omega;
   const double dt = 0.01;
@@ -129,7 +129,8 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
     trapezoidal_vel = std::copysign(min_angular_vel, angle_error);
   }
 
-  command.twist.angular.z = std::clamp(trapezoidal_vel, -pivot_speed_, pivot_speed_);
+  const auto angular_vel = std::clamp(trapezoidal_vel, -pivot_speed_, pivot_speed_);
+  command.motion_intent.angular = motion::intents::angular::VelocityIntent{angular_vel};
 
   /* rotate in a circle with diameter 0.0427 + 0.18 = 0.2227 (This might be tunable to use 8cm for
    * real robots)
@@ -139,34 +140,32 @@ ateam_msgs::msg::RobotMotionCommand PivotKick::Pivot(const Robot & robot)
   // double diameter = kBallDiameter + kRobotDiameter;
   double diameter = (2 * .095) * 1.05;
   double circumference = M_PI * diameter;
-  double velocity = circumference * (command.twist.angular.z / (2 * M_PI));
+  double velocity = circumference * (angular_vel / (2 * M_PI));
 
-  command.twist.linear.x = 0.0;
-  command.twist.linear.y = -velocity;
-  command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+  command.motion_intent.linear = motion::intents::linear::VelocityIntent{
+    ateam_geometry::Vector(0, -velocity),
+    motion::intents::linear::Frame::Local};
+
   command.dribbler_speed = kDefaultDribblerSpeed;
+
   return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand PivotKick::KickBall(const World & world, const Robot & robot)
+RobotCommand PivotKick::KickBall()
 {
-  easy_move_to_.setTargetPosition(robot.pos);
-  easy_move_to_.face_point(target_point_);
-  path_planning::PlannerOptions planner_options;
-  planner_options.avoid_ball = false;
-  planner_options.footprint_inflation = 0.0;
-  planner_options.use_default_obstacles = false;
-  easy_move_to_.setPlannerOptions(planner_options);
-  auto command = easy_move_to_.runFrame(robot, world);
+  RobotCommand command;
+
+  command.motion_intent.angular = motion::intents::angular::FacingIntent{target_point_};
+
   command.dribbler_speed = kDefaultDribblerSpeed;
 
+  command.kick_speed = GetKickSpeed();
   if (IsAllowedToKick()) {
     if(KickOrChip() == KickSkill::KickChip::Kick) {
-      command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
+      command.kick = KickState::KickOnTouch;
     } else {
-      command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_CHIP_TOUCH;
+      command.kick = KickState::ChipOnTouch;
     }
-    command.kick_speed = GetKickSpeed();
   }
 
   return command;

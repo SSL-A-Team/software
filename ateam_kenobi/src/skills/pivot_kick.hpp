@@ -22,9 +22,9 @@
 #ifndef SKILLS__PIVOT_KICK_HPP_
 #define SKILLS__PIVOT_KICK_HPP_
 
-#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
 #include "kick_skill.hpp"
+#include "core/types/robot_command.hpp"
 #include "core/types/world.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 #include "skills/capture.hpp"
@@ -60,22 +60,11 @@ public:
 
   ateam_geometry::Point GetAssignmentPoint(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+  RobotCommand RunFrame(const World & world, const Robot & robot);
 
   bool IsDone() const
   {
     return done_;
-  }
-
-  /**
-   * @brief Set the default obstacles planner option on the internal EasyMoveTo
-   */
-  void SetUseDefaultObstacles(bool use_obstacles)
-  {
-    path_planning::PlannerOptions options = easy_move_to_.getPlannerOptions();
-    options.use_default_obstacles = use_obstacles;
-    easy_move_to_.setPlannerOptions(options);
-    capture_.SetUseDefaultObstacles(use_obstacles);
   }
 
   void SetCaptureSpeed(double speed)
@@ -109,11 +98,11 @@ private:
   };
   State prev_state_ = State::Capture;
 
-  ateam_msgs::msg::RobotMotionCommand Capture(const World & world, const Robot & robot);
+  RobotCommand Capture(const World & world, const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand Pivot(const Robot & robot);
+  RobotCommand Pivot(const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand KickBall(const World & world, const Robot & robot);
+  RobotCommand KickBall();
 };
 
 }  // namespace ateam_kenobi::skills

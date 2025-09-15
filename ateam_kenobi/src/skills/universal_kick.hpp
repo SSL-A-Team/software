@@ -50,13 +50,11 @@ public:
 
   bool IsDone() const;
 
-  void SetUseDefaultObstacles(bool use_obstacles);
-
   void SetKickChip(KickSkill::KickChip kc);
 
   void SetPreferredKickType(KickType type);
 
-  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+  RobotCommand RunFrame(const World & world, const Robot & robot);
 
   /*
    * Pivot-only functions

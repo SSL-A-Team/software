@@ -104,11 +104,11 @@ target_sources(kenobi_node_component PRIVATE
   # src/skills/lane_idler.cpp
   src/skills/line_kick.cpp
   # src/skills/pass_receiver.cpp
-  # src/skills/pivot_kick.cpp
+  src/skills/pivot_kick.cpp
   # src/skills/dribble.cpp
   # src/skills/extract.cpp
-  # src/skills/capture.cpp
-  # src/skills/universal_kick.cpp
+  src/skills/capture.cpp
+  src/skills/universal_kick.cpp
 )
 
 target_include_directories(kenobi_node_component PUBLIC
