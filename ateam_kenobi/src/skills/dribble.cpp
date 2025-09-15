@@ -30,8 +30,7 @@ namespace ateam_kenobi::skills
 {
 
 Dribble::Dribble(stp::Options stp_options)
-: stp::Skill(stp_options),
-  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
+: stp::Skill(stp_options)
 {
   back_away_duration_ = std::chrono::seconds(1);
 }
@@ -40,10 +39,9 @@ void Dribble::reset()
 {
   done_ = false;
   ball_detected_filter_ = 0;
-  easy_move_to_.reset();
 }
 
-ateam_msgs::msg::RobotMotionCommand Dribble::runFrame(const World & world, const Robot & robot)
+RobotCommand Dribble::runFrame(const World & world, const Robot & robot)
 {
   const auto start_position = getStartPosition(world);
 
@@ -57,14 +55,14 @@ ateam_msgs::msg::RobotMotionCommand Dribble::runFrame(const World & world, const
       return runMoveBehindBall(world, robot);
     case State::Dribble:
       getPlayInfo()["State"] = "Dribble to Point";
-      return runDribble(world, robot);
+      return runDribble(robot);
     case State::BackAway:
       getPlayInfo()["State"] = "Back Away";
       return runBackAway(world, robot);
 
     default:
       std::cerr << "Unhandled state in dribble!\n";
-      return ateam_msgs::msg::RobotMotionCommand{};
+      return RobotCommand{};
   }
 }
 
@@ -181,80 +179,73 @@ bool Dribble::robotHasBall(const Robot & robot)
   return false;
 }
 
-ateam_msgs::msg::RobotMotionCommand Dribble::runMoveBehindBall(
+RobotCommand Dribble::runMoveBehindBall(
   const World & world,
   const Robot & robot)
 {
-  easy_move_to_.face_point(target_);
+  RobotCommand command;
 
-  motion::MotionOptions motion_options;
-  motion_options.completion_threshold = 0;
-  easy_move_to_.setMotionOptions(motion_options);
-  path_planning::PlannerOptions planner_options;
-  planner_options.footprint_inflation = 0.06;
-  planner_options.draw_obstacles = true;
-  planner_options.ignore_start_obstacle = false;
-  easy_move_to_.setPlannerOptions(planner_options);
-  easy_move_to_.setTargetPosition(getStartPosition(world));
-  easy_move_to_.setMaxVelocity(1.5);
+  command.motion_intent.angular = motion::intents::angular::FacingIntent{target_};
 
-  auto command = easy_move_to_.runFrame(robot, world);
+  command.motion_intent.motion_options.completion_threshold = 0.0;
+  command.motion_intent.planner_options.footprint_inflation = 0.06;
+  command.motion_intent.planner_options.draw_obstacles = true;
+  command.motion_intent.planner_options.ignore_start_obstacle = false;
+
+  // TODO(barulicm): Set max velocity to 1.5
+
   if (ateam_geometry::norm(robot.pos - world.ball.pos) < 0.5) {
     command.dribbler_speed = 130;
   }
   return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand Dribble::runDribble(const World & world, const Robot & robot)
+RobotCommand Dribble::runDribble(const Robot & robot)
 {
-  path_planning::PlannerOptions planner_options;
-  planner_options.avoid_ball = false;
-  planner_options.footprint_inflation = 0.0;
-  planner_options.use_default_obstacles = false;
-  planner_options.draw_obstacles = true;
-  easy_move_to_.setPlannerOptions(planner_options);
+  RobotCommand command;
 
-  easy_move_to_.setMaxVelocity(0.35);
-  easy_move_to_.face_point(target_);
+  command.motion_intent.planner_options.avoid_ball = false;
+  command.motion_intent.planner_options.footprint_inflation = 0.0;
+  command.motion_intent.planner_options.use_default_obstacles = false;
+  command.motion_intent.planner_options.draw_obstacles = true;
 
-  // Offset the robot position so the ball is on the target point
+  command.motion_intent.angular = motion::intents::angular::FacingIntent{target_};
+
   const auto robot_to_target = target_ - robot.pos;
-  easy_move_to_.setTargetPosition(
-    target_ -
-    (kRobotRadius * ateam_geometry::normalize(robot_to_target)));
-  auto command = easy_move_to_.runFrame(robot, world);
+  const auto position_target = target_ - (kRobotRadius * ateam_geometry::normalize(robot_to_target));
+  command.motion_intent.linear = motion::intents::linear::PositionIntent{position_target};
+
+  // TODO(barulicm): Set max velocity to 0.35
 
   command.dribbler_speed = 130;
 
   return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand Dribble::runBackAway(const World & world, const Robot & robot)
+RobotCommand Dribble::runBackAway(const World & world, const Robot & robot)
 {
-  path_planning::PlannerOptions planner_options;
-  planner_options.avoid_ball = false;
-  planner_options.footprint_inflation = 0.0;
-  planner_options.use_default_obstacles = false;
-  planner_options.draw_obstacles = true;
-  easy_move_to_.setPlannerOptions(planner_options);
+  RobotCommand command;
 
-  auto command = ateam_msgs::msg::RobotMotionCommand();
+  command.motion_intent.planner_options.avoid_ball = false;
+  command.motion_intent.planner_options.footprint_inflation = 0.0;
+  command.motion_intent.planner_options.use_default_obstacles = false;
+  command.motion_intent.planner_options.draw_obstacles = true;
+
   command.dribbler_speed = 0;
 
-  easy_move_to_.setMaxVelocity(0.35);
-  easy_move_to_.face_absolute(robot.theta);
-
-  const auto ball_to_robot = robot.pos - world.ball.pos;
-  easy_move_to_.setTargetPosition(robot.pos +
-    (0.2 * ateam_geometry::normalize(ball_to_robot)));
+  // TODO(barulicm): Set max velocity to 0.35
 
   // Wait for the dribbler to wind down before moving
   if ((std::chrono::steady_clock::now() - back_away_duration_.value()) > back_away_start_) {
     if (!world.ball.visible) {
-      command.twist.linear.x = -0.35;
-      command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+      command.motion_intent.linear = motion::intents::linear::VelocityIntent{
+        ateam_geometry::Vector{-0.35, 0.0},
+        motion::intents::linear::Frame::Local};
     } else {
-      command = easy_move_to_.runFrame(robot, world);
+      const auto ball_to_robot = robot.pos - world.ball.pos;
+      const auto position_target = robot.pos +
+        (0.2 * ateam_geometry::normalize(ball_to_robot));
+      command.motion_intent.linear = motion::intents::linear::PositionIntent{position_target};
     }
   }
 

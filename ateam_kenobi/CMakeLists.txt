@@ -105,7 +105,7 @@ target_sources(kenobi_node_component PRIVATE
   src/skills/line_kick.cpp
   # src/skills/pass_receiver.cpp
   src/skills/pivot_kick.cpp
-  # src/skills/dribble.cpp
+  src/skills/dribble.cpp
   # src/skills/extract.cpp
   src/skills/capture.cpp
   src/skills/universal_kick.cpp
