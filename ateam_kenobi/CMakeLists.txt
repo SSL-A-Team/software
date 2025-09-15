@@ -35,6 +35,7 @@ target_sources(kenobi_node_component PRIVATE
   src/core/path_planning/obstacles.cpp
   src/core/path_planning/path_planner.cpp
   src/core/types/message_conversions.cpp
+  src/core/motion/frame_conversions.cpp
   src/core/motion/motion_controller.cpp
   src/core/motion/motion_executor.cpp
   src/core/visualization/overlays.cpp
@@ -103,7 +104,7 @@ target_sources(kenobi_node_component PRIVATE
   src/skills/kick_skill.cpp
   src/skills/lane_idler.cpp
   src/skills/line_kick.cpp
-  # src/skills/pass_receiver.cpp
+  src/skills/pass_receiver.cpp
   src/skills/pivot_kick.cpp
   src/skills/dribble.cpp
   src/skills/extract.cpp
