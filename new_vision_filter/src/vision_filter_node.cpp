@@ -47,8 +47,23 @@ class VisionFilterNode : public rclcpp::Node
     private:
         std::map<int, Camera> cameras;
 
-        void vision_callback(const ssl_league_msgs::msg::VisionWrapper vision_wrapper_msg) {
-            // Add vision data to the queue for each camera
+        void vision_callback(const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg) {
+            // Add detections to the cameras' msg queues
+            auto detection = vision_wrapper_msg->detection;
+            // Create a new camera if we haven't seen this one before
+            int detect_camera = detection->camera_id;
+            if (!(cameras.contains(detect_camera))){
+                cameras[detect_camera] = Camera(camera_id);
+            }
+            cameras[detect_camera].detection_queue.push_back(detection);
+            
+            // Add geometry to the cameras' msg queues
+            auto geometry = vision_wrapper_msg->geometry;
+            int geo_camera = geometry->camera_id; 
+            if (!(cameras.contains(geo_camera))){
+                cameras[geo_camera] = Camera(camera_id);
+            }
+            
         }
 
         void timer_callback() {
