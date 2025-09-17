@@ -88,7 +88,7 @@ target_sources(kenobi_node_component PRIVATE
 # Tactic Sources
 #
 target_sources(kenobi_node_component PRIVATE
-  # src/tactics/blockers.cpp
+  src/tactics/blockers.cpp
   src/tactics/defenders.cpp
   src/tactics/multi_move_to.cpp
   # src/tactics/pass_to_segment.cpp
