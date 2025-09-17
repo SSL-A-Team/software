@@ -43,10 +43,10 @@ public:
     target_angle_ = 0.0;
   }
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override
   {
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+    std::array<std::optional<RobotCommand>, 16> motion_commands;
     const auto & robots = play_helpers::getAvailableRobots(world);
     if (robots.empty()) {
       return {};
@@ -78,7 +78,7 @@ public:
         target_angle_ += target_step_;
         target_angle_ = angles::normalize_angle(target_angle_);
       }
-      motion_commands[robot.id] = ateam_msgs::msg::RobotMotionCommand();
+      motion_commands[robot.id] = RobotCommand();
     } else {
       play_info["Time At Target"] = 0.0;
       motion_commands[robot.id] = getPivotCommand(robot, angle_error);
@@ -102,9 +102,9 @@ private:
   std::chrono::steady_clock::time_point arrival_time_;
 
 
-  ateam_msgs::msg::RobotMotionCommand getPivotCommand(const Robot & robot, double angle_error)
+  RobotCommand getPivotCommand(const Robot & robot, double angle_error)
   {
-    ateam_msgs::msg::RobotMotionCommand command;
+    RobotCommand command;
 
     const double vel = robot.prev_command_omega;
     const double dt = 0.01;
@@ -153,7 +153,7 @@ private:
 
     command.twist.linear.x = 0.0;
     command.twist.linear.y = -velocity;
-    command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+    command.twist_frame = RobotCommand::FRAME_BODY;
     return command;
   }
 };

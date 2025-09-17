@@ -64,12 +64,12 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/stop_plays/defensive_stop_play.cpp
   src/plays/stop_plays/offensive_stop_play.cpp
   src/plays/stop_plays/stop_helpers.cpp
-  # src/plays/test_plays/controls_test_play.cpp
-  # src/plays/test_plays/spinning_a_play.cpp
-  # src/plays/test_plays/test_pass_play.cpp
-  # src/plays/test_plays/test_play.cpp
-  # src/plays/test_plays/triangle_pass_play.cpp
-  # src/plays/test_plays/waypoints_play.cpp
+  src/plays/test_plays/controls_test_play.cpp
+  src/plays/test_plays/spinning_a_play.cpp
+  src/plays/test_plays/test_pass_play.cpp
+  src/plays/test_plays/test_play.cpp
+  src/plays/test_plays/triangle_pass_play.cpp
+  src/plays/test_plays/waypoints_play.cpp
   src/plays/util_plays/corner_lineup_play.cpp
   src/plays/halt_play.cpp
   src/plays/kick_on_goal_play.cpp

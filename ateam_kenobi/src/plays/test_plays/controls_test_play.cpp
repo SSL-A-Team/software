@@ -62,10 +62,10 @@ void ControlsTestPlay::reset()
   goal_hit_time = std::chrono::steady_clock::now();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> ControlsTestPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
   auto current_available_robots = play_helpers::getAvailableRobots(world);
   if (current_available_robots.empty()) {
     // No robots available to run
@@ -116,9 +116,16 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
 
   motion::MotionOptions motion_options;
   motion_options.completion_threshold = position_threshold;
-  maybe_motion_commands[robot.id] = motion_controller_.get_command(
+  const auto command_msg = motion_controller_.get_command(
     robot, current_time,
     motion_options);
+
+  RobotCommand command;
+  command.motion_intent.linear = motion::intents::linear::VelocityIntent{
+    ateam_geometry::Vector(command_msg.twist.linear.x, command_msg.twist.linear.y),
+    motion::intents::linear::Frame::World};
+  command.motion_intent.angular = motion::intents::angular::VelocityIntent{command_msg.twist.angular.z};
+  maybe_motion_commands[robot.id] = command;
 
   const std::vector<ateam_geometry::Point> viz_path = path;
   getOverlays().drawLine("controls_test_path", viz_path, "purple");
@@ -140,8 +147,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   getPlayInfo()["robot"]["vel"]["y"] = robot.vel.y();
   getPlayInfo()["robot"]["vel"]["t"] = robot.omega;
 
-  getPlayInfo()["robot"]["cmd_vel"]["x"] = maybe_motion_commands[robot.id].value().twist.linear.x;
-  getPlayInfo()["robot"]["cmd_vel"]["y"] = maybe_motion_commands[robot.id].value().twist.linear.y;
+  getPlayInfo()["robot"]["cmd_vel"]["x"] = command_msg.twist.linear.x;
+  getPlayInfo()["robot"]["cmd_vel"]["y"] = command_msg.twist.linear.y;
 
   getPlayInfo()["error"]["x"] = waypoints[index].position.x() - robot.pos.x();
   getPlayInfo()["error"]["y"] = waypoints[index].position.y() - robot.pos.y();

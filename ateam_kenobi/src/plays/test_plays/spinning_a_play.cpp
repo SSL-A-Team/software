@@ -28,7 +28,8 @@ namespace ateam_kenobi::plays
 {
 
 SpinningAPlay::SpinningAPlay(stp::Options stp_options)
-: stp::Play(kPlayName, stp_options)
+: stp::Play(kPlayName, stp_options),
+  multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_to"))
 {
   base_shape_ = {
     ateam_geometry::Point(0, 0),
@@ -43,15 +44,9 @@ SpinningAPlay::SpinningAPlay(stp::Options stp_options)
 void SpinningAPlay::reset()
 {
   angle_ = 0.0;
-  for (auto & emt : easy_move_tos_) {
-    path_planning::PlannerOptions options;
-    options.footprint_inflation = 0.1;
-    emt.setPlannerOptions(options);
-    emt.reset();
-  }
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+std::array<std::optional<RobotCommand>,
   16> SpinningAPlay::runFrame(const World & world)
 {
   const auto available_robots = play_helpers::getAvailableRobots(world);
@@ -61,18 +56,20 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
   CGAL::Aff_transformation_2<ateam_geometry::Kernel> rotate_transform(CGAL::ROTATION,
     std::sin(angle_), std::cos(angle_));
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
-  for (auto ind = 0ul; ind < num_robots; ++ind) {
-    const auto & robot = available_robots[ind];
-    const auto point = base_shape_[ind].transform(rotate_transform);
-    auto & emt = easy_move_tos_[robot.id];
-    emt.setTargetPosition(point);
-    emt.face_absolute(-M_PI_2 + angle_);
-    motion_commands[robot.id] = emt.runFrame(robot, world);
-    getOverlays().drawCircle(
-      "dest" + std::to_string(ind),
-      ateam_geometry::makeCircle(point, kRobotRadius));
+  std::vector<ateam_geometry::Point> targets;
+  std::transform(
+    base_shape_.begin(), base_shape_.begin() + num_robots, std::back_inserter(targets),
+    [&rotate_transform](const auto & point) {
+      return point.transform(rotate_transform);
+    });
+  multi_move_to_.SetTargetPoints(targets);
+  multi_move_to_.SetFaceAbsolue(-M_PI_2 + angle_);
+  multi_move_to_.RunFrame(available_robots, motion_commands);
+  for(auto & maybe_motion_command : motion_commands) {
+    if(!maybe_motion_command) continue;
+    maybe_motion_command->motion_intent.planner_options.footprint_inflation = 0.1;
   }
 
   if (angle_ < kNumRotations * 2 * M_PI) {
