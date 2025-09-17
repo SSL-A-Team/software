@@ -58,8 +58,8 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/kickoff_plays/offense/kickoff_on_goal.cpp
   src/plays/kickoff_plays/offense/kickoff_pass_play.cpp
   src/plays/kickoff_plays/offense/our_kickoff_prep_play.cpp
-  # src/plays/passing_plays/pass_to_lane_play.cpp
-  # src/plays/passing_plays/pass_to_segment_play.cpp
+  src/plays/passing_plays/pass_to_lane_play.cpp
+  src/plays/passing_plays/pass_to_segment_play.cpp
   src/plays/stop_plays/default_stop_play.cpp
   src/plays/stop_plays/defensive_stop_play.cpp
   src/plays/stop_plays/offensive_stop_play.cpp
