@@ -41,12 +41,6 @@ namespace ateam_kenobi::plays
 OffensiveStopPlay::OffensiveStopPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options)
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
-  for (auto & move_to : easy_move_tos_) {
-    // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
-    move_to.setMaxVelocity(1.0);
-  }
-  OffensiveStopPlay::reset();
 }
 
 stp::PlayScore OffensiveStopPlay::getScore(const World & world)
@@ -68,40 +62,36 @@ stp::PlayScore OffensiveStopPlay::getScore(const World & world)
   }
 }
 
-void OffensiveStopPlay::reset()
-{
-  for (auto & move_to : easy_move_tos_) {
-    move_to.reset();
-  }
-}
-
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OffensiveStopPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> OffensiveStopPlay::runFrame(
   const World & world)
 {
   const auto added_obstacles = helpers::getAddedObstacles(world);
 
   helpers::drawObstacles(world, added_obstacles, getOverlays(), getLogger());
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   runPrepBot(world, motion_commands);
 
-  helpers::moveBotsTooCloseToBall(world, added_obstacles, motion_commands, easy_move_tos_,
-    getOverlays(), getPlayInfo());
+  helpers::moveBotsTooCloseToBall(world, added_obstacles, motion_commands, getOverlays(),
+      getPlayInfo());
 
   helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo());
 
   // Halt all robots that weren't already assigned a motion command
   std::ranges::replace_if(
     motion_commands,
-    [](const auto & o) {return !o;}, std::make_optional(ateam_msgs::msg::RobotMotionCommand{}));
+    [](const auto & o) {return !o;}, std::make_optional(RobotCommand{}));
+
+  // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
+  // TODO(barulicm): Set max velocity to 1.0
 
   return motion_commands;
 }
 
 void OffensiveStopPlay::runPrepBot(
   const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & maybe_motion_commands)
+  std::array<std::optional<RobotCommand>, 16> & maybe_motion_commands)
 {
   const auto their_goal_center = ateam_geometry::Point(world.field.field_length / 2.0, 0.0);
   // TODO(barulicm): May need to handle balls close to field edge smarter
@@ -125,15 +115,13 @@ void OffensiveStopPlay::runPrepBot(
     return;
   }
 
-  auto & emt = easy_move_tos_[closest_bot.id];
-
-  std::vector<ateam_geometry::AnyShape> obstacles {
+  RobotCommand command;
+  command.motion_intent.linear = motion::intents::linear::PositionIntent{target_position};
+  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+  command.motion_intent.obstacles = {
     ateam_geometry::makeDisk(world.ball.pos, stop_plays::stop_helpers::kKeepoutRadiusRules)
   };
-
-  emt.setTargetPosition(target_position);
-  emt.face_point(world.ball.pos);
-  maybe_motion_commands[closest_bot.id] = emt.runFrame(closest_bot, world, obstacles);
+  maybe_motion_commands[closest_bot.id] = command;
 }
 
 }  // namespace ateam_kenobi::plays

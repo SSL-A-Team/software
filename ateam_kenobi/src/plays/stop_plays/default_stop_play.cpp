@@ -40,12 +40,6 @@ namespace ateam_kenobi::plays
 DefaultStopPlay::DefaultStopPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options)
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
-  for (auto & move_to : easy_move_tos_) {
-    // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
-    move_to.setMaxVelocity(1.0);
-  }
-  DefaultStopPlay::reset();
 }
 
 stp::PlayScore DefaultStopPlay::getScore(const World & world)
@@ -58,31 +52,27 @@ stp::PlayScore DefaultStopPlay::getScore(const World & world)
   }
 }
 
-void DefaultStopPlay::reset()
-{
-  for (auto & move_to : easy_move_tos_) {
-    move_to.reset();
-  }
-}
-
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefaultStopPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> DefaultStopPlay::runFrame(
   const World & world)
 {
   const auto added_obstacles = helpers::getAddedObstacles(world);
 
   helpers::drawObstacles(world, added_obstacles, getOverlays(), getLogger());
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
-  helpers::moveBotsTooCloseToBall(world, added_obstacles, motion_commands, easy_move_tos_,
-    getOverlays(), getPlayInfo());
+  helpers::moveBotsTooCloseToBall(world, added_obstacles, motion_commands, getOverlays(),
+      getPlayInfo());
 
   helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo());
 
   // Halt all robots that weren't already assigned a motion command
   std::ranges::replace_if(
     motion_commands,
-    [](const auto & o) {return !o;}, std::make_optional(ateam_msgs::msg::RobotMotionCommand{}));
+    [](const auto & o) {return !o;}, std::make_optional(RobotCommand{}));
+
+  // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
+  // TODO(barulicm): Set max velocity to 1.0
 
   return motion_commands;
 }

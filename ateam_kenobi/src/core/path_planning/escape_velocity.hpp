@@ -32,6 +32,8 @@ namespace ateam_kenobi::path_planning
 
 constexpr double kSafeEscapeVelocity = 0.3;  // m/s
 
+// TODO(barulicm): Convert this file to using BodyVelocity return types
+
 /**
  * @brief Creates a low velocity in the quickest direction to escape the given obstacle.
  *
