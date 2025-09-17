@@ -53,7 +53,8 @@ std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
 
 WallPlay::WallPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  goalie_skill_(createChild<skills::Goalie>("goalie"))
+  goalie_skill_(createChild<skills::Goalie>("goalie")),
+  multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_to"))
 {
 }
 
@@ -98,31 +99,9 @@ std::array<std::optional<RobotCommand>, 16> WallPlay::runFrame(
     current_available_robots,
     positions_to_assign);
 
-  for (auto ind = 0ul; ind < robot_assignments.size(); ++ind) {
-    const auto & maybe_robot = robot_assignments[ind];
-    if (!maybe_robot) {
-      continue;
-    }
-
-    const auto & robot = *maybe_robot;
-
-    if (!robot.IsAvailable()) {
-      continue;
-    }
-
-    const auto & target_position = positions_to_assign.at(ind);
-
-    RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{target_position};
-    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-
-    auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
-    getOverlays().drawCircle(
-      "destination_" + std::to_string(
-        robot.id), viz_circle, "blue", "transparent");
-    
-    commands.at(robot.id) = command;
-  }
+  multi_move_to_.SetTargetPoints(positions_to_assign);
+  multi_move_to_.SetFacePoint(world.ball.pos);
+  multi_move_to_.RunFrame(robot_assignments, commands);
 
   return commands;
 }

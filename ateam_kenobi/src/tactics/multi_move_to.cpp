@@ -58,4 +58,24 @@ void MultiMoveTo::RunFrame(
   }
 }
 
+
+void MultiMoveTo::RunFrame(
+  const std::vector<Robot> & robots,
+  std::array<std::optional<RobotCommand>, 16> & motion_commands)
+{
+  for (auto ind = 0ul; ind < robots.size(); ++ind) {
+    const auto & robot = robots[ind];
+    const auto & target_position = target_points_[ind];
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{target_position};
+    command.motion_intent.angular = angular_intent_;
+    motion_commands.at(robot.id) = command;
+
+    auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
+    getOverlays().drawCircle(
+      "destination_" + std::to_string(
+        robot.id), viz_circle, "blue", "transparent");
+  }
+}
+
 }  // namespace ateam_kenobi::tactics

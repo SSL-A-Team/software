@@ -25,6 +25,7 @@
 #include "core/stp/play.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 #include "skills/goalie.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -38,14 +39,12 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
-  std::array<play_helpers::EasyMoveTo, 16> move_tos_;
   skills::Goalie goalie_skill_;
+  tactics::MultiMoveTo multi_move_to_;
 };
 
 }  // namespace ateam_kenobi::plays

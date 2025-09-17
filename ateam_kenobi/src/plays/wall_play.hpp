@@ -30,6 +30,7 @@
 #include "core/stp/play.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 #include "skills/goalie.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -49,6 +50,7 @@ public:
 
 private:
   skills::Goalie goalie_skill_;
+  tactics::MultiMoveTo multi_move_to_;
 };
 }  // namespace ateam_kenobi::plays
 

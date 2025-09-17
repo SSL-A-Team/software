@@ -25,7 +25,7 @@
 #include "core/stp/play.hpp"
 #include "tactics/pass.hpp"
 #include "skills/dribble.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -42,13 +42,13 @@ public:
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
   tactics::Pass pass_tactic_;
   skills::Dribble dribble_;
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  tactics::MultiMoveTo multi_move_to_;
   ateam_geometry::Point placement_point_;
 
   double approach_radius_ = kRobotRadius + kBallRadius + 0.3;  // m
@@ -71,27 +71,31 @@ private:
 
   void runExtracting(
     const std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    std::array<std::optional<RobotCommand>,
     16> & motion_commands);
 
   void runPassing(
     const std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    std::array<std::optional<RobotCommand>,
     16> & motion_commands);
 
   void runPlacing(
     const std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    std::array<std::optional<RobotCommand>,
     16> & motion_commands);
 
   void runDone(
     const std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    std::array<std::optional<RobotCommand>,
     16> & motion_commands);
 
   void DrawKeepoutArea(
     const ateam_geometry::Point & ball_pos,
     const ateam_geometry::Point & placement_point);
+
+  bool shouldRobotMove(const World & world, const ateam_geometry::Point & placement_point, const Robot & robot);
+
+  ateam_geometry::Point getTargetPoint(const World & world, const ateam_geometry::Point & placement_point, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::plays

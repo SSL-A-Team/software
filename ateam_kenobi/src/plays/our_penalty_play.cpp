@@ -30,9 +30,9 @@ namespace ateam_kenobi::plays
 OurPenaltyPlay::OurPenaltyPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   goalie_skill_(createChild<skills::Goalie>("goalie")),
-  kick_skill_(createChild<skills::UniversalKick>("kick"))
+  kick_skill_(createChild<skills::UniversalKick>("kick")),
+  multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_to"))
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(move_tos_, "EasyMoveTo");
 }
 
 stp::PlayScore OurPenaltyPlay::getScore(const World & world)
@@ -51,17 +51,10 @@ stp::PlayScore OurPenaltyPlay::getScore(const World & world)
   return stp::PlayScore::NaN();
 }
 
-void OurPenaltyPlay::reset()
-{
-  for (auto & move_to : move_tos_) {
-    move_to.reset();
-  }
-}
-
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> OurPenaltyPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   goalie_skill_.runFrame(world, motion_commands);
 
@@ -92,11 +85,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
     getPlayInfo()["State"] = "Preparing";
     kick_skill_.SetTargetPoint(chooseKickTarget(world));
     const auto destination = kick_skill_.GetAssignmentPoint(world);
-    auto & move_to = move_tos_[kicking_robot.id];
-    move_to.setTargetPosition(destination);
-    move_to.face_point(world.ball.pos);
-    move_to.setMaxVelocity(1.5);
-    motion_commands[kicking_robot.id] = move_to.runFrame(kicking_robot, world);
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{destination};
+    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+    // TODO(barulicm): Set max velocity to 1.5
+    motion_commands[kicking_robot.id] = command;
   } else {
     // Kick ball
     getPlayInfo()["State"] = "Kicking";
@@ -109,14 +102,22 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurPenaltyPla
   ateam_geometry::Point pattern_point(kRobotDiameter - (world.field.field_length / 2.0),
     kRobotDiameter - (world.field.field_width / 2.0));
   ateam_geometry::Vector pattern_step(kRobotDiameter + 0.2, 0.0);
-  for (const auto & robot : available_robots) {
-    auto & move_to = move_tos_[robot.id];
-    move_to.setTargetPosition(pattern_point);
-    move_to.setMaxVelocity(1.5);
-    move_to.face_travel();
-    motion_commands[robot.id] = move_to.runFrame(robot, world);
-    pattern_point += pattern_step;
-  }
+  std::vector<ateam_geometry::Point> target_points;
+  std::generate_n(std::back_inserter(target_points), available_robots.size(),
+    [pos = pattern_point, step = pattern_step,&world]() mutable {
+      auto current = pos;
+      pos = pos + step;
+      if (pos.x() > (world.field.field_length / 2.0) - kRobotDiameter) {
+        pos = ateam_geometry::Point(
+          kRobotDiameter - (world.field.field_length / 2.0),
+          pos.y() + step.y());
+      }
+      return current;
+    });
+  multi_move_to_.SetTargetPoints(target_points);
+  multi_move_to_.SetFaceTravel();
+  // TODO(barulicm): Set max velocity to 1.5
+  multi_move_to_.RunFrame(available_robots, motion_commands);
 
   return motion_commands;
 }

@@ -39,6 +39,10 @@ public:
     const std::vector<std::optional<Robot>> & robots,
     std::array<std::optional<RobotCommand>, 16> & motion_commands);
 
+  void RunFrame(
+    const std::vector<Robot> & robots,
+    std::array<std::optional<RobotCommand>, 16> & motion_commands);
+
   void SetTargetPoints(const std::vector<ateam_geometry::Point> & targets)
   {
     target_points_ = targets;

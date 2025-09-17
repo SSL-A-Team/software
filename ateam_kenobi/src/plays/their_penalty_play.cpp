@@ -29,9 +29,9 @@ namespace ateam_kenobi::plays
 
 TheirPenaltyPlay::TheirPenaltyPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  goalie_skill_(createChild<skills::Goalie>("goalie"))
+  goalie_skill_(createChild<skills::Goalie>("goalie")),
+  multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_to"))
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(move_tos_, "EasyMoveTo");
 }
 
 stp::PlayScore TheirPenaltyPlay::getScore(const World & world)
@@ -50,35 +50,36 @@ stp::PlayScore TheirPenaltyPlay::getScore(const World & world)
   return stp::PlayScore::NaN();
 }
 
-void TheirPenaltyPlay::reset()
-{
-  for (auto & move_to : move_tos_) {
-    move_to.reset();
-  }
-}
-
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirPenaltyPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> TheirPenaltyPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
   goalie_skill_.runFrame(world, motion_commands);
 
-  auto i = 0;
   ateam_geometry::Point pattern_start(kRobotDiameter - (world.field.field_length / 2.0),
     kRobotDiameter - (world.field.field_width / 2.0));
   ateam_geometry::Vector pattern_step(kRobotDiameter + 0.2, 0.0);
-  for (const auto & robot : available_robots) {
-    auto & move_to = move_tos_[robot.id];
-    move_to.setTargetPosition(pattern_start + (i * pattern_step));
-    move_to.setMaxVelocity(1.5);
-    move_to.face_travel();
-    motion_commands[robot.id] = move_to.runFrame(robot, world);
-    i++;
-  }
+
+  std::vector<ateam_geometry::Point> target_points;
+  std::generate_n(std::back_inserter(target_points), available_robots.size(),
+    [pos = pattern_start, step = pattern_step,&world]() mutable {
+      auto current = pos;
+      pos = pos + step;
+      if (pos.x() > (world.field.field_length / 2.0) - kRobotDiameter) {
+        pos = ateam_geometry::Point(
+          kRobotDiameter - (world.field.field_length / 2.0),
+          pos.y() + step.y());
+      }
+      return current;
+    });
+  multi_move_to_.SetTargetPoints(target_points);
+  // multi_move_to_.SetMaxVelocity(1.5);  // TODO(barulicm)
+  multi_move_to_.SetFaceTravel();
+  multi_move_to_.RunFrame(available_robots, motion_commands);
 
   return motion_commands;
 }
