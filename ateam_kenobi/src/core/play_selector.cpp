@@ -43,56 +43,56 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
     "stp_parameters",
     node.get_node_parameters_interface());
   halt_play_ = addPlay<HaltPlay>(stp_options);
-  // addPlay<TestPlay>(stp_options);
-  // addPlay<CornerLineupPlay>("TheirLeftLineup", stp_options, 1.0, 1.0);
-  // addPlay<CornerLineupPlay>("TheirRightLineup", stp_options, 1.0, -1.0);
-  // addPlay<CornerLineupPlay>("OurLeftLineup", stp_options, -1.0, 1.0);
-  // addPlay<CornerLineupPlay>("OurRightLineup", stp_options, -1.0, -1.0);
-  // addPlay<DefaultStopPlay>(stp_options);
-  // addPlay<OffensiveStopPlay>(stp_options);
-  // addPlay<DefensiveStopPlay>(stp_options);
+  addPlay<TestPlay>(stp_options);
+  addPlay<CornerLineupPlay>("TheirLeftLineup", stp_options, 1.0, 1.0);
+  addPlay<CornerLineupPlay>("TheirRightLineup", stp_options, 1.0, -1.0);
+  addPlay<CornerLineupPlay>("OurLeftLineup", stp_options, -1.0, 1.0);
+  addPlay<CornerLineupPlay>("OurRightLineup", stp_options, -1.0, -1.0);
+  addPlay<DefaultStopPlay>(stp_options);
+  addPlay<OffensiveStopPlay>(stp_options);
+  addPlay<DefensiveStopPlay>(stp_options);
   addPlay<WallPlay>(stp_options);
-  // addPlay<KickOnGoalPlay>(stp_options);
-  // addPlay<KickoffOnGoalPlay>(stp_options);
-  // addPlay<KickoffPassPlay>(stp_options);
-  // addPlay<OurKickoffPrepPlay>(stp_options);
-  // addPlay<OurBallPlacementPlay>(stp_options);
-  // addPlay<TheirBallPlacementPlay>(stp_options);
-  // addPlay<TestKickPlay>(stp_options);
-  // addPlay<Basic122>(stp_options);
-  // addPlay<OurPenaltyPlay>(stp_options);
-  // addPlay<TestWindowEvalPlay>(stp_options);
-  // addPlay<TheirFreeKickPlay>(stp_options);
-  // addPlay<TheirKickoffPlay>(stp_options);
-  // addPlay<TheirPenaltyPlay>(stp_options);
-  // addPlay<ControlsTestPlay>(stp_options);
-  // addPlay<DefensePlay>(stp_options);
-  // addPlay<ExtractPlay>(stp_options);
-  // addPlay<TrianglePassPlay>(stp_options);
-  // addPlay<WaypointsPlay>(stp_options);
-  // addPlay<SpinningAPlay>(stp_options);
-  // addPlay<PassToLanePlay>(
-  //   "PassLeftForwardPlay", stp_options, play_helpers::lanes::Lane::Left,
-  //   PassToLanePlay::PassDirection::Forward);
-  // addPlay<PassToLanePlay>(
-  //   "PassCenterForwardPlay", stp_options, play_helpers::lanes::Lane::Center,
-  //   PassToLanePlay::PassDirection::Forward);
-  // addPlay<PassToLanePlay>(
-  //   "PassRightForwardPlay", stp_options, play_helpers::lanes::Lane::Right,
-  //   PassToLanePlay::PassDirection::Forward);
-  // addPlay<PassToLanePlay>(
-  //   "PassLeftBackwardPlay", stp_options, play_helpers::lanes::Lane::Left,
-  //   PassToLanePlay::PassDirection::Backward);
-  // addPlay<PassToLanePlay>(
-  //   "PassCenterBackwardPlay", stp_options, play_helpers::lanes::Lane::Center,
-  //   PassToLanePlay::PassDirection::Backward);
-  // addPlay<PassToLanePlay>(
-  //   "PassRightBackwardPlay", stp_options, play_helpers::lanes::Lane::Right,
-  //   PassToLanePlay::PassDirection::Backward);
-  // addPlay<FreeKickOnGoalPlay>(stp_options);
-  // addPlay<TestPassPlay>(stp_options);
-  // addPlay<TestPivotPlay>(stp_options);
-  // addPlay<DefendersOnlyPlay>(stp_options);
+  addPlay<KickOnGoalPlay>(stp_options);
+  addPlay<KickoffOnGoalPlay>(stp_options);
+  addPlay<KickoffPassPlay>(stp_options);
+  addPlay<OurKickoffPrepPlay>(stp_options);
+  addPlay<OurBallPlacementPlay>(stp_options);
+  addPlay<TheirBallPlacementPlay>(stp_options);
+  addPlay<TestKickPlay>(stp_options);
+  addPlay<Basic122>(stp_options);
+  addPlay<OurPenaltyPlay>(stp_options);
+  addPlay<TestWindowEvalPlay>(stp_options);
+  addPlay<TheirFreeKickPlay>(stp_options);
+  addPlay<TheirKickoffPlay>(stp_options);
+  addPlay<TheirPenaltyPlay>(stp_options);
+  addPlay<ControlsTestPlay>(stp_options);
+  addPlay<DefensePlay>(stp_options);
+  addPlay<ExtractPlay>(stp_options);
+  addPlay<TrianglePassPlay>(stp_options);
+  addPlay<WaypointsPlay>(stp_options);
+  addPlay<SpinningAPlay>(stp_options);
+  addPlay<PassToLanePlay>(
+    "PassLeftForwardPlay", stp_options, play_helpers::lanes::Lane::Left,
+    PassToLanePlay::PassDirection::Forward);
+  addPlay<PassToLanePlay>(
+    "PassCenterForwardPlay", stp_options, play_helpers::lanes::Lane::Center,
+    PassToLanePlay::PassDirection::Forward);
+  addPlay<PassToLanePlay>(
+    "PassRightForwardPlay", stp_options, play_helpers::lanes::Lane::Right,
+    PassToLanePlay::PassDirection::Forward);
+  addPlay<PassToLanePlay>(
+    "PassLeftBackwardPlay", stp_options, play_helpers::lanes::Lane::Left,
+    PassToLanePlay::PassDirection::Backward);
+  addPlay<PassToLanePlay>(
+    "PassCenterBackwardPlay", stp_options, play_helpers::lanes::Lane::Center,
+    PassToLanePlay::PassDirection::Backward);
+  addPlay<PassToLanePlay>(
+    "PassRightBackwardPlay", stp_options, play_helpers::lanes::Lane::Right,
+    PassToLanePlay::PassDirection::Backward);
+  addPlay<FreeKickOnGoalPlay>(stp_options);
+  addPlay<TestPassPlay>(stp_options);
+  addPlay<TestPivotPlay>(stp_options);
+  addPlay<DefendersOnlyPlay>(stp_options);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg)
