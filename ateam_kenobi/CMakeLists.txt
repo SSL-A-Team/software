@@ -54,10 +54,10 @@ target_sources(kenobi_node_component PRIVATE
 target_sources(kenobi_node_component PRIVATE
   src/plays/free_kick_plays/defense/their_free_kick_play.cpp
   src/plays/free_kick_plays/offense/free_kick_on_goal_play.cpp
-  # src/plays/kickoff_plays/defense/their_kickoff_play.cpp
-  # src/plays/kickoff_plays/offense/kickoff_on_goal.cpp
-  # src/plays/kickoff_plays/offense/kickoff_pass_play.cpp
-  # src/plays/kickoff_plays/offense/our_kickoff_prep_play.cpp
+  src/plays/kickoff_plays/defense/their_kickoff_play.cpp
+  src/plays/kickoff_plays/offense/kickoff_on_goal.cpp
+  src/plays/kickoff_plays/offense/kickoff_pass_play.cpp
+  src/plays/kickoff_plays/offense/our_kickoff_prep_play.cpp
   # src/plays/passing_plays/pass_to_lane_play.cpp
   # src/plays/passing_plays/pass_to_segment_play.cpp
   src/plays/stop_plays/default_stop_play.cpp

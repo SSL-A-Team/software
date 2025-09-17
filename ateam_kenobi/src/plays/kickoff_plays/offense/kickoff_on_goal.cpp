@@ -59,13 +59,12 @@ void KickoffOnGoalPlay::reset()
 {
   defense_.reset();
   kick_.Reset();
-  multi_move_to_.Reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffOnGoalPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> KickoffOnGoalPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
@@ -108,7 +107,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffOnGoal
       motion_commands);
 
   if (enough_bots_for_supports) {
-    multi_move_to_.RunFrame(world, assignments.GetGroupAssignments("supports"), motion_commands);
+    multi_move_to_.RunFrame(assignments.GetGroupAssignments("supports"), motion_commands);
   }
 
   return motion_commands;
