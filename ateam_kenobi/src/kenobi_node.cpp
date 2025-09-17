@@ -489,7 +489,9 @@ private:
         ros_cmd.twist.linear.x = linear_vel.x();
         ros_cmd.twist.linear.y = linear_vel.y();
         ros_cmd.twist.angular.z = motion_cmd.angular;
-        ros_cmd.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+        ros_cmd.twist_frame =
+          use_world_vels ? ateam_msgs::msg::RobotMotionCommand::FRAME_WORLD :
+          ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
       }
     }
 
