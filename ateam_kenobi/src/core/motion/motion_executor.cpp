@@ -22,6 +22,7 @@
 #include <ateam_geometry/nearest_point.hpp>
 #include "core/path_planning/obstacles.hpp"
 #include "core/path_planning/escape_velocity.hpp"
+#include "frame_conversions.hpp"
 
 namespace ateam_kenobi::motion
 {
@@ -162,8 +163,8 @@ std::optional<BodyVelocity> MotionExecutor::GenerateEscapeVelocity(
       intent.planner_options.footprint_inflation);
   if (vel) {
     return BodyVelocity{
-      ateam_geometry::Vector(vel->linear.x, vel->linear.y),
-      vel->angular.z
+      WorldToLocalFrame(*vel, robot),
+      0.0
     };
   } else {
     return std::nullopt;

@@ -290,10 +290,9 @@ void moveBotsInObstacles(
     }
     RobotCommand command;
     command.motion_intent.linear = motion::intents::linear::VelocityIntent{
-      ateam_geometry::Vector{opt_escape_vel->linear.x, opt_escape_vel->linear.y},
+      *opt_escape_vel,
       motion::intents::linear::Frame::World
     };
-    command.motion_intent.angular = motion::intents::angular::VelocityIntent{opt_escape_vel->angular.z};
     motion_commands[i] = command;
     play_info_bots.push_back(robot.id);
   }
