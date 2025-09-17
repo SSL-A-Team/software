@@ -60,16 +60,16 @@ RobotCommand Extract::RunFrame(const World & world, const Robot & robot)
     command.motion_intent.linear = motion::intents::linear::PositionIntent{
       robot.pos + ateam_geometry::normalize(world.ball.pos - robot.pos) * 0.25
     };
-    // TODO(barulicm): Set max angular velocity to 2.0
+    command.motion_intent.motion_options.max_angular_velocity = 2.0;
   } else if (ball_far) {
     command.motion_intent.planner_options.avoid_ball = false;
     command.motion_intent.linear = motion::intents::linear::PositionIntent{world.ball.pos};
-    // TODO(barulicm): Set max angular velocity to 2.0
+    command.motion_intent.motion_options.max_angular_velocity = 2.0;
   } else {
     command.motion_intent.planner_options.avoid_ball = false;
     command.motion_intent.planner_options.footprint_inflation = -0.1;
     command.motion_intent.linear = motion::intents::linear::PositionIntent{world.ball.pos};
-    // TODO(barulicm): Set max velocity to 0.35
+    command.motion_intent.motion_options.max_velocity = 0.35;
   }
 
   command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};

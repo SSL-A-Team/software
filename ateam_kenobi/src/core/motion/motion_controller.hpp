@@ -66,15 +66,17 @@ public:
   void face_travel();
   void no_face();
 
-  void calculate_trajectory_velocity_limits();
+  void calculate_trajectory_velocity_limits(const MotionOptions & options);
 
   double calculate_trapezoidal_velocity(
+    const MotionOptions & options,
     const ateam_kenobi::Robot & robot,
     ateam_geometry::Point target,
     size_t target_index,
     double dt);
 
   double calculate_trapezoidal_angular_vel(
+    const MotionOptions & options,
     const ateam_kenobi::Robot & robot,
     double target_angle,
     double dt);
@@ -92,17 +94,6 @@ public:
   void set_x_pid_gains(double p, double i, double d, double i_max, double i_min);
   void set_y_pid_gains(double p, double i, double d, double i_max, double i_min);
   void set_t_pid_gains(double p, double i, double d, double i_max, double i_min);
-
-  // Velocity limits
-  double v_max = 2.0;
-  double t_max = 3.0;
-
-  // Acceleration limits
-  double accel_limit = 1.5;
-  double decel_limit = 1.5;
-  double t_accel_limit = 5.0;
-
-  double max_allowed_turn_angle = M_PI / 4.0;
 
   double face_angle = 0;
   std::optional<ateam_geometry::Point> face_towards;

@@ -128,7 +128,7 @@ void EasyMoveTo::setMaxVelocity(double velocity)
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX VELOCITY");
     return;
   }
-  motion_controller_.v_max = velocity;
+  motion_options_.max_velocity = velocity;
 }
 
 void EasyMoveTo::setMaxAngularVelocity(double velocity)
@@ -137,7 +137,7 @@ void EasyMoveTo::setMaxAngularVelocity(double velocity)
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE VELOCITY GIVEN TO SET MAX ANGULAR VELOCITY");
     return;
   }
-  motion_controller_.t_max = velocity;
+  motion_options_.max_angular_velocity = velocity;
 }
 
 void EasyMoveTo::setMaxAccel(double accel)
@@ -146,7 +146,7 @@ void EasyMoveTo::setMaxAccel(double accel)
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE ACCELERATION GIVEN TO SET MAX ACCELERATION");
     return;
   }
-  motion_controller_.accel_limit = accel;
+  motion_options_.max_acceleration = accel;
 }
 
 void EasyMoveTo::setMaxDecel(double decel)
@@ -155,7 +155,7 @@ void EasyMoveTo::setMaxDecel(double decel)
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE DECELERATION GIVEN TO SET MAX DECELERATION");
     return;
   }
-  motion_controller_.decel_limit = decel;
+  motion_options_.max_deceleration = decel;
 }
 
 void EasyMoveTo::setMaxThetaAccel(double accel)
@@ -164,12 +164,12 @@ void EasyMoveTo::setMaxThetaAccel(double accel)
     RCLCPP_WARN(getLogger(), "UNREASONABLY LARGE ACCELERATION GIVEN TO SET MAX THETA ACCELERATION");
     return;
   }
-  motion_controller_.t_accel_limit = accel;
+  motion_options_.max_angular_acceleration = accel;
 }
 
 void EasyMoveTo::setMaxAllowedTurnAngle(double angle)
 {
-  motion_controller_.max_allowed_turn_angle = angle;
+  motion_options_.max_allowed_turn_angle = angle;
 }
 
 ateam_msgs::msg::RobotMotionCommand EasyMoveTo::runFrame(

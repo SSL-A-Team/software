@@ -192,7 +192,7 @@ RobotCommand Dribble::runMoveBehindBall(
   command.motion_intent.planner_options.draw_obstacles = true;
   command.motion_intent.planner_options.ignore_start_obstacle = false;
 
-  // TODO(barulicm): Set max velocity to 1.5
+  command.motion_intent.motion_options.max_velocity = 1.5;
 
   if (ateam_geometry::norm(robot.pos - world.ball.pos) < 0.5) {
     command.dribbler_speed = 130;
@@ -215,7 +215,7 @@ RobotCommand Dribble::runDribble(const Robot & robot)
   const auto position_target = target_ - (kRobotRadius * ateam_geometry::normalize(robot_to_target));
   command.motion_intent.linear = motion::intents::linear::PositionIntent{position_target};
 
-  // TODO(barulicm): Set max velocity to 0.35
+  command.motion_intent.motion_options.max_velocity = 0.35;
 
   command.dribbler_speed = 130;
 
@@ -233,7 +233,7 @@ RobotCommand Dribble::runBackAway(const World & world, const Robot & robot)
 
   command.dribbler_speed = 0;
 
-  // TODO(barulicm): Set max velocity to 0.35
+  command.motion_intent.motion_options.max_velocity = 0.35;
 
   // Wait for the dribbler to wind down before moving
   if ((std::chrono::steady_clock::now() - back_away_duration_.value()) > back_away_start_) {

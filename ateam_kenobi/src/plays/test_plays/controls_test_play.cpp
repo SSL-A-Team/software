@@ -48,11 +48,6 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
   //   {ateam_geometry::Point(-0.5, -kRobotRadius), AngleMode::face_absolute, M_PI / 2, 3.0},
   //   {ateam_geometry::Point(-0.5, kRobotRadius), AngleMode::face_absolute, M_PI / 2, 3.0}
   // };
-
-  motion_controller_.v_max = 2.0;
-  motion_controller_.t_max = 20.0;
-  motion_controller_.accel_limit = 2.0;
-  motion_controller_.decel_limit = 2.0;
 }
 
 void ControlsTestPlay::reset()
@@ -115,6 +110,10 @@ std::array<std::optional<RobotCommand>, 16> ControlsTestPlay::runFrame(
     world.current_time.time_since_epoch()).count();
 
   motion::MotionOptions motion_options;
+  motion_options.max_velocity = 2.0;
+  motion_options.max_angular_velocity = 20.0;
+  motion_options.max_acceleration = 2.0;
+  motion_options.max_deceleration = 2.0;
   motion_options.completion_threshold = position_threshold;
   const auto command_msg = motion_controller_.get_command(
     robot, current_time,

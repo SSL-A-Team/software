@@ -89,8 +89,7 @@ RobotCommand Capture::runMoveToBall(
   const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
       (capture_speed_ * capture_speed_));
 
-  // TODO(barulicm): Set max velocity to std::min(max_decel_vel, max_speed_)
-  (void)max_decel_vel;
+  command.motion_intent.motion_options.max_velocity = std::min(max_decel_vel, max_speed_);
 
   return command;
 }
@@ -116,7 +115,7 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
   command.motion_intent.planner_options.footprint_inflation = 0.0;
   command.motion_intent.motion_options.completion_threshold = 0.0;
 
-  // TODO(barulicm): Set max velocity to capture_speed_
+  command.motion_intent.motion_options.max_velocity = capture_speed_;
 
   if(world.ball.visible) {
     command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};

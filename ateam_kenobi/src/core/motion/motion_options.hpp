@@ -31,6 +31,15 @@ struct MotionOptions
 
   /// @brief angle around the end point that will be considered completed
   double angular_completion_threshold = 0.035;  // radians
+
+  double max_velocity = 1.0;  // m/s
+  double max_acceleration = 2.0;  // m/s^2
+  double max_deceleration = 2.0;  // m/s^2
+
+  double max_angular_velocity = 3.0;  // rad/s
+  double max_angular_acceleration = 4.0;  // rad/s^2
+
+  double max_allowed_turn_angle = M_PI / 4.0;  // radians
 };
 
 }  // namespace ateam_kenobi::motion

@@ -77,7 +77,7 @@ RobotCommand PassReceiver::runFrame(const World & world, const Robot & robot)
     command = runPrePass(world, robot);
   }
 
-  // TODO(barulicm): Set max velocity to 2.0
+  command.motion_intent.motion_options.max_velocity = 2.0;
 
   return command;
 }
@@ -155,7 +155,7 @@ RobotCommand PassReceiver::runPass(const World & world, const Robot & robot)
   const auto destination = ball_ray.supporting_line().projection(robot.pos);
   command.motion_intent.linear = motion::intents::linear::PositionIntent{destination};
   command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-  // TODO(barulicm): Set max decel to 4.0
+  command.motion_intent.motion_options.max_deceleration = 4.0;
   command.motion_intent.planner_options.avoid_ball = false;
   
   command.dribbler_speed = kDefaultDribblerSpeed * 1.2;
@@ -194,7 +194,7 @@ RobotCommand PassReceiver::runApproachBall(
     kRobotDiameter * 1.05;
   RobotCommand command;
   command.motion_intent.linear = motion::intents::linear::PositionIntent{target};
-  // TODO(barulicm): Set max velocity to 1.0
+  command.motion_intent.motion_options.max_velocity = 1.0;
   return command;
 }
 

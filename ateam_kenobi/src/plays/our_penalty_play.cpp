@@ -88,7 +88,7 @@ std::array<std::optional<RobotCommand>, 16> OurPenaltyPlay::runFrame(
     RobotCommand command;
     command.motion_intent.linear = motion::intents::linear::PositionIntent{destination};
     command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-    // TODO(barulicm): Set max velocity to 1.5
+    command.motion_intent.motion_options.max_velocity = 1.5;
     motion_commands[kicking_robot.id] = command;
   } else {
     // Kick ball
@@ -116,7 +116,10 @@ std::array<std::optional<RobotCommand>, 16> OurPenaltyPlay::runFrame(
     });
   multi_move_to_.SetTargetPoints(target_points);
   multi_move_to_.SetFaceTravel();
-  // TODO(barulicm): Set max velocity to 1.5
+  for(auto & maybe_cmd : motion_commands) {
+    if(!maybe_cmd) continue;
+    maybe_cmd->motion_intent.motion_options.max_velocity = 1.5;
+  }
   multi_move_to_.RunFrame(available_robots, motion_commands);
 
   return motion_commands;

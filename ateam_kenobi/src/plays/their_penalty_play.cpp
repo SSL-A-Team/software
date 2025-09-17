@@ -77,9 +77,12 @@ std::array<std::optional<RobotCommand>, 16> TheirPenaltyPlay::runFrame(
       return current;
     });
   multi_move_to_.SetTargetPoints(target_points);
-  // multi_move_to_.SetMaxVelocity(1.5);  // TODO(barulicm)
   multi_move_to_.SetFaceTravel();
   multi_move_to_.RunFrame(available_robots, motion_commands);
+  for(auto & maybe_cmd : motion_commands) {
+    if(!maybe_cmd) continue;
+    maybe_cmd->motion_intent.motion_options.max_velocity = 1.5;
+  }
 
   return motion_commands;
 }

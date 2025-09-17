@@ -190,9 +190,8 @@ RobotCommand LineKick::RunMoveBehindBall(
   command.motion_intent.planner_options.draw_obstacles = true;
   command.motion_intent.planner_options.footprint_inflation = std::min(0.015, pre_kick_offset);
 
-  // TODO(barulicm): add accel limit support to motion intent
-  // easy_move_to_.setMaxAccel(1.5);
-  // easy_move_to_.setMaxDecel(1.5);
+  command.motion_intent.motion_options.max_acceleration = 1.5;
+  command.motion_intent.motion_options.max_deceleration = 1.5;
 
   double obstacle_radius_multiplier = 1.8;
   const auto robot_to_prekick = prekick_position - robot.pos;

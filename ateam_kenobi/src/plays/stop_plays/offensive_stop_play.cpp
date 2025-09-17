@@ -84,7 +84,10 @@ std::array<std::optional<RobotCommand>, 16> OffensiveStopPlay::runFrame(
     [](const auto & o) {return !o;}, std::make_optional(RobotCommand{}));
 
   // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
-  // TODO(barulicm): Set max velocity to 1.0
+  for(auto & maybe_cmd : motion_commands) {
+    if(!maybe_cmd) continue;
+    maybe_cmd->motion_intent.motion_options.max_velocity = 1.0;
+  }
 
   return motion_commands;
 }

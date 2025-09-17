@@ -287,9 +287,9 @@ void OurBallPlacementPlay::runExtracting(
       motion_command.motion_intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
       motion_command.motion_intent.linear =
         motion::intents::linear::PositionIntent{approach_point_};
-      // TODO(barulicm): set max velocity to 0.2
-      // TODO(barulicm): set max accel to 1.0
-      // TODO(barulicm): set max decel to 1.0
+      motion_command.motion_intent.motion_options.max_velocity = 0.2;
+      motion_command.motion_intent.motion_options.max_acceleration = 1.0;
+      motion_command.motion_intent.motion_options.max_deceleration = 1.0;
 
       if (world.ball.visible) {
         motion_command.motion_intent.angular =
@@ -307,9 +307,9 @@ void OurBallPlacementPlay::runExtracting(
     motion_command.motion_intent.planner_options.avoid_ball = false;
     motion_command.motion_intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
 
-    // TODO(barulicm): set max velocity to 0.35
-    // TODO(barulicm): set max accel to 2.0
-    // TODO(barulicm): set max decel to 2.0
+    motion_command.motion_intent.motion_options.max_velocity = 0.35;
+    motion_command.motion_intent.motion_options.max_acceleration = 2.0;
+    motion_command.motion_intent.motion_options.max_deceleration = 2.0;
 
     if (world.ball.visible) {
       motion_command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
@@ -324,9 +324,9 @@ void OurBallPlacementPlay::runExtracting(
       motion::intents::linear::Frame::Local};
   } else {
     getPlayInfo()["ExtractState"] = "moving to approach point";
-    // TODO(barulicm): Set max velocity to 1.5
-    // TODO(barulicm): Set max accel to 2.0
-    // TODO(barulicm): Set max decel to 2.0
+    motion_command.motion_intent.motion_options.max_velocity = 1.5;
+    motion_command.motion_intent.motion_options.max_acceleration = 2.0;
+    motion_command.motion_intent.motion_options.max_deceleration = 2.0;
 
     motion_command.motion_intent.linear = motion::intents::linear::PositionIntent{approach_point_};
     motion_command.motion_intent.angular = motion::intents::angular::HeadingIntent{ateam_geometry::ToHeading(world.ball.pos - approach_point_)};
