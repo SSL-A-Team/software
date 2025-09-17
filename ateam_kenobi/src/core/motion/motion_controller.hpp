@@ -31,6 +31,7 @@
 #include "core/types/world.hpp"
 #include "pid.hpp"
 #include "motion_options.hpp"
+#include "motion_intent.hpp"
 
 namespace ateam_kenobi::motion {
 
@@ -82,7 +83,7 @@ public:
     double dt);
 
   // Generate a robot motion command to follow a trajectory
-  ateam_msgs::msg::RobotMotionCommand get_command(
+  BodyVelocity get_command(
     ateam_kenobi::Robot robot, double current_time,
     const MotionOptions & options = MotionOptions());
 

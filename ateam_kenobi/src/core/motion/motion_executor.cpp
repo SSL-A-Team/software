@@ -116,18 +116,12 @@ std::array<std::optional<BodyVelocity>,
     }, intent.angular);
 
     if(!path.empty()) {
-      // TODO(barulicm) change return type of get_command to BodyVelocity
-      auto controller_vel = controller.get_command(robot, current_time,
-          intent.motion_options);
+      auto controller_vel = controller.get_command(robot, current_time, intent.motion_options);
       if (use_controller_linvel) {
-        ConvertWorldVelsToBodyVels(controller_vel, robot);
-        body_velocity.linear = {
-          controller_vel.twist.linear.x,
-          controller_vel.twist.linear.y
-        };
+        body_velocity.linear = controller_vel.linear;
       }
       if (use_controller_omega) {
-        body_velocity.angular = controller_vel.twist.angular.z;
+        body_velocity.angular = controller_vel.angular;
       }
     }
 
@@ -219,14 +213,14 @@ void MotionExecutor::DrawOverlays(
 std::pair<size_t, ateam_geometry::Point> MotionExecutor::ProjectRobotOnPath(
   const path_planning::Path & path, const Robot & robot)
 {
-  if (path.empty())
-  {
+  if (path.empty()) {
     return {0, robot.pos};
   }
   if (path.size() == 1) {
     return {0, path[0]};
   }
-  auto closest_point = ateam_geometry::nearestPointOnSegment(ateam_geometry::Segment(path[0], path[1]), robot.pos);
+  auto closest_point = ateam_geometry::nearestPointOnSegment(ateam_geometry::Segment(path[0],
+      path[1]), robot.pos);
   size_t closest_index = 1;
   double min_distance = CGAL::squared_distance(closest_point, robot.pos);
   for (size_t i = 1; i < path.size() - 1; ++i) {
@@ -236,7 +230,7 @@ std::pair<size_t, ateam_geometry::Point> MotionExecutor::ProjectRobotOnPath(
     if (distance <= min_distance) {
       min_distance = distance;
       closest_point = point_on_segment;
-      closest_index = i+1;
+      closest_index = i + 1;
     }
   }
   return {closest_index, closest_point};

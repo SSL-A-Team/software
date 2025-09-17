@@ -32,6 +32,7 @@
 #include "ateam_geometry/ateam_geometry.hpp"
 #include "ateam_common/robot_constants.hpp"
 #include "pid.hpp"
+#include "frame_conversions.hpp"
 
 namespace ateam_kenobi::motion {
 
@@ -210,12 +211,12 @@ double MotionController::calculate_trapezoidal_angular_vel(
   return std::clamp(trapezoidal_vel, -options.max_angular_velocity, options.max_angular_velocity);
 }
 
-ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
+BodyVelocity MotionController::get_command(
   ateam_kenobi::Robot robot,
   double current_time,
   const MotionOptions & options)
 {
-  ateam_msgs::msg::RobotMotionCommand motion_command;
+  BodyVelocity motion_command;
 
   // Skip if there isn't a trajectory
   if (this->trajectory.size() <= 0) {
@@ -358,8 +359,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       vel_vector = options.max_velocity * ateam_geometry::normalize(vel_vector);
     }
 
-    motion_command.twist.linear.x = vel_vector.x();
-    motion_command.twist.linear.y = vel_vector.y();
+    motion_command.linear = WorldToLocalFrame(vel_vector, robot);
   }
 
   // calculate angle movement commands
@@ -410,7 +410,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
           }
         }
       }
-      motion_command.twist.angular.z = std::clamp(t_command, -options.max_angular_velocity, options.max_angular_velocity);
+      motion_command.angular = std::clamp(t_command, -options.max_angular_velocity, options.max_angular_velocity);
     }
   }
 

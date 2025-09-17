@@ -115,15 +115,13 @@ std::array<std::optional<RobotCommand>, 16> ControlsTestPlay::runFrame(
   motion_options.max_acceleration = 2.0;
   motion_options.max_deceleration = 2.0;
   motion_options.completion_threshold = position_threshold;
-  const auto command_msg = motion_controller_.get_command(
+  const auto body_vel = motion_controller_.get_command(
     robot, current_time,
     motion_options);
 
   RobotCommand command;
-  command.motion_intent.linear = motion::intents::linear::VelocityIntent{
-    ateam_geometry::Vector(command_msg.twist.linear.x, command_msg.twist.linear.y),
-    motion::intents::linear::Frame::World};
-  command.motion_intent.angular = motion::intents::angular::VelocityIntent{command_msg.twist.angular.z};
+  command.motion_intent.linear = motion::intents::linear::VelocityIntent{body_vel.linear, motion::intents::linear::Frame::World};
+  command.motion_intent.angular = motion::intents::angular::VelocityIntent{body_vel.angular};
   maybe_motion_commands[robot.id] = command;
 
   const std::vector<ateam_geometry::Point> viz_path = path;
@@ -146,8 +144,8 @@ std::array<std::optional<RobotCommand>, 16> ControlsTestPlay::runFrame(
   getPlayInfo()["robot"]["vel"]["y"] = robot.vel.y();
   getPlayInfo()["robot"]["vel"]["t"] = robot.omega;
 
-  getPlayInfo()["robot"]["cmd_vel"]["x"] = command_msg.twist.linear.x;
-  getPlayInfo()["robot"]["cmd_vel"]["y"] = command_msg.twist.linear.y;
+  getPlayInfo()["robot"]["cmd_vel"]["x"] = body_vel.linear.x();
+  getPlayInfo()["robot"]["cmd_vel"]["y"] = body_vel.linear.y();
 
   getPlayInfo()["error"]["x"] = waypoints[index].position.x() - robot.pos.x();
   getPlayInfo()["error"]["y"] = waypoints[index].position.y() - robot.pos.y();
