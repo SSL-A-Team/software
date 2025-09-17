@@ -33,7 +33,6 @@ StandardDefense::StandardDefense(stp::Options stp_options)
 void StandardDefense::reset()
 {
   goalie_.reset();
-  defenders_.reset();
 }
 
 std::vector<ateam_geometry::Point> StandardDefense::getAssignmentPoints(const World & world)
@@ -44,7 +43,7 @@ std::vector<ateam_geometry::Point> StandardDefense::getAssignmentPoints(const Wo
 void StandardDefense::runFrame(
   const World & world,
   const std::vector<Robot> & defender_bots,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+  std::array<std::optional<RobotCommand>, 16> & motion_commands)
 {
   goalie_.runFrame(world, motion_commands);
   ForwardPlayInfo(goalie_);
