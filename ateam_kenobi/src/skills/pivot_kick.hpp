@@ -26,7 +26,6 @@
 #include "kick_skill.hpp"
 #include "core/types/robot_command.hpp"
 #include "core/types/world.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 #include "skills/capture.hpp"
 
 namespace ateam_kenobi::skills
@@ -84,7 +83,6 @@ public:
 
 private:
   ateam_geometry::Point target_point_;
-  play_helpers::EasyMoveTo easy_move_to_;
   skills::Capture capture_;
   bool done_ = false;
   double pivot_speed_ = 2.0;  // rad/s

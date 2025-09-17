@@ -29,8 +29,7 @@ namespace ateam_kenobi::skills
 {
 
 LineKick::LineKick(stp::Options stp_options, KickSkill::WaitType wait_type)
-: KickSkill(stp_options, wait_type),
-  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
+: KickSkill(stp_options, wait_type)
 {
 }
 

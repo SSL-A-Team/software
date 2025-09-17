@@ -30,7 +30,6 @@ namespace ateam_kenobi::skills
 
 PivotKick::PivotKick(stp::Options stp_options, KickSkill::WaitType wait_type)
 : KickSkill(stp_options, wait_type),
-  easy_move_to_(createChild<play_helpers::EasyMoveTo>("easy_move_to")),
   capture_(createChild<skills::Capture>("Capture"))
 {
 }
@@ -57,7 +56,6 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
   }
 
   if (!robot.breakbeam_ball_detected) {
-    easy_move_to_.reset();
     prev_state_ = State::Capture;
     getPlayInfo()["State"] = "Capture";
     return Capture(world, robot);
@@ -67,7 +65,6 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
   if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.05) {
     if (prev_state_ != State::Pivot) {
-      easy_move_to_.reset();
       prev_state_ = State::Pivot;
     }
     getPlayInfo()["State"] = "Pivot";
@@ -75,7 +72,6 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
   }
 
   if (prev_state_ != State::KickBall) {
-    easy_move_to_.reset();
     prev_state_ = State::KickBall;
   }
 

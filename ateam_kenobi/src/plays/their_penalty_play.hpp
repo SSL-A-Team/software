@@ -23,7 +23,6 @@
 #define PLAYS__THEIR_PENALTY_PLAY_HPP_
 
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 #include "skills/goalie.hpp"
 #include "tactics/multi_move_to.hpp"
 

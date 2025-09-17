@@ -39,7 +39,6 @@ Goalie::Goalie(stp::Options stp_options)
   kick_(createChild<skills::LineKick>("Kick"))
 {
   reset();
-  kick_.SetUseDefaultObstacles(false);
   default_planner_options_.avoid_ball = false;
   default_planner_options_.use_default_obstacles = false;
   // kick_.setPreKickOffset(kRobotRadius + kBallRadius + 0.04);
@@ -316,7 +315,8 @@ RobotCommand Goalie::runClearBall(
   kick_.SetKickSpeed(1.3);
   kick_.SetTargetPoint(target_point);
 
-  const auto command = kick_.RunFrame(world, goalie);
+  auto command = kick_.RunFrame(world, goalie);
+  command.motion_intent.planner_options.use_default_obstacles = false;
   ForwardPlayInfo(kick_);
   return command;
 }
@@ -342,7 +342,8 @@ RobotCommand Goalie::runSideEjectBall(
   kick_.SetKickSpeed(0.2);
   kick_.SetTargetPoint(world.ball.pos + shoot_vec);
 
-  const auto command = kick_.RunFrame(world, goalie);
+  auto command = kick_.RunFrame(world, goalie);
+  command.motion_intent.planner_options.use_default_obstacles = false;
   ForwardPlayInfo(kick_);
   return command;
 }

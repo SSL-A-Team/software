@@ -28,7 +28,6 @@
 #include "ateam_geometry/types.hpp"
 #include "core/types/robot.hpp"
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 #include "skills/goalie.hpp"
 #include "tactics/multi_move_to.hpp"
 

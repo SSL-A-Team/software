@@ -26,7 +26,6 @@
 #include "kick_skill.hpp"
 #include "core/types/world.hpp"
 #include "core/types/robot_command.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -64,16 +63,6 @@ public:
   bool IsDone() const
   {
     return state_ == State::Done;
-  }
-
-  /**
-   * @brief Set the default obstacles planner option on the internal EasyMoveTo
-   */
-  void SetUseDefaultObstacles(bool use_obstacles)
-  {
-    path_planning::PlannerOptions options = easy_move_to_.getPlannerOptions();
-    options.use_default_obstacles = use_obstacles;
-    easy_move_to_.setPlannerOptions(options);
   }
 
   bool IsReady() const override
@@ -156,7 +145,6 @@ private:
   const double kDefaultPreKickOffset = kRobotRadius + kBallRadius + 0.06;
   double pre_kick_offset = kDefaultPreKickOffset;
   ateam_geometry::Point target_point_;
-  play_helpers::EasyMoveTo easy_move_to_;
 
   enum class State
   {
