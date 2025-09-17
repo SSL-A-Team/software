@@ -24,6 +24,7 @@
 
 #include <ateam_geometry/types.hpp>
 #include "core/types/robot.hpp"
+#include "core/motion/motion_intent.hpp"
 
 namespace ateam_kenobi::motion
 {

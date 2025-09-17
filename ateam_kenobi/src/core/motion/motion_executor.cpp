@@ -22,7 +22,6 @@
 #include <ateam_geometry/nearest_point.hpp>
 #include "core/path_planning/obstacles.hpp"
 #include "core/path_planning/escape_velocity.hpp"
-#include "world_to_body_vel.hpp"
 
 namespace ateam_kenobi::motion
 {

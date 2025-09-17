@@ -50,7 +50,7 @@
 #include "core/double_touch_eval.hpp"
 #include "core/ballsense_emulator.hpp"
 #include "core/ballsense_filter.hpp"
-#include "core/motion/world_to_body_vel.hpp"
+#include "core/motion/frame_conversions.hpp"
 #include "core/motion/motion_executor.hpp"
 #include "plays/halt_play.hpp"
 #include "core/defense_area_enforcement.hpp"
@@ -440,12 +440,6 @@ private:
 
     joystick_enforcer_.RemoveCommandForJoystickBot(motion_commands);
 
-    if (get_parameter("use_world_velocities").as_bool()) {
-      motion::ConvertBodyVelsToWorldVels(motion_commands, world_.our_robots);
-    } else {
-      motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);
-    }
-
     send_all_motion_commands(motion_commands);
   }
 
@@ -465,7 +459,7 @@ private:
     std::array<std::optional<motion::MotionIntent>, 16> motion_intents;
     std::ranges::transform(
       commands, motion_intents.begin(),
-      [](const std::optional<RobotCommand> & cmd) -> std::optional<motion::MotionIntent>{
+      [](const std::optional<RobotCommand> & cmd) -> std::optional<motion::MotionIntent> {
         if (cmd.has_value()) {
           return cmd->motion_intent;
         } else {
@@ -474,6 +468,8 @@ private:
       });
     const auto motion_commands = motion_executor_.RunFrame(motion_intents, overlays_, world);
 
+    const auto use_world_vels = get_parameter("use_world_velocities").as_bool();
+
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ros_commands;
     for(auto id = 0ul; id < commands.size(); ++id) {
       auto & maybe_cmd = commands[id];
@@ -481,14 +477,17 @@ private:
       if (!maybe_cmd || !maybe_motion_cmd) {
         ros_commands[id] = std::nullopt;
       } else {
+        const auto & robot = world.our_robots[id];
         const auto & cmd = maybe_cmd.value();
         const auto & motion_cmd = maybe_motion_cmd.value();
+        const auto linear_vel = use_world_vels ?
+          motion::LocalToWorldFrame(motion_cmd.linear, robot) : motion_cmd.linear;
         auto & ros_cmd = ros_commands[id].emplace();
         ros_cmd.dribbler_speed = cmd.dribbler_speed;
         ros_cmd.kick_request = static_cast<uint8_t>(cmd.kick);
         ros_cmd.kick_speed = cmd.kick_speed;
-        ros_cmd.twist.linear.x = motion_cmd.linear.x();
-        ros_cmd.twist.linear.y = motion_cmd.linear.y();
+        ros_cmd.twist.linear.x = linear_vel.x();
+        ros_cmd.twist.linear.y = linear_vel.y();
         ros_cmd.twist.angular.z = motion_cmd.angular;
         ros_cmd.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
       }
