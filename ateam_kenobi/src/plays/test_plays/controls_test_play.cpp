@@ -120,7 +120,8 @@ std::array<std::optional<RobotCommand>, 16> ControlsTestPlay::runFrame(
     motion_options);
 
   RobotCommand command;
-  command.motion_intent.linear = motion::intents::linear::VelocityIntent{body_vel.linear, motion::intents::linear::Frame::World};
+  command.motion_intent.linear = motion::intents::linear::VelocityIntent{body_vel.linear,
+    motion::intents::linear::Frame::World};
   command.motion_intent.angular = motion::intents::angular::VelocityIntent{body_vel.angular};
   maybe_motion_commands[robot.id] = command;
 

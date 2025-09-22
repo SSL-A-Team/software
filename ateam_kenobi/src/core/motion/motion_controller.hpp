@@ -33,7 +33,8 @@
 #include "motion_options.hpp"
 #include "motion_intent.hpp"
 
-namespace ateam_kenobi::motion {
+namespace ateam_kenobi::motion
+{
 
 // cause the robot to: always face a point, face in the direction of travel, or stay facing the
 // same direction

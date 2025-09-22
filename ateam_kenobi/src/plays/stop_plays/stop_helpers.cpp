@@ -259,7 +259,8 @@ void moveBotsTooCloseToBall(
     RobotCommand command;
     command.motion_intent.linear = motion::intents::linear::PositionIntent{spot};
     command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-    command.motion_intent.planner_options.use_default_obstacles = bot.id != world.referee_info.our_goalie_id;
+    command.motion_intent.planner_options.use_default_obstacles = bot.id !=
+      world.referee_info.our_goalie_id;
     command.motion_intent.obstacles = added_obstacles;
     motion_commands[bot.id] = command;
     overlays.drawCircle(

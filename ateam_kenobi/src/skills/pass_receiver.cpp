@@ -53,7 +53,7 @@ RobotCommand PassReceiver::runFrame(const World & world, const Robot & robot)
   const auto ball_stalled_and_reachable = isBallStalledAndReachable(world, robot);
 
   RobotCommand command;
-  
+
   if (bot_close_to_target && ball_vel_matching_bot_vel && ball_close) {
     done_ = true;
     getPlayInfo()["State"] = "Done";
@@ -157,7 +157,7 @@ RobotCommand PassReceiver::runPass(const World & world, const Robot & robot)
   command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
   command.motion_intent.motion_options.max_deceleration = 4.0;
   command.motion_intent.planner_options.avoid_ball = false;
-  
+
   command.dribbler_speed = kDefaultDribblerSpeed * 1.2;
   const auto dist_to_ball = ateam_geometry::norm(robot.pos - world.ball.pos);
   const auto time_to_ball = dist_to_ball / ateam_geometry::norm(world.ball.vel);
@@ -167,10 +167,13 @@ RobotCommand PassReceiver::runPass(const World & world, const Robot & robot)
     const auto angle_between_vecs = ateam_geometry::ShortestAngleBetween(world.ball.vel,
         robot_backwards_vec);
     if(std::abs(angle_between_vecs) < M_PI_2) {
-      command.motion_intent.callback = [](motion::BodyVelocity plan_velocity, 
-        const path_planning::Path &, const Robot & robot, const World & world) -> motion::BodyVelocity {
+      command.motion_intent.callback = [](motion::BodyVelocity plan_velocity,
+        const path_planning::Path &, const Robot & robot,
+        const World & world) -> motion::BodyVelocity {
           const auto multiplier = robot.breakbeam_ball_detected_filtered ? 0.2 : 0.6;
-          plan_velocity.linear += motion::WorldToLocalFrame(ateam_geometry::normalize(world.ball.vel) * multiplier, robot);
+          plan_velocity.linear +=
+            motion::WorldToLocalFrame(ateam_geometry::normalize(world.ball.vel) * multiplier,
+            robot);
           return plan_velocity;
         };
     }

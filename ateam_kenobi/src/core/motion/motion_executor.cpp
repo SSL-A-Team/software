@@ -19,6 +19,8 @@
 // THE SOFTWARE.
 
 #include "motion_executor.hpp"
+#include <utility>
+#include <vector>
 #include <ateam_geometry/nearest_point.hpp>
 #include "core/path_planning/obstacles.hpp"
 #include "core/path_planning/escape_velocity.hpp"
@@ -34,7 +36,6 @@ struct overloads : Ts ... { using Ts::operator() ...; };
 MotionExecutor::MotionExecutor(rclcpp::Logger logger)
 : logger_(std::move(logger))
 {
-
 }
 
 std::array<std::optional<BodyVelocity>,
@@ -236,4 +237,4 @@ std::pair<size_t, ateam_geometry::Point> MotionExecutor::ProjectRobotOnPath(
   return {closest_index, closest_point};
 }
 
-} // namespace ateam_kenobi::motion
+}  // namespace ateam_kenobi::motion

@@ -21,6 +21,7 @@
 
 #include "our_ball_placement_play.hpp"
 #include <angles/angles.h>
+#include <algorithm>
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include "core/play_helpers/available_robots.hpp"
@@ -314,8 +315,8 @@ void OurBallPlacementPlay::runExtracting(
     if (world.ball.visible) {
       motion_command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
     } else {
-      // If the ball is occluded we sometimes drive past its previous position and try to turn around
-      // so its better to just keep facing the same direction if we lose track of it
+      // If the ball is occluded we sometimes drive past its previous position and try to turn
+      // around so its better to just keep facing the same direction if we lose track of it
       motion_command.motion_intent.angular =
         motion::intents::angular::HeadingIntent{extract_robot.theta};
     }
@@ -329,7 +330,9 @@ void OurBallPlacementPlay::runExtracting(
     motion_command.motion_intent.motion_options.max_deceleration = 2.0;
 
     motion_command.motion_intent.linear = motion::intents::linear::PositionIntent{approach_point_};
-    motion_command.motion_intent.angular = motion::intents::angular::HeadingIntent{ateam_geometry::ToHeading(world.ball.pos - approach_point_)};
+    motion_command.motion_intent.angular =
+      motion::intents::angular::HeadingIntent{ateam_geometry::ToHeading(world.ball.pos -
+          approach_point_)};
   }
 
   const bool should_dribble = extract_robot.breakbeam_ball_detected_filtered ||

@@ -52,7 +52,8 @@ std::array<std::optional<RobotCommand>, 16> HaltPlay::runFrame(
 {
   std::array<std::optional<RobotCommand>, 16> halt_motion_commands;
   RobotCommand command;
-  command.motion_intent.linear = motion::intents::linear::VelocityIntent{ateam_geometry::Vector{0.0, 0.0}};
+  command.motion_intent.linear = motion::intents::linear::VelocityIntent{ateam_geometry::Vector{0.0,
+      0.0}};
   command.motion_intent.angular = motion::intents::angular::VelocityIntent{0.0};
   for (size_t i = 0; i < 16; ++i) {
     halt_motion_commands[i] = command;

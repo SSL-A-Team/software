@@ -34,7 +34,8 @@
 #include "pid.hpp"
 #include "frame_conversions.hpp"
 
-namespace ateam_kenobi::motion {
+namespace ateam_kenobi::motion
+{
 
 MotionController::MotionController(rclcpp::Logger logger)
 : logger_(logger)
@@ -121,7 +122,8 @@ void MotionController::calculate_trajectory_velocity_limits(const MotionOptions 
       const ateam_geometry::Vector prev_direction = point - prev_point;
 
       double angle = ateam_geometry::ShortestAngleBetween(direction, prev_direction);
-      max_turn_velocity = (abs(angle) > options.max_allowed_turn_angle) ? 0.5 : options.max_velocity;
+      max_turn_velocity = (abs(angle) >
+        options.max_allowed_turn_angle) ? 0.5 : options.max_velocity;
     }
 
     double selected_velocity = std::clamp(std::min(max_decel_velocity, max_turn_velocity),
@@ -195,7 +197,9 @@ double MotionController::calculate_trapezoidal_angular_vel(
   const double decel_direction = std::copysign(1, vel * angle_error);
 
   // Decelerate to target velocity
-  if (decel_direction > 0 && abs(deceleration_to_reach_target) > options.max_angular_acceleration * 0.95) {
+  if (decel_direction > 0 &&
+    abs(deceleration_to_reach_target) > options.max_angular_acceleration * 0.95)
+  {
     trapezoidal_vel = vel - (error_direction * deceleration_to_reach_target * dt);
 
   // Accelerate to speed
@@ -340,7 +344,8 @@ BodyVelocity MotionController::get_command(
 
     // Calculate trapezoidal velocity feedforward
     calculate_trajectory_velocity_limits(options);
-    double calculated_velocity = calculate_trapezoidal_velocity(options, robot, target, target_index, dt);
+    double calculated_velocity = calculate_trapezoidal_velocity(options, robot, target,
+        target_index, dt);
 
     ateam_geometry::Vector vel_vector;
 
@@ -410,7 +415,8 @@ BodyVelocity MotionController::get_command(
           }
         }
       }
-      motion_command.angular = std::clamp(t_command, -options.max_angular_velocity, options.max_angular_velocity);
+      motion_command.angular = std::clamp(t_command, -options.max_angular_velocity,
+          options.max_angular_velocity);
     }
   }
 

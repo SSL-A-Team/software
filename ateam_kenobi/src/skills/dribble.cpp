@@ -212,7 +212,8 @@ RobotCommand Dribble::runDribble(const Robot & robot)
   command.motion_intent.angular = motion::intents::angular::FacingIntent{target_};
 
   const auto robot_to_target = target_ - robot.pos;
-  const auto position_target = target_ - (kRobotRadius * ateam_geometry::normalize(robot_to_target));
+  const auto position_target = target_ -
+    (kRobotRadius * ateam_geometry::normalize(robot_to_target));
   command.motion_intent.linear = motion::intents::linear::PositionIntent{position_target};
 
   command.motion_intent.motion_options.max_velocity = 0.35;

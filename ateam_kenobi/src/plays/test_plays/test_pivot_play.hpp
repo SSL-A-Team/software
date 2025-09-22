@@ -87,11 +87,11 @@ public:
 
     motion_commands[robot.id]->motion_intent.callback = [&play_info](
       motion::BodyVelocity vel, const path_planning::Path &, const Robot &, const World &)
-    {
-      play_info["Y Cmd"] = vel.linear.y();
-      play_info["Omega Cmd"] = vel.angular;
-      return vel;
-    };
+      {
+        play_info["Y Cmd"] = vel.linear.y();
+        play_info["Omega Cmd"] = vel.angular;
+        return vel;
+      };
 
     return motion_commands;
   }

@@ -21,6 +21,7 @@
 
 #include "our_penalty_play.hpp"
 #include <limits>
+#include <vector>
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/window_evaluation.hpp"
 
@@ -104,7 +105,7 @@ std::array<std::optional<RobotCommand>, 16> OurPenaltyPlay::runFrame(
   ateam_geometry::Vector pattern_step(kRobotDiameter + 0.2, 0.0);
   std::vector<ateam_geometry::Point> target_points;
   std::generate_n(std::back_inserter(target_points), available_robots.size(),
-    [pos = pattern_point, step = pattern_step,&world]() mutable {
+    [pos = pattern_point, step = pattern_step, &world]() mutable {
       auto current = pos;
       pos = pos + step;
       if (pos.x() > (world.field.field_length / 2.0) - kRobotDiameter) {
@@ -117,7 +118,7 @@ std::array<std::optional<RobotCommand>, 16> OurPenaltyPlay::runFrame(
   multi_move_to_.SetTargetPoints(target_points);
   multi_move_to_.SetFaceTravel();
   for(auto & maybe_cmd : motion_commands) {
-    if(!maybe_cmd) continue;
+    if(!maybe_cmd) {continue;}
     maybe_cmd->motion_intent.motion_options.max_velocity = 1.5;
   }
   multi_move_to_.RunFrame(available_robots, motion_commands);

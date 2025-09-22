@@ -18,12 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef CORE__MOTION__MOTION_TARGET_HPP_
-#define CORE__MOTION__MOTION_TARGET_HPP_
+#ifndef CORE__MOTION__MOTION_INTENT_HPP_
+#define CORE__MOTION__MOTION_INTENT_HPP_
 
 #include <functional>
 #include <optional>
 #include <variant>
+#include <vector>
 #include <ateam_geometry/types.hpp>
 #include "core/types/world.hpp"
 #include "core/types/robot.hpp"
@@ -118,6 +119,6 @@ struct MotionIntent
   bool enable_escape_velocities = true;
 };
 
-} // namespace ateam_kenobi::motion
+}  // namespace ateam_kenobi::motion
 
-#endif  // CORE__MOTION__MOTION_TARGET_HPP_
+#endif  // CORE__MOTION__MOTION_INTENT_HPP_

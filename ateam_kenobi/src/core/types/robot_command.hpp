@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef CORE__TYPES_ROBOT_COMMAND_HPP_
-#define CORE__TYPES_ROBOT_COMMAND_HPP_
+#ifndef CORE__TYPES__ROBOT_COMMAND_HPP_
+#define CORE__TYPES__ROBOT_COMMAND_HPP_
 
 #include "core/motion/motion_intent.hpp"
 
@@ -41,7 +41,7 @@ enum class KickState : uint8_t
 struct RobotCommand
 {
   motion::MotionIntent motion_intent;
-  
+
   KickState kick = KickState::Arm;
   double kick_speed = 0.0;
 
@@ -50,4 +50,4 @@ struct RobotCommand
 
 }  // namespace ateam_kenobi
 
-#endif  // CORE__TYPES_ROBOT_COMMAND_HPP_
+#endif  // CORE__TYPES__ROBOT_COMMAND_HPP_

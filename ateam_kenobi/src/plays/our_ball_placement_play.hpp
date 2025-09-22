@@ -93,9 +93,13 @@ private:
     const ateam_geometry::Point & ball_pos,
     const ateam_geometry::Point & placement_point);
 
-  bool shouldRobotMove(const World & world, const ateam_geometry::Point & placement_point, const Robot & robot);
+  bool shouldRobotMove(
+    const World & world, const ateam_geometry::Point & placement_point,
+    const Robot & robot);
 
-  ateam_geometry::Point getTargetPoint(const World & world, const ateam_geometry::Point & placement_point, const Robot & robot);
+  ateam_geometry::Point getTargetPoint(
+    const World & world,
+    const ateam_geometry::Point & placement_point, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::plays

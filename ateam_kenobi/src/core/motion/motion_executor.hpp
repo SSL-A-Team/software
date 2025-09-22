@@ -23,6 +23,7 @@
 
 #include <array>
 #include <optional>
+#include <utility>
 #include <rclcpp/logger.hpp>
 #include "core/path_planning/path_planner.hpp"
 #include "core/visualization/overlays.hpp"
@@ -35,7 +36,7 @@ namespace ateam_kenobi::motion
 class MotionExecutor
 {
 public:
-  MotionExecutor(rclcpp::Logger logger);
+  explicit MotionExecutor(rclcpp::Logger logger);
 
   std::array<std::optional<BodyVelocity>,
     16> RunFrame(
@@ -58,9 +59,8 @@ private:
 
   std::pair<size_t, ateam_geometry::Point> ProjectRobotOnPath(
     const path_planning::Path & path, const Robot & robot);
-
 };
 
-} // namespace ateam_kenobi::motion
+}  // namespace ateam_kenobi::motion
 
 #endif  // CORE__MOTION__MOTION_EXECUTOR_HPP_

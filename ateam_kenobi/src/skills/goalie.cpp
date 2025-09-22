@@ -171,7 +171,9 @@ RobotCommand Goalie::runDefaultBehavior(
 
   RobotCommand command;
   command.motion_intent.planner_options = default_planner_options_;
-  command.motion_intent.linear = motion::intents::linear::PositionIntent{ateam_geometry::nearestPointOnSegment(goalie_line, ball_state.pos)};
+  command.motion_intent.linear =
+    motion::intents::linear::PositionIntent{ateam_geometry::nearestPointOnSegment(goalie_line,
+        ball_state.pos)};
   command.motion_intent.angular = motion::intents::angular::HeadingIntent{M_PI_2};
   command.motion_intent.obstacles = getCustomObstacles(world);
   return command;

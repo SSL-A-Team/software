@@ -21,6 +21,8 @@
 
 #include "their_ball_placement_play.hpp"
 #include <angles/angles.h>
+#include <algorithm>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include "core/play_helpers/available_robots.hpp"
 #include <ateam_geometry/ateam_geometry.hpp>
@@ -65,8 +67,8 @@ std::array<std::optional<RobotCommand>, 16> TheirBallPlacementPlay::runFrame(
   DrawKeepoutArea(world.ball.pos, placement_point);
 
   const auto partition_iter = std::partition(available_robots.begin(), available_robots.end(),
-    [this, &world, &placement_point](const Robot & robot) {
-      return shouldRobotMove(world, placement_point, robot);
+      [this, &world, &placement_point](const Robot & robot) {
+        return shouldRobotMove(world, placement_point, robot);
     });
 
   const std::vector<Robot> robots_to_move(available_robots.begin(), partition_iter);
@@ -85,7 +87,7 @@ std::array<std::optional<RobotCommand>, 16> TheirBallPlacementPlay::runFrame(
     [this, &world, &placement_point](const Robot & robot) {
       return getTargetPoint(world, placement_point, robot);
     });
-  
+
   multi_move_to_.SetTargetPoints(target_points);
   multi_move_to_.SetFacePoint(world.ball.pos);
   multi_move_to_.RunFrame(robots_to_move, maybe_motion_commands);

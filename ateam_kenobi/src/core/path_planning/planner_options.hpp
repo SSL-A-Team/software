@@ -75,8 +75,8 @@ struct PlannerOptions
 
   ReplanThresholds replan_thresholds;
 };
-  
-} // namespace ateam_kenobi::path_planning
+
+}  // namespace ateam_kenobi::path_planning
 
 
 #endif  // CORE__PATH_PLANNING__PLANNER_OPTIONS_HPP_
