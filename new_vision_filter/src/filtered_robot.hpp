@@ -1,7 +1,10 @@
 #include <chrono>
 #include <Eigen/Core>
+#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 
 class FilteredRobot {
+    FilteredRobot::FilteredRobot()
+
     private:
         int bot_id;
         // TODO: use a global enum for yellow/blue?
@@ -14,4 +17,6 @@ class FilteredRobot {
         Eigen::Vector3<double> acc;
         double orientation; // rads
         double angularVel; // rads/sec
+        // X, Y, Angle
+        ExtendedKalmanFilter<Kalman::Vector3::double> posFilterXYW;
 }
