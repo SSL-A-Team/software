@@ -94,8 +94,8 @@ struct FaceTravelIntent {};
 /// @brief Intended command velocity in local frame
 struct BodyVelocity
 {
-  ateam_geometry::Vector linear;
-  double angular;
+  ateam_geometry::Vector linear{0.0, 0.0};
+  double angular = 0.0;
 };
 
 struct MotionIntent
