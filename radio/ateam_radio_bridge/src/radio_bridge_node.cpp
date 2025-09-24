@@ -72,9 +72,6 @@ public:
         {"wheel_torque", false}
     });
 
-    declare_parameter<bool>("shut_down_robots", false);
-    declare_parameter<bool>("reboot_robots", false);
-
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
       "~/robot_motion_commands/robot",
