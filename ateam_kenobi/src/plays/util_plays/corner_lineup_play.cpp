@@ -30,9 +30,9 @@ namespace ateam_kenobi::plays
 CornerLineupPlay::CornerLineupPlay(stp::Options stp_options, double x_mult, double y_mult)
 : stp::Play(stp_options.name, stp_options),
   x_mult_(x_mult),
-  y_mult_(y_mult)
+  y_mult_(y_mult),
+  multi_move_to_(createChild<tactics::MultiMoveTo>("MultiMoveTo"))
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
   setEnabled(false);
 }
 
@@ -41,39 +41,27 @@ stp::PlayScore CornerLineupPlay::getScore(const World &)
   return stp::PlayScore::NaN();
 }
 
-void CornerLineupPlay::reset()
-{
-  for (auto & move_to : easy_move_tos_) {
-    move_to.reset();
-  }
-}
-
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> CornerLineupPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> CornerLineupPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
 
   const ateam_geometry::Point start_point(x_mult_ * world.field.field_length / 2.0,
     y_mult_ * world.field.field_width / 2.0);
   const auto x_dir = -1.0 * std::copysign(1.0, x_mult_);
   const ateam_geometry::Vector direction(x_dir * 2 * kRobotDiameter, 0.0);
 
-  auto spot_counter = 0;
-  for (auto & robot : world.our_robots) {
-    if (!robot.visible && !robot.radio_connected) {
-      continue;
-    }
+  const std::vector<Robot> available_robots = play_helpers::getAvailableRobots(world);
 
-    const auto spot = start_point + (direction * spot_counter);
-    spot_counter++;
+  std::vector<ateam_geometry::Point> target_points;
+  std::generate_n(std::back_inserter(target_points), available_robots.size(),
+    [spot = start_point, direction, n = 0]() mutable {
+      return spot + (direction * n++);
+    });
 
-    if (robot.IsAvailable()) {
-      auto & easy_move_to = easy_move_tos_.at(robot.id);
-      easy_move_to.setTargetPosition(spot);
-      easy_move_to.face_absolute(0.0);
-      maybe_motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
-    }
-  }
+  multi_move_to_.SetTargetPoints(target_points);
+  multi_move_to_.SetFaceAbsolue(0.0);
+  multi_move_to_.RunFrame(available_robots, maybe_motion_commands);
 
   return maybe_motion_commands;
 }

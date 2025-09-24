@@ -52,10 +52,10 @@ void DefendersOnlyPlay::reset()
   defense_tactic_.reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefendersOnlyPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> DefendersOnlyPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);

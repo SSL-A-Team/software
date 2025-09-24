@@ -23,7 +23,6 @@
 
 #include <vector>
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 #include "tactics/standard_defense.hpp"
 
 namespace ateam_kenobi::plays
@@ -40,19 +39,18 @@ public:
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
   tactics::StandardDefense defense_;
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
   std::vector<ateam_geometry::Point> getBlockerPoints(const World & world);
 
   void runBlockers(
     const World & world, const std::vector<Robot> & robots,
     const std::vector<ateam_geometry::Point> & points,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    std::array<std::optional<RobotCommand>,
     16> & motion_commands);
 };
 

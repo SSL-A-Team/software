@@ -27,25 +27,20 @@ namespace ateam_kenobi::skills
 {
 
 LaneIdler::LaneIdler(stp::Options stp_options)
-: stp::Skill(stp_options),
-  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
+: stp::Skill(stp_options)
 {}
-
-void LaneIdler::Reset()
-{
-  easy_move_to_.reset();
-}
 
 ateam_geometry::Point LaneIdler::GetAssignmentPoint(const World & world)
 {
   return GetIdlingPosition(world);
 }
 
-ateam_msgs::msg::RobotMotionCommand LaneIdler::RunFrame(const World & world, const Robot & robot)
+RobotCommand LaneIdler::RunFrame(const World & world)
 {
-  easy_move_to_.setTargetPosition(GetIdlingPosition(world));
-  easy_move_to_.face_point(world.ball.pos);
-  return easy_move_to_.runFrame(robot, world, extra_obstacles_);
+  RobotCommand command;
+  command.motion_intent.linear = motion::intents::linear::PositionIntent{GetIdlingPosition(world)};
+  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+  return command;
 }
 
 ateam_geometry::Point LaneIdler::GetIdlingPosition(const World & world)

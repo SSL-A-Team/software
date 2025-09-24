@@ -30,18 +30,16 @@ namespace ateam_kenobi::skills
 {
 
 Capture::Capture(stp::Options stp_options)
-: stp::Skill(stp_options),
-  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
+: stp::Skill(stp_options)
 {}
 
 void Capture::Reset()
 {
   done_ = false;
   ball_detected_filter_ = 0;
-  easy_move_to_.reset();
 }
 
-ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const Robot & robot)
+RobotCommand Capture::runFrame(const World & world, const Robot & robot)
 {
   chooseState(world, robot);
 
@@ -52,7 +50,7 @@ ateam_msgs::msg::RobotMotionCommand Capture::runFrame(const World & world, const
       return runCapture(world, robot);
     default:
       std::cerr << "Unhandled state in Capture!\n";
-      return ateam_msgs::msg::RobotMotionCommand{};
+      return RobotCommand{};
   }
 }
 
@@ -67,21 +65,21 @@ void Capture::chooseState(const World & world, const Robot & robot)
   }
 }
 
-ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
+RobotCommand Capture::runMoveToBall(
   const World & world,
   const Robot & robot)
 {
-  easy_move_to_.face_point(world.ball.pos);
+  RobotCommand command;
 
-  MotionOptions motion_options;
-  motion_options.completion_threshold = 0;
-  easy_move_to_.setMotionOptions(motion_options);
-  path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
-  planner_options.avoid_ball = false;
+  command.motion_intent.linear = motion::intents::linear::VelocityAtPositionIntent{
+    world.ball.pos,
+    ateam_geometry::normalize(world.ball.pos - robot.pos) * capture_speed_
+  };
 
-  easy_move_to_.setPlannerOptions(planner_options);
-  easy_move_to_.setTargetPosition(world.ball.pos,
-      capture_speed_ * 0.8 * ateam_geometry::normalize(world.ball.pos - robot.pos));
+  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+
+  command.motion_intent.motion_options.completion_threshold = 0.0;
+  command.motion_intent.planner_options.avoid_ball = false;
 
   const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
       world.ball.pos));
@@ -91,12 +89,12 @@ ateam_msgs::msg::RobotMotionCommand Capture::runMoveToBall(
   const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
       (capture_speed_ * capture_speed_));
 
-  easy_move_to_.setMaxVelocity(std::min(max_decel_vel, max_speed_));
+  command.motion_intent.motion_options.max_velocity = std::min(max_decel_vel, max_speed_);
 
-  return easy_move_to_.runFrame(robot, world);
+  return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, const Robot & robot)
+RobotCommand Capture::runCapture(const World & world, const Robot & robot)
 {
   // TODO(chachmu): Should we filter this over a few frames to make sure we have the ball settled?
   if (robot.breakbeam_ball_detected) {
@@ -111,32 +109,24 @@ ateam_msgs::msg::RobotMotionCommand Capture::runCapture(const World & world, con
     }
   }
 
-  /* TODO(chachmu): If we disable default obstacles do we need to check if the target is off the
-   * field?
-   */
-  path_planning::PlannerOptions planner_options = easy_move_to_.getPlannerOptions();
-  planner_options.avoid_ball = false;
-  planner_options.footprint_inflation = 0.0;
-  // planner_options.draw_obstacles = true;
-  easy_move_to_.setPlannerOptions(planner_options);
+  RobotCommand command;
 
-  MotionOptions motion_options;
-  motion_options.completion_threshold = 0;
-  easy_move_to_.setMotionOptions(motion_options);
+  command.motion_intent.planner_options.avoid_ball = false;
+  command.motion_intent.planner_options.footprint_inflation = 0.0;
+  command.motion_intent.motion_options.completion_threshold = 0.0;
 
-  easy_move_to_.setMaxVelocity(capture_speed_);
+  command.motion_intent.motion_options.max_velocity = capture_speed_;
+
   if(world.ball.visible) {
-    easy_move_to_.face_point(world.ball.pos);
+    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
   } else {
-    easy_move_to_.face_absolute(robot.theta);
+    command.motion_intent.angular = motion::intents::angular::HeadingIntent{robot.theta};
   }
 
-  easy_move_to_.setTargetPosition(world.ball.pos);
-  auto command = easy_move_to_.runFrame(robot, world);
-
-  command.twist.linear.x = capture_speed_;
-  command.twist.linear.y = 0.0;
-  command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+  command.motion_intent.linear = motion::intents::linear::VelocityIntent{
+    ateam_geometry::Vector{capture_speed_, 0.0},
+    motion::intents::linear::Frame::Local
+  };
 
   command.dribbler_speed = kDefaultDribblerSpeed;
 

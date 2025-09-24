@@ -40,7 +40,7 @@ public:
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
+  std::array<std::optional<RobotCommand>, 16> runFrame(
     const World & world) override;
 
 private:

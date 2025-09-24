@@ -30,6 +30,7 @@
 #include <ateam_geometry/normalize.hpp>
 #include "core/path_planning/path_planner.hpp"
 
+using ateam_kenobi::path_planning::Path;
 using ateam_kenobi::path_planning::PathPlanner;
 using ateam_kenobi::path_planning::PlannerOptions;
 
@@ -44,7 +45,7 @@ bool isSwitchBack(
   return angle < 0.0873;  // 5 degrees
 }
 
-bool pathContainsSwitchback(const PathPlanner::Path & path)
+bool pathContainsSwitchback(const Path & path)
 {
   if (path.empty()) {
     return false;
@@ -61,7 +62,7 @@ bool pathContainsSwitchback(const PathPlanner::Path & path)
   return false;
 }
 
-bool pathContainsLoops(const PathPlanner::Path & path)
+bool pathContainsLoops(const Path & path)
 {
   if (path.size() < 4) {
     return false;
@@ -79,7 +80,7 @@ bool pathContainsLoops(const PathPlanner::Path & path)
   return false;
 }
 
-bool isBadPath(const PathPlanner::Path & path)
+bool isBadPath(const Path & path)
 {
   /* Note: Empty or incomplete paths are not considered bad since there is no guarantee that our
    * random scenarios are solvable.
@@ -101,7 +102,7 @@ void printUsage()
 void renderSecenario(
   const ateam_geometry::Point & start, const ateam_geometry::Point & goal,
   const ateam_geometry::Point & ball_pos,
-  const ateam_geometry::Point & opponent_pos, const PathPlanner::Path & path)
+  const ateam_geometry::Point & opponent_pos, const Path & path)
 {
   std::stringstream script;
   script << "import matplotlib.pyplot as plt\n";

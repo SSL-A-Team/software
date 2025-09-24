@@ -24,8 +24,8 @@
 #include <array>
 #include <vector>
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 #include "tactics/standard_defense.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -41,12 +41,12 @@ public:
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   tactics::StandardDefense defense_;
+  tactics::MultiMoveTo multi_move_to_;
 
   std::vector<ateam_geometry::Point> getOffensePoints(const World & world);
 
@@ -57,10 +57,9 @@ private:
     const ateam_geometry::Point & fallback);
 
   void runOffense(
-    const World & world,
     const std::vector<ateam_geometry::Point> & points,
     const std::vector<std::optional<Robot>> & robots,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+    std::array<std::optional<RobotCommand>, 16> & motion_commands);
 };
 
 }  // namespace ateam_kenobi::plays

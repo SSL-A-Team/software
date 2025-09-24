@@ -56,13 +56,12 @@ stp::PlayScore DefensePlay::getScore(const World & world)
 void DefensePlay::reset()
 {
   defense_tactic_.reset();
-  blockers_.reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> DefensePlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> DefensePlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);

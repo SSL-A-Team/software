@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,55 +19,18 @@
 // THE SOFTWARE.
 
 
-#ifndef PLAYS__TEST_PLAYS__WAYPOINTS_PLAY_HPP_
-#define PLAYS__TEST_PLAYS__WAYPOINTS_PLAY_HPP_
+#ifndef CORE__PATH_PLANNING__PATH_HPP_
+#define CORE__PATH_PLANNING__PATH_HPP_
 
-#include <array>
-#include <chrono>
-#include <tuple>
 #include <vector>
-#include <string>
 #include <ateam_geometry/types.hpp>
-#include "core/stp/play.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::path_planning
 {
 
-class WaypointsPlay : public stp::Play
-{
-public:
-  static constexpr const char * kPlayName = "WaypointsPlay";
+using Position = ateam_geometry::Point;
+using Path = std::vector<Position>;
 
-  explicit WaypointsPlay(stp::Options stp_options);
+}  // namespace ateam_kenobi::path_planning
 
-  void reset() override;
-
-  std::array<std::optional<RobotCommand>,
-    16> runFrame(const World & world) override;
-
-private:
-  struct Pose
-  {
-    ateam_geometry::Point position;
-    double heading;
-  };
-
-  struct Waypoint
-  {
-    std::vector<Pose> poses;
-    int64_t duration_ms;
-  };
-
-  std::vector<Waypoint> waypoints_;
-  std::chrono::steady_clock::time_point next_transition_time_ =
-    std::chrono::steady_clock::time_point::max();
-  std::size_t waypoint_index_ = 0;
-
-  void addWaypoint(
-    const int64_t duration_ms, const std::vector<std::tuple<double, double,
-    double>> & poses);
-};
-
-}  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__TEST_PLAYS__WAYPOINTS_PLAY_HPP_
+#endif  // CORE__PATH_PLANNING__PATH_HPP_

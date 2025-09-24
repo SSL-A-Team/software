@@ -32,7 +32,6 @@ TheirFreeKickPlay::TheirFreeKickPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   defense_(createChild<tactics::StandardDefense>("defense"))
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "easy_move_to");
 }
 
 stp::PlayScore TheirFreeKickPlay::getScore(const World & world)
@@ -47,15 +46,12 @@ stp::PlayScore TheirFreeKickPlay::getScore(const World & world)
 void TheirFreeKickPlay::reset()
 {
   defense_.reset();
-  for (auto & emt : easy_move_tos_) {
-    emt.reset();
-  }
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+std::array<std::optional<RobotCommand>,
   16> TheirFreeKickPlay::runFrame(const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
@@ -101,7 +97,7 @@ std::vector<ateam_geometry::Point> TheirFreeKickPlay::getBlockerPoints(const Wor
 void TheirFreeKickPlay::runBlockers(
   const World & world, const std::vector<Robot> & robots,
   const std::vector<ateam_geometry::Point> & points,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+  std::array<std::optional<RobotCommand>, 16> & motion_commands)
 {
   // Rules section 5.3.3 require 0.5m distance between defenders and ball
   const auto ball_obstacle = ateam_geometry::makeDisk(world.ball.pos, 0.7);
@@ -125,10 +121,11 @@ void TheirFreeKickPlay::runBlockers(
   for (auto i = 0ul; i < std::min(robots.size(), points.size()); ++i) {
     const auto & robot = robots[i];
     const auto & point = points[i];
-    auto & emt = easy_move_tos_[robot.id];
-    emt.setTargetPosition(point);
-    emt.face_point(world.ball.pos);
-    motion_commands[robot.id] = emt.runFrame(robot, world, obstacles);
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{point};
+    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+    command.motion_intent.obstacles = obstacles;
+    motion_commands[robot.id] = command;
   }
 }
 

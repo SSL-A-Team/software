@@ -23,9 +23,9 @@
 #define SKILLS__CAPTURE_HPP_
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "core/play_helpers/easy_move_to.hpp"
 #include <ateam_common/robot_constants.hpp>
 #include "core/stp/skill.hpp"
+#include "core/types/robot_command.hpp"
 #include "core/types/world.hpp"
 
 
@@ -50,17 +50,7 @@ public:
   }
 
 
-  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
-
-  /**
- * @brief Set the default obstacles planner option on the internal EasyMoveTo
- */
-  void SetUseDefaultObstacles(bool use_obstacles)
-  {
-    path_planning::PlannerOptions options = easy_move_to_.getPlannerOptions();
-    options.use_default_obstacles = use_obstacles;
-    easy_move_to_.setPlannerOptions(options);
-  }
+  RobotCommand runFrame(const World & world, const Robot & robot);
 
   /**
    * @brief Set the capture speed used to approach the ball in the final phase
@@ -73,7 +63,6 @@ public:
   }
 
 private:
-  play_helpers::EasyMoveTo easy_move_to_;
   bool done_ = false;
   int ball_detected_filter_ = 0;
   double approach_radius_ = 0.3;  // m
@@ -90,8 +79,8 @@ private:
 
   void chooseState(const World & world, const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand runMoveToBall(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand runCapture(const World & world, const Robot & robot);
+  RobotCommand runMoveToBall(const World & world, const Robot & robot);
+  RobotCommand runCapture(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills

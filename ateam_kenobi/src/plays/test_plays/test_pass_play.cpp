@@ -42,10 +42,10 @@ void TestPassPlay::enter()
   pass_tactic_.reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPassPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> TestPassPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
 
   if(first_frame_) {
     const auto furthest_target_iter = std::max_element(targets_.begin(), targets_.end(),
