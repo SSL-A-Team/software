@@ -3,7 +3,6 @@ project(ateam_common)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
@@ -26,7 +25,6 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra -Wpedantic)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
-  rclcpp_components
   ateam_geometry
   ateam_msgs
   angles
@@ -48,7 +46,7 @@ target_include_directories(${PROJECT_NAME}
 set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(Boost Protobuf angles ateam_geometry)
+ament_export_dependencies(rclcpp ateam_geometry ateam_msgs angles ssl_league_msgs Eigen3 Boost Protobuf)
 
 install(
   DIRECTORY include/
