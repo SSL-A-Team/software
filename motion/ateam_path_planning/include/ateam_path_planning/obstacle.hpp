@@ -18,24 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_PATH_PLANNING__PLANNER_HPP_
-#define ATEAM_PATH_PLANNING__PLANNER_HPP_
+#ifndef ATEAM_PATH_PLANNING__OBSTACLE_HPP_
+#define ATEAM_PATH_PLANNING__OBSTACLE_HPP_
 
+#include <ateam_geometry/any_shape.hpp>
 #include <ateam_geometry/types.hpp>
-#include "obstacle.hpp"
-#include "trajectory_spline.hpp"
 
 namespace ateam_path_planning
 {
 
-class Planner {
-public:
-  Planner() = default;
-
-  TrajectorySpline PlanPath(const std::vector<Obstacle> & obstacles);
-
-private:
+struct Obstacle {
+  ateam_geometry::AnyShape shape;
+  ateam_geometry::Vector velocity = CGAL::NULL_VECTOR;
 };
+
+
 }  // namespace ateam_path_planning
 
-#endif  // ATEAM_PATH_PLANNING__PLANNER_HPP_
+#endif  // ATEAM_PATH_PLANNING__OBSTACLE_HPP_
