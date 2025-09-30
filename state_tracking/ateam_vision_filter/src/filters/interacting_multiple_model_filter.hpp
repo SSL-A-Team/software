@@ -39,7 +39,7 @@
 #include <memory>
 #include <vector>
 
-#include <ateam_msgs/msg/vision_imm_state.hpp>
+#include <ateam_msgs/msg/vision_state_imm.hpp>
 
 #include "filters/kalman_filter.hpp"
 #include "types/models.hpp"
@@ -101,7 +101,7 @@ public:
   /**
    * @return ROS2 msg containing the current internal state
    */
-  ateam_msgs::msg::VisionIMMState get_vision_imm_state() const;
+  ateam_msgs::msg::VisionStateIMM get_vision_imm_state() const;
 
 private:
   void update_mu(const Eigen::VectorXd & zt);

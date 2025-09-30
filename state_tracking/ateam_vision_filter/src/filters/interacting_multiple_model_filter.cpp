@@ -164,11 +164,11 @@ double InteractingMultipleModelFilter::get_potential_measurement_error(
   return potential_measurement_error.norm();
 }
 
-ateam_msgs::msg::VisionIMMState InteractingMultipleModelFilter::get_vision_imm_state() const
+ateam_msgs::msg::VisionStateIMM InteractingMultipleModelFilter::get_vision_imm_state() const
 {
-  ateam_msgs::msg::VisionIMMState imm_state;
+  ateam_msgs::msg::VisionStateIMM imm_state;
   for (const auto & model_type : model_types) {
-    ateam_msgs::msg::VisionModelState model_state;
+    ateam_msgs::msg::VisionStateModel model_state;
     model_state.model_type = model_type;
     model_state.mu = mu.at(model_type);
     imm_state.models.push_back(model_state);

@@ -32,7 +32,7 @@
 #include <utility>
 #include <vector>
 
-#include <ateam_msgs/msg/vision_mht_state.hpp>
+#include <ateam_msgs/msg/vision_state_mht.hpp>
 
 #include "filters/interacting_multiple_model_filter.hpp"
 
@@ -54,7 +54,7 @@ public:
   /**
    * @return ROS2 msg containing the current internal state
    */
-  ateam_msgs::msg::VisionMHTState get_vision_mht_state() const;
+  ateam_msgs::msg::VisionStateMHT get_vision_mht_state() const;
 
 private:
   void remove_expired_tracks();
