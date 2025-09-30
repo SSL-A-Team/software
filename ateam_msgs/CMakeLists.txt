@@ -10,23 +10,25 @@ find_package(sensor_msgs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  msg/BallState.msg
-  msg/BehaviorExecutorState.msg
   msg/JoystickControlStatus.msg
+  msg/KenobiStatus.msg
   msg/Overlay.msg
   msg/OverlayArray.msg
   msg/RefereeInfo.msg
   msg/RobotMotionCommand.msg
-  msg/RobotState.msg
-  msg/Sample3d.msg
   msg/TeamClientConnectionStatus.msg
-  msg/Trajectory.msg
-  msg/VisionCameraState.msg
-  msg/VisionIMMState.msg
-  msg/VisionMHTState.msg
-  msg/VisionModelState.msg
-  msg/VisionWorldState.msg
-  msg/World.msg
+
+  msg/GameStateBall.msg
+  msg/GameStateRobot.msg
+  msg/GameStateWorld.msg
+
+  msg/VisionStateBall.msg
+  msg/VisionStateCamera.msg
+  msg/VisionStateCameraArray.msg
+  msg/VisionStateIMM.msg
+  msg/VisionStateMHT.msg
+  msg/VisionStateModel.msg
+  msg/VisionStateRobot.msg
 
   msg/FieldInfo.msg
   msg/FieldSidedInfo.msg
