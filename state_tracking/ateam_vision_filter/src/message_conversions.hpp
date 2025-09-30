@@ -24,8 +24,8 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <ateam_msgs/msg/ball_state.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
+#include <ateam_msgs/msg/vision_state_ball.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/field_sided_info.hpp>
 #include <ateam_common/game_controller_listener.hpp>
@@ -43,8 +43,8 @@
 namespace ateam_vision_filter::message_conversions
 {
 
-ateam_msgs::msg::BallState toMsg(const std::optional<Ball> & maybe_ball);
-ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot);
+ateam_msgs::msg::VisionStateBall toMsg(const std::optional<Ball> & maybe_ball);
+ateam_msgs::msg::VisionStateRobot toMsg(const std::optional<Robot> & maybe_robot);
 
 CameraMeasurement fromMsg(
   const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg,
