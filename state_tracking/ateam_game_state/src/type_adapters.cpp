@@ -25,12 +25,14 @@
 #include <tf2/utils.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::World>::convert_to_ros_message(
+// TODO(barulicm): Check that all fields are adapted
+
+void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::GameStateWorld>::convert_to_ros_message(
   const custom_type & world, ros_message_type & ros_msg)
 {
   using FieldTA = rclcpp::adapt_type<ateam_game_state::Field>::as<ateam_msgs::msg::FieldInfo>;
-  using RobotTA = rclcpp::adapt_type<ateam_game_state::Robot>::as<ateam_msgs::msg::RobotState>;
-  using BallTA = rclcpp::adapt_type<ateam_game_state::Ball>::as<ateam_msgs::msg::BallState>;
+  using RobotTA = rclcpp::adapt_type<ateam_game_state::Robot>::as<ateam_msgs::msg::GameStateRobot>;
+  using BallTA = rclcpp::adapt_type<ateam_game_state::Ball>::as<ateam_msgs::msg::GameStateBall>;
   using RefTA = rclcpp::adapt_type<ateam_game_state::RefereeInfo>::as<ateam_msgs::msg::RefereeInfo>;
 
   ros_msg.current_time =
@@ -42,14 +44,14 @@ void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::World>::conve
 
   RefTA::convert_to_ros_message(world.referee_info, ros_msg.referee_info);
 
-  BallTA::convert_to_ros_message(world.ball, ros_msg.balls.emplace_back());
+  BallTA::convert_to_ros_message(world.ball, ros_msg.ball);
 
   ros_msg.our_robots.reserve(world.our_robots.size());
   for (const ateam_game_state::Robot & robot : world.our_robots) {
     if (robot.visible || robot.radio_connected) {
       RobotTA::convert_to_ros_message(robot, ros_msg.our_robots.emplace_back());
     } else {
-      ros_msg.our_robots.push_back(ateam_msgs::msg::RobotState());
+      ros_msg.our_robots.push_back(ateam_msgs::msg::GameStateRobot());
     }
   }
 
@@ -58,7 +60,7 @@ void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::World>::conve
     if (robot.visible) {
       RobotTA::convert_to_ros_message(robot, ros_msg.their_robots.emplace_back());
     } else {
-      ros_msg.their_robots.push_back(ateam_msgs::msg::RobotState());
+      ros_msg.their_robots.push_back(ateam_msgs::msg::GameStateRobot());
     }
   }
 
@@ -67,12 +69,12 @@ void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::World>::conve
   ros_msg.double_touch_id = world.double_touch_forbidden_id_.value_or(-1);
 }
 
-void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::World>::convert_to_custom(
+void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::GameStateWorld>::convert_to_custom(
   const ros_message_type & ros_msg, custom_type & world)
 {
   using FieldTA = rclcpp::adapt_type<ateam_game_state::Field>::as<ateam_msgs::msg::FieldInfo>;
-  using RobotTA = rclcpp::adapt_type<ateam_game_state::Robot>::as<ateam_msgs::msg::RobotState>;
-  using BallTA = rclcpp::adapt_type<ateam_game_state::Ball>::as<ateam_msgs::msg::BallState>;
+  using RobotTA = rclcpp::adapt_type<ateam_game_state::Robot>::as<ateam_msgs::msg::GameStateRobot>;
+  using BallTA = rclcpp::adapt_type<ateam_game_state::Ball>::as<ateam_msgs::msg::GameStateBall>;
   using RefTA = rclcpp::adapt_type<ateam_game_state::RefereeInfo>::as<ateam_msgs::msg::RefereeInfo>;
 
   world.current_time =
@@ -83,7 +85,7 @@ void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::World>::conve
 
   RefTA::convert_to_custom(ros_msg.referee_info, world.referee_info);
 
-  BallTA::convert_to_custom(ros_msg.balls.front(), world.ball);
+  BallTA::convert_to_custom(ros_msg.ball, world.ball);
 
   const auto convert_bot = [](const auto & ros_robot) {
       ateam_game_state::Robot robot;
@@ -106,7 +108,7 @@ void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::World>::conve
 }
 
 void rclcpp::TypeAdapter<ateam_game_state::Ball,
-  ateam_msgs::msg::BallState>::convert_to_ros_message(
+  ateam_msgs::msg::GameStateBall>::convert_to_ros_message(
   const custom_type & ball, ros_message_type & ros_msg)
 {
   ros_msg.pose.position.x = ball.pos.x();
@@ -116,7 +118,7 @@ void rclcpp::TypeAdapter<ateam_game_state::Ball,
   ros_msg.visible = ball.visible;
 }
 
-void rclcpp::TypeAdapter<ateam_game_state::Ball, ateam_msgs::msg::BallState>::convert_to_custom(
+void rclcpp::TypeAdapter<ateam_game_state::Ball, ateam_msgs::msg::GameStateBall>::convert_to_custom(
   const ros_message_type & ros_msg, custom_type & ball)
 {
   ball.pos = ateam_geometry::Point(ros_msg.pose.position.x, ros_msg.pose.position.y);
@@ -125,7 +127,7 @@ void rclcpp::TypeAdapter<ateam_game_state::Ball, ateam_msgs::msg::BallState>::co
 }
 
 void rclcpp::TypeAdapter<ateam_game_state::Robot,
-  ateam_msgs::msg::RobotState>::convert_to_ros_message(
+  ateam_msgs::msg::GameStateRobot>::convert_to_ros_message(
   const custom_type & robot, ros_message_type & ros_msg)
 {
   ros_msg.pose.position.x = robot.pos.x();
@@ -137,7 +139,7 @@ void rclcpp::TypeAdapter<ateam_game_state::Robot,
   ros_msg.visible = robot.visible;
 }
 
-void rclcpp::TypeAdapter<ateam_game_state::Robot, ateam_msgs::msg::RobotState>::convert_to_custom(
+void rclcpp::TypeAdapter<ateam_game_state::Robot, ateam_msgs::msg::GameStateRobot>::convert_to_custom(
   const ros_message_type & ros_msg, custom_type & robot)
 {
   robot.pos = ateam_geometry::Point(ros_msg.pose.position.x, ros_msg.pose.position.y);

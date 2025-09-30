@@ -22,9 +22,9 @@
 #ifndef ATEAM_GAME_STATE__TYPE_ADAPTERS_HPP_
 #define ATEAM_GAME_STATE__TYPE_ADAPTERS_HPP_
 
-#include <ateam_msgs/msg/world.hpp>
-#include <ateam_msgs/msg/ball_state.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
+#include <ateam_msgs/msg/game_state_world.hpp>
+#include <ateam_msgs/msg/game_state_ball.hpp>
+#include <ateam_msgs/msg/game_state_robot.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/referee_info.hpp>
 #include <rclcpp/type_adapter.hpp>
@@ -36,11 +36,11 @@
 
 
 template<>
-struct rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::World>
+struct rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::GameStateWorld>
 {
   using is_specialized = std::true_type;
   using custom_type = ateam_game_state::World;
-  using ros_message_type = ateam_msgs::msg::World;
+  using ros_message_type = ateam_msgs::msg::GameStateWorld;
 
   static void convert_to_ros_message(const custom_type & world, ros_message_type & ros_msg);
 
@@ -48,11 +48,11 @@ struct rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::World>
 };
 
 template<>
-struct rclcpp::TypeAdapter<ateam_game_state::Ball, ateam_msgs::msg::BallState>
+struct rclcpp::TypeAdapter<ateam_game_state::Ball, ateam_msgs::msg::GameStateBall>
 {
   using is_specialized = std::true_type;
   using custom_type = ateam_game_state::Ball;
-  using ros_message_type = ateam_msgs::msg::BallState;
+  using ros_message_type = ateam_msgs::msg::GameStateBall;
 
   static void convert_to_ros_message(const custom_type & ball, ros_message_type & ros_msg);
 
@@ -60,11 +60,11 @@ struct rclcpp::TypeAdapter<ateam_game_state::Ball, ateam_msgs::msg::BallState>
 };
 
 template<>
-struct rclcpp::TypeAdapter<ateam_game_state::Robot, ateam_msgs::msg::RobotState>
+struct rclcpp::TypeAdapter<ateam_game_state::Robot, ateam_msgs::msg::GameStateRobot>
 {
   using is_specialized = std::true_type;
   using custom_type = ateam_game_state::Robot;
-  using ros_message_type = ateam_msgs::msg::RobotState;
+  using ros_message_type = ateam_msgs::msg::GameStateRobot;
 
   static void convert_to_ros_message(const custom_type & robot, ros_message_type & ros_msg);
 
@@ -95,9 +95,9 @@ struct rclcpp::TypeAdapter<ateam_game_state::RefereeInfo, ateam_msgs::msg::Refer
   static void convert_to_custom(const ros_message_type & ros_msg, custom_type & ref_info);
 };
 
-RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::World, ateam_msgs::msg::World);
-RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Ball, ateam_msgs::msg::BallState);
-RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Robot, ateam_msgs::msg::RobotState);
+RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::World, ateam_msgs::msg::GameStateWorld);
+RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Ball, ateam_msgs::msg::GameStateBall);
+RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Robot, ateam_msgs::msg::GameStateRobot);
 RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Field, ateam_msgs::msg::FieldInfo);
 RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::RefereeInfo, ateam_msgs::msg::RefereeInfo);
 

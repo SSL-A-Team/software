@@ -22,7 +22,8 @@
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/topic_names.hpp>
-#include <ateam_msgs/msg/world.hpp>
+#include <ateam_msgs/msg/vision_state_ball.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <tf2/utils.hpp>
@@ -55,19 +56,19 @@ public:
       1,
       std::bind(&GameStateTracker::FieldCallback, this, std::placeholders::_1));
 
-    ball_sub_ = create_subscription<Ball>(
+    ball_sub_ = create_subscription<ateam_msgs::msg::VisionStateBall>(
       std::string(Topics::kBall),
       1,
-      std::bind(&GameStateTracker::BallCallback, this, std::placeholders::_1));  // TODO(barulicm): need to split vision output messages from world rep messages
+      std::bind(&GameStateTracker::BallCallback, this, std::placeholders::_1));
 
-    create_indexed_subscribers<ateam_msgs::msg::RobotState>(
+    create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
       blue_bot_subs_,
       Topics::kBlueTeamRobotPrefix,
       1,
       &GameStateTracker::BlueVisionBotCallback,
       this);
 
-    create_indexed_subscribers<ateam_msgs::msg::RobotState>(
+    create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
       yellow_bot_subs_,
       Topics::kYellowTeamRobotPrefix,
       1,
@@ -84,10 +85,10 @@ private:
   InPlayEvaluator in_play_evaluator_;
   rclcpp::Publisher<World>::SharedPtr world_pub_;
   rclcpp::Subscription<Field>::SharedPtr field_sub_;
-  rclcpp::Subscription<Ball>::SharedPtr ball_sub_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
+  rclcpp::Subscription<ateam_msgs::msg::VisionStateBall>::SharedPtr ball_sub_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     ateam_common::indexed_topic_helpers::kRobotCount> blue_bot_subs_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     ateam_common::indexed_topic_helpers::kRobotCount> yellow_bot_subs_;
   ateam_common::GameControllerListener gc_listener_;  // TODO(barulicm): Move GCListener type to ateam_game_state package
   World world_;
@@ -108,12 +109,15 @@ private:
     world_.field = *field;
   }
 
-  void BallCallback(const std::unique_ptr<Ball> & ball)
+  void BallCallback(const std::unique_ptr<ateam_msgs::msg::VisionStateBall> & msg)
   {
-    world_.ball = *ball;
+    world_.ball.pos = ateam_geometry::Point(msg->pose.position.x, msg->pose.position.y);
+    world_.ball.vel = ateam_geometry::Vector(msg->twist.linear.x, msg->twist.linear.y);
+    world_.ball.visible = msg->visible;
+    // TODO(barulicm): Update remaining Ball fields
   }
 
-  void UpdateBotFromVision(Robot & robot, const ateam_msgs::msg::RobotState::SharedPtr msg)
+  void UpdateBotFromVision(Robot & robot, const ateam_msgs::msg::VisionStateRobot::SharedPtr msg)
   {
     robot.visible = msg->visible;
     if (msg->visible) {
@@ -130,7 +134,7 @@ private:
     }
   }
 
-  void BlueVisionBotCallback(const ateam_msgs::msg::RobotState::SharedPtr msg, int id)
+  void BlueVisionBotCallback(const ateam_msgs::msg::VisionStateRobot::SharedPtr msg, int id)
   {
     const auto our_color = gc_listener_.GetTeamColor();
     if(our_color == ateam_common::TeamColor::Unknown) {
@@ -141,7 +145,7 @@ private:
     UpdateBotFromVision(robot_state_array[id], msg);
   }
 
-  void YellowVisionBotCallback(const ateam_msgs::msg::RobotState::SharedPtr msg, int id)
+  void YellowVisionBotCallback(const ateam_msgs::msg::VisionStateRobot::SharedPtr msg, int id)
   {
     const auto our_color = gc_listener_.GetTeamColor();
     if(our_color == ateam_common::TeamColor::Unknown) {
