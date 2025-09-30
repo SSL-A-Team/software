@@ -30,6 +30,8 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "ateam_game_state/world.hpp"
 #include "ateam_game_state/type_adapters.hpp"
+#include "double_touch_evaluator.hpp"
+#include "in_play_evaluator.hpp"
 
 
 using ateam_common::indexed_topic_helpers::create_indexed_publishers;
@@ -78,6 +80,8 @@ public:
   }
 
 private:
+  DoubleTouchEvaluator double_touch_evaluator_;
+  InPlayEvaluator in_play_evaluator_;
   rclcpp::Publisher<World>::SharedPtr world_pub_;
   rclcpp::Subscription<Field>::SharedPtr field_sub_;
   rclcpp::Subscription<Ball>::SharedPtr ball_sub_;
@@ -184,13 +188,8 @@ private:
   void TimerCallback()
   {
     UpdateRefInfo();
-    
-    // TODO(barulicm): Move ateam_kenobi::InPlayEval to this package
-    // world_.in_play = false;
-
-    // TODO(barulicm): Move ateam_kenobi::DoubleTouchEval to this package
-    // world_.double_touch_forbidden_id_ = std::nullopt;
-    
+    double_touch_evaluator_.Update(world_);
+    in_play_evaluator_.Update(world_);
     world_pub_->publish(world_);
   }
 };

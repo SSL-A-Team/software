@@ -33,6 +33,8 @@ ament_target_dependencies(
 
 add_library(game_state_tracker_component SHARED
   src/game_state_tracker/game_state_tracker.cpp
+  src/game_state_tracker/double_touch_evaluator.cpp
+  src/game_state_tracker/in_play_evaluator.cpp
 )
 target_include_directories(game_state_tracker_component PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
