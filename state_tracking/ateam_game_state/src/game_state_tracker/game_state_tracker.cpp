@@ -160,7 +160,7 @@ private:
   {
     world_.referee_info.our_goalie_id = gc_listener_.GetOurGoalieID().value_or(-1);
     world_.referee_info.their_goalie_id = gc_listener_.GetTheirGoalieID().value_or(-1);
-    world_.referee_info.current_game_stage = gc_listener_.GetGameStage();
+    world_.referee_info.game_stage = gc_listener_.GetGameStage();
     world_.referee_info.running_command = gc_listener_.GetGameCommand();
     world_.referee_info.prev_command = gc_listener_.GetPreviousGameCommand();
 

@@ -25,9 +25,8 @@
 #include <tf2/utils.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-// TODO(barulicm): Check that all fields are adapted
-
-void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::GameStateWorld>::convert_to_ros_message(
+void rclcpp::TypeAdapter<ateam_game_state::World,
+  ateam_msgs::msg::GameStateWorld>::convert_to_ros_message(
   const custom_type & world, ros_message_type & ros_msg)
 {
   using FieldTA = rclcpp::adapt_type<ateam_game_state::Field>::as<ateam_msgs::msg::FieldInfo>;
@@ -69,7 +68,8 @@ void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::GameStateWorl
   ros_msg.double_touch_id = world.double_touch_forbidden_id_.value_or(-1);
 }
 
-void rclcpp::TypeAdapter<ateam_game_state::World, ateam_msgs::msg::GameStateWorld>::convert_to_custom(
+void rclcpp::TypeAdapter<ateam_game_state::World,
+  ateam_msgs::msg::GameStateWorld>::convert_to_custom(
   const ros_message_type & ros_msg, custom_type & world)
 {
   using FieldTA = rclcpp::adapt_type<ateam_game_state::Field>::as<ateam_msgs::msg::FieldInfo>;
@@ -116,6 +116,10 @@ void rclcpp::TypeAdapter<ateam_game_state::Ball,
   ros_msg.twist.linear.x = ball.vel.x();
   ros_msg.twist.linear.y = ball.vel.y();
   ros_msg.visible = ball.visible;
+  ros_msg.last_visible_time =
+    rclcpp::Time(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(
+      ball.last_visible_time.time_since_epoch()).count());
 }
 
 void rclcpp::TypeAdapter<ateam_game_state::Ball, ateam_msgs::msg::GameStateBall>::convert_to_custom(
@@ -124,31 +128,60 @@ void rclcpp::TypeAdapter<ateam_game_state::Ball, ateam_msgs::msg::GameStateBall>
   ball.pos = ateam_geometry::Point(ros_msg.pose.position.x, ros_msg.pose.position.y);
   ball.vel = ateam_geometry::Vector(ros_msg.twist.linear.x, ros_msg.twist.linear.y);
   ball.visible = ros_msg.visible;
+  ball.last_visible_time =
+    std::chrono::steady_clock::time_point(std::chrono::seconds(ros_msg.last_visible_time.sec) +
+    std::chrono::nanoseconds(ros_msg.last_visible_time.nanosec));
 }
 
 void rclcpp::TypeAdapter<ateam_game_state::Robot,
   ateam_msgs::msg::GameStateRobot>::convert_to_ros_message(
   const custom_type & robot, ros_message_type & ros_msg)
 {
+  ros_msg.id = robot.id;
+  ros_msg.visible = robot.visible;
+  ros_msg.radio_connected = robot.radio_connected;
+
   ros_msg.pose.position.x = robot.pos.x();
   ros_msg.pose.position.y = robot.pos.y();
   ros_msg.pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), robot.theta));
-  ros_msg.twist.linear.x = robot.vel.x();
-  ros_msg.twist.linear.y = robot.vel.y();
-  ros_msg.twist.angular.z = robot.omega;
-  ros_msg.visible = robot.visible;
+
+  ros_msg.velocity.linear.x = robot.vel.x();
+  ros_msg.velocity.linear.y = robot.vel.y();
+  ros_msg.velocity.angular.z = robot.omega;
+
+  ros_msg.prev_command_velocity.linear.x = robot.prev_command_vel.x();
+  ros_msg.prev_command_velocity.linear.y = robot.prev_command_vel.y();
+  ros_msg.prev_command_velocity.angular.z = robot.prev_command_omega;
+
+  ros_msg.breakbeam_ball_detected = robot.breakbeam_ball_detected;
+  ros_msg.breakbeam_ball_detected_filtered = robot.breakbeam_ball_detected_filtered;
+
+  ros_msg.kicker_available = robot.kicker_available;
+  ros_msg.chipper_available = robot.chipper_available;
 }
 
-void rclcpp::TypeAdapter<ateam_game_state::Robot, ateam_msgs::msg::GameStateRobot>::convert_to_custom(
+void rclcpp::TypeAdapter<ateam_game_state::Robot,
+  ateam_msgs::msg::GameStateRobot>::convert_to_custom(
   const ros_message_type & ros_msg, custom_type & robot)
 {
+  robot.id = ros_msg.id;
+  robot.visible = ros_msg.visible;
+  robot.radio_connected = ros_msg.radio_connected;
+
   robot.pos = ateam_geometry::Point(ros_msg.pose.position.x, ros_msg.pose.position.y);
   tf2::Quaternion quat;
   tf2::fromMsg(ros_msg.pose.orientation, quat);
   robot.theta = tf2::getYaw(quat);
-  robot.vel = ateam_geometry::Vector(ros_msg.twist.linear.x, ros_msg.twist.linear.y);
-  robot.omega = ros_msg.twist.angular.z;
-  robot.visible = ros_msg.visible;
+
+  robot.vel = ateam_geometry::Vector(ros_msg.velocity.linear.x, ros_msg.velocity.linear.y);
+  robot.omega = ros_msg.velocity.angular.z;
+
+  robot.prev_command_vel = ateam_geometry::Vector(ros_msg.prev_command_velocity.linear.x,
+    ros_msg.prev_command_velocity.linear.y);
+  robot.prev_command_omega = ros_msg.prev_command_velocity.angular.z;
+
+  robot.kicker_available = ros_msg.kicker_available;
+  robot.chipper_available = ros_msg.chipper_available;
 }
 
 void rclcpp::TypeAdapter<ateam_game_state::Field,
@@ -213,36 +246,52 @@ void rclcpp::TypeAdapter<ateam_game_state::Field, ateam_msgs::msg::FieldInfo>::c
 }
 
 void rclcpp::TypeAdapter<ateam_game_state::RefereeInfo,
-  ateam_msgs::msg::RefereeInfo>::convert_to_ros_message(const custom_type & ref_info,
+  ateam_msgs::msg::RefereeInfo>::convert_to_ros_message(
+  const custom_type & ref_info,
   ros_message_type & ros_msg)
 {
   ros_msg.our_goalie_id = ref_info.our_goalie_id;
   ros_msg.their_goalie_id = ref_info.their_goalie_id;
-  ros_msg.game_stage = static_cast<uint8_t>(ref_info.current_game_stage);
-  ros_msg.game_command = static_cast<uint8_t>(ref_info.running_command);
+  ros_msg.game_stage = static_cast<uint8_t>(ref_info.game_stage);
+  ros_msg.running_command = static_cast<uint8_t>(ref_info.running_command);
   ros_msg.prev_command = static_cast<uint8_t>(ref_info.prev_command);
 
-  if (ref_info.designated_position.has_value()) {
-    ros_msg.designated_position.x = ref_info.designated_position->x();
-    ros_msg.designated_position.y = ref_info.designated_position->y();
-  } else {
-    ros_msg.designated_position.x = 0.0f;
-    ros_msg.designated_position.y = 0.0f;
-  }
+  ros_msg.has_designated_position = ref_info.designated_position.has_value();
+  const auto & designated_position = ref_info.designated_position.value_or(ateam_geometry::Point(0,
+    0));
+  ros_msg.designated_position.x = designated_position.x();
+  ros_msg.designated_position.y = designated_position.y();
+
+  ros_msg.has_next_command = ref_info.next_command.has_value();
+  ros_msg.next_command =
+    static_cast<uint8_t>(ref_info.next_command.value_or(ateam_common::GameCommand::Halt));
+
+  ros_msg.command_time =
+    rclcpp::Time(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(
+      ref_info.command_time.time_since_epoch()).count());
 }
 
 void rclcpp::TypeAdapter<ateam_game_state::RefereeInfo,
-  ateam_msgs::msg::RefereeInfo>::convert_to_custom(const ros_message_type & ros_msg,
+  ateam_msgs::msg::RefereeInfo>::convert_to_custom(
+  const ros_message_type & ros_msg,
   custom_type & ref_info)
 {
   ref_info.our_goalie_id = ros_msg.our_goalie_id;
   ref_info.their_goalie_id = ros_msg.their_goalie_id;
 
-  ref_info.current_game_stage = static_cast<ateam_common::GameStage>(ros_msg.game_stage);
-  ref_info.running_command = static_cast<ateam_common::GameCommand>(ros_msg.game_command);
+  ref_info.game_stage = static_cast<ateam_common::GameStage>(ros_msg.game_stage);
+  ref_info.running_command = static_cast<ateam_common::GameCommand>(ros_msg.running_command);
   ref_info.prev_command = static_cast<ateam_common::GameCommand>(ros_msg.prev_command);
 
-  // TODO(barulicm): add 'has_designated_position' field
-  ref_info.designated_position = ateam_geometry::Point(ros_msg.designated_position.x,
-    ros_msg.designated_position.y);
+  if(ros_msg.has_designated_position) {
+    ref_info.designated_position = ateam_geometry::Point(ros_msg.designated_position.x,
+      ros_msg.designated_position.y);
+  }
+  if(ros_msg.has_next_command) {
+    ref_info.next_command = static_cast<ateam_common::GameCommand>(ros_msg.next_command);
+  }
+  ref_info.command_time =
+    std::chrono::system_clock::time_point(std::chrono::seconds(ros_msg.command_time.sec) +
+    std::chrono::nanoseconds(ros_msg.command_time.nanosec));
 }

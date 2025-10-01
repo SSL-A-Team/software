@@ -1,6 +1,10 @@
-geometry_msgs/Pose pose
-geometry_msgs/Twist twist
-geometry_msgs/Twist twist_body
-geometry_msgs/Accel accel
+int32 id
 bool visible
-bool connected
+bool radio_connected
+geometry_msgs/Pose pose
+geometry_msgs/Twist velocity
+geometry_msgs/Twist prev_command_velocity
+bool breakbeam_ball_detected
+bool breakbeam_ball_detected_filtered
+bool kicker_available
+bool chipper_available
