@@ -114,7 +114,9 @@ private:
     world_.ball.pos = ateam_geometry::Point(msg->pose.position.x, msg->pose.position.y);
     world_.ball.vel = ateam_geometry::Vector(msg->twist.linear.x, msg->twist.linear.y);
     world_.ball.visible = msg->visible;
-    // TODO(barulicm): Update remaining Ball fields
+    if(world_.ball.visible) {
+      world_.ball.last_visible_time = std::chrono::steady_clock::now();
+    }
   }
 
   void UpdateBotFromVision(Robot & robot, const ateam_msgs::msg::VisionStateRobot::SharedPtr msg)
