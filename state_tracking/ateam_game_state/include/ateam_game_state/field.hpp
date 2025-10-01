@@ -40,6 +40,8 @@ struct Field
   float boundary_width = 0.f;
   float defense_area_width = 0.f;
   float defense_area_depth = 0.f;
+  ateam_geometry::Point center_circle_center;
+  float center_circle_radius;
   std::array<ateam_geometry::Point, 4> field_corners;
   int ignore_side = 0;
   FieldSidedInfo ours;

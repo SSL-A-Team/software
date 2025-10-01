@@ -50,6 +50,8 @@ public:
   : rclcpp::Node("game_state_tracker", options),
     gc_listener_(*this)
   {
+    InitializeRobotIds();
+
     world_pub_ =
       create_publisher<World>(std::string(Topics::kWorld),
         rclcpp::QoS(1).best_effort().durability_volatile());
@@ -100,7 +102,7 @@ public:
       this);
 
     timer_ = create_wall_timer(std::chrono::duration<double>(1.0 /
-        declare_parameter<double>("update_frequency")),
+        declare_parameter<double>("update_frequency", 100.0)),
         std::bind(&GameStateTracker::TimerCallback, this));
   }
 
@@ -242,6 +244,7 @@ private:
 
   void TimerCallback()
   {
+    world_.current_time = std::chrono::steady_clock::now();
     UpdateRefInfo();
     double_touch_evaluator_.Update(world_);
     in_play_evaluator_.Update(world_);

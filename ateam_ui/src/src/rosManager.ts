@@ -108,6 +108,14 @@ export class RosManager {
         joystickStatusTopic.subscribe(this.getJoystickStatusCallback(appState));
         this.subscriptions.set("joystickStatus", joystickStatusTopic);
 
+        let kenobiStatusTopic = new ROSLIB.Topic({
+            ros: this.ros,
+            name: '/kenobi_node/status',
+            messageType: 'ateam_msgs/msg/KenobiStatus'
+        });
+        kenobiStatusTopic.subscribe(this.getKenobiStatusCallback(appState));
+        this.subscriptions.set("kenobiStatus", kenobiStatusTopic);
+
         let goalieService = new ROSLIB.Service({
             ros: this.ros,
             name: '/team_client_node/set_desired_keeper',
@@ -182,8 +190,8 @@ export class RosManager {
         if (!kenobiTopic) {
             kenobiTopic = new ROSLIB.Topic({
                 ros: this.ros,
-                name: '/kenobi_node/world',
-                messageType: 'ateam_msgs/msg/World'
+                name: '/world',
+                messageType: 'ateam_msgs/msg/GameStateWorld'
             });
             this.subscriptions.set("kenobi", kenobiTopic);
         }
@@ -259,13 +267,10 @@ export class RosManager {
         return function(msg: any): void {
             // Convert timestamp to millis
             appState.realtimeWorld.timestamp = (msg.current_time.sec * 1e3) + (msg.current_time.nanosec / 1e6);
-            appState.realtimeWorld.fps = msg.fps;
             appState.lastTimeReceivedKenobi = Date.now();
 
-            if (msg.balls.length > 0) {
-                appState.realtimeWorld.ball.pose = msg.balls[0].pose;
-                appState.realtimeWorld.ball.visible = msg.balls[0].visible;
-            }
+            appState.realtimeWorld.ball.pose = msg.ball.pose;
+            appState.realtimeWorld.ball.visible = msg.ball.visible;
 
             for (const team of [TeamColor.Blue, TeamColor.Yellow]) {
                 const msgRobotArray = (team === appState.realtimeWorld.team) ? msg.our_robots : msg.their_robots;
@@ -474,6 +479,13 @@ export class RosManager {
             } else {
                 appState.controlledRobot = -1;
             }
+        }
+    }
+
+    getKenobiStatusCallback(appState: AppState): (msg: any) => void {
+        return function(msg: any): void {
+            appState.realtimeWorld.fps = msg.fps;
+
         }
     }
 }

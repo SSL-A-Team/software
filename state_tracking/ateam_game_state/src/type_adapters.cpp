@@ -194,28 +194,27 @@ void rclcpp::TypeAdapter<ateam_game_state::Field,
   ros_msg.goal_depth = field.goal_depth;
   ros_msg.boundary_width = field.boundary_width;
   ros_msg.ignore_side = field.ignore_side;
+  ros_msg.defense_area_width = field.defense_area_width;
+  ros_msg.defense_area_depth = field.defense_area_depth;
+  ros_msg.center_circle.x = field.center_circle_center.x();
+  ros_msg.center_circle.y = field.center_circle_center.y();
+  ros_msg.center_circle_radius = field.center_circle_radius;
 
-  auto convert_point_array = [&](auto & in_array, auto out_array_iter) {
+  auto convert_point_array = [&](auto & in_array, auto & out_vector) {
+      out_vector.reserve(in_array.size());
       std::transform(
-        in_array.begin(), in_array.end(), out_array_iter,
+        in_array.begin(), in_array.end(), std::back_inserter(out_vector),
         [&](auto & val)->geometry_msgs::msg::Point32 {
           return geometry_msgs::build<geometry_msgs::msg::Point32>().x(val.x()).y(val.y()).z(0);
         });
     };
 
-  convert_point_array(field.field_corners, std::back_inserter(ros_msg.field_corners.points));
-  convert_point_array(
-    field.ours.defense_area_corners,
-    std::back_inserter(ros_msg.ours.defense_area_corners.points));
-  convert_point_array(
-    field.ours.goal_corners,
-    std::back_inserter(ros_msg.ours.goal_corners.points));
-  convert_point_array(
-    field.theirs.defense_area_corners,
-    std::back_inserter(ros_msg.theirs.defense_area_corners.points));
-  convert_point_array(
-    field.theirs.goal_corners,
-    std::back_inserter(ros_msg.theirs.goal_corners.points));
+  convert_point_array(field.field_corners, ros_msg.field_corners.points);
+  convert_point_array(field.ours.defense_area_corners, ros_msg.ours.defense_area_corners.points);
+  convert_point_array(field.ours.goal_corners, ros_msg.ours.goal_corners.points);
+  convert_point_array(field.theirs.defense_area_corners,
+    ros_msg.theirs.defense_area_corners.points);
+  convert_point_array(field.theirs.goal_corners, ros_msg.theirs.goal_corners.points);
 }
 
 void rclcpp::TypeAdapter<ateam_game_state::Field, ateam_msgs::msg::FieldInfo>::convert_to_custom(
@@ -227,8 +226,13 @@ void rclcpp::TypeAdapter<ateam_game_state::Field, ateam_msgs::msg::FieldInfo>::c
   field.goal_depth = ros_msg.goal_depth;
   field.boundary_width = ros_msg.boundary_width;
   field.ignore_side = ros_msg.ignore_side;
+  field.defense_area_width = ros_msg.defense_area_width;
+  field.defense_area_depth = ros_msg.defense_area_depth;
+  field.center_circle_center = ateam_geometry::Point(ros_msg.center_circle.x,
+    ros_msg.center_circle.y);
+  field.center_circle_radius = ros_msg.center_circle_radius;
 
-  auto convert_point_array = [&](auto & in_vector, auto out_array) {
+  auto convert_point_array = [&](auto & in_vector, auto & out_array) {
       const auto count = std::min(in_vector.size(), out_array.size());
       std::transform(
       in_vector.begin(), in_vector.begin() + count, out_array.begin(),

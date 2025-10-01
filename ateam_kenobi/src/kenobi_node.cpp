@@ -37,6 +37,7 @@
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
+#include <ateam_game_state/type_adapters.hpp>
 #include <ateam_geometry/types.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "core/types.hpp"
