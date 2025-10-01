@@ -22,8 +22,11 @@
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/topic_names.hpp>
+#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/vision_state_ball.hpp>
 #include <ateam_msgs/msg/vision_state_robot.hpp>
+#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
+#include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <tf2/utils.hpp>
@@ -75,6 +78,27 @@ public:
       &GameStateTracker::YellowVisionBotCallback,
       this);
 
+    create_indexed_subscribers<ateam_radio_msgs::msg::BasicTelemetry>(
+      robot_feedback_subs_,
+      Topics::kRobotFeedbackPrefix,
+      1,
+      &GameStateTracker::RobotFeedbackCallback,
+      this);
+
+    create_indexed_subscribers<ateam_radio_msgs::msg::ConnectionStatus>(
+      robot_connection_status_subs_,
+      Topics::kRobotConnectionStatusPrefix,
+      1,
+      &GameStateTracker::RobotConnectionCallback,
+      this);
+
+    create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
+      robot_command_subs_,
+      Topics::kRobotMotionCommandPrefix,
+      1,
+      &GameStateTracker::RobotCommandCallback,
+      this);
+
     timer_ = create_wall_timer(std::chrono::duration<double>(1.0 /
         declare_parameter<double>("update_frequency")),
         std::bind(&GameStateTracker::TimerCallback, this));
@@ -90,6 +114,12 @@ private:
     ateam_common::indexed_topic_helpers::kRobotCount> blue_bot_subs_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     ateam_common::indexed_topic_helpers::kRobotCount> yellow_bot_subs_;
+  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
+    16> robot_feedback_subs_;
+  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
+    16> robot_connection_status_subs_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
+    16> robot_command_subs_;
   ateam_common::GameControllerListener gc_listener_;  // TODO(barulicm): Move GCListener type to ateam_game_state package
   World world_;
   rclcpp::TimerBase::SharedPtr timer_;
@@ -156,6 +186,25 @@ private:
     const auto are_we_yellow = our_color == ateam_common::TeamColor::Yellow;
     auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
     UpdateBotFromVision(robot_state_array[id], msg);
+  }
+
+  void RobotFeedbackCallback(const ateam_radio_msgs::msg::BasicTelemetry::SharedPtr msg, int id)
+  {
+    world_.our_robots[id].breakbeam_ball_detected = msg->breakbeam_ball_detected;
+    world_.our_robots[id].kicker_available = msg->kicker_available;
+    world_.our_robots[id].chipper_available = msg->chipper_available;
+  }
+
+  void RobotConnectionCallback(const ateam_radio_msgs::msg::ConnectionStatus::SharedPtr msg, int id)
+  {
+    world_.our_robots[id].radio_connected = msg->radio_connected;
+  }
+
+  void RobotCommandCallback(const ateam_msgs::msg::RobotMotionCommand::SharedPtr msg, int id)
+  {
+    world_.our_robots[id].prev_command_vel = ateam_geometry::Vector(msg->twist.linear.x,
+        msg->twist.linear.y);
+    world_.our_robots[id].prev_command_omega = msg->twist.angular.z;
   }
 
   void UpdateRefInfo()

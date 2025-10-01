@@ -7,6 +7,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(ateam_geometry REQUIRED)
 find_package(ateam_msgs REQUIRED)
+find_package(ateam_radio_msgs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -48,6 +49,7 @@ ament_target_dependencies(
   ateam_common
   ateam_geometry
   ateam_msgs
+  ateam_radio_msgs
   ssl_league_msgs
 )
 target_link_libraries(game_state_tracker_component ${PROJECT_NAME})
