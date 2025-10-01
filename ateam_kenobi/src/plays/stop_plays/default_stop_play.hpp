@@ -26,7 +26,6 @@
 #include "core/path_planning/path_planner.hpp"
 #include "core/motion/motion_controller.hpp"
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -39,13 +38,8 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
-
-private:
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 };
 }  // namespace ateam_kenobi::plays
 

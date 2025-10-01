@@ -56,8 +56,8 @@ ateam_geometry::Point Pass::getReceiverAssignmentPoint()
 
 void Pass::runFrame(
   const World & world, const Robot & kicker_bot, const Robot & receiver_bot,
-  ateam_msgs::msg::RobotMotionCommand & kicker_command,
-  ateam_msgs::msg::RobotMotionCommand & receiver_command)
+  RobotCommand & kicker_command,
+  RobotCommand & receiver_command)
 {
   kicker_id_ = kicker_bot.id;
 

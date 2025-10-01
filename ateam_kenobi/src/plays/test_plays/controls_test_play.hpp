@@ -26,7 +26,6 @@
 #include "core/motion/motion_controller.hpp"
 #include "core/stp/play.hpp"
 #include "ateam_geometry/types.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -39,20 +38,20 @@ public:
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
   struct Waypoint
   {
     ateam_geometry::Point position;
-    AngleMode angle_mode;
+    motion::AngleMode angle_mode;
     double heading;
     double hold_time_sec;
   };
 
-  MotionController motion_controller_;
-  MotionOptions motion_options_;
+  motion::MotionController motion_controller_;
+  motion::MotionOptions motion_options_;
 
   int index = 0;
   std::vector<Waypoint> waypoints;

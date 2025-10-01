@@ -21,8 +21,6 @@
 #ifndef PLAYS__HALT_PLAY_HPP_
 #define PLAYS__HALT_PLAY_HPP_
 
-#include "core/path_planning/path_planner.hpp"
-#include "core/motion/motion_controller.hpp"
 #include "core/stp/play.hpp"
 
 namespace ateam_kenobi::plays
@@ -38,12 +36,10 @@ public:
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
-  path_planning::PathPlanner path_planner_;
-  MotionController motion_controller_;
 };
 }  // namespace ateam_kenobi::plays
 

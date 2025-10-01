@@ -224,8 +224,8 @@ void drawObstacles(
 void moveBotsTooCloseToBall(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands,
-  std::array<play_helpers::EasyMoveTo, 16> & easy_move_tos, visualization::Overlays & overlays,
+  std::array<std::optional<RobotCommand>, 16> & motion_commands,
+  visualization::Overlays & overlays,
   nlohmann::json & play_info)
 {
   const auto spots = getOpenSpots(world, overlays);
@@ -256,19 +256,13 @@ void moveBotsTooCloseToBall(
     if(motion_commands[bot.id]) {
       continue;
     }
-    auto & emt = easy_move_tos.at(bot.id);
-    emt.setTargetPosition(spot);
-    emt.face_point(world.ball.pos);
-    if (bot.id == world.referee_info.our_goalie_id) {
-      auto planner_options = emt.getPlannerOptions();
-      planner_options.use_default_obstacles = false;
-      emt.setPlannerOptions(planner_options);
-    } else {
-      auto planner_options = emt.getPlannerOptions();
-      planner_options.use_default_obstacles = true;
-      emt.setPlannerOptions(planner_options);
-    }
-    motion_commands.at(bot.id) = emt.runFrame(bot, world, added_obstacles);
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{spot};
+    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+    command.motion_intent.planner_options.use_default_obstacles = bot.id !=
+      world.referee_info.our_goalie_id;
+    command.motion_intent.obstacles = added_obstacles;
+    motion_commands[bot.id] = command;
     overlays.drawCircle(
       "spot" + std::to_string(spot_ind),
       ateam_geometry::makeCircle(spot, kRobotRadius), "blue", "transparent");
@@ -278,7 +272,7 @@ void moveBotsTooCloseToBall(
 void moveBotsInObstacles(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands,
+  std::array<std::optional<RobotCommand>, 16> & motion_commands,
   nlohmann::json & play_info)
 {
   auto & play_info_bots = play_info["bots in obstacles"];
@@ -295,8 +289,11 @@ void moveBotsInObstacles(
     if(!opt_escape_vel) {
       continue;
     }
-    ateam_msgs::msg::RobotMotionCommand command;
-    command.twist = *opt_escape_vel;
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::VelocityIntent{
+      *opt_escape_vel,
+      motion::intents::linear::Frame::World
+    };
     motion_commands[i] = command;
     play_info_bots.push_back(robot.id);
   }

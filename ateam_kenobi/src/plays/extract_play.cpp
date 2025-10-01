@@ -59,10 +59,10 @@ void ExtractPlay::reset()
   extract_.Reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ExtractPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> ExtractPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
@@ -103,12 +103,12 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ExtractPlay::
   if (enough_bots_for_idlers) {
     assignments.RunPositionIfAssigned(
       "lane_idler_a", [this, &world, &motion_commands](const Robot & robot) {
-        motion_commands[robot.id] = lane_idler_a_.RunFrame(world, robot);
+        motion_commands[robot.id] = lane_idler_a_.RunFrame(world);
       });
 
     assignments.RunPositionIfAssigned(
       "lane_idler_b", [this, &world, &motion_commands](const Robot & robot) {
-        motion_commands[robot.id] = lane_idler_b_.RunFrame(world, robot);
+        motion_commands[robot.id] = lane_idler_b_.RunFrame(world);
       });
   }
 

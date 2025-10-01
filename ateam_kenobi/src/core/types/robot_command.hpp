@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,45 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TACTICS__STANDARD_DEFENSE_HPP_
-#define TACTICS__STANDARD_DEFENSE_HPP_
+#ifndef CORE__TYPES__ROBOT_COMMAND_HPP_
+#define CORE__TYPES__ROBOT_COMMAND_HPP_
 
-#include <vector>
-#include "core/types/world.hpp"
-#include "core/types/robot.hpp"
-#include "core/types/robot_command.hpp"
-#include "core/stp/tactic.hpp"
-#include "defenders.hpp"
-#include "skills/goalie.hpp"
+#include "core/motion/motion_intent.hpp"
 
-namespace ateam_kenobi::tactics
+namespace ateam_kenobi
 {
 
-class StandardDefense : public stp::Tactic
+enum class KickState : uint8_t
 {
-public:
-  explicit StandardDefense(stp::Options stp_options);
-
-  void reset();
-
-  /**
-   * @note Goalie not included in assignment points b/c it is assigned by ID
-   */
-  std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
-
-  /**
-   * @note Goalie not included in defender bots. It is chosen by ID.
-   */
-  void runFrame(
-    const World & world,
-    const std::vector<Robot> & defender_bots,
-    std::array<std::optional<RobotCommand>, 16> & motion_commands);
-
-private:
-  skills::Goalie goalie_;
-  tactics::Defenders defenders_;
+  Arm = 0,
+  Disable = 1,
+  KickNow = 2,
+  KickOnTouch = 3,
+  KickOnCaptured = 4,
+  ChipNow = 5,
+  ChipOnTouch = 6,
+  ChipOnCaptured = 7
 };
 
-}  // namespace ateam_kenobi::tactics
+struct RobotCommand
+{
+  motion::MotionIntent motion_intent;
 
-#endif  // TACTICS__STANDARD_DEFENSE_HPP_
+  KickState kick = KickState::Arm;
+  double kick_speed = 0.0;
+
+  double dribbler_speed = 0.0;
+};
+
+}  // namespace ateam_kenobi
+
+#endif  // CORE__TYPES__ROBOT_COMMAND_HPP_

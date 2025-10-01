@@ -43,7 +43,7 @@ public:
   {
   }
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override
   {
     const auto source = world.ball.pos;

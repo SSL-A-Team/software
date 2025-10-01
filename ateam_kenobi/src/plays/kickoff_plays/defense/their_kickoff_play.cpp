@@ -32,9 +32,9 @@ namespace ateam_kenobi::plays
 
 TheirKickoffPlay::TheirKickoffPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  defense_(createChild<tactics::StandardDefense>("defense"))
+  defense_(createChild<tactics::StandardDefense>("defense")),
+  multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_to"))
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
 }
 
 stp::PlayScore TheirKickoffPlay::getScore(const World & world)
@@ -56,15 +56,12 @@ stp::PlayScore TheirKickoffPlay::getScore(const World & world)
 void TheirKickoffPlay::reset()
 {
   defense_.reset();
-  for (auto & emt : easy_move_tos_) {
-    emt.reset();
-  }
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+std::array<std::optional<RobotCommand>,
   16> TheirKickoffPlay::runFrame(const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
@@ -79,7 +76,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
 
   defense_.runFrame(world, assignments.GetGroupFilledAssignments("defense"), motion_commands);
 
-  runOffense(world, offense_points, assignments.GetGroupAssignments("offense"), motion_commands);
+  runOffense(offense_points, assignments.GetGroupAssignments("offense"), motion_commands);
 
   const auto offense_assignments = assignments.GetGroupAssignments("offense");
 
@@ -160,25 +157,13 @@ ateam_geometry::Point TheirKickoffPlay::getOffensePointToBlockTarget(
 }
 
 void TheirKickoffPlay::runOffense(
-  const World & world,
   const std::vector<ateam_geometry::Point> & points,
   const std::vector<std::optional<Robot>> & robots,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+  std::array<std::optional<RobotCommand>, 16> & motion_commands)
 {
-  const auto num_runable = std::min(points.size(), robots.size());
-
-  for (auto i = 0ul; i < num_runable; ++i) {
-    const auto & maybe_robot = robots[i];
-    if (!maybe_robot) {
-      continue;
-    }
-    const auto & robot = *maybe_robot;
-    const auto & point = points[i];
-    auto & emt = easy_move_tos_[robot.id];
-    emt.setTargetPosition(point);
-    emt.face_absolute(0.0);
-    motion_commands[robot.id] = emt.runFrame(robot, world);
-  }
+  multi_move_to_.SetTargetPoints(points);
+  multi_move_to_.SetFaceAbsolue(0.0);
+  multi_move_to_.RunFrame(robots, motion_commands);
 }
 
 }  // namespace ateam_kenobi::plays

@@ -81,12 +81,6 @@ bool UniversalKick::IsDone() const
   }
 }
 
-void UniversalKick::SetUseDefaultObstacles(bool use_obstacles)
-{
-  pivot_kick_.SetUseDefaultObstacles(use_obstacles);
-  line_kick_.SetUseDefaultObstacles(use_obstacles);
-}
-
 void UniversalKick::SetKickChip(KickSkill::KickChip kc)
 {
   pivot_kick_.SetKickChip(kc);
@@ -98,7 +92,7 @@ void UniversalKick::SetPreferredKickType(KickType type)
   preferred_type_ = type;
 }
 
-ateam_msgs::msg::RobotMotionCommand UniversalKick::RunFrame(
+RobotCommand UniversalKick::RunFrame(
   const World & world,
   const Robot & robot)
 {
@@ -123,7 +117,7 @@ ateam_msgs::msg::RobotMotionCommand UniversalKick::RunFrame(
     case KickType::Unset:
     default:
       last_used_ = KickType::Unset;
-      return ateam_msgs::msg::RobotMotionCommand{};
+      return RobotCommand{};
   }
 }
 

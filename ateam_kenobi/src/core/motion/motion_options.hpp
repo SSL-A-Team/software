@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,45 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TACTICS__STANDARD_DEFENSE_HPP_
-#define TACTICS__STANDARD_DEFENSE_HPP_
+#ifndef CORE__MOTION__MOTION_OPTIONS_HPP_
+#define CORE__MOTION__MOTION_OPTIONS_HPP_
 
-#include <vector>
-#include "core/types/world.hpp"
-#include "core/types/robot.hpp"
-#include "core/types/robot_command.hpp"
-#include "core/stp/tactic.hpp"
-#include "defenders.hpp"
-#include "skills/goalie.hpp"
-
-namespace ateam_kenobi::tactics
+namespace ateam_kenobi::motion
 {
 
-class StandardDefense : public stp::Tactic
+struct MotionOptions
 {
-public:
-  explicit StandardDefense(stp::Options stp_options);
+  /// @brief radius around the end point that will be considered completed
+  double completion_threshold = .02;  // meters
 
-  void reset();
+  /// @brief angle around the end point that will be considered completed
+  double angular_completion_threshold = 0.035;  // radians
 
-  /**
-   * @note Goalie not included in assignment points b/c it is assigned by ID
-   */
-  std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
+  double max_velocity = 1.0;  // m/s
+  double max_acceleration = 2.0;  // m/s^2
+  double max_deceleration = 2.0;  // m/s^2
 
-  /**
-   * @note Goalie not included in defender bots. It is chosen by ID.
-   */
-  void runFrame(
-    const World & world,
-    const std::vector<Robot> & defender_bots,
-    std::array<std::optional<RobotCommand>, 16> & motion_commands);
+  double max_angular_velocity = 3.0;  // rad/s
+  double max_angular_acceleration = 4.0;  // rad/s^2
 
-private:
-  skills::Goalie goalie_;
-  tactics::Defenders defenders_;
+  double max_allowed_turn_angle = M_PI / 4.0;  // radians
 };
 
-}  // namespace ateam_kenobi::tactics
+}  // namespace ateam_kenobi::motion
 
-#endif  // TACTICS__STANDARD_DEFENSE_HPP_
+#endif  // CORE__MOTION__MOTION_OPTIONS_HPP_

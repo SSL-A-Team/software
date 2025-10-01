@@ -23,8 +23,7 @@
 
 #include <vector>
 #include "core/stp/tactic.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
-#include "core/motion/motion_controller.hpp"
+#include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::tactics
 {
@@ -34,14 +33,15 @@ class MultiMoveTo : public stp::Tactic
 public:
   explicit MultiMoveTo(stp::Options stp_options);
 
-  void Reset();
-
   std::vector<ateam_geometry::Point> GetAssignmentPoints();
 
   void RunFrame(
-    const World & world,
     const std::vector<std::optional<Robot>> & robots,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+    std::array<std::optional<RobotCommand>, 16> & motion_commands);
+
+  void RunFrame(
+    const std::vector<Robot> & robots,
+    std::array<std::optional<RobotCommand>, 16> & motion_commands);
 
   void SetTargetPoints(const std::vector<ateam_geometry::Point> & targets)
   {
@@ -50,24 +50,22 @@ public:
 
   void SetFaceNone()
   {
-    angle_mode_ = AngleMode::no_face;
+    angular_intent_ = motion::intents::None{};
   }
 
   void SetFaceTravel()
   {
-    angle_mode_ = AngleMode::face_travel;
+    angular_intent_ = motion::intents::angular::FaceTravelIntent{};
   }
 
   void SetFaceAbsolue(double angle)
   {
-    angle_mode_ = AngleMode::face_absolute;
-    absolute_angle_reference_ = angle;
+    angular_intent_ = motion::intents::angular::HeadingIntent{angle};
   }
 
   void SetFacePoint(const ateam_geometry::Point & point)
   {
-    angle_mode_ = AngleMode::face_point;
-    point_angle_reference_ = point;
+    angular_intent_ = motion::intents::angular::FacingIntent{point};
   }
 
   void SetObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles)
@@ -81,15 +79,11 @@ public:
   }
 
 private:
-  AngleMode angle_mode_ = AngleMode::no_face;
-  double absolute_angle_reference_ = 0.0;
-  ateam_geometry::Point point_angle_reference_;
+  motion::MotionIntent::AngularIntent angular_intent_;
 
   std::vector<ateam_geometry::AnyShape> obstacles_;
 
   std::vector<ateam_geometry::Point> target_points_;
-
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 };
 
 }  // namespace ateam_kenobi::tactics

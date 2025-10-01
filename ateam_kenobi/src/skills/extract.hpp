@@ -22,7 +22,7 @@
 #define SKILLS__EXTRACT_HPP_
 
 #include "core/stp/skill.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
+#include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -34,7 +34,7 @@ public:
 
   void Reset();
 
-  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+  RobotCommand RunFrame(const World & world, const Robot & robot);
 
   ateam_geometry::Point GetAssignmentPoint(const World & world)
   {
@@ -43,7 +43,6 @@ public:
 
 private:
   const int kBallsenseCountThreshold_ = 10;
-  play_helpers::EasyMoveTo easy_move_to_;
   int ballsense_count_ = 0;
   std::optional<std::chrono::steady_clock::time_point> rip_start_time_;
 };

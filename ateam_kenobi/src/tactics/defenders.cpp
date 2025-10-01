@@ -30,12 +30,6 @@ namespace ateam_kenobi::tactics
 Defenders::Defenders(stp::Options stp_options)
 : stp::Tactic(stp_options)
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
-}
-
-void Defenders::reset()
-{
-  std::ranges::for_each(easy_move_tos_, std::mem_fn(&play_helpers::EasyMoveTo::reset));
 }
 
 std::vector<ateam_geometry::Point> Defenders::getAssignmentPoints(const World & world)
@@ -46,7 +40,7 @@ std::vector<ateam_geometry::Point> Defenders::getAssignmentPoints(const World & 
 void Defenders::runFrame(
   const World & world,
   const std::vector<Robot> & robots,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+  std::array<std::optional<RobotCommand>, 16> & motion_commands)
 {
   const auto defender_points = getDefenderPoints(world);
   const auto num_defenders = std::min(defender_points.size(), robots.size());
@@ -54,15 +48,12 @@ void Defenders::runFrame(
   for (auto i = 0ul; i < num_defenders; ++i) {
     const auto & robot = robots[i];
     const auto & defender_point = defender_points[i];
-    auto & emt = easy_move_tos_[robot.id];
-    emt.setTargetPosition(defender_point);
-    // emt.face_point(world.ball.pos);
-    emt.face_absolute(0.0);
-    path_planning::PlannerOptions planner_options;
-    planner_options.avoid_ball = false;
-    planner_options.footprint_inflation = 0.03;
-    emt.setPlannerOptions(planner_options);
-    motion_commands[robot.id] = emt.runFrame(robot, world);
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{defender_point};
+    command.motion_intent.angular = motion::intents::angular::HeadingIntent{0.0};
+    command.motion_intent.planner_options.avoid_ball = false;
+    command.motion_intent.planner_options.footprint_inflation = 0.03;
+    motion_commands[robot.id] = command;
   }
 
   drawDefenseSegments(world);
