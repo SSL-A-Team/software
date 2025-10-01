@@ -53,26 +53,26 @@ public:
     });
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
-    ball_publisher_ = create_publisher<ateam_msgs::msg::BallState>(
+    ball_publisher_ = create_publisher<ateam_msgs::msg::VisionStateBall>(
       std::string(Topics::kBall),
       rclcpp::SystemDefaultsQoS());
 
     ateam_common::indexed_topic_helpers::create_indexed_publishers
-    <ateam_msgs::msg::RobotState>(
+    <ateam_msgs::msg::VisionStateRobot>(
       blue_robots_publisher_,
       Topics::kBlueTeamRobotPrefix,
       rclcpp::SystemDefaultsQoS(),
       this
     );
     ateam_common::indexed_topic_helpers::create_indexed_publishers
-    <ateam_msgs::msg::RobotState>(
+    <ateam_msgs::msg::VisionStateRobot>(
       yellow_robots_publisher_,
       Topics::kYellowTeamRobotPrefix,
       rclcpp::SystemDefaultsQoS(),
       this
     );
 
-    vision_state_publisher_ = create_publisher<ateam_msgs::msg::VisionWorldState>(
+    vision_state_publisher_ = create_publisher<ateam_msgs::msg::VisionStateCameraArray>(
       std::string(Topics::kVisionState),
       rclcpp::SystemDefaultsQoS());
 
@@ -140,11 +140,12 @@ public:
 
 private:
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<ateam_msgs::msg::BallState>::SharedPtr ball_publisher_;
-  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotState>::SharedPtr, 16> blue_robots_publisher_;
-  std::array<rclcpp::Publisher<ateam_msgs::msg::RobotState>::SharedPtr,
+  rclcpp::Publisher<ateam_msgs::msg::VisionStateBall>::SharedPtr ball_publisher_;
+  std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
+    16> blue_robots_publisher_;
+  std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     16> yellow_robots_publisher_;
-  rclcpp::Publisher<ateam_msgs::msg::VisionWorldState>::SharedPtr vision_state_publisher_;
+  rclcpp::Publisher<ateam_msgs::msg::VisionStateCameraArray>::SharedPtr vision_state_publisher_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
   rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
   rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr field_subscription_;

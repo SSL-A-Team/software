@@ -30,7 +30,7 @@
 
 #include <rclcpp/node_interfaces/node_parameters_interface.hpp>
 
-#include <ateam_msgs/msg/vision_camera_state.hpp>
+#include <ateam_msgs/msg/vision_state_camera.hpp>
 
 #include "filters/multiple_hypothesis_tracker.hpp"
 #include "generators/model_input_generator.hpp"
@@ -81,7 +81,7 @@ public:
   /**
    * @return ROS2 msg containing the current internal state
    */
-  ateam_msgs::msg::VisionCameraState get_vision_camera_state() const;
+  ateam_msgs::msg::VisionStateCamera get_vision_camera_state() const;
 
   void set_ignored_half(int ignored_half)
   {

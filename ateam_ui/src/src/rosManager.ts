@@ -204,7 +204,7 @@ export class RosManager {
             ballTopic = new ROSLIB.Topic({
                 ros: this.ros,
                 name: '/ball',
-                messageType: 'ateam_msgs/msg/BallState'
+                messageType: 'ateam_msgs/msg/VisionStateBall'
             });
             this.subscriptions.set("ball", ballTopic);
         }
@@ -217,7 +217,7 @@ export class RosManager {
                     robotTopic = new ROSLIB.Topic({
                         ros: this.ros,
                         name: '/' + team + '_team/robot' + i,
-                        messageType: 'ateam_msgs/msg/RobotState'
+                        messageType: 'ateam_msgs/msg/VisionStateRobot'
                     });
                     this.subscriptions.set("/" + team + "_team/robot" + i, robotTopic);
                 }

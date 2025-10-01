@@ -25,18 +25,19 @@
 #include <functional>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-#include <ateam_msgs/msg/ball_state.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
+#include <ateam_msgs/msg/vision_state_ball.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/overlay.hpp>
 #include <ateam_msgs/msg/play_info.hpp>
-#include <ateam_msgs/msg/world.hpp>
+#include <ateam_msgs/msg/game_state_world.hpp>
 #include <ateam_msgs/srv/set_override_play.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
 #include <ateam_msgs/msg/playbook_state.hpp>
+#include <ateam_msgs/msg/kenobi_status.hpp>
 #include <ateam_common/cache_directory.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
@@ -88,14 +89,14 @@ public:
       "/play_info",
       rclcpp::SystemDefaultsQoS());
 
-    create_indexed_subscribers<ateam_msgs::msg::RobotState>(
+    create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
       blue_robots_subscriptions_,
       Topics::kBlueTeamRobotPrefix,
       10,
       &KenobiNode::blue_robot_state_callback,
       this);
 
-    create_indexed_subscribers<ateam_msgs::msg::RobotState>(
+    create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
       yellow_robots_subscriptions_,
       Topics::kYellowTeamRobotPrefix,
       10,
@@ -120,12 +121,12 @@ public:
       robot_commands_publishers_, Topics::kRobotMotionCommandPrefix,
       rclcpp::SystemDefaultsQoS(), this);
 
-    ball_subscription_ = create_subscription<ateam_msgs::msg::BallState>(
+    ball_subscription_ = create_subscription<ateam_msgs::msg::VisionStateBall>(
       std::string(Topics::kBall),
       10,
       std::bind(&KenobiNode::ball_state_callback, this, std::placeholders::_1));
 
-    world_publisher_ = create_publisher<ateam_msgs::msg::World>(
+    world_publisher_ = create_publisher<ateam_msgs::msg::GameStateWorld>(
       "~/world",
       rclcpp::SystemDefaultsQoS());
 
@@ -147,6 +148,9 @@ public:
     playbook_state_publisher_ = create_publisher<ateam_msgs::msg::PlaybookState>(
       "~/playbook_state",
       rclcpp::SystemDefaultsQoS());
+
+    status_publisher_ = create_publisher<ateam_msgs::msg::KenobiStatus>("~/status",
+        rclcpp::SystemDefaultsQoS());
 
     timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
 
@@ -185,10 +189,10 @@ private:
   motion::MotionExecutor motion_executor_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
-  rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
+  rclcpp::Subscription<ateam_msgs::msg::VisionStateBall>::SharedPtr ball_subscription_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     16> blue_robots_subscriptions_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     16> yellow_robots_subscriptions_;
   std::array<rclcpp::Subscription<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
     16> robot_feedback_subscriptions_;
@@ -201,10 +205,11 @@ private:
   rclcpp::Service<ateam_msgs::srv::SetOverridePlay>::SharedPtr override_service_;
   rclcpp::Service<ateam_msgs::srv::SetPlayEnabled>::SharedPtr play_enabled_service_;
   rclcpp::Publisher<ateam_msgs::msg::PlaybookState>::SharedPtr playbook_state_publisher_;
+  rclcpp::Publisher<ateam_msgs::msg::KenobiStatus>::SharedPtr status_publisher_;
 
   ateam_common::GameControllerListener game_controller_listener_;
 
-  rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
+  rclcpp::Publisher<ateam_msgs::msg::GameStateWorld>::SharedPtr world_publisher_;
 
   rclcpp::TimerBase::SharedPtr timer_;
 
@@ -219,7 +224,7 @@ private:
   }
 
   void blue_robot_state_callback(
-    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
+    const ateam_msgs::msg::VisionStateRobot::SharedPtr robot_state_msg,
     int id)
   {
     const auto our_color = game_controller_listener_.GetTeamColor();
@@ -232,7 +237,7 @@ private:
   }
 
   void yellow_robot_state_callback(
-    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
+    const ateam_msgs::msg::VisionStateRobot::SharedPtr robot_state_msg,
     int id)
   {
     const auto our_color = game_controller_listener_.GetTeamColor();
@@ -247,7 +252,7 @@ private:
   void robot_state_callback(
     std::array<Robot, 16> & robot_states,
     std::size_t id,
-    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg)
+    const ateam_msgs::msg::VisionStateRobot::SharedPtr robot_state_msg)
   {
     robot_states.at(id).visible = robot_state_msg->visible;
     if (robot_state_msg->visible) {
@@ -281,7 +286,7 @@ private:
     world_.our_robots.at(id).radio_connected = robot_connection_msg->radio_connected;
   }
 
-  void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
+  void ball_state_callback(const ateam_msgs::msg::VisionStateBall::SharedPtr ball_state_msg)
   {
     world_.ball.visible = ball_state_msg->visible;
     const auto ball_visibility_timed_out = ateam_common::TimeDiffSeconds(world_.current_time,
@@ -430,9 +435,11 @@ private:
         "DETECTED TEAM SIDE WAS UNKNOWN");
     }
 
-    fps_tracker_.update(world_);
-
     world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
+
+    ateam_msgs::msg::KenobiStatus status_msg;
+    status_msg.fps = fps_tracker_.Update(world_);
+    status_publisher_->publish(status_msg);
 
     auto motion_commands = runPlayFrame(world_);
 

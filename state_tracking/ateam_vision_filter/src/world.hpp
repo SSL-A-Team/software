@@ -29,7 +29,7 @@
 
 #include <rclcpp/node_interfaces/node_parameters_interface.hpp>
 
-#include <ateam_msgs/msg/vision_world_state.hpp>
+#include <ateam_msgs/msg/vision_state_camera_array.hpp>
 
 #include "camera.hpp"
 #include "generators/model_input_generator.hpp"
@@ -80,7 +80,7 @@ public:
   /**
    * @return ROS2 msg containing the current internal state
    */
-  ateam_msgs::msg::VisionWorldState get_vision_world_state() const;
+  ateam_msgs::msg::VisionStateCameraArray get_vision_world_state() const;
 
 private:
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr params_interface_;

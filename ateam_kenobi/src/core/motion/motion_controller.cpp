@@ -28,7 +28,6 @@
 #include <vector>
 #include <utility>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
 #include "ateam_geometry/ateam_geometry.hpp"
 #include "ateam_common/robot_constants.hpp"
 #include "pid.hpp"

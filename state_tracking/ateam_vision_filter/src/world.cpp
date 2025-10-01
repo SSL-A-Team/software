@@ -227,11 +227,11 @@ std::array<std::optional<Robot>, 16> World::get_blue_robots_estimate()
   return blue_robots_estimates;
 }
 
-ateam_msgs::msg::VisionWorldState World::get_vision_world_state() const
+ateam_msgs::msg::VisionStateCameraArray World::get_vision_world_state() const
 {
-  ateam_msgs::msg::VisionWorldState world_state;
+  ateam_msgs::msg::VisionStateCameraArray world_state;
   for (const auto & camera_pair : cameras) {
-    ateam_msgs::msg::VisionCameraState camera_state = camera_pair.second.get_vision_camera_state();
+    ateam_msgs::msg::VisionStateCamera camera_state = camera_pair.second.get_vision_camera_state();
     camera_state.camera_id = camera_pair.first;
     world_state.camera_states.push_back(camera_state);
   }
