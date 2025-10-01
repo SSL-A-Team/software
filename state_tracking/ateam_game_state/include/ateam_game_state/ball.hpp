@@ -34,6 +34,6 @@ struct Ball
   bool visible = false;
   std::chrono::steady_clock::time_point last_visible_time;
 };
-}  // namespace ateam_kenobi
+}  // namespace ateam_game_state
 
 #endif  // ATEAM_GAME_STATE__BALL_HPP_

@@ -49,6 +49,6 @@ struct World
   // Holds the ID of the robot not allowed to touch the ball, if any
   std::optional<int> double_touch_forbidden_id_;
 };
-}  // namespace ateam_kenobi
+}  // namespace ateam_game_state
 
 #endif  // ATEAM_GAME_STATE__WORLD_HPP_

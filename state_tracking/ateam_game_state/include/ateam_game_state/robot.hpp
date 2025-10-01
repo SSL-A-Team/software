@@ -51,6 +51,6 @@ struct Robot
     return visible && radio_connected;
   }
 };
-}  // namespace ateam_kenobi
+}  // namespace ateam_game_state
 
 #endif  // ATEAM_GAME_STATE__ROBOT_HPP_

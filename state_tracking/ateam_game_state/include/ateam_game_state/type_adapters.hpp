@@ -95,10 +95,15 @@ struct rclcpp::TypeAdapter<ateam_game_state::RefereeInfo, ateam_msgs::msg::Refer
   static void convert_to_custom(const ros_message_type & ros_msg, custom_type & ref_info);
 };
 
-RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::World, ateam_msgs::msg::GameStateWorld);
-RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Ball, ateam_msgs::msg::GameStateBall);
-RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Robot, ateam_msgs::msg::GameStateRobot);
-RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Field, ateam_msgs::msg::FieldInfo);
-RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::RefereeInfo, ateam_msgs::msg::RefereeInfo);
+RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::World,
+  ateam_msgs::msg::GameStateWorld);
+RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Ball,
+  ateam_msgs::msg::GameStateBall);
+RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Robot,
+  ateam_msgs::msg::GameStateRobot);
+RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::Field,
+  ateam_msgs::msg::FieldInfo);
+RCLCPP_USING_CUSTOM_TYPE_AS_ROS_MESSAGE_TYPE(ateam_game_state::RefereeInfo,
+  ateam_msgs::msg::RefereeInfo);
 
 #endif  // ATEAM_GAME_STATE__TYPE_ADAPTERS_HPP_

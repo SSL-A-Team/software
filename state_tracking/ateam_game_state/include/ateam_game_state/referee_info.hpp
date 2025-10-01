@@ -40,6 +40,6 @@ struct RefereeInfo
   std::optional<ateam_common::GameCommand> next_command = std::nullopt;
   std::chrono::system_clock::time_point command_time;
 };
-}  // namespace ateam_kenobi
+}  // namespace ateam_game_state
 
 #endif  // ATEAM_GAME_STATE__REFEREE_INFO_HPP_

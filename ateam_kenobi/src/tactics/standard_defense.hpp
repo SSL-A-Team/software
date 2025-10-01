@@ -24,7 +24,6 @@
 #include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "core/types.hpp"
-#include "core/types.hpp"
 #include "core/stp/tactic.hpp"
 #include "defenders.hpp"
 #include "skills/goalie.hpp"

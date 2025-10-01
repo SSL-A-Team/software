@@ -28,7 +28,6 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
 #include "core/types.hpp"
-#include "core/types.hpp"
 #include "pid.hpp"
 
 // cause the robot to: always face a point, face in the direction of travel, or stay facing the

@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef GAME_STATE_TRACKER__IN_PLAY_EVAL_HPP_
-#define GAME_STATE_TRACKER__IN_PLAY_EVAL_HPP_
+#ifndef GAME_STATE_TRACKER__IN_PLAY_EVALUATOR_HPP_
+#define GAME_STATE_TRACKER__IN_PLAY_EVALUATOR_HPP_
 
 #include <chrono>
 #include <optional>
@@ -61,4 +61,4 @@ private:
 
 }  // namespace ateam_game_state
 
-#endif  // GAME_STATE_TRACKER__IN_PLAY_EVAL_HPP_
+#endif  // GAME_STATE_TRACKER__IN_PLAY_EVALUATOR_HPP_

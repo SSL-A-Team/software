@@ -122,7 +122,8 @@ private:
     16> robot_connection_status_subs_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_command_subs_;
-  ateam_common::GameControllerListener gc_listener_;  // TODO(barulicm): Move GCListener type to ateam_game_state package
+  // TODO(barulicm): Move GCListener type to ateam_game_state package
+  ateam_common::GameControllerListener gc_listener_;
   World world_;
   rclcpp::TimerBase::SharedPtr timer_;
 

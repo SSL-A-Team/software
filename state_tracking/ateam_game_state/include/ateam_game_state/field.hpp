@@ -47,6 +47,6 @@ struct Field
   FieldSidedInfo ours;
   FieldSidedInfo theirs;
 };
-}  // namespace ateam_kenobi
+}  // namespace ateam_game_state
 
 #endif  // ATEAM_GAME_STATE__FIELD_HPP_

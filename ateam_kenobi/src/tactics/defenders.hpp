@@ -26,7 +26,6 @@
 #include <ateam_geometry/types.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "core/types.hpp"
-#include "core/types.hpp"
 #include "core/stp/tactic.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 

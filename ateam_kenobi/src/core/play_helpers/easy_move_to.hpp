@@ -31,7 +31,6 @@
 #include "core/motion/motion_controller.hpp"
 #include "core/stp/base.hpp"
 #include "core/types.hpp"
-#include "core/types.hpp"
 
 namespace ateam_kenobi::play_helpers
 {

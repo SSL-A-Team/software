@@ -25,7 +25,6 @@
 
 #include "core/path_planning/path_planner.hpp"
 #include "core/types.hpp"
-#include "core/types.hpp"
 
 #include <ateam_geometry/ateam_geometry.hpp>
 #include <ateam_geometry_testing/testing_utils.hpp>

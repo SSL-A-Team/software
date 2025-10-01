@@ -153,4 +153,4 @@ bool InPlayEvaluator::HasTimeoutExpired()
   return (std::chrono::steady_clock::now() - timeout_duration_.value()) > timeout_start_;
 }
 
-}  // namespace ateam_kenobi
+}  // namespace ateam_game_state
