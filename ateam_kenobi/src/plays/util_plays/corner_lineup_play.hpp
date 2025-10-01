@@ -26,7 +26,7 @@
 #include <array>
 
 #include "ateam_geometry/types.hpp"
-#include "core/types/robot.hpp"
+#include "core/types.hpp"
 #include "core/stp/play.hpp"
 #include "core/play_helpers/easy_move_to.hpp"
 

@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,38 +19,22 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__TYPES__ROBOT_HPP_
-#define CORE__TYPES__ROBOT_HPP_
+#ifndef CORE__TYPES_HPP_
+#define CORE__TYPES_HPP_
 
-#include <ateam_geometry/types.hpp>
+#include <ateam_game_state/ball.hpp>
+#include <ateam_game_state/field.hpp>
+#include <ateam_game_state/referee_info.hpp>
+#include <ateam_game_state/robot.hpp>
+#include <ateam_game_state/world.hpp>
 
 namespace ateam_kenobi
 {
-struct Robot
-{
-  int id;
-  bool visible = false;
-  bool radio_connected = false;
-
-  ateam_geometry::Point pos;
-  double theta = 0.0;
-  ateam_geometry::Vector vel;
-  double omega = 0.0;
-
-  ateam_geometry::Vector prev_command_vel;
-  double prev_command_omega = 0.0;
-
-  bool breakbeam_ball_detected = false;
-  bool breakbeam_ball_detected_filtered = false;
-
-  bool kicker_available = true;
-  bool chipper_available = false;
-
-  bool IsAvailable() const
-  {
-    return visible && radio_connected;
-  }
-};
+using Ball = ateam_game_state::Ball;
+using Field = ateam_game_state::Field;
+using RefereeInfo = ateam_game_state::RefereeInfo;
+using Robot = ateam_game_state::Robot;
+using World = ateam_game_state::World;
 }  // namespace ateam_kenobi
 
-#endif  // CORE__TYPES__ROBOT_HPP_
+#endif  // CORE__TYPES_HPP_

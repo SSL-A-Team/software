@@ -25,7 +25,7 @@
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/any_shape.hpp>
 #include <geometry_msgs/msg/twist.hpp>
-#include "core/types/robot.hpp"
+#include "core/types.hpp"
 
 namespace ateam_kenobi::path_planning
 {

@@ -23,7 +23,7 @@
 #define PLAYS__PASSING_PLAYS__SEGMENT_PASSING_TARGET_FUNCS_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include "core/types/world.hpp"
+#include "core/types.hpp"
 #include "core/play_helpers/lanes.hpp"
 #include "core/stp/base.hpp"
 

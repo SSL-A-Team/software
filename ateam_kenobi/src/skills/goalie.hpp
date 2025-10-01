@@ -24,7 +24,7 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include "core/play_helpers/easy_move_to.hpp"
-#include "core/types/world.hpp"
+#include "core/types.hpp"
 #include "core/stp/skill.hpp"
 #include "pivot_kick.hpp"
 #include "line_kick.hpp"

@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <limits>
 #include <ateam_common/robot_constants.hpp>
-#include "core/types/robot.hpp"
+#include "core/types.hpp"
 
 namespace ateam_kenobi::play_helpers
 {

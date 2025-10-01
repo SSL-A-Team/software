@@ -11,6 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(ateam_game_state REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ateam_geometry REQUIRED)
@@ -34,7 +35,6 @@ target_sources(kenobi_node_component PRIVATE
   src/core/path_planning/escape_velocity.cpp
   src/core/path_planning/obstacles.cpp
   src/core/path_planning/path_planner.cpp
-  src/core/types/message_conversions.cpp
   src/core/motion/motion_controller.cpp
   src/core/visualization/overlays.cpp
   src/core/play_helpers/easy_move_to.cpp
@@ -122,6 +122,7 @@ ament_target_dependencies(
   "ateam_radio_msgs"
   "ateam_msgs"
   "ateam_common"
+  "ateam_game_state"
   "tf2"
   "tf2_geometry_msgs"
   "ateam_geometry"

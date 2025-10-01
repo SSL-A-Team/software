@@ -26,7 +26,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include "core/types/robot.hpp"
+#include "core/types.hpp"
 
 namespace ateam_kenobi::play_helpers
 {

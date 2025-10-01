@@ -30,8 +30,8 @@
 #include "core/path_planning/path_planner.hpp"
 #include "core/motion/motion_controller.hpp"
 #include "core/stp/base.hpp"
-#include "core/types/robot.hpp"
-#include "core/types/world.hpp"
+#include "core/types.hpp"
+#include "core/types.hpp"
 
 namespace ateam_kenobi::play_helpers
 {

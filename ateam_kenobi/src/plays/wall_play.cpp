@@ -24,7 +24,7 @@
 #include <limits>
 #include <ateam_common/robot_constants.hpp>
 #include "core/play_helpers/robot_assignment.hpp"
-#include "core/types/robot.hpp"
+#include "core/types.hpp"
 #include "skills/goalie.hpp"
 #include "core/play_helpers/available_robots.hpp"
 namespace ateam_kenobi::plays

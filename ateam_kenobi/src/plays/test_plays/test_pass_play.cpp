@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 #include "test_pass_play.hpp"
-#include "core/types/world.hpp"
+#include "core/types.hpp"
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 

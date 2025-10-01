@@ -21,7 +21,7 @@
 
 #include "corner_lineup_play.hpp"
 #include <ateam_common/robot_constants.hpp>
-#include "core/types/robot.hpp"
+#include "core/types.hpp"
 #include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays

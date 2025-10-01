@@ -24,7 +24,7 @@
 
 #include <ateam_geometry/types.hpp>
 #include "core/stp/tactic.hpp"
-#include "core/types/world.hpp"
+#include "core/types.hpp"
 #include "skills/universal_kick.hpp"
 #include "skills/pass_receiver.hpp"
 

@@ -28,7 +28,7 @@
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "base.hpp"
 #include "play_score.hpp"
-#include "core/types/world.hpp"
+#include "core/types.hpp"
 
 namespace ateam_kenobi::stp
 {

@@ -22,7 +22,7 @@
 #define CORE__PLAY_HELPERS__LANES_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include "core/types/world.hpp"
+#include "core/types.hpp"
 
 namespace ateam_kenobi::play_helpers::lanes
 {

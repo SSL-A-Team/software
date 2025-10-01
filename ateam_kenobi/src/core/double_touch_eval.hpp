@@ -26,7 +26,7 @@
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <boost/scope_exit.hpp>
-#include "core/types/world.hpp"
+#include "core/types.hpp"
 #include "core/visualization/overlays.hpp"
 
 namespace ateam_kenobi

@@ -25,7 +25,7 @@
 #include <CGAL/Aff_transformation_2.h>
 #include <ateam_geometry/ateam_geometry.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "core/types/robot.hpp"
+#include "core/types.hpp"
 
 namespace ateam_kenobi::motion
 {

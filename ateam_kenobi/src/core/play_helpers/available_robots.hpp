@@ -24,8 +24,8 @@
 
 #include <vector>
 #include <ateam_geometry/types.hpp>
-#include "core/types/robot.hpp"
-#include "core/types/world.hpp"
+#include "core/types.hpp"
+#include "core/types.hpp"
 
 namespace ateam_kenobi::play_helpers
 {
