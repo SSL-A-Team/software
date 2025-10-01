@@ -21,8 +21,10 @@
 #include "core/types/message_conversions.hpp"
 
 #include <tf2/LinearMath/Quaternion.h>
-
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
+#include "core/types/field.hpp"
+#include "core/types/referee_info.hpp"
 
 namespace ateam_kenobi::message_conversions
 {
@@ -81,9 +83,9 @@ ateam_msgs::msg::RefereeInfo toMsg(const RefereeInfo & obj)
 }
 
 
-ateam_msgs::msg::BallState toMsg(const Ball & obj)
+ateam_msgs::msg::GameStateBall toMsg(const Ball & obj)
 {
-  ateam_msgs::msg::BallState ball_state_msg;
+  ateam_msgs::msg::GameStateBall ball_state_msg;
   ball_state_msg.pose.position.x = obj.pos.x();
   ball_state_msg.pose.position.y = obj.pos.y();
   ball_state_msg.twist.linear.x = obj.vel.x();
@@ -93,9 +95,9 @@ ateam_msgs::msg::BallState toMsg(const Ball & obj)
   return ball_state_msg;
 }
 
-ateam_msgs::msg::RobotState toMsg(const Robot & obj)
+ateam_msgs::msg::GameStateRobot toMsg(const Robot & obj)
 {
-  ateam_msgs::msg::RobotState robot_state_msg;
+  ateam_msgs::msg::GameStateRobot robot_state_msg;
   robot_state_msg.pose.position.x = obj.pos.x();
   robot_state_msg.pose.position.y = obj.pos.y();
   robot_state_msg.pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), obj.theta));
@@ -107,9 +109,9 @@ ateam_msgs::msg::RobotState toMsg(const Robot & obj)
   return robot_state_msg;
 }
 
-ateam_msgs::msg::World toMsg(const World & obj)
+ateam_msgs::msg::GameStateWorld toMsg(const World & obj)
 {
-  ateam_msgs::msg::World world_msg;
+  ateam_msgs::msg::GameStateWorld world_msg;
 
   world_msg.current_time =
     rclcpp::Time(
@@ -119,13 +121,13 @@ ateam_msgs::msg::World toMsg(const World & obj)
   world_msg.field = toMsg(obj.field);
   world_msg.referee_info = toMsg(obj.referee_info);
 
-  world_msg.balls.push_back(toMsg(obj.ball));
+  world_msg.ball = toMsg(obj.ball);
 
   for (const Robot & robot : obj.our_robots) {
     if (robot.visible || robot.radio_connected) {
       world_msg.our_robots.push_back(toMsg(robot));
     } else {
-      world_msg.our_robots.push_back(ateam_msgs::msg::RobotState());
+      world_msg.our_robots.push_back(ateam_msgs::msg::GameStateRobot());
     }
   }
 
@@ -133,15 +135,13 @@ ateam_msgs::msg::World toMsg(const World & obj)
     if (robot.visible) {
       world_msg.their_robots.push_back(toMsg(robot));
     } else {
-      world_msg.their_robots.push_back(ateam_msgs::msg::RobotState());
+      world_msg.their_robots.push_back(ateam_msgs::msg::GameStateRobot());
     }
   }
 
   world_msg.ball_in_play = obj.in_play;
   world_msg.double_touch_enforced = obj.double_touch_forbidden_id_.has_value();
   world_msg.double_touch_id = obj.double_touch_forbidden_id_.value_or(-1);
-
-  world_msg.fps = obj.fps;
 
   return world_msg;
 }

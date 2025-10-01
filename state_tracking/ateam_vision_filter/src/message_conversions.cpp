@@ -33,9 +33,9 @@
 namespace ateam_vision_filter::message_conversions
 {
 
-ateam_msgs::msg::BallState toMsg(const std::optional<Ball> & maybe_ball)
+ateam_msgs::msg::VisionStateBall toMsg(const std::optional<Ball> & maybe_ball)
 {
-  ateam_msgs::msg::BallState ball_state_msg;
+  ateam_msgs::msg::VisionStateBall ball_state_msg;
   ball_state_msg.visible = maybe_ball.has_value();
   if (maybe_ball.has_value()) {
     auto obj = maybe_ball.value();
@@ -51,9 +51,9 @@ ateam_msgs::msg::BallState toMsg(const std::optional<Ball> & maybe_ball)
   return ball_state_msg;
 }
 
-ateam_msgs::msg::RobotState toMsg(const std::optional<Robot> & maybe_robot)
+ateam_msgs::msg::VisionStateRobot toMsg(const std::optional<Robot> & maybe_robot)
 {
-  ateam_msgs::msg::RobotState robot_state_msg;
+  ateam_msgs::msg::VisionStateRobot robot_state_msg;
   robot_state_msg.visible = maybe_robot.has_value();
 
   if (maybe_robot.has_value()) {

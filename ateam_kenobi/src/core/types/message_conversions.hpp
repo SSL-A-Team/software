@@ -22,25 +22,20 @@
 #ifndef CORE__TYPES__MESSAGE_CONVERSIONS_HPP_
 #define CORE__TYPES__MESSAGE_CONVERSIONS_HPP_
 
-#include <ateam_msgs/msg/world.hpp>
-#include <ateam_msgs/msg/behavior_executor_state.hpp>
-#include <ateam_msgs/msg/trajectory.hpp>
-#include <ateam_msgs/msg/ball_state.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
-#include <ateam_msgs/msg/field_info.hpp>
-#include <ateam_msgs/msg/field_sided_info.hpp>
-#include <ateam_msgs/msg/referee_info.hpp>
+#include <ateam_msgs/msg/game_state_ball.hpp>
+#include <ateam_msgs/msg/game_state_robot.hpp>
+#include <ateam_msgs/msg/game_state_world.hpp>
 
+#include "core/types/ball.hpp"
+#include "core/types/robot.hpp"
 #include "core/types/world.hpp"
-#include "core/types/field.hpp"
-#include "core/types/referee_info.hpp"
+
 
 namespace ateam_kenobi::message_conversions
 {
-ateam_msgs::msg::BallState toMsg(const Ball & obj);
-ateam_msgs::msg::RobotState toMsg(const Robot & obj);
-
-ateam_msgs::msg::World toMsg(const World & obj);
+ateam_msgs::msg::GameStateBall toMsg(const Ball & obj);
+ateam_msgs::msg::GameStateRobot toMsg(const Robot & obj);
+ateam_msgs::msg::GameStateWorld toMsg(const World & obj);
 
 }  // namespace ateam_kenobi::message_conversions
 

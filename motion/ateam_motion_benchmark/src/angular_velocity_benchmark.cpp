@@ -11,7 +11,7 @@
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_geometry/types.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
@@ -125,7 +125,7 @@ struct Options
 struct Robot
 {
   bool connected = false;
-  std::optional<ateam_msgs::msg::RobotState> state;
+  std::optional<ateam_msgs::msg::VisionStateRobot> state;
   std::optional<ateam_radio_msgs::msg::BasicTelemetry> feedback;
   std::optional<ateam_radio_msgs::msg::ExtendedTelemetry> motion_feedback;
 };
@@ -156,8 +156,9 @@ public:
 
     const auto state_topic_prefix = options_.team_color ==
       ateam_common::TeamColor::Blue ? Topics::kBlueTeamRobotPrefix : Topics::kYellowTeamRobotPrefix;
-    create_indexed_subscribers<ateam_msgs::msg::RobotState>(
-      robot_state_subs_, state_topic_prefix, 1, &AngularVelocityBenchmarkNode::RobotStateCallback,
+    create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
+      robot_state_subs_, state_topic_prefix, 1,
+      &AngularVelocityBenchmarkNode::VisionStateRobotCallback,
       this);
 
     create_indexed_subscribers<ateam_radio_msgs::msg::BasicTelemetry>(robot_feedback_subs_,
@@ -196,7 +197,8 @@ private:
 
   rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr command_pub_;
   rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr field_sub_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr, 16> robot_state_subs_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
+    16> robot_state_subs_;
   std::array<rclcpp::Subscription<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
     16> robot_feedback_subs_;
   std::array<rclcpp::Subscription<ateam_radio_msgs::msg::ExtendedTelemetry>::SharedPtr,
@@ -210,7 +212,9 @@ private:
     field_ = *msg;
   }
 
-  void RobotStateCallback(const ateam_msgs::msg::RobotState::SharedPtr msg, int robot_id)
+  void VisionStateRobotCallback(
+    const ateam_msgs::msg::VisionStateRobot::SharedPtr msg,
+    int robot_id)
   {
     robots_[robot_id].state = *msg;
   }

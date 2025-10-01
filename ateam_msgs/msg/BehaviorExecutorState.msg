@@ -1,1 +1,0 @@
-ateam_msgs/Trajectory[] previous_trajectories
