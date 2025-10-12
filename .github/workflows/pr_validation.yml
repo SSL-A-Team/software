@@ -37,14 +37,14 @@ jobs:
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon build --packages-up-to ${{ steps.get-changed-packages.outputs.changed-packages }}
+          colcon build --packages-up-to ${{ steps.get-changed-packages.outputs.changed-packages }} --cmake-args -DCMAKE_BUILD_TYPE=Release
       
       - name: Build Above Changes
         if: ${{ steps.get-changed-packages.outputs.changed-packages != '' }}
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon build --packages-above-and-dependencies ${{ steps.get-changed-packages.outputs.changed-packages }}
+          colcon build --packages-above-and-dependencies ${{ steps.get-changed-packages.outputs.changed-packages }} --cmake-args -DCMAKE_BUILD_TYPE=Release
       
       - name: Test Changed Packages
         shell: bash
