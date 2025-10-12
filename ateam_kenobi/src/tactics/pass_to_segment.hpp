@@ -23,6 +23,7 @@
 
 #include <ateam_geometry/types.hpp>
 #include "core/stp/tactic.hpp"
+#include "core/types/robot_command.hpp"
 #include "pass.hpp"
 
 namespace ateam_kenobi::tactics
@@ -41,8 +42,8 @@ public:
 
   void runFrame(
     const World & world, const Robot & kicker_bot, const Robot & receiver_bot,
-    ateam_msgs::msg::RobotMotionCommand & kicker_command,
-    ateam_msgs::msg::RobotMotionCommand & receiver_command);
+    RobotCommand & kicker_command,
+    RobotCommand & receiver_command);
 
   bool isDone()
   {

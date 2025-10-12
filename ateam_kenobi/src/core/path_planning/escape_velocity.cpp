@@ -26,7 +26,7 @@
 namespace ateam_kenobi::path_planning
 {
 
-geometry_msgs::msg::Twist GenerateEscapeVelocity(
+ateam_geometry::Vector GenerateEscapeVelocity(
   const Robot & robot,
   const ateam_geometry::AnyShape & obstacle)
 {
@@ -46,34 +46,26 @@ geometry_msgs::msg::Twist GenerateEscapeVelocity(
   }
 
   // Default case when we don't recognize the obstacle type
-  return geometry_msgs::msg::Twist{};
+  return ateam_geometry::Vector{};
 }
 
-geometry_msgs::msg::Twist GenerateEscapeVelocity(
+ateam_geometry::Vector GenerateEscapeVelocity(
   const Robot & robot,
   const ateam_geometry::Circle & obstacle)
 {
   const auto vector = robot.pos - obstacle.center();
-  const auto velocity = ateam_geometry::normalize(vector) * kSafeEscapeVelocity;
-  geometry_msgs::msg::Twist msg;
-  msg.linear.x = velocity.x();
-  msg.linear.y = velocity.y();
-  return msg;
+  return ateam_geometry::normalize(vector) * kSafeEscapeVelocity;
 }
 
-geometry_msgs::msg::Twist GenerateEscapeVelocity(
+ateam_geometry::Vector GenerateEscapeVelocity(
   const Robot & robot,
   const ateam_geometry::Disk & obstacle)
 {
   const auto vector = robot.pos - obstacle.center();
-  const auto velocity = ateam_geometry::normalize(vector) * kSafeEscapeVelocity;
-  geometry_msgs::msg::Twist msg;
-  msg.linear.x = velocity.x();
-  msg.linear.y = velocity.y();
-  return msg;
+  return ateam_geometry::normalize(vector) * kSafeEscapeVelocity;
 }
 
-geometry_msgs::msg::Twist GenerateEscapeVelocity(
+ateam_geometry::Vector GenerateEscapeVelocity(
   const Robot & robot,
   const ateam_geometry::Rectangle & obstacle)
 {
@@ -97,14 +89,10 @@ geometry_msgs::msg::Twist GenerateEscapeVelocity(
   // Rotate direction by -90 deg. Assumes vertices are reported in counterclockwise order
   const ateam_geometry::Vector escape_vector{edge_direction.dy(), -edge_direction.dx()};
 
-  const auto velocity = escape_vector * kSafeEscapeVelocity;
-  geometry_msgs::msg::Twist msg;
-  msg.linear.x = velocity.x();
-  msg.linear.y = velocity.y();
-  return msg;
+  return escape_vector * kSafeEscapeVelocity;
 }
 
-std::optional<geometry_msgs::msg::Twist> GenerateEscapeVelocity(
+std::optional<ateam_geometry::Vector> GenerateEscapeVelocity(
   const Robot & robot,
   const std::vector<ateam_geometry::AnyShape> & obstacles, double footprint_inflation)
 {

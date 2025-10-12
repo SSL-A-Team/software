@@ -36,11 +36,9 @@ namespace ateam_kenobi::skills
 
 Goalie::Goalie(stp::Options stp_options)
 : stp::Skill(stp_options),
-  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo")),
   kick_(createChild<skills::LineKick>("Kick"))
 {
   reset();
-  kick_.SetUseDefaultObstacles(false);
   default_planner_options_.avoid_ball = false;
   default_planner_options_.use_default_obstacles = false;
   // kick_.setPreKickOffset(kRobotRadius + kBallRadius + 0.04);
@@ -48,16 +46,13 @@ Goalie::Goalie(stp::Options stp_options)
 
 void Goalie::reset()
 {
-  easy_move_to_.reset();
   prev_ball_in_def_area_ = false;
 }
 
 void Goalie::runFrame(
   const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-  16> & motion_commands)
+  std::array<std::optional<RobotCommand>, 16> & motion_commands)
 {
-  easy_move_to_.setPlannerOptions(default_planner_options_);
   Ball ball_state = world.ball;
   if(world.ball.visible) {
     const auto maybe_closest_enemy = getClosestEnemyRobotToBall(world);
@@ -80,7 +75,8 @@ void Goalie::runFrame(
     return;
   }
 
-  ateam_msgs::msg::RobotMotionCommand motion_command;
+  RobotCommand motion_command;
+  motion_command.motion_intent.planner_options = default_planner_options_;
 
   const auto ball_in_def_area = isBallInDefenseArea(world, ball_state);
   if(ball_in_def_area && !prev_ball_in_def_area_) {
@@ -154,9 +150,9 @@ bool Goalie::isBallInDefenseArea(const World & world, const Ball & ball_state)
   return CGAL::do_intersect(ball_state.pos, our_defense_area);
 }
 
-ateam_msgs::msg::RobotMotionCommand Goalie::runDefaultBehavior(
+RobotCommand Goalie::runDefaultBehavior(
   const World & world,
-  const Robot & goalie, const Ball & ball_state)
+  const Robot &, const Ball & ball_state)
 {
   auto goal_line_offset = 0.25;
   if (world.referee_info.running_command == ateam_common::GameCommand::PreparePenaltyTheirs ||
@@ -173,15 +169,17 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runDefaultBehavior(
       -(world.field.field_length / 2) + goal_line_offset,
       -world.field.goal_width / 2));
 
-  easy_move_to_.setTargetPosition(
-    ateam_geometry::nearestPointOnSegment(
-      goalie_line,
-      ball_state.pos));
-  easy_move_to_.face_absolute(M_PI_2);
-  return easy_move_to_.runFrame(goalie, world, getCustomObstacles(world));
+  RobotCommand command;
+  command.motion_intent.planner_options = default_planner_options_;
+  command.motion_intent.linear =
+    motion::intents::linear::PositionIntent{ateam_geometry::nearestPointOnSegment(goalie_line,
+        ball_state.pos)};
+  command.motion_intent.angular = motion::intents::angular::HeadingIntent{M_PI_2};
+  command.motion_intent.obstacles = getCustomObstacles(world);
+  return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(
+RobotCommand Goalie::runBlockShot(
   const World & world, const Robot & goalie,
   const Ball & ball_state)
 {
@@ -236,16 +234,18 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockShot(
     shot_point_on_extended_goalie_line = segment->source();
   }
 
-  easy_move_to_.setTargetPosition(
+  RobotCommand command;
+  command.motion_intent.planner_options = default_planner_options_;
+  command.motion_intent.linear = motion::intents::linear::PositionIntent{
     ateam_geometry::nearestPointOnSegment(
       goalie_line,
-      shot_point_on_extended_goalie_line));
-  easy_move_to_.face_absolute(M_PI_2);
-
-  return easy_move_to_.runFrame(goalie, world, getCustomObstacles(world));
+      shot_point_on_extended_goalie_line)};
+  command.motion_intent.angular = motion::intents::angular::HeadingIntent{M_PI_2};
+  command.motion_intent.obstacles = getCustomObstacles(world);
+  return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(
+RobotCommand Goalie::runBlockBall(
   const World & world, const Robot & goalie,
   const Ball & ball_state)
 {
@@ -263,7 +263,7 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(
     return runDefaultBehavior(world, goalie, ball_state);
   }
 
-  ateam_geometry::Point target_point;
+  ateam_geometry::Point target_point{0.0, 0.0};
 
   if (const auto * point = boost::get<ateam_geometry::Point>(&*maybe_intersection)) {
     target_point = *point;
@@ -271,17 +271,16 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runBlockBall(
     target_point = segment->source();
   }
 
-  auto planner_options = default_planner_options_;
-  planner_options.footprint_inflation = -0.05;
-  easy_move_to_.setPlannerOptions(planner_options);
-
-  easy_move_to_.setTargetPosition(target_point);
-  easy_move_to_.face_absolute(M_PI_2);
-
-  return easy_move_to_.runFrame(goalie, world, getCustomObstacles(world));
+  RobotCommand command;
+  command.motion_intent.planner_options = default_planner_options_;
+  command.motion_intent.planner_options.footprint_inflation = -0.05;
+  command.motion_intent.linear = motion::intents::linear::PositionIntent{target_point};
+  command.motion_intent.angular = motion::intents::angular::HeadingIntent{M_PI_2};
+  command.motion_intent.obstacles = getCustomObstacles(world);
+  return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(
+RobotCommand Goalie::runClearBall(
   const World & world, const Robot & goalie,
   const Ball & ball_state)
 {
@@ -318,13 +317,14 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runClearBall(
   kick_.SetKickSpeed(1.3);
   kick_.SetTargetPoint(target_point);
 
-  const auto command = kick_.RunFrame(world, goalie);
+  auto command = kick_.RunFrame(world, goalie);
+  command.motion_intent.planner_options.use_default_obstacles = false;
   ForwardPlayInfo(kick_);
   return command;
 }
 
 
-ateam_msgs::msg::RobotMotionCommand Goalie::runSideEjectBall(
+RobotCommand Goalie::runSideEjectBall(
   const World & world, const Robot & goalie)
 {
   auto left_count = 0;
@@ -344,7 +344,8 @@ ateam_msgs::msg::RobotMotionCommand Goalie::runSideEjectBall(
   kick_.SetKickSpeed(0.2);
   kick_.SetTargetPoint(world.ball.pos + shoot_vec);
 
-  const auto command = kick_.RunFrame(world, goalie);
+  auto command = kick_.RunFrame(world, goalie);
+  command.motion_intent.planner_options.use_default_obstacles = false;
   ForwardPlayInfo(kick_);
   return command;
 }

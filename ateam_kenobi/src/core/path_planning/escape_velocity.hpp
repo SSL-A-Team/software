@@ -24,7 +24,6 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/any_shape.hpp>
-#include <geometry_msgs/msg/twist.hpp>
 #include "core/types/robot.hpp"
 
 namespace ateam_kenobi::path_planning
@@ -37,19 +36,19 @@ constexpr double kSafeEscapeVelocity = 0.3;  // m/s
  *
  * @note This function does not actually check if the robot is currently in the given obstacle.
  */
-geometry_msgs::msg::Twist GenerateEscapeVelocity(
+ateam_geometry::Vector GenerateEscapeVelocity(
   const Robot & robot,
   const ateam_geometry::AnyShape & obstacle);
 
-geometry_msgs::msg::Twist GenerateEscapeVelocity(
+ateam_geometry::Vector GenerateEscapeVelocity(
   const Robot & robot,
   const ateam_geometry::Circle & obstacle);
 
-geometry_msgs::msg::Twist GenerateEscapeVelocity(
+ateam_geometry::Vector GenerateEscapeVelocity(
   const Robot & robot,
   const ateam_geometry::Disk & obstacle);
 
-geometry_msgs::msg::Twist GenerateEscapeVelocity(
+ateam_geometry::Vector GenerateEscapeVelocity(
   const Robot & robot,
   const ateam_geometry::Rectangle & obstacle);
 
@@ -57,10 +56,10 @@ geometry_msgs::msg::Twist GenerateEscapeVelocity(
  * @brief Creates a low velocity in the quickest direction to escape the first colliding obstacle
  * in @c obstacles.
  *
- * @return std::optional<geometry_msgs::msg::Twist> The escape velocity, or @c nullopt if no
+ * @return std::optional<ateam_geometry::Vector> The escape velocity, or @c nullopt if no
  * obstacles collide with the robot.
  */
-std::optional<geometry_msgs::msg::Twist> GenerateEscapeVelocity(
+std::optional<ateam_geometry::Vector> GenerateEscapeVelocity(
   const Robot & robot,
   const std::vector<ateam_geometry::AnyShape> & obstacles, double footprint_inflation = 0.06);
 

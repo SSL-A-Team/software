@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,45 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TACTICS__STANDARD_DEFENSE_HPP_
-#define TACTICS__STANDARD_DEFENSE_HPP_
 
-#include <vector>
-#include "core/types/world.hpp"
-#include "core/types/robot.hpp"
-#include "core/types/robot_command.hpp"
-#include "core/stp/tactic.hpp"
-#include "defenders.hpp"
-#include "skills/goalie.hpp"
+#include "frame_conversions.hpp"
+#include <CGAL/Aff_transformation_2.h>
 
-namespace ateam_kenobi::tactics
+namespace ateam_kenobi::motion
 {
 
-class StandardDefense : public stp::Tactic
+ateam_geometry::Vector WorldToLocalFrame(
+  const ateam_geometry::Vector & world_vector,
+  const Robot & robot)
 {
-public:
-  explicit StandardDefense(stp::Options stp_options);
+  CGAL::Aff_transformation_2<ateam_geometry::Kernel> transformation(CGAL::ROTATION,
+    std::sin(-robot.theta), std::cos(-robot.theta));
+  return world_vector.transform(transformation);
+}
 
-  void reset();
+ateam_geometry::Vector LocalToWorldFrame(
+  const ateam_geometry::Vector & local_vector,
+  const Robot & robot)
+{
+  CGAL::Aff_transformation_2<ateam_geometry::Kernel> transformation(CGAL::ROTATION,
+    std::sin(robot.theta), std::cos(robot.theta));
+  return local_vector.transform(transformation);
+}
 
-  /**
-   * @note Goalie not included in assignment points b/c it is assigned by ID
-   */
-  std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
-
-  /**
-   * @note Goalie not included in defender bots. It is chosen by ID.
-   */
-  void runFrame(
-    const World & world,
-    const std::vector<Robot> & defender_bots,
-    std::array<std::optional<RobotCommand>, 16> & motion_commands);
-
-private:
-  skills::Goalie goalie_;
-  tactics::Defenders defenders_;
-};
-
-}  // namespace ateam_kenobi::tactics
-
-#endif  // TACTICS__STANDARD_DEFENSE_HPP_
+}  // namespace ateam_kenobi::motion

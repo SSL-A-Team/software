@@ -21,6 +21,8 @@
 
 #include "their_ball_placement_play.hpp"
 #include <angles/angles.h>
+#include <algorithm>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include "core/play_helpers/available_robots.hpp"
 #include <ateam_geometry/ateam_geometry.hpp>
@@ -29,9 +31,9 @@ namespace ateam_kenobi::plays
 {
 
 TheirBallPlacementPlay::TheirBallPlacementPlay(stp::Options stp_options)
-: stp::Play(kPlayName, stp_options)
+: stp::Play(kPlayName, stp_options),
+  multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_to"))
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
 }
 
 stp::PlayScore TheirBallPlacementPlay::getScore(const World & world)
@@ -43,17 +45,10 @@ stp::PlayScore TheirBallPlacementPlay::getScore(const World & world)
   return stp::PlayScore::NaN();
 }
 
-void TheirBallPlacementPlay::reset()
-{
-  for (auto & emt : easy_move_tos_) {
-    emt.reset();
-  }
-}
-
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlacementPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> TheirBallPlacementPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
 
@@ -68,54 +63,34 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TheirBallPlac
       }
     }();
 
-  const auto point_to_ball = world.ball.pos - placement_point;
-  const auto angle = std::atan2(point_to_ball.y(), point_to_ball.x());
 
   DrawKeepoutArea(world.ball.pos, placement_point);
 
-  for (auto ind = 0ul; ind < available_robots.size(); ++ind) {
-    const auto & robot = available_robots[ind];
-    auto & emt = easy_move_tos_[robot.id];
+  const auto partition_iter = std::partition(available_robots.begin(), available_robots.end(),
+      [this, &world, &placement_point](const Robot & robot) {
+        return shouldRobotMove(world, placement_point, robot);
+    });
 
-    const auto placement_segment = ateam_geometry::Segment(placement_point, world.ball.pos);
-    const auto nearest_point = ateam_geometry::nearestPointOnSegment(placement_segment, robot.pos);
+  const std::vector<Robot> robots_to_move(available_robots.begin(), partition_iter);
+  const std::vector<Robot> robots_to_stay(partition_iter, available_robots.end());
 
-    ateam_geometry::Point target_position = robot.pos;
-    if (ateam_geometry::norm(robot.pos - nearest_point) < 0.6 + kRobotRadius) {
-      target_position = nearest_point +
-        0.7 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2));
-
-      const auto alternate_position = nearest_point +
-        0.7 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2));
-
-      const auto offset = kRobotRadius * 0.95;
-      const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - offset;
-      const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - offset;
-      ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
-        ateam_geometry::Point(x_bound, y_bound));
-
-      if (!CGAL::do_intersect(target_position, pathable_region)) {
-        target_position = alternate_position;
-      } else if (!CGAL::do_intersect(alternate_position, pathable_region)) {
-        // Stick with target_position
-      } else {
-        // Use the shorter path
-        if (ateam_geometry::norm(target_position - robot.pos) >
-          ateam_geometry::norm(alternate_position - robot.pos))
-        {
-          target_position = alternate_position;
-        }
-      }
-
-      getPlayInfo()["Robots"][std::to_string(robot.id)] = "MOVING";
-    } else {
-      getPlayInfo()["Robots"][std::to_string(robot.id)] = "-";
-    }
-
-    emt.setTargetPosition(target_position);
-    emt.face_point(world.ball.pos);
-    maybe_motion_commands[robot.id] = emt.runFrame(robot, world);
+  for(const auto & robot : robots_to_move) {
+    getPlayInfo()["Robots"][std::to_string(robot.id)] = "MOVING";
   }
+  for(const auto & robot : robots_to_stay) {
+    getPlayInfo()["Robots"][std::to_string(robot.id)] = "-";
+  }
+
+  std::vector<ateam_geometry::Point> target_points;
+  std::transform(robots_to_move.begin(), robots_to_move.end(),
+    std::back_inserter(target_points),
+    [this, &world, &placement_point](const Robot & robot) {
+      return getTargetPoint(world, placement_point, robot);
+    });
+
+  multi_move_to_.SetTargetPoints(target_points);
+  multi_move_to_.SetFacePoint(world.ball.pos);
+  multi_move_to_.RunFrame(robots_to_move, maybe_motion_commands);
 
   return maybe_motion_commands;
 }
@@ -149,6 +124,52 @@ void TheirBallPlacementPlay::DrawKeepoutArea(
       "Red");
   overlays.drawLine("placement_avoid_neg_line", {neg_segment.source(), neg_segment.target()},
       "Red");
+}
+
+bool TheirBallPlacementPlay::shouldRobotMove(
+  const World & world,
+  const ateam_geometry::Point & placement_point, const Robot & robot)
+{
+  const auto placement_segment = ateam_geometry::Segment(placement_point, world.ball.pos);
+  const auto nearest_point = ateam_geometry::nearestPointOnSegment(placement_segment, robot.pos);
+  return ateam_geometry::norm(robot.pos - nearest_point) < 0.6 + kRobotRadius;
+}
+
+ateam_geometry::Point TheirBallPlacementPlay::getTargetPoint(
+  const World & world,
+  const ateam_geometry::Point & placement_point, const Robot & robot)
+{
+  const auto placement_segment = ateam_geometry::Segment(placement_point, world.ball.pos);
+  const auto nearest_point = ateam_geometry::nearestPointOnSegment(placement_segment, robot.pos);
+
+  const auto point_to_ball = world.ball.pos - placement_point;
+  const auto angle = std::atan2(point_to_ball.y(), point_to_ball.x());
+
+  auto target_position = nearest_point +
+    0.7 * ateam_geometry::Vector(std::cos(angle + M_PI / 2), std::sin(angle + M_PI / 2));
+
+  const auto alternate_position = nearest_point +
+    0.7 * ateam_geometry::Vector(std::cos(angle - M_PI / 2), std::sin(angle - M_PI / 2));
+
+  const auto offset = kRobotRadius * 0.95;
+  const auto x_bound = (world.field.field_length / 2.0) + world.field.boundary_width - offset;
+  const auto y_bound = (world.field.field_width / 2.0) + world.field.boundary_width - offset;
+  ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
+    ateam_geometry::Point(x_bound, y_bound));
+
+  if (!CGAL::do_intersect(target_position, pathable_region)) {
+    target_position = alternate_position;
+  } else if (!CGAL::do_intersect(alternate_position, pathable_region)) {
+        // Stick with target_position
+  } else {
+        // Use the shorter path
+    if (ateam_geometry::norm(target_position - robot.pos) >
+      ateam_geometry::norm(alternate_position - robot.pos))
+    {
+      target_position = alternate_position;
+    }
+  }
+  return target_position;
 }
 
 }  // namespace ateam_kenobi::plays

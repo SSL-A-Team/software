@@ -25,7 +25,7 @@
 #include "core/stp/play.hpp"
 #include "skills/goalie.hpp"
 #include "skills/universal_kick.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -39,15 +39,13 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
   skills::Goalie goalie_skill_;
   skills::UniversalKick kick_skill_;
-  std::array<play_helpers::EasyMoveTo, 16> move_tos_;
+  tactics::MultiMoveTo multi_move_to_;
   std::chrono::steady_clock::time_point kick_time_ = std::chrono::steady_clock::time_point::max();
 
   ateam_geometry::Point chooseKickTarget(const World & world);
