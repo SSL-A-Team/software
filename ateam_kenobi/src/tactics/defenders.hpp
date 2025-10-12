@@ -24,10 +24,9 @@
 #include <array>
 #include <vector>
 #include <ateam_geometry/types.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "core/types.hpp"
+#include "core/types/robot_command.hpp"
 #include "core/stp/tactic.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::tactics
 {
@@ -37,19 +36,16 @@ class Defenders : public stp::Tactic
 public:
   explicit Defenders(stp::Options stp_options);
 
-  void reset();
-
   std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
 
   void runFrame(
     const World & world,
     const std::vector<Robot> & robots,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+    std::array<std::optional<RobotCommand>, 16> & motion_commands);
 
 private:
   static constexpr double kMargin = 0.05;
   static constexpr double kDefenseSegmentOffset = kRobotRadius + kMargin;
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
   std::vector<ateam_geometry::Point> getDefenderPoints(const World & world);
 

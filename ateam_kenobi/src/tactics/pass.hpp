@@ -25,6 +25,7 @@
 #include <ateam_geometry/types.hpp>
 #include "core/stp/tactic.hpp"
 #include "core/types.hpp"
+#include "core/types/robot_command.hpp"
 #include "skills/universal_kick.hpp"
 #include "skills/pass_receiver.hpp"
 
@@ -44,8 +45,8 @@ public:
 
   void runFrame(
     const World & world, const Robot & kicker_bot, const Robot & receiver_bot,
-    ateam_msgs::msg::RobotMotionCommand & kicker_command,
-    ateam_msgs::msg::RobotMotionCommand & receiver_command);
+    RobotCommand & kicker_command,
+    RobotCommand & receiver_command);
 
   bool isDone();
 

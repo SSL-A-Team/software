@@ -46,7 +46,8 @@
 #include "core/double_touch_eval.hpp"
 #include "core/ballsense_emulator.hpp"
 #include "core/ballsense_filter.hpp"
-#include "core/motion/world_to_body_vel.hpp"
+#include "core/motion/frame_conversions.hpp"
+#include "core/motion/motion_executor.hpp"
 #include "plays/halt_play.hpp"
 #include "core/defense_area_enforcement.hpp"
 #include "core/joystick_enforcer.hpp"
@@ -66,7 +67,8 @@ public:
   : rclcpp::Node("kenobi_node", options),
     play_selector_(*this),
     joystick_enforcer_(*this),
-    overlays_("")
+    overlays_(""),
+    motion_executor_(get_logger().get_child("motion"))
   {
     declare_parameter<bool>("use_world_velocities", false);
     declare_parameter<bool>("use_emulated_ballsense", false);
@@ -135,6 +137,7 @@ private:
   JoystickEnforcer joystick_enforcer_;
   visualization::Overlays overlays_;
   FpsTracker fps_tracker_;
+  motion::MotionExecutor motion_executor_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
@@ -194,12 +197,6 @@ private:
 
     joystick_enforcer_.RemoveCommandForJoystickBot(motion_commands);
 
-    if (get_parameter("use_world_velocities").as_bool()) {
-      motion::ConvertBodyVelsToWorldVels(motion_commands, world.our_robots);
-    } else {
-      motion::ConvertWorldVelsToBodyVels(motion_commands, world.our_robots);
-    }
-
     send_all_motion_commands(motion_commands);
   }
 
@@ -214,10 +211,48 @@ private:
       RCLCPP_ERROR(get_logger(), "No play selected!");
       return {};
     }
-    const auto motion_commands = play->runFrame(world);
+
+    const auto commands = play->runFrame(world);
+    std::array<std::optional<motion::MotionIntent>, 16> motion_intents;
+    std::ranges::transform(
+      commands, motion_intents.begin(),
+      [](const std::optional<RobotCommand> & cmd) -> std::optional<motion::MotionIntent> {
+        if (cmd.has_value()) {
+          return cmd->motion_intent;
+        } else {
+          return std::nullopt;
+        }
+      });
+    const auto motion_commands = motion_executor_.RunFrame(motion_intents, overlays_, world);
+
+    const auto use_world_vels = get_parameter("use_world_velocities").as_bool();
+
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ros_commands;
+    for(auto id = 0ul; id < commands.size(); ++id) {
+      auto & maybe_cmd = commands[id];
+      auto & maybe_motion_cmd = motion_commands[id];
+      if (!maybe_cmd || !maybe_motion_cmd) {
+        ros_commands[id] = std::nullopt;
+      } else {
+        const auto & robot = world.our_robots[id];
+        const auto & cmd = maybe_cmd.value();
+        const auto & motion_cmd = maybe_motion_cmd.value();
+        const auto linear_vel = use_world_vels ?
+          motion::LocalToWorldFrame(motion_cmd.linear, robot) : motion_cmd.linear;
+        auto & ros_cmd = ros_commands[id].emplace();
+        ros_cmd.dribbler_speed = cmd.dribbler_speed;
+        ros_cmd.kick_request = static_cast<uint8_t>(cmd.kick);
+        ros_cmd.kick_speed = cmd.kick_speed;
+        ros_cmd.twist.linear.x = linear_vel.x();
+        ros_cmd.twist.linear.y = linear_vel.y();
+        ros_cmd.twist.angular.z = motion_cmd.angular;
+        ros_cmd.twist_frame =
+          use_world_vels ? ateam_msgs::msg::RobotMotionCommand::FRAME_WORLD :
+          ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+      }
+    }
 
     overlays_.merge(play->getOverlays());
-
     overlay_publisher_->publish(overlays_.getMsg());
     overlays_.clear();
     play->getOverlays().clear();
@@ -229,7 +264,7 @@ private:
     play->getPlayInfo().clear();
     play_info_publisher_->publish(play_info_msg);
 
-    return motion_commands;
+    return ros_commands;
   }
 
   void send_all_motion_commands(

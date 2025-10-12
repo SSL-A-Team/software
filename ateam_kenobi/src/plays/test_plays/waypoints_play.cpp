@@ -31,7 +31,6 @@ namespace ateam_kenobi::plays
 WaypointsPlay::WaypointsPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options)
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
   addWaypoint(
     5000, {
       {0.00, 0, M_PI},
@@ -58,16 +57,9 @@ void WaypointsPlay::reset()
   waypoint_index_ = 0;
   next_transition_time_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(
     waypoints_.front().duration_ms);
-  path_planning::PlannerOptions planner_options;
-  planner_options.use_default_obstacles = false;
-  planner_options.footprint_inflation = 0.02;
-  for (auto & emt : easy_move_tos_) {
-    emt.reset();
-    emt.setPlannerOptions(planner_options);
-  }
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WaypointsPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> WaypointsPlay::runFrame(
   const World & world)
 {
   const auto now = std::chrono::steady_clock::now();
@@ -85,14 +77,17 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WaypointsPlay
 
   const auto num_robots = std::min(waypoint.poses.size(), available_robots.size());
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   for (auto robot_ind = 0ul; robot_ind < num_robots; ++robot_ind) {
     const auto & pose = waypoint.poses[robot_ind];
     const auto & robot = available_robots[robot_ind];
-    easy_move_tos_[robot.id].setTargetPosition(pose.position);
-    easy_move_tos_[robot.id].face_absolute(pose.heading);
-    motion_commands[robot.id] = easy_move_tos_[robot.id].runFrame(robot, world);
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{pose.position};
+    command.motion_intent.angular = motion::intents::angular::HeadingIntent{pose.heading};
+    command.motion_intent.planner_options.footprint_inflation = 0.02;
+    command.motion_intent.planner_options.use_default_obstacles = false;
+    motion_commands[robot.id] = command;
   }
 
   return motion_commands;

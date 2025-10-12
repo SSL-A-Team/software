@@ -22,7 +22,6 @@
 #define PLAYS__STOP_PLAYS__OFFENSIVE_STOP_PLAY_HPP_
 
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -36,19 +35,15 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
   constexpr static double kPrepBotDistFromBall = 0.9;
 
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
-
   void runPrepBot(
     const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & maybe_motion_commands);
+    std::array<std::optional<RobotCommand>, 16> & maybe_motion_commands);
 };
 
 }  // namespace ateam_kenobi::plays

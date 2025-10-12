@@ -24,7 +24,6 @@
 
 #include <vector>
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 #include "tactics/pass.hpp"
 
 namespace ateam_kenobi::plays
@@ -39,13 +38,12 @@ public:
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
   static constexpr double kKickSpeed = 3.0;
   tactics::Pass pass_tactic_;
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   std::vector<ateam_geometry::Point> positions;
   std::size_t kick_target_ind_ = 0;
 
@@ -60,23 +58,23 @@ private:
 
   void runSetup(
     const std::vector<Robot> & robots,
-    const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    const World & world, std::array<std::optional<RobotCommand>,
     16> & motion_commands);
 
   void runPassing(
     const std::vector<Robot> & robots,
     const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    std::array<std::optional<RobotCommand>,
     16> & motion_commands);
 
   void runBackOff(
     const std::vector<Robot> & available_robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    std::array<std::optional<RobotCommand>,
     16> & motion_commands);
 
   void runIdlers(
     const std::vector<Robot> & robots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+    std::array<std::optional<RobotCommand>, 16> & motion_commands);
 };
 
 }  // namespace ateam_kenobi::plays

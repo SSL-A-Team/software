@@ -23,8 +23,8 @@
 
 #include <vector>
 #include <ateam_geometry/types.hpp>
-#include "core/play_helpers/easy_move_to.hpp"
 #include "core/types.hpp"
+#include "core/types/robot_command.hpp"
 #include "core/stp/skill.hpp"
 #include "pivot_kick.hpp"
 #include "line_kick.hpp"
@@ -38,12 +38,9 @@ public:
 
   void reset();
 
-  void runFrame(
-    const World & world, std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-    16> & motion_commands);
+  void runFrame(const World & world, std::array<std::optional<RobotCommand>, 16> & motion_commands);
 
 private:
-  play_helpers::EasyMoveTo easy_move_to_;
   LineKick kick_;
   std::optional<int> last_enemy_id_closest_to_ball_;
   std::chrono::steady_clock::time_point ball_entered_def_area_time_;
@@ -56,37 +53,37 @@ private:
 
   /**
    * @brief Default behavior of robot staying in line with ball
-   * @return ateam_msgs::msg::RobotMotionCommand
+   * @return RobotCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runDefaultBehavior(
+  RobotCommand runDefaultBehavior(
     const World & world, const Robot & goalie,
     const Ball & ball_state);
 
   /**
    * @brief Block a possible shot when opponents have the ball
-   * @return ateam_msgs::msg::RobotMotionCommand
+   * @return RobotCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runBlockShot(
+  RobotCommand runBlockShot(
     const World & world, const Robot & goalie,
     const Ball & ball_state);
 
   /**
    * @brief Block ball when headed towards goal
-   * @return ateam_msgs::msg::RobotMotionCommand
+   * @return RobotCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runBlockBall(
+  RobotCommand runBlockBall(
     const World & world, const Robot & goalie,
     const Ball & ball_state);
 
   /**
    * @brief Kick ball out of defense area
-   * @return ateam_msgs::msg::RobotMotionCommand
+   * @return RobotCommand
    */
-  ateam_msgs::msg::RobotMotionCommand runClearBall(
+  RobotCommand runClearBall(
     const World & world, const Robot & goalie,
     const Ball & ball_state);
 
-  ateam_msgs::msg::RobotMotionCommand runSideEjectBall(const World & world, const Robot & goalie);
+  RobotCommand runSideEjectBall(const World & world, const Robot & goalie);
 
   std::vector<ateam_geometry::AnyShape> getCustomObstacles(const World & world);
   std::optional<Robot> getClosestEnemyRobotToBall(const World & world);

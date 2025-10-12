@@ -36,7 +36,7 @@ PathPlanner::PathPlanner(stp::Options stp_options)
 {
 }
 
-PathPlanner::Path PathPlanner::getPath(
+Path PathPlanner::getPath(
   const Position & start, const Position & goal, const World & world,
   const std::vector<ateam_geometry::AnyShape> & obstacles,
   const PlannerOptions & options)

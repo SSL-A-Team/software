@@ -42,7 +42,7 @@ public:
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
@@ -52,11 +52,11 @@ private:
 
   void runStriker(
     const Robot & striker_bot, const World & world,
-    ateam_msgs::msg::RobotMotionCommand & motion_command);
+    RobotCommand & motion_command);
 
   void runBlockers(
     const std::vector<Robot> & blocker_bots, const World & world,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+    std::array<std::optional<RobotCommand>,
     16> & motion_commands);
 
   bool doTheyHavePossession(const World & world);

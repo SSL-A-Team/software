@@ -47,8 +47,8 @@ ateam_geometry::Point PassToSegment::getReceiverAssignmentPoint(const World & wo
 
 void PassToSegment::runFrame(
   const World & world, const Robot & kicker_bot, const Robot & receiver_bot,
-  ateam_msgs::msg::RobotMotionCommand & kicker_command,
-  ateam_msgs::msg::RobotMotionCommand & receiver_command)
+  RobotCommand & kicker_command,
+  RobotCommand & receiver_command)
 {
   if (ateam_geometry::norm(world.ball.vel) < 0.01) {
     pass_tactic_.setTarget(getTargetPointOnSegment(world));

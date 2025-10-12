@@ -43,10 +43,10 @@ public:
     target_angle_ = 0.0;
   }
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override
   {
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+    std::array<std::optional<RobotCommand>, 16> motion_commands;
     const auto & robots = play_helpers::getAvailableRobots(world);
     if (robots.empty()) {
       return {};
@@ -78,15 +78,20 @@ public:
         target_angle_ += target_step_;
         target_angle_ = angles::normalize_angle(target_angle_);
       }
-      motion_commands[robot.id] = ateam_msgs::msg::RobotMotionCommand();
+      motion_commands[robot.id] = RobotCommand();
     } else {
       play_info["Time At Target"] = 0.0;
       motion_commands[robot.id] = getPivotCommand(robot, angle_error);
     }
     prev_at_target_ = at_target;
 
-    play_info["Y Cmd"] = motion_commands[robot.id]->twist.linear.y;
-    play_info["Omega Cmd"] = motion_commands[robot.id]->twist.angular.z;
+    motion_commands[robot.id]->motion_intent.callback = [&play_info](
+      motion::BodyVelocity vel, const path_planning::Path &, const Robot &, const World &)
+      {
+        play_info["Y Cmd"] = vel.linear.y();
+        play_info["Omega Cmd"] = vel.angular;
+        return vel;
+      };
 
     return motion_commands;
   }
@@ -102,9 +107,9 @@ private:
   std::chrono::steady_clock::time_point arrival_time_;
 
 
-  ateam_msgs::msg::RobotMotionCommand getPivotCommand(const Robot & robot, double angle_error)
+  RobotCommand getPivotCommand(const Robot & robot, double angle_error)
   {
-    ateam_msgs::msg::RobotMotionCommand command;
+    RobotCommand command;
 
     const double vel = robot.prev_command_omega;
     const double dt = 0.01;
@@ -139,7 +144,8 @@ private:
       trapezoidal_vel = std::copysign(min_angular_vel, angle_error);
     }
 
-    command.twist.angular.z = std::clamp(trapezoidal_vel, -pivot_speed_, pivot_speed_);
+    const auto angular_vel = std::clamp(trapezoidal_vel, -pivot_speed_, pivot_speed_);
+    command.motion_intent.angular = motion::intents::angular::VelocityIntent{angular_vel};
 
     /* rotate in a circle with diameter 0.0427 + 0.18 = 0.2227 (This might be tunable to use 8cm for
     * real robots)
@@ -149,11 +155,12 @@ private:
     // double diameter = kBallDiameter + kRobotDiameter;
     double diameter = 2 * .095;
     double circumference = M_PI * diameter;
-    double velocity = circumference * (command.twist.angular.z / (2 * M_PI));
+    double velocity = circumference * (angular_vel / (2 * M_PI));
 
-    command.twist.linear.x = 0.0;
-    command.twist.linear.y = -velocity;
-    command.twist_frame = ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+    command.motion_intent.linear = motion::intents::linear::VelocityIntent{
+      ateam_geometry::Vector{0.0, velocity},
+      motion::intents::linear::Frame::Local
+    };
     return command;
   }
 };

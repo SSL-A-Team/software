@@ -21,10 +21,9 @@
 #ifndef SKILLS__PASS_RECEIVER_HPP_
 #define SKILLS__PASS_RECEIVER_HPP_
 
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "core/play_helpers/easy_move_to.hpp"
 #include "core/stp/skill.hpp"
 #include "core/types.hpp"
+#include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -36,7 +35,7 @@ public:
 
   void reset();
 
-  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
+  RobotCommand runFrame(const World & world, const Robot & robot);
 
   ateam_geometry::Point getAssignmentPoint()
   {
@@ -60,7 +59,6 @@ public:
 
 private:
   ateam_geometry::Point target_;
-  play_helpers::EasyMoveTo easy_move_to_;
   bool done_ = false;
   bool kick_happened_ = false;
   double expected_kick_speed_ = 6.5;
@@ -72,10 +70,10 @@ private:
   bool isBotCloseToTarget(const Robot & robot);
   bool hasBallBeenKicked(const World & world);
 
-  ateam_msgs::msg::RobotMotionCommand runPrePass(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand runPass(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand runPostPass();
-  ateam_msgs::msg::RobotMotionCommand runApproachBall(const World & world, const Robot & robot);
+  RobotCommand runPrePass(const World & world, const Robot & robot);
+  RobotCommand runPass(const World & world, const Robot & robot);
+  RobotCommand runPostPass();
+  RobotCommand runApproachBall(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills

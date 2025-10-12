@@ -25,10 +25,10 @@
 #include <array>
 #include <optional>
 #include <string>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include "base.hpp"
 #include "play_score.hpp"
 #include "core/types.hpp"
+#include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::stp
 {
@@ -93,8 +93,7 @@ public:
    */
   virtual void exit() {}
 
-  virtual std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> runFrame(
-    const World & world) = 0;
+  virtual std::array<std::optional<RobotCommand>, 16> runFrame(const World & world) = 0;
 
   bool isEnabled() const
   {

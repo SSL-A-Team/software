@@ -40,10 +40,10 @@ void TestInterceptPlay::enter()
   kick_skill_.Reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestInterceptPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> TestInterceptPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
 
   // pass_tactic_.setTarget(targets_[target_ind_]);
 

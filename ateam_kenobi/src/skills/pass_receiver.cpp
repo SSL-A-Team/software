@@ -19,27 +19,26 @@
 // THE SOFTWARE.
 
 #include "pass_receiver.hpp"
-#include "core/play_helpers/available_robots.hpp"
 #include <ateam_common/robot_constants.hpp>
+#include "core/play_helpers/available_robots.hpp"
+#include "core/motion/motion_intent.hpp"
+#include "core/motion/frame_conversions.hpp"
 
 namespace ateam_kenobi::skills
 {
 
 PassReceiver::PassReceiver(stp::Options stp_options)
-: stp::Skill(stp_options),
-  easy_move_to_(createChild<play_helpers::EasyMoveTo>("EasyMoveTo"))
+: stp::Skill(stp_options)
 {}
 
 void PassReceiver::reset()
 {
   done_ = false;
   kick_happened_ = false;
-  easy_move_to_.reset();
 }
 
-ateam_msgs::msg::RobotMotionCommand PassReceiver::runFrame(const World & world, const Robot & robot)
+RobotCommand PassReceiver::runFrame(const World & world, const Robot & robot)
 {
-  easy_move_to_.setMaxVelocity(2.0);  // reset default max vel
   getPlayInfo()["Robot"] = robot.id;
   if (done_) {
     getPlayInfo()["State"] = "Done";
@@ -53,28 +52,34 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runFrame(const World & world, 
   const auto ball_was_kicked = hasBallBeenKicked(world);
   const auto ball_stalled_and_reachable = isBallStalledAndReachable(world, robot);
 
+  RobotCommand command;
+
   if (bot_close_to_target && ball_vel_matching_bot_vel && ball_close) {
     done_ = true;
     getPlayInfo()["State"] = "Done";
-    return runPostPass();
+    command = runPostPass();
   } else if (ball_was_kicked && ball_close && !ball_fast) {
     done_ = true;
     getPlayInfo()["State"] = "Done";
-    return runPostPass();
+    command = runPostPass();
   } else if (ball_was_kicked && ball_fast && !ball_vel_matching_bot_vel) {
     getPlayInfo()["State"] = "Pass";
-    return runPass(world, robot);
+    command = runPass(world, robot);
   } else if (ball_was_kicked && ball_close && ball_vel_matching_bot_vel) {
     done_ = true;
     getPlayInfo()["State"] = "Post";
-    return runPostPass();
+    command = runPostPass();
   } else if (ball_stalled_and_reachable) {
     getPlayInfo()["State"] = "Capture";
-    return runApproachBall(world, robot);
+    command = runApproachBall(world, robot);
   } else {
     getPlayInfo()["State"] = "Pre";
-    return runPrePass(world, robot);
+    command = runPrePass(world, robot);
   }
+
+  command.motion_intent.motion_options.max_velocity = 2.0;
+
+  return command;
 }
 
 bool PassReceiver::isBallFast(const World & world)
@@ -111,7 +116,7 @@ bool PassReceiver::hasBallBeenKicked(const World & world)
   return kick_happened_;
 }
 
-ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(
+RobotCommand PassReceiver::runPrePass(
   const World & world,
   const Robot & robot)
 {
@@ -136,29 +141,24 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPrePass(
     }
   }
 
-  easy_move_to_.setTargetPosition(destination);
-  easy_move_to_.face_point(world.ball.pos);
-  path_planning::PlannerOptions planner_options;
-  planner_options.avoid_ball = false;
-  easy_move_to_.setPlannerOptions(planner_options);
-  return easy_move_to_.runFrame(robot, world);
+  RobotCommand command;
+  command.motion_intent.linear = motion::intents::linear::PositionIntent{destination};
+  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+  command.motion_intent.planner_options.avoid_ball = false;
+  return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, const Robot & robot)
+RobotCommand PassReceiver::runPass(const World & world, const Robot & robot)
 {
+  RobotCommand command;
   const ateam_geometry::Ray ball_ray(world.ball.pos, world.ball.vel);
   const auto destination = ball_ray.supporting_line().projection(robot.pos);
-  // const auto vel_bump_vec = 0.07 * ateam_geometry::normalize(destination - robot.pos);
-  easy_move_to_.setTargetPosition(
-      destination/*, ateam_geometry::Vector(-0.001, 0.0) + vel_bump_vec*/);
-  easy_move_to_.face_point(world.ball.pos);
-  easy_move_to_.setMaxDecel(4.0);
-  path_planning::PlannerOptions planner_options;
-  planner_options.avoid_ball = false;
-  easy_move_to_.setPlannerOptions(planner_options);
-  ateam_msgs::msg::RobotMotionCommand motion_command;
-  motion_command = easy_move_to_.runFrame(robot, world);
-  motion_command.dribbler_speed = kDefaultDribblerSpeed * 1.2;
+  command.motion_intent.linear = motion::intents::linear::PositionIntent{destination};
+  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+  command.motion_intent.motion_options.max_deceleration = 4.0;
+  command.motion_intent.planner_options.avoid_ball = false;
+
+  command.dribbler_speed = kDefaultDribblerSpeed * 1.2;
   const auto dist_to_ball = ateam_geometry::norm(robot.pos - world.ball.pos);
   const auto time_to_ball = dist_to_ball / ateam_geometry::norm(world.ball.vel);
   if (time_to_ball < 0.5) {
@@ -167,37 +167,38 @@ ateam_msgs::msg::RobotMotionCommand PassReceiver::runPass(const World & world, c
     const auto angle_between_vecs = ateam_geometry::ShortestAngleBetween(world.ball.vel,
         robot_backwards_vec);
     if(std::abs(angle_between_vecs) < M_PI_2) {
-      ateam_geometry::Vector robot_vel(motion_command.twist.linear.x,
-        motion_command.twist.linear.y);
-      const auto multiplier = robot.breakbeam_ball_detected_filtered ? 0.2 : 0.6;
-      robot_vel += ateam_geometry::normalize(world.ball.vel) * multiplier;
-      motion_command.twist.linear.x = robot_vel.x();
-      motion_command.twist.linear.y = robot_vel.y();
+      command.motion_intent.callback = [](motion::BodyVelocity plan_velocity,
+        const path_planning::Path &, const Robot & robot,
+        const World & world) -> motion::BodyVelocity {
+          const auto multiplier = robot.breakbeam_ball_detected_filtered ? 0.2 : 0.6;
+          plan_velocity.linear +=
+            motion::WorldToLocalFrame(ateam_geometry::normalize(world.ball.vel) * multiplier,
+            robot);
+          return plan_velocity;
+        };
     }
   }
-  return motion_command;
-}
-
-ateam_msgs::msg::RobotMotionCommand PassReceiver::runPostPass()
-{
-  ateam_msgs::msg::RobotMotionCommand command;
-  command.dribbler_speed = kDefaultDribblerSpeed;
-  command.twist.linear.x = 0;
-  command.twist.linear.y = 0;
-  command.twist.angular.z = 0;
   return command;
 }
 
-ateam_msgs::msg::RobotMotionCommand PassReceiver::runApproachBall(
+RobotCommand PassReceiver::runPostPass()
+{
+  RobotCommand command;
+  command.dribbler_speed = kDefaultDribblerSpeed;
+  return command;
+}
+
+RobotCommand PassReceiver::runApproachBall(
   const World & world,
   const Robot & robot)
 {
   const auto ball_to_bot_vector = robot.pos - world.ball.pos;
   const auto target = world.ball.pos + ateam_geometry::normalize(ball_to_bot_vector) *
     kRobotDiameter * 1.05;
-  easy_move_to_.setTargetPosition(target);
-  easy_move_to_.setMaxVelocity(1.0);
-  return easy_move_to_.runFrame(robot, world);
+  RobotCommand command;
+  command.motion_intent.linear = motion::intents::linear::PositionIntent{target};
+  command.motion_intent.motion_options.max_velocity = 1.0;
+  return command;
 }
 
 }  // namespace ateam_kenobi::skills

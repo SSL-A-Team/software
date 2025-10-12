@@ -23,11 +23,10 @@
 #define TACTICS__BLOCKERS_HPP_
 
 #include <vector>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <nlohmann/json.hpp>
 #include "core/stp/tactic.hpp"
 #include "core/types.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
+#include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::tactics
 {
@@ -37,11 +36,9 @@ class Blockers : public stp::Tactic
 public:
   explicit Blockers(stp::Options stp_options);
 
-  void reset();
-
   std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
 
-  std::vector<ateam_msgs::msg::RobotMotionCommand> runFrame(
+  std::vector<RobotCommand> runFrame(
     const World & world,
     const std::vector<Robot> & robots, nlohmann::json * play_info = nullptr);
 
@@ -57,8 +54,6 @@ public:
 
 private:
   std::size_t max_blocker_count_ = 2;
-
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
 
   std::vector<Robot> getRankedBlockableRobots(const World & world);
 

@@ -28,14 +28,6 @@ namespace ateam_kenobi::tactics
 MultiMoveTo::MultiMoveTo(stp::Options stp_options)
 : stp::Tactic(stp_options)
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "easy_move_to");
-}
-
-void MultiMoveTo::Reset()
-{
-  for (auto & emt : easy_move_tos_) {
-    emt.reset();
-  }
 }
 
 std::vector<ateam_geometry::Point> MultiMoveTo::GetAssignmentPoints()
@@ -44,9 +36,8 @@ std::vector<ateam_geometry::Point> MultiMoveTo::GetAssignmentPoints()
 }
 
 void MultiMoveTo::RunFrame(
-  const World & world,
   const std::vector<std::optional<Robot>> & robots,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+  std::array<std::optional<RobotCommand>, 16> & motion_commands)
 {
   for (auto ind = 0ul; ind < robots.size(); ++ind) {
     const auto & maybe_robot = robots[ind];
@@ -55,18 +46,35 @@ void MultiMoveTo::RunFrame(
     }
     const auto & robot = *maybe_robot;
     const auto & target_position = target_points_[ind];
-
-    auto & easy_move_to = easy_move_tos_.at(robot.id);
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{target_position};
+    command.motion_intent.angular = angular_intent_;
+    motion_commands.at(robot.id) = command;
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
     getOverlays().drawCircle(
       "destination_" + std::to_string(
         robot.id), viz_circle, "blue", "transparent");
+  }
+}
 
-    easy_move_to.setTargetPosition(target_position);
-    easy_move_to.face_point(world.ball.pos);
 
-    motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
+void MultiMoveTo::RunFrame(
+  const std::vector<Robot> & robots,
+  std::array<std::optional<RobotCommand>, 16> & motion_commands)
+{
+  for (auto ind = 0ul; ind < robots.size(); ++ind) {
+    const auto & robot = robots[ind];
+    const auto & target_position = target_points_[ind];
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{target_position};
+    command.motion_intent.angular = angular_intent_;
+    motion_commands.at(robot.id) = command;
+
+    auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
+    getOverlays().drawCircle(
+      "destination_" + std::to_string(
+        robot.id), viz_circle, "blue", "transparent");
   }
 }
 

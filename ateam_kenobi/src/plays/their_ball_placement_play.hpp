@@ -22,7 +22,7 @@
 #define PLAYS__THEIR_BALL_PLACEMENT_PLAY_HPP_
 
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -36,18 +36,23 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
-
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  tactics::MultiMoveTo multi_move_to_;
 
   void DrawKeepoutArea(
     const ateam_geometry::Point & ball_pos,
     const ateam_geometry::Point & placement_point);
+
+  bool shouldRobotMove(
+    const World & world, const ateam_geometry::Point & placement_point,
+    const Robot & robot);
+
+  ateam_geometry::Point getTargetPoint(
+    const World & world,
+    const ateam_geometry::Point & placement_point, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::plays
