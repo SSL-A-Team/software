@@ -159,6 +159,7 @@ bool isPointInOrBehindGoal(
 std::vector<ateam_geometry::AnyShape> getAddedObstacles(const World & world)
 {
   std::vector<ateam_geometry::AnyShape> obstacles;
+  obstacles.reserve(3);
 
   const auto half_field_length = world.field.field_length / 2.0;
   const auto half_goal_width = world.field.goal_width / 2.0;
