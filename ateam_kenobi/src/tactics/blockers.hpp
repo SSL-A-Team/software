@@ -25,7 +25,7 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 #include "core/stp/tactic.hpp"
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 #include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::tactics

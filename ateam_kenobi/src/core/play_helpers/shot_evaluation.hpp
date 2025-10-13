@@ -23,7 +23,7 @@
 #define CORE__PLAY_HELPERS__SHOT_EVALUATION_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi::play_helpers
 {

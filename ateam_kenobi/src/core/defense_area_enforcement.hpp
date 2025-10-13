@@ -22,7 +22,7 @@
 #define CORE__DEFENSE_AREA_ENFORCEMENT_HPP_
 
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi::defense_area_enforcement
 {

@@ -24,7 +24,7 @@
 
 #include <ateam_common/robot_constants.hpp>
 #include "kick_skill.hpp"
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 #include "core/types/robot_command.hpp"
 #include "skills/capture.hpp"
 

@@ -23,7 +23,7 @@
 #define CORE__FPS_TRACKER_HPP_
 
 #include <ateam_common/time.hpp>
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi
 {

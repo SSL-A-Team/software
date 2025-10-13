@@ -21,7 +21,7 @@
 #ifndef CORE__PLAY_HELPERS__POSSESSION_HPP_
 #define CORE__PLAY_HELPERS__POSSESSION_HPP_
 
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi::play_helpers
 {

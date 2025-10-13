@@ -22,7 +22,7 @@
 #define SKILLS__PASS_RECEIVER_HPP_
 
 #include "core/stp/skill.hpp"
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 #include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::skills

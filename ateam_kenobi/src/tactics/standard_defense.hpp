@@ -22,7 +22,7 @@
 #define TACTICS__STANDARD_DEFENSE_HPP_
 
 #include <vector>
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 #include "core/types/robot_command.hpp"
 #include "core/stp/tactic.hpp"
 #include "defenders.hpp"

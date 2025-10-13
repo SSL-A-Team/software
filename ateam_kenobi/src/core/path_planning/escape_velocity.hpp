@@ -24,7 +24,7 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/any_shape.hpp>
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi::path_planning
 {

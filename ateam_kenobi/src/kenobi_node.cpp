@@ -40,7 +40,7 @@
 #include <ateam_game_state/type_adapters.hpp>
 #include <ateam_geometry/types.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 #include "core/play_selector.hpp"
 #include "core/in_play_eval.hpp"
 #include "core/double_touch_eval.hpp"

@@ -26,7 +26,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi::play_helpers
 {

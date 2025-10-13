@@ -24,7 +24,7 @@
 
 #include <ateam_common/robot_constants.hpp>
 #include "core/stp/skill.hpp"
-#include "core/types.hpp"
+#include "core/types/state_types.hpp"
 #include "core/types/robot_command.hpp"
 
 
