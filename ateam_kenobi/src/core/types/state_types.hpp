@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__STATE_TYPES_HPP_
-#define CORE__STATE_TYPES_HPP_
+#ifndef CORE__TYPES__STATE_TYPES_HPP_
+#define CORE__TYPES__STATE_TYPES_HPP_
 
 #include <ateam_game_state/ball.hpp>
 #include <ateam_game_state/field.hpp>
@@ -37,4 +37,4 @@ using Robot = ateam_game_state::Robot;
 using World = ateam_game_state::World;
 }  // namespace ateam_kenobi
 
-#endif  // CORE__STATE_TYPES_HPP_
+#endif  // CORE__TYPES__STATE_TYPES_HPP_
