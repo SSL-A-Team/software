@@ -5,6 +5,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 find_package(ateam_geometry REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(ateam_game_state REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/planner.cpp
@@ -14,6 +15,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra -Wpedantic)
 ament_target_dependencies(${PROJECT_NAME}
   ateam_geometry
   ateam_common
+  ateam_game_state
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

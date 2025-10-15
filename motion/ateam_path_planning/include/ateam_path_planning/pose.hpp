@@ -18,29 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_PATH_PLANNING__OBSTACLE_HPP_
-#define ATEAM_PATH_PLANNING__OBSTACLE_HPP_
+#ifndef ATEAM_PATH_PLANNING__POSE_HPP_
+#define ATEAM_PATH_PLANNING__POSE_HPP_
 
-#include <ateam_common/robot_constants.hpp>
-#include <ateam_game_state/robot.hpp>
 #include <ateam_geometry/any_shape.hpp>
-#include <ateam_geometry/creation_helpers.hpp>
 #include <ateam_geometry/types.hpp>
 
 namespace ateam_path_planning
 {
 
-struct Obstacle
+struct Pose
 {
-  ateam_geometry::AnyShape shape;
-  ateam_geometry::Vector velocity = CGAL::NULL_VECTOR;
-
-  static Obstacle FromRobot(const ateam_game_state::Robot & robot)
-  {
-    return Obstacle{ateam_geometry::makeDisk(robot.pos, kRobotRadius), robot.vel};
-  }
+  ateam_geometry::Point position = ateam_geometry::Point(0, 0);
+  double heading = 0.0;
 };
+
 
 }  // namespace ateam_path_planning
 
-#endif  // ATEAM_PATH_PLANNING__OBSTACLE_HPP_
+#endif  // ATEAM_PATH_PLANNING__POSE_HPP_

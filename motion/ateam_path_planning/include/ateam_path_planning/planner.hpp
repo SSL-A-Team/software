@@ -21,8 +21,13 @@
 #ifndef ATEAM_PATH_PLANNING__PLANNER_HPP_
 #define ATEAM_PATH_PLANNING__PLANNER_HPP_
 
+#include <array>
+#include <optional>
+#include <vector>
+#include <ateam_game_state/world.hpp>
 #include <ateam_geometry/types.hpp>
 #include "obstacle.hpp"
+#include "pose.hpp"
 #include "trajectory_spline.hpp"
 
 namespace ateam_path_planning
@@ -32,7 +37,14 @@ class Planner {
 public:
   Planner() = default;
 
-  TrajectorySpline PlanPath(const std::vector<Obstacle> & obstacles);
+  std::array<std::optional<TrajectorySpline>, 16> PlanPathsForAllBots(
+    const std::array<std::optional<Pose>, 16> & targets, const std::array<uint8_t, 16> & priorities,
+    const ateam_game_state::World & world, const std::vector<Obstacle> & global_obstacles,
+    const std::array<std::vector<Obstacle>, 16> & per_bot_obstacles);
+
+  std::optional<TrajectorySpline> PlanPath(
+    const Pose & start_pose, const ateam_geometry::Vector & start_velocity,
+    const Pose & target, const std::vector<Obstacle> & obstacles);
 
 private:
 };

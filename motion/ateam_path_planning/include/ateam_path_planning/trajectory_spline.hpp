@@ -21,7 +21,9 @@
 #ifndef ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
 #define ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
 
+#include <vector>
 #include <ateam_geometry/types.hpp>
+#include "pose.hpp"
 
 namespace ateam_path_planning
 {
@@ -30,13 +32,11 @@ class TrajectorySpline {
 public:
   TrajectorySpline() = default;
 
-
 private:
-  ateam_geometry::Point source_;
+  Pose source_;
   ateam_geometry::Vector source_vel_;
-  std::vector<ateam_geometry::Point> targets_;
+  std::vector<Pose> targets_;
   std::vector<double> transition_times_;
-
 };
 }  // namespace ateam_path_planning
 

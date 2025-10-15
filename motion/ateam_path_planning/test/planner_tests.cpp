@@ -19,12 +19,15 @@
 // THE SOFTWARE.
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include "ateam_path_planning/planner.hpp"
 
 using ateam_path_planning::Planner;
 
-TEST(Planner, Placeholder) {
+TEST(Planner, AllBotsNoTargets) {
   Planner planner;
 
-  EXPECT_EQ(0, 0);
+  const auto paths = planner.PlanPathsForAllBots({}, {}, {}, {}, {});
+
+  EXPECT_THAT(paths, ::testing::Each(::testing::Eq(std::nullopt)));
 }
