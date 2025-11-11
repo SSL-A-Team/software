@@ -57,16 +57,22 @@ Camera::Camera(int camera_id) : camera_id(camera_id) {
                 });
                 if (existing_bot != tracked_robots.end()){
                     existing_bot.update(robot_detection);
+                } else {
+                    // If not, create a new one
+                    tracked_robots.push_back(FilteredRobot(robot_detection, 0));
                 }
-                // Might want to refine that a bit since there are up to 24 robots ^
-                // If not, create a new one
-                tracked_robots.push_back(FilteredRobot(robot_detection, 0));
             }
             for (auto robot_detection : detection_frame_msg->robots_yellow){
                 // Check if this is close to an existing measurement (from an id that we have?)
-                // Might want to refine that a bit since there are up to 24 robots ^
-                // If not, create a new one
-                tracked_robots.push_back(FilteredRobot(robot_detection, 1));
+                auto existing_bot = std::find_if(tracked_robots.begin(), tracked_robots.end(), [](const FilteredRobot& bot) {
+                    return bot.bot_id == robot_detection->robot_id; 
+                });
+                if (existing_bot != tracked_robots.end()){
+                    existing_bot.update(robot_detection);
+                } else {
+                    // If not, create a new one
+                    tracked_robots.push_back(FilteredRobot(robot_detection, 1));
+                }
             }
         }
 
