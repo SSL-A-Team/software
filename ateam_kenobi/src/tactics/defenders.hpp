@@ -24,8 +24,7 @@
 #include <array>
 #include <vector>
 #include <ateam_geometry/types.hpp>
-#include "core/types/world.hpp"
-#include "core/types/robot.hpp"
+#include "core/types/state_types.hpp"
 #include "core/types/robot_command.hpp"
 #include "core/stp/tactic.hpp"
 

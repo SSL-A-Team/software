@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,27 +19,36 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__TYPES__REFEREE_INFO_HPP_
-#define CORE__TYPES__REFEREE_INFO_HPP_
+#ifndef GAME_STATE_TRACKER__DOUBLE_TOUCH_EVALUATOR_HPP_
+#define GAME_STATE_TRACKER__DOUBLE_TOUCH_EVALUATOR_HPP_
 
-#include <chrono>
+#include <algorithm>
 #include <optional>
-#include <ateam_common/game_controller_listener.hpp>
-#include <ateam_geometry/ateam_geometry.hpp>
+#include <vector>
+#include <ateam_common/robot_constants.hpp>
+#include "ateam_game_state/world.hpp"
 
-namespace ateam_kenobi
+namespace ateam_game_state
 {
-struct RefereeInfo
+
+class DoubleTouchEvaluator
 {
-  int our_goalie_id = -1;
-  int their_goalie_id = -1;
-  ateam_common::GameStage current_game_stage = ateam_common::GameStage::Unknown;
-  ateam_common::GameCommand running_command = ateam_common::GameCommand::Halt;
-  ateam_common::GameCommand prev_command = ateam_common::GameCommand::Halt;
-  std::optional<ateam_geometry::Point> designated_position;
-  std::optional<ateam_common::GameCommand> next_command = std::nullopt;
-  std::chrono::system_clock::time_point command_time;
+public:
+  void Update(World & world);
+
+private:
+  static constexpr double kStartTouchBallsenseThreshold = kRobotRadius + 0.1;
+  static constexpr double kStartTouchVisionThreshold = kRobotRadius + kBallRadius + 0.01;
+  static constexpr double kEndTouchVisionThreshold = kRobotRadius + kBallRadius + 0.045;
+  bool double_touch_rule_applies_ = false;
+  std::optional<int> forbidden_id_;
+  // tracking the frame when command changes, different from RefereeInfo.prev_command
+  ateam_common::GameCommand prev_game_command_{ateam_common::GameCommand::Halt};
+  std::optional<int> prev_touching_id_;
+
+  std::optional<Robot> GetRobotTouchingBall(const World & world);
 };
-}  // namespace ateam_kenobi
 
-#endif  // CORE__TYPES__REFEREE_INFO_HPP_
+}  // namespace ateam_game_state
+
+#endif  // GAME_STATE_TRACKER__DOUBLE_TOUCH_EVALUATOR_HPP_

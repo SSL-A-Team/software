@@ -27,7 +27,7 @@
 #include <string>
 #include "base.hpp"
 #include "play_score.hpp"
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::stp

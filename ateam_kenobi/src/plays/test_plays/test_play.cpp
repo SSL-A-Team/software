@@ -20,7 +20,7 @@
 
 #include "test_play.hpp"
 #include "ateam_geometry/types.hpp"
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "skills/goalie.hpp"
 #include "core/play_helpers/available_robots.hpp"
 

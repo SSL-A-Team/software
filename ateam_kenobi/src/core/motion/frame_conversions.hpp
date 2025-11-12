@@ -23,7 +23,7 @@
 #define CORE__MOTION__FRAME_CONVERSIONS_HPP_
 
 #include <ateam_geometry/types.hpp>
-#include "core/types/robot.hpp"
+#include "core/types/state_types.hpp"
 #include "core/motion/motion_intent.hpp"
 
 namespace ateam_kenobi::motion

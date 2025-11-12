@@ -22,7 +22,7 @@
 #include <angles/angles.h>
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/creation_helpers.hpp>
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays

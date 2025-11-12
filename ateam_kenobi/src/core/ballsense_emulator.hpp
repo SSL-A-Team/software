@@ -27,7 +27,7 @@
 #include <array>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/normalize.hpp>
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi
 {

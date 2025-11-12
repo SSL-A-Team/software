@@ -27,8 +27,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_geometry/ateam_geometry.hpp>
-#include "core/types/robot.hpp"
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "pid.hpp"
 #include "motion_options.hpp"
 #include "motion_intent.hpp"

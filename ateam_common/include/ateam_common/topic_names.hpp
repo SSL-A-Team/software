@@ -49,6 +49,8 @@ constexpr std::string_view kJoystickControlStatus = "/joystick_control_status";
 
 // Output from AI
 constexpr std::string_view kRobotMotionCommandPrefix = "/robot_motion_commands/robot";
+
+constexpr std::string_view kWorld = "/world";
 }  // namespace Topics
 
 #endif  // ATEAM_COMMON__TOPIC_NAMES_HPP_

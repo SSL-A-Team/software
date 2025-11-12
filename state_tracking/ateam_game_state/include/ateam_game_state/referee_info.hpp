@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,42 +19,27 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__TYPES__WORLD_HPP_
-#define CORE__TYPES__WORLD_HPP_
+#ifndef ATEAM_GAME_STATE__REFEREE_INFO_HPP_
+#define ATEAM_GAME_STATE__REFEREE_INFO_HPP_
 
-#include <optional>
-#include <array>
 #include <chrono>
+#include <optional>
+#include <ateam_common/game_controller_listener.hpp>
+#include <ateam_geometry/ateam_geometry.hpp>
 
-#include "core/types/ball.hpp"
-#include "core/types/field.hpp"
-#include "core/types/referee_info.hpp"
-#include "core/types/robot.hpp"
-
-namespace ateam_kenobi
+namespace ateam_game_state
 {
-struct World
+struct RefereeInfo
 {
-  std::chrono::steady_clock::time_point current_time;
-
-  Field field;
-  RefereeInfo referee_info;
-
-  Ball ball;
-  std::array<Robot, 16> our_robots;
-  std::array<Robot, 16> their_robots;
-
-  bool in_play = false;
-  bool our_penalty = false;
-  bool their_penalty = false;
-
-  int ignore_side = 0;
-
-  double fps = 100.0;
-
-  // Holds the ID of the robot not allowed to touch the ball, if any
-  std::optional<int> double_touch_forbidden_id_;
+  int our_goalie_id = -1;
+  int their_goalie_id = -1;
+  ateam_common::GameStage game_stage = ateam_common::GameStage::Unknown;
+  ateam_common::GameCommand running_command = ateam_common::GameCommand::Halt;
+  ateam_common::GameCommand prev_command = ateam_common::GameCommand::Halt;
+  std::optional<ateam_geometry::Point> designated_position;
+  std::optional<ateam_common::GameCommand> next_command = std::nullopt;
+  std::chrono::system_clock::time_point command_time;
 };
-}  // namespace ateam_kenobi
+}  // namespace ateam_game_state
 
-#endif  // CORE__TYPES__WORLD_HPP_
+#endif  // ATEAM_GAME_STATE__REFEREE_INFO_HPP_

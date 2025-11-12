@@ -26,7 +26,7 @@
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/any_shape.hpp>
 #include <ateam_geometry/types.hpp>
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "core/stp/base.hpp"
 #include "path.hpp"
 #include "planner_options.hpp"

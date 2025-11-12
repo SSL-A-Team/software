@@ -24,6 +24,7 @@
 #include "kick_skill.hpp"
 #include "pivot_kick.hpp"
 #include "line_kick.hpp"
+#include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::skills
 {

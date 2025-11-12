@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,33 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef CORE__TYPES__FIELD_HPP_
-#define CORE__TYPES__FIELD_HPP_
 
-#include <array>
+#ifndef ATEAM_GAME_STATE__BALL_HPP_
+#define ATEAM_GAME_STATE__BALL_HPP_
+
+#include <chrono>
 #include <ateam_geometry/types.hpp>
 
-namespace ateam_kenobi
+namespace ateam_game_state
 {
-struct FieldSidedInfo
+struct Ball
 {
-  std::array<ateam_geometry::Point, 4> defense_area_corners;
-  std::array<ateam_geometry::Point, 4> goal_corners;
-  std::array<ateam_geometry::Point, 2> goal_posts;
+  ateam_geometry::Point pos;
+  ateam_geometry::Vector vel;
+  bool visible = false;
+  std::chrono::steady_clock::time_point last_visible_time;
 };
-struct Field
-{
-  float field_length = 0.f;
-  float field_width = 0.f;
-  float goal_width = 0.f;
-  float goal_depth = 0.f;
-  float boundary_width = 0.f;
-  float defense_area_width = 0.f;
-  float defense_area_depth = 0.f;
-  std::array<ateam_geometry::Point, 4> field_corners;
-  FieldSidedInfo ours;
-  FieldSidedInfo theirs;
-};
-}  // namespace ateam_kenobi
+}  // namespace ateam_game_state
 
-#endif  // CORE__TYPES__FIELD_HPP_
+#endif  // ATEAM_GAME_STATE__BALL_HPP_

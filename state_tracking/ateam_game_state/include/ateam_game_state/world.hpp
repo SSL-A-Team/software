@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,44 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TACTICS__STANDARD_DEFENSE_HPP_
-#define TACTICS__STANDARD_DEFENSE_HPP_
 
-#include <vector>
-#include "core/types/state_types.hpp"
-#include "core/types/robot_command.hpp"
-#include "core/stp/tactic.hpp"
-#include "defenders.hpp"
-#include "skills/goalie.hpp"
+#ifndef ATEAM_GAME_STATE__WORLD_HPP_
+#define ATEAM_GAME_STATE__WORLD_HPP_
 
-namespace ateam_kenobi::tactics
+#include <optional>
+#include <array>
+#include <chrono>
+
+#include "ball.hpp"
+#include "field.hpp"
+#include "referee_info.hpp"
+#include "robot.hpp"
+
+namespace ateam_game_state
 {
-
-class StandardDefense : public stp::Tactic
+struct World
 {
-public:
-  explicit StandardDefense(stp::Options stp_options);
+  std::chrono::steady_clock::time_point current_time;
 
-  void reset();
+  Field field;
+  RefereeInfo referee_info;
 
-  /**
-   * @note Goalie not included in assignment points b/c it is assigned by ID
-   */
-  std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
+  Ball ball;
+  std::array<Robot, 16> our_robots;
+  std::array<Robot, 16> their_robots;
 
-  /**
-   * @note Goalie not included in defender bots. It is chosen by ID.
-   */
-  void runFrame(
-    const World & world,
-    const std::vector<Robot> & defender_bots,
-    std::array<std::optional<RobotCommand>, 16> & motion_commands);
+  bool in_play = false;
 
-private:
-  skills::Goalie goalie_;
-  tactics::Defenders defenders_;
+  // Holds the ID of the robot not allowed to touch the ball, if any
+  std::optional<int> double_touch_forbidden_id_;
 };
+}  // namespace ateam_game_state
 
-}  // namespace ateam_kenobi::tactics
-
-#endif  // TACTICS__STANDARD_DEFENSE_HPP_
+#endif  // ATEAM_GAME_STATE__WORLD_HPP_

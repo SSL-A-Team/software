@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,44 +18,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TACTICS__STANDARD_DEFENSE_HPP_
-#define TACTICS__STANDARD_DEFENSE_HPP_
 
-#include <vector>
-#include "core/types/state_types.hpp"
-#include "core/types/robot_command.hpp"
-#include "core/stp/tactic.hpp"
-#include "defenders.hpp"
-#include "skills/goalie.hpp"
+#ifndef GAME_STATE_TRACKER__IN_PLAY_EVALUATOR_HPP_
+#define GAME_STATE_TRACKER__IN_PLAY_EVALUATOR_HPP_
 
-namespace ateam_kenobi::tactics
+#include <chrono>
+#include <optional>
+#include <ateam_geometry/types.hpp>
+#include <ateam_common/game_controller_listener.hpp>
+#include "ateam_game_state/world.hpp"
+
+namespace ateam_game_state
 {
 
-class StandardDefense : public stp::Tactic
+class InPlayEvaluator
 {
 public:
-  explicit StandardDefense(stp::Options stp_options);
-
-  void reset();
-
-  /**
-   * @note Goalie not included in assignment points b/c it is assigned by ID
-   */
-  std::vector<ateam_geometry::Point> getAssignmentPoints(const World & world);
-
-  /**
-   * @note Goalie not included in defender bots. It is chosen by ID.
-   */
-  void runFrame(
-    const World & world,
-    const std::vector<Robot> & defender_bots,
-    std::array<std::optional<RobotCommand>, 16> & motion_commands);
+  void Update(World & world);
 
 private:
-  skills::Goalie goalie_;
-  tactics::Defenders defenders_;
+  bool in_play_ = false;
+  std::optional<ateam_geometry::Point> ball_start_pos_;
+  ateam_common::GameCommand prev_game_command_;
+  std::optional<std::chrono::steady_clock::duration> timeout_duration_;
+  std::chrono::steady_clock::time_point timeout_start_;
+  double ball_moved_threshold_ = 0;
+
+  void SetTimeout(const World & world);
+
+  void SetDistanceThreshold(const World & world);
+
+  bool IsGameStopping(const World & world);
+
+  bool IsStopCommandEnding(const World & world);
+
+  bool IsGameResuming(const World & world);
+
+  bool HasBallMoved(const World & world);
+
+  bool HasTimeoutExpired();
 };
 
-}  // namespace ateam_kenobi::tactics
+}  // namespace ateam_game_state
 
-#endif  // TACTICS__STANDARD_DEFENSE_HPP_
+#endif  // GAME_STATE_TRACKER__IN_PLAY_EVALUATOR_HPP_

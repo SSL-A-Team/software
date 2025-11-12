@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,21 +19,22 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__TYPES__BALL_HPP_
-#define CORE__TYPES__BALL_HPP_
+#ifndef CORE__TYPES__STATE_TYPES_HPP_
+#define CORE__TYPES__STATE_TYPES_HPP_
 
-#include <chrono>
-#include <ateam_geometry/types.hpp>
+#include <ateam_game_state/ball.hpp>
+#include <ateam_game_state/field.hpp>
+#include <ateam_game_state/referee_info.hpp>
+#include <ateam_game_state/robot.hpp>
+#include <ateam_game_state/world.hpp>
 
 namespace ateam_kenobi
 {
-struct Ball
-{
-  ateam_geometry::Point pos;
-  ateam_geometry::Vector vel;
-  bool visible = false;
-  std::chrono::steady_clock::time_point last_visible_time;
-};
+using Ball = ateam_game_state::Ball;
+using Field = ateam_game_state::Field;
+using RefereeInfo = ateam_game_state::RefereeInfo;
+using Robot = ateam_game_state::Robot;
+using World = ateam_game_state::World;
 }  // namespace ateam_kenobi
 
-#endif  // CORE__TYPES__BALL_HPP_
+#endif  // CORE__TYPES__STATE_TYPES_HPP_

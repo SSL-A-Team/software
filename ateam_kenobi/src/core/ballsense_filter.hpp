@@ -24,7 +24,7 @@
 
 #include <ranges>
 #include <array>
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi
 {

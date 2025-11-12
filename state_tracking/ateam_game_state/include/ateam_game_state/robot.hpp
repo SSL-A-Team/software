@@ -1,4 +1,4 @@
-// Copyright 2021 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,24 +19,38 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__TYPES__MESSAGE_CONVERSIONS_HPP_
-#define CORE__TYPES__MESSAGE_CONVERSIONS_HPP_
+#ifndef ATEAM_GAME_STATE__ROBOT_HPP_
+#define ATEAM_GAME_STATE__ROBOT_HPP_
 
-#include <ateam_msgs/msg/game_state_ball.hpp>
-#include <ateam_msgs/msg/game_state_robot.hpp>
-#include <ateam_msgs/msg/game_state_world.hpp>
+#include <ateam_geometry/types.hpp>
 
-#include "core/types/ball.hpp"
-#include "core/types/robot.hpp"
-#include "core/types/world.hpp"
-
-
-namespace ateam_kenobi::message_conversions
+namespace ateam_game_state
 {
-ateam_msgs::msg::GameStateBall toMsg(const Ball & obj);
-ateam_msgs::msg::GameStateRobot toMsg(const Robot & obj);
-ateam_msgs::msg::GameStateWorld toMsg(const World & obj);
+struct Robot
+{
+  int id;
+  bool visible = false;
+  bool radio_connected = false;
 
-}  // namespace ateam_kenobi::message_conversions
+  ateam_geometry::Point pos;
+  double theta = 0.0;
+  ateam_geometry::Vector vel;
+  double omega = 0.0;
 
-#endif  // CORE__TYPES__MESSAGE_CONVERSIONS_HPP_
+  ateam_geometry::Vector prev_command_vel;
+  double prev_command_omega = 0.0;
+
+  bool breakbeam_ball_detected = false;
+  bool breakbeam_ball_detected_filtered = false;
+
+  bool kicker_available = true;
+  bool chipper_available = false;
+
+  bool IsAvailable() const
+  {
+    return visible && radio_connected;
+  }
+};
+}  // namespace ateam_game_state
+
+#endif  // ATEAM_GAME_STATE__ROBOT_HPP_

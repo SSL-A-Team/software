@@ -29,7 +29,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ateam_msgs/msg/playbook_state.hpp>
 #include "core/stp/play.hpp"
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi
 {

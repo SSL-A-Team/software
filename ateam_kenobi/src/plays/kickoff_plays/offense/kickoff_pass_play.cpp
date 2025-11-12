@@ -23,7 +23,7 @@
 #include <limits>
 #include <random>
 #include <vector>
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "skills/goalie.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 #include "core/play_helpers/available_robots.hpp"
