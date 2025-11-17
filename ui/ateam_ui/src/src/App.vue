@@ -94,10 +94,10 @@ export default {
         // Renders field at 100fps
         updateField: function() {
 
-            if (!this.state.useKenobi) {
-                this.state.realtimeWorld.timestamp = Date.now();
-                this.state.updateHistory()
-            }
+            // if (!this.state.useKenobi) {
+            //     this.state.realtimeWorld.timestamp = Date.now();
+            //     this.state.updateHistory()
+            // }
 
             // Only render while unpaused, HistoryComponent will handle field rendering while not in realtime
             if (this.state.selectedHistoryFrame == -1) {
@@ -115,7 +115,6 @@ export default {
                 this.kenobiStatus = "Hello There"
             }
 
-            console.log(this.state.realtimeWorld.fps)
             this.kenobiFPS = Math.round(this.state.realtimeWorld.fps);
             if (this.kenobiFPS >= 95) {
                 this.kenobiFPSALERT =  'ateam-color';

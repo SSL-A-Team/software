@@ -143,10 +143,84 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.17.19.tgz#8cfaf2ff603e9aabb910e9c0558c26cf32744061"
   integrity sha512-lAhycmKnVOuRYNtRtatQR1LPQf2oYCkRGkSFnseDAKPl8lu5SOsK/e1sXe5a0Pc5kHIHe6P2I/ilntNv2xf3cA==
 
+"@foxglove/cdr@^3.3.0":
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/@foxglove/cdr/-/cdr-3.5.0.tgz#61fb191166453a7abcec2a40abe18e52dee71cf9"
+  integrity sha512-trj8uB+J71SuW9g8TbbDgTbvqrmUHQjh5uhqBAraBhg4hxm7aG9AFPvz34yJ/XZnl28x0NuLjptJYKNSUlgM9Q==
+
+"@foxglove/crc@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@foxglove/crc/-/crc-0.0.3.tgz#04cd8816454e14f1ec48de17c949199b4b3ec9c2"
+  integrity sha512-DjIZsnL3CyP/yQ/vUYA9cjrD0a/8YXejI5ZmsaOiT16cLfZcTwaCxIN01/ys4jsy+dZCQ/9DnWFn7AEFbiMDaA==
+
+"@foxglove/message-definition@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@foxglove/message-definition/-/message-definition-0.3.1.tgz#63f48e8f3de47bba8943d8bfa8021af635254f1c"
+  integrity sha512-nkPowiED67LjcKEC77CprkUG3XvSsFHHR9HEwWCuhnIC2wm0W57T1J+WWvteoArZ7SdGGlKzSYSRFyjQkgmITw==
+
+"@foxglove/message-definition@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@foxglove/message-definition/-/message-definition-0.4.0.tgz#ecce0c30a58e0ddda776045e486c64dc29d501c1"
+  integrity sha512-lo98RFt+w7B3s+G3G431xyvXcc49GWRDLCj4NxPK5TXS3BkMKpe4+FVj4I3fSF87xYAFE52SgMqvBVUHnnRWQw==
+
+"@foxglove/omgidl-parser@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@foxglove/omgidl-parser/-/omgidl-parser-1.1.0.tgz#b27f0ae3635d6d6386937ec08f0fa5bd1a64381a"
+  integrity sha512-/A5JaqjI8O7WK5sxUsn1Qc5TbjRE1fmjnoakm8vxj8WDNhfw94dv5z53Bq/3PxE2bVx+hpYMfVlzMLR9ELYoMQ==
+  dependencies:
+    tslib "^2"
+
+"@foxglove/ros2idl-parser@^0.3.5":
+  version "0.3.5"
+  resolved "https://registry.yarnpkg.com/@foxglove/ros2idl-parser/-/ros2idl-parser-0.3.5.tgz#4951afc1a78b56319a1615eea20841eed1ec6661"
+  integrity sha512-qgJNE0XEn9aRMK/lyyjXOjJqmJstKL8oE3duUMRmK4VQScNArd/9/HRb32CAz2UZ9DMAhMvdQiUE+zfKQj68FA==
+  dependencies:
+    "@foxglove/message-definition" "^0.4.0"
+    "@foxglove/omgidl-parser" "1.1.0"
+    md5-typescript "^1.0.5"
+
+"@foxglove/rosmsg2-serialization@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg2-serialization/-/rosmsg2-serialization-3.0.2.tgz#e22733913870f265f2d0724d33eb5fea2c050067"
+  integrity sha512-NKMmRqyKWQk5mkWzE6WvYWdOUqnQzySgn+FLPa3Bc6eZt22ARZ9QNtX4MpymmCXNjC8Iocp/jpLC0uCrDPMILw==
+  dependencies:
+    "@foxglove/cdr" "^3.3.0"
+    "@foxglove/message-definition" "^0.4.0"
+    "@foxglove/rostime" "^1.1.2"
+
+"@foxglove/rosmsg@^5.0.4":
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg/-/rosmsg-5.0.4.tgz#445328d9722dff6960e060113a930f64a76b3ecb"
+  integrity sha512-s0JQLA6Zi0Qh9HtzyAan30sjiMU0u34+fkwccek/Xt+aQjCkSoErP/U4NBP6hCDfp0fBcb7CDSU2ggLFy/rJAQ==
+  dependencies:
+    "@foxglove/message-definition" "^0.3.1"
+    md5-typescript "^1.0.5"
+
+"@foxglove/rostime@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@foxglove/rostime/-/rostime-1.1.2.tgz#f8e1f10bff115c22be8a3e06791c2ac800449ee8"
+  integrity sha512-vWuTJCuGv0xvgwOlrZ1y2MevmNMVxWcUU/HwlmYXi/jUq/kRaACStU18uyuZ3LzdNKaffkti0rTcXWESaQjwQw==
+
 "@jridgewell/sourcemap-codec@^1.4.13":
   version "1.4.15"
   resolved "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz"
   integrity sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==
+
+"@mcap/browser@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@mcap/browser/-/browser-1.0.2.tgz#d25ac24234f4eefd2da7a55a65fa04717fe74792"
+  integrity sha512-Vxc/lKJN1OBJdRAQfenBcI/vQpsJUhlEmZbmKCPdayGiCFOvioIRXD8l9kR7GzLapmGGgpGOXEOEDGy67ViTeQ==
+  dependencies:
+    tslib "^2.5.0"
+
+"@mcap/core@^2.1.7":
+  version "2.1.7"
+  resolved "https://registry.yarnpkg.com/@mcap/core/-/core-2.1.7.tgz#b2b892c2969a6e9d92d20aa9d103a20cf8215589"
+  integrity sha512-lp+ZfJ/wKCyB9+vzc5yWe9CfnKa7Vh4nN99yazEjp9eC5DG6ACvGaNWQfQsrOC+3QraAWIY912pCwBWrY31QLQ==
+  dependencies:
+    "@foxglove/crc" "^0.0.3"
+    heap-js "^2.2.0"
+    tslib "^2.5.0"
 
 "@mdi/font@^7.4.47":
   version "7.4.47"
@@ -612,6 +686,11 @@ brace-expansion@^2.0.1:
   dependencies:
     balanced-match "^1.0.0"
 
+bson@^6.10.4:
+  version "6.10.4"
+  resolved "https://registry.yarnpkg.com/bson/-/bson-6.10.4.tgz#d530733bb5bb16fb25c162e01a3344fab332fd2b"
+  integrity sha512-WIsKqkSC0ABoBJuT1LEX+2HEvNmNKKgnTAyd0fL8qzK4SH2i9NXg+t08YtdZp/V9IZ33cxe3iV4yM0qg8lMQng==
+
 buffer-from@^1.0.0:
   version "1.1.2"
   resolved "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz"
@@ -999,6 +1078,11 @@ he@^1.2.0:
   resolved "https://registry.npmjs.org/he/-/he-1.2.0.tgz"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
+heap-js@^2.2.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/heap-js/-/heap-js-2.6.0.tgz#72a2fc9efdb8b7b103c351b6e936d18325104a15"
+  integrity sha512-trFMIq3PATiFRiQmNNeHtsrkwYRByIXUbYNbotiY9RLVfMkdwZdd2eQ38mGt7BRiCKBaj1DyBAIHmm7mmXPuuw==
+
 ieee754@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.2.1.tgz#8eb7a10a63fff25d15a57b001586d177d1b0d352"
@@ -1070,6 +1154,11 @@ map-limit@0.0.1:
   integrity sha512-pJpcfLPnIF/Sk3taPW21G/RQsEEirGaFpCW3oXRwH9dnFHPHNGjNyvh++rdmC2fNqEaTw2MhYJraoJWAHx8kEg==
   dependencies:
     once "~1.3.0"
+
+md5-typescript@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/md5-typescript/-/md5-typescript-1.0.5.tgz#68c0b24dff8e5d3162e498fa9893b63be72e038f"
+  integrity sha512-ovAc4EtiNt2dY8JPhPr/wkC9h4U5k/nuClNVcG0Ga3V1rMlYpAY24ZaaymFXJlz+ccJ6UMPo3FSaVKe7czBsXw==
 
 mime-db@1.52.0:
   version "1.52.0"
@@ -1427,6 +1516,11 @@ to-fast-properties@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/to-fast-properties/-/to-fast-properties-2.0.0.tgz"
   integrity sha512-/OaKK0xYrs3DmxRYqL/yDc+FxFUVYhDlXMhRmv3z915w2HF1tnN1omB354j8VUGO/hbRzyD6Y3sA7v7GS/ceog==
+
+tslib@^2, tslib@^2.5.0:
+  version "2.8.1"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
+  integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
 
 typedarray@^0.0.6:
   version "0.0.6"

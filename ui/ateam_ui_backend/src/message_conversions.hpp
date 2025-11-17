@@ -78,6 +78,47 @@
     name: "/joystick_control_node:robot_id"
 */
 
+
+// Nlohmann Json Conversion
+namespace ateam_msgs::msg{
+void to_json(nlohmann::json& j,
+  const ateam_msgs::msg::World& ros_msg);
+
+void to_json(nlohmann::json& j,
+  const ateam_msgs::msg::BallState & ros_msg);
+
+void to_json(nlohmann::json& j,
+  const ateam_msgs::msg::RobotState & ros_msg);
+}
+
+namespace geometry_msgs::msg{
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Pose & ros_msg);
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Twist & ros_msg);
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Accel & ros_msg);
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Vector3 & ros_msg);
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Point & ros_msg);
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Quaternion & ros_msg);
+
+}
+
+
+namespace builtin_interfaces::msg{
+void to_json(nlohmann::json& j,
+  const builtin_interfaces::msg::Time & ros_msg);
+}
+
 namespace ateam_ui_backend_node::message_conversions
 {
 

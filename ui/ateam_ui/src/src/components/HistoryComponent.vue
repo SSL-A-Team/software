@@ -2,7 +2,7 @@
     <v-col class="flex-grow-0 flex-shrink-0 justify-center mt-n8 pt-n8 mb-n4 pb-n4">
         <v-slider
             v-model="historySlider"
-            :min="-state.worldHistory.length+1"
+            :min="-state.historyManager.compressedWorldHistory.length+1"
             max="0"
             step="1"
             v-on:start="startSlider"
@@ -11,6 +11,9 @@
             :color="historyWarningStyle"
         />
         <v-row class="nowrap justify-center mx-3 my-0 px-1 py-0" align="center">
+            <div>
+                {{ playbackSpeed + "x" }}
+            </div>
             <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "rewind()">
                 <v-icon icon="mdi-rewind"/>
             </v-btn>
@@ -29,6 +32,9 @@
             <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "goToRealTime()" :color="historyWarningStyle">
                 <v-icon icon="mdi-clock-end"/>
             </v-btn>
+            <div>
+                {{ state.historyManager.historyEndIndex + " / " + state.historyManager.compressedWorldHistory.length }}
+            </div>
         </v-row>
     </v-col>
 </template>
@@ -37,6 +43,7 @@
 <script lang="ts">
 import { inject } from "vue";
 import { AppState } from "@/state";
+import { TeamColor } from "@/team";
 import * as PIXI from 'pixi.js';
 
 export default {
@@ -53,13 +60,13 @@ export default {
     },
     methods: {
         playPauseIcon: function() {
-            return (this.state.selectedHistoryFrame == -1 || !this.state.historyReplayIsPaused)? 'mdi-pause' : 'mdi-play';
+            return (this.state.historyManager.selectedHistoryFrame == -1 || !this.state.historyManager.historyReplayIsPaused)? 'mdi-pause' : 'mdi-play';
         },
         togglePause: function() {
-            if (this.state.selectedHistoryFrame == -1) {
+            if (this.state.historyManager.selectedHistoryFrame == -1) {
                 this.pause();
-                this.state.selectedHistoryFrame = this.state.worldHistory.length - 1;
-            } else if (this.state.historyReplayIsPaused) {
+                this.state.historyManager.selectedHistoryFrame = this.state.historyManager.compressedWorldHistory.length - 1;
+            } else if (this.state.historyManager.historyReplayIsPaused) {
                 this.playbackSpeed = 1.0;
                 this.play();
             } else {
@@ -68,20 +75,20 @@ export default {
         },
         play: function() {
             clearInterval(this.playbackTimer);
-            this.state.historyReplayIsPaused = false;
+            this.state.historyManager.historyReplayIsPaused = false;
 
             // Playback runs at half framerate
             this.playbackTimer = setInterval(this.playbackUpdate, 20);
         },
         pause: function() {
-            this.state.historyReplayIsPaused = true;
+            this.state.historyManager.historyReplayIsPaused = true;
             this.playbackSpeed = 1.0;
             clearInterval(this.playbackTimer);
         },
         rewind: function() {
-            if (this.state.selectedHistoryFrame == -1) {
+            if (this.state.historyManager.selectedHistoryFrame == -1) {
                 this.playbackSpeed = 1.0;
-                this.state.selectedHistoryFrame = this.state.worldHistory.length - 1;
+                this.state.historyManager.selectedHistoryFrame = this.state.historyManager.compressedWorldHistory.length - 1;
             }
             if (this.playbackSpeed >= 0) {
                 this.playbackSpeed = -1.0;
@@ -101,47 +108,47 @@ export default {
         goToRealTime: function() {
             this.pause();
             this.playbackSpeed = 1.0;
-            this.state.selectedHistoryFrame = -1;
+            this.state.historyManager.selectedHistoryFrame = -1;
         },
         stepButton: function(frames: number) {
             // Pause history replay when stepping by frame
-            this.state.historyReplayIsPaused = true;
+            this.state.historyManager.historyReplayIsPaused = true;
             this.playbackSpeed = 1.0;
 
             // If you are in realtime just go to the latest frame
-            if (this.state.selectedHistoryFrame == -1) {
-                this.state.selectedHistoryFrame = this.state.worldHistory.length - 1;
+            if (this.state.historyManager.selectedHistoryFrame == -1) {
+                this.state.historyManager.selectedHistoryFrame = this.state.historyManager.compressedWorldHistory.length - 1;
             }
 
             this.stepFrames(frames);
         },
         stepFrames: function(frames: number) {
-            let intendedFrame = this.state.selectedHistoryFrame + frames;
-            if (intendedFrame >= this.state.worldHistory.length) {
-                intendedFrame = this.state.worldHistory.length - 1;
+            let intendedFrame = this.state.historyManager.selectedHistoryFrame + frames;
+            if (intendedFrame >= this.state.historyManager.compressedWorldHistory.length) {
+                intendedFrame = this.state.historyManager.compressedWorldHistory.length - 1;
             } else if (intendedFrame < 0) {
                 intendedFrame = 0;
             }
 
-            this.state.selectedHistoryFrame = intendedFrame;
+            this.state.historyManager.selectedHistoryFrame = intendedFrame;
         },
         startSlider: function(sliderValue: number) {
             // This function moves out of realtime when you first interact with the slider but
             // does not work for dragging
-            this.state.historyReplayIsPaused = true;
-            this.state.selectedHistoryFrame = this.state.worldHistory.length - 1 + sliderValue;
+            this.state.historyManager.historyReplayIsPaused = true;
+            this.state.historyManager.selectedHistoryFrame = this.state.historyManager.compressedWorldHistory.length - 1 + sliderValue;
         },
         playbackUpdate: function() {
 
-            if (this.state.selectedHistoryFrame == -1) {
+            if (this.state.historyManager.selectedHistoryFrame == -1) {
                 this.pause();
             }
 
-            if (!this.state.historyReplayIsPaused) {
-                if (this.state.selectedHistoryFrame >= this.state.worldHistory.length - 1 && this.playbackSpeed >= 0) {
-                    this.state.historyReplayIsPaused = true;
-                } else if (this.state.selectedHistoryFrame <= 0 && this.playbackSpeed <= 0) {
-                    this.state.historyReplayIsPaused = true;
+            if (!this.state.historyManager.historyReplayIsPaused) {
+                if (this.state.historyManager.selectedHistoryFrame >= this.state.historyManager.compressedWorldHistory.length - 1 && this.playbackSpeed >= 0) {
+                    this.state.historyManager.historyReplayIsPaused = true;
+                } else if (this.state.historyManager.selectedHistoryFrame <= 0 && this.playbackSpeed <= 0) {
+                    this.state.historyManager.historyReplayIsPaused = true;
                 } else {
                     // Rendering every other frame for standard playback rn since it can be kind of laggy
                     this.stepFrames(2 * Math.round(this.playbackSpeed));
@@ -149,16 +156,17 @@ export default {
             }
         },
         loadHistoryFrame: function() {
-            if (this.state.selectedHistoryFrame == -1) {
+            if (this.state.historyManager.selectedHistoryFrame == -1) {
                 this.state.world = this.state.realtimeWorld;
             } else {
                 // Calculate the correct index into the circular buffer
 
-                let circularBufferIndex = (this.state.historyEndIndex + 1) + this.state.selectedHistoryFrame;
-                if (circularBufferIndex >= this.state.worldHistory.length) {
-                    circularBufferIndex = circularBufferIndex - (this.state.worldHistory.length);
+                let circularBufferIndex = (this.state.historyManager.historyEndIndex + 1) + this.state.historyManager.selectedHistoryFrame;
+                if (circularBufferIndex >= this.state.historyManager.compressedWorldHistory.length) {
+                    circularBufferIndex = circularBufferIndex - (this.state.historyManager.compressedWorldHistory.length);
                 }
-                this.state.world = this.state.worldHistory[circularBufferIndex];
+                this.state.world = this.state.historyManager.decompressWorldState(this.state.historyManager.compressedWorldHistory[circularBufferIndex], this.state);
+
                 this.state.graphicState.updateField(); // Render the field and overlays
             }
 
@@ -177,10 +185,10 @@ export default {
     },
     computed: {
         selectedHistoryFrame: function() {
-            return this.state.selectedHistoryFrame;
+            return this.state.historyManager.selectedHistoryFrame;
         },
         historyWarningStyle: function() {
-            if (this.state.selectedHistoryFrame == -1) {
+            if (this.state.historyManager.selectedHistoryFrame == -1) {
                 return "";
             } else {
                 return "red"
@@ -194,19 +202,19 @@ export default {
 
                 // This if statement prevents circular loops caused by moving the slider back to the start of the bar when switching to realtime
                 // which would then cause the selected frame to switch out of realtime to the last frame in history
-                if (this.state.selectedHistoryFrame != -1) {
+                if (this.state.historyManager.selectedHistoryFrame != -1) {
                     // Does not account for circular buffer
-                    this.state.selectedHistoryFrame = this.state.worldHistory.length - 1 + this.historySlider;
+                    this.state.historyManager.selectedHistoryFrame = this.state.historyManager.compressedWorldHistory.length - 1 + this.historySlider;
                 }
             },
             deep: false
         },
         selectedHistoryFrame: {
             handler() {
-                if (this.state.selectedHistoryFrame == -1) {
+                if (this.state.historyManager.selectedHistoryFrame == -1) {
                     this.historySlider = 0;
                 } else {
-                    this.historySlider = this.state.selectedHistoryFrame - (this.state.worldHistory.length - 1);
+                    this.historySlider = this.state.historyManager.selectedHistoryFrame - (this.state.historyManager.compressedWorldHistory.length - 1);
                 }
                 this.loadHistoryFrame();
             },

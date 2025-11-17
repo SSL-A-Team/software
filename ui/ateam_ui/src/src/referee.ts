@@ -1,8 +1,8 @@
 import { Team, TeamInfo, TeamColor } from "@/team";
 
 export class GameProperty{
-    name: String
-    color: String
+    name: string
+    color: string
 }
 
 export enum GameStage {
@@ -101,6 +101,20 @@ export class Referee {
     constructor() {
         this.blue = new TeamInfo();
         this.yellow = new TeamInfo();
+    }
+}
+
+export class RefereeHistory {
+    stage: GameStage;
+    command: GameCommand;
+    ball_in_play: boolean
+    history_timestamp: number = 0;
+
+    constructor(stage: number, command: number, ball_in_play: boolean, timestamp: number) {
+        this.stage = stage;
+        this.command = command;
+        this.ball_in_play = ball_in_play;
+        this.history_timestamp = timestamp;
     }
 }
 

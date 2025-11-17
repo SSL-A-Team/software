@@ -3,7 +3,7 @@ import { AppState } from "@/state";
 import * as PIXI from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { drawBall, updateBall } from "@/ball";
-import { drawRobot, updateRobot } from "@/robot";
+import { Robot, drawRobot, updateRobot } from "@/robot";
 
 // Types used for field data and overlays
 
@@ -28,7 +28,7 @@ export class FieldSidedInfo {
 
 export class Field {
     fieldInfo: FieldInfo;
-    overlays: Map<string, Overlay> = new Map<string, Overlay>;
+    overlays: Map<string, Overlay> | Overlay[] = new Map<string, Overlay>;
 
     constructor() {
         this.fieldInfo = new FieldInfo();
@@ -143,7 +143,7 @@ export function drawFieldLines(state: AppState, fieldLines: PIXI.Graphics) {
 export function drawRobots(state: AppState, robotsContainer: PIXI.Container) {
     const robotArray = Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()
     for (var i = 0; i < robotArray.length; i++) {
-        drawRobot(robotArray[i], robotsContainer, state.renderConfig);
+        drawRobot(robotArray[i] as Robot, robotsContainer, state.renderConfig);
     }
 }
 
@@ -242,17 +242,17 @@ export function updateField(state: AppState, fieldContainer: PIXI.Container) {
     for (var i = 0; i < robotArray.length; i++) {
         if (i != state.draggedRobot) {
             const robotContainer = robots[i] as PIXI.Container;
-            updateRobot(robotArray[i], robotContainer, state.renderConfig);
+            updateRobot(robotArray[i] as Robot, robotContainer, state.renderConfig);
         }
     }
 
     updateBall(state.world.ball, fieldContainer.getChildByName("ball") as PIXI.Container, state.renderConfig);
 
-    for (const [id, overlay] of field.overlays) {
+    for (const [id, overlay] of field.overlays as Map<string, Overlay>) {
         const shouldDelete = updateOverlay(overlay, state.world.timestamp, fieldContainer.getChildByName("overlay"), fieldContainer.getChildByName("underlay"), state.renderConfig);
 
         if (shouldDelete) {
-            field.overlays.delete(id);
+            (field.overlays as Map<string, Overlay>).delete(id);
         }
     }
 }

@@ -16,6 +16,9 @@ find_package(std_srvs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 find_package(Boost REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(rosbag2_transport REQUIRED)
+
 
 add_library(${PROJECT_NAME} SHARED
   src/ateam_ui_backend_node.cpp
@@ -39,6 +42,8 @@ ament_target_dependencies(${PROJECT_NAME}
   std_srvs
   ssl_league_msgs
   nlohmann_json
+  visualization_msgs
+  rosbag2_transport
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}

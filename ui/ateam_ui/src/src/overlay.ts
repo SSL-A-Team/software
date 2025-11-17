@@ -2,6 +2,7 @@ import { GraphicState, RenderConfig } from "@/state";
 import * as PIXI from "pixi.js";
 import { Buffer } from "buffer";
 import { Vector3 } from "roslib";
+import { compressedArrayToPlayMap } from "./play";
 
 export enum OverlayType {
     Point = 0,
@@ -18,9 +19,9 @@ export enum OverlayType {
 
 // Overlay Types
 export class Overlay {
-    id: string
-    ns: string
-    name: string
+    id?: string
+    ns: string | number
+    name: string | number
     visible: boolean = true
     type: OverlayType
     command: number
@@ -32,10 +33,10 @@ export class Overlay {
     stroke_width: number = 20
     lifetime: number
     points: Point[] | null
-    heatmap_data: Uint8Array
-    heatmap_alpha: Uint8Array
-    heatmap_resolution_width: number
-    heatmap_resolution_height: number
+    heatmap_data?: Uint8Array
+    heatmap_alpha?: Uint8Array
+    heatmap_resolution_width?: number
+    heatmap_resolution_height?: number
     text: string | null
     depth: number = 0
     start_angle: number
@@ -50,6 +51,7 @@ export class Overlay {
 
         for (const member of Object.getOwnPropertyNames(msg)) {
             if (member === "heatmap_data" || member == "heatmap_alpha") {
+                //@ts-ignore
                 this[member] = Buffer.from(msg[member], 'base64');
             } else {
                 this[member] = msg[member];

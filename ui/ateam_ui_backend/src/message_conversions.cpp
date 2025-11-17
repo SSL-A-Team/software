@@ -26,6 +26,213 @@
 #include <vector>
 #include <iostream>
 
+
+namespace ateam_msgs::msg{
+
+void to_json(nlohmann::json& j,
+  const ateam_msgs::msg::World& ros_msg) {
+
+  j = nlohmann::json{
+    {"timestamp", ros_msg.current_time},
+    {"balls", ros_msg.balls},
+    // {"our_robots", ros_msg.our_robots},
+    // {"their_robots", ros_msg.their_robots},
+    {"ball_in_play", ros_msg.ball_in_play},
+    {"double_touch_enforced", ros_msg.double_touch_enforced},
+    {"double_touch_id", ros_msg.double_touch_id},
+    {"fps", ros_msg.fps},
+  };
+
+  nlohmann::json robot_array = nlohmann::json::array();
+  for (const auto robot : ros_msg.our_robots) {
+    robot_array.push_back(robot.pose.position.x);
+    robot_array.push_back(robot.pose.position.y);
+    robot_array.push_back(robot.pose.position.z);
+    robot_array.push_back(robot.pose.orientation.z);
+    robot_array.push_back(robot.twist.linear.x);
+    robot_array.push_back(robot.twist.linear.z);
+    robot_array.push_back(robot.twist.angular.z);
+    // robot_array.push_back(robot.radio_connected);
+    robot_array.push_back(1);
+    robot_array.push_back(robot.visible);
+  }
+
+  j["robots"] = nlohmann::json::to_bson(robot_array);
+}
+
+void to_json(nlohmann::json& j,
+  const ateam_msgs::msg::BallState & ros_msg){
+
+  j = nlohmann::json{
+    {"pose", ros_msg.pose},
+    {"twist", ros_msg.twist},
+    {"accel", ros_msg.accel},
+    {"visible", ros_msg.visible}
+  };
+}
+
+void to_json(nlohmann::json& j,
+  const ateam_msgs::msg::RobotState & ros_msg){
+
+  j = nlohmann::json{
+    {"pose", ros_msg.pose},
+    {"twist", ros_msg.twist},
+    {"accel", ros_msg.accel},
+    {"visible", ros_msg.visible}
+  };
+}
+}
+
+
+
+
+
+namespace geometry_msgs::msg{
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Pose & ros_msg){
+
+  j = nlohmann::json{
+    {"position", ros_msg.position},
+    {"orientation", ros_msg.orientation}
+  };
+}
+
+//////////////
+// geometry_msgs::msg::Pose toPoseMsg(
+//   const nlohmann::json json){
+
+//   geometry_msgs::msg::Pose msg;
+
+//   if (json.contains("position")) {
+//     msg.position = toPointMsg(json["position"]);
+//   }
+
+//   if (json.contains("orientation")) {
+//     msg.orientation = toQuaternionMsg(json["orientation"]);
+//   }
+
+//   return msg;
+// }
+
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Twist & ros_msg){
+
+  j = nlohmann::json{
+    {"linear", ros_msg.linear},
+    {"angular", ros_msg.angular}
+  };
+}
+
+////////////////////////////////
+// geometry_msgs::msg::Twist toTwistMsg(
+//   const nlohmann::json json){
+
+//   geometry_msgs::msg::Twist msg;
+
+
+//   if (json.contains("linear")) {
+//     msg.linear = toVector3Msg(json["linear"]);
+//   }
+
+//   if (json.contains("angular")) {
+//     msg.angular = toVector3Msg(json["angular"]);
+//   }
+
+//   return msg;
+// }
+////////////////
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Accel & ros_msg){
+
+  j = nlohmann::json{
+    {"linear", ros_msg.linear},
+    {"angular", ros_msg.angular}
+  };
+}
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Vector3 & ros_msg){
+
+  j = nlohmann::json{
+    {"x", ros_msg.x},
+    {"y", ros_msg.y},
+    {"z", ros_msg.z}
+  };
+}
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Point & ros_msg){
+
+  j = nlohmann::json{
+    {"x", ros_msg.x},
+    {"y", ros_msg.y},
+    {"z", ros_msg.z}
+  };
+}
+
+void to_json(nlohmann::json& j,
+  const geometry_msgs::msg::Quaternion & ros_msg){
+
+  j = nlohmann::json{
+    {"x", ros_msg.x},
+    {"y", ros_msg.y},
+    {"z", ros_msg.z},
+    {"w", ros_msg.w}
+  };
+}
+
+//////////////////
+// geometry_msgs::msg::Quaternion toQuaternionMsg(
+//   const nlohmann::json json){
+
+//   geometry_msgs::msg::Quaternion msg;
+
+//   if (json.contains("w")) {
+//     msg.w = json["w"];
+//   }
+
+//   if (json.contains("x")) {
+//     msg.x = json["x"];
+//   }
+//   if (json.contains("y")) {
+//     msg.y = json["y"];
+//   }
+//   if (json.contains("z")) {
+//     msg.z = json["z"];
+//   }
+
+//   return msg;
+// }
+
+// nlohmann::json fromMsg(
+//   const geometry_msgs::msg::Polygon & ros_msg){
+
+//   nlohmann::json json;
+
+//   json["points"] = nlohmann::json::array();
+//   for (auto point : ros_msg.points) {
+//     json["points"].push_back(fromMsg(point));
+//   }
+
+//   return json;
+// }
+}
+
+
+namespace builtin_interfaces::msg{
+void to_json(nlohmann::json& j,
+  const builtin_interfaces::msg::Time & ros_msg){
+
+  j = nlohmann::json{
+    {"sec", ros_msg.sec},
+    {"nanosec", ros_msg.nanosec}
+  };
+}
+}
+
 namespace ateam_ui_backend_node::message_conversions
 {
 
@@ -36,25 +243,51 @@ nlohmann::json fromMsg(
 
     json["timestamp"] = fromMsg(ros_msg.current_time);
 
-    json["field"] = fromMsg(ros_msg.field);
-    json["referee_info"] = fromMsg(ros_msg.referee_info);
+    // json["field"] = fromMsg(ros_msg.field);
+    // json["referee_info"] = fromMsg(ros_msg.referee_info);
 
     json["balls"] = nlohmann::json::array();
     for (auto ball : ros_msg.balls) {
       json["balls"].push_back(fromMsg(ball));
     }
 
-    json["our_robots"] = nlohmann::json::array();
-    for (auto robot : ros_msg.our_robots) {
-      json["our_robots"].push_back(fromMsg(robot));
+    // json["our_robots"] = nlohmann::json::array();
+    // for (auto robot : ros_msg.our_robots) {
+    //   json["our_robots"].push_back(fromMsg(robot));
+    // }
+
+    // json["their_robots"] = nlohmann::json::array();
+    // for (auto robot : ros_msg.their_robots) {
+    //   json["their_robots"].push_back(fromMsg(robot));
+    // }
+
+    json["robots"] = nlohmann::json::array();
+    for (const auto robot : ros_msg.our_robots) {
+      json["robots"].push_back(robot.pose.position.x);
+      json["robots"].push_back(robot.pose.position.y);
+      json["robots"].push_back(robot.pose.position.z);
+      json["robots"].push_back(robot.pose.orientation.z);
+      json["robots"].push_back(robot.twist.linear.x);
+      json["robots"].push_back(robot.twist.linear.z);
+      json["robots"].push_back(robot.twist.angular.z);
+      // json["robots"].push_back(robot.radio_connected);
+      json["robots"].push_back(1.0);
+      json["robots"].push_back((double) robot.visible);
+    }
+    for (const auto robot : ros_msg.their_robots) {
+      json["robots"].push_back(robot.pose.position.x);
+      json["robots"].push_back(robot.pose.position.y);
+      json["robots"].push_back(robot.pose.position.z);
+      json["robots"].push_back(robot.pose.orientation.z);
+      json["robots"].push_back(robot.twist.linear.x);
+      json["robots"].push_back(robot.twist.linear.z);
+      json["robots"].push_back(robot.twist.angular.z);
+      // json["robots"].push_back(robot.radio_connected);
+      json["robots"].push_back(0.0);
+      json["robots"].push_back((double) robot.visible);
     }
 
-    json["their_robots"] = nlohmann::json::array();
-    for (auto robot : ros_msg.their_robots) {
-      json["their_robots"].push_back(fromMsg(robot));
-    }
-
-    json["behavior_executor_state"] = fromMsg(ros_msg.behavior_executor_state);
+    // json["behavior_executor_state"] = fromMsg(ros_msg.behavior_executor_state);
 
     json["ball_in_play"] = ros_msg.ball_in_play;
     json["double_touch_enforced"] = ros_msg.double_touch_enforced;

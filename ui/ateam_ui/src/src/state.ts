@@ -1,11 +1,11 @@
-import ROSLIB from "roslib";
 import { Team, TeamColor } from "@/team";
 import { Referee } from "@/referee";
 import { Ball } from "@/ball";
 import { Field } from "@/field";
 import { AIState } from "@/AI";
 import { Play } from "@/play";
-import { BackendManager, MessageType } from "./backendManager";
+import { BackendManager, MessageType } from "@/backendManager";
+import { HistoryManager } from "@/history"
 import * as PIXI from "pixi.js";
 
 export class RenderConfig {
@@ -14,16 +14,16 @@ export class RenderConfig {
 }
 
 export class WorldState {
-    teamName: string;
+    teamName: string | number;
     team: TeamColor;
     teams: Map<TeamColor, Team> = new Map<TeamColor, Team>;
     ball: Ball;
     field: Field;
     referee: Referee;
     ai: AIState;
-    plays: Map<string, Play> = new Map<string, Play>;
-    selectedPlayName: string = null;
-    overridePlay: string;
+    plays: Map<string, Play> | number[] = new Map<string, Play>;
+    selectedPlayName: string | number = null;
+    overridePlay: string | number;
     ball_in_play: boolean;
     double_touch_enforced: boolean;
     double_touch_id: number;
@@ -60,6 +60,16 @@ export class GraphicState {
     sslVisionContainers: Map<string, PIXI.Graphics> = new Map<string, PIXI.Graphics>;
 }
 
+export class StringCacheItem {
+    name: string;
+    enabled: boolean = false;
+
+    constructor(name: string, enabled: boolean = false) {
+        this.name = name;
+        this.enabled = enabled;
+    }
+}
+
 export class AppState {
     backendManager: BackendManager;
 
@@ -70,10 +80,11 @@ export class AppState {
     realtimeWorld: WorldState; // World that is constantly kept up to date by ROS callbacks
     world: WorldState; // World to be displayed, can be set to a world state in the past history buffer
 
-    worldHistory: WorldState[] = []; // Treated as a circular buffer
-    historyEndIndex: number = -1; // Index of the last element of circular buffer
-    selectedHistoryFrame: number = -1; // Goes from 0 to length of the history buffer linearly, not using the circular buffer index system.
-    historyReplayIsPaused: boolean = true;
+    playNameCache: string[] = [];
+    overlayNamespaceCache: StringCacheItem[] = [];
+    overlayNameCache: StringCacheItem[] = [];
+
+    historyManager: HistoryManager;
 
     // TODO: Add ROS params for these
     sim: boolean = true;
@@ -97,6 +108,7 @@ export class AppState {
         this.realtimeWorld = new WorldState();
         this.world = this.realtimeWorld;
 
+        this.historyManager = new HistoryManager();
         this.lastTimeReceivedKenobi = Date.now();
     }
 
@@ -105,20 +117,11 @@ export class AppState {
     }
 
     updateHistory(): void {
-        // Only store history while we are unpausued
-        if (this.selectedHistoryFrame == -1) {
-            this.historyEndIndex++;
-            if (this.worldHistory.length < 100000) {
-                // @ts-ignore
-                this.worldHistory.push(structuredClone(this.realtimeWorld.__v_raw));
-            } else {
-                if (this.historyEndIndex >= this.worldHistory.length) {
-                    this.historyEndIndex = 0;
-                }
-                // @ts-ignore
-                this.worldHistory[this.historyEndIndex] = structuredClone(this.realtimeWorld.__v_raw);
-            }
-        }
+        this.historyManager.updateHistory(this);
+    }
+
+    updateBagHistory(): void {
+        this.historyManager.updateBagHistory(this);
     }
 
     setGoalie(goalieId: number): void {

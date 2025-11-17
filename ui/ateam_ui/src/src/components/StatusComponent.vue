@@ -1,7 +1,7 @@
 <template>
     <v-col style="max-width: 11vw; min-width: 11vw">
         <v-card variant="outlined" class="mb-4 pl-4 pt-3 pb-1 justify-space-around"
-            v-for="robot of state.world.teams.get(state.world.team).robots.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" 
+            v-for="robot of (state.world.teams.get(state.world.team).robots as Robot[]).filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" 
             @click.left.stop="state.setJoystickRobot(robot.id)"
             @contextmenu.prevent="changeDetailedStatusMenu(robot)"
         >
@@ -13,7 +13,7 @@
                     <v-tooltip activator="parent" location="end">
                         {{batteryLevel(robot)}}
                     </v-tooltip>
-                    <v-icon :icon="batteryIcon(robot.status.battery_percent)" class="mx-0 pl-1 justify-center" size="small"/>
+                   <!-- <v-icon :icon="batteryIcon(robot.status.battery_percent)" class="mx-0 pl-1 justify-center" size="small"/> -->
                 </v-btn>
             </v-row>
 
@@ -155,6 +155,8 @@ export default {
                 ctx.closePath();
                 ctx.fill();
             }
+
+            return; // TODO: FIX THIS
 
             // Generate Ball Sense indicator
             if (robot.status.breakbeam_ball_detected) {

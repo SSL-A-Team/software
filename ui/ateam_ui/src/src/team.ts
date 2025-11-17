@@ -32,10 +32,10 @@ export class TeamInfo {
 }
 
 export class Team {
-    name: string;
+    name: string | number;
     color: TeamColor;
     defending: number; // +1 or -1 for defending positive or negative field coordinates
-    robots: Robot[];
+    robots: Robot[] | number[];
 
     //TODO: figure out how to store the current DAG(t) or whatever play structure we use
 
@@ -43,7 +43,7 @@ export class Team {
         this.color = color;
         this.defending = defending;
 
-        this.robots = [];
+        this.robots = [] as Robot[];
 
         // initialize robots
         const numVisible = 11;
@@ -63,7 +63,7 @@ export class Team {
                     w: this.defending > 0 ? 0 : 1
                 }
             })
-        
+
             this.robots.push(new Robot(i, visible, this.color, pose));
         }
     }

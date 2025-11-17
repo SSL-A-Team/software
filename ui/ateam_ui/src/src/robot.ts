@@ -1,6 +1,8 @@
 import { TeamColor } from "@/team";
 import { RenderConfig } from "@/state";
+import ROSLIB from "roslib";
 import * as PIXI from "pixi.js";
+import { compressedArrayToPlayMap } from "./play";
 
 // Types used for robot data including the feedback status
 
@@ -58,7 +60,7 @@ export class Robot {
     twist: Twist;
     accel: Accel;
 
-    twist_body: Twist;
+    // twist_body: Twist;
 
     visible: boolean;
 

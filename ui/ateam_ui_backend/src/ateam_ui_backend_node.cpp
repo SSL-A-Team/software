@@ -19,7 +19,10 @@
 // THE SOFTWARE.
 
 #include <rclcpp/rclcpp.hpp>
+#include "rclcpp/serialization.hpp"
 #include <rclcpp_components/register_node_macro.hpp>
+#include "rosbag2_transport/reader_writer_factory.hpp"
+
 #include <std_msgs/msg/string.hpp>
 
 #include <boost/beast.hpp>
@@ -67,6 +70,8 @@
 #include <ssl_league_msgs/msg/teleport_ball_command.hpp>
 #include <ssl_league_msgs/msg/teleport_robot_command.hpp>
 
+#include <visualization_msgs/msg/marker_array.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 
 namespace ateam_ui_backend_node
 {
@@ -97,8 +102,20 @@ public:
     do_read();
   }
 
+  void send(const std::vector<uint8_t> bytes) {
+    if (ws_.is_open()) {
+      ws_.binary(true);
+      beast::error_code ec;
+      ws_.write(asio::buffer(bytes.data(), bytes.size()), ec);
+      if (ec) {
+        std::cerr << "WebSocket write failed: " << ec.message() << "\n";
+      }
+    }
+  }
+
   void send(const std::string& message) {
     if (ws_.is_open()) {
+      ws_.binary(false);
       beast::error_code ec;
       ws_.write(asio::buffer(message), ec);
       if (ec) {
@@ -166,66 +183,34 @@ public:
         ioc_.run();
     });
 
-    // Kenobi World and required Susbcriptions
-    world_subscription_ =
-      create_subscription<ateam_msgs::msg::World>(
-      "kenobi_node/world",
-      10,
-      std::bind(&AteamUIBackendNode::world_callback, this, std::placeholders::_1));
-
-    playbook_subscription_ =
-      create_subscription<ateam_msgs::msg::PlaybookState>(
-      "kenobi_node/playbook_state",
-      10,
-      std::bind(&AteamUIBackendNode::playbook_callback, this, std::placeholders::_1));
-
-    referee_subscription_ =
-      create_subscription<ssl_league_msgs::msg::Referee>(
-      "/referee_messages",
-      10,
-      std::bind(&AteamUIBackendNode::referee_callback, this, std::placeholders::_1));
-
-    playinfo_subscription_ =
-      create_subscription<ateam_msgs::msg::PlayInfo>(
-      "/play_info",
-      10,
-      std::bind(&AteamUIBackendNode::playinfo_callback, this, std::placeholders::_1));
-
-    overlay_subscription_ =
-      create_subscription<ateam_msgs::msg::OverlayArray>(
-      "/overlays",
-      10,
-      std::bind(&AteamUIBackendNode::overlay_callback, this, std::placeholders::_1));
-
-
-    // Alternate world status subscriptions
-
-    field_subscription_ =
-      create_subscription<ateam_msgs::msg::FieldInfo>(
-      "/field",
-      10,
-      std::bind(&AteamUIBackendNode::field_callback, this, std::placeholders::_1));
+    enable_subscribers();
 
     /*
+    ball_subscription_ =
+      create_subscription<ateam_msgs::msg::BallState>(
+      "/ball",
+      10,
+      std::bind(&AteamUIBackendNode::ball_state_callback, this, std::placeholders::_1));
+
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
       blue_robots_subscriptions_,
       Topics::kBlueTeamRobotPrefix,
       10,
-      &KenobiNode::blue_robot_state_callback,
+      &AteamUIBackendNode::blue_robot_state_callback,
       this);
 
     create_indexed_subscribers<ateam_msgs::msg::RobotState>(
       yellow_robots_subscriptions_,
       Topics::kYellowTeamRobotPrefix,
       10,
-      &KenobiNode::yellow_robot_state_callback,
+      &AteamUIBackendNode::yellow_robot_state_callback,
       this);
 
     create_indexed_subscribers<ateam_msgs::msg::RobotFeedback>(
       robot_feedback_subscriptions_,
       Topics::kRobotFeedbackPrefix,
       10,
-      &KenobiNode::robot_feedback_callback,
+      &AteamUIBackendNode::robot_feedback_callback,
       this);
     */
 
@@ -252,6 +237,10 @@ public:
     send_reboot_kenobi_request_client_ =
       create_client<std_srvs::srv::Trigger>("/strike_him_down");  
 
+    // marker publisher
+    marker_pub_ = create_publisher<visualization_msgs::msg::MarkerArray>("world_markers", 
+      rclcpp::SystemDefaultsQoS());
+
     timer_ = create_wall_timer(10ms, std::bind(&AteamUIBackendNode::send_latest_message, this));
   }
 
@@ -268,6 +257,11 @@ private:
   nlohmann::json json_;
   std::optional<std::string> latest_msg_;
   std::mutex json_mutex_;
+
+  std::vector<std::string> string_list_;
+
+  bool shutting_down_ = false;
+  bool loading_bag_file_ = false;
 
   // Boost.Asio / WebSocket
   asio::io_context ioc_;
@@ -317,6 +311,60 @@ private:
   rclcpp::Client<ateam_radio_msgs::srv::SendRobotPowerRequest>::SharedPtr send_robot_power_request_client_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr send_reboot_kenobi_request_client_;
 
+  // Publishers
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
+
+  void enable_subscribers() {
+    // Kenobi World and required Susbcriptions
+    world_subscription_ =
+      create_subscription<ateam_msgs::msg::World>(
+      "kenobi_node/world",
+      10,
+      std::bind(&AteamUIBackendNode::world_callback, this, std::placeholders::_1));
+
+    playbook_subscription_ =
+      create_subscription<ateam_msgs::msg::PlaybookState>(
+      "kenobi_node/playbook_state",
+      10,
+      std::bind(&AteamUIBackendNode::playbook_callback, this, std::placeholders::_1));
+
+    referee_subscription_ =
+      create_subscription<ssl_league_msgs::msg::Referee>(
+      "/referee_messages",
+      10,
+      std::bind(&AteamUIBackendNode::referee_callback, this, std::placeholders::_1));
+
+    playinfo_subscription_ =
+      create_subscription<ateam_msgs::msg::PlayInfo>(
+      "/play_info",
+      10,
+      std::bind(&AteamUIBackendNode::playinfo_callback, this, std::placeholders::_1));
+
+    overlay_subscription_ =
+      create_subscription<ateam_msgs::msg::OverlayArray>(
+      "/overlays",
+      10,
+      std::bind(&AteamUIBackendNode::overlay_callback, this, std::placeholders::_1));
+
+
+    // Alternate world status subscriptions
+
+    field_subscription_ =
+      create_subscription<ateam_msgs::msg::FieldInfo>(
+      "/field",
+      10,
+      std::bind(&AteamUIBackendNode::field_callback, this, std::placeholders::_1));
+  }
+
+  void disable_subscribers() {
+    world_subscription_.reset();
+    playbook_subscription_.reset();
+    referee_subscription_.reset();
+    playinfo_subscription_.reset();
+    overlay_subscription_.reset();
+    field_subscription_.reset();
+  }
+
   void do_accept() {
     acceptor_.async_accept([this](beast::error_code ec, tcp::socket socket) {
       if (!ec) {
@@ -333,6 +381,7 @@ private:
 
         session->start();
       }
+      // load_bag("/home/mwoodward/ateam_ws/test_bag");
       do_accept();  // Accept next client
     });
   }
@@ -357,6 +406,10 @@ private:
     nlohmann::json json_copy;
     {
       std::lock_guard<std::mutex> lock(json_mutex_);
+      if (json_["world"].is_null()) {
+        return;
+      }
+
       json_["world"]["team"] = color;
 
       json_copy = json_;
@@ -368,10 +421,12 @@ private:
       json_["responses"] = nlohmann::json::array();
     }
 
-    std::string json_dump = json_copy.dump();
+    // std::string json_dump = json_copy.dump();
+    std::vector<std::uint8_t> bytes = nlohmann::json::to_bson(json_copy);
     std::lock_guard<std::mutex> lock(sessions_mutex_);
     for (auto& session : sessions_) {
-      session->send(json_dump);
+      // session->send(json_dump);
+      session->send(bytes);
     }
   }
 
@@ -389,6 +444,7 @@ private:
         // RCLCPP_INFO(this->get_logger(), "CALLING setUseKenobiTopic");
         return;
       case MessageType::SetJoystickRobot:
+        load_bag("/home/mwoodward/ateam_ws/test_bag");
         if (json_msg.contains("robot_id")) {
           auto request = toSetJoystickRobotRequest(json_msg);
 
@@ -508,6 +564,7 @@ private:
 
   void shutdown() {
     {
+      shutting_down_ = true;
       std::lock_guard<std::mutex> lock(sessions_mutex_);
       for (auto& session : sessions_) {
         session->close();
@@ -527,6 +584,7 @@ private:
   {
     std::lock_guard<std::mutex> lock(json_mutex_);
     json_["world"] = fromMsg(world_msg);
+    // json_["world"] = world_msg;
   }
 
   void playbook_callback(
@@ -564,66 +622,259 @@ private:
     json_["field"] = fromMsg(field_msg);
   }
 
-  /*
   void blue_robot_state_callback(
-    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
+    const ateam_msgs::msg::RobotState robot_state_msg,
     int id)
   {
     std::lock_guard<std::mutex> lock(json_mutex_);
+
+    const auto our_color = game_controller_listener_.GetTeamColor();
+    if (our_color == ateam_common::TeamColor::Blue) {
+      json_["world"]["our_team"][id] = fromMsg(robot_state_msg);
+    } else if (our_color == ateam_common::TeamColor::Yellow) {
+      json_["world"]["their_team"][id] = fromMsg(robot_state_msg);
+    }
   }
 
   void yellow_robot_state_callback(
-    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
+    const ateam_msgs::msg::RobotState robot_state_msg,
     int id)
   {
     std::lock_guard<std::mutex> lock(json_mutex_);
+
+    const auto our_color = game_controller_listener_.GetTeamColor();
+    if (our_color == ateam_common::TeamColor::Yellow) {
+      json_["world"]["our_team"][id] = fromMsg(robot_state_msg);
+    } else if (our_color == ateam_common::TeamColor::Blue) {
+      json_["world"]["their_team"][id] = fromMsg(robot_state_msg);
+    }
   }
 
-  void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
+  void ball_state_callback(const ateam_msgs::msg::BallState ball_state_msg)
   {
     std::lock_guard<std::mutex> lock(json_mutex_);
-    json_["ball"] = fromMsg(ball_state_msg);
+    json_["world"]["ball"] = fromMsg(ball_state_msg);
   }
 
-  void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
-  {
-    std::lock_guard<std::mutex> lock(json_mutex_);
-    json_["field"] = fromMsg(field_msg);
+  void load_bag(std::string bag_path) {
+    disable_subscribers();
+    timer_->cancel();
+    loading_bag_file_ = true;
+
+    RCLCPP_INFO(get_logger(), "START LOADING BAG: '%s'", bag_path.c_str());
+
+    rosbag2_storage::StorageOptions storage_options;
+    storage_options.uri = bag_path;
+
+    const auto world_serialization = rclcpp::Serialization<ateam_msgs::msg::World>();
+    const auto playbook_serialization = rclcpp::Serialization<ateam_msgs::msg::PlaybookState>();
+    const auto referee_serialization = rclcpp::Serialization<ssl_league_msgs::msg::Referee>();
+    const auto playinfo_serialization = rclcpp::Serialization<ateam_msgs::msg::PlayInfo>();
+    const auto overlay_serialization = rclcpp::Serialization<ateam_msgs::msg::OverlayArray>();
+    const auto field_serialization = rclcpp::Serialization<ateam_msgs::msg::FieldInfo>();
+
+    const auto reader = rosbag2_transport::ReaderWriterFactory::make_reader(storage_options);
+
+    reader->open(storage_options);
+
+    const auto metadata = reader->get_metadata();
+    const double bag_length_s = std::round(metadata.duration.count() / (1e9));
+    const auto print_duration = std::chrono::milliseconds(1000);
+
+    auto time = std::chrono::steady_clock::now();
+    auto load_start_time = time;
+    long long bag_start_time = metadata.starting_time.time_since_epoch().count();
+    double prev_print_time = 0.0;
+    double prev_recv_time = 0.0;
+
+    int counter = 0;
+    while (reader->has_next()) {
+      if (shutting_down_) {
+        break;
+      }
+
+      rosbag2_storage::SerializedBagMessageSharedPtr msg = reader->read_next();
+      if (msg->topic_name == "/kenobi_node/world") {
+        rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
+        ateam_msgs::msg::World::SharedPtr world_msg = std::make_shared<ateam_msgs::msg::World>();
+        world_serialization.deserialize_message(&serialized_msg, world_msg.get());
+
+        world_callback(*world_msg);
+        send_latest_message();
+        // Trigger UI message send
+        // if (counter >= 1499) {
+        //   send_latest_message();
+        //   counter = 0;
+        // } else {
+        //   counter++;
+        // }
+      } else if (msg->topic_name == "/kenobi_node/playbook_state") {
+        rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
+        ateam_msgs::msg::PlaybookState::SharedPtr playbook_msg = std::make_shared<ateam_msgs::msg::PlaybookState>();
+        playbook_serialization.deserialize_message(&serialized_msg, playbook_msg.get());
+
+        // playbook_callback(*playbook_msg);
+      } else if (msg->topic_name == "/referee_messages") {
+        rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
+        ssl_league_msgs::msg::Referee::SharedPtr referee_msg = std::make_shared<ssl_league_msgs::msg::Referee>();
+        referee_serialization.deserialize_message(&serialized_msg, referee_msg.get());
+
+        // referee_callback(*referee_msg);
+      } else if (msg->topic_name == "/play_info") {
+        rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
+        ateam_msgs::msg::PlayInfo::SharedPtr playinfo_msg = std::make_shared<ateam_msgs::msg::PlayInfo>();
+        playinfo_serialization.deserialize_message(&serialized_msg, playinfo_msg.get());
+
+        // playinfo_callback(*playinfo_msg);
+      } else if (msg->topic_name == "/overlays") {
+        rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
+        ateam_msgs::msg::OverlayArray::SharedPtr overlay_msg = std::make_shared<ateam_msgs::msg::OverlayArray>();
+        overlay_serialization.deserialize_message(&serialized_msg, overlay_msg.get());
+
+        // overlay_callback(*overlay_msg);
+      } else if (msg->topic_name == "/field") {
+        rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
+        ateam_msgs::msg::FieldInfo::SharedPtr field_msg = std::make_shared<ateam_msgs::msg::FieldInfo>();
+        field_serialization.deserialize_message(&serialized_msg, field_msg.get());
+
+        // field_callback(*field_msg);
+      }
+
+      if (std::chrono::steady_clock::now() - time > print_duration) {
+        double bag_time_since_start = (msg->recv_timestamp - bag_start_time) / (1e9);
+        double bag_time_since_last_print = bag_time_since_start - prev_print_time;
+        // This assumes we are printing once every second
+
+        RCLCPP_INFO(get_logger(), "LOADING BAG: %.2f / %f: %.2fx realtime",
+          (msg->recv_timestamp - bag_start_time) / (1e9),
+          bag_length_s,
+          bag_time_since_last_print
+        );
+        RCLCPP_INFO(get_logger(), "string list length: %ld", string_list_.size());
+
+        prev_print_time = bag_time_since_start;
+        time = std::chrono::steady_clock::now();
+      }
+      prev_recv_time = (msg->recv_timestamp - bag_start_time) / (1e9);
+    }
+
+    if (!shutting_down_) {
+      RCLCPP_INFO(get_logger(), "FINISHED LOADING BAG: '%s'", bag_path.c_str());
+    }
+
+    double total_load_time = (std::chrono::steady_clock::now() - load_start_time).count() / (1e9);
+    RCLCPP_INFO(get_logger(), "Took %.2fs to load %fs: %.2fx realtime",
+      total_load_time,
+      prev_recv_time,
+      prev_recv_time / total_load_time
+    );
+
+    /*
+    RCLCPP_INFO(get_logger(), "final packet size: %ld", string_list_.back().size());
+    RCLCPP_INFO(get_logger(), "%s", string_list_.back().c_str());
+    long int total_size = 0;
+    for (std::string str : string_list_) {
+      total_size += str.size();
+    }
+    RCLCPP_INFO(get_logger(), "total combined packet size: %ld", total_size);
+    */
+
+
+
+    loading_bag_file_ = false;
+    enable_subscribers();
   }
 
-  void referee_callback(const ssl_league_msgs::msg::Referee::SharedPtr referee_msg)
-  {
-    std::lock_guard<std::mutex> lock(json_mutex_);
-    json_["referee"] = fromMsg(referee_msg);
+  void publish_marker_array(const ateam_msgs::msg::World & world_msg) {
+
+    auto arr = visualization_msgs::msg::MarkerArray();
+
+    auto ball = visualization_msgs::msg::Marker();
+    ball.ns = "ball";
+    ball.id = 1;
+    ball.type = 2; // sphere
+
+    ball.pose = world_msg.balls[0].pose;
+    ball.scale.x = 0.042;
+    ball.scale.y = 0.042;
+    ball.scale.z = 0.042;
+
+    ball.color.r = 1.0;
+    ball.color.g = 0.36;
+    ball.color.b = 0.0;
+    ball.color.a = 1.0;
+
+    arr.markers.push_back(ball);
+
+    const auto our_color = game_controller_listener_.GetTeamColor();
+
+    for (int i = 0; i < 16; ++i) {
+      const auto robot = world_msg.our_robots.at(i);
+
+      if (robot.visible) {
+        auto marker = visualization_msgs::msg::Marker();
+
+        marker.ns = "our_robots";
+        marker.id = i;
+        marker.type = 3; // cylinder
+
+        marker.pose = robot.pose;
+        marker.scale.x = 0.18;
+        marker.scale.y = 0.18;
+        marker.scale.z = 0.15;
+
+        if (our_color == ateam_common::TeamColor::Blue) {
+          marker.color.r = 0.0;
+          marker.color.g = 0.0;
+          marker.color.b = 1.0;
+          marker.color.a = 1.0;
+        } else {
+          marker.color.r = 1.0;
+          marker.color.g = 1.0;
+          marker.color.b = 0.0;
+          marker.color.a = 1.0;
+        }
+
+        arr.markers.push_back(marker);
+      }
+    }
+
+    for (int i = 0; i < 16; ++i) {
+      const auto robot = world_msg.their_robots.at(i);
+
+      if (robot.visible) {
+        auto marker = visualization_msgs::msg::Marker();
+
+        marker.ns = "their_robots";
+        marker.id = i;
+        marker.type = 3; // cylinder
+
+        marker.pose = robot.pose;
+        marker.scale.x = 0.18;
+        marker.scale.y = 0.18;
+        marker.scale.z = 0.15;
+
+        if (our_color == ateam_common::TeamColor::Yellow) {
+          marker.color.r = 0.0;
+          marker.color.g = 0.0;
+          marker.color.b = 1.0;
+          marker.color.a = 1.0;
+        } else {
+          marker.color.r = 1.0;
+          marker.color.g = 1.0;
+          marker.color.b = 0.0;
+          marker.color.a = 1.0;
+        }
+
+        arr.markers.push_back(marker);
+      }
+    }
+    marker_pub_->publish(arr);
   }
-
-  void ai_state_callback(const ateam_msgs::msg::PlayInfo::SharedPtr ai_state_msg)
-  {
-    std::lock_guard<std::mutex> lock(json_mutex_);
-    json_["ai"] = fromMsg(ai_state_msg);
-  }
-
-
-  */
 
   void reset_json_object() {
-    // Mimics a default WorldState typescript object
     json_ = {
-      {"world", {
-        {"teamName", "A-Team"},
-        {"team", "unkown"},
-        {"teams", {}},
-        {"ball", nullptr},
-        {"field", nullptr},
-        {"referee", nullptr},
-        {"overridePlay", ""},
-        {"ball_in_play", false},
-        {"double_touch_envored", false},
-        {"double_touch_id", -1},
-        {"timestamp", 0},
-        {"fps", 0},
-        }
-      },
+      {"world", nullptr},
       {"playbook", nullptr},
       {"referee", nullptr},
       {"play_info", nullptr},
@@ -631,28 +882,6 @@ private:
       {"field", nullptr},
       {"responses", nlohmann::json::array()}
     };
-
-    // Fill robot array
-    for (std::string color : {"blue", "yellow"}) {
-      for (int i = 0; i < 16; ++i) {
-        auto robot_json = message_conversions::fromMsg(ateam_msgs::msg::RobotState());
-        robot_json["id"] = i;
-        robot_json["team"] = color;
-        robot_json["visible"] = false;
-        robot_json["status"] = message_conversions::fromMsg(ateam_radio_msgs::msg::BasicTelemetry());
-
-        json_["world"]["teams"][color]["robots"][i] = robot_json;
-      }
-    }
-
-    json_["world"]["ball"] = message_conversions::fromMsg(ateam_msgs::msg::BallState());
-    json_["world"]["field"] = message_conversions::fromMsg(ateam_msgs::msg::FieldInfo());
-
-    auto timestamp = rclcpp::Time(
-    std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::steady_clock::now().time_since_epoch()).count());
-
-    json_["world"]["timestamp"] = message_conversions::fromMsg(timestamp);
   }
 };
 } // namespace ateam_ui_backend_node

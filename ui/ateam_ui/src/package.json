@@ -19,7 +19,13 @@
     "roslib": "^1.3.0",
     "vue": "^3.3.2",
     "vuetify": "^3.2.4",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "@mcap/core": "^2.1.7",
+    "@mcap/browser": "^1.0.2",
+    "@foxglove/rosmsg2-serialization": "^3.0.2",
+    "@foxglove/rosmsg": "^5.0.4",
+    "@foxglove/ros2idl-parser": "^0.3.5",
+    "bson": "^6.10.4"
   },
   "devDependencies": {
     "@babel/types": "^7.21.5",

@@ -9,6 +9,7 @@ import * as PIXI from 'pixi.js';
 import { Viewport } from "pixi-viewport";
 import { AppState } from "@/state";
 import { TeamColor } from "@/team";
+import { Robot } from "@/robot";
 import { initializePixi, updateField, drawFieldBoundary, drawFieldLines, drawSideIgnoreOverlay, drawRobots } from "@/field";
 
 export default {
@@ -210,7 +211,7 @@ export default {
                         viewport.pause = false;
                         state.draggedRobot = null;
 
-                        const robotObj = robotArray[i];
+                        const robotObj = robotArray[i] as Robot;
                         let pos = new PIXI.Point();
                         viewport.toLocal(event.global, null, pos);
 

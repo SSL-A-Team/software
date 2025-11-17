@@ -93,7 +93,7 @@
             </v-list-item>
         </v-list>
     </v-menu>
-
+    <v-file-input label="File input" @change="loadBagFile"></v-file-input>
 </template>
 
 <script lang="ts">
@@ -175,6 +175,11 @@ export default {
                 clearTimeout(this.timeoutId);
             }
         },
+        loadBagFile: function(event) {
+            if (event.target.files) {
+                this.state.backendManager.loadBagFile(this.state, event.target.files[0])
+            }
+        }
     }
 }
 </script>
