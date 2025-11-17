@@ -1,6 +1,9 @@
 #ifndef FILTERED_ROBOT_HPP_ 
 #define FILTERED_ROBOT_HPP_ 
 
+#include "kalman/ExtendedKalmanFilter.hpp"
+#include "filter_types.hpp"
+
 #include <chrono>
 #include <Eigen/Core>
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
@@ -22,15 +25,13 @@ class FilteredRobot {
         double maxDistance = -1.0;
         std::chrono::time_point timestamp; 
         std::chrono::time_point last_visible_timestamp;
-        // Unless otherwise stated, below is in m and s
-        Eigen::Vector3<double> pos;
-        Eigen::Vector3<double> vel;
-        Eigen::Vector3<double> acc;
-        double orientation; // rads
-        double angularVel; // rads/sec
         double height; // in m
-        // X, Y, Angle
-        ExtendedKalmanFilter<Kalman::Vector3::double> posFilterXYW;
+        // Use the below filtered values when getting X/Y/w (theta) and
+        // velocities
+        // X, Y
+        Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
+        // Theta
+        Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
 }
 
 #endif  // FILTERED_ROBOT_HPP_
