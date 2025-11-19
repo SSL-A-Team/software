@@ -4,3 +4,6 @@
 [submodule "radio/ateam_radio_msgs/software-communication"]
 	path = radio/ateam_radio_msgs/software-communication
 	url = https://github.com/SSL-A-Team/software-communication.git
+[submodule "motion/ateam_path_planning/controls"]
+	path = motion/ateam_path_planning/ateam_controls
+	url = https://github.com/SSL-A-Team/controls.git

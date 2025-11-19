@@ -7,6 +7,11 @@ find_package(ateam_geometry REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(ateam_game_state REQUIRED)
 
+add_subdirectory(ateam_controls)
+if(NOT TARGET ateam_controls)
+  message(FATAL_ERROR "Failed to build or find ateam_controls library")
+endif()
+
 add_library(${PROJECT_NAME} SHARED
   src/planner.cpp
 )
@@ -20,6 +25,9 @@ ament_target_dependencies(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(${PROJECT_NAME}
+  ateam_controls
 )
 
 install(

@@ -23,6 +23,7 @@
 #include <numeric>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/creation_helpers.hpp>
+#include <ateam_controls/ateam_controls.h>
 
 namespace ateam_path_planning
 {
