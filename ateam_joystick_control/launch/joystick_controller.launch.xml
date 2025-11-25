@@ -9,6 +9,7 @@
     <param from="$(var joy_config_file)"/>
     <param from="$(find-pkg-share ateam_joystick_control)/config/common_params.yaml"/>
     <param name="command_topic_template" value="/robot_motion_commands/robot{}" />
+    <param name="robot_id" value="2" />
     <remap from="~/joy" to="/joy"/>
   </node>
 </launch>
