@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "WSL",
+            "compilerPath": "/usr/bin/gcc",
+            "includePath": [
+                "${workspaceFolder}/install/**",
+                "/opt/ros/jazzy/include/**"
+            ],
+            "compileCommands": "${workspaceFolder}/compile_commands.json",
+            "intelliSenseMode": "linux-gcc-x64",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17"
+        }
+    ],
+    "version": 4
+}
