@@ -3,6 +3,7 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/vision_state_robot.hpp>
+#include <ateam_controls/ateam_controls.h>
 
 class BangBangNode : public rclcpp::Node
 {
@@ -55,6 +56,14 @@ private:
         // Convert to roll, pitch, yaw
         double roll, pitch, yaw;
         tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+        GlobalState_t current_state = {x, y, yaw, 0.0, 0.0, 0.0};
+        GlobalState_t target_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
+        // ateam_controls_add();
+        BangBangTraj3D_t traj = ateam_controls_compute_optimal_bang_bang_traj_3d(current_state, target_state);
+        traj.x_traj.t1 += 1.0;
+        // ateam_controls_compute_bang_bang_traj_3d_state_at_t()
 
         ateam_msgs::msg::RobotMotionCommand msg;
         msg.twist.linear.x = 0;
