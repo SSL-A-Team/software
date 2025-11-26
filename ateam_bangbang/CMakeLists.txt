@@ -25,6 +25,10 @@ add_executable(bangbang_node
   src/bangbang_node.cpp
 )
 
+target_include_directories(bangbang_node PRIVATE
+  ${ateam_controls_INCLUDE_DIRS}
+)
+
 ament_target_dependencies(bangbang_node
   "rclcpp"
   "rclcpp_components"
@@ -39,7 +43,10 @@ ament_target_dependencies(bangbang_node
   "OMPL"
   "angles"
   nlohmann_json
-  ateam_controls
+)
+
+target_link_libraries(bangbang_node
+  "${ateam_controls_DIR}/../../../lib/libateam_controls_c.a"
 )
 
 install(TARGETS
