@@ -22,6 +22,7 @@
   <depend>ompl</depend>
   <depend>nlohmann-json-dev</depend>
   <depend>angles</depend>
+  <depend>ateam_controls</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

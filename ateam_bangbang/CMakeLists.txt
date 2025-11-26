@@ -19,20 +19,7 @@ find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
 find_package(nlohmann_json REQUIRED)
-
-# --- ADD EXTERNAL DEPENDENCY ---
-include(FetchContent)
-
-FetchContent_Declare(
-  ateam_controls
-  # Use SOURCE_DIR to point to the local folder containing the library's CMakeLists.txt
-  # This example assumes ateam_controls is a sibling folder in src/
-  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../controls"
-)
-
-# This downloads/configures the Rust/C wrapper project
-FetchContent_MakeAvailable(ateam_controls)
-# -------------------------------
+find_package(ateam_controls REQUIRED)
 
 add_executable(bangbang_node
   src/bangbang_node.cpp
@@ -52,12 +39,8 @@ ament_target_dependencies(bangbang_node
   "OMPL"
   "angles"
   nlohmann_json
+  ateam_controls
 )
-
-# Link the non-ROS library
-# Note: Ensure 'ateam_controls_c' matches the library name defined 
-# in the external project's CMakeLists.txt
-target_link_libraries(bangbang_node ateam_controls)
 
 install(TARGETS
   bangbang_node
