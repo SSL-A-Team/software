@@ -34,6 +34,7 @@
 #include <ateam_radio_msgs/srv/send_robot_power_request.hpp>
 #include <ateam_radio_msgs/conversion.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
@@ -72,6 +73,12 @@ public:
         {"wheel_torque", false}
     });
 
+    ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
+      vision_state_subscriptions_,
+      "~/yellow_team/robot",
+      rclcpp::SystemDefaultsQoS(),
+      &RadioBridgeNode::VisionStateCallback,
+      this);
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
       "~/robot_motion_commands/robot",
@@ -121,11 +128,15 @@ private:
   const std::chrono::milliseconds timeout_threshold_;
   const std::chrono::milliseconds command_timeout_threshold_;
   std::mutex mutex_;
+  std::array<ateam_msgs::msg::VisionStateRobot, 16> vision_states_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
+  std::array<std::chrono::steady_clock::time_point, 16> vision_state_timestamps_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
   ateam_common::GameControllerListener game_controller_listener_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
+    16> vision_state_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
@@ -147,6 +158,19 @@ private:
       RCLCPP_WARN(get_logger(), "Radio bridge is replacing NaNs!");
       val = 0.0;
     }
+  }
+
+  void VisionStateCallback(
+    const ateam_msgs::msg::VisionStateRobot::SharedPtr state_msg,
+    int robot_id)
+  {
+    const std::lock_guard lock(mutex_);
+    vision_states_[robot_id] = *state_msg;
+    auto & state = vision_states_[robot_id];
+    ReplaceNanWithZero(state.twist.linear.x);
+    ReplaceNanWithZero(state.twist.linear.y);
+    ReplaceNanWithZero(state.twist.angular.z);
+    vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
   void MotionCommandCallback(
@@ -238,6 +262,13 @@ private:
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.play_song = 0;
+      uint64_t micros = std::chrono::duration_cast<std::chrono::microseconds>(
+        vision_state_timestamps_[id].time_since_epoch()).count();
+      control_msg.last_vision_update_us_hi = static_cast<uint32_t>(micros >> 32);
+      control_msg.last_vision_update_us_lo = static_cast<uint32_t>(micros & 0xFFFFFFFFu);
+      control_msg.vision_x = 0.0;
+      control_msg.vision_y = 0.0;
+      control_msg.vision_z = 0.0;
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
