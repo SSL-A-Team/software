@@ -61,14 +61,14 @@ private:
         GlobalState_t target_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
         // ateam_controls_add();
+        float dt = 0.1;  // Because instantaneous velocity change can't be achieved, lead the state by dt
         BangBangTraj3D_t traj = ateam_controls_compute_optimal_bang_bang_traj_3d(current_state, target_state);
-        traj.x_traj.t1 += 1.0;
-        // ateam_controls_compute_bang_bang_traj_3d_state_at_t()
+        GlobalState_t next_step_state = ateam_controls_compute_bang_bang_traj_3d_state_at_t(traj, current_state, 0.0, dt);
 
         ateam_msgs::msg::RobotMotionCommand msg;
-        msg.twist.linear.x = 0;
-        msg.twist.linear.y = 0;
-        msg.twist.angular.z = 0;
+        msg.twist.linear.x = next_step_state.xd;
+        msg.twist.linear.y = next_step_state.yd;
+        msg.twist.angular.z = next_step_state.zd;
 
         pub_->publish(msg);
     }
