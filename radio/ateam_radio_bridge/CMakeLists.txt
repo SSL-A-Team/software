@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(tf2 REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
@@ -24,6 +25,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC src)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
+  tf2
   ateam_radio_msgs
   ateam_msgs
   ateam_common

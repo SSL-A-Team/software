@@ -26,6 +26,8 @@
 #include <thread>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
@@ -167,9 +169,13 @@ private:
     const std::lock_guard lock(mutex_);
     vision_states_[robot_id] = *state_msg;
     auto & state = vision_states_[robot_id];
-    ReplaceNanWithZero(state.twist.linear.x);
-    ReplaceNanWithZero(state.twist.linear.y);
-    ReplaceNanWithZero(state.twist.angular.z);
+    ReplaceNanWithZero(state.pose.position.x);
+    ReplaceNanWithZero(state.pose.position.y);
+    ReplaceNanWithZero(state.pose.position.z);
+    ReplaceNanWithZero(state.pose.orientation.x);
+    ReplaceNanWithZero(state.pose.orientation.y);
+    ReplaceNanWithZero(state.pose.orientation.z);
+    ReplaceNanWithZero(state.pose.orientation.w);
     vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
@@ -262,13 +268,28 @@ private:
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.play_song = 0;
+      // TODO: figure out a time reference that will be meaningful for the robot, time since last time sync?
       uint64_t micros = std::chrono::duration_cast<std::chrono::microseconds>(
-        vision_state_timestamps_[id].time_since_epoch()).count();
+        vision_state_timestamps_[id].time_since_epoch()).count();  // will be zero if no vision update has been received yet
       control_msg.last_vision_update_us_hi = static_cast<uint32_t>(micros >> 32);
       control_msg.last_vision_update_us_lo = static_cast<uint32_t>(micros & 0xFFFFFFFFu);
-      control_msg.vision_x = 0.0;
-      control_msg.vision_y = 0.0;
-      control_msg.vision_z = 0.0;
+      ateam_msgs::msg::VisionStateRobot vision_state = vision_states_[id];
+      double roll, pitch, yaw = 0.0;
+      if (micros != 0) {
+        // Pose has been updated with a valid quaternion
+        // Convert to tf2 quaternion
+        tf2::Quaternion q(
+            vision_state.pose.orientation.x,
+            vision_state.pose.orientation.y,
+            vision_state.pose.orientation.z,
+            vision_state.pose.orientation.w
+        );
+        // Convert to roll, pitch, yaw
+        tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+      }
+      control_msg.vision_x = vision_state.pose.position.x;
+      control_msg.vision_y = vision_state.pose.position.y;
+      control_msg.vision_z = yaw;
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
