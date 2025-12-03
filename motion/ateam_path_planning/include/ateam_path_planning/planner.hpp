@@ -42,11 +42,10 @@ public:
     const ateam_game_state::World & world, const std::vector<Obstacle> & global_obstacles,
     const std::array<std::vector<Obstacle>, 16> & per_bot_obstacles);
 
-  std::optional<TrajectorySpline> PlanPath(
-    const Pose & start_pose, const ateam_geometry::Vector & start_velocity,
-    const Pose & target, const std::vector<Obstacle> & obstacles);
-
 private:
+  std::optional<TrajectorySpline> PlanPath(
+    const ateam_game_state::Robot & robot, const Pose & target,
+    const std::vector<Obstacle> & obstacles);
 };
 }  // namespace ateam_path_planning
 

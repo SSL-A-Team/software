@@ -18,23 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
-#define ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
-
-#include <vector>
-#include <ateam_geometry/types.hpp>
+#include <ateam_controls/ateam_controls.h>
+#include <ateam_game_state/robot.hpp>
 #include "pose.hpp"
 
 namespace ateam_path_planning
 {
-struct TrajectorySplineSegment {
-  double time;
-  Pose target;
-};
 
-struct TrajectorySpline {
-  std::vector<TrajectorySplineSegment> segments;
-};
+RigidBodyState RigidBodyStateFromRobot(const ateam_game_state::Robot & robot);
+
+RigidBodyState RigidBodyStateFromPose(const Pose & pose);
+
+double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory);
+
 }  // namespace ateam_path_planning
-
-#endif  // ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_

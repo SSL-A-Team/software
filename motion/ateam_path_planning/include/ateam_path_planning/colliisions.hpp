@@ -18,23 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
-#define ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
+#include "obstacle.hpp"
+#include <ateam_controls/ateam_controls.h>
 
-#include <vector>
-#include <ateam_geometry/types.hpp>
-#include "pose.hpp"
-
-namespace ateam_path_planning
+namespace ateam_path_planning::collisions
 {
-struct TrajectorySplineSegment {
-  double time;
-  Pose target;
-};
 
-struct TrajectorySpline {
-  std::vector<TrajectorySplineSegment> segments;
-};
-}  // namespace ateam_path_planning
+std::optional<double> TimeToCollision(
+  const BangBangTraj3D & trajectory,
+  const std::vector<Obstacle> & obstacles);
 
-#endif  // ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
+}  // namespace ateam_path_planning::collisions
