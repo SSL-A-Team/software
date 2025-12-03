@@ -22,6 +22,8 @@
 
 #include "camera.hpp"
 
+namespace new_super_vision {
+
 class VisionFilterNode : public rclcpp::Node
 {
     // Important things this needs to do, which could be broken out into objects that this holds 
@@ -71,3 +73,5 @@ class VisionFilterNode : public rclcpp::Node
             // Similar to the publish() method in TIGERs
         }
 }
+
+} // namespace new_super_vision

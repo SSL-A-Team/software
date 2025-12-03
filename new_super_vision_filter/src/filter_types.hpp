@@ -18,6 +18,14 @@ class PosMeasurement : public Kalman::Vector<double, 2>
 {
 public:
     KALMAN_VECTOR(PosMeasurement, double, 2)
+
+    double x() const {
+        return (*this)[0];
+    }
+    
+    double y() const {
+        return (*this)[1];
+    }
 };
 
 /*
@@ -49,14 +57,11 @@ public:
     Curently assumes no measurement noise
 */
 class PosMeasurementModel
-    : public Kalman::LinearizedMeasurementModel<PosState, PosMeasurement>
+    : public Kalman::LinearizedMeasurementModel<PosState, PosMeasurement, StandardBase>
 {
 public:
-    using MeasurementType = PosMeasurement;
-    using StateType = PosState;
-
     // h(x) = predicted measurement
-    MeasurementType h(const StateType& x) const override
+    PosMeasurement h(const PosState& x) const 
     {
         PosMeasurement z;
         z[0] = x[0]; // px
@@ -65,20 +70,15 @@ public:
     }
 
     // Jacobian H = ∂h/∂x
-    void updateJacobians(const StateType& x) override
+protected:
+    void updateJacobians(const PosState& x)
     {
-        Jacobian<Measurement, State> H;
-        H.setZero();
+        this->H.setZero();
 
-        H(0, 0) = 1; // dz_px / d_px
-        H(1, 1) = 1; // dz_py / d_py
-
-        return H;
+        this->H(0, 0) = 1; // dz_px / d_px
+        this->H(1, 1) = 1; // dz_py / d_py
     }
 };
-
-// TODO (Christian): Create SystemModel type similar to the above - based
-// on LinearizedSystemModel
 
 /*
     Angular position measurement (in rad)
@@ -104,7 +104,7 @@ public:
     KALMAN_VECTOR(State, double, 2)
 
     static constexpr size_t PW = 0;
-    static constexpr size_t VW = 2;
+    static constexpr size_t VW = 1;
 };
 
 /*
@@ -113,14 +113,11 @@ public:
     Currently assumes no measurement noise
 */
 class AngleMeasurementModel
-    : public Kalman::LinearizedMeasurementModel<AngleState, AngleMeasurement>
+    : public Kalman::LinearizedMeasurementModel<AngleState, AngleMeasurement, StandardBase>
 {
 public:
-    using MeasurementType = AngleMeasurement;
-    using StateType = AngleState;
-
     // h(x) = predicted measurement
-    MeasurementType h(const StateType& x) const override
+    AngleMeasurement h(const AngleState& x) const override
     {
         AngleMeasurement z;
         z[0] = x[0]; // pw
@@ -130,12 +127,8 @@ public:
     // Jacobian H = ∂h/∂x
     void updateJacobians(const StateType& x) override
     {
-        Jacobian<Measurement, State> H;
-        H.setZero();
-
-        H(0, 0) = 1; // dz_px / d_px
-
-        return H;
+        this->H.setZero();
+        this->H(0, 0) = 1; // dz_px / d_px
     }
 };
 

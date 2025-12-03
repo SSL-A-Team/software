@@ -7,9 +7,31 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(ateam_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
+
+add_library(${PROJECT_NAME} SHARED 
+  src/vision_filter_node.cpp
+  src/camera.cpp
+  src/filtered_robot.cpp
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE src include/kalman)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+ament_target_dependencies(${PROJECT_NAME}
+  rclcpp
+  rclcpp_components
+  ateam_msgs
+  Eigen3
+)
+rclcpp_components_register_node(
+  ${PROJECT_NAME}
+  PLUGIN "new_super_vision::VisionFilterNode"
+  EXECUTABLE ateam_new_super_vision
+)
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
