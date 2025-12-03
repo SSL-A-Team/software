@@ -15,11 +15,13 @@
   <node name="field_manager" pkg="ateam_field_manager" exec="ateam_field_manager_node" respawn="True">
     <param name="gc_team_name" value="$(var team_name)"/>
   </node>
+  <node name="game_state_tracker" pkg="ateam_game_state" exec="game_state_tracker_node" respawn="True">
+    <param name="gc_team_name" value="$(var team_name)"/>
+  </node>
   <let name="kenobi_prefix" value="$(eval '\'xterm -fg white -bg black -e gdb -ex run --args\' if (\'$(var kenobi_debug)\'.lower() == \'true\') else \'\'')"/>
   <node name="kenobi_node" pkg="ateam_kenobi" exec="ateam_kenobi_node" respawn="True" launch-prefix="$(var kenobi_prefix)">
     <param name="use_world_velocities" value="$(var use_world_velocities)"/>
     <param name="use_emulated_ballsense" value="$(var use_emulated_ballsense)"/>
-    <param name="gc_team_name" value="$(var team_name)"/>
     <param name="playbook" value="$(var kenobi_playbook)"/>
   </node>
   <node name="vader" pkg="ateam_bringup" exec="vader.py" respawn="True"/>

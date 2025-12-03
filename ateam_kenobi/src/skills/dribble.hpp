@@ -22,11 +22,10 @@
 #ifndef SKILLS__DRIBBLE_HPP_
 #define SKILLS__DRIBBLE_HPP_
 
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "core/play_helpers/easy_move_to.hpp"
 #include <ateam_common/robot_constants.hpp>
 #include "core/stp/skill.hpp"
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
+#include "core/types/robot_command.hpp"
 
 
 namespace ateam_kenobi::skills
@@ -56,13 +55,12 @@ public:
   }
 
 
-  ateam_msgs::msg::RobotMotionCommand runFrame(const World & world, const Robot & robot);
+  RobotCommand runFrame(const World & world, const Robot & robot);
 
 private:
   const double kOffset = kRobotRadius + kBallRadius + 0.07;
   ateam_geometry::Point target_;
   double target_threshold_ = 0.1;
-  play_helpers::EasyMoveTo easy_move_to_;
   int ball_detected_filter_ = 0;
   bool done_ = false;
 
@@ -86,9 +84,9 @@ private:
   bool isRobotSettled(const World & world, const Robot & robot);
   bool robotHasBall(const Robot & robot);
 
-  ateam_msgs::msg::RobotMotionCommand runMoveBehindBall(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand runDribble(const World & world, const Robot & robot);
-  ateam_msgs::msg::RobotMotionCommand runBackAway(const World & world, const Robot & robot);
+  RobotCommand runMoveBehindBall(const World & world, const Robot & robot);
+  RobotCommand runDribble(const Robot & robot);
+  RobotCommand runBackAway(const World & world, const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills

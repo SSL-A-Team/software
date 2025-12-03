@@ -49,10 +49,10 @@ public:
     pivot_kick_skill_.Reset();
   }
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override
   {
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+    std::array<std::optional<RobotCommand>, 16> motion_commands;
     const auto & robots = play_helpers::getAvailableRobots(world);
     if (robots.empty()) {
       return {};

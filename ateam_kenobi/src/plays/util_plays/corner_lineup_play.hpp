@@ -26,9 +26,9 @@
 #include <array>
 
 #include "ateam_geometry/types.hpp"
-#include "core/types/robot.hpp"
+#include "core/types/state_types.hpp"
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
+#include "tactics/multi_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -40,15 +40,13 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
-  void reset() override;
-
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
   const double x_mult_;
   const double y_mult_;
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
+  tactics::MultiMoveTo multi_move_to_;
 };
 }  // namespace ateam_kenobi::plays
 

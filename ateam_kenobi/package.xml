@@ -14,6 +14,7 @@
   <depend>ateam_msgs</depend>
   <depend>ateam_radio_msgs</depend>
   <depend>ateam_common</depend>
+  <depend>ateam_game_state</depend>
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>ateam_geometry</depend>
@@ -21,8 +22,6 @@
   <depend>ompl</depend>
   <depend>nlohmann-json-dev</depend>
   <depend>angles</depend>
-  <depend>libopencv-dev</depend>
-  <depend>ateam_spatial</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

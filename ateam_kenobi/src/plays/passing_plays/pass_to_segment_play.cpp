@@ -90,15 +90,14 @@ void PassToSegmentPlay::reset()
 {
   defense_tactic_.reset();
   pass_tactic_.reset();
-  idler_skill_.Reset();
   started_ = false;
   cached_target_ = ateam_geometry::Segment{};
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegmentPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> PassToSegmentPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   ateam_geometry::Segment target = cached_target_;
 
@@ -157,9 +156,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
   const auto maybe_receiver = assignments.GetPositionAssignment("receiver");
   if (maybe_kicker && maybe_receiver) {
     auto & kicker_command =
-      *(motion_commands[maybe_kicker->id] = ateam_msgs::msg::RobotMotionCommand{});
+      *(motion_commands[maybe_kicker->id] = RobotCommand{});
     auto & receiver_command =
-      *(motion_commands[maybe_receiver->id] = ateam_msgs::msg::RobotMotionCommand{});
+      *(motion_commands[maybe_receiver->id] = RobotCommand{});
 
     if (CGAL::squared_distance(world.ball.pos, maybe_kicker->pos) < 0.5) {
       started_ = true;
@@ -174,7 +173,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> PassToSegment
   if (enough_bots_for_idler) {
     assignments.RunPositionIfAssigned(
       "idler", [this, &world, &motion_commands](const Robot & robot) {
-        motion_commands[robot.id] = idler_skill_.RunFrame(world, robot);
+        motion_commands[robot.id] = idler_skill_.RunFrame(world);
       });
   }
 

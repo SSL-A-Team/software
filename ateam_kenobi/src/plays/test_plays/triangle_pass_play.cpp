@@ -34,7 +34,6 @@ TrianglePassPlay::TrianglePassPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   pass_tactic_(createChild<tactics::Pass>("pass"))
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
   positions.emplace_back(0.85, 0);
   const auto angle = angles::from_degrees(120);
   CGAL::Aff_transformation_2<ateam_geometry::Kernel> rotate_transform(CGAL::ROTATION, std::sin(
@@ -50,15 +49,12 @@ void TrianglePassPlay::reset()
 {
   state_ = State::Setup;
   kick_target_ind_ = 0;
-  for (auto & e : easy_move_tos_) {
-    e.reset();
-  }
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TrianglePassPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> TrianglePassPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
 
@@ -96,7 +92,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TrianglePassP
   for (auto ind = 0ul; ind < maybe_motion_commands.size(); ++ind) {
     auto & motion_command = maybe_motion_commands[ind];
     if (!motion_command) {
-      motion_command = ateam_msgs::msg::RobotMotionCommand{};
+      motion_command = RobotCommand{};
     }
   }
 
@@ -119,7 +115,7 @@ bool TrianglePassPlay::isReady(const World & world)
 void TrianglePassPlay::runSetup(
   const std::vector<Robot> & robots,
   const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
   16> & motion_commands)
 {
   if (isReady(world)) {
@@ -130,17 +126,17 @@ void TrianglePassPlay::runSetup(
   for (auto pos_ind = 0ul; pos_ind < positions.size(); ++pos_ind) {
     const auto & position = positions[pos_ind];
     const auto & robot = robots[pos_ind];
-    auto & emt = easy_move_tos_[robot.id];
-    emt.setTargetPosition(position);
-    emt.face_travel();
-    motion_commands[robot.id] = emt.runFrame(robot, world);
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{position};
+    command.motion_intent.angular = motion::intents::angular::FaceTravelIntent{};
+    motion_commands[robot.id] = command;
   }
 }
 
 void TrianglePassPlay::runPassing(
   const std::vector<Robot> & robots,
   const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
   16> & motion_commands)
 {
   if (pass_tactic_.isDone()) {
@@ -159,21 +155,22 @@ void TrianglePassPlay::runPassing(
   getPlayInfo()["Kicker"] = std::to_string(kicker_bot.id);
   getPlayInfo()["Receiver"] = std::to_string(receiver_bot.id);
 
-  auto & kicker_command = *(motion_commands[kicker_bot.id] = ateam_msgs::msg::RobotMotionCommand{});
+  auto & kicker_command = *(motion_commands[kicker_bot.id] = RobotCommand{});
   auto & receiver_command =
-    *(motion_commands[receiver_bot.id] = ateam_msgs::msg::RobotMotionCommand{});
+    *(motion_commands[receiver_bot.id] = RobotCommand{});
 
   pass_tactic_.runFrame(world, kicker_bot, receiver_bot, kicker_command, receiver_command);
 
-  auto & idler_emt = easy_move_tos_[idler_bot.id];
-  idler_emt.setTargetPosition(positions[idler_index]);
-  idler_emt.face_point(world.ball.pos);
-  motion_commands[idler_bot.id] = idler_emt.runFrame(idler_bot, world);
+  RobotCommand command;
+  command.motion_intent.linear = motion::intents::linear::PositionIntent{
+    positions[idler_index]};
+  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+  motion_commands[idler_bot.id] = command;
 }
 
 void TrianglePassPlay::runBackOff(
   const std::vector<Robot> & available_robots, const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
   16> & motion_commands)
 {
   auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
@@ -197,26 +194,25 @@ void TrianglePassPlay::runBackOff(
     pass_tactic_.reset();
   }
 
+  RobotCommand command;
   const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
-  auto & motion_command = motion_commands[receiver_robot.id] =
-    ateam_msgs::msg::RobotMotionCommand{};
-  motion_command->twist.linear.x = vel.x();
-  motion_command->twist.linear.y = vel.y();
+  command.motion_intent.linear = motion::intents::linear::VelocityIntent{vel};
+  motion_commands[receiver_robot.id] = command;
 }
 
 void TrianglePassPlay::runIdlers(
   const std::vector<Robot> & robots, const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+  std::array<std::optional<RobotCommand>, 16> & motion_commands)
 {
   const ateam_geometry::Point first_pos(-world.field.field_length / 2.0,
     -world.field.field_width / 2.0);
   const ateam_geometry::Vector step(kRobotDiameter * 1.5, 0);
   for( auto i = 0ul; i < robots.size(); ++i) {
     auto & robot = robots[i];
-    auto & emt = easy_move_tos_[robot.id];
-    emt.setTargetPosition(first_pos + step * i);
-    emt.face_absolute(0.0);
-    motion_commands[robot.id] = emt.runFrame(robot, world);
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{first_pos + step * i};
+    command.motion_intent.angular = motion::intents::angular::HeadingIntent{0.0};
+    motion_commands[robot.id] = command;
   }
 }
 

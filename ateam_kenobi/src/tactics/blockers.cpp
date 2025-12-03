@@ -32,14 +32,6 @@ namespace ateam_kenobi::tactics
 Blockers::Blockers(stp::Options stp_options)
 : stp::Tactic(stp_options)
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
-}
-
-void Blockers::reset()
-{
-  for (auto & move_to : easy_move_tos_) {
-    move_to.reset();
-  }
 }
 
 std::vector<ateam_geometry::Point> Blockers::getAssignmentPoints(const World & world)
@@ -56,7 +48,7 @@ std::vector<ateam_geometry::Point> Blockers::getAssignmentPoints(const World & w
   return positions;
 }
 
-std::vector<ateam_msgs::msg::RobotMotionCommand> Blockers::runFrame(
+std::vector<RobotCommand> Blockers::runFrame(
   const World & world,
   const std::vector<Robot> & robots, nlohmann::json * play_info)
 {
@@ -71,16 +63,15 @@ std::vector<ateam_msgs::msg::RobotMotionCommand> Blockers::runFrame(
   const auto num_blockers = std::min(max_blocker_count_, robots.size());
   positions.erase(positions.begin() + num_blockers, positions.end());
 
-  std::vector<ateam_msgs::msg::RobotMotionCommand> motion_commands;
+  std::vector<RobotCommand> motion_commands;
 
   for (auto robot_index = 0ul; robot_index < robots.size(); ++robot_index) {
     const auto & robot = robots[robot_index];
     const auto & position = positions[robot_index];
-    const auto robot_id = robot.id;
-    auto & move_to = easy_move_tos_[robot_id];
-    move_to.setTargetPosition(position);
-    move_to.face_point(world.ball.pos);
-    motion_commands.push_back(move_to.runFrame(robot, world));
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{position};
+    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+    motion_commands.push_back(command);
     if (play_info) {
       (*play_info)["Blockers"][std::to_string(robot.id)]["Blocking"] =
         blockable_robots[robot_index].id;

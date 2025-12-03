@@ -24,7 +24,7 @@
 #include <limits>
 #include <ateam_common/robot_constants.hpp>
 #include "core/play_helpers/robot_assignment.hpp"
-#include "core/types/robot.hpp"
+#include "core/types/state_types.hpp"
 #include "skills/goalie.hpp"
 #include "core/play_helpers/available_robots.hpp"
 namespace ateam_kenobi::plays
@@ -51,12 +51,11 @@ std::vector<ateam_geometry::Point> get_equally_spaced_points_on_segment(
   return points_on_segment;
 }
 
-
 WallPlay::WallPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
-  goalie_skill_(createChild<skills::Goalie>("goalie"))
+  goalie_skill_(createChild<skills::Goalie>("goalie")),
+  multi_move_to_(createChild<tactics::MultiMoveTo>("multi_move_to"))
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
 }
 
 stp::PlayScore WallPlay::getScore(const World &)
@@ -66,18 +65,15 @@ stp::PlayScore WallPlay::getScore(const World &)
 
 void WallPlay::reset()
 {
-  for (auto & move_to : easy_move_tos_) {
-    move_to.reset();
-  }
   goalie_skill_.reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> WallPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> commands;
 
-  goalie_skill_.runFrame(world, maybe_motion_commands);
+  goalie_skill_.runFrame(world, commands);
 
   auto current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
@@ -103,34 +99,11 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> WallPlay::run
     current_available_robots,
     positions_to_assign);
 
-  for (auto ind = 0ul; ind < robot_assignments.size(); ++ind) {
-    const auto & maybe_robot = robot_assignments[ind];
-    if (!maybe_robot) {
-      continue;
-    }
+  multi_move_to_.SetTargetPoints(positions_to_assign);
+  multi_move_to_.SetFacePoint(world.ball.pos);
+  multi_move_to_.RunFrame(robot_assignments, commands);
 
-    const auto & robot = *maybe_robot;
-
-    if (!robot.IsAvailable()) {
-      continue;
-    }
-
-    auto & easy_move_to = easy_move_tos_.at(robot.id);
-
-    const auto & target_position = positions_to_assign.at(ind);
-
-    auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
-    getOverlays().drawCircle(
-      "destination_" + std::to_string(
-        robot.id), viz_circle, "blue", "transparent");
-
-    easy_move_to.setTargetPosition(target_position);
-    easy_move_to.face_point(world.ball.pos);
-
-    maybe_motion_commands.at(robot.id) = easy_move_to.runFrame(robot, world);
-  }
-
-  return maybe_motion_commands;
+  return commands;
 }
 
 }  // namespace ateam_kenobi::plays

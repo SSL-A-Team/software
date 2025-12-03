@@ -11,15 +11,14 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(ateam_game_state REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ateam_geometry REQUIRED)
 find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
-find_package(OpenCV REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(ateam_spatial REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/kenobi_node.cpp
@@ -36,10 +35,10 @@ target_sources(kenobi_node_component PRIVATE
   src/core/path_planning/escape_velocity.cpp
   src/core/path_planning/obstacles.cpp
   src/core/path_planning/path_planner.cpp
-  src/core/types/message_conversions.cpp
+  src/core/motion/frame_conversions.cpp
   src/core/motion/motion_controller.cpp
+  src/core/motion/motion_executor.cpp
   src/core/visualization/overlays.cpp
-  src/core/play_helpers/easy_move_to.cpp
   src/core/play_helpers/lanes.cpp
   src/core/play_helpers/possession.cpp
   src/core/play_helpers/available_robots.cpp
@@ -60,7 +59,6 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/kickoff_plays/offense/our_kickoff_prep_play.cpp
   src/plays/passing_plays/pass_to_lane_play.cpp
   src/plays/passing_plays/pass_to_segment_play.cpp
-  src/plays/passing_plays/spatial_pass_play.cpp
   src/plays/stop_plays/default_stop_play.cpp
   src/plays/stop_plays/defensive_stop_play.cpp
   src/plays/stop_plays/offensive_stop_play.cpp
@@ -125,15 +123,14 @@ ament_target_dependencies(
   "ateam_radio_msgs"
   "ateam_msgs"
   "ateam_common"
+  "ateam_game_state"
   "tf2"
   "tf2_geometry_msgs"
   "ateam_geometry"
   "control_toolbox"
   "OMPL"
   "angles"
-  OpenCV
   nlohmann_json
-  ateam_spatial
 )
 rclcpp_components_register_node(
   kenobi_node_component

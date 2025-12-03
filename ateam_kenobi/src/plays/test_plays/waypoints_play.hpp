@@ -29,7 +29,6 @@
 #include <string>
 #include <ateam_geometry/types.hpp>
 #include "core/stp/play.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -43,7 +42,7 @@ public:
 
   void reset() override;
 
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
@@ -59,7 +58,6 @@ private:
     int64_t duration_ms;
   };
 
-  std::array<play_helpers::EasyMoveTo, 16> easy_move_tos_;
   std::vector<Waypoint> waypoints_;
   std::chrono::steady_clock::time_point next_transition_time_ =
     std::chrono::steady_clock::time_point::max();

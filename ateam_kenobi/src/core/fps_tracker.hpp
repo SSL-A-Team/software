@@ -23,7 +23,7 @@
 #define CORE__FPS_TRACKER_HPP_
 
 #include <ateam_common/time.hpp>
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 
 namespace ateam_kenobi
 {
@@ -36,7 +36,7 @@ public:
     std::fill(buffer_.begin(), buffer_.end(), average_fps_ / kWindowWidth);
   }
 
-  void update(World & world)
+  double Update(const World & world)
   {
     const auto dt = ateam_common::TimeDiffSeconds(world.current_time, prev_time_);
     prev_time_ = world.current_time;
@@ -45,7 +45,7 @@ public:
     buffer_[buffer_index_] = current_fps / kWindowWidth;
     average_fps_ += buffer_[buffer_index_];
     buffer_index_ = (buffer_index_ + 1) % kWindowWidth;
-    world.fps = average_fps_;
+    return average_fps_;
   }
 
 private:

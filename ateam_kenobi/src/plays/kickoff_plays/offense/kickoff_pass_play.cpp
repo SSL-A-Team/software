@@ -23,7 +23,7 @@
 #include <limits>
 #include <random>
 #include <vector>
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "skills/goalie.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 #include "core/play_helpers/available_robots.hpp"
@@ -103,7 +103,6 @@ stp::PlayCompletionState KickoffPassPlay::getCompletionState()
 void KickoffPassPlay::enter()
 {
   defense_.reset();
-  multi_move_to_.Reset();
   pass_.reset();
   pass_direction_chosen_ = false;
 }
@@ -114,10 +113,10 @@ void KickoffPassPlay::exit()
   pass_.reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffPassPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> KickoffPassPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
   std::vector<Robot> current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
@@ -176,9 +175,9 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffPassPl
     const auto & kicker = *maybe_kicker;
     const auto & receiver = *maybe_receiver;
     auto & kicker_command =
-      *(maybe_motion_commands[kicker.id] = ateam_msgs::msg::RobotMotionCommand{});
+      *(maybe_motion_commands[kicker.id] = RobotCommand{});
     auto & receiver_command =
-      *(maybe_motion_commands[receiver.id] = ateam_msgs::msg::RobotMotionCommand{});
+      *(maybe_motion_commands[receiver.id] = RobotCommand{});
     pass_.runFrame(world, kicker, receiver, kicker_command, receiver_command);
   }
 
@@ -187,7 +186,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> KickoffPassPl
 
   if (enough_bots_for_supports) {
     multi_move_to_.RunFrame(
-      world, assignments.GetGroupAssignments("supports"),
+      assignments.GetGroupAssignments("supports"),
       maybe_motion_commands);
   }
 

@@ -1,0 +1,5 @@
+geometry_msgs/Pose pose
+geometry_msgs/Twist twist
+geometry_msgs/Twist twist_body
+geometry_msgs/Accel accel
+bool visible

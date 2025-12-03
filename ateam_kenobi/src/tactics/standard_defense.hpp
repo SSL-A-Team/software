@@ -22,9 +22,8 @@
 #define TACTICS__STANDARD_DEFENSE_HPP_
 
 #include <vector>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
-#include "core/types/world.hpp"
-#include "core/types/robot.hpp"
+#include "core/types/state_types.hpp"
+#include "core/types/robot_command.hpp"
 #include "core/stp/tactic.hpp"
 #include "defenders.hpp"
 #include "skills/goalie.hpp"
@@ -50,7 +49,7 @@ public:
   void runFrame(
     const World & world,
     const std::vector<Robot> & defender_bots,
-    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands);
+    std::array<std::optional<RobotCommand>, 16> & motion_commands);
 
 private:
   skills::Goalie goalie_;

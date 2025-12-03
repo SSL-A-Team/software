@@ -26,7 +26,7 @@
 #include "core/play_helpers/easy_move_to.hpp"
 #include <ateam_common/robot_constants.hpp>
 #include "core/stp/skill.hpp"
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 
 
 namespace ateam_kenobi::skills

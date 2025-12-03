@@ -27,7 +27,6 @@
 #include "test_pass_play.hpp"
 #include "test_pivot_play.hpp"
 #include "test_play.hpp"
-#include "test_spatial_map_play.hpp"
 #include "test_window_eval.hpp"
 #include "triangle_pass_play.hpp"
 #include "waypoints_play.hpp"

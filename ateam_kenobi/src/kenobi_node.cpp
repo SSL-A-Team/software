@@ -25,36 +25,32 @@
 #include <functional>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-#include <ateam_msgs/msg/ball_state.hpp>
-#include <ateam_radio_msgs/msg/basic_telemetry.hpp>
-#include <ateam_radio_msgs/msg/connection_status.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
-#include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/overlay.hpp>
 #include <ateam_msgs/msg/play_info.hpp>
-#include <ateam_msgs/msg/world.hpp>
+#include <ateam_msgs/msg/game_state_world.hpp>
 #include <ateam_msgs/srv/set_override_play.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
 #include <ateam_msgs/msg/playbook_state.hpp>
+#include <ateam_msgs/msg/kenobi_status.hpp>
 #include <ateam_common/cache_directory.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
+#include <ateam_game_state/type_adapters.hpp>
 #include <ateam_geometry/types.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include "core/types/world.hpp"
-#include "core/types/message_conversions.hpp"
+#include "core/types/state_types.hpp"
 #include "core/play_selector.hpp"
 #include "core/in_play_eval.hpp"
 #include "core/double_touch_eval.hpp"
 #include "core/ballsense_emulator.hpp"
 #include "core/ballsense_filter.hpp"
-#include "core/motion/world_to_body_vel.hpp"
+#include "core/motion/frame_conversions.hpp"
+#include "core/motion/motion_executor.hpp"
 #include "plays/halt_play.hpp"
 #include "core/defense_area_enforcement.hpp"
 #include "core/joystick_enforcer.hpp"
-#include <ateam_spatial/spatial_evaluator.hpp>
 #include "core/fps_tracker.hpp"
 
 namespace ateam_kenobi
@@ -72,12 +68,8 @@ public:
     play_selector_(*this),
     joystick_enforcer_(*this),
     overlays_(""),
-    game_controller_listener_(*this)
+    motion_executor_(get_logger().get_child("motion"))
   {
-    world_.spatial_evaluator = &spatial_evaluator_;
-
-    initialize_robot_ids();
-
     declare_parameter<bool>("use_world_velocities", false);
     declare_parameter<bool>("use_emulated_ballsense", false);
 
@@ -89,51 +81,9 @@ public:
       "/play_info",
       rclcpp::SystemDefaultsQoS());
 
-    create_indexed_subscribers<ateam_msgs::msg::RobotState>(
-      blue_robots_subscriptions_,
-      Topics::kBlueTeamRobotPrefix,
-      10,
-      &KenobiNode::blue_robot_state_callback,
-      this);
-
-    create_indexed_subscribers<ateam_msgs::msg::RobotState>(
-      yellow_robots_subscriptions_,
-      Topics::kYellowTeamRobotPrefix,
-      10,
-      &KenobiNode::yellow_robot_state_callback,
-      this);
-
-    create_indexed_subscribers<ateam_radio_msgs::msg::BasicTelemetry>(
-      robot_feedback_subscriptions_,
-      Topics::kRobotFeedbackPrefix,
-      10,
-      &KenobiNode::robot_feedback_callback,
-      this);
-
-    create_indexed_subscribers<ateam_radio_msgs::msg::ConnectionStatus>(
-      robot_connection_status_subscriptions_,
-      Topics::kRobotConnectionStatusPrefix,
-      10,
-      &KenobiNode::robot_connection_callback,
-      this);
-
     create_indexed_publishers<ateam_msgs::msg::RobotMotionCommand>(
       robot_commands_publishers_, Topics::kRobotMotionCommandPrefix,
       rclcpp::SystemDefaultsQoS(), this);
-
-    ball_subscription_ = create_subscription<ateam_msgs::msg::BallState>(
-      std::string(Topics::kBall),
-      10,
-      std::bind(&KenobiNode::ball_state_callback, this, std::placeholders::_1));
-
-    world_publisher_ = create_publisher<ateam_msgs::msg::World>(
-      "~/world",
-      rclcpp::SystemDefaultsQoS());
-
-    field_subscription_ = create_subscription<ateam_msgs::msg::FieldInfo>(
-      std::string(Topics::kField),
-      10,
-      std::bind(&KenobiNode::field_callback, this, std::placeholders::_1));
 
     override_service_ = create_service<ateam_msgs::srv::SetOverridePlay>(
       "~/set_override_play", std::bind(
@@ -149,7 +99,12 @@ public:
       "~/playbook_state",
       rclcpp::SystemDefaultsQoS());
 
-    timer_ = create_wall_timer(10ms, std::bind(&KenobiNode::timer_callback, this));
+    status_publisher_ = create_publisher<ateam_msgs::msg::KenobiStatus>("~/status",
+        rclcpp::SystemDefaultsQoS());
+
+    world_subscription_ = create_subscription<World>(
+      std::string(Topics::kWorld), rclcpp::SystemDefaultsQoS(),
+      std::bind(&KenobiNode::WorldCallback, this, std::placeholders::_1));
 
     const auto playbook_path = declare_parameter<std::string>("playbook", "");
     const auto autosave_playbook_path = getCacheDirectory() / "playbook/autosave.json";
@@ -173,8 +128,6 @@ public:
   }
 
 private:
-  ateam_spatial::SpatialEvaluator spatial_evaluator_;
-  World world_;
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
@@ -184,160 +137,16 @@ private:
   JoystickEnforcer joystick_enforcer_;
   visualization::Overlays overlays_;
   FpsTracker fps_tracker_;
+  motion::MotionExecutor motion_executor_;
   rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::PlayInfo>::SharedPtr play_info_publisher_;
-  rclcpp::Subscription<ateam_msgs::msg::BallState>::SharedPtr ball_subscription_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
-    16> blue_robots_subscriptions_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::RobotState>::SharedPtr,
-    16> yellow_robots_subscriptions_;
-  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
-    16> robot_feedback_subscriptions_;
-  std::array<rclcpp::Subscription<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
-    16> robot_connection_status_subscriptions_;
-  rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr
-    field_subscription_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> robot_commands_publishers_;
   rclcpp::Service<ateam_msgs::srv::SetOverridePlay>::SharedPtr override_service_;
   rclcpp::Service<ateam_msgs::srv::SetPlayEnabled>::SharedPtr play_enabled_service_;
   rclcpp::Publisher<ateam_msgs::msg::PlaybookState>::SharedPtr playbook_state_publisher_;
-
-  ateam_common::GameControllerListener game_controller_listener_;
-
-  rclcpp::Publisher<ateam_msgs::msg::World>::SharedPtr world_publisher_;
-
-  rclcpp::TimerBase::SharedPtr timer_;
-
-  void initialize_robot_ids()
-  {
-    for(auto i = 0u; i < world_.our_robots.size(); ++i) {
-      world_.our_robots[i].id = i;
-    }
-    for(auto i = 0u; i < world_.their_robots.size(); ++i) {
-      world_.their_robots[i].id = i;
-    }
-  }
-
-  void blue_robot_state_callback(
-    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
-    int id)
-  {
-    const auto our_color = game_controller_listener_.GetTeamColor();
-    if(our_color == ateam_common::TeamColor::Unknown) {
-      return;
-    }
-    const auto are_we_blue = our_color == ateam_common::TeamColor::Blue;
-    auto & robot_state_array = are_we_blue ? world_.our_robots : world_.their_robots;
-    robot_state_callback(robot_state_array, id, robot_state_msg);
-  }
-
-  void yellow_robot_state_callback(
-    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg,
-    int id)
-  {
-    const auto our_color = game_controller_listener_.GetTeamColor();
-    if(our_color == ateam_common::TeamColor::Unknown) {
-      return;
-    }
-    const auto are_we_yellow = our_color == ateam_common::TeamColor::Yellow;
-    auto & robot_state_array = are_we_yellow ? world_.our_robots : world_.their_robots;
-    robot_state_callback(robot_state_array, id, robot_state_msg);
-  }
-
-  void robot_state_callback(
-    std::array<Robot, 16> & robot_states,
-    std::size_t id,
-    const ateam_msgs::msg::RobotState::SharedPtr robot_state_msg)
-  {
-    robot_states.at(id).visible = robot_state_msg->visible;
-    if (robot_state_msg->visible) {
-      robot_states.at(id).pos = ateam_geometry::Point(
-        robot_state_msg->pose.position.x,
-        robot_state_msg->pose.position.y);
-      tf2::Quaternion tf2_quat;
-      tf2::fromMsg(robot_state_msg->pose.orientation, tf2_quat);
-      robot_states.at(id).theta = tf2::getYaw(tf2_quat);
-      robot_states.at(id).vel = ateam_geometry::Vector(
-        robot_state_msg->twist.linear.x,
-        robot_state_msg->twist.linear.y);
-      robot_states.at(id).omega = robot_state_msg->twist.angular.z;
-      robot_states.at(id).id = id;
-    }
-  }
-
-  void robot_feedback_callback(
-    const ateam_radio_msgs::msg::BasicTelemetry::SharedPtr robot_feedback_msg,
-    int id)
-  {
-    world_.our_robots.at(id).breakbeam_ball_detected = robot_feedback_msg->breakbeam_ball_detected;
-    world_.our_robots.at(id).kicker_available = robot_feedback_msg->kicker_available;
-    world_.our_robots.at(id).chipper_available = robot_feedback_msg->chipper_available;
-  }
-
-  void robot_connection_callback(
-    const ateam_radio_msgs::msg::ConnectionStatus::SharedPtr robot_connection_msg,
-    int id)
-  {
-    world_.our_robots.at(id).radio_connected = robot_connection_msg->radio_connected;
-  }
-
-  void ball_state_callback(const ateam_msgs::msg::BallState::SharedPtr ball_state_msg)
-  {
-    world_.ball.visible = ball_state_msg->visible;
-    const auto ball_visibility_timed_out = ateam_common::TimeDiffSeconds(world_.current_time,
-        world_.ball.last_visible_time) > 0.5;
-    if (ball_state_msg->visible) {
-      world_.ball.pos = ateam_geometry::Point(
-        ball_state_msg->pose.position.x,
-        ball_state_msg->pose.position.y);
-      world_.ball.vel = ateam_geometry::Vector(
-        ball_state_msg->twist.linear.x,
-        ball_state_msg->twist.linear.y);
-      world_.ball.last_visible_time = world_.current_time;
-    } else if(ball_visibility_timed_out) {
-      world_.ball.vel = ateam_geometry::Vector{0.0, 0.0};
-    }
-  }
-
-  void field_callback(const ateam_msgs::msg::FieldInfo::SharedPtr field_msg)
-  {
-    Field field;
-    field.field_length = field_msg->field_length;
-    field.field_width = field_msg->field_width;
-    field.goal_width = field_msg->goal_width;
-    field.goal_depth = field_msg->goal_depth;
-    field.boundary_width = field_msg->boundary_width;
-    field.defense_area_depth = field_msg->defense_area_depth;
-    field.defense_area_width = field_msg->defense_area_width;
-
-    auto convert_point_array = [&](auto & starting_array, auto final_array_iter) {
-        std::transform(
-          starting_array.begin(), starting_array.end(), final_array_iter,
-          [&](auto & val) {
-            return ateam_geometry::Point(val.x, val.y);
-          });
-      };
-
-    convert_point_array(field_msg->field_corners.points, field.field_corners.begin());
-    convert_point_array(
-      field_msg->ours.defense_area_corners.points,
-      field.ours.defense_area_corners.begin());
-    convert_point_array(field_msg->ours.goal_corners.points, field.ours.goal_corners.begin());
-    convert_point_array(
-      field_msg->theirs.defense_area_corners.points,
-      field.theirs.defense_area_corners.begin());
-    convert_point_array(field_msg->theirs.goal_corners.points, field.theirs.goal_corners.begin());
-    field.ours.goal_posts = {field.ours.goal_corners[0], field.ours.goal_corners[1]};
-    field.theirs.goal_posts = {field.theirs.goal_corners[0], field.theirs.goal_corners[1]};
-
-    world_.field = field;
-    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
-      world_.ignore_side = -field_msg->ignore_side;
-    } else {
-      world_.ignore_side = field_msg->ignore_side;
-    }
-  }
+  rclcpp::Publisher<ateam_msgs::msg::KenobiStatus>::SharedPtr status_publisher_;
+  rclcpp::Subscription<World>::SharedPtr world_subscription_;
 
   void set_override_play_callback(
     const ateam_msgs::srv::SetOverridePlay::Request::SharedPtr request,
@@ -376,77 +185,17 @@ private:
     response->success = true;
   }
 
-  void timer_callback()
+  void WorldCallback(const ateam_game_state::World & world)
   {
-    world_.current_time = std::chrono::steady_clock::now();
-    world_.referee_info.running_command = game_controller_listener_.GetGameCommand();
-    const auto & ref_msg = game_controller_listener_.GetLatestRefereeMessage();
-    world_.referee_info.command_time =
-      std::chrono::system_clock::time_point(
-      std::chrono::nanoseconds(
-        rclcpp::Time(ref_msg.command_timestamp).nanoseconds()));
-    world_.referee_info.prev_command = game_controller_listener_.GetPreviousGameCommand();
-    world_.referee_info.next_command = game_controller_listener_.GetNextGameCommand();
-    world_.referee_info.current_game_stage = game_controller_listener_.GetGameStage();
+    ateam_msgs::msg::KenobiStatus status_msg;
+    status_msg.fps = fps_tracker_.Update(world);
+    status_publisher_->publish(status_msg);
 
-    const auto & gc_designated_position =
-      game_controller_listener_.GetDesignatedPosition();
-    if (gc_designated_position.has_value()) {
-      if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
-        world_.referee_info.designated_position = ateam_geometry::Point(
-        -gc_designated_position->x,
-        -gc_designated_position->y);
-      } else {
-        world_.referee_info.designated_position = ateam_geometry::Point(
-        gc_designated_position->x,
-        gc_designated_position->y);
-      }
-    } else {
-      world_.referee_info.designated_position = std::nullopt;
-    }
+    auto motion_commands = runPlayFrame(world);
 
-
-    if (game_controller_listener_.GetOurGoalieID().has_value()) {
-      world_.referee_info.our_goalie_id = game_controller_listener_.GetOurGoalieID().value();
-    }
-    if (game_controller_listener_.GetTheirGoalieID().has_value()) {
-      world_.referee_info.their_goalie_id = game_controller_listener_.GetTheirGoalieID().value();
-    }
-    in_play_eval_.Update(world_);
-    double_touch_eval_.update(world_, overlays_);
-    UpdateSpatialEvaluator();
-    if (get_parameter("use_emulated_ballsense").as_bool()) {
-      ballsense_emulator_.Update(world_);
-    }
-    ballsense_filter_.Update(world_);
-    if (game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Unknown) {
-      auto & clk = *this->get_clock();
-      RCLCPP_WARN_THROTTLE(
-        this->get_logger(), clk, 3000,
-        "DETECTED TEAM COLOR WAS UNKNOWN");
-    }
-    if (game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::Unknown) {
-      auto & clk = *this->get_clock();
-      RCLCPP_WARN_THROTTLE(
-        this->get_logger(), clk, 3000,
-        "DETECTED TEAM SIDE WAS UNKNOWN");
-    }
-
-    fps_tracker_.update(world_);
-
-    world_publisher_->publish(ateam_kenobi::message_conversions::toMsg(world_));
-
-    auto motion_commands = runPlayFrame(world_);
-
-    defense_area_enforcement::EnforceDefenseAreaKeepout(world_, motion_commands);
+    defense_area_enforcement::EnforceDefenseAreaKeepout(world, motion_commands);
 
     joystick_enforcer_.RemoveCommandForJoystickBot(motion_commands);
-
-    if (get_parameter("use_world_velocities").as_bool()) {
-      motion::ConvertBodyVelsToWorldVels(motion_commands, world_.our_robots);
-    } else {
-      motion::ConvertWorldVelsToBodyVels(motion_commands, world_.our_robots);
-    }
 
     send_all_motion_commands(motion_commands);
   }
@@ -462,10 +211,48 @@ private:
       RCLCPP_ERROR(get_logger(), "No play selected!");
       return {};
     }
-    const auto motion_commands = play->runFrame(world);
+
+    const auto commands = play->runFrame(world);
+    std::array<std::optional<motion::MotionIntent>, 16> motion_intents;
+    std::ranges::transform(
+      commands, motion_intents.begin(),
+      [](const std::optional<RobotCommand> & cmd) -> std::optional<motion::MotionIntent> {
+        if (cmd.has_value()) {
+          return cmd->motion_intent;
+        } else {
+          return std::nullopt;
+        }
+      });
+    const auto motion_commands = motion_executor_.RunFrame(motion_intents, overlays_, world);
+
+    const auto use_world_vels = get_parameter("use_world_velocities").as_bool();
+
+    std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ros_commands;
+    for(auto id = 0ul; id < commands.size(); ++id) {
+      auto & maybe_cmd = commands[id];
+      auto & maybe_motion_cmd = motion_commands[id];
+      if (!maybe_cmd || !maybe_motion_cmd) {
+        ros_commands[id] = std::nullopt;
+      } else {
+        const auto & robot = world.our_robots[id];
+        const auto & cmd = maybe_cmd.value();
+        const auto & motion_cmd = maybe_motion_cmd.value();
+        const auto linear_vel = use_world_vels ?
+          motion::LocalToWorldFrame(motion_cmd.linear, robot) : motion_cmd.linear;
+        auto & ros_cmd = ros_commands[id].emplace();
+        ros_cmd.dribbler_speed = cmd.dribbler_speed;
+        ros_cmd.kick_request = static_cast<uint8_t>(cmd.kick);
+        ros_cmd.kick_speed = cmd.kick_speed;
+        ros_cmd.twist.linear.x = linear_vel.x();
+        ros_cmd.twist.linear.y = linear_vel.y();
+        ros_cmd.twist.angular.z = motion_cmd.angular;
+        ros_cmd.twist_frame =
+          use_world_vels ? ateam_msgs::msg::RobotMotionCommand::FRAME_WORLD :
+          ateam_msgs::msg::RobotMotionCommand::FRAME_BODY;
+      }
+    }
 
     overlays_.merge(play->getOverlays());
-
     overlay_publisher_->publish(overlays_.getMsg());
     overlays_.clear();
     play->getOverlays().clear();
@@ -477,7 +264,7 @@ private:
     play->getPlayInfo().clear();
     play_info_publisher_->publish(play_info_msg);
 
-    return motion_commands;
+    return ros_commands;
   }
 
   void send_all_motion_commands(
@@ -488,15 +275,6 @@ private:
       const auto & maybe_motion_command = robot_motion_commands.at(id);
       if (maybe_motion_command.has_value()) {
         robot_commands_publishers_.at(id)->publish(maybe_motion_command.value());
-        world_.our_robots.at(id).prev_command_vel = ateam_geometry::Vector(
-          maybe_motion_command.value().twist.linear.x,
-          maybe_motion_command.value().twist.linear.y
-        );
-
-        world_.our_robots.at(id).prev_command_omega = maybe_motion_command.value().twist.angular.z;
-      } else {
-        world_.our_robots.at(id).prev_command_vel = ateam_geometry::Vector(0, 0);
-        world_.our_robots.at(id).prev_command_omega = 0;
       }
     }
   }
@@ -504,41 +282,6 @@ private:
   std::filesystem::path getCacheDirectory()
   {
     return ateam_common::getCacheDirectory() / "kenobi";
-  }
-
-  void UpdateSpatialEvaluator()
-  {
-    ateam_spatial::FieldDimensions field{
-      world_.field.field_width,
-      world_.field.field_length,
-      world_.field.goal_width,
-      world_.field.goal_depth,
-      world_.field.boundary_width,
-      world_.field.defense_area_width,
-      world_.field.defense_area_depth
-    };
-    ateam_spatial::Ball ball{
-      static_cast<float>(world_.ball.pos.x()),
-      static_cast<float>(world_.ball.pos.y()),
-      static_cast<float>(world_.ball.vel.x()),
-      static_cast<float>(world_.ball.vel.y())
-    };
-    auto make_spatial_robot = [](const Robot & robot){
-        return ateam_spatial::Robot{
-        robot.visible,
-        static_cast<float>(robot.pos.x()),
-        static_cast<float>(robot.pos.y()),
-        static_cast<float>(robot.theta),
-        static_cast<float>(robot.vel.x()),
-        static_cast<float>(robot.vel.y()),
-        static_cast<float>(robot.omega)
-        };
-      };
-    std::array<ateam_spatial::Robot, 16> our_robots;
-    std::ranges::transform(world_.our_robots, our_robots.begin(), make_spatial_robot);
-    std::array<ateam_spatial::Robot, 16> their_robots;
-    std::ranges::transform(world_.their_robots, their_robots.begin(), make_spatial_robot);
-    spatial_evaluator_.UpdateMaps(field, ball, our_robots, their_robots);
   }
 };
 

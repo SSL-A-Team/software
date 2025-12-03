@@ -20,7 +20,7 @@
 
 #include "test_play.hpp"
 #include "ateam_geometry/types.hpp"
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "skills/goalie.hpp"
 #include "core/play_helpers/available_robots.hpp"
 
@@ -30,32 +30,28 @@ TestPlay::TestPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options),
   goalie_skill_(createChild<skills::Goalie>("goalie"))
 {
-  createIndexedChildren<play_helpers::EasyMoveTo>(easy_move_tos_, "EasyMoveTo");
 }
 
 void TestPlay::reset()
 {
-  for (auto & move_to : easy_move_tos_) {
-    move_to.reset();
-  }
   goalie_skill_.reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> TestPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> TestPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
   auto current_available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(current_available_robots, world);
 
   if (current_available_robots.size() > 0) {
     const auto & robot = current_available_robots[0];
     int robot_id = robot.id;
-    auto & easy_move_to = easy_move_tos_.at(robot_id);
-
-    easy_move_to.setTargetPosition(world.ball.pos + ateam_geometry::Vector(-.2, 0));
-    easy_move_to.face_point(world.ball.pos);
-    maybe_motion_commands.at(robot_id) = easy_move_to.runFrame(robot, world);
+    RobotCommand command;
+    command.motion_intent.linear = motion::intents::linear::PositionIntent{world.ball.pos +
+      ateam_geometry::Vector(-.2, 0)};
+    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+    maybe_motion_commands.at(robot_id) = command;
   }
 
   goalie_skill_.runFrame(world, maybe_motion_commands);

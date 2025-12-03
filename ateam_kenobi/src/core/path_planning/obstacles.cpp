@@ -171,11 +171,11 @@ bool IsPointInBounds(
   ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
     ateam_geometry::Point(x_bound, y_bound));
 
-  if (world.ignore_side > 0) {
+  if (world.field.ignore_side > 0) {
     pathable_region = ateam_geometry::Rectangle(
       ateam_geometry::Point(-x_bound, -y_bound),
       ateam_geometry::Point(0, y_bound));
-  } else if (world.ignore_side < 0) {
+  } else if (world.field.ignore_side < 0) {
     pathable_region = ateam_geometry::Rectangle(
       ateam_geometry::Point(0, y_bound),
       ateam_geometry::Point(x_bound, -y_bound));

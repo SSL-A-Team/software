@@ -44,13 +44,12 @@ stp::PlayScore OurKickoffPrepPlay::getScore(const World & world)
 void OurKickoffPrepPlay::reset()
 {
   defense_.reset();
-  multi_move_to_.Reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPrepPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> OurKickoffPrepPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
@@ -80,7 +79,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> OurKickoffPre
 
   defense_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
       motion_commands);
-  multi_move_to_.RunFrame(world, assignments.GetGroupAssignments("movers"), motion_commands);
+  multi_move_to_.RunFrame(assignments.GetGroupAssignments("movers"), motion_commands);
 
   return motion_commands;
 }

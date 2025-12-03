@@ -1,7 +1,10 @@
 uint8 our_goalie_id
 uint8 their_goalie_id
 uint8 game_stage
-uint8 game_command
+uint8 running_command
 uint8 prev_command
-
+bool has_designated_position
 geometry_msgs/Point32 designated_position
+bool has_next_command
+uint8 next_command
+builtin_interfaces/Time command_time

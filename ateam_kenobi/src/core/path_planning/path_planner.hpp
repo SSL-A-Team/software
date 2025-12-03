@@ -26,68 +26,17 @@
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/any_shape.hpp>
 #include <ateam_geometry/types.hpp>
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "core/stp/base.hpp"
+#include "path.hpp"
+#include "planner_options.hpp"
 
 namespace ateam_kenobi::path_planning
 {
 
-struct ReplanThresholds
-{
-  double goal_distance_ = 0.05;
-  double obstacle_distance_ = kRobotRadius;
-  double start_distance_ = 0.20;
-};
-
-struct PlannerOptions
-{
-  /**
-   * @brief Max time before planner will give up searching for a path
-   */
-  double search_time_limit = 2e-3;  // seconds
-
-  /**
-   * @brief If true, the planner treats the ball as an obstacle.
-   */
-  bool avoid_ball = true;
-
-  /**
-   * @brief The size by which the radius of the robot will be augmented during collision checking
-   *
-   */
-  double footprint_inflation = 0.06;
-
-  double collision_check_resolution = 0.05;
-
-  bool use_default_obstacles = true;
-
-  /**
-   * @brief If true, any obstacles touching the start point will be ignored for all planning.
-   *
-   * Useful if you want to plan a path to escape a virtual obstacle like a keep out zone.
-   */
-  bool ignore_start_obstacle = true;
-
-  bool draw_obstacles = false;
-
-  bool force_replan = false;
-
-  /**
-   * Any corners sharper than this angle will attempt to be smoothed, time permitting
-   */
-  double corner_smoothing_angle_threshold = 2.36;
-
-  double corner_smoothing_step_size = 0.005;
-
-  ReplanThresholds replan_thresholds;
-};
-
 class PathPlanner : public stp::Base
 {
 public:
-  using Position = ateam_geometry::Point;
-  using Path = std::vector<Position>;
-
   explicit PathPlanner(stp::Options stp_options = {});
 
   Path getPath(

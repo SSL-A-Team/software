@@ -27,10 +27,10 @@
 #include <rclcpp/rclcpp.hpp>
 #include <nlohmann/json.hpp>
 #include <ateam_common/robot_constants.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_geometry/types.hpp>
-#include "core/types/world.hpp"
-#include "core/play_helpers/easy_move_to.hpp"
+#include "core/types/state_types.hpp"
+#include "core/types/robot_command.hpp"
+#include "core/visualization/overlays.hpp"
 
 namespace ateam_kenobi::plays::stop_plays::stop_helpers
 {
@@ -56,14 +56,14 @@ void drawObstacles(
 void moveBotsTooCloseToBall(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands,
-  std::array<play_helpers::EasyMoveTo, 16> & easy_move_tos, visualization::Overlays & overlays,
+  std::array<std::optional<RobotCommand>, 16> & motion_commands,
+  visualization::Overlays & overlays,
   nlohmann::json & play_info);
 
 void moveBotsInObstacles(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands,
+  std::array<std::optional<RobotCommand>, 16> & motion_commands,
   nlohmann::json & play_info);
 
 }  // namespace ateam_kenobi::plays::stop_plays::stop_helpers

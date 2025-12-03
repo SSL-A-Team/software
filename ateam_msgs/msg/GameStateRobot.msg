@@ -1,0 +1,10 @@
+int32 id
+bool visible
+bool radio_connected
+geometry_msgs/Pose pose
+geometry_msgs/Twist velocity
+geometry_msgs/Twist prev_command_velocity
+bool breakbeam_ball_detected
+bool breakbeam_ball_detected_filtered
+bool kicker_available
+bool chipper_available

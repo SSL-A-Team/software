@@ -28,7 +28,6 @@ using namespace ateam_kenobi::play_helpers;  // NOLINT(build/namespaces)
 
 using testing::ElementsAre;
 using testing::Optional;
-using testing::Field;
 using testing::Eq;
 
 TEST(RobotAssignmentTest, EmptyRobots)
@@ -62,7 +61,7 @@ TEST(RobotAssignmentTest, OneRobotOneGoal)
     ateam_geometry::Point(3, 4)
   };
   const auto assignments = assignRobots(robots, goals);
-  EXPECT_THAT(assignments, ElementsAre(Optional(Field(&Robot::id, Eq(1)))));
+  EXPECT_THAT(assignments, ElementsAre(Optional(testing::Field(&Robot::id, Eq(1)))));
 }
 
 TEST(RobotAssignmentTest, TwoRobotsOneGoal)
@@ -79,7 +78,7 @@ TEST(RobotAssignmentTest, TwoRobotsOneGoal)
     ateam_geometry::Point(3, 4)
   };
   const auto assignments = assignRobots(robots, goals);
-  EXPECT_THAT(assignments, ElementsAre(Optional(Field(&Robot::id, Eq(2)))));
+  EXPECT_THAT(assignments, ElementsAre(Optional(testing::Field(&Robot::id, Eq(2)))));
 }
 
 TEST(RobotAssignmentTest, TwoRobotsTwoGoals)
@@ -99,7 +98,8 @@ TEST(RobotAssignmentTest, TwoRobotsTwoGoals)
   const auto assignments = assignRobots(robots, goals);
   EXPECT_THAT(
     assignments,
-    ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
+    ElementsAre(Optional(testing::Field(&Robot::id, Eq(1))),
+    Optional(testing::Field(&Robot::id, Eq(2)))));
 }
 
 TEST(RobotAssignmentTest, TwoRobotsSameDistance)
@@ -119,7 +119,8 @@ TEST(RobotAssignmentTest, TwoRobotsSameDistance)
   const auto assignments = assignRobots(robots, goals);
   EXPECT_THAT(
     assignments,
-    ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
+    ElementsAre(Optional(testing::Field(&Robot::id, Eq(1))),
+    Optional(testing::Field(&Robot::id, Eq(2)))));
 }
 
 TEST(RobotAssignmentTest, DisallowAssigningDisallowedRobots)
@@ -165,13 +166,16 @@ TEST(GroupAssignmentTest, ThreeGroups) {
 
   const auto assignments = play_helpers::assignGroups(robots, groups);
 
-  EXPECT_THAT(assignments.GetPositionAssignment("kicker"), Optional(Field(&Robot::id, Eq(0))));
+  EXPECT_THAT(assignments.GetPositionAssignment("kicker"),
+    Optional(testing::Field(&Robot::id, Eq(0))));
   EXPECT_THAT(
     assignments.GetGroupAssignments("support"),
-    ElementsAre(Optional(Field(&Robot::id, Eq(1))), Optional(Field(&Robot::id, Eq(2)))));
+    ElementsAre(Optional(testing::Field(&Robot::id, Eq(1))),
+    Optional(testing::Field(&Robot::id, Eq(2)))));
   EXPECT_THAT(
     assignments.GetGroupAssignments("defense"),
-    ElementsAre(Optional(Field(&Robot::id, Eq(3))), Optional(Field(&Robot::id, Eq(4)))));
+    ElementsAre(Optional(testing::Field(&Robot::id, Eq(3))),
+    Optional(testing::Field(&Robot::id, Eq(4)))));
 }
 
 TEST(GroupAssignmentTest, DisallowedIds) {
@@ -193,8 +197,10 @@ TEST(GroupAssignmentTest, DisallowedIds) {
 
   const auto assignments = play_helpers::assignGroups(robots, groups);
 
-  EXPECT_THAT(assignments.GetPositionAssignment("kicker"), Optional(Field(&Robot::id, Eq(1))));
+  EXPECT_THAT(assignments.GetPositionAssignment("kicker"),
+    Optional(testing::Field(&Robot::id, Eq(1))));
   EXPECT_THAT(
     assignments.GetGroupAssignments("support"),
-    ElementsAre(Optional(Field(&Robot::id, Eq(0))), Optional(Field(&Robot::id, Eq(2)))));
+    ElementsAre(Optional(testing::Field(&Robot::id, Eq(0))),
+    Optional(testing::Field(&Robot::id, Eq(2)))));
 }

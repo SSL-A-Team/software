@@ -28,24 +28,13 @@
 #include <vector>
 #include <utility>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
-#include <ateam_common/parameters.hpp>
 #include "ateam_geometry/ateam_geometry.hpp"
 #include "ateam_common/robot_constants.hpp"
 #include "pid.hpp"
+#include "frame_conversions.hpp"
 
-/*
-// PID gains
-CREATE_PARAM(double, "motion/pid/x_kp", x_kp, 2);
-CREATE_PARAM(double, "motion/pid/y_kp", y_kp, 2);
-CREATE_PARAM(double, "motion/pid/t_kp", t_kp, 3);
-
-// PID velocity limits
-CREATE_PARAM(double, "motion/pid/x_max", x_max, 2);
-CREATE_PARAM(double, "motion/pid/y_max", y_max, 2);
-CREATE_PARAM(double, "motion/pid/t_max", t_max, 4);
-*/
-
+namespace ateam_kenobi::motion
+{
 
 MotionController::MotionController(rclcpp::Logger logger)
 : logger_(logger)
@@ -101,7 +90,7 @@ void MotionController::reset_trajectory(
   }
 }
 
-void MotionController::calculate_trajectory_velocity_limits()
+void MotionController::calculate_trajectory_velocity_limits(const MotionOptions & options)
 {
   trajectory_velocity_limits.reserve(trajectory.size());
 
@@ -123,26 +112,28 @@ void MotionController::calculate_trajectory_velocity_limits()
     // Max velocity robot could linearly decelerate to the next velocity from
     double distance = ateam_geometry::norm(next_point - point);
     double max_decel_velocity = sqrt(std::pow(ateam_geometry::norm(next_vel),
-      2) + 2 * decel_limit * distance);
+      2) + 2 * options.max_deceleration * distance);
 
     // Max velocity robot can make turn (also have to account for next_vel being (0,0))
-    double max_turn_velocity = v_max;
+    double max_turn_velocity = options.max_velocity;
     if (i > 0) {
       const ateam_geometry::Point prev_point = trajectory[i - 1];
       const ateam_geometry::Vector prev_direction = point - prev_point;
 
       double angle = ateam_geometry::ShortestAngleBetween(direction, prev_direction);
-      max_turn_velocity = (abs(angle) > max_allowed_turn_angle) ? 0.5 : v_max;
+      max_turn_velocity = (abs(angle) >
+        options.max_allowed_turn_angle) ? 0.5 : options.max_velocity;
     }
 
     double selected_velocity = std::clamp(std::min(max_decel_velocity, max_turn_velocity),
-      0.0, v_max);
+      0.0, options.max_velocity);
 
     trajectory_velocity_limits[i] = selected_velocity * direction;
   }
 }
 
 double MotionController::calculate_trapezoidal_velocity(
+  const MotionOptions & options,
   const ateam_kenobi::Robot & robot,
   ateam_geometry::Point target, size_t target_index, double dt)
 {
@@ -172,21 +163,22 @@ double MotionController::calculate_trapezoidal_velocity(
     (2 * distance_to_next_trajectory_point);
 
   // Cruise
-  double trapezoidal_vel = this->v_max;
+  double trapezoidal_vel = options.max_velocity;
 
   // Decelerate to target velocity
-  if (deceleration_to_reach_target > decel_limit * 0.95) {
+  if (deceleration_to_reach_target > options.max_deceleration * 0.95) {
     trapezoidal_vel = vel - (deceleration_to_reach_target * dt);
 
   // Accelerate to speed
-  } else if (vel < this->v_max) {
-    trapezoidal_vel = vel + (accel_limit * dt);
+  } else if (vel < options.max_velocity) {
+    trapezoidal_vel = vel + (options.max_acceleration * dt);
   }
 
-  return std::clamp(trapezoidal_vel, -this->v_max, this->v_max);
+  return std::clamp(trapezoidal_vel, -options.max_velocity, options.max_velocity);
 }
 
 double MotionController::calculate_trapezoidal_angular_vel(
+  const MotionOptions & options,
   const ateam_kenobi::Robot & robot,
   double target_angle, double dt)
 {
@@ -199,17 +191,19 @@ double MotionController::calculate_trapezoidal_angular_vel(
   double deceleration_to_reach_target = (vel * vel) / (2 * angle_error);
 
   // Cruise
-  double trapezoidal_vel = std::copysign(t_max, angle_error);
+  double trapezoidal_vel = std::copysign(options.max_angular_velocity, angle_error);
   const double error_direction = std::copysign(1, angle_error);
   const double decel_direction = std::copysign(1, vel * angle_error);
 
   // Decelerate to target velocity
-  if (decel_direction > 0 && abs(deceleration_to_reach_target) > t_accel_limit * 0.95) {
+  if (decel_direction > 0 &&
+    abs(deceleration_to_reach_target) > options.max_angular_acceleration * 0.95)
+  {
     trapezoidal_vel = vel - (error_direction * deceleration_to_reach_target * dt);
 
   // Accelerate to speed
-  } else if (abs(vel) < t_max) {
-    trapezoidal_vel = vel + (error_direction * t_accel_limit * dt);
+  } else if (abs(vel) < options.max_angular_velocity) {
+    trapezoidal_vel = vel + (error_direction * options.max_angular_acceleration * dt);
   }
 
   // const auto min_angular_vel = 1.0;
@@ -217,15 +211,15 @@ double MotionController::calculate_trapezoidal_angular_vel(
   //   trapezoidal_vel = std::copysign(min_angular_vel, angle_error);
   // }
 
-  return std::clamp(trapezoidal_vel, -t_max, t_max);
+  return std::clamp(trapezoidal_vel, -options.max_angular_velocity, options.max_angular_velocity);
 }
 
-ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
+BodyVelocity MotionController::get_command(
   ateam_kenobi::Robot robot,
   double current_time,
   const MotionOptions & options)
 {
-  ateam_msgs::msg::RobotMotionCommand motion_command;
+  BodyVelocity motion_command;
 
   // Skip if there isn't a trajectory
   if (this->trajectory.size() <= 0) {
@@ -247,7 +241,7 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
   ateam_geometry::Point target = this->trajectory[target_index];
   ateam_geometry::Vector target_direction = ateam_geometry::normalize(target - robot.pos);
 
-  const double lookahead_distance = this->v_max * dt;
+  const double lookahead_distance = options.max_velocity * dt;
   const auto lookahead = ateam_geometry::makeCircle(robot.pos, lookahead_distance);
 
   u_int64_t closest_index = this->trajectory.size() - 1;
@@ -348,8 +342,9 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     const auto world_feedback = body_feedback.transform(transformation.inverse());
 
     // Calculate trapezoidal velocity feedforward
-    calculate_trajectory_velocity_limits();
-    double calculated_velocity = calculate_trapezoidal_velocity(robot, target, target_index, dt);
+    calculate_trajectory_velocity_limits(options);
+    double calculated_velocity = calculate_trapezoidal_velocity(options, robot, target,
+        target_index, dt);
 
     ateam_geometry::Vector vel_vector;
 
@@ -364,12 +359,11 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
     }
 
     // clamp to max/min velocity
-    if (ateam_geometry::norm(vel_vector) > this->v_max) {
-      vel_vector = this->v_max * ateam_geometry::normalize(vel_vector);
+    if (ateam_geometry::norm(vel_vector) > options.max_velocity) {
+      vel_vector = options.max_velocity * ateam_geometry::normalize(vel_vector);
     }
 
-    motion_command.twist.linear.x = vel_vector.x();
-    motion_command.twist.linear.y = vel_vector.y();
+    motion_command.linear = WorldToLocalFrame(vel_vector, robot);
   }
 
   // calculate angle movement commands
@@ -407,20 +401,21 @@ ateam_msgs::msg::RobotMotionCommand MotionController::get_command(
       if(std::abs(t_error) < M_PI / 12.0) {
         t_command = this->t_controller.compute_command(t_error, dt);
       } else {
-        t_command = this->calculate_trapezoidal_angular_vel(robot, target_angle, dt);
+        t_command = this->calculate_trapezoidal_angular_vel(options, robot, target_angle, dt);
       }
 
       if (trajectory_complete) {
         double theta_min = 0.0;
         if (abs(t_command) < theta_min) {
           if (t_command > 0) {
-            t_command = std::clamp(t_command, theta_min, this->t_max);
+            t_command = std::clamp(t_command, theta_min, options.max_angular_velocity);
           } else {
-            t_command = std::clamp(t_command, -theta_min, -this->t_max);
+            t_command = std::clamp(t_command, -theta_min, -options.max_angular_velocity);
           }
         }
       }
-      motion_command.twist.angular.z = std::clamp(t_command, -this->t_max, this->t_max);
+      motion_command.angular = std::clamp(t_command, -options.max_angular_velocity,
+          options.max_angular_velocity);
     }
   }
 
@@ -478,3 +473,5 @@ void MotionController::set_t_pid_gains(double p, double i, double d, double i_mi
 {
   t_controller.set_gains(p, i, d, i_max, i_min);
 }
+
+}  // namespace ateam_kenobi::motion

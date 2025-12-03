@@ -56,14 +56,13 @@ stp::PlayScore Basic122::getScore(const World & world)
 
 void Basic122::reset()
 {
-  blockers_skill_.reset();
   defense_.reset();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::runFrame(
+std::array<std::optional<RobotCommand>, 16> Basic122::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> motion_commands;
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
@@ -112,7 +111,7 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> Basic122::run
 
 void Basic122::runStriker(
   const Robot & striker_bot, const World & world,
-  ateam_msgs::msg::RobotMotionCommand & motion_command)
+  RobotCommand & motion_command)
 {
   if (striker_skill_.IsDone()) {
     striker_skill_.Reset();
@@ -126,8 +125,7 @@ void Basic122::runStriker(
     const auto ball_to_bot_vec = striker_bot.pos - world.ball.pos;
     const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
     if (ateam_geometry::norm(ball_to_bot_vec) < kRobotDiameter) {
-      motion_command.twist.linear.x = vel.x();
-      motion_command.twist.linear.y = vel.y();
+      motion_command.motion_intent.linear = motion::intents::linear::VelocityIntent{vel};
     }
     return;
   }
@@ -161,7 +159,7 @@ void Basic122::runStriker(
 void Basic122::runBlockers(
   const std::vector<Robot> & blocker_bots,
   const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
+  std::array<std::optional<RobotCommand>,
   16> & motion_commands)
 {
   const auto skill_commands = blockers_skill_.runFrame(world, blocker_bots);

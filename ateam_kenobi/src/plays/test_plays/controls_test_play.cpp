@@ -22,7 +22,7 @@
 #include <angles/angles.h>
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/creation_helpers.hpp>
-#include "core/types/world.hpp"
+#include "core/types/state_types.hpp"
 #include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
@@ -38,21 +38,16 @@ ControlsTestPlay::ControlsTestPlay(stp::Options stp_options)
 
   // Drive in square
   waypoints = {
-    {ateam_geometry::Point(-1.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(-3.0, -1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(-3.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
-    {ateam_geometry::Point(-1.0, 1.0), AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(1.0, -1.0), motion::AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.0, -1.0), motion::AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(-1.0, 1.0), motion::AngleMode::face_absolute, 0.0, 3.0},
+    {ateam_geometry::Point(1.0, 1.0), motion::AngleMode::face_absolute, 0.0, 3.0},
   };
 
   // waypoints = {
   //   {ateam_geometry::Point(-0.5, -kRobotRadius), AngleMode::face_absolute, M_PI / 2, 3.0},
   //   {ateam_geometry::Point(-0.5, kRobotRadius), AngleMode::face_absolute, M_PI / 2, 3.0}
   // };
-
-  motion_controller_.v_max = 2.0;
-  motion_controller_.t_max = 20.0;
-  motion_controller_.accel_limit = 2.0;
-  motion_controller_.decel_limit = 2.0;
 }
 
 void ControlsTestPlay::reset()
@@ -62,10 +57,10 @@ void ControlsTestPlay::reset()
   goal_hit_time = std::chrono::steady_clock::now();
 }
 
-std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestPlay::runFrame(
+std::array<std::optional<RobotCommand>, 16> ControlsTestPlay::runFrame(
   const World & world)
 {
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> maybe_motion_commands;
+  std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
   auto current_available_robots = play_helpers::getAvailableRobots(world);
   if (current_available_robots.empty()) {
     // No robots available to run
@@ -98,27 +93,37 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   motion_controller_.reset_trajectory(path, waypoint_vel);
 
   switch (waypoints[index].angle_mode) {
-    case AngleMode::face_absolute:
+    case motion::AngleMode::face_absolute:
       motion_controller_.face_absolute(waypoints[index].heading);
       break;
-    case AngleMode::face_travel:
+    case motion::AngleMode::face_travel:
       motion_controller_.face_travel();
       break;
-    case AngleMode::face_point:
+    case motion::AngleMode::face_point:
       // WARNING: face_point not supported in this play. Defaulting to no face.
       [[fallthrough]];
-    case AngleMode::no_face:
+    case motion::AngleMode::no_face:
       motion_controller_.no_face();
       break;
   }
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
 
-  MotionOptions motion_options;
+  motion::MotionOptions motion_options;
+  motion_options.max_velocity = 2.0;
+  motion_options.max_angular_velocity = 20.0;
+  motion_options.max_acceleration = 2.0;
+  motion_options.max_deceleration = 2.0;
   motion_options.completion_threshold = position_threshold;
-  maybe_motion_commands[robot.id] = motion_controller_.get_command(
+  const auto body_vel = motion_controller_.get_command(
     robot, current_time,
     motion_options);
+
+  RobotCommand command;
+  command.motion_intent.linear = motion::intents::linear::VelocityIntent{body_vel.linear,
+    motion::intents::linear::Frame::World};
+  command.motion_intent.angular = motion::intents::angular::VelocityIntent{body_vel.angular};
+  maybe_motion_commands[robot.id] = command;
 
   const std::vector<ateam_geometry::Point> viz_path = path;
   getOverlays().drawLine("controls_test_path", viz_path, "purple");
@@ -140,8 +145,8 @@ std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ControlsTestP
   getPlayInfo()["robot"]["vel"]["y"] = robot.vel.y();
   getPlayInfo()["robot"]["vel"]["t"] = robot.omega;
 
-  getPlayInfo()["robot"]["cmd_vel"]["x"] = maybe_motion_commands[robot.id].value().twist.linear.x;
-  getPlayInfo()["robot"]["cmd_vel"]["y"] = maybe_motion_commands[robot.id].value().twist.linear.y;
+  getPlayInfo()["robot"]["cmd_vel"]["x"] = body_vel.linear.x();
+  getPlayInfo()["robot"]["cmd_vel"]["y"] = body_vel.linear.y();
 
   getPlayInfo()["error"]["x"] = waypoints[index].position.x() - robot.pos.x();
   getPlayInfo()["error"]["y"] = waypoints[index].position.y() - robot.pos.y();
@@ -163,7 +168,7 @@ bool ControlsTestPlay::isGoalHit(const Robot & robot)
   const bool position_goal_hit = ateam_geometry::norm(waypoints[target_index].position -
       robot.pos) < position_threshold;
   const bool heading_goal_hit = [&]() {
-      if (waypoints[target_index].angle_mode == AngleMode::face_absolute) {
+      if (waypoints[target_index].angle_mode == motion::AngleMode::face_absolute) {
         return std::abs(
           angles::shortest_angular_distance(
             waypoints[target_index].heading,

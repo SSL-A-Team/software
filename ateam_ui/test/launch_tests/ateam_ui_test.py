@@ -103,12 +103,12 @@ class TestUI(unittest.TestCase):
         self.assertIsNotNone(subscriptions)
 
         # Check subscription to /ball
-        self.assertIn(("/ball", ['ateam_msgs/msg/BallState']), subscriptions)
+        self.assertIn(("/ball", ['ateam_msgs/msg/VisionStateBall']), subscriptions)
 
         # Check robot subscriptions
         for team in ["yellow", "blue"]:
             for id in range(0, 16):
-                topic = (f"/{team}_team/robot{id}", ['ateam_msgs/msg/RobotState'])
+                topic = (f"/{team}_team/robot{id}", ['ateam_msgs/msg/VisionStateRobot'])
                 self.assertIn(topic, subscriptions)
 
         # Check subscription to /overlay

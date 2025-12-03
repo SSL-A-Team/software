@@ -24,6 +24,5 @@
 #include "pass_to_lane_play.hpp"
 #include "pass_to_segment_play.hpp"
 #include "segment_passing_target_funcs.hpp"
-#include "spatial_pass_play.hpp"
 
 #endif  // PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_

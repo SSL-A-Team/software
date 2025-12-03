@@ -1,0 +1,2 @@
+VisionStateModel[] models
+uint32 updates_until_valid_track

@@ -24,6 +24,7 @@
 #include "kick_skill.hpp"
 #include "pivot_kick.hpp"
 #include "line_kick.hpp"
+#include "core/types/robot_command.hpp"
 
 namespace ateam_kenobi::skills
 {
@@ -50,13 +51,11 @@ public:
 
   bool IsDone() const;
 
-  void SetUseDefaultObstacles(bool use_obstacles);
-
   void SetKickChip(KickSkill::KickChip kc);
 
   void SetPreferredKickType(KickType type);
 
-  ateam_msgs::msg::RobotMotionCommand RunFrame(const World & world, const Robot & robot);
+  RobotCommand RunFrame(const World & world, const Robot & robot);
 
   /*
    * Pivot-only functions
