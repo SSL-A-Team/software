@@ -28,6 +28,7 @@
 #include <rclcpp_components/register_node_macro.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
+#include <geometry_msgs/msg/pose.hpp>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
@@ -81,6 +82,7 @@ public:
       rclcpp::SystemDefaultsQoS(),
       &RadioBridgeNode::VisionStateCallback,
       this);
+
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
       "~/robot_motion_commands/robot",
@@ -177,6 +179,7 @@ private:
     ReplaceNanWithZero(state.pose.orientation.z);
     ReplaceNanWithZero(state.pose.orientation.w);
     vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
+    RCLCPP_INFO(get_logger(), "Updating vision state for robot %i", robot_id);
   }
 
   void MotionCommandCallback(
@@ -190,6 +193,7 @@ private:
     ReplaceNanWithZero(command.twist.linear.y);
     ReplaceNanWithZero(command.twist.angular.z);
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
+    RCLCPP_INFO(get_logger(), "Updating motion command for robot %i", robot_id);
   }
 
   void CloseConnection(const std::size_t & connection_index)
@@ -269,27 +273,16 @@ private:
         get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.play_song = 0;
       // TODO: figure out a time reference that will be meaningful for the robot, time since last time sync?
-      uint64_t micros = std::chrono::duration_cast<std::chrono::microseconds>(
+      uint64_t last_vision_update_micros = std::chrono::duration_cast<std::chrono::microseconds>(
         vision_state_timestamps_[id].time_since_epoch()).count();  // will be zero if no vision update has been received yet
-      control_msg.last_vision_update_us_hi = static_cast<uint32_t>(micros >> 32);
-      control_msg.last_vision_update_us_lo = static_cast<uint32_t>(micros & 0xFFFFFFFFu);
-      ateam_msgs::msg::VisionStateRobot vision_state = vision_states_[id];
-      double roll, pitch, yaw = 0.0;
-      if (micros != 0) {
-        // Pose has been updated with a valid quaternion
-        // Convert to tf2 quaternion
-        tf2::Quaternion q(
-            vision_state.pose.orientation.x,
-            vision_state.pose.orientation.y,
-            vision_state.pose.orientation.z,
-            vision_state.pose.orientation.w
-        );
-        // Convert to roll, pitch, yaw
-        tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
-      }
-      control_msg.vision_x = vision_state.pose.position.x;
-      control_msg.vision_y = vision_state.pose.position.y;
-      control_msg.vision_z = yaw;
+      control_msg.last_vision_update_us_hi = static_cast<uint32_t>(last_vision_update_micros >> 32);
+      control_msg.last_vision_update_us_lo = static_cast<uint32_t>(last_vision_update_micros & 0xFFFFFFFFu);
+      control_msg.pos_x_linear_vision = vision_states_[id].pose.position.x;
+      control_msg.pos_y_linear_vision = vision_states_[id].pose.position.y;
+      control_msg.pos_z_angular_vision = GetPoseYaw(vision_states_[id].pose);
+      control_msg.pos_x_linear = motion_commands_[id].pose.position.x;
+      control_msg.pos_y_linear = motion_commands_[id].pose.position.y;
+      control_msg.pos_z_angular = GetPoseYaw(motion_commands_[id].pose);
       control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
       control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
       control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
@@ -297,6 +290,9 @@ private:
       control_msg.dribbler_multiplier = 55;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
+      if (id == 2) {
+        RCLCPP_INFO(get_logger(), "Robot 2 commanded x: %f", control_msg.pos_x_linear);
+      }
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),
@@ -519,6 +515,22 @@ private:
     }
 
     response->success = true;
+  }
+
+  double GetPoseYaw(geometry_msgs::msg::Pose pose) {
+    double roll, pitch, yaw = 0.0;
+    tf2::Quaternion q(
+        pose.orientation.x,
+        pose.orientation.y,
+        pose.orientation.z,
+        pose.orientation.w
+    );
+    if (q.length2() == 0) {
+        // invalid quaternion, pose could be a default constructed message
+        return 0.0;
+    }
+    tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+    return yaw;
   }
 
 };

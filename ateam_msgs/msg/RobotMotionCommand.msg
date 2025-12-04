@@ -2,6 +2,7 @@
 # XY in translation (m/s)
 # Z in rotation (rad/s)
 geometry_msgs/Twist twist
+geometry_msgs/Pose pose
 uint8 twist_frame 0
 uint8 kick_request
 float32 kick_speed # (m/s)
