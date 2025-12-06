@@ -179,7 +179,7 @@ private:
     ReplaceNanWithZero(state.pose.orientation.z);
     ReplaceNanWithZero(state.pose.orientation.w);
     vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
-    RCLCPP_INFO(get_logger(), "Updating vision state for robot %i", robot_id);
+    // RCLCPP_INFO(get_logger(), "Updating vision state for robot %i", robot_id);
   }
 
   void MotionCommandCallback(
@@ -193,7 +193,7 @@ private:
     ReplaceNanWithZero(command.twist.linear.y);
     ReplaceNanWithZero(command.twist.angular.z);
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
-    RCLCPP_INFO(get_logger(), "Updating motion command for robot %i", robot_id);
+    // RCLCPP_INFO(get_logger(), "Updating motion command for robot %i", robot_id);
   }
 
   void CloseConnection(const std::size_t & connection_index)
@@ -290,9 +290,9 @@ private:
       control_msg.dribbler_multiplier = 55;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
-      if (id == 2) {
-        RCLCPP_INFO(get_logger(), "Robot 2 commanded x: %f", control_msg.pos_x_linear);
-      }
+      // if (id == 2) {
+      //   RCLCPP_INFO(get_logger(), "Robot 2 commanded x: %f", control_msg.pos_x_linear);
+      // }
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),

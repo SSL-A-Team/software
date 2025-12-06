@@ -1,4 +1,5 @@
 ros2 launch ateam_bringup joystick_only_stack.launch.py
+colcon build --packages-select ateam_bangbang ateam_msgs ateam_bringup ateam_radio_msgs ateam_radio_bridge && source ./install/setup.bash && ros2 launch ateam_bringup bringup_bangbang.launch.py command_frequency:=60.0
 colcon build --packages-select ateam_bringup; source ./install/setup.bash; ros2 run ateam_bringup trajectory.py
 ros2 topic echo --qos-durability volatile /robot_motion_commands/robot2
 colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
