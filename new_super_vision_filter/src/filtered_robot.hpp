@@ -30,8 +30,10 @@ class FilteredRobot {
         // velocities
         // X, Y
         Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
+        PosMeasurementModel measurementModelXY;
         // Theta
         Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
+        AngleMeasurementModel measurementModelW;
 }
 
 #endif  // FILTERED_ROBOT_HPP_

@@ -5,6 +5,10 @@
 #include <chrono>
 #include <Eigen/Core>
 
+// See https://thekalmanfilter.com/extended-kalman-filter-python-example/
+// or https://thekalmanfilter.com/kalman-filter-explained-simply/
+// OR https://github.com/mherb/kalman/blob/master/examples/Robot1/main.cpp
+
 FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg, ateam_common::TeamColor team_color)
     : posFilterXY(), posFilterW(), bot_id(robot_detection_msg->robot_id), height(robot_detection_msg->height * 1000), team(team_color) {
         // TODO (Christian) - Might need to change the below to use our state/measurement types
@@ -47,6 +51,22 @@ void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_dete
     // (unless our filter is still new/only has a few measurements)
     bool is_new = age < oldEnough;
     // As long as its reasonable, update the Kalman Filter
+
+    // Predict state forward
+    // Predict covariance forward
+    // (All encompassed by the .predict() function)
+    auto xy_pred = posFilterXY.predict();
+    auto w_pred = posFilterW.predict();
+    // TODO - create the pos variable (should just be a vector) from our detection message
+    PosMeasurement xy_measurement = measurementModelXY.h(pos);
+    AngleMeasurement w_measurement = measurementModelW.h(pos);
+    // Update the Jacobian matrix (contained in filter)
+    // Compute Kalman gain (contained in filter)
+    // Update state estimate (returned)
+    // Update covariance estimate (contained in filter)
+    // All encompassed by the .update() function
+    auto xy_updated = posFilterXY.update(measurementModelXY, xy_measurement)
+    auto w_updated = posFilterW.update(measurementModelW, w_measurement)
 }
 
 ateam_msgs::msg::RobotState FilteredRobot::toMsg(){};
