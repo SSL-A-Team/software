@@ -51,6 +51,13 @@ void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_dete
     // (unless our filter is still new/only has a few measurements)
     bool is_new = age < oldEnough;
     // As long as its reasonable, update the Kalman Filter
+    const std::chrono::time_point<std::chrono::system_clock> now =
+        std::chrono::system_clock::now();
+    // If it's been too long, don't use this message
+    if (now - timestamp > update_threshold) {
+        timestamp = now;
+        return;
+    }
 
     // Predict state forward
     // Predict covariance forward
@@ -67,6 +74,8 @@ void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_dete
     // All encompassed by the .update() function
     auto xy_updated = posFilterXY.update(measurementModelXY, xy_measurement)
     auto w_updated = posFilterW.update(measurementModelW, w_measurement)
+    // Update our timestamp for next time
+    timestamp = now;
 }
 
 ateam_msgs::msg::RobotState FilteredRobot::toMsg(){};

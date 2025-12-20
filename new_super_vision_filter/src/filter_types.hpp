@@ -1,8 +1,11 @@
 #ifndef FILTER_TYPES_HPP_ 
 #define FILTER_TYPES_HPP_ 
 
+#include <chrono>
+
 #include "kalman/Types.hpp"
 #include "kalman/LinearizedMeasurementModel.hpp"
+#include "kalman/LinearizedSystemModel.hpp"
 
 /*
     Position measurement for robot or balls
@@ -81,6 +84,50 @@ protected:
 };
 
 /*
+    System (measurement to state) transition model for X/Y position
+    that assumes a constant velocity and no control inputs.
+
+*/
+class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
+{
+    private:
+        const float ms_to_s = 1e4;
+        std::chrono::time_point<std::chrono::system_clock> last_update;
+
+    public:
+        // For now, we don't add any control inputs to the vision system
+        // TODO (Christian): We might need this for the robots, even if we
+        // don't use it for the ball
+        using Control = Kalman::Vector<double, 0>;
+
+        /*
+            The f() function applies what would be the A (state transition)
+            matrix but lazily skips doing a matmul.
+
+            We assume the velocity stays constant and add v * dt to the
+            current position.
+        */
+        PosState f(const PosState& x, const Control& /*u*/) const override
+        {
+            PosState x_updated;
+            const auto now = std::chrono::system_clock::now();
+            std::chrono::milliseconds dt = now - last_update;
+
+            // B/c dt is in ms, we need to convert to s, since
+            // our velocities are all in m/s
+            x_updated[x.PX] += x[x.VX] * dt * ms_to_s;
+            // We assume constant velocity in the system model
+            x_updated[x.VX] = x[x.VX];
+            x_updated[x.PY] += x[x.VY] * dt * ms_to_s;
+            x_updated[x.VY] = x[x.VY];
+
+            last_update = now;
+            return last_updated;
+        }
+
+}
+
+/*
     Angular position measurement (in rad)
 */
 class AngleMeasurement : public KalmanVector<double, 1>
@@ -131,5 +178,10 @@ public:
         this->H(0, 0) = 1; // dz_px / d_px
     }
 };
+
+class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>
+{
+
+}
 
 #endif // FILTER_TYPES_HPP

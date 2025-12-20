@@ -23,8 +23,9 @@ class FilteredRobot {
         int oldEnough = 3;
         int maxHealth = 20;
         double maxDistance = -1.0;
-        std::chrono::time_point timestamp; 
-        std::chrono::time_point last_visible_timestamp;
+        std::chrono::milliseconds update_threshold = 50;
+        std::chrono::time_point<std::chrono::system_clock> timestamp; 
+        std::chrono::time_point<std::chrono::system_clock> last_visible_timestamp;
         double height; // in m
         // Use the below filtered values when getting X/Y/w (theta) and
         // velocities
