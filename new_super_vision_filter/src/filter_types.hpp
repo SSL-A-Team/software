@@ -21,13 +21,16 @@ class PosMeasurement : public Kalman::Vector<double, 2>
 {
 public:
     KALMAN_VECTOR(PosMeasurement, double, 2)
+    
+    static constexpr size_t X = 0;
+    static constexpr size_t Y = 1;
 
     double x() const {
-        return (*this)[0];
+        return (*this)[X];
     }
     
     double y() const {
-        return (*this)[1];
+        return (*this)[Y];
     }
 };
 
@@ -51,6 +54,12 @@ public:
     static constexpr size_t PY = 1;
     static constexpr size_t VX = 2;
     static constexpr size_t VY = 3;
+
+    double const px(){return (*this)[PX]; }
+    double const py(){return (*this)[PY]; }
+    double const vx(){return (*this)[VX]; }
+    double const vy(){return (*this)[VY]; }
+
 };
 
 /*
@@ -67,8 +76,8 @@ public:
     PosMeasurement h(const PosState& x) const 
     {
         PosMeasurement z;
-        z[0] = x[0]; // px
-        z[1] = x[1]; // py
+        z[0] = x.px(); // px
+        z[1] = x.py(); // py
         return z;
     }
 
@@ -106,20 +115,23 @@ class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
 
             We assume the velocity stays constant and add v * dt to the
             current position.
+
+            pos_t = pos_{t-1} + vel_{t-1} * dt
+            vel_t = vel_{t-1}
         */
         PosState f(const PosState& x, const Control& /*u*/) const override
         {
-            PosState x_updated;
+            PosState x_updated{};
             const auto now = std::chrono::system_clock::now();
             std::chrono::milliseconds dt = now - last_update;
 
             // B/c dt is in ms, we need to convert to s, since
             // our velocities are all in m/s
-            x_updated[x.PX] += x[x.VX] * dt * ms_to_s;
+            x_updated[x.PX] = x.px() + x.vx() * dt * ms_to_s;
             // We assume constant velocity in the system model
-            x_updated[x.VX] = x[x.VX];
-            x_updated[x.PY] += x[x.VY] * dt * ms_to_s;
-            x_updated[x.VY] = x[x.VY];
+            x_updated[x.VX] = x.vx();
+            x_updated[x.PY] = x.py() + x.vy() * dt * ms_to_s;
+            x_updated[x.VY] = x.vy();
 
             last_update = now;
             return last_updated;
@@ -181,7 +193,31 @@ public:
 
 class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>
 {
+    private:
+        const float ms_to_s = 1e4;
+        std::chrono::time_point<std::chrono::system_clock> last_update;
 
+    public:
+        /*
+            This is the system's state transition function (applies
+            the A matrix)
+
+            We assume the velocity stays constant and add v * dt to the
+            current position.
+
+            pos_t = pos_{t-1} + vel_{t-1} * dt
+            vel_t = vel_{t-1}
+        */
+        AngleState f(const AngleState& x, const Control& ){
+            AngleState x_updated{};
+
+            const auto now = std::chrono::system_clock::now();
+            std::chrono::milliseconds dt = now - last_update;
+
+            x_updated[x.PW] = x.pw() + x.vw() * dt * ms_to_s;
+
+            return x_updated;
+        }
 }
 
 #endif // FILTER_TYPES_HPP

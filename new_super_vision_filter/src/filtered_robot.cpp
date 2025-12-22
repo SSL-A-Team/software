@@ -1,5 +1,23 @@
+// Copyright 2024 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 #include "filtered_robot.hpp"
-// #include "kalman/Types.hpp"
 #include "filter_types.hpp"
 
 #include <chrono>
@@ -13,7 +31,7 @@ FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_de
     : posFilterXY(), posFilterW(), bot_id(robot_detection_msg->robot_id), height(robot_detection_msg->height * 1000), team(team_color) {
         // TODO (Christian) - Might need to change the below to use our state/measurement types
         // Initialize XY KF
-        Kalman::Vector<4, double> initial_state_xy = { 
+        PosState initial_state_xy = { 
             robot_detection_msg->pose->position->x,
             robot_detection_msg->pose->position->y,
             0,
@@ -32,7 +50,7 @@ FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_de
             w_pos,
             w_vel
         */
-        Kalman::Vector<2, double> initial_state_w = {
+        AngleState initial_state_w = {
             robot_detection_msg->pose->orientation->w,
             0
         };
@@ -49,33 +67,39 @@ FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_de
 void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg) {
     // Make sure this detection isn't crazy off from our previous ones
     // (unless our filter is still new/only has a few measurements)
+    ++age;
     bool is_new = age < oldEnough;
     // As long as its reasonable, update the Kalman Filter
     const std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
     // If it's been too long, don't use this message
-    if (now - timestamp > update_threshold) {
+    if (now - timestamp > update_threshold || is_new) {
         timestamp = now;
         return;
     }
-
+    // Update our timestamp for next time
+    timestamp = now;
     // Predict state forward
     // Predict covariance forward
     // (All encompassed by the .predict() function)
     auto xy_pred = posFilterXY.predict();
     auto w_pred = posFilterW.predict();
-    // TODO - create the pos variable (should just be a vector) from our detection message
+    PosMeasurement pos {
+        robot_detection_msg->pose->position->x,
+        robot_detection_msg->pose->position->y
+    };
+    AngleMeasurement angle {
+        robot_detection_msg->pose->orientation->w
+    };
     PosMeasurement xy_measurement = measurementModelXY.h(pos);
-    AngleMeasurement w_measurement = measurementModelW.h(pos);
+    AngleMeasurement w_measurement = measurementModelW.h(angle);
     // Update the Jacobian matrix (contained in filter)
     // Compute Kalman gain (contained in filter)
     // Update state estimate (returned)
     // Update covariance estimate (contained in filter)
     // All encompassed by the .update() function
-    auto xy_updated = posFilterXY.update(measurementModelXY, xy_measurement)
-    auto w_updated = posFilterW.update(measurementModelW, w_measurement)
-    // Update our timestamp for next time
-    timestamp = now;
+    posXYEstimate = posFilterXY.update(measurementModelXY, xy_measurement);
+    posWEstimate = w_updated = posFilterW.update(measurementModelW, w_measurement);
 }
 
 ateam_msgs::msg::RobotState FilteredRobot::toMsg(){};
