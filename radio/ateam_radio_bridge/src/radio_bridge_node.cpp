@@ -277,15 +277,12 @@ private:
         vision_state_timestamps_[id].time_since_epoch()).count();  // will be zero if no vision update has been received yet
       control_msg.last_vision_update_us_hi = static_cast<uint32_t>(last_vision_update_micros >> 32);
       control_msg.last_vision_update_us_lo = static_cast<uint32_t>(last_vision_update_micros & 0xFFFFFFFFu);
-      control_msg.pos_x_linear_vision = vision_states_[id].pose.position.x;
-      control_msg.pos_y_linear_vision = vision_states_[id].pose.position.y;
-      control_msg.pos_z_angular_vision = GetPoseYaw(vision_states_[id].pose);
-      control_msg.pos_x_linear = motion_commands_[id].pose.position.x;
-      control_msg.pos_y_linear = motion_commands_[id].pose.position.y;
-      control_msg.pos_z_angular = GetPoseYaw(motion_commands_[id].pose);
-      control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
-      control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
-      control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
+      control_msg.pose_x_linear_vision = vision_states_[id].pose.position.x;
+      control_msg.pose_y_linear_vision = vision_states_[id].pose.position.y;
+      control_msg.pose_z_angular_vision = GetPoseYaw(vision_states_[id].pose);
+      control_msg.x_linear_cmd = motion_commands_[id].pose.position.x;
+      control_msg.y_linear_cmd = motion_commands_[id].pose.position.y;
+      control_msg.z_angular_cmd = GetPoseYaw(motion_commands_[id].pose);
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
       control_msg.dribbler_multiplier = 55;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
