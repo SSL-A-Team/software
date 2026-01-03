@@ -72,8 +72,8 @@ private:
         // msg.twist.angular.z = next_step_state.zd;
 
         ateam_msgs::msg::RobotMotionCommand msg;
-        msg.pose.position.x = 1.0;
-        msg.pose.position.y = 2.0;
+        msg.pose.position.x = 0.0;
+        msg.pose.position.y = 0.0;
         msg.pose.orientation = geometry_msgs::msg::Quaternion();
         // msg.twist.angular.z = 3.0;
 
