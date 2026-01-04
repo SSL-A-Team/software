@@ -55,10 +55,10 @@ public:
     static constexpr size_t VX = 2;
     static constexpr size_t VY = 3;
 
-    double const px(){return (*this)[PX]; }
-    double const py(){return (*this)[PY]; }
-    double const vx(){return (*this)[VX]; }
-    double const vy(){return (*this)[VY]; }
+    const double px(){return (*this)[PX]; }
+    const double py(){return (*this)[PY]; }
+    const double vx(){return (*this)[VX]; }
+    const double vy(){return (*this)[VY]; }
 
 };
 
@@ -69,15 +69,15 @@ public:
     Curently assumes no measurement noise
 */
 class PosMeasurementModel
-    : public Kalman::LinearizedMeasurementModel<PosState, PosMeasurement, StandardBase>
+    : public Kalman::LinearizedMeasurementModel<PosState, PosMeasurement, Kalman::StandardBase>
 {
 public:
     // h(x) = predicted measurement
     PosMeasurement h(const PosState& x) const 
     {
         PosMeasurement z;
-        z[0] = x.px(); // px
-        z[1] = x.py(); // py
+        z[0] = x(x.PX); // px
+        z[1] = x(x.PY); // py
         return z;
     }
 
@@ -122,7 +122,7 @@ class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
         PosState f(const PosState& x, const Control& /*u*/) const override
         {
             PosState x_updated{};
-            const auto now = std::chrono::system_clock::now();
+            auto now = std::chrono::system_clock::now();
             std::chrono::duration<float, std::milli> dt = now - last_update; 
             
             // B/c dt is in ms, we need to convert to s, since
@@ -142,7 +142,7 @@ class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
 /*
     Angular position measurement (in rad)
 */
-class AngleMeasurement : public KalmanVector<double, 1>
+class AngleMeasurement : public Kalman::Vector<double, 1>
 {
 public:
     KALMAN_VECTOR(AngleMeasurement, double, 1)
@@ -165,8 +165,8 @@ public:
     static constexpr size_t PW = 0;
     static constexpr size_t VW = 1;
     
-    double const pw(){return (*this)[PW]; }
-    double const vw(){return (*this)[VW]; }
+    const double pw(){return (*this)[PW]; }
+    const double vw(){return (*this)[VW]; }
 };
 
 /*
@@ -187,7 +187,7 @@ public:
     }
 
     // Jacobian H = ∂h/∂x
-    void updateJacobians(const StateType& x) override
+    void updateJacobians(const AngleState& x) override
     {
         this->H.setZero();
         this->H(0, 0) = 1; // dz_px / d_px

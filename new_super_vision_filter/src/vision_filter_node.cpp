@@ -20,7 +20,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <ssl_league_msgs/msg/vision/vision_wrapper.hpp>
+#include <ssl_league_msgs/msg/vision_wrapper.hpp>
 
 #include "camera.hpp"
 
@@ -37,6 +37,17 @@ class VisionFilterNode : public rclcpp::Node
     // Output final prediction for robots and ball(s)
 
     public:
+        explicit VisionFilterNode(const rclcpp::NodeOptions & options)
+        : rclcpp::Node("new_ateam_vision_filter", options),
+        game_controller_listener_(*this){
+            ssl_vision_subscription_ = 
+                create_subscription<ssl_league_msgs::msg::VisionWrapper>(
+                std::string(Topics::kVisionMessages),
+                10,
+                std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1)
+            );
+
+        }
 
     // Will also need to add publishers here... but want to determine whether we keep existing
     // approach that is in the old Vision Filter or do something else.
@@ -44,28 +55,23 @@ class VisionFilterNode : public rclcpp::Node
     private:
         // Subscribe to vision info from our processed messages
         // in ssl_vision_bridge_node.cpp
-        rclcpp::Subscription<ssl_league_msgs::msg::vision::VisionWrapper>::SharedPtr ssl_vision_subscription_ =
-            create_subscription<ssl_league_msgs::msg::vision::VisionWrapper>(
-            std::string(Topics::kVisionMessages),
-            10,
-            std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
         std::map<int, Camera> cameras;
 
-        void vision_callback(const ssl_league_msgs::msg::vision::VisionWrapper::SharedPtr vision_wrapper_msg) {
+        void vision_callback(const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg) {
             // Add detections to the cameras' msg queues
-            auto detection = vision_wrapper_msg->detection;
+            auto detection = vision_wrapper_msg->detection.front();
             // Create a new camera if we haven't seen this one before
-            int detect_camera = detection->camera_id;
+            int detect_camera = detection.camera_id;
             if (!(cameras.contains(detect_camera))){
-                cameras[detect_camera] = Camera(camera_id);
+                cameras[detect_camera] = Camera(detect_camera);
             }
             cameras[detect_camera].detection_queue.push_back(detection);
             
             // Add geometry to the cameras' msg queues
-            auto geometry = vision_wrapper_msg->geometry;
-            int geo_camera = geometry->camera_id; 
+            auto geometry = vision_wrapper_msg->geometry.front();
+            int geo_camera = geometry.calibration.front().camera_id; 
             if (!(cameras.contains(geo_camera))){
-                cameras[geo_camera] = Camera(camera_id);
+                cameras[geo_camera] = Camera(geo_camera);
             }
             return; 
         }
@@ -75,6 +81,9 @@ class VisionFilterNode : public rclcpp::Node
             // Similar to the publish() method in TIGERs
             return;
         }
+
+        ateam_common::GameControllerListener game_controller_listener_;
+        rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
 };
 
 } // namespace new_super_vision

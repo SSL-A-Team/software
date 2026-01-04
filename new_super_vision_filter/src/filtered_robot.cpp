@@ -111,3 +111,7 @@ void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr
 ateam_msgs::msg::RobotState FilteredRobot::toMsg(){
     return ateam_msgs::msg::RobotState{};
 };
+
+int FilteredRobot::getId(){
+    return bot_id;
+}

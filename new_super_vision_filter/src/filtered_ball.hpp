@@ -13,7 +13,7 @@ enum KickState {
 };
 
 class FilteredBall {
-    FilteredBall::FilteredBall(ssl_league_msgs::msg::VisionDetectionBall vision_ball);
+    FilteredBall(ssl_league_msgs::msg::VisionDetectionBall vision_ball);
 
     private:
         KickState currentKickState = ROLLING;
@@ -25,7 +25,7 @@ class FilteredBall {
         Eigen::Vector3<double> acc;
         Eigen::Vector2<double> spin;
         // Filter
-        ExtendedKalmanFilter<Kalman::Vector::double> posFilterXY;
+        Kalman::ExtendedKalmanFilter<Kalman::Vector<double, 2>> posFilterXY;
 };
 
 #endif // FILTERED_BALL_HPP_

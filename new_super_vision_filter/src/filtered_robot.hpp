@@ -30,11 +30,13 @@
 #include <ateam_msgs/msg/robot_state.hpp>
 
 class FilteredRobot {
-    FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr robot_detection_msg, ateam_common::TeamColor team_color);
+    FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr robot_detection_msg, ateam_common::TeamColor team_color);
 
     void update(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr robot_detection);
 
     ateam_msgs::msg::RobotState toMsg();
+
+    int getId();
 
     private:
         int bot_id;
