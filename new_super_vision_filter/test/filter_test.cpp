@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <ateam_common/game_controller_listener.hpp>

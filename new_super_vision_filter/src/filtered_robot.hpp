@@ -27,11 +27,12 @@
 #include <Eigen/Core>
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <ateam_common/game_controller_listener.hpp>
+#include <ateam_msgs/msg/robot_state.hpp>
 
 class FilteredRobot {
-    FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg, ateam_common::TeamColor team_color);
+    FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr robot_detection_msg, ateam_common::TeamColor team_color);
 
-    void update(ssl_league_msgs::msg::VisionDetectionRobot robot_detection);
+    void update(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr robot_detection);
 
     ateam_msgs::msg::RobotState toMsg();
 
@@ -42,7 +43,7 @@ class FilteredRobot {
         int oldEnough = 3;
         int maxHealth = 20;
         double maxDistance = -1.0;
-        std::chrono::milliseconds update_threshold = 50;
+        std::chrono::milliseconds update_threshold{50};
         std::chrono::time_point<std::chrono::system_clock> timestamp; 
         std::chrono::time_point<std::chrono::system_clock> last_visible_timestamp;
         double height; // in m
@@ -50,12 +51,14 @@ class FilteredRobot {
         // velocities
         // X, Y
         Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
+        PosSystemModel systemModelXY;
         PosMeasurementModel measurementModelXY;
         PosState posXYEstimate{};
         // Theta
         Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
+        AngleSystemModel systemModelW;
         AngleMeasurementModel measurementModelW;
         AngleState posWEstimate{};
-}
+};
 
 #endif  // FILTERED_ROBOT_HPP_

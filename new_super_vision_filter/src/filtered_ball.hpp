@@ -1,3 +1,6 @@
+#ifndef FILTERED_BALL_HPP_ 
+#define FILTERED_BALL_HPP_
+
 #include <chrono>
 #include <Eigen/Core>
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
@@ -22,5 +25,7 @@ class FilteredBall {
         Eigen::Vector3<double> acc;
         Eigen::Vector2<double> spin;
         // Filter
-        ExtendedKalmanFilter<Kalman::Vector2::double> posFilterXY;
-}
+        ExtendedKalmanFilter<Kalman::Vector::double> posFilterXY;
+};
+
+#endif // FILTERED_BALL_HPP_

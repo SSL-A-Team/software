@@ -20,6 +20,7 @@
 #include "filtered_robot.hpp"
 #include "filter_types.hpp"
 
+#include <cmath>
 #include <chrono>
 #include <Eigen/Core>
 
@@ -27,21 +28,22 @@
 // or https://thekalmanfilter.com/kalman-filter-explained-simply/
 // OR https://github.com/mherb/kalman/blob/master/examples/Robot1/main.cpp
 
-FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg, ateam_common::TeamColor team_color)
+FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr robot_detection_msg, ateam_common::TeamColor team_color)
     : posFilterXY(), posFilterW(), bot_id(robot_detection_msg->robot_id), height(robot_detection_msg->height * 1000), team(team_color) {
         // TODO (Christian) - Might need to change the below to use our state/measurement types
         // Initialize XY KF
-        PosState initial_state_xy = { 
-            robot_detection_msg->pose->position->x,
-            robot_detection_msg->pose->position->y,
+        PosState initial_state_xy;
+        initial_state_xy << 
+            robot_detection_msg->pose.position.x,
+            robot_detection_msg->pose.position.y,
             0,
-            0
-        };
+            0;
         posFilterXY.init(initial_state_xy);
-        Kalman::Matrix<4, 4, double> xy_covariance <<   1e-2, 0, 0, 0,
-                                                        0, 1e-2, 0, 0,
-                                                        0, 0, 1e3, 0,
-                                                        0, 0, 0, 1e3;
+        Kalman::Matrix<double, 4, 4> xy_covariance;
+        xy_covariance    <<   1e-2, 0, 0, 0,
+                            0, 1e-2, 0, 0,
+                            0, 0, 1e3, 0,
+                            0, 0, 0, 1e3;
         posFilterXY.setCovariance(xy_covariance);
 
         // Initialize angular KF
@@ -50,21 +52,22 @@ FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_de
             w_pos,
             w_vel
         */
-        AngleState initial_state_w = {
-            robot_detection_msg->pose->orientation->w,
-            0
-        };
+        AngleState initial_state_w;
+        initial_state_w <<
+            robot_detection_msg->pose.orientation.w,
+            0;
         posFilterW.init(initial_state_w);
         /*
             Initial covariance is approx 2 deg. for pos,
             10 deg. for vel
         */
-        Kalman::Matrix<2, 2, double> w_covariance <<    (2*M_PI/180.0)^2, 0,
-                                                        0, (10*M_PI/180.0)^2;
+        Kalman::Matrix<double, 2, 2> w_covariance;
+        w_covariance <<    std::pow(2*M_PI/180.0, 2), 0,
+                            0, std::pow(10*M_PI/180.0, 2);
         posFilterW.setCovariance(w_covariance);
     }
 
-void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg) {
+void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr robot_detection_msg) {
     // Make sure this detection isn't crazy off from our previous ones
     // (unless our filter is still new/only has a few measurements)
     ++age;
@@ -82,15 +85,18 @@ void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_dete
     // Predict state forward
     // Predict covariance forward
     // (All encompassed by the .predict() function)
-    auto xy_pred = posFilterXY.predict();
-    auto w_pred = posFilterW.predict();
-    PosMeasurement pos {
-        robot_detection_msg->pose->position->x,
-        robot_detection_msg->pose->position->y
-    };
-    AngleMeasurement angle {
-        robot_detection_msg->pose->orientation->w
-    };
+    auto xy_pred = posFilterXY.predict(systemModelXY);
+    auto w_pred = posFilterW.predict(systemModelW);
+    PosState pos; 
+    pos <<
+        robot_detection_msg->pose.position.x,
+        robot_detection_msg->pose.position.y,
+        0,
+        0;
+    AngleState angle;
+    angle <<
+        robot_detection_msg->pose.orientation.w,
+        0;
     PosMeasurement xy_measurement = measurementModelXY.h(pos);
     AngleMeasurement w_measurement = measurementModelW.h(angle);
     // Update the Jacobian matrix (contained in filter)
@@ -99,7 +105,9 @@ void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_dete
     // Update covariance estimate (contained in filter)
     // All encompassed by the .update() function
     posXYEstimate = posFilterXY.update(measurementModelXY, xy_measurement);
-    posWEstimate = w_updated = posFilterW.update(measurementModelW, w_measurement);
+    posWEstimate = posFilterW.update(measurementModelW, w_measurement);
 }
 
-ateam_msgs::msg::RobotState FilteredRobot::toMsg(){};
+ateam_msgs::msg::RobotState FilteredRobot::toMsg(){
+    return ateam_msgs::msg::RobotState{};
+};

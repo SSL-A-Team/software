@@ -48,7 +48,7 @@ public:
 class PosState : public Kalman::Vector<double, 4>
 {
 public:
-    KALMAN_VECTOR(State, double, 4)
+    KALMAN_VECTOR(PosState, double, 4)
 
     static constexpr size_t PX = 0;
     static constexpr size_t PY = 1;
@@ -123,21 +123,21 @@ class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
         {
             PosState x_updated{};
             const auto now = std::chrono::system_clock::now();
-            std::chrono::milliseconds dt = now - last_update;
-
+            std::chrono::duration<float, std::milli> dt = now - last_update; 
+            
             // B/c dt is in ms, we need to convert to s, since
             // our velocities are all in m/s
-            x_updated[x.PX] = x.px() + x.vx() * dt * ms_to_s;
+            x_updated(x.PX) = x(x.PX) + x(x.VX) * dt.count() * ms_to_s;
             // We assume constant velocity in the system model
-            x_updated[x.VX] = x.vx();
-            x_updated[x.PY] = x.py() + x.vy() * dt * ms_to_s;
-            x_updated[x.VY] = x.vy();
+            x_updated(x.VX) = x(x.VX);
+            x_updated(x.PY) = x(x.PY) + x(x.VY) * dt.count() * ms_to_s;
+            x_updated(x.VY) = x(x.VY);
 
             last_update = now;
-            return last_updated;
+            return x_updated;
         }
 
-}
+};
 
 /*
     Angular position measurement (in rad)
@@ -160,10 +160,13 @@ public:
 class AngleState : public Kalman::Vector<double, 2>
 {
 public:
-    KALMAN_VECTOR(State, double, 2)
+    KALMAN_VECTOR(AngleState, double, 2)
 
     static constexpr size_t PW = 0;
     static constexpr size_t VW = 1;
+    
+    double const pw(){return (*this)[PW]; }
+    double const vw(){return (*this)[VW]; }
 };
 
 /*
@@ -172,13 +175,13 @@ public:
     Currently assumes no measurement noise
 */
 class AngleMeasurementModel
-    : public Kalman::LinearizedMeasurementModel<AngleState, AngleMeasurement, StandardBase>
+    : public Kalman::LinearizedMeasurementModel<AngleState, AngleMeasurement, Kalman::StandardBase>
 {
 public:
     // h(x) = predicted measurement
     AngleMeasurement h(const AngleState& x) const override
     {
-        AngleMeasurement z;
+        AngleMeasurement z{};
         z[0] = x[0]; // pw
         return z;
     }
@@ -208,16 +211,16 @@ class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>
             pos_t = pos_{t-1} + vel_{t-1} * dt
             vel_t = vel_{t-1}
         */
-        AngleState f(const AngleState& x, const Control& ){
+        AngleState f(const AngleState& x, const Control& ) const {
             AngleState x_updated{};
 
             const auto now = std::chrono::system_clock::now();
-            std::chrono::milliseconds dt = now - last_update;
+            std::chrono::duration<float, std::milli> dt = now - last_update;
 
-            x_updated[x.PW] = x.pw() + x.vw() * dt * ms_to_s;
+            x_updated(x.PW) = x(x.PW) + x(x.VW) * dt.count() * ms_to_s;
 
             return x_updated;
         }
-}
+};
 
 #endif // FILTER_TYPES_HPP

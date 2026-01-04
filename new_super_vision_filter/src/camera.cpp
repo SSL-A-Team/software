@@ -76,13 +76,13 @@ Camera::Camera(int camera_id) : camera_id(camera_id) {
             }
         }
 
-        void create_new_ball_track();
+        void create_new_ball_track(){}
 
-        void create_new_robot_track();
+        void create_new_robot_track(){}
     
     private:
         int camera_id;
         LastFrameInfo last_processed_frame;
         std::vector<FilteredBall> tracked_balls;
         std::vector<FilteredRobot> tracked_robots;
-}
+};
