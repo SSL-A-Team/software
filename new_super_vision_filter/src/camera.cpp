@@ -50,31 +50,33 @@ void Camera::process_balls(const ssl_league_msgs::msg::VisionDetectionFrame::Sha
 };
 
 void Camera::process_robots(const ssl_league_msgs::msg::VisionDetectionFrame::SharedPtr detection_frame_msg){
-    for (auto robot_detection : detection_frame_msg->robots_blue){
+    for (const auto &robot_detection : detection_frame_msg->robots_blue){
         // Check if this is close to an existing measurement (from an id that we have?)
-        auto existing_bot = std::find_if(tracked_robots.begin(), tracked_robots.end(), [](const FilteredRobot& bot) {
+        auto existing_bot = std::find_if(tracked_robots.begin(), tracked_robots.end(),
+            [&robot_detection](const FilteredRobot& bot) {
             return bot.getId() == robot_detection.robot_id; 
         });
         if (existing_bot != tracked_robots.end()){
-            existing_bot.update(robot_detection);
+            existing_bot->update(robot_detection);
         } else {
             // If not, create a new one
             tracked_robots.push_back(FilteredRobot(robot_detection, ateam_common::TeamColor::Blue));
         }
     }
-    for (auto robot_detection : detection_frame_msg->robots_yellow){
+    for (const auto &robot_detection : detection_frame_msg->robots_yellow){
         // Check if this is close to an existing measurement (from an id that we have?)
-        auto existing_bot = std::find_if(tracked_robots.begin(), tracked_robots.end(), [](const FilteredRobot& bot) {
+        auto existing_bot = std::find_if(tracked_robots.begin(), tracked_robots.end(), 
+            [&robot_detection](const FilteredRobot& bot) {
             return bot.getId() == robot_detection.robot_id; 
         });
         if (existing_bot != tracked_robots.end()){
-            existing_bot.update(robot_detection);
+            existing_bot->update(robot_detection);
         } else {
             // If not, create a new one
             tracked_robots.push_back(FilteredRobot(robot_detection, ateam_common::TeamColor::Yellow));
         }
     }
-};
+}
 
 void Camera::create_new_ball_track(){};
 

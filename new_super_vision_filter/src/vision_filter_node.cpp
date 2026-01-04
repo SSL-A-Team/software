@@ -59,19 +59,27 @@ class VisionFilterNode : public rclcpp::Node
 
         void vision_callback(const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg) {
             // Add detections to the cameras' msg queues
-            auto detection = vision_wrapper_msg->detection.front();
-            // Create a new camera if we haven't seen this one before
-            int detect_camera = detection.camera_id;
-            if (!(cameras.contains(detect_camera))){
-                cameras[detect_camera] = Camera(detect_camera);
+            if (!vision_wrapper_msg->detection.empty()){
+                // Create a new camera if we haven't seen this one before
+                for (const auto& detection : vision_wrapper_msg->detection){
+                    int detect_camera = detection.camera_id;
+                    if (!(cameras.contains(detect_camera))){
+                        cameras.try_emplace(detect_camera, detect_camera);
+                    }
+                    cameras.at(detect_camera).detection_queue.push_back(detection);
+                }
             }
-            cameras[detect_camera].detection_queue.push_back(detection);
             
             // Add geometry to the cameras' msg queues
-            auto geometry = vision_wrapper_msg->geometry.front();
-            int geo_camera = geometry.calibration.front().camera_id; 
-            if (!(cameras.contains(geo_camera))){
-                cameras[geo_camera] = Camera(geo_camera);
+            if (!vision_wrapper_msg->geometry.empty()){
+                for (const auto& geometry: vision_wrapper_msg->geometry){
+                    for (const auto& calib : geometry.calibration){
+                        int geo_camera = calib.camera_id; 
+                        if (!(cameras.contains(geo_camera))){
+                            cameras.try_emplace(geo_camera, geo_camera);
+                        }
+                    }
+                }
             }
             return; 
         }
