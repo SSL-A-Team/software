@@ -21,7 +21,6 @@
 #ifndef CAMERA_HPP_ 
 #define CAMERA_HPP_ 
 
-#include <deque>
 #include <vector>
 #include <ssl_league_msgs/msg/vision_geometry_data.hpp>
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
@@ -51,9 +50,6 @@ class Camera {
         void create_new_ball_track();
 
         void create_new_robot_track();
-    
-        std::deque<ssl_league_msgs::msg::VisionDetectionFrame> detection_queue;
-        std::deque<ssl_league_msgs::msg::VisionGeometryData> geometry_queue;
     
     private:
         int camera_id;

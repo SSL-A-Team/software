@@ -66,7 +66,7 @@ class VisionFilterNode : public rclcpp::Node
                     if (!(cameras.contains(detect_camera))){
                         cameras.try_emplace(detect_camera, detect_camera);
                     }
-                    cameras.at(detect_camera).detection_queue.push_back(detection);
+                    cameras.at(detect_camera).process_detection_frame(detection);
                 }
             }
             
