@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -17,6 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 #include "filtered_robot.hpp"
 #include "filter_types.hpp"
 
@@ -28,14 +29,14 @@
 // or https://thekalmanfilter.com/kalman-filter-explained-simply/
 // OR https://github.com/mherb/kalman/blob/master/examples/Robot1/main.cpp
 
-FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr robot_detection_msg, ateam_common::TeamColor team_color)
-    : posFilterXY(), posFilterW(), bot_id(robot_detection_msg->robot_id), height(robot_detection_msg->height * 1000), team(team_color) {
+FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg, ateam_common::TeamColor team_color)
+    : posFilterXY(), posFilterW(), bot_id(robot_detection_msg.robot_id), height(robot_detection_msg.height * 1000), team(team_color) {
         // TODO (Christian) - Might need to change the below to use our state/measurement types
         // Initialize XY KF
         PosState initial_state_xy;
         initial_state_xy << 
-            robot_detection_msg->pose.position.x,
-            robot_detection_msg->pose.position.y,
+            robot_detection_msg.pose.position.x,
+            robot_detection_msg.pose.position.y,
             0,
             0;
         posFilterXY.init(initial_state_xy);
@@ -54,7 +55,7 @@ FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot::SharedP
         */
         AngleState initial_state_w;
         initial_state_w <<
-            robot_detection_msg->pose.orientation.w,
+            robot_detection_msg.pose.orientation.w,
             0;
         posFilterW.init(initial_state_w);
         /*
@@ -67,7 +68,7 @@ FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot::SharedP
         posFilterW.setCovariance(w_covariance);
     }
 
-void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr robot_detection_msg) {
+void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg) {
     // Make sure this detection isn't crazy off from our previous ones
     // (unless our filter is still new/only has a few measurements)
     ++age;
@@ -89,13 +90,13 @@ void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot::SharedPtr
     auto w_pred = posFilterW.predict(systemModelW);
     PosState pos; 
     pos <<
-        robot_detection_msg->pose.position.x,
-        robot_detection_msg->pose.position.y,
+        robot_detection_msg.pose.position.x,
+        robot_detection_msg.pose.position.y,
         0,
         0;
     AngleState angle;
     angle <<
-        robot_detection_msg->pose.orientation.w,
+        robot_detection_msg.pose.orientation.w,
         0;
     PosMeasurement xy_measurement = measurementModelXY.h(pos);
     AngleMeasurement w_measurement = measurementModelW.h(angle);
@@ -112,6 +113,6 @@ ateam_msgs::msg::RobotState FilteredRobot::toMsg(){
     return ateam_msgs::msg::RobotState{};
 };
 
-int FilteredRobot::getId(){
+int FilteredRobot::getId() const {
     return bot_id;
 }

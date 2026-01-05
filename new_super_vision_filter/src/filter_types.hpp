@@ -1,3 +1,23 @@
+// Copyright 2025 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 #ifndef FILTER_TYPES_HPP_ 
 #define FILTER_TYPES_HPP_ 
 
@@ -100,14 +120,14 @@ protected:
 class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
 {
     private:
-        const float ms_to_s = 1e4;
-        std::chrono::time_point<std::chrono::system_clock> last_update;
+        mutable std::chrono::time_point<std::chrono::steady_clock> last_update;
 
     public:
         // For now, we don't add any control inputs to the vision system
         // TODO (Christian): We might need this for the robots, even if we
         // don't use it for the ball
         using Control = Kalman::Vector<double, 0>;
+        using Seconds = std::chrono::duration<double>;
 
         /*
             The f() function applies what would be the A (state transition)
@@ -122,15 +142,16 @@ class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
         PosState f(const PosState& x, const Control& /*u*/) const override
         {
             PosState x_updated{};
-            auto now = std::chrono::system_clock::now();
-            std::chrono::duration<float, std::milli> dt = now - last_update; 
+            auto now = std::chrono::steady_clock::now();
+            Seconds dt = now - last_update;
+            double dt_s = dt.count();
             
             // B/c dt is in ms, we need to convert to s, since
             // our velocities are all in m/s
-            x_updated(x.PX) = x(x.PX) + x(x.VX) * dt.count() * ms_to_s;
+            x_updated(x.PX) = x(x.PX) + x(x.VX) * dt_s;
             // We assume constant velocity in the system model
             x_updated(x.VX) = x(x.VX);
-            x_updated(x.PY) = x(x.PY) + x(x.VY) * dt.count() * ms_to_s;
+            x_updated(x.PY) = x(x.PY) + x(x.VY) * dt_s;
             x_updated(x.VY) = x(x.VY);
 
             last_update = now;
@@ -197,10 +218,11 @@ public:
 class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>
 {
     private:
-        const float ms_to_s = 1e4;
-        std::chrono::time_point<std::chrono::system_clock> last_update;
+        mutable std::chrono::time_point<std::chrono::steady_clock> last_update;
 
     public:
+        using Control = Kalman::Vector<double, 0>;
+        using Seconds = std::chrono::duration<double>;
         /*
             This is the system's state transition function (applies
             the A matrix)
@@ -214,10 +236,11 @@ class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>
         AngleState f(const AngleState& x, const Control& ) const {
             AngleState x_updated{};
 
-            const auto now = std::chrono::system_clock::now();
-            std::chrono::duration<float, std::milli> dt = now - last_update;
+            const auto now = std::chrono::steady_clock::now();
+            Seconds dt = now - last_update;
+            double dt_s = dt.count();
 
-            x_updated(x.PW) = x(x.PW) + x(x.VW) * dt.count() * ms_to_s;
+            x_updated(x.PW) = x(x.PW) + x(x.VW) * dt_s;
 
             return x_updated;
         }

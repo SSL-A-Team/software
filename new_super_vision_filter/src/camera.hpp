@@ -38,15 +38,15 @@ class Camera {
         // Have a queue/buffer that we can remove old frames/have a set capacity
         Camera(int camera_id);
 
-        void process_detection_frame(const ssl_league_msgs::msg::VisionDetectionFrame::SharedPtr detection_frame_msg); 
+        void process_detection_frame(const ssl_league_msgs::msg::VisionDetectionFrame &detection_frame_msg); 
 
-        void process_camera_geometry(const ssl_league_msgs::msg::VisionGeometryData::SharedPtr geometry);
+        void process_camera_geometry(const ssl_league_msgs::msg::VisionGeometryData &geometry);
 
         void clear_old_messages();
 
-        void process_balls(const ssl_league_msgs::msg::VisionDetectionFrame::SharedPtr detection_frame_msg);
+        void process_balls(const ssl_league_msgs::msg::VisionDetectionFrame &detection_frame_msg);
 
-        void process_robots(const ssl_league_msgs::msg::VisionDetectionFrame::SharedPtr detection_frame_msg);
+        void process_robots(const ssl_league_msgs::msg::VisionDetectionFrame &detection_frame_msg);
 
         void create_new_ball_track();
 

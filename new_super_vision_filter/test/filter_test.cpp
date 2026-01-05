@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -37,21 +37,21 @@ class FilteredRobotTest : public ::testing::Test
                 team
             };
         }
-}
+};
 
-TEST_F(RobotSetupTest, InitalState)
+TEST(RobotSetupTest, InitalState)
 {
     // Check that initial state is valid
     return;
 }
 
-TEST_F(RobotSetupTest, InitialCovariance)
+TEST(RobotSetupTest, InitialCovariance)
 {
     // Check that initial covariance is valid
     return;
 }
 
-TEST_F(RobotUpdateTest, WaitUntilOldEnough)
+TEST(RobotUpdateTest, WaitUntilOldEnough)
 {
     // Create valid timestamp and fake measurement
     // Try to update
@@ -61,7 +61,7 @@ TEST_F(RobotUpdateTest, WaitUntilOldEnough)
     return;
 }
 
-TEST_F(RobotUpdateTest, UpdateIfTimestampValid)
+TEST(RobotUpdateTest, UpdateIfTimestampValid)
 {
     // Get initial estimate
     // Create valid timestamp and fake measurement
@@ -70,7 +70,7 @@ TEST_F(RobotUpdateTest, UpdateIfTimestampValid)
     return;
 }
 
-TEST_F(RobotUpdateTest, DontUpdateIfTimestampInvalid)
+TEST(RobotUpdateTest, DontUpdateIfTimestampInvalid)
 {
     // Get initial estimate
     // Create invalid timestamp and fake measurement
