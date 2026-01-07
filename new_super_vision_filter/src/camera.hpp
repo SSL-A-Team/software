@@ -53,9 +53,9 @@ class Camera {
     
     private:
         int camera_id;
-        LastFrameInfo last_processed_frame;
-        std::vector<FilteredBall> tracked_balls;
-        std::vector<FilteredRobot> tracked_robots;
+        std::chrono::time_point<std::chrono::steady_clock> last_updated;
+        // std::vector<BallTrack> tracked_balls;
+        // std::vector<RobotTrack> tracked_robots;
 };
 
 #endif // CAMERA_HPP_ 

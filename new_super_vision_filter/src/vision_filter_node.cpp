@@ -17,12 +17,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+#include "camera.hpp"
+#include "filtered_robot.hpp"
+#include "filtered_ball.hpp"
+#include "measurements/ball_track.hpp"
+#include "measurements/robot_track.hpp"
 
 #include <rclcpp/rclcpp.hpp>
-
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
-
-#include "camera.hpp"
+#include <ateam_common/game_controller_listener.hpp>
+#include <vector>
 
 namespace new_super_vision {
 
@@ -57,30 +61,68 @@ class VisionFilterNode : public rclcpp::Node
         // in ssl_vision_bridge_node.cpp
         std::map<int, Camera> cameras;
 
+        std::vector<FilteredRobot> blue_robots;
+        std::vector<FilteredRobot> yellow_robots;
+
+        std::vector<BallTrack> ball_tracks;
+        std::vector<RobotTrack> blue_tracks;
+        std::vector<RobotTrack> yellow_tracks;
+
         void vision_callback(const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg) {
-            // Add detections to the cameras' msg queues
+            // Add detections to the queues
             if (!vision_wrapper_msg->detection.empty()){
-                // Create a new camera if we haven't seen this one before
                 for (const auto& detection : vision_wrapper_msg->detection){
                     int detect_camera = detection.camera_id;
+                    // Create a new camera if we haven't seen this one before
                     if (!(cameras.contains(detect_camera))){
                         cameras.try_emplace(detect_camera, detect_camera);
                     }
-                    cameras.at(detect_camera).process_detection_frame(detection);
+
+                    // Create a track from each robot in this message
+                    for (const auto& bot : detection.yellow_robots) {
+                        yellow_tracks.push_back(
+                            RobotTrack(bot, detect_camera, ateam_common::TeamColor::Yellow)
+                        ); 
+                    }
+
+                    for (const auto& bot : detection.blue_robots) {
+                        blue_tracks.push_back(
+                            RobotTrack(bot, detect_camera, ateam_common::TeamColor::Blue)
+                        );
+                    }
+
+                    // Create a track from each ball in this message
+                    for (const auto& ball: detection.balls) {
+                        ball_tracks.push_back(
+                            BallTrack(ball, detect_camera)
+                        );
+                    }
+                }
+
+                // Process all the new updates from the tracks
+                // TODO (Christian) - Filter out known bad tracks first
+                for (const auto& bot_track : blue_tracks){
+                    
+                }
+                for (const auto& bot_track : yellow_tracks){
+
+                }
+                for (const auto& ball_track : ball_tracks){
+
                 }
             }
             
-            // Add geometry to the cameras' msg queues
-            if (!vision_wrapper_msg->geometry.empty()){
-                for (const auto& geometry: vision_wrapper_msg->geometry){
-                    for (const auto& calib : geometry.calibration){
-                        int geo_camera = calib.camera_id; 
-                        if (!(cameras.contains(geo_camera))){
-                            cameras.try_emplace(geo_camera, geo_camera);
-                        }
-                    }
-                }
-            }
+            // // Add geometry to the cameras' msg queues
+            // if (!vision_wrapper_msg->geometry.empty()){
+            //     for (const auto& geometry: vision_wrapper_msg->geometry){
+            //         for (const auto& calib : geometry.calibration){
+            //             int geo_camera = calib.camera_id; 
+            //             if (!(cameras.contains(geo_camera))){
+            //                 cameras.try_emplace(geo_camera, geo_camera);
+            //             }
+            //         }
+            //     }
+            // }
             return; 
         }
 

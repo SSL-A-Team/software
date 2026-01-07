@@ -74,6 +74,7 @@ void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_dete
     ++age;
     bool is_new = age < oldEnough;
     // As long as its reasonable, update the Kalman Filter
+    // TODO (Christian) - do this for each current track in the queue
     const std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
     // If it's been too long, don't use this message

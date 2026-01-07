@@ -67,8 +67,8 @@ void Camera::process_robots(const ssl_league_msgs::msg::VisionDetectionFrame &de
     for (const auto &robot_detection : detection_frame_msg.robots_yellow){
         // Check if this is close to an existing measurement (from an id that we have?)
         auto existing_bot = std::find_if(tracked_robots.begin(), tracked_robots.end(), 
-            [&robot_detection](const FilteredRobot& bot) {
-            return bot.getId() == robot_detection.robot_id; 
+            [&robot_detection](const RobotTrack& track) {
+            return track.bot_id == robot_detection.robot_id; 
         });
 
         if (existing_bot != tracked_robots.end()){
