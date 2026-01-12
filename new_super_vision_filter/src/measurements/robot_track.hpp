@@ -26,6 +26,10 @@
 
 #include "filter_types.hpp"
 
+/**
+ * @brief Robot position and angle measurement from a single camera detection,
+ * used to provide updates to the Kalman filter.
+ */
 class RobotTrack {
     RobotTrack(
         ssl_league_msgs::msg::VisionDetectionRobot &bot_detection,

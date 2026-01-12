@@ -1,1 +1,0 @@
-// Detects kicks and chips

@@ -20,6 +20,7 @@
 
 #include "filtered_robot.hpp"
 #include "filter_types.hpp"
+#include "measurements/robot_track.hpp"
 
 #include <cmath>
 #include <chrono>
@@ -29,14 +30,14 @@
 // or https://thekalmanfilter.com/kalman-filter-explained-simply/
 // OR https://github.com/mherb/kalman/blob/master/examples/Robot1/main.cpp
 
-FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg, ateam_common::TeamColor team_color)
-    : posFilterXY(), posFilterW(), bot_id(robot_detection_msg.robot_id), height(robot_detection_msg.height * 1000), team(team_color) {
+FilteredRobot::FilteredRobot(RobotTrack track, ateam_common::TeamColor team_color)
+    : posFilterXY(), posFilterW(), bot_id(track.robot_id), team(team_color) {
         // TODO (Christian) - Might need to change the below to use our state/measurement types
         // Initialize XY KF
         PosState initial_state_xy;
         initial_state_xy << 
-            robot_detection_msg.pose.position.x,
-            robot_detection_msg.pose.position.y,
+            track.pos.px(),
+            track.pos.py(),
             0,
             0;
         posFilterXY.init(initial_state_xy);
@@ -55,7 +56,7 @@ FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_de
         */
         AngleState initial_state_w;
         initial_state_w <<
-            robot_detection_msg.pose.orientation.w,
+            track.angle.pw(),
             0;
         posFilterW.init(initial_state_w);
         /*
@@ -68,7 +69,7 @@ FilteredRobot::FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_de
         posFilterW.setCovariance(w_covariance);
     }
 
-void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg) {
+void FilteredRobot::update(RobotTrack &track) {
     // Make sure this detection isn't crazy off from our previous ones
     // (unless our filter is still new/only has a few measurements)
     ++age;
@@ -78,36 +79,21 @@ void FilteredRobot::update(ssl_league_msgs::msg::VisionDetectionRobot robot_dete
     const std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
     // If it's been too long, don't use this message
-    if (now - timestamp > update_threshold || is_new) {
-        timestamp = now;
+    if (now - track.timestamp > update_threshold || is_new) {
         return;
     }
-    // Update our timestamp for next time
-    timestamp = now;
     // Predict state forward
     // Predict covariance forward
     // (All encompassed by the .predict() function)
     auto xy_pred = posFilterXY.predict(systemModelXY);
     auto w_pred = posFilterW.predict(systemModelW);
-    PosState pos; 
-    pos <<
-        robot_detection_msg.pose.position.x,
-        robot_detection_msg.pose.position.y,
-        0,
-        0;
-    AngleState angle;
-    angle <<
-        robot_detection_msg.pose.orientation.w,
-        0;
-    PosMeasurement xy_measurement = measurementModelXY.h(pos);
-    AngleMeasurement w_measurement = measurementModelW.h(angle);
     // Update the Jacobian matrix (contained in filter)
     // Compute Kalman gain (contained in filter)
     // Update state estimate (returned)
     // Update covariance estimate (contained in filter)
     // All encompassed by the .update() function
-    posXYEstimate = posFilterXY.update(measurementModelXY, xy_measurement);
-    posWEstimate = posFilterW.update(measurementModelW, w_measurement);
+    posXYEstimate = posFilterXY.update(measurementModelXY, track.pos);
+    posWEstimate = posFilterW.update(measurementModelW, track.angle);
 }
 
 ateam_msgs::msg::RobotState FilteredRobot::toMsg(){

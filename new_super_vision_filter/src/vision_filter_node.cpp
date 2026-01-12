@@ -27,6 +27,8 @@
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 #include <vector>
+#include <algorithm>
+#include <optional>
 
 namespace new_super_vision {
 
@@ -53,8 +55,7 @@ class VisionFilterNode : public rclcpp::Node
 
         }
 
-    // Will also need to add publishers here... but want to determine whether we keep existing
-    // approach that is in the old Vision Filter or do something else.
+    // Will also need to add publishers here and wall clock timer 
     
     private:
         // Subscribe to vision info from our processed messages
@@ -63,6 +64,7 @@ class VisionFilterNode : public rclcpp::Node
 
         std::vector<FilteredRobot> blue_robots;
         std::vector<FilteredRobot> yellow_robots;
+        std::optional<FilteredBall> ball;
 
         std::vector<BallTrack> ball_tracks;
         std::vector<RobotTrack> blue_tracks;
@@ -99,36 +101,58 @@ class VisionFilterNode : public rclcpp::Node
                     }
                 }
 
+                // Sort our tracks to make sure they are in order of the time received
+                // in case created/processed them out of order
+
                 // Process all the new updates from the tracks
-                // TODO (Christian) - Filter out known bad tracks first
                 for (const auto& bot_track : blue_tracks){
-                    
+                    auto it = std::find_if(
+                        blue_robots.begin(),
+                        blue_robots.end(),
+                        [](){ return bot_track.robot_id == bot.getId(); }
+                    );
+                    if (it != blue_robots.end()){
+                        blue_robots.push_back(
+                            FilteredRobot(bot_track, ateam_common::TeamColor::Blue)
+                        );
+                    } else {
+                        it->update(bot_track);
+                    }
                 }
                 for (const auto& bot_track : yellow_tracks){
-
+                    auto it = std::find_if(
+                        yellow_robots.begin(),
+                        yellow_robots.end(),
+                        [](){ return bot_track.robot_id == bot.getId(); }
+                    );
+                    if (it != yellow_robots.end()){
+                        yellow_robots.push_back(
+                            FilteredRobot(bot_track, ateam_common::TeamColor::Yellow)
+                        );
+                    } else {
+                        it->update(bot_track);
+                    }
                 }
                 for (const auto& ball_track : ball_tracks){
-
+                    if (!ball.has_value()){
+                        ball = FilteredBall(ball_track);
+                    } else {
+                        ball->update(ball_track);
+                    }
                 }
             }
             
-            // // Add geometry to the cameras' msg queues
-            // if (!vision_wrapper_msg->geometry.empty()){
-            //     for (const auto& geometry: vision_wrapper_msg->geometry){
-            //         for (const auto& calib : geometry.calibration){
-            //             int geo_camera = calib.camera_id; 
-            //             if (!(cameras.contains(geo_camera))){
-            //                 cameras.try_emplace(geo_camera, geo_camera);
-            //             }
-            //         }
-            //     }
-            // }
             return; 
         }
 
         void timer_callback() {
+            // Get the current predictions for all robots and ball(s)
+            // Make sure these specific critera... 
+            // Should be recently updated enough - prune stale robots/balls
+            // Pick the best ball if multiple exist (based on whichever is closest to our most recent
+            // prediction?)
+            //
             // Publish the updated vision info
-            // Similar to the publish() method in TIGERs
             return;
         }
 

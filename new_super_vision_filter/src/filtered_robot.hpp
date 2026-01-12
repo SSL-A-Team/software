@@ -49,18 +49,16 @@ class FilteredRobot {
         std::chrono::milliseconds update_threshold{50};
         std::chrono::time_point<std::chrono::steady_clock> timestamp; 
         std::chrono::time_point<std::chrono::steady_clock> last_visible_timestamp;
-        double height; // in m
+        // double height; // in m
         // Use the below filtered values when getting X/Y/w (theta) and
         // velocities
         // X, Y
         Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
         PosSystemModel systemModelXY;
-        PosMeasurementModel measurementModelXY;
         PosState posXYEstimate{};
         // Theta
         Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
         AngleSystemModel systemModelW;
-        AngleMeasurementModel measurementModelW;
         AngleState posWEstimate{};
 };
 
