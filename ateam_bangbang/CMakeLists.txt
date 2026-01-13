@@ -19,14 +19,9 @@ find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(ateam_controls REQUIRED)
 
 add_executable(bangbang_node
   src/bangbang_node.cpp
-)
-
-target_include_directories(bangbang_node PRIVATE
-  ${ateam_controls_INCLUDE_DIRS}
 )
 
 ament_target_dependencies(bangbang_node
@@ -43,10 +38,6 @@ ament_target_dependencies(bangbang_node
   "OMPL"
   "angles"
   nlohmann_json
-)
-
-target_link_libraries(bangbang_node
-  "${ateam_controls_DIR}/../../../lib/libateam_controls_c.a"
 )
 
 install(TARGETS
