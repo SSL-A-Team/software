@@ -1,5 +1,5 @@
 import { TeamColor } from "@/team";
-import { Overlay, OverlayType, isOverlayExpired, deleteOverlayGraphic, initializeHeatmapGraphic } from "@/overlay";
+import { Overlay, OverlayType, isOverlayExpired, deleteOverlayGraphic, initializeHeatmapGraphic, updateOverlay } from "@/overlay";
 import { Robot } from "@/robot";
 import { Play } from "@/play";
 import { WorldState, AppState } from "@/state";
@@ -11,7 +11,8 @@ import { parseRos2idl as parseIdlDefinition } from "@foxglove/ros2idl-parser";
 import { MessageReader } from "@foxglove/rosmsg2-serialization";
 import { BSON } from "bson";
 import { GameCommandProperties, getCommandProperty, RefereeHistory } from "@/referee";
-import { compressedToRobotArray } from "@/history"
+import { compressedToRobotArray, HistoryManager } from "@/history"
+import { toRaw } from "vue";
 
 export enum MessageType {
   // Internal UI Backend commands
@@ -43,8 +44,21 @@ export class BackendMessage {
     responses: BackendResponse[]
 }
 
+export class BagData {
+    load_in_progress: boolean = false; 
+    reader: McapIndexedReader
+    schemasById: Map<number, McapTypes.TypedMcapRecords["Schema"]>
+    channelInfoById: Map<number, {info: McapTypes.Channel, messageDeserializer?: (data: ArrayBufferView) => any}>
+    message_start_time: bigint
+    message_end_time: bigint
+    bag_length_time: number
+    num_frames: number
+}
+
 export class BackendManager {
     websocket: WebSocket;
+    bag: BagData = null;
+
     backend_receive_function
     constructor(state: AppState) {
 
@@ -639,8 +653,11 @@ export class BackendManager {
         }
 
         if (appState.useKenobi) {
-            // appState.updateHistory();
-            appState.updateBagHistory();
+            if (!appState.historyManager.viewingBag) {
+                appState.updateHistory();
+            } else {
+                appState.updateBagHistory();
+            }
         } else {
             // This should never happen
         }
@@ -725,15 +742,13 @@ export class BackendManager {
         }
 
         if (appState.historyManager.viewingBag) {
-            for (const [key, overlay] of overlayMap) {
+            for (const [id, overlay] of overlayMap) {
                 if (isOverlayExpired(overlay, appState.realtimeWorld.timestamp)) {
-                    let id = overlay.ns+"/"+overlay.name;
                     deleteOverlayGraphic(overlayMap.get(id), underlayContainer);
                     deleteOverlayGraphic(overlayMap.get(id), overlayContainer);
                     overlayMap.delete(id);
                 }
             }
-
         }
     }
 
@@ -858,9 +873,9 @@ export class BackendManager {
         const message = channelInfo.messageDeserializer(record.data);
         switch(channelInfo.info.topic) {
             case "/kenobi_node/world":
-                message.timestamp = Number(record.logTime / BigInt(1e9));
+                message.timestamp = Number(record.logTime / BigInt(1e6));
                 this.worldUpdateFunction(message, appState);
-                break;
+                return true; // TODO: maybe make an enum for return type or something?
             case "/kenobi_node/playbook_state":
                 this.playbookUpdateFunction(message, appState);
                 break;
@@ -877,77 +892,72 @@ export class BackendManager {
                 this.fieldUpdateFunction(message, appState);
                 break;
         }
+
+        return false;
     }
 
-    async loadBagFile(appState: AppState, file: Blob) {
+    async initialLoadBagFile(appState: AppState, file: Blob) {
 
         appState.historyManager.viewingBag = true;
         appState.historyManager.historyEndIndex = -1;
         appState.historyManager.selectedHistoryFrame = -1;
-        // appState.historyManager.historyReplayIsPaused = true;
 
+        this.bag = new BagData();
 
-        // let hist = appState.historyManager.compressedWorldHistory
-        // hist = new Array(100000);
-
-        // hist = new Array(100000).fill(null).map(() => (new WorldState()));
-        // hist = new Array(100000);
-        // for (let i = 0; i < hist.length; i++) {
-        //     // if (i < 25000 || i > 75000) {
-        //     if (true) {
-        //         hist[i] = new WorldState();
-        //         hist[i].timestamp = i;
-        //     }
-        // }
-        // hist.slice(25000, 75000).forEach((_, index) => ( delete hist[25000 + index]))
-
-
-        // Filled Array
-        // Performance Results (clearing entire array):
-        // hist.slice(0, 100000).forEach((_, index, arr) => ( delete hist[index]))
-        //      Time: 0.0025, 0.0026 | 0.00219
-        // for of loop
-        //      Time: 0.003699
-
-        // Sparse Array (half filled)
-        // Performance Results (clearing entire array):
-        // hist.slice(0, 100000).forEach((_, index, arr) => ( delete hist[index]))
-        //      Time: 0.00279 | 0.00169
-        // filter to for of loop
-        //      Time: 0.00769
-
-        // let sl = hist.filter((elem) => (elem.timestamp < 25000));
-        // console.log("SL: ", sl.length)
-        // let num = 0;
-        // const new_proc_start_time = performance.now();
-
-        // Slice/For Each
-        // hist.slice(0, 100000).forEach((elem, index) => { if (elem.timestamp < 2500) {delete hist[index]} num++});
-
-        // For of Loop
-        // for (let [index, elem] of sl.entries()) {
-        //     // if (elem.timestamp > 2500) {
-        //     //     break;
-        //     // }
-        //     delete hist[elem.timestamp];
-        //     num++;
-        // }
-
-        // console.log("Processing took: ", (performance.now() - new_proc_start_time) / 1000.0, "s");
-        // console.log("Processed ", num, " values")
-        // console.log(hist)
-        // return;
-
-
-        const reader = await McapIndexedReader.Initialize({
+        this.bag.reader = await McapIndexedReader.Initialize({
             readable: new BlobReadable(file)
         });
 
-        console.log("reader loaded");
-        console.log(reader);
+        this.loadBagMetadata(appState);
 
-        const schemasById = new Map<number, McapTypes.TypedMcapRecords["Schema"]>();
-        const channelInfoById = new Map<
+        const num_frames = Math.ceil(this.bag.bag_length_time * 100.0);
+        console.log("Setting History Array Length to: ", num_frames);
+        appState.historyManager.compressedWorldHistory = new Array(num_frames);
+        // appState.historyManager.compressedWorldHistory = [];
+
+        appState.historyManager.loadedFrames = 0;
+        appState.historyManager.historyEndIndex = -1;
+        appState.historyManager.bagStartTimestamp = 1000 * Number(this.bag.message_start_time);
+        appState.historyManager.bagEndTimestamp = 1000 * Number(this.bag.message_end_time);
+        console.log("setting history length: ", appState.historyManager.compressedWorldHistory);
+
+        // Set up loaded zones display
+        const zoneCanvas = document.createElement('canvas');
+        zoneCanvas.id = "zone_canvas"
+        zoneCanvas.width = appState.historyManager.loadedZones.length;
+        zoneCanvas.height = 100;
+        const zoneCtx = zoneCanvas.getContext('2d');
+        zoneCtx.fillStyle = 'red';
+        zoneCtx.fillRect(
+            0,
+            0,
+            zoneCanvas.width,
+            zoneCanvas.height
+        );
+
+        document.body.prepend(zoneCanvas);
+
+        const processing_start_time = Date.now();
+
+        await this.loadBagRefData(appState);
+
+        if (!appState.historyManager.viewingBag) {
+            this.unloadBagFile(appState);
+            return;
+        }
+
+        await this.loadBagChunk(appState);
+
+        if (appState.historyManager.viewingBag) {
+            console.log("bag completion time: ", (Date.now() - processing_start_time) / 1000.0);
+            console.log(appState);
+            console.log(appState.historyManager.compressedWorldHistory);
+        }
+    }
+
+    async loadBagMetadata(appState: AppState) {
+        this.bag.schemasById = new Map<number, McapTypes.TypedMcapRecords["Schema"]>();
+        this.bag.channelInfoById = new Map<
             number,
             {
             info: McapTypes.Channel;
@@ -956,114 +966,123 @@ export class BackendManager {
         >();
 
         console.log("schemabyid:");
-        console.log(reader.schemasById);
+        console.log(this.bag.reader.schemasById);
 
         console.log("reading channels")
-        for (const record of reader.channelsById.values()) {
-            this.processBagChannel(record, reader.schemasById, channelInfoById, appState);
+        for (const record of this.bag.reader.channelsById.values()) {
+            this.processBagChannel(record, this.bag.reader.schemasById, this.bag.channelInfoById, appState);
         }
         console.log("channelbyid:");
-        console.log(channelInfoById);
+        console.log(this.bag.channelInfoById);
 
-        const message_start_time = reader.statistics.messageStartTime / BigInt(1e9);
-        const message_end_time = reader.statistics.messageEndTime / BigInt(1e9);
-        const bag_length_time = Number(message_end_time - message_start_time);
+        this.bag.message_start_time = this.bag.reader.statistics.messageStartTime / BigInt(1e9);
+        this.bag.message_end_time = this.bag.reader.statistics.messageEndTime / BigInt(1e9);
+        this.bag.bag_length_time = Number(this.bag.message_end_time - this.bag.message_start_time);
 
-        const num_frames = Math.ceil(bag_length_time * 100.0);
-        console.log("Setting History Array Length to: ", num_frames);
-        // appState.historyManager.compressedWorldHistory = new Array(num_frames);
-        appState.historyManager.compressedWorldHistory = [];
-        appState.historyManager.loadedFrames = 0;
-        appState.historyManager.historyEndIndex = -1;
-        appState.historyManager.bagStartTime = Number(message_start_time);
-        appState.historyManager.bagEndTime = Number(message_end_time);
-        console.log("setting history length: ", appState.historyManager.compressedWorldHistory);
+    }
+
+    async loadBagRefData(appState: AppState) {
+        console.log("Loading Ref Data");
+        const processing_start_time = Date.now();
+        let last_print_time = Date.now();
+
+        // Set up ref event display
+        const eventCanvas = document.createElement('canvas');
+        eventCanvas.id = "event_canvas"
+        eventCanvas.width = appState.historyManager.loadedZones.length; // this might need to be fixed
+        eventCanvas.height = 100;
+        const eventCtx = eventCanvas.getContext('2d');
+        eventCtx.fillStyle = 'red';
+        eventCtx.fillRect(
+            0,
+            0,
+            eventCanvas.width,
+            eventCanvas.height
+        );
+        document.body.prepend(eventCanvas);
+
+        const timestep = this.bag.bag_length_time / eventCanvas.width;
+        const reader = toRaw(this).bag.reader;
+        for await (const record of reader.readMessages({
+            topics: [
+                "/referee_messages",
+                // "/kenobi_node/world",
+            ]
+        })) {
+
+            if (!appState.historyManager.viewingBag) {
+                this.unloadBagFile(appState);
+                return;
+            }
+
+            const channelInfo = this.bag.channelInfoById.get(record.channelId);
+            const message: any = channelInfo.messageDeserializer(record.data);
+
+            const ref_message = new RefereeHistory(
+                message.stage,
+                message.command,
+                false,
+                Number((record.logTime / BigInt(1e9)) - this.bag.message_start_time)
+            )
+
+            if (appState.historyManager.refHistory.length > 0 && 
+                appState.historyManager.refHistory.at(-1).command != message.command) {
+                appState.historyManager.eventList.push(ref_message);
+
+                const time_from_start = (ref_message.history_timestamp - appState.historyManager.refHistory.at(0).history_timestamp);
+                const frame_index = Math.floor(time_from_start / timestep);
+                eventCtx.fillStyle = 'red';
+                if (ref_message.ball_in_play) {
+                    eventCtx.fillStyle = 'green';
+                } else {
+                    eventCtx.fillStyle = GameCommandProperties[ref_message.command].color;
+                }
+
+                // console.log("time: ", time_from_start, ", index: ",  frame_index, ", event: ", ref_message.command, ", color: ", eventCtx.fillStyle);
+
+                eventCtx.fillRect(
+                    frame_index,
+                    0,
+                    1,
+                    eventCanvas.height
+                );
+            }
+
+            appState.historyManager.refHistory.push(ref_message);
+
+            if (Date.now() - last_print_time > 1000) {
+                console.log((record.logTime / BigInt(1e9)) - this.bag.message_start_time);
+                last_print_time = Date.now();
+                console.log("ref_test length: ", appState.historyManager.refHistory.length)
+
+                // if ((record.logTime / BigInt(1e9)) - message_start_time > 100) {
+                //     break;
+                // }
+            }
+        }
+
+        console.log("load ref time: ", (Date.now() - processing_start_time) / 1000.0);
+    }
+
+    async loadBagChunk(appState: AppState, startFrame: number = 0) {
+        if (this.bag.load_in_progress) {
+            console.log("Already loading chunk")
+            return;
+        }
+
+        console.log("Loading Bag Chunk ", startFrame);
+        this.bag.load_in_progress = true;
 
         const processing_start_time = Date.now();
         let last_print_time = Date.now();
-        let index = 0;
-        // console.log("Loading Ref Data");
-        // for await (const record of reader.readMessages({
-        //     topics: [
-        //         "/referee_messages",
-        //         // "/kenobi_node/world",
-        //     ]
-        // })) {
 
-        //     const channelInfo = channelInfoById.get(record.channelId);
-        //     const message: any = channelInfo.messageDeserializer(record.data);
+        const start_time = BigInt(1e9) * (this.bag.message_start_time + BigInt(Math.floor(startFrame / 100.0)));
 
-        //     // KENOBI WORLD MESSAGE
-        //     // appState.refHistory.push(
-        //     //     new RefereeHistory(
-        //     //         message.referee_info.game_stage,
-        //     //         message.referee_info.game_command,
-        //     //         message.ball_in_play,
-        //     //         Number((record.logTime / BigInt(1e9)) - message_start_time)
-        //     //     )
-        //     // );
+        let frames_to_load = appState.historyManager.frameLimit / 2;
 
-        //     // REFEREE MESSAGE
-        //     appState.historyManager.refHistory.push(
-        //         new RefereeHistory(
-        //             message.stage,
-        //             message.command,
-        //             false,
-        //             Number((record.logTime / BigInt(1e9)) - message_start_time)
-        //         )
-        //     );
-
-        //     if (Date.now() - last_print > 1000) {
-        //         console.log((record.logTime / BigInt(1e9)) - message_start_time);
-        //         last_print = Date.now();
-        //         console.log("ref_test length: ", appState.historyManager.refHistory.length)
-
-        //         // if ((record.logTime / BigInt(1e9)) - message_start_time > 100) {
-        //         //     break;
-        //         // }
-        //     }
-        // }
-
-        // console.log("load ref time: ", (Date.now() - start) / 1000.0);
-
-        // const canvas = document.createElement('canvas');
-        // canvas.width = 1000;
-        // canvas.height = 200;
-        // const ctx = canvas.getContext('2d');
-
-        // const timestep = appState.historyManager.refHistory[appState.historyManager.refHistory.length - 1].history_timestamp / canvas.width;
-        // let prev_ref_index = 0;
-        // for (let i = 0; i < canvas.width; i++) {
-        //     const index_time = appState.historyManager.refHistory[0].history_timestamp + (i * timestep);
-        //     let ref_frame = appState.historyManager.refHistory[prev_ref_index];
-
-        //     for (let ref_index = prev_ref_index; ref_index < appState.historyManager.refHistory.length; ref_index++) {
-        //         if (appState.historyManager.refHistory[ref_index].history_timestamp >= index_time) {
-        //             ref_frame = appState.historyManager.refHistory[ref_index];
-        //             prev_ref_index = ref_index;
-        //             break;
-        //         }
-        //     }
-
-        //     if (ref_frame.ball_in_play) {
-        //         ctx.fillStyle = 'green';
-        //     } else {
-        //         ctx.fillStyle = GameCommandProperties[ref_frame.command].color;
-        //     }
-        //     ctx.fillRect(
-        //         i,
-        //         0,
-        //         1,
-        //         canvas.height
-        //     );
-        // }
-
-        // document.body.prepend(canvas);
-
-        // console.log("total time to load and display ref data: ", (Date.now() - start) / 1000.0)
-
+        const reader = toRaw(this).bag.reader;
         for await (const record of reader.readMessages({
-            startTime: reader.statistics.messageStartTime,
+            startTime: start_time,
             topics: [
                 "/kenobi_node/world",
                 "/kenobi_node/playbook_state",
@@ -1073,22 +1092,45 @@ export class BackendManager {
                 "/field",
             ]
         })) {
-            this.processBagMessage(record, channelInfoById, appState);
+
+            if (!appState.historyManager.viewingBag) {
+                this.unloadBagFile(appState);
+                return;
+            }
+
+            const was_world_message = this.processBagMessage(record, this.bag.channelInfoById, appState);
+            if (was_world_message) {
+                frames_to_load -= 1;
+                if (frames_to_load <= 0) {
+                    break;
+                }
+            }
 
             if (Date.now() - last_print_time > 1000) {
-                console.log(Number((record.logTime / BigInt(1e9)) - message_start_time), "/", bag_length_time, " | ", appState.historyManager.loadedFrames);
-                const first = appState.historyManager.compressedWorldHistory.find((elem) => (elem != undefined));
-                console.log("First loaded time: ", first.timestamp - Number(message_start_time));
+                console.log(Number((record.logTime / BigInt(1e9)) - this.bag.message_start_time), "/", this.bag.bag_length_time, " | ", appState.historyManager.loadedFrames);
+                // const first = appState.historyManager.compressedWorldHistory.find((elem) => (elem != undefined));
+                // console.log("First loaded time: ", first.timestamp - (1000 * Number(message_start_time)));
                 last_print_time = Date.now();
 
-                // if ((record.logTime / BigInt(1e9)) - message_start_time > 50) {
+                // if ((record.logTime / BigInt(1e9)) - this.bag.message_start_time > 120) {
                 //     break;
                 // }
             }
         }
 
-        console.log("completion time: ", (Date.now() - processing_start_time) / 1000.0);
-        console.log(appState);
-        console.log(appState.historyManager.compressedWorldHistory);
+        if (!appState.historyManager.viewingBag) {
+            this.unloadBagFile(appState);
+            return;
+        }
+
+        console.log("Finished loading bag chunk");
+        this.bag.load_in_progress = false;
+    }
+
+    unloadBagFile(appState: AppState) {
+        appState.historyManager.viewingBag = false;
+
+        appState.historyManager = new HistoryManager();
+        this.bag = new BagData();
     }
 }

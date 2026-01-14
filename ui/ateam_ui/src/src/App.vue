@@ -100,7 +100,7 @@ export default {
             // }
 
             // Only render while unpaused, HistoryComponent will handle field rendering while not in realtime
-            if (this.state.selectedHistoryFrame == -1) {
+            if (this.state.historyManager.selectedHistoryFrame == -1) {
                 this.$refs.mainField.update();
             }
         },

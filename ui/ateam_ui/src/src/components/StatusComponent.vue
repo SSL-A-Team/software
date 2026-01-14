@@ -1,7 +1,7 @@
 <template>
     <v-col style="max-width: 11vw; min-width: 11vw">
         <v-card variant="outlined" class="mb-4 pl-4 pt-3 pb-1 justify-space-around"
-            v-for="robot of (state.world.teams.get(state.world.team).robots as Robot[]).filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" 
+            v-for="robot of (state?.world?.teams.get(state?.world?.team).robots as Robot[])?.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" 
             @click.left.stop="state.setJoystickRobot(robot.id)"
             @contextmenu.prevent="changeDetailedStatusMenu(robot)"
         >
@@ -48,7 +48,11 @@ export default {
     },
     methods: {
         update: function() {
-            for(const robot of this.state.world.teams.get(this.state.world.team).robots) {
+            if (!this.state?.world?.teams) {
+                return;
+            }
+
+            for(const robot of this.state?.world?.teams?.get(this.state?.world?.team)?.robots) {
                 if (isValid(robot) && this.$refs["robotCard" + robot.id]) {
                     let canvas = this.$refs["canvas" + robot.id][0];
                     this.drawStatus(robot, canvas.getContext("2d"));
@@ -242,7 +246,7 @@ export default {
     computed: {
         getRobotStatuses: function() {
             // If performance is a problem we can reduce this to just status members that would cause a redraw
-            return this.state.world.teams.get(this.state.world.team).robots.map(robot => robot.status);
+            return this.state?.world?.teams?.get(this.state.world.team)?.robots?.map(robot => robot.status);
         },
         getControlledRobot: function() {
             return this.state.controlledRobot;

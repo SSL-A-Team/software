@@ -12,8 +12,10 @@ import { Overlay, OverlayType } from "@/overlay";
 
 export class HistoryManager {
     refHistory: RefereeHistory[] = [];
+    eventList: RefereeHistory[] = []; // First frame of relevant events
     compressedWorldHistory: WorldState[] = []; // Treated as a circular buffer
-    frameLimit: number = 100000;
+    // frameLimit: number = 100000;
+    frameLimit: number = 10000;
     loadedFrames: number;
 
     historyEndIndex: number = -1; // Index of the last element of circular buffer
@@ -21,13 +23,16 @@ export class HistoryManager {
     historyReplayIsPaused: boolean = true;
 
     viewingBag: boolean = false;
-    bagStartTime: number = null;
-    bagEndTime: number = null;
+    bagStartTimestamp: number = null; // milliseconds
+    bagEndTimestamp: number = null; // milliseconds
+
+    loadedZones: number[] = new Array(1000).fill(0);
 
     updateHistory(appState: AppState): void {
         // Only store history while we are unpaused
         if (this.selectedHistoryFrame == -1 || this.viewingBag) {
             this.historyEndIndex++;
+            this.loadedFrames++;
             let compressed_world = this.compressWorldState(appState);
             if (this.compressedWorldHistory.length < this.frameLimit) {
                 this.compressedWorldHistory.push(compressed_world);
@@ -41,41 +46,84 @@ export class HistoryManager {
         }
     }
 
-    updateBagHistory(appState: AppState): void {
-        if (this.viewingBag) {
-            return;
+    updateZone(historyIndex: number, value: number): void {
+        const zoneIndex = Math.floor((historyIndex / this.compressedWorldHistory.length) * this.loadedZones.length);
+        this.loadedZones[zoneIndex] += value;
+
+        // Only trigger on transition
+        if (
+            value > 0 &&
+            this.loadedZones[zoneIndex] > 0.5 * this.compressedWorldHistory.length / (this.loadedZones.length) &&
+            this.loadedZones[zoneIndex] - 1 < 0.5 * this.compressedWorldHistory.length / (this.loadedZones.length)
+        ) {
+            let zoneCanvas = document.getElementById("zone_canvas") as HTMLCanvasElement;
+            const ctx = zoneCanvas.getContext('2d');
+            ctx.fillStyle = 'green';
+            ctx.fillRect(
+                zoneIndex,
+                0,
+                1,
+                zoneCanvas.height
+            );
+
+        } else if (
+            value < 0 &&
+            this.loadedZones[zoneIndex] < 0.5 * this.compressedWorldHistory.length / (this.loadedZones.length) &&
+            this.loadedZones[zoneIndex] + 1 > 0.5 * this.compressedWorldHistory.length / (this.loadedZones.length)
+        ){
+            let zoneCanvas = document.getElementById("zone_canvas") as HTMLCanvasElement;
+            const ctx = zoneCanvas.getContext('2d');
+            ctx.fillStyle = 'red';
+            ctx.fillRect(
+                zoneIndex,
+                0,
+                1,
+                zoneCanvas.height
+            );
         }
+    }
+
+    updateBagHistory(appState: AppState): void {
 
         this.historyEndIndex++;
         this.loadedFrames++;
 
-        // // TODO: this may end up behaving weird if we are not hitting the kenobi framerate
-        // if (this.loadedFrames > this.frameLimit) {
-        //     let start_time = 0.0
-        //     let end_time = appState.realtimeWorld.timestamp - this.bagStartTime - 10.0;
-        //     if (end_time < 0) {
-        //         console.log("ran out of space while near start of buffer ??????");
-        //         // TODO: handle this way better
-        //         start_time = end_time + 20.0;
-        //         end_time = this.bagEndTime;
-        //     }
+        // TODO: this may end up behaving weird if we are not hitting the kenobi framerate
+        if (this.loadedFrames > this.frameLimit) {
+            let start_time = this.bagStartTimestamp;
+            let end_time = appState.realtimeWorld.timestamp - ((this.frameLimit / 100) * 1000);
 
-        //     let filtered = this.compressedWorldHistory.filter((elem) => (elem.timestamp < end_time));
-        //     for (let [_, elem] of filtered.entries()) {
-        //         if (this.loadedFrames < this.frameLimit - 1000) {
-        //             break;
-        //         }
+            // This doesn't do a very good job of choosing chunks to remove
+            console.log("REMOVE TIMES:")
+            console.log("start: ", start_time)
+            console.log("end: ", end_time)
+            
+            if (end_time - start_time < 0) {
+                console.log("ran out of space while near start of buffer ??????");
+                // TODO: handle this way better
+                start_time = end_time + ((this.frameLimit / 100) * 1000);
+                end_time = this.bagEndTimestamp;
+            }
 
-        //         const index = Math.ceil((elem.timestamp - this.bagStartTime) / 100.0);
-        //         delete this.compressedWorldHistory[elem.timestamp];
-        //         this.loadedFrames--;
-        //     }
+            let ts = performance.now();
+            let filtered = this.compressedWorldHistory.filter((elem) => (elem.timestamp > start_time && elem.timestamp < end_time));
 
-        // }
+            for (let [_, elem] of filtered.entries()) {
+                if (this.loadedFrames < this.frameLimit - (10.0 * 100)) {
+                    break;
+                }
+
+                const index = Math.floor((elem.timestamp - this.bagStartTimestamp) / (1000 / 100));
+                delete this.compressedWorldHistory[index];
+                this.loadedFrames--;
+                this.updateZone(index, -1);
+            }
+        }
 
         let compressed_world = this.compressWorldState(appState);
-        // this.compressedWorldHistory[this.historyEndIndex] = compressed_world;
-        this.compressedWorldHistory.push(compressed_world);
+        const index = Math.floor((appState.realtimeWorld.timestamp - this.bagStartTimestamp) / (1000 / 100));
+        this.compressedWorldHistory[index] = compressed_world;
+        this.updateZone(index, 1);
     }
 
     compressWorldState(appState: AppState) {
@@ -115,13 +163,15 @@ export class HistoryManager {
             }
         }
 
-        world.teams.get(TeamColor.Blue).robots = compressedToRobotArray(TeamColor.Blue,
-            world.teams.get(TeamColor.Blue).robots as number[]);
-        world.teams.get(TeamColor.Yellow).robots = compressedToRobotArray(TeamColor.Yellow,
-            world.teams.get(TeamColor.Yellow).robots as number[]);
-        world.plays = compressedArrayToPlayMap(world.plays as number[], appState.playNameCache);
-        world.field.overlays = compressedArrayToOverlays(world.field.overlays as Overlay[],
-            appState.overlayNamespaceCache, appState.overlayNameCache);
+        if (world?.teams) {
+            world.teams.get(TeamColor.Blue).robots = compressedToRobotArray(TeamColor.Blue,
+                world.teams.get(TeamColor.Blue).robots as number[]);
+            world.teams.get(TeamColor.Yellow).robots = compressedToRobotArray(TeamColor.Yellow,
+                world.teams.get(TeamColor.Yellow).robots as number[]);
+            world.plays = compressedArrayToPlayMap(world.plays as number[], appState.playNameCache);
+            world.field.overlays = compressedArrayToOverlays(world.field.overlays as Overlay[],
+                appState.overlayNamespaceCache, appState.overlayNameCache);
+        }
 
         return world;
     }

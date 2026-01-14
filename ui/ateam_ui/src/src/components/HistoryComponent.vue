@@ -42,7 +42,7 @@
 
 <script lang="ts">
 import { inject } from "vue";
-import { AppState } from "@/state";
+import { AppState, WorldState } from "@/state";
 import { TeamColor } from "@/team";
 import * as PIXI from 'pixi.js';
 
@@ -167,7 +167,20 @@ export default {
                 }
                 this.state.world = this.state.historyManager.decompressWorldState(this.state.historyManager.compressedWorldHistory[circularBufferIndex], this.state);
 
+                if (!this.state?.world?.teams) {
+                    this.state.world = new WorldState();
+                }
+
                 this.state.graphicState.updateField(); // Render the field and overlays
+
+                if (this.state.historyManager.viewingBag) {
+                    console.log("loading new chunk");
+                    this.state.backendManager.loadBagChunk(this.state, this.state.historyManager.selectedHistoryFrame);
+                }
+            }
+
+            if (!this.state?.world?.field?.overlays) {
+                return;
             }
 
             // Check for orphaned overlay graphics

@@ -195,7 +195,7 @@ export default {
             const viewport = this.pixi.stage.getChildAt(0);
             var defending = this.getDefending;
 
-            const robotArray = Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()
+            const robotArray = Array.from(state?.world?.teams?.values()).map(i => { return i.robots }).flat()
             const robots = this.fieldContainer.getChildByName("robots").children;
             for (let i = 0; i < robotArray.length; i++) {
                 const robot = robots[i] as PIXI.Container;
@@ -258,7 +258,7 @@ export default {
             return this.state.world.field.fieldInfo;
         },
         getDefending: function() {
-            return this.state.world.teams.get(this.state.world.team).defending;
+            return this.state?.world?.teams?.get(this.state?.world?.team).defending;
         },
         getIgnoreFieldSide: function() {
             return this.state.world.field.fieldInfo.ignore_side * -this.getDefending;

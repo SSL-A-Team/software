@@ -94,6 +94,9 @@
         </v-list>
     </v-menu>
     <v-file-input label="File input" @change="loadBagFile"></v-file-input>
+    <v-btn dense class="mx-1" style="max-width: 50;" @click.stop=unloadBagFile()>
+        <v-icon icon="mdi-bag-personal-off-outline"/>
+    </v-btn>
 </template>
 
 <script lang="ts">
@@ -177,8 +180,11 @@ export default {
         },
         loadBagFile: function(event) {
             if (event.target.files) {
-                this.state.backendManager.loadBagFile(this.state, event.target.files[0])
+                this.state.backendManager.initialLoadBagFile(this.state, event.target.files[0])
             }
+        },
+        unloadBagFile: function() {
+            this.state.backendManager.unloadBagFile(this.state);
         }
     }
 }

@@ -119,9 +119,9 @@ export function drawFieldLines(state: AppState, fieldLines: PIXI.Graphics) {
     fieldLines.lineTo(scale * field.fieldInfo.field_length / 2, 0);
 
     // Team Goal Boxes
-    for (const color of state.world.teams.keys()) {
-        const team = state.world.teams.get(color);
-        const direction = (color == state.world.team ? -1 : 1); // always draw our goal on the left
+    for (const color of state?.world?.teams?.keys()) {
+        const team = state?.world?.teams?.get(color);
+        const direction = (color == state?.world?.team ? -1 : 1); // always draw our goal on the left
         const goalX = direction * scale * field.fieldInfo.field_length / 2
 
         // Goal Box
@@ -141,7 +141,7 @@ export function drawFieldLines(state: AppState, fieldLines: PIXI.Graphics) {
 }
 
 export function drawRobots(state: AppState, robotsContainer: PIXI.Container) {
-    const robotArray = Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()
+    const robotArray = Array.from(state?.world?.teams?.values()).map(i => { return i.robots }).flat()
     for (var i = 0; i < robotArray.length; i++) {
         drawRobot(robotArray[i] as Robot, robotsContainer, state.renderConfig);
     }
@@ -235,9 +235,13 @@ export function initializePixi(app: PIXI.Application, state: AppState): PIXI.Con
 }
 
 export function updateField(state: AppState, fieldContainer: PIXI.Container) {
-    const field = state.world.field;
+    const field = state?.world?.field;
 
-    const robotArray = Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()
+    if (field == null) {
+        return;
+    }
+
+    const robotArray = Array.from(state?.world?.teams?.values()).map(i => { return i.robots }).flat()
     const robots = fieldContainer.getChildByName("robots").children;
     for (var i = 0; i < robotArray.length; i++) {
         if (i != state.draggedRobot) {
