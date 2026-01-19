@@ -54,13 +54,43 @@ class VisionFilterNode : public rclcpp::Node
             );
 
             timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
+    
+            ball_publisher_ = create_publisher<ateam_msgs::msg::VisionStateBall>(
+                std::string(Topics::kBall),
+                rclcpp::SystemDefaultsQoS());
+
+            
+            ateam_common::indexed_topic_helpers::create_indexed_publishers
+            <ateam_msgs::msg::VisionStateRobot>(
+            blue_robots_publisher_,
+            Topics::kBlueTeamRobotPrefix,
+            rclcpp::SystemDefaultsQoS(),
+            this
+            );
+            ateam_common::indexed_topic_helpers::create_indexed_publishers
+            <ateam_msgs::msg::VisionStateRobot>(
+            yellow_robots_publisher_,
+            Topics::kYellowTeamRobotPrefix,
+            rclcpp::SystemDefaultsQoS(),
+            this
+            );
+    
+            ssl_vision_subscription_ =
+                create_subscription<ssl_league_msgs::msg::VisionWrapper>(
+                std::string(Topics::kVisionMessages),
+                10,
+                std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
+
+            field_subscription_ =
+                create_subscription<ateam_msgs::msg::FieldInfo>(
+                std::string(Topics::kField),
+                10,
+                std::bind(&VisionFilterNode::field_callback, this, std::placeholders::_1));
         }
 
     // Will also need to add publishers here and wall clock timer 
     
     private:
-        // Subscribe to vision info from our processed messages
-        // in ssl_vision_bridge_node.cpp
         std::map<int, Camera> cameras;
         rclcpp::TimerBase::SharedPtr timer_;
 
@@ -71,6 +101,19 @@ class VisionFilterNode : public rclcpp::Node
         std::vector<BallTrack> ball_tracks;
         std::vector<RobotTrack> blue_tracks;
         std::vector<RobotTrack> yellow_tracks;
+ 
+        // All this stuff interacts with other nodes (pub/sub related)
+        std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
+            16> blue_robots_publisher_;
+        std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
+            16> yellow_robots_publisher_;
+        
+        ateam_common::GameControllerListener game_controller_listener_;
+        rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
+        rclcpp::Publisher<ateam_msgs::msg::VisionStateCameraArray>::SharedPtr vision_state_publisher_;
+        // The two below are in case we are sharing a field during testing at event
+        rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr field_subscription_;
+        int ignore_side_;
 
         void vision_callback(const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg) {
             // Add detections to the queues
@@ -157,9 +200,19 @@ class VisionFilterNode : public rclcpp::Node
             // Publish the updated vision info
             return;
         }
-
-        ateam_common::GameControllerListener game_controller_listener_;
-        rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
+  
+        void field_callback(
+            const ateam_msgs::msg::FieldInfo::SharedPtr field_info_msg)
+        {
+            const auto team_side = game_controller_listener_.GetTeamSide();
+            if (team_side == ateam_common::TeamSide::PositiveHalf) {
+            ignore_side_ = -field_info_msg->ignore_side;
+            } else {
+            ignore_side_ = field_info_msg->ignore_side;
+            }
+        }
 };
 
 } // namespace new_super_vision
+
+RCLCPP_COMPONENTS_REGISTER_NODE(new_super_vision::VisionFilterNode)
