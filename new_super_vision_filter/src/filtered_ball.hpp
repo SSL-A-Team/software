@@ -24,7 +24,9 @@
 #include <chrono>
 #include <Eigen/Core>
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
+#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include "kalman/ExtendedKalmanFilter.hpp"
+#include "filter_types.hpp"
 
 enum KickState {
     ROLLING,
@@ -34,17 +36,21 @@ enum KickState {
 
 class FilteredBall {
     public:
-        FilteredBall(ssl_league_msgs::msg::VisionDetectionBall &vision_ball);
+        FilteredBall(ssl_league_msgs::msg::VisionDetectionBall &ball_detection_msg);
+
+        void update(ssl_league_msgs::msg::VisionDetectionBall &ball_detection)
+
+        ateam_msgs::msg::BallState toMsg();
 
     private:
+        int age = 0;
+        int oldEnough = 3;
+        int maxHealth = 20;
+        double maxDistance = -1.0;
         KickState currentKickState = ROLLING;
+        std::chrono::milliseconds update_threshold{50};
         std::chrono::steady_clock::time_point timestamp; 
         std::chrono::steady_clock::time_point last_visible_timestamp;
-        // TODO: Add unit labels/info 
-        Eigen::Vector3<double> pos;
-        Eigen::Vector3<double> vel;
-        Eigen::Vector3<double> acc;
-        Eigen::Vector2<double> spin;
         // Filter
         Kalman::ExtendedKalmanFilter<Kalman::Vector<double, 2>> posFilterXY;
 };

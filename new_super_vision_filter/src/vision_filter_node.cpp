@@ -53,6 +53,7 @@ class VisionFilterNode : public rclcpp::Node
                 std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1)
             );
 
+            timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
         }
 
     // Will also need to add publishers here and wall clock timer 
@@ -61,6 +62,7 @@ class VisionFilterNode : public rclcpp::Node
         // Subscribe to vision info from our processed messages
         // in ssl_vision_bridge_node.cpp
         std::map<int, Camera> cameras;
+        rclcpp::TimerBase::SharedPtr timer_;
 
         std::vector<FilteredRobot> blue_robots;
         std::vector<FilteredRobot> yellow_robots;

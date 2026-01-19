@@ -27,11 +27,11 @@
 #include <Eigen/Core>
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <ateam_common/game_controller_listener.hpp>
-#include <ateam_msgs/msg/robot_state.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 
 class FilteredRobot {
     public:
-        FilteredRobot(ssl_league_msgs::msg::VisionDetectionRobot robot_detection_msg, ateam_common::TeamColor team_color);
+        FilteredRobot(RobotTrack &track, ateam_common::TeamColor team_color);
 
         void update(ssl_league_msgs::msg::VisionDetectionRobot robot_detection);
 

@@ -30,9 +30,8 @@
 // or https://thekalmanfilter.com/kalman-filter-explained-simply/
 // OR https://github.com/mherb/kalman/blob/master/examples/Robot1/main.cpp
 
-FilteredRobot::FilteredRobot(RobotTrack track, ateam_common::TeamColor team_color)
+FilteredRobot::FilteredRobot(RobotTrack &track, ateam_common::TeamColor team_color)
     : posFilterXY(), posFilterW(), bot_id(track.robot_id), team(team_color) {
-        // TODO (Christian) - Might need to change the below to use our state/measurement types
         // Initialize XY KF
         PosState initial_state_xy;
         initial_state_xy << 
@@ -42,6 +41,9 @@ FilteredRobot::FilteredRobot(RobotTrack track, ateam_common::TeamColor team_colo
             0;
         posFilterXY.init(initial_state_xy);
         Kalman::Matrix<double, 4, 4> xy_covariance;
+        // This is in m, so initial covariance is 100 mm.
+        // We don't get a velocity input in the measurement itself,
+        // so that has a large initial uncertainty.
         xy_covariance    <<   1e-2, 0, 0, 0,
                             0, 1e-2, 0, 0,
                             0, 0, 1e3, 0,
@@ -75,7 +77,6 @@ void FilteredRobot::update(RobotTrack &track) {
     ++age;
     bool is_new = age < oldEnough;
     // As long as its reasonable, update the Kalman Filter
-    // TODO (Christian) - do this for each current track in the queue
     const std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
     // If it's been too long, don't use this message
@@ -97,7 +98,8 @@ void FilteredRobot::update(RobotTrack &track) {
 }
 
 ateam_msgs::msg::RobotState FilteredRobot::toMsg(){
-    return ateam_msgs::msg::RobotState{};
+    ateam_msgs::msg::RobotState robot_state_msg{};
+    return robot_state_msg;
 };
 
 int FilteredRobot::getId() const {
