@@ -267,16 +267,14 @@ private:
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
         ateam_common::GameCommand::Stop;
       control_msg.emergency_stop = false;
-      control_msg.body_vel_controls_enabled = get_parameter("controls_enabled.body_vel").as_bool();
+      control_msg.body_pose_control_enabled = true;
+      control_msg.body_twist_control_enabled = get_parameter("controls_enabled.body_twist").as_bool();
+      control_msg.body_wrench_control_enabled = get_parameter("controls_enabled.body_wrench").as_bool();
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.play_song = 0;
-      // TODO: figure out a time reference that will be meaningful for the robot, time since last time sync?
-      uint64_t last_vision_update_micros = std::chrono::duration_cast<std::chrono::microseconds>(
-        vision_state_timestamps_[id].time_since_epoch()).count();  // will be zero if no vision update has been received yet
-      control_msg.last_vision_update_us_hi = static_cast<uint32_t>(last_vision_update_micros >> 32);
-      control_msg.last_vision_update_us_lo = static_cast<uint32_t>(last_vision_update_micros & 0xFFFFFFFFu);
+      control_msg.vision_update = true;
       control_msg.pose_x_linear_vision = vision_states_[id].pose.position.x;
       control_msg.pose_y_linear_vision = vision_states_[id].pose.position.y;
       control_msg.pose_z_angular_vision = GetPoseYaw(vision_states_[id].pose);
