@@ -26,8 +26,7 @@
 #include <thread>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
@@ -71,7 +70,9 @@ public:
     firmware_parameter_server_(*this, connections_)
   {
     declare_parameters<bool>("controls_enabled", {
-        {"body_vel", true},
+        {"body_pose", true},
+        {"body_twist", false},
+        {"body_wrench", false},
         {"wheel_vel", true},
         {"wheel_torque", false}
     });
@@ -274,13 +275,21 @@ private:
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.play_song = 0;
-      control_msg.vision_update = true;
-      control_msg.pose_x_linear_vision = vision_states_[id].pose.position.x;
-      control_msg.pose_y_linear_vision = vision_states_[id].pose.position.y;
-      control_msg.pose_z_angular_vision = GetPoseYaw(vision_states_[id].pose);
+      if (
+        std::chrono::steady_clock::now() - vision_state_timestamps_[id] < std::chrono::milliseconds(100) &&
+        vision_states_[id].visible
+      ) {
+        // vision data is recent enough to send and not all zero/identity
+        control_msg.vision_update = true;
+        control_msg.pose_x_linear_vision = vision_states_[id].pose.position.x;
+        control_msg.pose_y_linear_vision = vision_states_[id].pose.position.y;
+        control_msg.pose_z_angular_vision = GetYaw(vision_states_[id].pose);
+      } else {
+        control_msg.vision_update = false;
+      }
       control_msg.x_linear_cmd = motion_commands_[id].pose.position.x;
       control_msg.y_linear_cmd = motion_commands_[id].pose.position.y;
-      control_msg.z_angular_cmd = GetPoseYaw(motion_commands_[id].pose);
+      control_msg.z_angular_cmd = GetYaw(motion_commands_[id].pose);
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
       control_msg.dribbler_multiplier = 55;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
@@ -512,22 +521,14 @@ private:
     response->success = true;
   }
 
-  double GetPoseYaw(geometry_msgs::msg::Pose pose) {
-    double roll, pitch, yaw = 0.0;
-    tf2::Quaternion q(
-        pose.orientation.x,
-        pose.orientation.y,
-        pose.orientation.z,
-        pose.orientation.w
-    );
-    if (q.length2() == 0) {
-        // invalid quaternion, pose could be a default constructed message
-        return 0.0;
-    }
-    tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+  double GetYaw(geometry_msgs::msg::Pose pose)
+  {
+    tf2::Quaternion quat;
+    tf2::fromMsg(pose.orientation, quat);
+    double yaw, pitch, roll;
+    tf2::Matrix3x3(quat).getEulerYPR(yaw, pitch, roll);
     return yaw;
   }
-
 };
 
 }  // namespace ateam_radio_bridge
