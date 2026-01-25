@@ -277,7 +277,14 @@ private:
       control_msg.play_song = 0;
       if (
         std::chrono::steady_clock::now() - vision_state_timestamps_[id] < std::chrono::milliseconds(100) &&
-        vision_states_[id].visible
+        vision_states_[id].visible && (
+          vision_states_[id].pose.position.x != 0.0 ||
+          vision_states_[id].pose.position.y != 0.0 ||
+          vision_states_[id].pose.orientation.x != 0.0 ||
+          vision_states_[id].pose.orientation.y != 0.0 ||
+          vision_states_[id].pose.orientation.z != 0.0 ||
+          vision_states_[id].pose.orientation.w != 1.0
+        )
       ) {
         // vision data is recent enough to send and not all zero/identity
         control_msg.vision_update = true;
