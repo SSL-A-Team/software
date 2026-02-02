@@ -25,6 +25,7 @@
 #include <cmath>
 #include <chrono>
 #include <Eigen/Core>
+#include <ateam_geometry/ateam_geometry.hpp>
 
 // See https://thekalmanfilter.com/extended-kalman-filter-python-example/
 // or https://thekalmanfilter.com/kalman-filter-explained-simply/
@@ -74,7 +75,12 @@ FilteredRobot::FilteredRobot(RobotTrack &track, ateam_common::TeamColor team_col
 void FilteredRobot::update(RobotTrack &track) {
     // Make sure this detection isn't crazy off from our previous ones
     // (unless our filter is still new/only has a few measurements)
-    ++age;
+    if (age < oldEnough) {
+        ++age;
+    }
+    if (health < maxHealth){
+        health += 2;
+    }
     bool is_new = age < oldEnough;
     // As long as its reasonable, update the Kalman Filter
     const std::chrono::time_point<std::chrono::system_clock> now =
@@ -98,10 +104,39 @@ void FilteredRobot::update(RobotTrack &track) {
 }
 
 ateam_msgs::msg::RobotState FilteredRobot::toMsg(){
-    ateam_msgs::msg::RobotState robot_state_msg{};
+    ateam_msgs::msg::VisionStateRobot robot_state_msg{};
+    bool is_new = age < oldEnough;
+
+    if (health > 0 && !is_new) {
+        robot_state_msg.visible = true;
+        robot_detection_msg.pose.position.x = posXYEstimate.px();
+        robot_detection_msg.pose.position.y = posXYEstimate.py();
+        robot_detection_msg.pose.twist.linear.x = posXYEstimate.vx();
+        robot_detection_msg.pose.twist.linear.y = posXYEstimate.vy();
+
+        robot_detection_msg.pose.orientation.x = 0;
+        robot_detection_msg.pose.orientation.y = 0;
+        robot_detection_msg.pose.orientation.z = 1;
+        robot_detection_msg.pose.orientation.w = posWEstimate.pw();
+        robot_detection_msg.twist.angular.z = posWEstimate.vw();
+
+        // Convert to body velocities for plotting/debugging
+        ateam_geometry::Vector velocity(robot_state_msg.twist.linear.x, robot_state_msg.twist.linear.y);
+        CGAL::Aff_transformation_2<ateam_geometry::Kernel> transformation(CGAL::ROTATION,
+        std::sin(-obj.theta), std::cos(-obj.theta));
+        const auto velocity_trans = velocity.transform(transformation);
+        robot_state_msg.twist_body.linear.x = velocity_trans.x();
+        robot_state_msg.twist_body.linear.y = velocity_trans.y();
+        robot_state_msg.twist_body.angular.z = robot_state_msg.twist.angular.z;
+        --health;
+    }
     return robot_state_msg;
 };
 
 int FilteredRobot::getId() const {
     return bot_id;
+}
+
+bool FilteredRobot::isHealthy(){
+    return health > 0;
 }

@@ -42,17 +42,20 @@ class FilteredBall {
 
         ateam_msgs::msg::BallState toMsg();
 
+        bool isHealthy() const;
+
     private:
         int age = 0;
         int oldEnough = 3;
         int maxHealth = 20;
+        int health = 2;
         double maxDistance = -1.0;
         KickState currentKickState = ROLLING;
         std::chrono::milliseconds update_threshold{50};
         std::chrono::steady_clock::time_point timestamp; 
         std::chrono::steady_clock::time_point last_visible_timestamp;
         // Filter
-        Kalman::ExtendedKalmanFilter<Kalman::Vector<double, 2>> posFilterXY;
+        Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
 };
 
 #endif // FILTERED_BALL_HPP_

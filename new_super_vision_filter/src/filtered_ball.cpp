@@ -22,7 +22,12 @@ FilteredBall::FilteredBall(ssl_league_msgs::msg::VisionDetectionBall &ball_detec
 void FilteredBall::update(BallTrack &track){
     // Make sure this detection isn't crazy off from our previous ones
     // (unless our filter is still new/only has a few measurements)
-    ++age;
+    if (age < oldEnough) {
+        ++age;
+    }
+    if (health < maxHealth){
+        health += 2;
+    }
     bool is_new = age < oldEnough;
     // As long as its reasonable, update the Kalman Filter
     const std::chrono::time_point<std::chrono::system_clock> now =
@@ -43,7 +48,22 @@ void FilteredBall::update(BallTrack &track){
     posXYEstimate = posFilterXY.update(measurementModelXY, track.pos);
 }
 
-ateam_msgs::msg::BallState FilteredBall::toMsg(){
-    ateam_msgs::msg::BallState ball_state_msg{};
+ateam_msgs::msg::VisionStateBall FilteredBall::toMsg(){
+    ateam_msgs::msg::VisionStateBall ball_state_msg{};
+    bool is_new = age < oldEnough;
+
+    if (health > 0 && !is_new) {
+        // NOTE: Does not contain acceleration info
+        ball_state_msg.visible = true;
+        ball_detection_msg.pose.position.x = posXYEstimate.px();
+        ball_detection_msg.pose.position.y = posXYEstimate.py();
+        ball_detection_msg.pose.twist.linear.x = posXYEstimate.vx();
+        ball_detection_msg.pose.twist.linear.y = posXYEstimate.vy();
+        --health;
+    }
     return ball_state_msg;
+}
+
+bool FilteredBall::isHealthy(){
+    return health > 0;
 }

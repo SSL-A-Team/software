@@ -39,6 +39,8 @@ class FilteredRobot {
 
         int getId() const;
 
+        bool isHealthy() const;
+
     private:
         int bot_id;
         ateam_common::TeamColor team;

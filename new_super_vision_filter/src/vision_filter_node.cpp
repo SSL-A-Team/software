@@ -191,13 +191,49 @@ class VisionFilterNode : public rclcpp::Node
         }
 
         void timer_callback() {
-            // Get the current predictions for all robots and ball(s)
-            // Make sure these specific critera... 
-            // Should be recently updated enough - prune stale robots/balls
-            // Pick the best ball if multiple exist (based on whichever is closest to our most recent
-            // prediction?)
-            //
-            // Publish the updated vision info
+            // Remove the ball if it's bad quality
+            if (ball.has_value){
+                if (!ball.isHealthy()){
+                    ball.reset();
+                }
+            }
+            // Erase any robots that are bad quality 
+            std::erase_if(blue_robots, [](FilteredRobot &bot) { return !x.isHealthy()})
+            std::erase_if(yellow_robots, [](FilteredRobot &bot) { return !x.isHealthy()})
+            // Publish the most recent ball
+            ateam_msgs::msg::VisionStateBall ball_msg{};
+            if (ball.has_value()){
+                ball_msg = ball.toMsg();
+            }
+            ball_publisher_->publish(ball_msg);
+
+            // Publish the robots
+            // - Blue -
+            for (std::size_t id = 0; id < 16; id++) {
+                auto robot_msg = ateam_msgs::msg::VisionStateRobot{};
+                auto it = std::find_if(
+                    blue_robots.begin(),
+                    blue_robots.end(),
+                    [](){ return id == bot.getId(); }
+                );
+                if (it != blue_robots.end()){
+                    robot_msg = it->toMsg();
+                }
+                blue_robots_publisher_.at(id)->publish(robot_msg);
+            }
+            // - Yellow -
+            for (std::size_t id = 0; id < 16; id++) {
+                auto robot_msg = ateam_msgs::msg::VisionStateRobot{};
+                auto it = std::find_if(
+                    yellow_robots.begin(),
+                    yellow_robots.end(),
+                    [](){ return id == bot.getId(); }
+                );
+                if (it != yellow_robots.end()){
+                    robot_msg = it->toMsg();
+                }
+                yellow_robots_publisher_.at(id)->publish(robot_msg);
+            }
             return;
         }
   
