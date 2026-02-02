@@ -72,9 +72,9 @@ public:
     declare_parameters<bool>("controls_enabled", {
         {"body_pose", true},
         {"body_twist", false},
-        {"body_wrench", false},
-        {"wheel_vel", true},
-        {"wheel_torque", false}
+        {"body_accel", false},
+        {"wheel_vel", false},
+        {"wheel_torque", true}
     });
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
@@ -268,9 +268,9 @@ private:
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
         ateam_common::GameCommand::Stop;
       control_msg.emergency_stop = false;
-      control_msg.body_pose_control_enabled = true;
+      control_msg.body_pose_control_enabled = get_parameter("controls_enabled.body_pose").as_bool();
       control_msg.body_twist_control_enabled = get_parameter("controls_enabled.body_twist").as_bool();
-      control_msg.body_wrench_control_enabled = get_parameter("controls_enabled.body_wrench").as_bool();
+      control_msg.body_accel_control_enabled = get_parameter("controls_enabled.body_accel").as_bool();
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
