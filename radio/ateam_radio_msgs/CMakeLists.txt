@@ -21,6 +21,9 @@ set(RADIO_STRUCTS_TO_GENERATE
     ExtendedTelemetry
     KickerTelemetry
     MotorTelemetry
+    CcmTelemetry
+    CcmVelocityTelemetry
+    CcmCurrentTelemetry
     PowerTelemetry
     BatteryInfo
 )
@@ -46,6 +49,9 @@ rosidl_generate_interfaces(${MSG_TARGET}
   ${GENERATED_DIR}:msg/ExtendedTelemetry.msg
   ${GENERATED_DIR}:msg/KickerTelemetry.msg
   ${GENERATED_DIR}:msg/MotorTelemetry.msg
+  ${GENERATED_DIR}:msg/CcmTelemetry.msg
+  ${GENERATED_DIR}:msg/CcmVelocityTelemetry.msg
+  ${GENERATED_DIR}:msg/CcmCurrentTelemetry.msg
   ${GENERATED_DIR}:msg/PowerTelemetry.msg
   ${GENERATED_DIR}:msg/BatteryInfo.msg
 
