@@ -70,9 +70,9 @@ public:
     firmware_parameter_server_(*this, connections_)
   {
     declare_parameters<bool>("controls_enabled", {
-        {"body_pose", true},
+        {"body_pose", false},
         {"body_twist", false},
-        {"body_accel", false},
+        {"body_accel", true},
         {"wheel_vel", false},
         {"wheel_torque", true}
     });
@@ -294,9 +294,12 @@ private:
       } else {
         control_msg.vision_update = false;
       }
-      control_msg.x_linear_cmd = motion_commands_[id].pose.position.x;
-      control_msg.y_linear_cmd = motion_commands_[id].pose.position.y;
-      control_msg.z_angular_cmd = GetYaw(motion_commands_[id].pose);
+      // control_msg.x_linear_cmd = motion_commands_[id].pose.position.x;
+      // control_msg.y_linear_cmd = motion_commands_[id].pose.position.y;
+      // control_msg.z_angular_cmd = GetYaw(motion_commands_[id].pose);
+      control_msg.x_linear_cmd = motion_commands_[id].twist.linear.x;
+      control_msg.y_linear_cmd = motion_commands_[id].twist.linear.y;
+      control_msg.z_angular_cmd = motion_commands_[id].twist.angular.z;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
       control_msg.dribbler_multiplier = 55;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);

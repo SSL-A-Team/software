@@ -8,3 +8,4 @@ ln -s build/compile_commands.json .
 ros2 topic echo /yellow_team/robot2 --field pose
 ros2 bag record -a -o rosbag_idle
 ros2 bag play rosbag_idle
+colcon build --packages-select ateam_bangbang && ros2 run ateam_bangbang bangbang_node --ros-args -p a_linear:=0.2 -p a_angular:=0.0
