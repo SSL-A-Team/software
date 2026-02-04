@@ -14,7 +14,9 @@
   <depend>ateam_common</depend>
   <depend>ateam_geometry</depend>
   <depend>ateam_msgs</depend>
+  <depend>ateam_radio_msgs</depend>
   <depend>ssl_league_msgs</depend>
+  <depend>ssl_ros_bridge</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

@@ -1,5 +1,5 @@
 <template>
-    <v-col class="flex-grow-0 flex-shrink-0 justify-center mt-n8 pt-n8 mb-n4 pb-n4">
+    <v-col class="flex-grow-0 flex-shrink-0 justify-center mt-n8 pt-n8 mb-n4 pb-n4" id="historySliderContainer">
         <v-slider
             v-model="historySlider"
             :min="-state.historyManager.compressedWorldHistory.length+1"
@@ -33,7 +33,7 @@
                 <v-icon icon="mdi-clock-end"/>
             </v-btn>
             <div>
-                {{ state.historyManager.historyEndIndex + " / " + state.historyManager.compressedWorldHistory.length }}
+                {{ bufferLocationIndex + " / " + state.historyManager.compressedWorldHistory.length }}
             </div>
         </v-row>
     </v-col>
@@ -86,7 +86,7 @@ export default {
             clearInterval(this.playbackTimer);
         },
         rewind: function() {
-            if (this.state.historyManager.selectedHistoryFrame == -1) {
+            if (this.state.historyManager.selectedHistoryFrame == -1 && !this.state.historyManager.viewingBag) {
                 this.playbackSpeed = 1.0;
                 this.state.historyManager.selectedHistoryFrame = this.state.historyManager.compressedWorldHistory.length - 1;
             }
@@ -108,7 +108,10 @@ export default {
         goToRealTime: function() {
             this.pause();
             this.playbackSpeed = 1.0;
-            this.state.historyManager.selectedHistoryFrame = -1;
+
+            if (!this.state.historyManager.viewingBag) {
+                this.state.historyManager.selectedHistoryFrame = -1;
+            }
         },
         stepButton: function(frames: number) {
             // Pause history replay when stepping by frame
@@ -156,7 +159,9 @@ export default {
             }
         },
         loadHistoryFrame: function() {
-            if (this.state.historyManager.selectedHistoryFrame == -1) {
+            if (this.state.historyManager.selectedHistoryFrame == -1
+                || (this.state.historyManager.viewingBag && this.state.backendManager.bag.load_in_progress)
+            ) {
                 this.state.world = this.state.realtimeWorld;
             } else {
                 // Calculate the correct index into the circular buffer
@@ -165,7 +170,16 @@ export default {
                 if (circularBufferIndex >= this.state.historyManager.compressedWorldHistory.length) {
                     circularBufferIndex = circularBufferIndex - (this.state.historyManager.compressedWorldHistory.length);
                 }
+
+                if (this.state.historyManager.viewingBag) {
+                    this.state.backendManager.loadBagChunk(this.state, this.state.historyManager.selectedHistoryFrame);
+                    if (this.state.backendManager.bag.load_in_progress) {
+                        this.pause();
+                    }
+                }
+
                 this.state.world = this.state.historyManager.decompressWorldState(this.state.historyManager.compressedWorldHistory[circularBufferIndex], this.state);
+
 
                 if (!this.state?.world?.teams) {
                     this.state.world = new WorldState();
@@ -173,10 +187,6 @@ export default {
 
                 this.state.graphicState.updateField(); // Render the field and overlays
 
-                if (this.state.historyManager.viewingBag) {
-                    console.log("loading new chunk");
-                    this.state.backendManager.loadBagChunk(this.state, this.state.historyManager.selectedHistoryFrame);
-                }
             }
 
             if (!this.state?.world?.field?.overlays) {
@@ -205,6 +215,13 @@ export default {
                 return "";
             } else {
                 return "red"
+            }
+        },
+        bufferLocationIndex: function() {
+            if (this.state.historyManager.viewingBag) {
+                return this.state.historyManager.selectedHistoryFrame;
+            } else {
+                return this.state.historyManager.historyEndIndex;
             }
         }
     },

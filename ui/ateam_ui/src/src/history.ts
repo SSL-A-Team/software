@@ -46,6 +46,12 @@ export class HistoryManager {
         }
     }
 
+    checkIfZoneLoaded(historyIndex: number): Boolean {
+        const zoneIndex = Math.floor((historyIndex / this.compressedWorldHistory.length) * this.loadedZones.length);
+        // Zone has some amount of data loaded
+        return this.loadedZones[zoneIndex] > 0.5 * this.compressedWorldHistory.length / (this.loadedZones.length);
+    }
+
     updateZone(historyIndex: number, value: number): void {
         const zoneIndex = Math.floor((historyIndex / this.compressedWorldHistory.length) * this.loadedZones.length);
         this.loadedZones[zoneIndex] += value;
@@ -85,34 +91,36 @@ export class HistoryManager {
 
     updateBagHistory(appState: AppState): void {
 
-        this.historyEndIndex++;
         this.loadedFrames++;
 
         // TODO: this may end up behaving weird if we are not hitting the kenobi framerate
         if (this.loadedFrames > this.frameLimit) {
             let start_time = this.bagStartTimestamp;
             let end_time = appState.realtimeWorld.timestamp - ((this.frameLimit / 100) * 1000);
+            let direction = 1;
 
-            // This doesn't do a very good job of choosing chunks to remove
-            console.log("REMOVE TIMES:")
-            console.log("start: ", start_time)
-            console.log("end: ", end_time)
-            
             if (end_time - start_time < 0) {
-                console.log("ran out of space while near start of buffer ??????");
-                // TODO: handle this way better
                 start_time = end_time + ((this.frameLimit / 100) * 1000);
                 end_time = this.bagEndTimestamp;
+                direction = -1;
             }
 
             let ts = performance.now();
             let filtered = this.compressedWorldHistory.filter((elem) => (elem.timestamp > start_time && elem.timestamp < end_time));
 
-            for (let [_, elem] of filtered.entries()) {
+            let start_index = direction > 0 ? 0 : filtered.length - 1;
+
+            let loop_condition = direction > 0 ?
+                function(i: number): Boolean { return i < filtered.length }
+                :
+                function(i: number): Boolean { return i >= 0 }
+
+            for (let i = start_index; loop_condition(i); i += direction) {
                 if (this.loadedFrames < this.frameLimit - (10.0 * 100)) {
                     break;
                 }
 
+                const elem = filtered[i];
                 const index = Math.floor((elem.timestamp - this.bagStartTimestamp) / (1000 / 100));
                 delete this.compressedWorldHistory[index];
                 this.loadedFrames--;
@@ -124,6 +132,8 @@ export class HistoryManager {
         const index = Math.floor((appState.realtimeWorld.timestamp - this.bagStartTimestamp) / (1000 / 100));
         this.compressedWorldHistory[index] = compressed_world;
         this.updateZone(index, 1);
+
+        this.selectedHistoryFrame = index;
     }
 
     compressWorldState(appState: AppState) {

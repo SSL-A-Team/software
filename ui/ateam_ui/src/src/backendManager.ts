@@ -859,15 +859,11 @@ export class BackendManager {
         const channelInfo = channelInfoById.get(record.channelId);
         if (!channelInfo) {
             console.log("no channel info for: ", record);
-            // throw new Error(`message for channel ${record.channelId} with no prior channel info`);
             return;
         }
         if (channelInfo.messageDeserializer == undefined) {
             console.log("no message deserializer for: ", record);
             return;
-            // throw new Error(
-            //     `No deserializer available for channel id: ${channelInfo.info.id} ${channelInfo.info.messageEncoding}`,
-            // );
         }
 
         const message = channelInfo.messageDeserializer(record.data);
@@ -897,6 +893,7 @@ export class BackendManager {
     }
 
     async initialLoadBagFile(appState: AppState, file: Blob) {
+        console.log("Loading bag file: ", file.name)
 
         appState.historyManager.viewingBag = true;
         appState.historyManager.historyEndIndex = -1;
@@ -911,21 +908,18 @@ export class BackendManager {
         this.loadBagMetadata(appState);
 
         const num_frames = Math.ceil(this.bag.bag_length_time * 100.0);
-        console.log("Setting History Array Length to: ", num_frames);
         appState.historyManager.compressedWorldHistory = new Array(num_frames);
-        // appState.historyManager.compressedWorldHistory = [];
 
         appState.historyManager.loadedFrames = 0;
         appState.historyManager.historyEndIndex = -1;
         appState.historyManager.bagStartTimestamp = 1000 * Number(this.bag.message_start_time);
         appState.historyManager.bagEndTimestamp = 1000 * Number(this.bag.message_end_time);
-        console.log("setting history length: ", appState.historyManager.compressedWorldHistory);
 
         // Set up loaded zones display
         const zoneCanvas = document.createElement('canvas');
         zoneCanvas.id = "zone_canvas"
         zoneCanvas.width = appState.historyManager.loadedZones.length;
-        zoneCanvas.height = 100;
+        zoneCanvas.height = 20;
         const zoneCtx = zoneCanvas.getContext('2d');
         zoneCtx.fillStyle = 'red';
         zoneCtx.fillRect(
@@ -935,10 +929,13 @@ export class BackendManager {
             zoneCanvas.height
         );
 
-        document.body.prepend(zoneCanvas);
+        zoneCanvas.style.width = "88%";
+        zoneCanvas.style.height = "auto";
+        zoneCanvas.style.display = "block";
+        zoneCanvas.style.margin = "0 auto";
+        document.getElementById("historySliderContainer").prepend(zoneCanvas);
 
         const processing_start_time = Date.now();
-
         await this.loadBagRefData(appState);
 
         if (!appState.historyManager.viewingBag) {
@@ -949,9 +946,7 @@ export class BackendManager {
         await this.loadBagChunk(appState);
 
         if (appState.historyManager.viewingBag) {
-            console.log("bag completion time: ", (Date.now() - processing_start_time) / 1000.0);
-            console.log(appState);
-            console.log(appState.historyManager.compressedWorldHistory);
+            console.log("Completed initial load of (", file.name, ") in ", (Date.now() - processing_start_time) / 1000.0, " seconds");
         }
     }
 
@@ -965,15 +960,9 @@ export class BackendManager {
             }
         >();
 
-        console.log("schemabyid:");
-        console.log(this.bag.reader.schemasById);
-
-        console.log("reading channels")
         for (const record of this.bag.reader.channelsById.values()) {
             this.processBagChannel(record, this.bag.reader.schemasById, this.bag.channelInfoById, appState);
         }
-        console.log("channelbyid:");
-        console.log(this.bag.channelInfoById);
 
         this.bag.message_start_time = this.bag.reader.statistics.messageStartTime / BigInt(1e9);
         this.bag.message_end_time = this.bag.reader.statistics.messageEndTime / BigInt(1e9);
@@ -982,31 +971,31 @@ export class BackendManager {
     }
 
     async loadBagRefData(appState: AppState) {
-        console.log("Loading Ref Data");
-        const processing_start_time = Date.now();
-        let last_print_time = Date.now();
 
         // Set up ref event display
         const eventCanvas = document.createElement('canvas');
         eventCanvas.id = "event_canvas"
         eventCanvas.width = appState.historyManager.loadedZones.length; // this might need to be fixed
-        eventCanvas.height = 100;
+        eventCanvas.height = 30;
         const eventCtx = eventCanvas.getContext('2d');
-        eventCtx.fillStyle = 'red';
+        eventCtx.fillStyle = 'LightGray';
         eventCtx.fillRect(
             0,
             0,
             eventCanvas.width,
             eventCanvas.height
         );
-        document.body.prepend(eventCanvas);
+        eventCanvas.style.width = "88%";
+        eventCanvas.style.height = "auto";
+        eventCanvas.style.display = "block";
+        eventCanvas.style.margin = "0 auto";
+        document.getElementById("historySliderContainer").prepend(eventCanvas);
 
         const timestep = this.bag.bag_length_time / eventCanvas.width;
         const reader = toRaw(this).bag.reader;
         for await (const record of reader.readMessages({
             topics: [
                 "/referee_messages",
-                // "/kenobi_node/world",
             ]
         })) {
 
@@ -1038,47 +1027,39 @@ export class BackendManager {
                     eventCtx.fillStyle = GameCommandProperties[ref_message.command].color;
                 }
 
-                // console.log("time: ", time_from_start, ", index: ",  frame_index, ", event: ", ref_message.command, ", color: ", eventCtx.fillStyle);
-
                 eventCtx.fillRect(
                     frame_index,
                     0,
-                    1,
+                    2, // Makes it easier to see
                     eventCanvas.height
                 );
             }
 
             appState.historyManager.refHistory.push(ref_message);
-
-            if (Date.now() - last_print_time > 1000) {
-                console.log((record.logTime / BigInt(1e9)) - this.bag.message_start_time);
-                last_print_time = Date.now();
-                console.log("ref_test length: ", appState.historyManager.refHistory.length)
-
-                // if ((record.logTime / BigInt(1e9)) - message_start_time > 100) {
-                //     break;
-                // }
-            }
         }
-
-        console.log("load ref time: ", (Date.now() - processing_start_time) / 1000.0);
     }
 
     async loadBagChunk(appState: AppState, startFrame: number = 0) {
-        if (this.bag.load_in_progress) {
-            console.log("Already loading chunk")
+
+        // Avoid weird behavior around the history slider updating itself to the max length
+        if (startFrame > appState.historyManager.compressedWorldHistory.length - 10) {
             return;
         }
 
-        console.log("Loading Bag Chunk ", startFrame);
+        if (this.bag.load_in_progress) {
+            return;
+        }
+
+        // Check if trying to select area that is already loaded
+        // This will need a lot of improvement later
+        if (appState.historyManager.checkIfZoneLoaded(startFrame)) {
+            return;
+        }
+
         this.bag.load_in_progress = true;
 
-        const processing_start_time = Date.now();
-        let last_print_time = Date.now();
-
         const start_time = BigInt(1e9) * (this.bag.message_start_time + BigInt(Math.floor(startFrame / 100.0)));
-
-        let frames_to_load = appState.historyManager.frameLimit / 2;
+        let frames_to_load = Math.floor(appState.historyManager.frameLimit / 3);
 
         const reader = toRaw(this).bag.reader;
         for await (const record of reader.readMessages({
@@ -1090,31 +1071,21 @@ export class BackendManager {
                 "/play_info",
                 "/overlays",
                 "/field",
-            ]
-        })) {
+            ]})
+        ) {
 
             if (!appState.historyManager.viewingBag) {
                 this.unloadBagFile(appState);
                 return;
             }
 
+            // TODO: Should find a way to not process this if loading already loaded data
             const was_world_message = this.processBagMessage(record, this.bag.channelInfoById, appState);
             if (was_world_message) {
                 frames_to_load -= 1;
                 if (frames_to_load <= 0) {
                     break;
                 }
-            }
-
-            if (Date.now() - last_print_time > 1000) {
-                console.log(Number((record.logTime / BigInt(1e9)) - this.bag.message_start_time), "/", this.bag.bag_length_time, " | ", appState.historyManager.loadedFrames);
-                // const first = appState.historyManager.compressedWorldHistory.find((elem) => (elem != undefined));
-                // console.log("First loaded time: ", first.timestamp - (1000 * Number(message_start_time)));
-                last_print_time = Date.now();
-
-                // if ((record.logTime / BigInt(1e9)) - this.bag.message_start_time > 120) {
-                //     break;
-                // }
             }
         }
 
@@ -1123,7 +1094,6 @@ export class BackendManager {
             return;
         }
 
-        console.log("Finished loading bag chunk");
         this.bag.load_in_progress = false;
     }
 
@@ -1132,5 +1102,11 @@ export class BackendManager {
 
         appState.historyManager = new HistoryManager();
         this.bag = new BagData();
+
+        const eventCanvas = document.getElementById("event_canvas");
+        eventCanvas?.remove();
+
+        const zoneCanvas = document.getElementById("zone_canvas");
+        zoneCanvas?.remove();
     }
 }
