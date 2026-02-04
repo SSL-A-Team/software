@@ -18,8 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "obstacle.hpp"
+#ifndef ATEAM_PATH_PLANNING__COLLIISIONS_HPP_
+#define ATEAM_PATH_PLANNING__COLLIISIONS_HPP_
+
 #include <ateam_controls/ateam_controls.h>
+#include <vector>
+#include "obstacle.hpp"
 
 namespace ateam_path_planning::collisions
 {
@@ -29,3 +33,5 @@ std::optional<double> TimeToCollision(
   const std::vector<Obstacle> & obstacles);
 
 }  // namespace ateam_path_planning::collisions
+
+#endif  // ATEAM_PATH_PLANNING__COLLIISIONS_HPP_

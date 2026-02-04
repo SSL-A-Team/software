@@ -27,12 +27,14 @@
 
 namespace ateam_path_planning
 {
-struct TrajectorySplineSegment {
+struct TrajectorySplineSegment
+{
   double time;
   Pose target;
 };
 
-struct TrajectorySpline {
+struct TrajectorySpline
+{
   std::vector<TrajectorySplineSegment> segments;
 };
 }  // namespace ateam_path_planning

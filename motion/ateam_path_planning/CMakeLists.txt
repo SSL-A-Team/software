@@ -13,6 +13,8 @@ if(NOT TARGET ateam_controls)
 endif()
 
 add_library(${PROJECT_NAME} SHARED
+  src/collisions.cpp
+  src/controls_lib_adapters.cpp
   src/planner.cpp
 )
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
@@ -45,6 +47,10 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  file(GLOB_RECURSE AMENT_LINT_AUTO_FILE_EXCLUDE
+    # Exclude all files in controls submodule
+    ateam_controls/*
+  )
   ament_lint_auto_find_test_dependencies()
   add_subdirectory(test)
 endif()

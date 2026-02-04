@@ -29,6 +29,8 @@ std::optional<double> TimeToCollision(
   const std::vector<Obstacle> & obstacles)
 {
   // Placeholder implementation
+  (void)trajectory;
+  (void)obstacles;
   return std::nullopt;
 }
 
