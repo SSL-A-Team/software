@@ -4,6 +4,7 @@
 #include <geometry_msgs/geometry_msgs/msg/quaternion.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/vision_state_robot.hpp>
+#include <cmath>
 
 class BangBangNode : public rclcpp::Node
 {
@@ -53,9 +54,17 @@ private:
     void publish_latest()
     {
         ateam_msgs::msg::RobotMotionCommand msg;
-        msg.twist.linear.x = a_linear_ * cosf(w_ * t_);
+        // msg.twist.linear.x = a_linear_ * cosf(w_ * t_);
+        // msg.twist.linear.y = 0.0;
+        // msg.twist.angular.z = a_angular_ * cosf(w_ * t_);
+        msg.twist.linear.x = 0.0;
         msg.twist.linear.y = 0.0;
-        msg.twist.angular.z = a_angular_ * cosf(w_ * t_);
+        msg.twist.angular.z = 0.0;
+        float time_period = 5.0f;  // seconds
+        if (std::fmod(t_, time_period) < 1.0f) {
+            RCLCPP_INFO(this->get_logger(), "BangBangNode: Moving forward");
+            msg.twist.linear.x = a_linear_;
+        }
 
         pub_->publish(msg);
 
