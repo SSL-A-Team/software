@@ -35,13 +35,13 @@ public:
 
         // 100 Hz = 10 ms period
         period_ms_ = 10;
-        t_ = 0.0f;
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(period_ms_),
             std::bind(&BangBangNode::publish_latest, this)
         );
 
         RCLCPP_INFO(this->get_logger(), "Node started: publishing at 100 Hz");
+        t_ = 0.0f;
     }
 
 private:
@@ -57,13 +57,24 @@ private:
         // msg.twist.linear.x = a_linear_ * cosf(w_ * t_);
         // msg.twist.linear.y = 0.0;
         // msg.twist.angular.z = a_angular_ * cosf(w_ * t_);
+
         msg.twist.linear.x = 0.0;
         msg.twist.linear.y = 0.0;
         msg.twist.angular.z = 0.0;
-        float time_period = 5.0f;  // seconds
-        if (std::fmod(t_, time_period) < 1.0f) {
-            RCLCPP_INFO(this->get_logger(), "BangBangNode: Moving forward");
+
+        float fn_period = 5.0f;  // seconds
+        float fn_time = std::fmod(t_, fn_period);
+
+        // Log fn start
+        if (fn_time < period_ms_ / 1000.0f) {
+            RCLCPP_INFO(this->get_logger(), "BangBangNode: Starting fn");
+        }
+
+        // Function computation
+        if (fn_time < 0.5f) {
             msg.twist.linear.x = a_linear_;
+        } else {
+            msg.twist.linear.x = 0.0f;
         }
 
         pub_->publish(msg);
