@@ -267,28 +267,34 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & parameter)
 {
   switch(parameter) {
-    case VEL_PID_X:
-      return PID_LIMITED_INTEGRAL_F32;
-    case VEL_PID_Y:
-      return PID_LIMITED_INTEGRAL_F32;
-    case ANGULAR_VEL_PID_Z:
-      return PID_LIMITED_INTEGRAL_F32;
-    case VEL_CGKF_ENCODER_NOISE:
+    case KF_PROCESS_STD_POS_LINEAR:
+      return F32;    
+    case KF_PROCESS_STD_POS_ANGULAR:
       return F32;
-    case VEL_CGKF_GYRO_NOISE:
+    case KF_PROCESS_STD_VEL_LINEAR:
       return F32;
-    case VEL_CGKF_PROCESS_NOISE:
+    case KF_PROCESS_STD_VEL_ANGULAR:
       return F32;
-    case VEL_CGFK_INITIAL_COVARIANCE:
+    case KF_VISION_STD_LINEAR:
       return F32;
-    case VEL_CGKF_K_MATRIX:
-      return MATRIX_F32;
-    case RC_BODY_VEL_LIMIT:
-      return VEC3_F32;
-    case RC_BODY_ACC_LIMIT:
-      return VEC3_F32;
-    case RC_WHEEL_ACC_LIMIT:
-      return VEC4_F32;
+    case KF_VISION_STD_ANGULAR:
+      return F32;
+    case KF_ENCODER_STD_ANGULAR:
+      return F32;
+    case KF_GYRO_STD_ANGULAR:
+      return F32;
+    case PHYS_WHEEL_ANGLE_ALPHA:
+      return F32;
+    case PHYS_WHEEL_ANGLE_BETA:
+      return F32;
+    case PHYS_WHEEL_DISTANCE:
+      return F32;
+    case PHYS_WHEEL_RADIUS:
+      return F32;
+    case PHYS_BODY_MASS:
+      return F32;
+    case PHYS_BODY_MOMENT_Z:
+      return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
