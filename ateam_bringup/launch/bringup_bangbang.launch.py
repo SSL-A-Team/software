@@ -107,15 +107,15 @@ def generate_launch_description():
             # prefix=['xterm -bg black -fg white -e gdb -ex run --args']
         ),
 
-        # Node(
-        #     package='ateam_bangbang',
-        #     executable='bangbang_node',
-        #     name='bangbang',
-        #     parameters=[{
-        #         'a': LaunchConfiguration('a')
-        #     }],
-        #     respawn=True,
-        # ),
+        Node(
+            package='ateam_bangbang',
+            executable='bangbang_node',
+            name='bangbang',
+            # parameters=[{
+            #     # 'a': LaunchConfiguration('a')
+            # }],
+            respawn=True,
+        ),
 
         # IncludeLaunchDescription(
         #     FrontendLaunchDescriptionSource(
