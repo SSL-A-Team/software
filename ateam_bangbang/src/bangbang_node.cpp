@@ -78,14 +78,14 @@ private:
         }
 
         // Function computation
-        if (fn_time < 0.5f) {
+        if (fn_time < 1.0f) {
             msg.twist.linear.x = a_linear_;
         } else {
             msg.twist.linear.x = 0.0f;
         }
 
-        if (fn_time >= 2.5f && fn_time < 3.0f) {
-            msg.twist.angular.x = -a_linear_;
+        if (fn_time >= 3.0f && fn_time < 4.0f) {
+            msg.twist.linear.x = -a_linear_;
         } else {
             msg.twist.linear.x = 0.0f;
         }
