@@ -295,6 +295,14 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return F32;
     case PHYS_BODY_MOMENT_Z:
       return F32;
+    case KF_MAX_POS_LINEAR:
+      return F32;
+    case KF_MAX_POS_ANGULAR:
+      return F32;
+    case KF_MAX_VEL_LINEAR:
+      return F32;
+    case KF_MAX_VEL_ANGULAR:
+      return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }

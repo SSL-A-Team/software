@@ -21,12 +21,19 @@ public:
 
         declare_parameter<float>("a_linear", 0.2f);
         declare_parameter<float>("a_angular", 0.0f);
+        declare_parameter<float>("duration", 0.0f);  // 0 = run forever
+        declare_parameter<int>("robot_id", 2);
+
+        int robot_id;
+        this->get_parameter("robot_id", robot_id);
 
         // Publisher
-        pub_ = this->create_publisher<ateam_msgs::msg::RobotMotionCommand>("/robot_motion_commands/robot2", 10);
+        std::string topic = "/robot_motion_commands/robot" + std::to_string(robot_id);
+        pub_ = this->create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic, 10);
 
         this->get_parameter("a_linear", a_linear_); // m/s^2
         this->get_parameter("a_angular", a_angular_); // m/s^2
+        this->get_parameter("duration", duration_);
         RCLCPP_INFO(this->get_logger(), "BangBangNode: a_linear = %f", a_linear_);
         RCLCPP_INFO(this->get_logger(), "BangBangNode: a_angular = %f deg", a_angular_);
         a_angular_ = a_angular_ * M_PI / 180.0f; // convert to rad
@@ -77,9 +84,21 @@ private:
             msg.twist.linear.x = 0.0f;
         }
 
+        if (fn_time >= 2.5f && fn_time < 3.0f) {
+            msg.twist.angular.x = -a_linear_;
+        } else {
+            msg.twist.linear.x = 0.0f;
+        }
+
         pub_->publish(msg);
 
         t_ += (float)period_ms_ / 1000.0f;
+
+        // Auto-shutdown after duration (if set)
+        if (duration_ > 0.0f && t_ >= duration_) {
+            RCLCPP_INFO(this->get_logger(), "BangBangNode: Duration %.2f s reached, shutting down.", duration_);
+            rclcpp::shutdown();
+        }
     }
 
     // rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr sub_;
@@ -88,6 +107,7 @@ private:
     float a_linear_;
     float a_angular_;
     float w_;
+    float duration_;
     int64_t period_ms_;
     float t_;
 
