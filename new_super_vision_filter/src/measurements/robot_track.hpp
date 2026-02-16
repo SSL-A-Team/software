@@ -31,35 +31,39 @@
  * used to provide updates to the Kalman filter.
  */
 class RobotTrack {
-    public:
-        RobotTrack(
-            const ssl_league_msgs::msg::VisionDetectionRobot &bot_detection,
-            int &camera_id,
-            ateam_common::TeamColor &team
-        ) : camera_id(camera_id), team(team) {
-            PosMeasurement pos;
-            pos << bot_detection.pose.position.x,
-                bot_detection.pose.position.y;
-            angle << bot_detection.pose.orientation.w;
-            robot_id = bot_detection.robot_id;
-        }
+public:
+  RobotTrack(
+    const ssl_league_msgs::msg::VisionDetectionRobot & bot_detection,
+    int & camera_id,
+    ateam_common::TeamColor & team
+  )
+  : camera_id(camera_id), team(team)
+  {
+    PosMeasurement pos;
+    pos << bot_detection.pose.position.x,
+      bot_detection.pose.position.y;
+    angle << bot_detection.pose.orientation.w;
+    robot_id = bot_detection.robot_id;
+  }
 
-        int getId() const {
-            return robot_id;
-        };
+  int getId() const
+  {
+    return robot_id;
+  }
 
-        std::chrono::time_point<std::chrono::steady_clock> getTimestamp() const {
-            return timestamp;
-        }
-        
-        PosMeasurement pos;
-        AngleMeasurement angle;
-    
-    private:
-        std::chrono::time_point<std::chrono::steady_clock> timestamp;
-        int camera_id;
-        ateam_common::TeamColor team;
-        int robot_id;
+  std::chrono::time_point<std::chrono::steady_clock> getTimestamp() const
+  {
+    return timestamp;
+  }
+
+  PosMeasurement pos;
+  AngleMeasurement angle;
+
+private:
+  std::chrono::time_point<std::chrono::steady_clock> timestamp;
+  int camera_id;
+  ateam_common::TeamColor team;
+  int robot_id;
 
 };
 

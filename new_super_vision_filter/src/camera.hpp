@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef CAMERA_HPP_ 
-#define CAMERA_HPP_ 
+#ifndef CAMERA_HPP_
+#define CAMERA_HPP_
 
 #include <vector>
 #include <ssl_league_msgs/msg/vision_geometry_data.hpp>
@@ -31,21 +31,22 @@
 #include "filtered_robot.hpp"
 
 class Camera {
-    public:   
+public:
         // Need to process an individual frame
         // Set geometry from VisionGeometryCameraCalibration.msg
         // Have a queue/buffer that we can remove old frames/have a set capacity
-        Camera(int camera_id);
+  Camera(int camera_id);
 
-        void process_detection_frame(const ssl_league_msgs::msg::VisionDetectionFrame &detection_frame_msg); 
+  void process_detection_frame(
+    const ssl_league_msgs::msg::VisionDetectionFrame & detection_frame_msg);
 
-        void process_camera_geometry(const ssl_league_msgs::msg::VisionGeometryData &geometry);
+  void process_camera_geometry(const ssl_league_msgs::msg::VisionGeometryData & geometry);
 
-        void clear_old_messages();
+  void clear_old_messages();
 
-    private:
-        int camera_id;
-        std::chrono::time_point<std::chrono::steady_clock> last_updated;
+private:
+  int camera_id;
+  std::chrono::time_point<std::chrono::steady_clock> last_updated;
 };
 
-#endif // CAMERA_HPP_ 
+#endif // CAMERA_HPP_

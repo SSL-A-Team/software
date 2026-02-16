@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FILTER_TYPES_HPP_ 
-#define FILTER_TYPES_HPP_ 
+#ifndef FILTER_TYPES_HPP_
+#define FILTER_TYPES_HPP_
 
 #include <chrono>
 
@@ -40,45 +40,47 @@
 class PosMeasurement : public Kalman::Vector<double, 2>
 {
 public:
-    KALMAN_VECTOR(PosMeasurement, double, 2)
-    
-    static constexpr size_t X = 0;
-    static constexpr size_t Y = 1;
+  KALMAN_VECTOR(PosMeasurement, double, 2)
 
-    double x() const {
-        return (*this)[X];
-    }
-    
-    double y() const {
-        return (*this)[Y];
-    }
+  static constexpr size_t X = 0;
+  static constexpr size_t Y = 1;
+
+  double x() const
+  {
+    return (*this)[X];
+  }
+
+  double y() const
+  {
+    return (*this)[Y];
+  }
 };
 
 /*
     4D state vector for robot or ball position
-    
-    State vector structure is    
+
+    State vector structure is
         { x_pos,
         y_pos,
         x_vel,
         y_vel }
-    
+
     Measurements are in m
 */
 class PosState : public Kalman::Vector<double, 4>
 {
 public:
-    KALMAN_VECTOR(PosState, double, 4)
+  KALMAN_VECTOR(PosState, double, 4)
 
-    static constexpr size_t PX = 0;
-    static constexpr size_t PY = 1;
-    static constexpr size_t VX = 2;
-    static constexpr size_t VY = 3;
+  static constexpr size_t PX = 0;
+  static constexpr size_t PY = 1;
+  static constexpr size_t VX = 2;
+  static constexpr size_t VY = 3;
 
-    const double px(){return (*this)[PX]; }
-    const double py(){return (*this)[PY]; }
-    const double vx(){return (*this)[VX]; }
-    const double vy(){return (*this)[VY]; }
+  const double px() {return (*this)[PX];}
+  const double py() {return (*this)[PY];}
+  const double vx() {return (*this)[VX];}
+  const double vy() {return (*this)[VY];}
 
 };
 
@@ -89,27 +91,28 @@ public:
     Curently assumes no measurement noise
 */
 class PosMeasurementModel
-    : public Kalman::LinearizedMeasurementModel<PosState, PosMeasurement, Kalman::StandardBase>
+  : public Kalman::LinearizedMeasurementModel<PosState, PosMeasurement, Kalman::StandardBase>
 {
 public:
     // h(x) = predicted measurement
-    PosMeasurement h(const PosState& x) const 
-    {
-        PosMeasurement z;
-        z[0] = x(x.PX); // px
-        z[1] = x(x.PY); // py
-        return z;
-    }
+  PosMeasurement h(const PosState & x) const
+  {
+    PosMeasurement z;
+    z[0] = x(x.PX);     // px
+    z[1] = x(x.PY);     // py
+    return z;
+  }
 
     // Jacobian H = ∂h/∂x
-protected:
-    void updateJacobians(const PosState& x)
-    {
-        this->H.setZero();
 
-        this->H(0, 0) = 1; // dz_px / d_px
-        this->H(1, 1) = 1; // dz_py / d_py
-    }
+protected:
+  void updateJacobians(const PosState & x)
+  {
+    this->H.setZero();
+
+    this->H(0, 0) = 1;     // dz_px / d_px
+    this->H(1, 1) = 1;     // dz_py / d_py
+  }
 };
 
 /*
@@ -119,15 +122,15 @@ protected:
 */
 class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
 {
-    private:
-        mutable std::chrono::time_point<std::chrono::steady_clock> last_update;
+private:
+  mutable std::chrono::time_point<std::chrono::steady_clock> last_update;
 
-    public:
+public:
         // For now, we don't add any control inputs to the vision system
         // TODO (Christian): We might need this for the robots, even if we
         // don't use it for the ball
-        using Control = Kalman::Vector<double, 0>;
-        using Seconds = std::chrono::duration<double>;
+  using Control = Kalman::Vector<double, 0>;
+  using Seconds = std::chrono::duration<double>;
 
         /*
             The f() function applies what would be the A (state transition)
@@ -139,24 +142,24 @@ class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
             pos_t = pos_{t-1} + vel_{t-1} * dt
             vel_t = vel_{t-1}
         */
-        PosState f(const PosState& x, const Control& /*u*/) const override
-        {
-            PosState x_updated{};
-            auto now = std::chrono::steady_clock::now();
-            Seconds dt = now - last_update;
-            double dt_s = dt.count();
-            
+  PosState f(const PosState & x, const Control & /*u*/) const override
+  {
+    PosState x_updated{};
+    auto now = std::chrono::steady_clock::now();
+    Seconds dt = now - last_update;
+    double dt_s = dt.count();
+
             // B/c dt is in ms, we need to convert to s, since
             // our velocities are all in m/s
-            x_updated(x.PX) = x(x.PX) + x(x.VX) * dt_s;
+    x_updated(x.PX) = x(x.PX) + x(x.VX) * dt_s;
             // We assume constant velocity in the system model
-            x_updated(x.VX) = x(x.VX);
-            x_updated(x.PY) = x(x.PY) + x(x.VY) * dt_s;
-            x_updated(x.VY) = x(x.VY);
+    x_updated(x.VX) = x(x.VX);
+    x_updated(x.PY) = x(x.PY) + x(x.VY) * dt_s;
+    x_updated(x.VY) = x(x.VY);
 
-            last_update = now;
-            return x_updated;
-        }
+    last_update = now;
+    return x_updated;
+  }
 
 };
 
@@ -166,13 +169,14 @@ class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
 class AngleMeasurement : public Kalman::Vector<double, 1>
 {
 public:
-    KALMAN_VECTOR(AngleMeasurement, double, 1)
+  KALMAN_VECTOR(AngleMeasurement, double, 1)
 
-    static constexpr size_t W = 0;
+  static constexpr size_t W = 0;
 
-    double w() const {
-        return (*this)[W];
-    }
+  double w() const
+  {
+    return (*this)[W];
+  }
 };
 
 /*
@@ -187,13 +191,13 @@ public:
 class AngleState : public Kalman::Vector<double, 2>
 {
 public:
-    KALMAN_VECTOR(AngleState, double, 2)
+  KALMAN_VECTOR(AngleState, double, 2)
 
-    static constexpr size_t PW = 0;
-    static constexpr size_t VW = 1;
-    
-    const double pw(){return (*this)[PW]; }
-    const double vw(){return (*this)[VW]; }
+  static constexpr size_t PW = 0;
+  static constexpr size_t VW = 1;
+
+  const double pw() {return (*this)[PW];}
+  const double vw() {return (*this)[VW];}
 };
 
 /*
@@ -202,33 +206,33 @@ public:
     Currently assumes no measurement noise
 */
 class AngleMeasurementModel
-    : public Kalman::LinearizedMeasurementModel<AngleState, AngleMeasurement, Kalman::StandardBase>
+  : public Kalman::LinearizedMeasurementModel<AngleState, AngleMeasurement, Kalman::StandardBase>
 {
 public:
     // h(x) = predicted measurement
-    AngleMeasurement h(const AngleState& x) const override
-    {
-        AngleMeasurement z{};
-        z[0] = x[0]; // pw
-        return z;
-    }
+  AngleMeasurement h(const AngleState & x) const override
+  {
+    AngleMeasurement z{};
+    z[0] = x[0];     // pw
+    return z;
+  }
 
     // Jacobian H = ∂h/∂x
-    void updateJacobians(const AngleState& x) override
-    {
-        this->H.setZero();
-        this->H(0, 0) = 1; // dz_px / d_px
-    }
+  void updateJacobians(const AngleState & x) override
+  {
+    this->H.setZero();
+    this->H(0, 0) = 1;     // dz_px / d_px
+  }
 };
 
 class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>
 {
-    private:
-        mutable std::chrono::time_point<std::chrono::steady_clock> last_update;
+private:
+  mutable std::chrono::time_point<std::chrono::steady_clock> last_update;
 
-    public:
-        using Control = Kalman::Vector<double, 0>;
-        using Seconds = std::chrono::duration<double>;
+public:
+  using Control = Kalman::Vector<double, 0>;
+  using Seconds = std::chrono::duration<double>;
         /*
             This is the system's state transition function (applies
             the A matrix)
@@ -239,17 +243,18 @@ class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>
             pos_t = pos_{t-1} + vel_{t-1} * dt
             vel_t = vel_{t-1}
         */
-        AngleState f(const AngleState& x, const Control& ) const {
-            AngleState x_updated{};
+  AngleState f(const AngleState & x, const Control &) const
+  {
+    AngleState x_updated{};
 
-            const auto now = std::chrono::steady_clock::now();
-            Seconds dt = now - last_update;
-            double dt_s = dt.count();
+    const auto now = std::chrono::steady_clock::now();
+    Seconds dt = now - last_update;
+    double dt_s = dt.count();
 
-            x_updated(x.PW) = x(x.PW) + x(x.VW) * dt_s;
+    x_updated(x.PW) = x(x.PW) + x(x.VW) * dt_s;
 
-            return x_updated;
-        }
+    return x_updated;
+  }
 };
 
 #endif // FILTER_TYPES_HPP

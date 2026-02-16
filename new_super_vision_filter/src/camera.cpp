@@ -24,16 +24,16 @@
 #include "filtered_ball.hpp"
 #include "filtered_robot.hpp"
 
-Camera::Camera(int camera_id) : camera_id(camera_id) {};
-// Need to process an individual frame
-// Set geometry from VisionGeometryCameraCalibration.msg
-// Have a queue/buffer that we can remove old frames/have a set capacity
+Camera::Camera(int camera_id)
+: camera_id(camera_id) {}
 
-void Camera::process_detection_frame(const ssl_league_msgs::msg::VisionDetectionFrame &detection_frame_msg){
+void Camera::process_detection_frame(
+  const ssl_league_msgs::msg::VisionDetectionFrame & detection_frame_msg)
+{
     // process_balls(detection_frame_msg);
     // process_robots(detection_frame_msg);
 }
 
-void Camera::process_camera_geometry(const ssl_league_msgs::msg::VisionGeometryData &geometry){};
+void Camera::process_camera_geometry(const ssl_league_msgs::msg::VisionGeometryData & geometry) {}
 
-void Camera::clear_old_messages(){};
+void Camera::clear_old_messages() {}

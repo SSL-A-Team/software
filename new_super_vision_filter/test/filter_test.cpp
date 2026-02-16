@@ -27,24 +27,24 @@
 
 class FilteredRobotTest : public ::testing::Test
 {
-    protected:
-        void SetUp() override
-        {
-            ssl_league_msgs::msg::VisionDetectionRobot robot_msg{};
-            auto team = ateam_common::TeamColor::Blue; 
-        }
+protected:
+  void SetUp() override
+  {
+    ssl_league_msgs::msg::VisionDetectionRobot robot_msg{};
+    auto team = ateam_common::TeamColor::Blue;
+  }
 };
 
 TEST(RobotSetupTest, InitalState)
 {
     // Check that initial state is valid
-    return;
+  return;
 }
 
 TEST(RobotSetupTest, InitialCovariance)
 {
     // Check that initial covariance is valid
-    return;
+  return;
 }
 
 TEST(RobotUpdateTest, WaitUntilOldEnough)
@@ -54,7 +54,7 @@ TEST(RobotUpdateTest, WaitUntilOldEnough)
     // Check that we didn't
     // Do that again until "oldEnough"
     // Now check that it has updated
-    return;
+  return;
 }
 
 TEST(RobotUpdateTest, UpdateIfTimestampValid)
@@ -63,7 +63,7 @@ TEST(RobotUpdateTest, UpdateIfTimestampValid)
     // Create valid timestamp and fake measurement
     // Update the filter
     // Check that the current estimate is different
-    return;
+  return;
 }
 
 TEST(RobotUpdateTest, DontUpdateIfTimestampInvalid)
@@ -72,5 +72,5 @@ TEST(RobotUpdateTest, DontUpdateIfTimestampInvalid)
     // Create invalid timestamp and fake measurement
     // Attempt to update the filter
     // Check that the current estimate is not different
-    return;
+  return;
 }

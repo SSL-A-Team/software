@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FILTERED_BALL_HPP_ 
+#ifndef FILTERED_BALL_HPP_
 #define FILTERED_BALL_HPP_
 
 #include <chrono>
@@ -29,37 +29,38 @@
 #include "filter_types.hpp"
 #include "measurements/ball_track.hpp"
 
-enum KickState {
-    ROLLING,
-    KICKED,
-    CHIPPED
+enum KickState
+{
+  ROLLING,
+  KICKED,
+  CHIPPED
 };
 
 class FilteredBall {
-    public:
-        FilteredBall(const BallTrack &track);
+public:
+  FilteredBall(const BallTrack & track);
 
-        void update(const BallTrack &track);
+  void update(const BallTrack & track);
 
-        ateam_msgs::msg::VisionStateBall toMsg();
+  ateam_msgs::msg::VisionStateBall toMsg();
 
-        bool isHealthy() const;
+  bool isHealthy() const;
 
-    private:
-        int age = 0;
-        int oldEnough = 3;
-        int maxHealth = 20;
-        int health = 2;
-        double maxDistance = -1.0;
-        KickState currentKickState = ROLLING;
-        std::chrono::milliseconds update_threshold{50};
-        std::chrono::steady_clock::time_point timestamp; 
-        std::chrono::steady_clock::time_point last_visible_timestamp;
+private:
+  int age = 0;
+  int oldEnough = 3;
+  int maxHealth = 20;
+  int health = 2;
+  double maxDistance = -1.0;
+  KickState currentKickState = ROLLING;
+  std::chrono::milliseconds update_threshold{50};
+  std::chrono::steady_clock::time_point timestamp;
+  std::chrono::steady_clock::time_point last_visible_timestamp;
         // Filter
-        Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
-        PosState posXYEstimate;
-        PosSystemModel systemModelXY;
-        PosMeasurementModel measurementModelXY;
+  Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
+  PosState posXYEstimate;
+  PosSystemModel systemModelXY;
+  PosMeasurementModel measurementModelXY;
 };
 
 #endif // FILTERED_BALL_HPP_

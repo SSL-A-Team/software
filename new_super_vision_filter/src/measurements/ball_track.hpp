@@ -26,17 +26,19 @@
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
 
 class BallTrack {
-    public:
-        BallTrack(const ssl_league_msgs::msg::VisionDetectionBall &ball_detection, int &camera_id) : camera_id(camera_id) {
-            PosMeasurement pos;
-            pos << ball_detection.pos.x,
-                ball_detection.pos.y;
-            timestamp = std::chrono::steady_clock::now();
-        }
+public:
+  BallTrack(const ssl_league_msgs::msg::VisionDetectionBall & ball_detection, int & camera_id)
+  : camera_id(camera_id)
+  {
+    PosMeasurement pos;
+    pos << ball_detection.pos.x,
+      ball_detection.pos.y;
+    timestamp = std::chrono::steady_clock::now();
+  }
 
-        PosMeasurement pos;
-        std::chrono::time_point<std::chrono::steady_clock> timestamp;
-        int camera_id;
+  PosMeasurement pos;
+  std::chrono::time_point<std::chrono::steady_clock> timestamp;
+  int camera_id;
 };
 
 #endif // BALL_TRACK_HPP_

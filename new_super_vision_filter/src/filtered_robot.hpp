@@ -17,8 +17,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-#ifndef FILTERED_ROBOT_HPP_ 
-#define FILTERED_ROBOT_HPP_ 
+#ifndef FILTERED_ROBOT_HPP_
+#define FILTERED_ROBOT_HPP_
 
 #include "kalman/ExtendedKalmanFilter.hpp"
 #include "filter_types.hpp"
@@ -31,41 +31,41 @@
 #include <ateam_msgs/msg/vision_state_robot.hpp>
 
 class FilteredRobot {
-    public:
-        FilteredRobot(const RobotTrack &track, ateam_common::TeamColor team_color);
+public:
+  FilteredRobot(const RobotTrack & track, ateam_common::TeamColor team_color);
 
-        void update(const RobotTrack &track);
+  void update(const RobotTrack & track);
 
-        ateam_msgs::msg::VisionStateRobot toMsg();
+  ateam_msgs::msg::VisionStateRobot toMsg();
 
-        int getId() const;
+  int getId() const;
 
-        bool isHealthy() const;
+  bool isHealthy() const;
 
-    private:
-        int bot_id;
-        ateam_common::TeamColor team;
-        int age = 0;
-        int oldEnough = 3;
-        int health = 2;
-        int maxHealth = 20;
-        double maxDistance = -1.0;
-        std::chrono::milliseconds update_threshold{50};
-        std::chrono::time_point<std::chrono::steady_clock> timestamp; 
-        std::chrono::time_point<std::chrono::steady_clock> last_visible_timestamp;
+private:
+  int bot_id;
+  ateam_common::TeamColor team;
+  int age = 0;
+  int oldEnough = 3;
+  int health = 2;
+  int maxHealth = 20;
+  double maxDistance = -1.0;
+  std::chrono::milliseconds update_threshold{50};
+  std::chrono::time_point<std::chrono::steady_clock> timestamp;
+  std::chrono::time_point<std::chrono::steady_clock> last_visible_timestamp;
         // double height; // in m
         // Use the below filtered values when getting X/Y/w (theta) and
         // velocities
         // X, Y
-        Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
-        PosSystemModel systemModelXY;
-        PosState posXYEstimate{};
-        PosMeasurementModel measurementModelXY;
+  Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
+  PosSystemModel systemModelXY;
+  PosState posXYEstimate{};
+  PosMeasurementModel measurementModelXY;
         // Theta
-        Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
-        AngleSystemModel systemModelW;
-        AngleState posWEstimate{};
-        AngleMeasurementModel measurementModelW;
+  Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
+  AngleSystemModel systemModelW;
+  AngleState posWEstimate{};
+  AngleMeasurementModel measurementModelW;
 };
 
 #endif  // FILTERED_ROBOT_HPP_
