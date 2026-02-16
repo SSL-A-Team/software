@@ -24,9 +24,10 @@
 #include <chrono>
 #include <Eigen/Core>
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
-#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
+#include <ateam_msgs/msg/vision_state_ball.hpp>
 #include "kalman/ExtendedKalmanFilter.hpp"
 #include "filter_types.hpp"
+#include "measurements/ball_track.hpp"
 
 enum KickState {
     ROLLING,
@@ -36,11 +37,11 @@ enum KickState {
 
 class FilteredBall {
     public:
-        FilteredBall(ssl_league_msgs::msg::VisionDetectionBall &ball_detection_msg);
+        FilteredBall(const BallTrack &track);
 
-        void update(ssl_league_msgs::msg::VisionDetectionBall &ball_detection)
+        void update(const BallTrack &track);
 
-        ateam_msgs::msg::BallState toMsg();
+        ateam_msgs::msg::VisionStateBall toMsg();
 
         bool isHealthy() const;
 
@@ -56,6 +57,9 @@ class FilteredBall {
         std::chrono::steady_clock::time_point last_visible_timestamp;
         // Filter
         Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
+        PosState posXYEstimate;
+        PosSystemModel systemModelXY;
+        PosMeasurementModel measurementModelXY;
 };
 
 #endif // FILTERED_BALL_HPP_

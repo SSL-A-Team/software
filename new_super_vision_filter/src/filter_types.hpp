@@ -167,6 +167,12 @@ class AngleMeasurement : public Kalman::Vector<double, 1>
 {
 public:
     KALMAN_VECTOR(AngleMeasurement, double, 1)
+
+    static constexpr size_t W = 0;
+
+    double w() const {
+        return (*this)[W];
+    }
 };
 
 /*

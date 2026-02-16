@@ -43,19 +43,9 @@ class Camera {
 
         void clear_old_messages();
 
-        void process_balls(const ssl_league_msgs::msg::VisionDetectionFrame &detection_frame_msg);
-
-        void process_robots(const ssl_league_msgs::msg::VisionDetectionFrame &detection_frame_msg);
-
-        void create_new_ball_track();
-
-        void create_new_robot_track();
-    
     private:
         int camera_id;
         std::chrono::time_point<std::chrono::steady_clock> last_updated;
-        // std::vector<BallTrack> tracked_balls;
-        // std::vector<RobotTrack> tracked_robots;
 };
 
 #endif // CAMERA_HPP_ 

@@ -32,10 +32,6 @@ class FilteredRobotTest : public ::testing::Test
         {
             ssl_league_msgs::msg::VisionDetectionRobot robot_msg{};
             auto team = ateam_common::TeamColor::Blue; 
-            FilteredRobot robot{
-                robot_msg,
-                team
-            };
         }
 };
 

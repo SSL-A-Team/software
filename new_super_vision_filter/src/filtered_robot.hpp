@@ -22,6 +22,7 @@
 
 #include "kalman/ExtendedKalmanFilter.hpp"
 #include "filter_types.hpp"
+#include "measurements/robot_track.hpp"
 
 #include <chrono>
 #include <Eigen/Core>
@@ -31,11 +32,11 @@
 
 class FilteredRobot {
     public:
-        FilteredRobot(RobotTrack &track, ateam_common::TeamColor team_color);
+        FilteredRobot(const RobotTrack &track, ateam_common::TeamColor team_color);
 
-        void update(ssl_league_msgs::msg::VisionDetectionRobot robot_detection);
+        void update(const RobotTrack &track);
 
-        ateam_msgs::msg::RobotState toMsg();
+        ateam_msgs::msg::VisionStateRobot toMsg();
 
         int getId() const;
 
@@ -46,6 +47,7 @@ class FilteredRobot {
         ateam_common::TeamColor team;
         int age = 0;
         int oldEnough = 3;
+        int health = 2;
         int maxHealth = 20;
         double maxDistance = -1.0;
         std::chrono::milliseconds update_threshold{50};
@@ -58,10 +60,12 @@ class FilteredRobot {
         Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
         PosSystemModel systemModelXY;
         PosState posXYEstimate{};
+        PosMeasurementModel measurementModelXY;
         // Theta
         Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
         AngleSystemModel systemModelW;
         AngleState posWEstimate{};
+        AngleMeasurementModel measurementModelW;
 };
 
 #endif  // FILTERED_ROBOT_HPP_

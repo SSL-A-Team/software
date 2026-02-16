@@ -18,6 +18,7 @@ add_library(${PROJECT_NAME} SHARED
   src/vision_filter_node.cpp
   src/camera.cpp
   src/filtered_robot.cpp
+  src/filtered_ball.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

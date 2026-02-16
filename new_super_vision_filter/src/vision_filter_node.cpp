@@ -24,11 +24,16 @@
 #include "measurements/robot_track.hpp"
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
+#include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_common/game_controller_listener.hpp>
+#include <ateam_common/indexed_topic_helpers.hpp>
 #include <vector>
 #include <algorithm>
 #include <optional>
+
+using namespace std::chrono_literals;
 
 namespace new_super_vision {
 
@@ -107,10 +112,10 @@ class VisionFilterNode : public rclcpp::Node
             16> blue_robots_publisher_;
         std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
             16> yellow_robots_publisher_;
+        rclcpp::Publisher<ateam_msgs::msg::VisionStateBall>::SharedPtr ball_publisher_; 
         
         ateam_common::GameControllerListener game_controller_listener_;
         rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
-        rclcpp::Publisher<ateam_msgs::msg::VisionStateCameraArray>::SharedPtr vision_state_publisher_;
         // The two below are in case we are sharing a field during testing at event
         rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr field_subscription_;
         int ignore_side_;
@@ -126,15 +131,17 @@ class VisionFilterNode : public rclcpp::Node
                     }
 
                     // Create a track from each robot in this message
-                    for (const auto& bot : detection.yellow_robots) {
+                    for (const auto& bot : detection.robots_yellow) {
+                        ateam_common::TeamColor team_color = ateam_common::TeamColor::Yellow;
                         yellow_tracks.push_back(
-                            RobotTrack(bot, detect_camera, ateam_common::TeamColor::Yellow)
+                            RobotTrack(bot, detect_camera, team_color)
                         ); 
                     }
 
-                    for (const auto& bot : detection.blue_robots) {
+                    for (const auto& bot : detection.robots_blue) {
+                        ateam_common::TeamColor team_color = ateam_common::TeamColor::Blue;
                         blue_tracks.push_back(
-                            RobotTrack(bot, detect_camera, ateam_common::TeamColor::Blue)
+                            RobotTrack(bot, detect_camera, team_color)
                         );
                     }
 
@@ -151,28 +158,30 @@ class VisionFilterNode : public rclcpp::Node
 
                 // Process all the new updates from the tracks
                 for (const auto& bot_track : blue_tracks){
+                    ateam_common::TeamColor team_color = ateam_common::TeamColor::Blue;
                     auto it = std::find_if(
                         blue_robots.begin(),
                         blue_robots.end(),
-                        [](){ return bot_track.robot_id == bot.getId(); }
+                        [bot_track](const FilteredRobot &bot){ return bot_track.getId() == bot.getId(); }
                     );
                     if (it != blue_robots.end()){
                         blue_robots.push_back(
-                            FilteredRobot(bot_track, ateam_common::TeamColor::Blue)
+                            FilteredRobot(bot_track, team_color)
                         );
                     } else {
                         it->update(bot_track);
                     }
                 }
                 for (const auto& bot_track : yellow_tracks){
+                    ateam_common::TeamColor team_color = ateam_common::TeamColor::Yellow;
                     auto it = std::find_if(
                         yellow_robots.begin(),
                         yellow_robots.end(),
-                        [](){ return bot_track.robot_id == bot.getId(); }
+                        [bot_track](const FilteredRobot &bot){ return bot_track.getId() == bot.getId(); }
                     );
                     if (it != yellow_robots.end()){
                         yellow_robots.push_back(
-                            FilteredRobot(bot_track, ateam_common::TeamColor::Yellow)
+                            FilteredRobot(bot_track, team_color)
                         );
                     } else {
                         it->update(bot_track);
@@ -192,18 +201,18 @@ class VisionFilterNode : public rclcpp::Node
 
         void timer_callback() {
             // Remove the ball if it's bad quality
-            if (ball.has_value){
-                if (!ball.isHealthy()){
+            if (ball.has_value()){
+                if (!ball.value().isHealthy()){
                     ball.reset();
                 }
             }
             // Erase any robots that are bad quality 
-            std::erase_if(blue_robots, [](FilteredRobot &bot) { return !x.isHealthy()})
-            std::erase_if(yellow_robots, [](FilteredRobot &bot) { return !x.isHealthy()})
+            std::erase_if(blue_robots, [](FilteredRobot &bot) { return !bot.isHealthy();});
+            std::erase_if(yellow_robots, [](FilteredRobot &bot) { return !bot.isHealthy();});
             // Publish the most recent ball
             ateam_msgs::msg::VisionStateBall ball_msg{};
             if (ball.has_value()){
-                ball_msg = ball.toMsg();
+                ball_msg = ball.value().toMsg();
             }
             ball_publisher_->publish(ball_msg);
 
@@ -214,7 +223,7 @@ class VisionFilterNode : public rclcpp::Node
                 auto it = std::find_if(
                     blue_robots.begin(),
                     blue_robots.end(),
-                    [](){ return id == bot.getId(); }
+                    [id](const FilteredRobot &bot){ return id == bot.getId(); }
                 );
                 if (it != blue_robots.end()){
                     robot_msg = it->toMsg();
@@ -227,7 +236,7 @@ class VisionFilterNode : public rclcpp::Node
                 auto it = std::find_if(
                     yellow_robots.begin(),
                     yellow_robots.end(),
-                    [](){ return id == bot.getId(); }
+                    [id](const FilteredRobot &bot){ return id == bot.getId(); }
                 );
                 if (it != yellow_robots.end()){
                     robot_msg = it->toMsg();

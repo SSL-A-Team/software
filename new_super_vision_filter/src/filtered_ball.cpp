@@ -1,10 +1,10 @@
 #include "filtered_ball.hpp"
 
-FilteredBall::FilteredBall(ssl_league_msgs::msg::VisionDetectionBall &ball_detection_msg){
+FilteredBall::FilteredBall(const BallTrack &track){
     PosState initial_state_xy;
     initial_state_xy << 
-        track.pos.px(),
-        track.pos.py(),
+        track.pos.x(),
+        track.pos.y(),
         0,
         0;
     posFilterXY.init(initial_state_xy);
@@ -19,7 +19,7 @@ FilteredBall::FilteredBall(ssl_league_msgs::msg::VisionDetectionBall &ball_detec
     posFilterXY.setCovariance(xy_covariance);
 }
 
-void FilteredBall::update(BallTrack &track){
+void FilteredBall::update(const BallTrack &track){
     // Make sure this detection isn't crazy off from our previous ones
     // (unless our filter is still new/only has a few measurements)
     if (age < oldEnough) {
@@ -30,8 +30,8 @@ void FilteredBall::update(BallTrack &track){
     }
     bool is_new = age < oldEnough;
     // As long as its reasonable, update the Kalman Filter
-    const std::chrono::time_point<std::chrono::system_clock> now =
-        std::chrono::system_clock::now();
+    const std::chrono::time_point<std::chrono::steady_clock> now =
+        std::chrono::steady_clock::now();
     // If it's been too long, don't use this message
     if (now - track.timestamp > update_threshold || is_new) {
         return;
@@ -55,15 +55,15 @@ ateam_msgs::msg::VisionStateBall FilteredBall::toMsg(){
     if (health > 0 && !is_new) {
         // NOTE: Does not contain acceleration info
         ball_state_msg.visible = true;
-        ball_detection_msg.pose.position.x = posXYEstimate.px();
-        ball_detection_msg.pose.position.y = posXYEstimate.py();
-        ball_detection_msg.pose.twist.linear.x = posXYEstimate.vx();
-        ball_detection_msg.pose.twist.linear.y = posXYEstimate.vy();
+        ball_state_msg.pose.position.x = posXYEstimate.px();
+        ball_state_msg.pose.position.y = posXYEstimate.py();
+        ball_state_msg.twist.linear.x = posXYEstimate.vx();
+        ball_state_msg.twist.linear.y = posXYEstimate.vy();
         --health;
     }
     return ball_state_msg;
 }
 
-bool FilteredBall::isHealthy(){
+bool FilteredBall::isHealthy() const {
     return health > 0;
 }
