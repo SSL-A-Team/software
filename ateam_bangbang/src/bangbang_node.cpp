@@ -23,6 +23,7 @@ public:
         declare_parameter<float>("a_angular", 0.0f);
         declare_parameter<float>("duration", 0.0f);  // 0 = run forever
         declare_parameter<int>("robot_id", 2);
+        declare_parameter<float>("startup_delay", 3.0f);
 
         int robot_id;
         this->get_parameter("robot_id", robot_id);
@@ -42,13 +43,26 @@ public:
 
         // 100 Hz = 10 ms period
         period_ms_ = 10;
+
+        float startup_delay;
+        get_parameter("startup_delay", startup_delay);
+
+        RCLCPP_INFO(this->get_logger(), "Waiting %.1f s for subscribers...", startup_delay);
+        t_ = -(float)period_ms_ / 1000.0f; // start slightly negative
+        fn_started_ = false;
+
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(period_ms_),
             std::bind(&BangBangNode::publish_latest, this)
         );
-
-        RCLCPP_INFO(this->get_logger(), "Node started: publishing at 100 Hz");
-        t_ = 0.0f;
+        startup_timer_ = this->create_wall_timer(
+            std::chrono::milliseconds(static_cast<int>(startup_delay * 1000)),
+            [this]() {
+                startup_timer_->cancel();  // fire only once
+                RCLCPP_INFO(this->get_logger(), "Starting control function now...");
+                fn_started_ = true;
+            }
+        );
     }
 
 private:
@@ -69,30 +83,23 @@ private:
         msg.twist.linear.y = 0.0;
         msg.twist.angular.z = 0.0;
 
-        float fn_period = 5.0f;  // seconds
-        float fn_time = std::fmod(t_, fn_period);
+        float fn_period = 10.0f;  // seconds
+        if (fn_started_) {
+            t_ += (float)period_ms_ / 1000.0f;
 
-        // Log fn start
-        if (fn_time < period_ms_ / 1000.0f) {
-            RCLCPP_INFO(this->get_logger(), "BangBangNode: Starting fn");
-        }
+            float fn_time = std::fmod(t_, fn_period);
 
-        // Function computation
-        if (fn_time < 1.0f) {
-            msg.twist.linear.x = a_linear_;
-        } else {
-            msg.twist.linear.x = 0.0f;
-        }
+            // Function computation
+            if (fn_time < 0.75f) {
+                msg.twist.linear.x = a_linear_;
+            }
 
-        if (fn_time >= 3.0f && fn_time < 4.0f) {
-            msg.twist.linear.x = -a_linear_;
-        } else {
-            msg.twist.linear.x = 0.0f;
+            // if (fn_time >= 0.75f && fn_time < 1.0f) {
+            //     msg.twist.linear.x = - 0.5 * a_linear_;
+            // }
         }
 
         pub_->publish(msg);
-
-        t_ += (float)period_ms_ / 1000.0f;
 
         // Auto-shutdown after duration (if set)
         if (duration_ > 0.0f && t_ >= duration_) {
@@ -104,12 +111,14 @@ private:
     // rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr sub_;
     rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr pub_;
     rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::TimerBase::SharedPtr startup_timer_;
     float a_linear_;
     float a_angular_;
     float w_;
     float duration_;
     int64_t period_ms_;
     float t_;
+    bool fn_started_;
 
     // ateam_msgs::msg::VisionStateRobot latest_msg_;  
     // bool have_msg_ = false;
