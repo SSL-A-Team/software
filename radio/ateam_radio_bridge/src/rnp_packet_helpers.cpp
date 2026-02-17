@@ -303,6 +303,12 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return F32;
     case KF_MAX_VEL_ANGULAR:
       return F32;
+    case PIDII_X:
+      return PID_LIMITED_INTEGRAL_F32;
+    case PIDII_Y:
+      return PID_LIMITED_INTEGRAL_F32;
+    case PIDII_THETA:
+      return PID_LIMITED_INTEGRAL_F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
