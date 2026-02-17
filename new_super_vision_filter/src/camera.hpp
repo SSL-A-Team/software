@@ -26,7 +26,6 @@
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <ssl_league_msgs/msg/vision_detection_frame.hpp>
-#include "frame_info.hpp"
 #include "filtered_ball.hpp"
 #include "filtered_robot.hpp"
 

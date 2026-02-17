@@ -19,11 +19,15 @@
 // THE SOFTWARE.
 
 #include <gtest/gtest.h>
+#include <chrono>
+#include <thread>
 
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_common/game_controller_listener.hpp>
 
 #include "filtered_robot.hpp"
+#include "measurements/robot_track.hpp"
 
 class FilteredRobotTest : public ::testing::Test
 {
@@ -31,46 +35,35 @@ protected:
   void SetUp() override
   {
     ssl_league_msgs::msg::VisionDetectionRobot robot_msg{};
+    int camera = 0;
     auto team = ateam_common::TeamColor::Blue;
+    auto track = RobotTrack(robot_msg, team);
+    auto bot = FilteredRobot(track, team);
+    int oldEnoughAge = 3;
   }
 };
 
-TEST(RobotSetupTest, InitalState)
-{
-    // Check that initial state is valid
-  return;
-}
-
-TEST(RobotSetupTest, InitialCovariance)
-{
-    // Check that initial covariance is valid
-  return;
-}
-
 TEST(RobotUpdateTest, WaitUntilOldEnough)
 {
-    // Create valid timestamp and fake measurement
-    // Try to update
-    // Check that we didn't
-    // Do that again until "oldEnough"
-    // Now check that it has updated
-  return;
-}
-
-TEST(RobotUpdateTest, UpdateIfTimestampValid)
-{
-    // Get initial estimate
-    // Create valid timestamp and fake measurement
-    // Update the filter
-    // Check that the current estimate is different
-  return;
-}
-
-TEST(RobotUpdateTest, DontUpdateIfTimestampInvalid)
-{
-    // Get initial estimate
-    // Create invalid timestamp and fake measurement
-    // Attempt to update the filter
-    // Check that the current estimate is not different
-  return;
+  ateam_msgs::msg::VisionStateRobot default_msg{};
+  for (size_t i = 0; i < (oldEnoughAge + 1); ++i){
+      ssl_league_msgs::msg::VisionDetectionRobot fake_vision_data{};
+      fake_vision_data.pose.position.x = 1;
+      fake_vision_data.pose.position.y = 1;
+      if (i < oldEnoughAge) {
+        auto fake_track = RobotTrack(fake_vision_data, team);
+        bot.update(fake_track);
+        auto msg = bot.toMsg()
+        // We shouldn't update if our filter is too new
+        EXPECT_EQ(default_msg, msg);
+      } else {
+        // Sorry, adding a short sleep was easier than mocking the timestamp... 
+        std::this_thread::sleep_for(std::chrono::milliseconds(60));
+        auto fake_track = RobotTrack(fake_vision_data, team);
+        bot.update(fake_track);
+        auto msg = bot.toMsg()
+        // We should update if our filter is old enough 
+        EXPECT_NE(default_msg, msg);
+      }
+    }
 }
