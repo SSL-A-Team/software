@@ -74,17 +74,17 @@ private:
 
     void publish_latest()
     {
-        ateam_msgs::msg::RobotMotionCommand msg;
-        // msg.twist.linear.x = a_linear_ * cosf(w_ * t_);
-        // msg.twist.linear.y = 0.0;
-        // msg.twist.angular.z = a_angular_ * cosf(w_ * t_);
-
-        msg.twist.linear.x = 0.0;
-        msg.twist.linear.y = 0.0;
-        msg.twist.angular.z = 0.0;
-
         float fn_period = 10.0f;  // seconds
         if (fn_started_) {
+            ateam_msgs::msg::RobotMotionCommand msg;
+            // msg.twist.linear.x = a_linear_ * cosf(w_ * t_);
+            // msg.twist.linear.y = 0.0;
+            // msg.twist.angular.z = a_angular_ * cosf(w_ * t_);
+
+            msg.twist.linear.x = 0.0;
+            msg.twist.linear.y = 0.0;
+            msg.twist.angular.z = 0.0;
+
             t_ += (float)period_ms_ / 1000.0f;
 
             float fn_time = std::fmod(t_, fn_period);
@@ -97,9 +97,9 @@ private:
             // if (fn_time >= 0.75f && fn_time < 1.0f) {
             //     msg.twist.linear.x = - 0.5 * a_linear_;
             // }
-        }
 
-        pub_->publish(msg);
+            pub_->publish(msg);
+        }
 
         // Auto-shutdown after duration (if set)
         if (duration_ > 0.0f && t_ >= duration_) {

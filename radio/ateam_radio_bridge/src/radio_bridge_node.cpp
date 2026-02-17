@@ -70,9 +70,9 @@ public:
     firmware_parameter_server_(*this, connections_)
   {
     declare_parameters<bool>("controls_enabled", {
-        {"body_pose", false},
+        {"body_pose", true},
         {"body_twist", false},
-        {"body_accel", true},
+        {"body_accel", false},
         {"wheel_vel", false},
         {"wheel_torque", true}
     });
@@ -255,36 +255,47 @@ private:
       if (connections_[id] == nullptr) {
         continue;
       }
+      BasicControl control_msg;
+      // Motion and kicker commands
       if ((std::chrono::steady_clock::now() - motion_command_timestamps_[id]) >
         command_timeout_threshold_)
       {
-        RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Sending zeros.", id);
-        motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
-        motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
+        RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Disabling controls.", id);
+        control_msg.body_pose_control_enabled = false;
+        control_msg.body_twist_control_enabled = false;
+        control_msg.body_accel_control_enabled = false;
+        control_msg.wheel_vel_control_enabled = false;
+        control_msg.wheel_torque_control_enabled = false;
+        control_msg.x_linear_cmd = 0.0;
+        control_msg.y_linear_cmd = 0.0;
+        control_msg.z_angular_cmd = 0.0;
+        control_msg.kick_request = KickRequest::KR_DISABLE;
+      } else {
+        control_msg.body_pose_control_enabled = get_parameter("controls_enabled.body_pose").as_bool();
+        control_msg.body_twist_control_enabled = get_parameter("controls_enabled.body_twist").as_bool();
+        control_msg.body_accel_control_enabled = get_parameter("controls_enabled.body_accel").as_bool();
+        control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
+        control_msg.wheel_torque_control_enabled = get_parameter("controls_enabled.wheel_torque").as_bool();
+        // control_msg.x_linear_cmd = motion_commands_[id].pose.position.x;
+        // control_msg.y_linear_cmd = motion_commands_[id].pose.position.y;
+        // control_msg.z_angular_cmd = GetYaw(motion_commands_[id].pose);
+        control_msg.x_linear_cmd = motion_commands_[id].twist.linear.x;
+        control_msg.y_linear_cmd = motion_commands_[id].twist.linear.y;
+        control_msg.z_angular_cmd = motion_commands_[id].twist.angular.z;
+        control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       }
-      BasicControl control_msg;
-      control_msg.request_shutdown = shutdown_requested_[id];
-      control_msg.reboot_robot = reboot_requested_[id];
-      control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
-        ateam_common::GameCommand::Stop;
-      control_msg.emergency_stop = false;
-      control_msg.body_pose_control_enabled = get_parameter("controls_enabled.body_pose").as_bool();
-      control_msg.body_twist_control_enabled = get_parameter("controls_enabled.body_twist").as_bool();
-      control_msg.body_accel_control_enabled = get_parameter("controls_enabled.body_accel").as_bool();
-      control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
-      control_msg.wheel_torque_control_enabled =
-        get_parameter("controls_enabled.wheel_torque").as_bool();
-      control_msg.play_song = 0;
+      // Vision update
       if (
         std::chrono::steady_clock::now() - vision_state_timestamps_[id] < std::chrono::milliseconds(100) &&
-        vision_states_[id].visible && (
-          vision_states_[id].pose.position.x != 0.0 ||
-          vision_states_[id].pose.position.y != 0.0 ||
-          vision_states_[id].pose.orientation.x != 0.0 ||
-          vision_states_[id].pose.orientation.y != 0.0 ||
-          vision_states_[id].pose.orientation.z != 0.0 ||
-          vision_states_[id].pose.orientation.w != 1.0
-        )
+        vision_states_[id].visible
+        // vision_states_[id].visible && (
+        //   vision_states_[id].pose.position.x != 0.0 ||
+        //   vision_states_[id].pose.position.y != 0.0 ||
+        //   vision_states_[id].pose.orientation.x != 0.0 ||
+        //   vision_states_[id].pose.orientation.y != 0.0 ||
+        //   vision_states_[id].pose.orientation.z != 0.0 ||
+        //   vision_states_[id].pose.orientation.w != 1.0
+        // )
       ) {
         // vision data is recent enough to send and not all zero/identity
         control_msg.vision_update = true;
@@ -294,19 +305,16 @@ private:
       } else {
         control_msg.vision_update = false;
       }
-      // control_msg.x_linear_cmd = motion_commands_[id].pose.position.x;
-      // control_msg.y_linear_cmd = motion_commands_[id].pose.position.y;
-      // control_msg.z_angular_cmd = GetYaw(motion_commands_[id].pose);
-      control_msg.x_linear_cmd = motion_commands_[id].twist.linear.x;
-      control_msg.y_linear_cmd = motion_commands_[id].twist.linear.y;
-      control_msg.z_angular_cmd = motion_commands_[id].twist.angular.z;
+      // Misc commands
+      control_msg.request_shutdown = shutdown_requested_[id];
+      control_msg.reboot_robot = reboot_requested_[id];
+      control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
+        ateam_common::GameCommand::Stop;
+      control_msg.emergency_stop = false;
+      control_msg.play_song = 0;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
       control_msg.dribbler_multiplier = 55;
-      control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
-      // if (id == 2) {
-      //   RCLCPP_INFO(get_logger(), "Robot 2 commanded x: %f", control_msg.pos_x_linear);
-      // }
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),
