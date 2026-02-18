@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 #include <chrono>
 #include <thread>
+#include <memory>
 
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <ateam_msgs/msg/vision_state_robot.hpp>
@@ -32,36 +33,41 @@
 class FilteredRobotTest : public ::testing::Test
 {
 protected:
+  ateam_common::TeamColor team = ateam_common::TeamColor::Blue;
+  int oldEnoughAge = 3;
+  ssl_league_msgs::msg::VisionDetectionRobot robot_msg{};
+  std::unique_ptr<FilteredRobot> bot;
+
   void SetUp() override
   {
-    ssl_league_msgs::msg::VisionDetectionRobot robot_msg{};
     int camera = 0;
-    auto team = ateam_common::TeamColor::Blue;
-    auto track = RobotTrack(robot_msg, team);
-    auto bot = FilteredRobot(track, team);
-    int oldEnoughAge = 3;
+    auto track = RobotTrack(robot_msg, camera, team);
+    bot = std::make_unique<FilteredRobot>(track, team);
   }
 };
 
-TEST(RobotUpdateTest, WaitUntilOldEnough)
+TEST_F(FilteredRobotTest, WaitUntilOldEnough)
 {
   ateam_msgs::msg::VisionStateRobot default_msg{};
+  int camera = 0;
   for (size_t i = 0; i < (oldEnoughAge + 1); ++i){
+      // Set it up so we can print our messages more effectively
+      // https://google.github.io/googletest/advanced.html#teaching-googletest-how-to-print-your-values
       ssl_league_msgs::msg::VisionDetectionRobot fake_vision_data{};
       fake_vision_data.pose.position.x = 1;
       fake_vision_data.pose.position.y = 1;
       if (i < oldEnoughAge) {
-        auto fake_track = RobotTrack(fake_vision_data, team);
-        bot.update(fake_track);
-        auto msg = bot.toMsg()
+        auto fake_track = RobotTrack(fake_vision_data, camera, team);
+        bot->update(fake_track);
+        auto msg = bot->toMsg();
         // We shouldn't update if our filter is too new
         EXPECT_EQ(default_msg, msg);
       } else {
         // Sorry, adding a short sleep was easier than mocking the timestamp... 
         std::this_thread::sleep_for(std::chrono::milliseconds(60));
-        auto fake_track = RobotTrack(fake_vision_data, team);
-        bot.update(fake_track);
-        auto msg = bot.toMsg()
+        auto fake_track = RobotTrack(fake_vision_data, camera, team);
+        bot->update(fake_track);
+        auto msg = bot->toMsg();
         // We should update if our filter is old enough 
         EXPECT_NE(default_msg, msg);
       }

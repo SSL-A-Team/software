@@ -34,6 +34,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp_components
   ateam_msgs
   ateam_common
+  ssl_league_msgs
   Eigen3
 )
 rclcpp_components_register_node(
@@ -51,6 +52,7 @@ install(TARGETS ${PROJECT_NAME}
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
   # the following line skips the linter which checks for copyrights
   # comment the line when a copyright and license is added to all source files
   set(ament_cmake_copyright_FOUND TRUE)
