@@ -12,15 +12,11 @@ public:
     BangBangNode()
     : Node("bangbang_node")
     {
-        // // Subscriber
-        // sub_ = this->create_subscription<ateam_msgs::msg::VisionStateRobot>(
-        //     "/yellow_team/robot2",
-        //     10,
-        //     std::bind(&BangBangNode::callback, this, std::placeholders::_1)
-        // );
-
-        declare_parameter<float>("a_linear", 0.2f);
-        declare_parameter<float>("a_angular", 0.0f);
+        declare_parameter<float>("amp", 0.2f);
+        declare_parameter<std::string>("dimension", "x");  // x, y, or theta
+        declare_parameter<std::string>("fn_type", "oscillate");  // pulse, oscillate, step
+        declare_parameter<float>("freq", 1.0f);  // hz (for oscillate)
+        declare_parameter<float>("width", 0.5f);  // seconds (for pulse)
         declare_parameter<float>("duration", 0.0f);  // 0 = run forever
         declare_parameter<int>("robot_id", 2);
         declare_parameter<float>("startup_delay", 3.0f);
@@ -32,14 +28,23 @@ public:
         std::string topic = "/robot_motion_commands/robot" + std::to_string(robot_id);
         pub_ = this->create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic, 10);
 
-        this->get_parameter("a_linear", a_linear_); // m/s^2
-        this->get_parameter("a_angular", a_angular_); // m/s^2
+        this->get_parameter("amp", amp_);
+        this->get_parameter("dimension", dimension_);
+        this->get_parameter("fn_type", fn_type_);
         this->get_parameter("duration", duration_);
-        RCLCPP_INFO(this->get_logger(), "BangBangNode: a_linear = %f", a_linear_);
-        RCLCPP_INFO(this->get_logger(), "BangBangNode: a_angular = %f deg", a_angular_);
-        a_angular_ = a_angular_ * M_PI / 180.0f; // convert to rad
-        RCLCPP_INFO(this->get_logger(), "BangBangNode: a_angular = %f rad", a_angular_);
-        w_ = 2.0f * M_PI / 3.0f; // rad/s
+        this->get_parameter("width", width_);
+        RCLCPP_INFO(this->get_logger(), "BangBangNode: amp = %f", amp_);
+        RCLCPP_INFO(this->get_logger(), "BangBangNode: dimension = %s", dimension_.c_str());
+        RCLCPP_INFO(this->get_logger(), "BangBangNode: fn_type = %s", fn_type_.c_str());
+        if (dimension_ == "theta") {
+            amp_ = amp_ * M_PI / 180.0f; // convert to rad
+            RCLCPP_INFO(this->get_logger(), "BangBangNode: amp (rad) = %f", amp_);
+        }
+        this->get_parameter("freq", freq_);
+        RCLCPP_INFO(this->get_logger(), "BangBangNode: freq = %f Hz", freq_);
+        w_ = 2.0f * M_PI * freq_;
+        RCLCPP_INFO(this->get_logger(), "BangBangNode: w = %f rad/s", w_);
+
 
         // 100 Hz = 10 ms period
         period_ms_ = 10;
@@ -66,20 +71,12 @@ public:
     }
 
 private:
-    // void callback(const ateam_msgs::msg::VisionStateRobot::SharedPtr msg)
-    // {
-    //     latest_msg_ = *msg;  // store local copy
-    //     have_msg_ = true;
-    // }
 
     void publish_latest()
     {
         float fn_period = 10.0f;  // seconds
         if (fn_started_) {
             ateam_msgs::msg::RobotMotionCommand msg;
-            // msg.twist.linear.x = a_linear_ * cosf(w_ * t_);
-            // msg.twist.linear.y = 0.0;
-            // msg.twist.angular.z = a_angular_ * cosf(w_ * t_);
 
             msg.twist.linear.x = 0.0;
             msg.twist.linear.y = 0.0;
@@ -87,16 +84,23 @@ private:
 
             t_ += (float)period_ms_ / 1000.0f;
 
-            float fn_time = std::fmod(t_, fn_period);
-
-            // Function computation
-            if (fn_time < 0.75f) {
-                msg.twist.linear.x = a_linear_;
+            // Compute control value based on fn_type
+            float val = 0.0f;
+            if (fn_type_ == "oscillate") {
+                val = 0.5 * (amp_ - amp_ * cosf(w_ * t_));  // not really amplitute, but just go from 0 to amp and back in a cosine wave
+            } else if (fn_type_ == "step") {
+                val = amp_;
+            } else if (fn_type_ == "pulse") {
+                val = (fmodf(t_, 1.0f/freq_) <= width_) ? amp_ : 0.0f;
             }
 
-            // if (fn_time >= 0.75f && fn_time < 1.0f) {
-            //     msg.twist.linear.x = - 0.5 * a_linear_;
-            // }
+            if (dimension_ == "x") {
+                msg.twist.linear.x = val;
+            } else if (dimension_ == "y") {
+                msg.twist.linear.y = val;
+            } else if (dimension_ == "theta") {
+                msg.twist.angular.z = val;
+            }
 
             pub_->publish(msg);
         }
@@ -112,16 +116,16 @@ private:
     rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr pub_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr startup_timer_;
-    float a_linear_;
-    float a_angular_;
+    float amp_;
+    std::string dimension_;
+    std::string fn_type_;
+    float freq_;
     float w_;
+    float width_;
     float duration_;
     int64_t period_ms_;
     float t_;
     bool fn_started_;
-
-    // ateam_msgs::msg::VisionStateRobot latest_msg_;  
-    // bool have_msg_ = false;
 };
 
 int main(int argc, char **argv)

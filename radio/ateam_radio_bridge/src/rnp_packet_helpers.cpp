@@ -295,6 +295,10 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return F32;
     case PHYS_BODY_MOMENT_Z:
       return F32;
+    case PHYS_MOTOR_TORQUE_CONSTANT:
+      return F32;
+    case PHYS_MOTOR_EFFICIENCY_FACTOR:
+      return F32;
     case KF_MAX_POS_LINEAR:
       return F32;
     case KF_MAX_POS_ANGULAR:
