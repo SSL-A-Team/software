@@ -313,17 +313,21 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return PID_LIMITED_INTEGRAL_F32;
     case PIDII_THETA:
       return PID_LIMITED_INTEGRAL_F32;
-    case TRAJ_MAX_TRANSLATIONAL_VELOCITY:
+    case TRAJ_ALLOWABLE_ERROR_POS_LINEAR:
       return F32;
-    case TRAJ_MAX_TRANSLATIONAL_ACCELERATION:
+    case TRAJ_ALLOWABLE_ERROR_POS_ANGULAR:
       return F32;
-    case TRAJ_MAX_ROTATIONAL_VELOCITY:
+    case TRAJ_ALLOWABLE_ERROR_VEL_LINEAR:
       return F32;
-    case TRAJ_MAX_ROTATIONAL_ACCELERATION:
+    case TRAJ_ALLOWABLE_ERROR_VEL_ANGULAR:
       return F32;
-    case TRAJ_ALLOWABLE_ERROR_POS:
+    case TRAJ_MAX_VEL_LINEAR:
       return F32;
-    case TRAJ_ALLOWABLE_ERROR_VEL:
+    case TRAJ_MAX_VEL_ANGULAR:
+      return F32;
+    case TRAJ_MAX_ACCEL_LINEAR:
+      return F32;
+    case TRAJ_MAX_ACCEL_ANGULAR:
       return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
