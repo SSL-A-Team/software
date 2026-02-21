@@ -4,7 +4,7 @@ ln -s build/compile_commands.json .
 
 ros2 launch ateam_bringup joystick_only_stack.launch.py
 ros2 launch ateam_bringup bringup_connection.launch.py command_frequency:=100.0
-ros2 run ateam_motion_input motion_input_node --ros-args -p dimension:=theta -p fn_type:=oscillate -p amplitude:=30 -p freq:=0.5 -p duration:=0.0
+ros2 run ateam_motion_input motion_input_node --ros-args -p dimension:=theta -p fn_type:=oscillate -p amp:=30 -p freq:=0.5 -p duration:=0.0
 python3 ./analysis/scripts/param_tuning_loop.py
 
 ros2 service call /set_firmware_param ateam_msgs/srv/SetFirmwareParameter "{robot_id: 2, parameter_id: 6, data: [0.1]}"
