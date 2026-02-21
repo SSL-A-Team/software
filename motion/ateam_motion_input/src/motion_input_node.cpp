@@ -1,16 +1,15 @@
 #include <rclcpp/rclcpp.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
-#include <geometry_msgs/geometry_msgs/msg/quaternion.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <cmath>
 
-class BangBangNode : public rclcpp::Node
+class MotionInputNode : public rclcpp::Node
 {
 public:
-    BangBangNode()
-    : Node("bangbang_node")
+    MotionInputNode()
+    : Node("motion_input_node")
     {
         declare_parameter<float>("amp", 0.2f);
         declare_parameter<std::string>("dimension", "x");  // x, y, or theta
@@ -33,17 +32,17 @@ public:
         this->get_parameter("fn_type", fn_type_);
         this->get_parameter("duration", duration_);
         this->get_parameter("width", width_);
-        RCLCPP_INFO(this->get_logger(), "BangBangNode: amp = %f", amp_);
-        RCLCPP_INFO(this->get_logger(), "BangBangNode: dimension = %s", dimension_.c_str());
-        RCLCPP_INFO(this->get_logger(), "BangBangNode: fn_type = %s", fn_type_.c_str());
+        RCLCPP_INFO(this->get_logger(), "MotionInputNode: amp = %f", amp_);
+        RCLCPP_INFO(this->get_logger(), "MotionInputNode: dimension = %s", dimension_.c_str());
+        RCLCPP_INFO(this->get_logger(), "MotionInputNode: fn_type = %s", fn_type_.c_str());
         if (dimension_ == "theta") {
             amp_ = amp_ * M_PI / 180.0f; // convert to rad
-            RCLCPP_INFO(this->get_logger(), "BangBangNode: amp (rad) = %f", amp_);
+            RCLCPP_INFO(this->get_logger(), "MotionInputNode: amp (rad) = %f", amp_);
         }
         this->get_parameter("freq", freq_);
-        RCLCPP_INFO(this->get_logger(), "BangBangNode: freq = %f Hz", freq_);
+        RCLCPP_INFO(this->get_logger(), "MotionInputNode: freq = %f Hz", freq_);
         w_ = 2.0f * M_PI * freq_;
-        RCLCPP_INFO(this->get_logger(), "BangBangNode: w = %f rad/s", w_);
+        RCLCPP_INFO(this->get_logger(), "MotionInputNode: w = %f rad/s", w_);
 
 
         // 100 Hz = 10 ms period
@@ -58,7 +57,7 @@ public:
 
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(period_ms_),
-            std::bind(&BangBangNode::publish_latest, this)
+            std::bind(&MotionInputNode::publish_latest, this)
         );
         startup_timer_ = this->create_wall_timer(
             std::chrono::milliseconds(static_cast<int>(startup_delay * 1000)),
@@ -74,7 +73,6 @@ private:
 
     void publish_latest()
     {
-        float fn_period = 10.0f;  // seconds
         if (fn_started_) {
             ateam_msgs::msg::RobotMotionCommand msg;
 
@@ -107,12 +105,11 @@ private:
 
         // Auto-shutdown after duration (if set)
         if (duration_ > 0.0f && t_ >= duration_) {
-            RCLCPP_INFO(this->get_logger(), "BangBangNode: Duration %.2f s reached, shutting down.", duration_);
+            RCLCPP_INFO(this->get_logger(), "MotionInputNode: Duration %.2f s reached, shutting down.", duration_);
             rclcpp::shutdown();
         }
     }
 
-    // rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr sub_;
     rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr pub_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr startup_timer_;
@@ -131,7 +128,7 @@ private:
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<BangBangNode>());
+    rclcpp::spin(std::make_shared<MotionInputNode>());
     rclcpp::shutdown();
     return 0;
 }
