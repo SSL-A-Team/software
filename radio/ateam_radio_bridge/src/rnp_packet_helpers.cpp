@@ -329,6 +329,22 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return F32;
     case TRAJ_MAX_ACCEL_ANGULAR:
       return F32;
+    case CTRL_PID_ENTER_ERROR_POS_LINEAR:
+      return F32;
+    case CTRL_PID_ENTER_ERROR_POS_ANGULAR:
+      return F32;
+    case CTRL_PID_EXIT_ERROR_POS_LINEAR:
+      return F32;
+    case CTRL_PID_EXIT_ERROR_POS_ANGULAR:
+      return F32;
+    case CTRL_PID_ENTER_ERROR_VEL_LINEAR:
+      return F32;
+    case CTRL_PID_ENTER_ERROR_VEL_ANGULAR:
+      return F32;
+    case CTRL_PID_EXIT_ERROR_VEL_LINEAR:
+      return F32;
+    case CTRL_PID_EXIT_ERROR_VEL_ANGULAR:
+      return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
