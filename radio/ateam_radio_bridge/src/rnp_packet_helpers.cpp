@@ -313,6 +313,12 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return PID_LIMITED_INTEGRAL_F32;
     case PIDII_THETA:
       return PID_LIMITED_INTEGRAL_F32;
+    case PIDII_XD:
+      return PID_LIMITED_INTEGRAL_F32;
+    case PIDII_YD:
+      return PID_LIMITED_INTEGRAL_F32;
+    case PIDII_THETAD:
+      return PID_LIMITED_INTEGRAL_F32;
     case TRAJ_ALLOWABLE_ERROR_POS_LINEAR:
       return F32;
     case TRAJ_ALLOWABLE_ERROR_POS_ANGULAR:
@@ -329,21 +335,21 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return F32;
     case TRAJ_MAX_ACCEL_ANGULAR:
       return F32;
-    case CTRL_PID_ENTER_ERROR_POS_LINEAR:
+    case HYST_PID_ENTER_ERROR_POS_LINEAR:
       return F32;
-    case CTRL_PID_ENTER_ERROR_POS_ANGULAR:
+    case HYST_PID_ENTER_ERROR_POS_ANGULAR:
       return F32;
-    case CTRL_PID_EXIT_ERROR_POS_LINEAR:
+    case HYST_PID_EXIT_ERROR_POS_LINEAR:
       return F32;
-    case CTRL_PID_EXIT_ERROR_POS_ANGULAR:
+    case HYST_PID_EXIT_ERROR_POS_ANGULAR:
       return F32;
-    case CTRL_PID_ENTER_ERROR_VEL_LINEAR:
+    case HYST_PID_ENTER_ERROR_VEL_LINEAR:
       return F32;
-    case CTRL_PID_ENTER_ERROR_VEL_ANGULAR:
+    case HYST_PID_ENTER_ERROR_VEL_ANGULAR:
       return F32;
-    case CTRL_PID_EXIT_ERROR_VEL_LINEAR:
+    case HYST_PID_EXIT_ERROR_VEL_LINEAR:
       return F32;
-    case CTRL_PID_EXIT_ERROR_VEL_ANGULAR:
+    case HYST_PID_EXIT_ERROR_VEL_ANGULAR:
       return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
