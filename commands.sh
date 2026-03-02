@@ -2,6 +2,7 @@ colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --packages-select ateam_bangbang ateam_msgs ateam_bringup ateam_radio_msgs ateam_radio_bridge
 ln -s build/compile_commands.json .
 
+ros2 launch ateam_bringup bringup_physical.launch.py use_local_gc:=true ui_debug:=true
 ros2 launch ateam_bringup joystick_only_stack.launch.py
 ros2 launch ateam_bringup bringup_connection.launch.py command_frequency:=100.0
 ros2 run ateam_motion_input motion_input_node --ros-args -p dimension:=theta -p fn_type:=oscillate -p amp:=30 -p freq:=0.5 -p duration:=0.0
