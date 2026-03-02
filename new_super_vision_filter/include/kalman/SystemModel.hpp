@@ -27,7 +27,8 @@
 #include "Matrix.hpp"
 #include "StandardBase.hpp"
 
-namespace Kalman {
+namespace Kalman
+{
     /**
      * @brief Abstract base class of all system models
      *
@@ -35,35 +36,38 @@ namespace Kalman {
      * @param ControlType The vector-type of the control input (usually some type derived from Kalman::Vector)
      * @param CovarianceBase The class template used for covariance storage (must be either StandardBase or SquareRootBase)
      */
-    template<class StateType, class ControlType = Vector<typename StateType::Scalar, 0>, template<class> class CovarianceBase = StandardBase>
-    class SystemModel : public CovarianceBase<StateType>
-    {
-        static_assert(/*StateType::RowsAtCompileTime == Dynamic ||*/ StateType::RowsAtCompileTime > 0,
+template<class StateType, class ControlType = Vector<typename StateType::Scalar, 0>,
+  template<class> class CovarianceBase = StandardBase>
+class SystemModel : public CovarianceBase<StateType>
+{
+  static_assert(/*StateType::RowsAtCompileTime == Dynamic ||*/ StateType::RowsAtCompileTime > 0,
                       "State vector must contain at least 1 element" /* or be dynamic */);
-        static_assert(/*ControlType::RowsAtCompileTime == Dynamic ||*/ ControlType::RowsAtCompileTime >= 0,
+  static_assert(/*ControlType::RowsAtCompileTime == Dynamic ||*/ ControlType::RowsAtCompileTime >=
+      0,
                       "Control vector must contain at least 0 elements" /* or be dynamic */);
-        static_assert(std::is_same<typename StateType::Scalar, typename ControlType::Scalar>::value,
+  static_assert(std::is_same<typename StateType::Scalar, typename ControlType::Scalar>::value,
                       "State and Control scalar types must be identical");
-    public:
+
+public:
         //! System state type
-        typedef StateType State;
-        
+  typedef StateType State;
+
         //! System control input type
-        typedef ControlType Control;
-        
-    public:
+  typedef ControlType Control;
+
+public:
         /**
          * @brief State Transition Function f
-         * 
+         *
          * Computes the predicted system state in the next timestep given
          * the current state x and the control input u
          */
-        virtual State f(const State& x, const Control& u) const = 0;
-        
-    protected:
-        SystemModel() {}
-        virtual ~SystemModel() {}
-    };
+  virtual State f(const State & x, const Control & u) const = 0;
+
+protected:
+  SystemModel() {}
+  virtual ~SystemModel() {}
+};
 }
 
 #endif

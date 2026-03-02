@@ -25,56 +25,58 @@
 #include "Matrix.hpp"
 #include "Types.hpp"
 
-namespace Kalman {
-    
+namespace Kalman
+{
+
     /**
      * @brief Abstract base class for all Kalman Filters
-     * 
+     *
      * @param StateType The vector-type of the system state (usually some type derived from Kalman::Vector)
      */
-    template<class StateType>
-    class KalmanFilterBase
-    {
-    public:
-        static_assert(/*StateType::RowsAtCompileTime == Dynamic ||*/StateType::RowsAtCompileTime > 0,
+template<class StateType>
+class KalmanFilterBase
+{
+public:
+  static_assert(/*StateType::RowsAtCompileTime == Dynamic ||*/StateType::RowsAtCompileTime > 0,
                       "State vector must contain at least 1 element" /* or be dynamic */);
-        static_assert(StateType::ColsAtCompileTime == 1, "State type must be a column vector");
+  static_assert(StateType::ColsAtCompileTime == 1, "State type must be a column vector");
 
         //! Numeric scalar type
-        typedef typename StateType::Scalar T;
-        
+  typedef typename StateType::Scalar T;
+
         //! Type of the state vector
-        typedef StateType State;
-        
-    protected:
+  typedef StateType State;
+
+protected:
         //! Estimated state
-        State x;
-        
-    public:
+  State x;
+
+public:
         /**
          * Get current state estimate
          */
-        const State& getState() const
-        {
-            return x;
-        }
-        
+  const State & getState() const
+  {
+    return x;
+  }
+
         /**
          * @brief Initialize state
          * @param initialState The initial state of the system
          */
-        void init(const State& initialState)
-        {
-            x = initialState;
-        }
-    protected:
+  void init(const State & initialState)
+  {
+    x = initialState;
+  }
+
+protected:
         /**
          * @brief Protected constructor
          */
-        KalmanFilterBase()
-        {
-        }
-    };
+  KalmanFilterBase()
+  {
+  }
+};
 }
 
 #endif

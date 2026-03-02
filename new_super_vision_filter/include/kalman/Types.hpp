@@ -32,44 +32,44 @@ namespace Kalman
      * @param T The numeric scalar type
      * @param N The dimensionality of the Matrix
      */
-    template<typename T, int N>
-    using SquareMatrix = Matrix<T, N, N>;
-    
+template<typename T, int N>
+using SquareMatrix = Matrix<T, N, N>;
+
     /**
      * @class Kalman::Covariance
      * @brief Template type for covariance matrices
      * @param Type The vector type for which to generate a covariance (usually a state or measurement type)
      */
-    template<class Type>
-    using Covariance = SquareMatrix<typename Type::Scalar, Type::RowsAtCompileTime>;
-    
+template<class Type>
+using Covariance = SquareMatrix<typename Type::Scalar, Type::RowsAtCompileTime>;
+
     /**
      * @class Kalman::CovarianceSquareRoot
      * @brief Template type for covariance square roots
      * @param Type The vector type for which to generate a covariance (usually a state or measurement type)
      */
-    template<class Type>
-    using CovarianceSquareRoot = Cholesky< Covariance<Type> >;
-    
+template<class Type>
+using CovarianceSquareRoot = Cholesky<Covariance<Type>>;
+
     /**
      * @class Kalman::KalmanGain
      * @brief Template type of Kalman Gain
      * @param State The system state type
      * @param Measurement The measurement type
      */
-    template<class State, class Measurement>
-    using KalmanGain = Matrix<typename State::Scalar,
-                              State::RowsAtCompileTime,
-                              Measurement::RowsAtCompileTime>;
-    
+template<class State, class Measurement>
+using KalmanGain = Matrix<typename State::Scalar,
+    State::RowsAtCompileTime,
+    Measurement::RowsAtCompileTime>;
+
     /**
      * @class Kalman::Jacobian
      * @brief Template type of jacobian of A w.r.t. B
      */
-    template<class A, class B>
-    using Jacobian = Matrix<typename A::Scalar,
-                            A::RowsAtCompileTime,
-                            B::RowsAtCompileTime>;
+template<class A, class B>
+using Jacobian = Matrix<typename A::Scalar,
+    A::RowsAtCompileTime,
+    B::RowsAtCompileTime>;
 }
 
 #endif

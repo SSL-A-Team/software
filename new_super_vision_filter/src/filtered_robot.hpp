@@ -32,7 +32,7 @@
 
 class FilteredRobot {
 public:
-  FilteredRobot(const RobotTrack & track, ateam_common::TeamColor &team_color);
+  FilteredRobot(const RobotTrack & track, ateam_common::TeamColor & team_color);
 
   void update(const RobotTrack & track);
 

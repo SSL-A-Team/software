@@ -26,7 +26,8 @@
 
 #include "StandardBase.hpp"
 
-namespace Kalman {
+namespace Kalman
+{
     /**
      * @brief Abstract base class of all measurement models
      *
@@ -34,34 +35,38 @@ namespace Kalman {
      * @param MeasurementType The vector-type of the measurement (usually some type derived from Kalman::Vector)
      * @param CovarianceBase The class template used for covariance storage (must be either StandardBase or SquareRootBase)
      */
-    template<class StateType, class MeasurementType, template<class> class CovarianceBase = StandardBase>
-    class MeasurementModel : public CovarianceBase<MeasurementType>
-    {
-        static_assert(/*StateType::RowsAtCompileTime == Dynamic ||*/StateType::RowsAtCompileTime > 0,
+template<class StateType, class MeasurementType,
+  template<class> class CovarianceBase = StandardBase>
+class MeasurementModel : public CovarianceBase<MeasurementType>
+{
+  static_assert(/*StateType::RowsAtCompileTime == Dynamic ||*/StateType::RowsAtCompileTime > 0,
                       "State vector must contain at least 1 element" /* or be dynamic */);
-        static_assert(/*MeasurementType::RowsAtCompileTime == Dynamic ||*/MeasurementType::RowsAtCompileTime > 0,
+  static_assert(
+                      /*MeasurementType::RowsAtCompileTime == Dynamic ||*/MeasurementType::
+    RowsAtCompileTime > 0,
                       "Measurement vector must contain at least 1 element" /* or be dynamic */);
-        static_assert(std::is_same<typename StateType::Scalar, typename MeasurementType::Scalar>::value,
+  static_assert(std::is_same<typename StateType::Scalar, typename MeasurementType::Scalar>::value,
                        "State and Measurement scalar types must be identical");
-    public:
+
+public:
         //! System state type
-        typedef StateType State;
-        
+  typedef StateType State;
+
         //! Measurement vector type
-        typedef MeasurementType Measurement;
-        
-    public:
+  typedef MeasurementType Measurement;
+
+public:
         /**
          * Measurement Model Function h
-         * 
+         *
          * Predicts the estimated measurement value given the current state estimate x
          */
-        virtual Measurement h(const State& x) const = 0;
-        
-    protected:
-        MeasurementModel() {}
-        virtual ~MeasurementModel() {}
-    };
+  virtual Measurement h(const State & x) const = 0;
+
+protected:
+  MeasurementModel() {}
+  virtual ~MeasurementModel() {}
+};
 }
 
 #endif
