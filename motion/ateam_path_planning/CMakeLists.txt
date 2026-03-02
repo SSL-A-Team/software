@@ -16,6 +16,7 @@ add_library(${PROJECT_NAME} SHARED
   src/collisions.cpp
   src/controls_lib_adapters.cpp
   src/planner.cpp
+  src/trajectory_spline.cpp
 )
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra -Wpedantic)

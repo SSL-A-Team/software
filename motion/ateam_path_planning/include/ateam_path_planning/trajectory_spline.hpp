@@ -29,13 +29,19 @@ namespace ateam_path_planning
 {
 struct TrajectorySplineSegment
 {
-  double time;
+  double duration;
   Pose target;
 };
 
 struct TrajectorySpline
 {
+  Pose start_pose;
+  ateam_geometry::Vector start_velocity;
   std::vector<TrajectorySplineSegment> segments;
+
+  std::vector<ateam_geometry::Point> ToPoints(double delta_t = 0.1) const;
+
+  std::vector<std::vector<ateam_geometry::Point>> ToPointsBySegment(double delta_t = 0.1) const;
 };
 }  // namespace ateam_path_planning
 

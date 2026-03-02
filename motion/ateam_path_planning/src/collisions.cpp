@@ -20,6 +20,9 @@
 
 #include "ateam_path_planning/colliisions.hpp"
 #include <ateam_common/robot_constants.hpp>
+#include <ateam_geometry/do_intersect.hpp>
+#include <ateam_geometry/creation_helpers.hpp>
+#include "ateam_path_planning/controls_lib_adapters.hpp"
 
 namespace ateam_path_planning::collisions
 {
@@ -28,9 +31,21 @@ std::optional<double> TimeToCollision(
   const BangBangTraj3D & trajectory,
   const std::vector<Obstacle> & obstacles)
 {
-  // Placeholder implementation
-  (void)trajectory;
-  (void)obstacles;
+  const auto delta_t = 0.1;
+  const auto duration = GetBangBangTrajectoryDuration(trajectory);
+  for (double t = 0.0; t < duration; t += delta_t) {
+    const auto state_at_t = ateam_controls_compute_bangbang_traj_3d_state_at_t(
+      trajectory, RigidBodyState{}, 0.0, t);
+    const ateam_geometry::Point robot_pos(state_at_t.pose.position.x, state_at_t.pose.position.y);
+    for (const auto & obstacle : obstacles) {
+      if(ateam_geometry::doIntersect(ateam_geometry::makeDisk(robot_pos, kRobotRadius),
+          obstacle.shape))
+      {
+        return t;
+      }
+    }
+  }
+
   return std::nullopt;
 }
 

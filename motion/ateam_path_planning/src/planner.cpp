@@ -43,11 +43,12 @@ std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
 
   std::vector<Obstacle> obstacles = global_obstacles;
   obstacles.insert(obstacles.end(), global_obstacles.begin(), global_obstacles.end());
-  std::ranges::transform(world.our_robots, std::back_inserter(obstacles), Obstacle::FromRobot);
+  // std::ranges::transform(world.our_robots, std::back_inserter(obstacles), Obstacle::FromRobot);
 
   std::array<std::optional<TrajectorySpline>, 16> paths;
   for (int bot_index : bot_indices) {
     if (!targets[bot_index].has_value()) {
+      std::cerr << "Skipping bot " << bot_index << " with no target\n";
       continue;
     }
     const auto & bot = world.our_robots.at(bot_index);
@@ -76,9 +77,15 @@ std::optional<TrajectorySpline> Planner::PlanPath(
 
   if (!collision_time.has_value()) {
     TrajectorySpline result;
-    result.segments.emplace_back(0.0, target);
+    result.start_pose.position = robot.pos;
+    result.start_pose.heading = robot.theta;
+    result.start_velocity = robot.vel;
+    result.segments.emplace_back(GetBangBangTrajectoryDuration(base_trajectory), target);
     return result;
   }
+
+  std::cerr << "Direct trajectory for robot " << robot.id << " collides at time "
+            << collision_time.value() << "\n";
 
   auto fastest_time = std::numeric_limits<double>::infinity();
   TrajectorySpline fastest_trajectory;
@@ -104,13 +111,20 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         const auto second_traj = ateam_controls_compute_optimal_bangbang_traj_3d(transition_state,
             target_state);
         const auto second_collision_time = collisions::TimeToCollision(second_traj, obstacles);
+        if(second_collision_time.has_value()) {
+          std::cerr << "Second collision time candidate: " << *second_collision_time << "\n";
+        }
         if (!second_collision_time.has_value()) {
-          const double total_time = transition_time + GetBangBangTrajectoryDuration(second_traj);
+          const auto second_traj_duration = GetBangBangTrajectoryDuration(second_traj);
+          const auto total_time = transition_time + second_traj_duration;
           if (total_time < fastest_time) {
             fastest_time = total_time;
             TrajectorySpline result;
-            result.segments.emplace_back(0.0, inter_target);
-            result.segments.emplace_back(transition_time, target);
+            result.start_pose.position = robot.pos;
+            result.start_pose.heading = robot.theta;
+            result.start_velocity = robot.vel;
+            result.segments.emplace_back(transition_time, inter_target);
+            result.segments.emplace_back(second_traj_duration, target);
             fastest_trajectory = result;
             found_collision_free = true;
           }
@@ -120,6 +134,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
   }
 
   if(!found_collision_free) {
+    std::cerr << "Could not find collision-free trajectory for robot " << robot.id << "\n";
     return std::nullopt;
   }
 
