@@ -9,6 +9,7 @@ python3 ./analysis/scripts/param_tuning_loop.py
 python3 ./analysis/scripts/param_tuning_loop.py --dimension theta --fn-type pulse --amp 90 --width 2.0 --duration 4.0 --freq 0.1
 
 ros2 service call /set_firmware_param ateam_msgs/srv/SetFirmwareParameter "{robot_id: 2, parameter_id: 6, data: [0.1]}"
+ros2 service call /kenobi_node/set_override_play ateam_msgs/srv/SetOverridePlay "{play_name: 'ControlsTestPlay'}"
 
 ros2 topic echo --qos-durability volatile /robot_motion_commands/robot2
 ros2 topic echo /yellow_team/robot2 --field pose
