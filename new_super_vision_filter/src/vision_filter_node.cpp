@@ -40,13 +40,6 @@ namespace new_super_vision
 
 class VisionFilterNode : public rclcpp::Node
 {
-    // Important things this needs to do, which could be broken out into objects that this holds
-    // and uses when the node is ticked...
-
-    // Check quality of stuff overall
-    // Keep track of individual cameras - can be 1 - many
-    // Fuse the info from those cameras into tracks
-    // Output final prediction for robots and ball(s)
 
 public:
   explicit VisionFilterNode(const rclcpp::NodeOptions & options)
