@@ -53,6 +53,10 @@ public:
   : rclcpp::Node("new_ateam_vision_filter", options),
     game_controller_listener_(*this)
   {
+    declare_parameters<double>("offsets", {
+        {"robots.x", 0.0},
+        {"robots.y", 0.0}
+    });
     ssl_vision_subscription_ =
       create_subscription<ssl_league_msgs::msg::VisionWrapper>(
                 std::string(Topics::kVisionMessages),
