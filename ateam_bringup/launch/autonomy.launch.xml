@@ -7,7 +7,7 @@
   <arg name="vision_offset_robot_x" default="0.0"/>
   <arg name="vision_offset_robot_y" default="0.0"/>
 
-  <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True">
+  <node name="vision_filter" pkg="new_vision_filter" exec="new_ateam_vision_filter" respawn="True">
     <param name="gc_team_name" value="$(var team_name)"/>
     <param name="offsets.robots.x" value="$(var vision_offset_robot_x)"/>
     <param name="offsets.robots.y" value="$(var vision_offset_robot_y)"/>
