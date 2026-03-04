@@ -14,7 +14,7 @@ find_package(ateam_common REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED 
+add_library(${PROJECT_NAME} SHARED
   src/vision_filter_node.cpp
   src/camera.cpp
   src/filtered_robot.cpp
@@ -23,7 +23,7 @@ add_library(${PROJECT_NAME} SHARED
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/kalman/include>
     $<INSTALL_INTERFACE:include>
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -42,7 +42,7 @@ rclcpp_components_register_node(
   PLUGIN "new_super_vision::VisionFilterNode"
   EXECUTABLE ateam_new_super_vision
 )
-install(TARGETS ${PROJECT_NAME} 
+install(TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
@@ -51,7 +51,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_lint_cmake REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
   # the following line skips the linter which checks for copyrights
   # comment the line when a copyright and license is added to all source files
@@ -60,7 +60,20 @@ if(BUILD_TESTING)
   # comment the line when this package is in a git repo and when
   # a copyright and license is added to all source files
   set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
+  file(GLOB_RECURSE AMENT_LINT_AUTO_FILE_EXCLUDE
+    "kalman/*"
+    "kalman/cmake/*"
+  )
+  file(GLOB_RECURSE ALL_CMAKE_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt"
+  )
+
+  list(FILTER ALL_CMAKE_FILES EXCLUDE REGEX
+    ".*/kalman/.*"
+  )
+
+  ament_lint_cmake(${ALL_CMAKE_FILES})
   add_subdirectory(test)
 endif()
 
