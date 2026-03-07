@@ -46,6 +46,12 @@ def generate_launch_description():
 
         DeclareLaunchArgument('command_frequency', default_value='60.0'),
 
+        DeclareLaunchArgument('controls_enabled_body_pose', default_value='false'),
+        DeclareLaunchArgument('controls_enabled_body_twist', default_value='true'),
+        DeclareLaunchArgument('controls_enabled_body_accel', default_value='false'),
+        DeclareLaunchArgument('controls_enabled_wheel_vel', default_value='true'),
+        DeclareLaunchArgument('controls_enabled_wheel_torque', default_value='false'),
+
         Node(
             package='ateam_bringup',
             executable='scream_if_wifi_enabled.sh',
@@ -96,7 +102,12 @@ def generate_launch_description():
             parameters=[{
                 'net_interface_address': LaunchConfiguration('radio_interface_address'),
                 'gc_team_name': LaunchConfiguration('team_name'),
-                'command_frequency': LaunchConfiguration('command_frequency')
+                'command_frequency': LaunchConfiguration('command_frequency'),
+                'controls_enabled.body_pose': LaunchConfiguration('controls_enabled_body_pose'),
+                'controls_enabled.body_twist': LaunchConfiguration('controls_enabled_body_twist'),
+                'controls_enabled.body_accel': LaunchConfiguration('controls_enabled_body_accel'),
+                'controls_enabled.wheel_vel': LaunchConfiguration('controls_enabled_wheel_vel'),
+                'controls_enabled.wheel_torque': LaunchConfiguration('controls_enabled_wheel_torque'),
             }],
             respawn=True,
             remappings=remap_indexed_topics([
