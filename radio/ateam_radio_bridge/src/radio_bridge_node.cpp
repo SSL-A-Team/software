@@ -26,6 +26,8 @@
 #include <thread>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <geometry_msgs/msg/pose.hpp>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
@@ -34,6 +36,7 @@
 #include <ateam_radio_msgs/srv/send_robot_power_request.hpp>
 #include <ateam_radio_msgs/conversion.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
@@ -67,10 +70,19 @@ public:
     firmware_parameter_server_(*this, connections_)
   {
     declare_parameters<bool>("controls_enabled", {
-        {"body_vel", true},
+        {"body_pose", false},
+        {"body_twist", true},
+        {"body_accel", false},
         {"wheel_vel", true},
         {"wheel_torque", false}
     });
+
+    ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
+      vision_state_subscriptions_,
+      "~/yellow_team/robot",
+      rclcpp::SystemDefaultsQoS(),
+      &RadioBridgeNode::VisionStateCallback,
+      this);
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
@@ -121,11 +133,15 @@ private:
   const std::chrono::milliseconds timeout_threshold_;
   const std::chrono::milliseconds command_timeout_threshold_;
   std::mutex mutex_;
+  std::array<ateam_msgs::msg::VisionStateRobot, 16> vision_states_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
+  std::array<std::chrono::steady_clock::time_point, 16> vision_state_timestamps_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
   ateam_common::GameControllerListener game_controller_listener_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
+    16> vision_state_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
@@ -147,6 +163,23 @@ private:
       RCLCPP_WARN(get_logger(), "Radio bridge is replacing NaNs!");
       val = 0.0;
     }
+  }
+
+  void VisionStateCallback(
+    const ateam_msgs::msg::VisionStateRobot::SharedPtr state_msg,
+    int robot_id)
+  {
+    const std::lock_guard lock(mutex_);
+    vision_states_[robot_id] = *state_msg;
+    auto & state = vision_states_[robot_id];
+    ReplaceNanWithZero(state.pose.position.x);
+    ReplaceNanWithZero(state.pose.position.y);
+    ReplaceNanWithZero(state.pose.position.z);
+    ReplaceNanWithZero(state.pose.orientation.x);
+    ReplaceNanWithZero(state.pose.orientation.y);
+    ReplaceNanWithZero(state.pose.orientation.z);
+    ReplaceNanWithZero(state.pose.orientation.w);
+    vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
   void MotionCommandCallback(
@@ -220,30 +253,54 @@ private:
       if (connections_[id] == nullptr) {
         continue;
       }
+      BasicControl control_msg;
+      // Motion and kicker commands
       if ((std::chrono::steady_clock::now() - motion_command_timestamps_[id]) >
         command_timeout_threshold_)
       {
-        RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Sending zeros.", id);
-        motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
-        motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
+        RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Disabling controls.", id);
+        control_msg.body_pose_control_enabled = false;
+        control_msg.body_twist_control_enabled = false;
+        control_msg.body_accel_control_enabled = false;
+        control_msg.wheel_vel_control_enabled = false;
+        control_msg.wheel_torque_control_enabled = false;
+        control_msg.x_linear_cmd = 0.0;
+        control_msg.y_linear_cmd = 0.0;
+        control_msg.z_angular_cmd = 0.0;
+        control_msg.kick_request = KickRequest::KR_DISABLE;
+      } else {
+        control_msg.body_pose_control_enabled = get_parameter("controls_enabled.body_pose").as_bool();
+        control_msg.body_twist_control_enabled = get_parameter("controls_enabled.body_twist").as_bool();
+        control_msg.body_accel_control_enabled = get_parameter("controls_enabled.body_accel").as_bool();
+        control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
+        control_msg.wheel_torque_control_enabled = get_parameter("controls_enabled.wheel_torque").as_bool();
+        control_msg.x_linear_cmd = motion_commands_[id].twist.linear.x;
+        control_msg.y_linear_cmd = motion_commands_[id].twist.linear.y;
+        control_msg.z_angular_cmd = motion_commands_[id].twist.angular.z;
+        control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       }
-      BasicControl control_msg;
+      // Vision update
+      if (
+        std::chrono::steady_clock::now() - vision_state_timestamps_[id] < std::chrono::milliseconds(100) &&
+        vision_states_[id].visible
+      ) {
+        // vision data is recent enough to send and not all zero/identity
+        control_msg.vision_update = true;
+        control_msg.pose_x_linear_vision = vision_states_[id].pose.position.x;
+        control_msg.pose_y_linear_vision = vision_states_[id].pose.position.y;
+        control_msg.pose_z_angular_vision = GetYaw(vision_states_[id].pose);
+      } else {
+        control_msg.vision_update = false;
+      }
+      // Misc commands
       control_msg.request_shutdown = shutdown_requested_[id];
       control_msg.reboot_robot = reboot_requested_[id];
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
         ateam_common::GameCommand::Stop;
       control_msg.emergency_stop = false;
-      control_msg.body_vel_controls_enabled = get_parameter("controls_enabled.body_vel").as_bool();
-      control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
-      control_msg.wheel_torque_control_enabled =
-        get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.play_song = 0;
-      control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
-      control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
-      control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
       control_msg.dribbler_multiplier = 55;
-      control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
@@ -469,6 +526,14 @@ private:
     response->success = true;
   }
 
+  double GetYaw(geometry_msgs::msg::Pose pose)
+  {
+    tf2::Quaternion quat;
+    tf2::fromMsg(pose.orientation, quat);
+    double yaw, pitch, roll;
+    tf2::Matrix3x3(quat).getEulerYPR(yaw, pitch, roll);
+    return yaw;
+  }
 };
 
 }  // namespace ateam_radio_bridge

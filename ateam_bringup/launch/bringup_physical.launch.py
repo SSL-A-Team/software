@@ -44,6 +44,8 @@ def generate_launch_description():
         DeclareLaunchArgument('team_name', default_value='A-Team'),
         DeclareLaunchArgument('use_local_gc', default_value='False'),
 
+        DeclareLaunchArgument('command_frequency', default_value='60.0'),
+
         Node(
             package='ateam_bringup',
             executable='scream_if_wifi_enabled.sh',
@@ -93,7 +95,8 @@ def generate_launch_description():
             name='radio_bridge',
             parameters=[{
                 'net_interface_address': LaunchConfiguration('radio_interface_address'),
-                'gc_team_name': LaunchConfiguration('team_name')
+                'gc_team_name': LaunchConfiguration('team_name'),
+                'command_frequency': LaunchConfiguration('command_frequency')
             }],
             respawn=True,
             remappings=remap_indexed_topics([

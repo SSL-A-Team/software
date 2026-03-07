@@ -267,28 +267,90 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & parameter)
 {
   switch(parameter) {
-    case VEL_PID_X:
+    case KF_PROCESS_STD_POS_LINEAR:
+      return F32;    
+    case KF_PROCESS_STD_POS_ANGULAR:
+      return F32;
+    case KF_PROCESS_STD_VEL_LINEAR:
+      return F32;
+    case KF_PROCESS_STD_VEL_ANGULAR:
+      return F32;
+    case KF_VISION_STD_LINEAR:
+      return F32;
+    case KF_VISION_STD_ANGULAR:
+      return F32;
+    case KF_ENCODER_STD_ANGULAR:
+      return F32;
+    case KF_GYRO_STD_ANGULAR:
+      return F32;
+    case PHYS_WHEEL_ANGLE_ALPHA:
+      return F32;
+    case PHYS_WHEEL_ANGLE_BETA:
+      return F32;
+    case PHYS_WHEEL_DISTANCE:
+      return F32;
+    case PHYS_WHEEL_RADIUS:
+      return F32;
+    case PHYS_BODY_MASS:
+      return F32;
+    case PHYS_BODY_MOMENT_Z:
+      return F32;
+    case PHYS_MOTOR_TORQUE_CONSTANT:
+      return F32;
+    case PHYS_MOTOR_EFFICIENCY_FACTOR:
+      return F32;
+    case KF_MAX_POS_LINEAR:
+      return F32;
+    case KF_MAX_POS_ANGULAR:
+      return F32;
+    case KF_MAX_VEL_LINEAR:
+      return F32;
+    case KF_MAX_VEL_ANGULAR:
+      return F32;
+    case PIDII_X:
       return PID_LIMITED_INTEGRAL_F32;
-    case VEL_PID_Y:
+    case PIDII_Y:
       return PID_LIMITED_INTEGRAL_F32;
-    case ANGULAR_VEL_PID_Z:
+    case PIDII_THETA:
       return PID_LIMITED_INTEGRAL_F32;
-    case VEL_CGKF_ENCODER_NOISE:
+    case PIDII_XD:
+      return PID_LIMITED_INTEGRAL_F32;
+    case PIDII_YD:
+      return PID_LIMITED_INTEGRAL_F32;
+    case PIDII_THETAD:
+      return PID_LIMITED_INTEGRAL_F32;
+    case TRAJ_ALLOWABLE_ERROR_POS_LINEAR:
       return F32;
-    case VEL_CGKF_GYRO_NOISE:
+    case TRAJ_ALLOWABLE_ERROR_POS_ANGULAR:
       return F32;
-    case VEL_CGKF_PROCESS_NOISE:
+    case TRAJ_ALLOWABLE_ERROR_VEL_LINEAR:
       return F32;
-    case VEL_CGFK_INITIAL_COVARIANCE:
+    case TRAJ_ALLOWABLE_ERROR_VEL_ANGULAR:
       return F32;
-    case VEL_CGKF_K_MATRIX:
-      return MATRIX_F32;
-    case RC_BODY_VEL_LIMIT:
-      return VEC3_F32;
-    case RC_BODY_ACC_LIMIT:
-      return VEC3_F32;
-    case RC_WHEEL_ACC_LIMIT:
-      return VEC4_F32;
+    case TRAJ_MAX_VEL_LINEAR:
+      return F32;
+    case TRAJ_MAX_VEL_ANGULAR:
+      return F32;
+    case TRAJ_MAX_ACCEL_LINEAR:
+      return F32;
+    case TRAJ_MAX_ACCEL_ANGULAR:
+      return F32;
+    case HYST_PID_ENTER_ERROR_POS_LINEAR:
+      return F32;
+    case HYST_PID_ENTER_ERROR_POS_ANGULAR:
+      return F32;
+    case HYST_PID_EXIT_ERROR_POS_LINEAR:
+      return F32;
+    case HYST_PID_EXIT_ERROR_POS_ANGULAR:
+      return F32;
+    case HYST_PID_ENTER_ERROR_VEL_LINEAR:
+      return F32;
+    case HYST_PID_ENTER_ERROR_VEL_ANGULAR:
+      return F32;
+    case HYST_PID_EXIT_ERROR_VEL_LINEAR:
+      return F32;
+    case HYST_PID_EXIT_ERROR_VEL_ANGULAR:
+      return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
