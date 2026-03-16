@@ -20,7 +20,7 @@
 
 #include "filtered_robot.hpp"
 #include "filter_types.hpp"
-#include "measurements/robot_track.hpp"
+#include "measurements/robot_measurement.hpp"
 
 #include <cmath>
 #include <chrono>
@@ -31,14 +31,14 @@
 // or https://thekalmanfilter.com/kalman-filter-explained-simply/
 // OR https://github.com/mherb/kalman/blob/master/examples/Robot1/main.cpp
 
-FilteredRobot::FilteredRobot(const RobotTrack & track, ateam_common::TeamColor & team_color)
-: posFilterXY(), posFilterW(), bot_id(track.getId()), team(team_color)
+FilteredRobot::FilteredRobot(const RobotMeasurement & measurement, ateam_common::TeamColor & team_color)
+: posFilterXY(), posFilterW(), bot_id(measurement.getId()), team(team_color)
 {
         // Initialize XY KF
   PosState initial_state_xy;
   initial_state_xy <<
-    track.pos.x(),
-    track.pos.y(),
+    measurement.pos.x(),
+    measurement.pos.y(),
     0,
     0;
   posFilterXY.init(initial_state_xy);
@@ -60,7 +60,7 @@ FilteredRobot::FilteredRobot(const RobotTrack & track, ateam_common::TeamColor &
         */
   AngleState initial_state_w;
   initial_state_w <<
-    track.angle.w(),
+    measurement.angle.w(),
     0;
   posFilterW.init(initial_state_w);
         /*
@@ -73,7 +73,7 @@ FilteredRobot::FilteredRobot(const RobotTrack & track, ateam_common::TeamColor &
   posFilterW.setCovariance(w_covariance);
 }
 
-void FilteredRobot::update(const RobotTrack & track)
+void FilteredRobot::update(const RobotMeasurement & measurement)
 {
     // Make sure this detection isn't crazy off from our previous ones
     // (unless our filter is still new/only has a few measurements)
@@ -88,7 +88,7 @@ void FilteredRobot::update(const RobotTrack & track)
   const std::chrono::time_point<std::chrono::steady_clock> now =
     std::chrono::steady_clock::now();
     // If it's been too long, don't use this message
-  if (now - track.getTimestamp() > update_threshold || is_new) {
+  if (now - measurement.getTimestamp() > update_threshold || is_new) {
     return;
   }
     // Predict state forward
@@ -101,8 +101,8 @@ void FilteredRobot::update(const RobotTrack & track)
     // Update state estimate (returned)
     // Update covariance estimate (contained in filter)
     // All encompassed by the .update() function
-  posXYEstimate = posFilterXY.update(measurementModelXY, track.pos);
-  posWEstimate = posFilterW.update(measurementModelW, track.angle);
+  posXYEstimate = posFilterXY.update(measurementModelXY, measurement.pos);
+  posWEstimate = posFilterW.update(measurementModelW, measurement.angle);
 }
 
 ateam_msgs::msg::VisionStateRobot FilteredRobot::toMsg()

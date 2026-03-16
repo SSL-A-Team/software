@@ -27,7 +27,7 @@
 #include <ateam_msgs/msg/vision_state_ball.hpp>
 #include "kalman/ExtendedKalmanFilter.hpp"
 #include "filter_types.hpp"
-#include "measurements/ball_track.hpp"
+#include "measurements/ball_measurement.hpp"
 
 enum KickState
 {
@@ -38,9 +38,9 @@ enum KickState
 
 class FilteredBall {
 public:
-  FilteredBall(const BallTrack & track);
+  FilteredBall(const BallMeasurement & measurement);
 
-  void update(const BallTrack & track);
+  void update(const BallMeasurement & measurement);
 
   ateam_msgs::msg::VisionStateBall toMsg();
 

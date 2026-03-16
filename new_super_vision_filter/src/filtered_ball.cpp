@@ -1,11 +1,11 @@
 #include "filtered_ball.hpp"
 
-FilteredBall::FilteredBall(const BallTrack & track)
+FilteredBall::FilteredBall(const BallMeasurement & measurement)
 {
   PosState initial_state_xy;
   initial_state_xy <<
-    track.pos.x(),
-    track.pos.y(),
+    measurement.pos.x(),
+    measurement.pos.y(),
     0,
     0;
   posFilterXY.init(initial_state_xy);
@@ -20,7 +20,7 @@ FilteredBall::FilteredBall(const BallTrack & track)
   posFilterXY.setCovariance(xy_covariance);
 }
 
-void FilteredBall::update(const BallTrack & track)
+void FilteredBall::update(const BallMeasurement & measurement)
 {
     // Make sure this detection isn't crazy off from our previous ones
     // (unless our filter is still new/only has a few measurements)
@@ -35,7 +35,7 @@ void FilteredBall::update(const BallTrack & track)
   const std::chrono::time_point<std::chrono::steady_clock> now =
     std::chrono::steady_clock::now();
     // If it's been too long, don't use this message
-  if (now - track.timestamp > update_threshold || is_new) {
+  if (now - measurement.timestamp > update_threshold || is_new) {
     return;
   }
     // Predict state forward
@@ -47,7 +47,7 @@ void FilteredBall::update(const BallTrack & track)
     // Update state estimate (returned)
     // Update covariance estimate (contained in filter)
     // All encompassed by the .update() function
-  posXYEstimate = posFilterXY.update(measurementModelXY, track.pos);
+  posXYEstimate = posFilterXY.update(measurementModelXY, measurement.pos);
 }
 
 ateam_msgs::msg::VisionStateBall FilteredBall::toMsg()

@@ -22,7 +22,7 @@
 
 #include "kalman/ExtendedKalmanFilter.hpp"
 #include "filter_types.hpp"
-#include "measurements/robot_track.hpp"
+#include "measurements/robot_measurement.hpp"
 
 #include <chrono>
 #include <Eigen/Core>
@@ -32,9 +32,9 @@
 
 class FilteredRobot {
 public:
-  FilteredRobot(const RobotTrack & track, ateam_common::TeamColor & team_color);
+  FilteredRobot(const RobotMeasurement & measurement, ateam_common::TeamColor & team_color);
 
-  void update(const RobotTrack & track);
+  void update(const RobotMeasurement & measurement);
 
   ateam_msgs::msg::VisionStateRobot toMsg();
 

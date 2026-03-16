@@ -18,53 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ROBOT_TRACK_HPP_
-#define ROBOT_TRACK_HPP_
-
-#include <ateam_common/game_controller_listener.hpp>
-#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
+#ifndef BALL_MEASUREMENT_HPP_
+#define BALL_MEASUREMENT_HPP_
 
 #include "filter_types.hpp"
 
-/**
- * @brief Robot position and angle measurement from a single camera detection,
- * used to provide updates to the Kalman filter.
- */
-class RobotTrack {
+#include <ssl_league_msgs/msg/vision_detection_ball.hpp>
+
+class BallMeasurement {
 public:
-  RobotTrack(
-    const ssl_league_msgs::msg::VisionDetectionRobot & bot_detection,
-    int & camera_id,
-    ateam_common::TeamColor & team
-  )
-  : camera_id(camera_id), team(team)
+  BallMeasurement(const ssl_league_msgs::msg::VisionDetectionBall & ball_detection, int & camera_id)
+  : camera_id(camera_id)
   {
     PosMeasurement pos;
-    pos << bot_detection.pose.position.x,
-      bot_detection.pose.position.y;
-    angle << bot_detection.pose.orientation.w;
-    robot_id = bot_detection.robot_id;
-  }
-
-  int getId() const
-  {
-    return robot_id;
-  }
-
-  std::chrono::time_point<std::chrono::steady_clock> getTimestamp() const
-  {
-    return timestamp;
+    pos << ball_detection.pos.x,
+      ball_detection.pos.y;
+    timestamp = std::chrono::steady_clock::now();
   }
 
   PosMeasurement pos;
-  AngleMeasurement angle;
-
-private:
   std::chrono::time_point<std::chrono::steady_clock> timestamp;
   int camera_id;
-  ateam_common::TeamColor team;
-  int robot_id;
-
 };
 
-#endif // ROBOT_TRACK_HPP_
+#endif // BALL_MEASUREMENT_HPP_

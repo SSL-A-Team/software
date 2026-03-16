@@ -30,7 +30,7 @@
 #include <ateam_common/game_controller_listener.hpp>
 
 #include "filtered_robot.hpp"
-#include "measurements/robot_track.hpp"
+#include "measurements/robot_measurement.hpp"
 
 namespace ateam_msgs
 {
@@ -57,8 +57,8 @@ protected:
   void SetUp() override
   {
     int camera = 0;
-    auto track = RobotTrack(robot_msg, camera, team);
-    bot = std::make_unique<FilteredRobot>(track, team);
+    auto measurement = RobotMeasurement(robot_msg, camera, team);
+    bot = std::make_unique<FilteredRobot>(measurement, team);
   }
 };
 
@@ -73,16 +73,16 @@ TEST_F(FilteredRobotTest, WaitUntilOldEnough)
     fake_vision_data.pose.position.x = 1;
     fake_vision_data.pose.position.y = 1;
     if (i < oldEnoughAge) {
-      auto fake_track = RobotTrack(fake_vision_data, camera, team);
-      bot->update(fake_track);
+      auto fake_measurement = RobotMeasurement(fake_vision_data, camera, team);
+      bot->update(fake_measurement);
       auto msg = bot->toMsg();
         // We shouldn't update if our filter is too new
       EXPECT_EQ(default_msg, msg);
     } else {
         // Sorry, adding a short sleep was easier than mocking the timestamp...
       std::this_thread::sleep_for(std::chrono::milliseconds(60));
-      auto fake_track = RobotTrack(fake_vision_data, camera, team);
-      bot->update(fake_track);
+      auto fake_measurement = RobotMeasurement(fake_vision_data, camera, team);
+      bot->update(fake_measurement);
       auto msg = bot->toMsg();
         // We should update if our filter is old enough
       EXPECT_NE(default_msg, msg);

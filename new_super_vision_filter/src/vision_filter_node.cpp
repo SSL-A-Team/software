@@ -20,8 +20,8 @@
 #include "camera.hpp"
 #include "filtered_robot.hpp"
 #include "filtered_ball.hpp"
-#include "measurements/ball_track.hpp"
-#include "measurements/robot_track.hpp"
+#include "measurements/ball_measurement.hpp"
+#include "measurements/robot_measurement.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
@@ -102,9 +102,9 @@ private:
   std::vector<FilteredRobot> yellow_robots;
   std::optional<FilteredBall> ball;
 
-  std::vector<BallTrack> ball_tracks;
-  std::vector<RobotTrack> blue_tracks;
-  std::vector<RobotTrack> yellow_tracks;
+  std::vector<BallMeasurement> ball_measurements;
+  std::vector<RobotMeasurement> blue_measurements;
+  std::vector<RobotMeasurement> yellow_measurements;
 
         // All this stuff interacts with other nodes (pub/sub related)
   std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
@@ -130,68 +130,68 @@ private:
           cameras.try_emplace(detect_camera, detect_camera);
         }
 
-                    // Create a track from each robot in this message
+                    // Create a measurement from each robot in this message
         for (const auto & bot : detection.robots_yellow) {
           ateam_common::TeamColor team_color = ateam_common::TeamColor::Yellow;
-          yellow_tracks.push_back(
-                            RobotTrack(bot, detect_camera, team_color)
+          yellow_measurements.push_back(
+                            RobotMeasurement(bot, detect_camera, team_color)
           );
         }
 
         for (const auto & bot : detection.robots_blue) {
           ateam_common::TeamColor team_color = ateam_common::TeamColor::Blue;
-          blue_tracks.push_back(
-                            RobotTrack(bot, detect_camera, team_color)
+          blue_measurements.push_back(
+                            RobotMeasurement(bot, detect_camera, team_color)
           );
         }
 
-                    // Create a track from each ball in this message
+                    // Create a measurement from each ball in this message
         for (const auto & ball: detection.balls) {
-          ball_tracks.push_back(
-                            BallTrack(ball, detect_camera)
+          ball_measurements.push_back(
+                            BallMeasurement(ball, detect_camera)
           );
         }
       }
 
-                // Sort our tracks to make sure they are in order of the time received
+                // Sort our measurements to make sure they are in order of the time received
                 // in case created/processed them out of order
 
-                // Process all the new updates from the tracks
-      for (const auto & bot_track : blue_tracks) {
+                // Process all the new updates from the measurements
+      for (const auto & bot_measurement : blue_measurements) {
         ateam_common::TeamColor team_color = ateam_common::TeamColor::Blue;
         auto it = std::find_if(
                         blue_robots.begin(),
                         blue_robots.end(),
-          [bot_track](const FilteredRobot & bot){return bot_track.getId() == bot.getId();}
+          [bot_measurement](const FilteredRobot & bot){return bot_measurement.getId() == bot.getId();}
         );
         if (it != blue_robots.end()) {
           blue_robots.push_back(
-                            FilteredRobot(bot_track, team_color)
+                            FilteredRobot(bot_measurement, team_color)
           );
         } else {
-          it->update(bot_track);
+          it->update(bot_measurement);
         }
       }
-      for (const auto & bot_track : yellow_tracks) {
+      for (const auto & bot_measurement : yellow_measurements) {
         ateam_common::TeamColor team_color = ateam_common::TeamColor::Yellow;
         auto it = std::find_if(
                         yellow_robots.begin(),
                         yellow_robots.end(),
-          [bot_track](const FilteredRobot & bot){return bot_track.getId() == bot.getId();}
+          [bot_measurement](const FilteredRobot & bot){return bot_measurement.getId() == bot.getId();}
         );
         if (it != yellow_robots.end()) {
           yellow_robots.push_back(
-                            FilteredRobot(bot_track, team_color)
+                            FilteredRobot(bot_measurement, team_color)
           );
         } else {
-          it->update(bot_track);
+          it->update(bot_measurement);
         }
       }
-      for (const auto & ball_track : ball_tracks) {
+      for (const auto & ball_measurement : ball_measurements) {
         if (!ball.has_value()) {
-          ball = FilteredBall(ball_track);
+          ball = FilteredBall(ball_measurement);
         } else {
-          ball->update(ball_track);
+          ball->update(ball_measurement);
         }
       }
     }
