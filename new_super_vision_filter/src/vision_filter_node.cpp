@@ -164,7 +164,7 @@ private:
                         blue_robots.end(),
           [bot_measurement](const FilteredRobot & bot){return bot_measurement.getId() == bot.getId();}
         );
-        if (it != blue_robots.end()) {
+        if (it == blue_robots.end()) {
           blue_robots.push_back(
                             FilteredRobot(bot_measurement, team_color)
           );
@@ -179,7 +179,7 @@ private:
                         yellow_robots.end(),
           [bot_measurement](const FilteredRobot & bot){return bot_measurement.getId() == bot.getId();}
         );
-        if (it != yellow_robots.end()) {
+        if (it == yellow_robots.end()) {
           yellow_robots.push_back(
                             FilteredRobot(bot_measurement, team_color)
           );
