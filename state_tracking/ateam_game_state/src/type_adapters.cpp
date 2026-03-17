@@ -180,6 +180,9 @@ void rclcpp::TypeAdapter<ateam_game_state::Robot,
     ros_msg.prev_command_velocity.linear.y);
   robot.prev_command_omega = ros_msg.prev_command_velocity.angular.z;
 
+  robot.breakbeam_ball_detected = ros_msg.breakbeam_ball_detected;
+  robot.breakbeam_ball_detected_filtered = ros_msg.breakbeam_ball_detected_filtered;
+
   robot.kicker_available = ros_msg.kicker_available;
   robot.chipper_available = ros_msg.chipper_available;
 }
