@@ -21,6 +21,7 @@
 
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
+#include <ateam_common/time.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/vision_state_ball.hpp>
@@ -144,11 +145,17 @@ private:
 
   void BallCallback(const std::unique_ptr<ateam_msgs::msg::VisionStateBall> & msg)
   {
-    world_.ball.pos = ateam_geometry::Point(msg->pose.position.x, msg->pose.position.y);
-    world_.ball.vel = ateam_geometry::Vector(msg->twist.linear.x, msg->twist.linear.y);
     world_.ball.visible = msg->visible;
+    const auto ball_visibility_timed_out = ateam_common::TimeDiffSeconds(world_.current_time,
+        world_.ball.last_visible_time) > 0.5;
+
     if(world_.ball.visible) {
+      // Only update ball position if we can see it, otherwise assume it is where we last saw it
+      world_.ball.pos = ateam_geometry::Point(msg->pose.position.x, msg->pose.position.y);
+      world_.ball.vel = ateam_geometry::Vector(msg->twist.linear.x, msg->twist.linear.y);
       world_.ball.last_visible_time = std::chrono::steady_clock::now();
+    } else if (ball_visibility_timed_out) {
+      world_.ball.vel = ateam_geometry::Vector{0.0, 0.0};
     }
   }
 
