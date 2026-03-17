@@ -299,6 +299,14 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return F32;
     case PHYS_MOTOR_EFFICIENCY_FACTOR:
       return F32;
+    case PHYS_COULOMB_FRICTION_COEFFICIENT_LINEAR:
+      return F32;
+    case PHYS_COULOMB_FRICTION_COEFFICIENT_ANGULAR:
+      return F32;
+    case PHYS_VISCOUS_FRICTION_COEFFICIENT_LINEAR:
+      return F32;
+    case PHYS_VISCOUS_FRICTION_COEFFICIENT_ANGULAR:
+      return F32;
     case KF_MAX_POS_LINEAR:
       return F32;
     case KF_MAX_POS_ANGULAR:
@@ -350,6 +358,14 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
     case HYST_PID_EXIT_ERROR_VEL_LINEAR:
       return F32;
     case HYST_PID_EXIT_ERROR_VEL_ANGULAR:
+      return F32;
+    case TRAJ_RECOMPUTE_ERROR_POS_LINEAR:
+      return F32;
+    case TRAJ_RECOMPUTE_ERROR_VEL_LINEAR:
+      return F32;
+    case TRAJ_RECOMPUTE_ERROR_POS_ANGULAR:
+      return F32;
+    case TRAJ_RECOMPUTE_ERROR_VEL_ANGULAR:
       return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
