@@ -24,9 +24,9 @@
 
 #include <ranges>
 #include <array>
-#include "core/types/state_types.hpp"
+#include "ateam_game_state/world.hpp"
 
-namespace ateam_kenobi
+namespace ateam_game_state
 {
 
 class BallSenseFilter
@@ -79,6 +79,6 @@ private:
   }
 };
 
-}  // namespace ateam_kenobi
+}  // namespace ateam_gamestate
 
 #endif  // CORE__BALLSENSE_FILTER_HPP_

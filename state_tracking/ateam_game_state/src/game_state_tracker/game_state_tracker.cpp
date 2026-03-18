@@ -36,6 +36,7 @@
 #include "ateam_game_state/type_adapters.hpp"
 #include "double_touch_evaluator.hpp"
 #include "in_play_evaluator.hpp"
+#include "ballsense_filter.hpp"
 
 
 using ateam_common::indexed_topic_helpers::create_indexed_publishers;
@@ -109,6 +110,7 @@ public:
 private:
   DoubleTouchEvaluator double_touch_evaluator_;
   InPlayEvaluator in_play_evaluator_;
+  BallSenseFilter ballsense_filter_;
   rclcpp::Publisher<World>::SharedPtr world_pub_;
   rclcpp::Subscription<Field>::SharedPtr field_sub_;
   rclcpp::Subscription<ateam_msgs::msg::VisionStateBall>::SharedPtr ball_sub_;
@@ -249,6 +251,7 @@ private:
     UpdateRefInfo();
     double_touch_evaluator_.Update(world_);
     in_play_evaluator_.Update(world_);
+    ballsense_filter_.Update(world_);
     world_pub_->publish(world_);
   }
 };
