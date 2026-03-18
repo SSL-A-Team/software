@@ -45,7 +45,6 @@
 #include "core/in_play_eval.hpp"
 #include "core/double_touch_eval.hpp"
 #include "core/ballsense_emulator.hpp"
-#include "core/ballsense_filter.hpp"
 #include "core/motion/frame_conversions.hpp"
 #include "core/motion/motion_executor.hpp"
 #include "plays/halt_play.hpp"
@@ -132,7 +131,6 @@ private:
   InPlayEval in_play_eval_;
   DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
-  BallSenseFilter ballsense_filter_;
   std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
   visualization::Overlays overlays_;
