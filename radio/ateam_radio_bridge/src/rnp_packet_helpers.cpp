@@ -367,6 +367,10 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return F32;
     case TRAJ_RECOMPUTE_ERROR_VEL_ANGULAR:
       return F32;
+    case FEEDFORWARD_GAIN:
+      return F32;
+    case FEEDBACK_GAIN:
+      return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
