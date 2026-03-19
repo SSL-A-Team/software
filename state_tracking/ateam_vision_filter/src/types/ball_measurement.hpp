@@ -29,6 +29,7 @@ namespace ateam_vision_filter
 struct BallMeasurement
 {
   Eigen::Vector2d position;
+  double confidence = 0.0;
 
   void invert()
   {
