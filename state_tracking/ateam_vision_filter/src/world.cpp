@@ -102,7 +102,7 @@ std::optional<Ball> World::get_ball_estimate()
 
     // Check if the previous ball is still a good option
     if (prev_ball_.second > threshold_score &&
-      (prev_ball_.first.position - ball_with_score.first.position).norm() > threshold_distance) {
+      (prev_ball_.first.position - ball_with_score.first.position).norm() < threshold_distance) {
       prev_ball_.first = ball_with_score.first;
       prev_ball_.second = (prev_ball_.second + ball_with_score.second) / 2.0;
       return ball_with_score.first;
