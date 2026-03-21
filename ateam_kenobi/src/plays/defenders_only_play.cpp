@@ -33,17 +33,8 @@ DefendersOnlyPlay::DefendersOnlyPlay(stp::Options stp_options)
   setEnabled(false);
 }
 
-stp::PlayScore DefendersOnlyPlay::getScore(const World & world)
+stp::PlayScore DefendersOnlyPlay::getScore([[maybe_unused]] const World & world)
 {
-  if (world.referee_info.running_command == ateam_common::GameCommand::ForceStart ||
-    world.referee_info.running_command == ateam_common::GameCommand::NormalStart ||
-    world.referee_info.running_command == ateam_common::GameCommand::DirectFreeOurs ||
-    world.referee_info.running_command == ateam_common::GameCommand::DirectFreeTheirs ||
-    world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffOurs ||
-    world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffTheirs)
-  {
-    return stp::PlayScore::Max();
-  }
   return stp::PlayScore::NaN();
 }
 
