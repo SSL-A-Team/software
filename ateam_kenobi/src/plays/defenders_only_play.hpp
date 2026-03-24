@@ -34,7 +34,7 @@ public:
 
   explicit DefendersOnlyPlay(stp::Options stp_options);
 
-  stp::PlayScore getScore(const World & world) override;
+  stp::PlayScore getScore([[maybe_unused]] const World & world) override;
 
   void reset() override;
 

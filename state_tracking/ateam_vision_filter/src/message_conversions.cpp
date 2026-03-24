@@ -124,6 +124,7 @@ BallMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionBall & ros_ms
   BallMeasurement ballDetection;
   ballDetection.position.x() = ros_msg.pos.x;
   ballDetection.position.y() = ros_msg.pos.y;
+  ballDetection.confidence = ros_msg.confidence;
   return ballDetection;
 }
 

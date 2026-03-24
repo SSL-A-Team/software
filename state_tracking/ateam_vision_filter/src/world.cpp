@@ -84,9 +84,34 @@ std::optional<Ball> World::get_ball_estimate()
     return std::nullopt;
   }
 
+  // Find the highest scoring ball to use as a backup option
+  auto best_ball = std::max_element(balls_with_scores.begin(), balls_with_scores.end(),
+    [](const auto& obj_a, const auto& obj_b) {
+      return obj_a.second < obj_b.second;
+    }
+  );
+
+  bool averaging_failed = false;
+
+  // Average the balls if they are all close together
   Ball merged_ball;
   double total_score = 0.0;
+  const double threshold_distance = 0.15;
+  const double threshold_score = 0.0;
   for (const auto & ball_with_score : balls_with_scores) {
+
+    // Check if the previous ball is still a good option
+    if (prev_ball_.second > threshold_score &&
+      (prev_ball_.first.position - ball_with_score.first.position).norm() < threshold_distance) {
+      prev_ball_.first = ball_with_score.first;
+      prev_ball_.second = (prev_ball_.second + ball_with_score.second) / 2.0;
+      return ball_with_score.first;
+    }
+
+    if (((*best_ball).first.position - ball_with_score.first.position).norm() > threshold_distance) {
+      averaging_failed = true;
+    }
+
     const auto & ball = ball_with_score.first;
     const auto & score = ball_with_score.second + 1;
 
@@ -96,10 +121,18 @@ std::optional<Ball> World::get_ball_estimate()
     total_score += score;
   }
 
+  if (averaging_failed) {
+    // Give up and just use the highest scoring ball
+    prev_ball_ = *best_ball;
+    return (*best_ball).first;
+  }
+
   merged_ball.position /= total_score;
   merged_ball.velocity /= total_score;
   merged_ball.acceleration /= total_score;
 
+  prev_ball_.first = merged_ball;
+  prev_ball_.second = total_score / balls_with_scores.size();
   return merged_ball;
 }
 

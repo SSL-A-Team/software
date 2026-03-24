@@ -40,6 +40,7 @@ public:
   stp::PlayScore getScore(const World & world) override;
 
   void enter() override;
+  void exit() override;
 
   std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;

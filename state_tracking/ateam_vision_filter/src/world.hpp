@@ -87,6 +87,7 @@ private:
   std::shared_ptr<ModelInputGenerator> model_input_generator;
   std::shared_ptr<TransmissionProbabilityGenerator> transmission_probability_generator;
   std::map<CameraID, Camera> cameras;
+  std::pair<Ball, double> prev_ball_;
   int ignore_side_ = 0;
 };
 
