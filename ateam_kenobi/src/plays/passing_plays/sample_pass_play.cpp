@@ -103,7 +103,7 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
     const auto get_id = [](const auto & r) { return r.id; };
 
     kicker_id_ = [&assignments]() -> std::optional<int> {
-      const auto maybe_kicker = assignments.GetPositionAssignment("stricker");
+      const auto maybe_kicker = assignments.GetPositionAssignment("striker");
       if (maybe_kicker) {
         return std::make_optional(maybe_kicker.value().id);
       }
@@ -122,12 +122,14 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
   std::vector<Robot> defenders;
   std::ranges::transform(defender_ids_, std::back_inserter(defenders), [&world](const int id){ return world.our_robots[id]; });
   defense_tactic_.runFrame(world, defenders, commands);
+  ForwardPlayInfo(defense_tactic_);
 
   // Move candidate receivers to best local target
   std::optional<Robot> best_receiver;
   std::optional<ateam_geometry::Point> best_target;
   double best_receiver_score = -1.0;
-  for ( const auto & candidate : available_robots ) {
+  for ( const auto & candidate_id : candidate_receiver_ids_ ) {
+    const auto candidate = world.our_robots[candidate_id];
     const auto [target, score] = getBestPassTargetForCandidate(world, candidate);
     RobotCommand command;
     command.motion_intent.linear = motion::intents::linear::PositionIntent{target};
@@ -140,29 +142,30 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
     }
   }
 
-  if (best_receiver) {
-    if (holding_start_time_) {
-      if ((std::chrono::steady_clock::now() - *holding_start_time_) > kHoldingTimeout) {
+  if (!pass_locked_) {
+    if (best_receiver) {
+      if (holding_start_time_) {
+        if ((std::chrono::steady_clock::now() - *holding_start_time_) > kHoldingTimeout) {
+          lockPass(*best_receiver, *best_target);
+        }
+      }
+
+      if (best_receiver_score > kPreemptHoldingScoreThreshold) {
         lockPass(*best_receiver, *best_target);
       }
     }
 
-    if (best_receiver_score > kPreemptHoldingScoreThreshold) {
-      lockPass(*best_receiver, *best_target);
-    }
-  }
-
-  if (!pass_locked_) {
     const auto kicker = world.our_robots[*kicker_id_];
-    commands[kicker.id] = capture_skill_.runFrame(world, kicker);
 
     const auto dist_to_ball = ateam_geometry::norm(kicker.pos - world.ball.pos);
-    if (dist_to_ball < (kRobotRadius + kBallRadius + 0.01)) {
+    if (dist_to_ball < (kRobotRadius + kBallRadius + 0.01) || kicker.breakbeam_ball_detected_filtered) {
       if (!holding_start_time_) {
         holding_start_time_ = std::chrono::steady_clock::now();
       }
     } else {
       holding_start_time_.reset();
+      commands[kicker.id] = capture_skill_.runFrame(world, kicker);
+      ForwardPlayInfo(capture_skill_);
     }
   } else {
     const auto kicker = world.our_robots[*kicker_id_];
@@ -172,7 +175,16 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
     pass_tactic_.runFrame(world, kicker, receiver, kicker_command, receiver_command);
     commands[kicker.id] = kicker_command;
     commands[receiver.id] = receiver_command;
+    ForwardPlayInfo(pass_tactic_);
   }
+
+  getPlayInfo()["locked"] = pass_locked_;
+  getPlayInfo()["hold time"] = holding_start_time_ ? std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - *holding_start_time_).count() : -1;
+  getPlayInfo()["best score"] = best_receiver_score;
+  getPlayInfo()["kicker"] = kicker_id_ ? *kicker_id_ : -1;
+  getPlayInfo()["receiver"] = receiver_id_ ? *receiver_id_ : -1;
+  getPlayInfo()["defenders"] = defender_ids_;
+  getPlayInfo()["candidates"] = candidate_receiver_ids_;
 
   return commands;
 }
@@ -200,6 +212,8 @@ std::tuple<ateam_geometry::Point, double> SamplePassPlay::getBestPassTargetForCa
 
 double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, const World & world)
 {
+  // TODO(barulicm): need to disallow pass targets inside of defense areas
+
   double opponent_dist = std::numeric_limits<double>::max();
   const auto pass_segment = ateam_geometry::Segment(world.ball.pos, target);
   for ( const auto & opponent : world.their_robots ) {
@@ -211,7 +225,14 @@ double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, cons
 
   const auto shot_success_chance = play_helpers::GetShotSuccessChance(world, target);
 
-  return shot_success_chance * opponent_dist;
+  std::vector<Robot> friends;
+  std::ranges::transform(candidate_receiver_ids_, std::back_inserter(friends), [&world](const int id){ return world.our_robots[id]; });
+  const auto closest_friend = play_helpers::getClosestRobot(friends, target);
+  const auto friend_dist = ateam_geometry::norm(closest_friend.pos - target);
+
+  const auto friend_proximity_penalty = std::min(kFriendProximityPenalty * (friend_dist / kFriendProximityThreshold), 1.0);
+
+  return shot_success_chance * opponent_dist * friend_proximity_penalty;
 }
 
 void SamplePassPlay::lockPass(const Robot & candidate, const ateam_geometry::Point & target)

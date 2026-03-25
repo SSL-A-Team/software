@@ -36,6 +36,8 @@ namespace ateam_kenobi::plays
 class SamplePassPlay : public stp::Play
 {
 public:
+  static constexpr const char * kPlayName = "SamplePassPlay";
+
   SamplePassPlay(stp::Options stp_options);
 
   stp::PlayScore getScore(const World & world) override;
@@ -47,10 +49,12 @@ public:
   std::array<std::optional<RobotCommand>, 16> runFrame(const World & world) override;
 
 private:
-  static constexpr double kSearchRadius = 0.5;
+  static constexpr double kSearchRadius = 0.5;  // m
   static constexpr unsigned int kSampleCount = 10;
   static constexpr std::chrono::milliseconds kHoldingTimeout = std::chrono::seconds(3);
-  static constexpr double kPreemptHoldingScoreThreshold = 0.0; // TODO
+  static constexpr double kPreemptHoldingScoreThreshold = 500.0;
+  static constexpr double kFriendProximityPenalty = 1.0;
+  static constexpr double kFriendProximityThreshold = 1.0;  // m
 
   tactics::StandardDefense defense_tactic_;
   tactics::Pass pass_tactic_;
