@@ -42,7 +42,7 @@
    # In the ateam_ws directory
    ./src/software/ateam_ui/install_deps.sh
 
-   sudo apt install python3-clang
+   sudo apt install python3-clang net-tools
    ```
    <!-- TODO(braulicm): Add custom rosdep keys file -->
 
@@ -81,7 +81,7 @@ Our software can be run against [the ER-Force Framework simulator](https://githu
 1. Install dependencies
 
    ```bash
-   sudo apt install cmake protobuf-compiler libprotobuf-dev qtbase5-dev libqt5opengl5-dev g++ libusb-1.0-0-dev libsdl2-dev libqt5svg5-dev libssl-dev
+   sudo apt install cmake protobuf-compiler libprotobuf-dev qt6-base-dev libqt6opengl6-dev g++ libusb-1.0-0-dev libsdl2-dev libqt6svg6-dev libssl-dev libglu1-mesa-dev
    ```
 
 1. Build simulator
@@ -128,6 +128,15 @@ This will start the simlator, game controller, and our full autonomous gameplay 
 
 ```bash
 ros2 run ateam_bringup enable_loopback_multicast.sh
+```
+
+**Note:** If you get a permission error regarding Docker launching (game controller), you need to add you user to the docker permission group.
+
+> [docker-2] docker: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Head "http://%2Fvar%2Frun%2Fdocker.sock/_ping": dial unix /var/run/docker.sock: connect: permission denied
+
+```bash
+sudo usermod -aG docker $USER
+# you need to log out and log back in after this command. On some Ubuntu 24.04 LTS, you need a full reboot.
 ```
 
 #### Running Two Gameplay Stacks for Self-Scrimmaging.
