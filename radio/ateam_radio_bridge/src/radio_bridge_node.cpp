@@ -78,10 +78,17 @@ public:
     });
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
-      vision_state_subscriptions_,
+      vision_state_subscriptions_blue_,
+      "~/blue_team/robot",
+      rclcpp::SystemDefaultsQoS(),
+      &RadioBridgeNode::VisionStateCallbackBlue,
+      this);
+
+    ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
+      vision_state_subscriptions_yellow_,
       "~/yellow_team/robot",
       rclcpp::SystemDefaultsQoS(),
-      &RadioBridgeNode::VisionStateCallback,
+      &RadioBridgeNode::VisionStateCallbackYellow,
       this);
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
@@ -133,15 +140,19 @@ private:
   const std::chrono::milliseconds timeout_threshold_;
   const std::chrono::milliseconds command_timeout_threshold_;
   std::mutex mutex_;
-  std::array<ateam_msgs::msg::VisionStateRobot, 16> vision_states_;
+  std::array<ateam_msgs::msg::VisionStateRobot, 16> vision_states_blue_;
+  std::array<ateam_msgs::msg::VisionStateRobot, 16> vision_states_yellow_;
+  std::array<std::chrono::steady_clock::time_point, 16> vision_state_timestamps_blue_;
+  std::array<std::chrono::steady_clock::time_point, 16> vision_state_timestamps_yellow_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
-  std::array<std::chrono::steady_clock::time_point, 16> vision_state_timestamps_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
-    16> vision_state_subscriptions_;
+    16> vision_state_subscriptions_blue_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
+    16> vision_state_subscriptions_yellow_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
@@ -165,13 +176,14 @@ private:
     }
   }
 
-  void VisionStateCallback(
+  void VisionStateCallbackBlue(
     const ateam_msgs::msg::VisionStateRobot::SharedPtr state_msg,
     int robot_id)
   {
     const std::lock_guard lock(mutex_);
-    vision_states_[robot_id] = *state_msg;
-    auto & state = vision_states_[robot_id];
+    vision_state_timestamps_blue_[robot_id] = std::chrono::steady_clock::now();
+    vision_states_blue_[robot_id] = *state_msg;
+    auto & state = vision_states_blue_[robot_id];
     ReplaceNanWithZero(state.pose.position.x);
     ReplaceNanWithZero(state.pose.position.y);
     ReplaceNanWithZero(state.pose.position.z);
@@ -179,7 +191,23 @@ private:
     ReplaceNanWithZero(state.pose.orientation.y);
     ReplaceNanWithZero(state.pose.orientation.z);
     ReplaceNanWithZero(state.pose.orientation.w);
-    vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
+  }
+
+  void VisionStateCallbackYellow(
+    const ateam_msgs::msg::VisionStateRobot::SharedPtr state_msg,
+    int robot_id)
+  {
+    const std::lock_guard lock(mutex_);
+    vision_state_timestamps_yellow_[robot_id] = std::chrono::steady_clock::now();
+    vision_states_yellow_[robot_id] = *state_msg;
+    auto & state = vision_states_yellow_[robot_id];
+    ReplaceNanWithZero(state.pose.position.x);
+    ReplaceNanWithZero(state.pose.position.y);
+    ReplaceNanWithZero(state.pose.position.z);
+    ReplaceNanWithZero(state.pose.orientation.x);
+    ReplaceNanWithZero(state.pose.orientation.y);
+    ReplaceNanWithZero(state.pose.orientation.z);
+    ReplaceNanWithZero(state.pose.orientation.w);
   }
 
   void MotionCommandCallback(
@@ -280,15 +308,24 @@ private:
         control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       }
       // Vision update
+      std::chrono::steady_clock::time_point vision_state_timestamp;
+      ateam_msgs::msg::VisionStateRobot vision_state;
+      if (this->game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue) {
+        vision_state_timestamp = vision_state_timestamps_blue_[id];
+        vision_state = vision_states_blue_[id];
+      } else if (this->game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Yellow) {
+        vision_state_timestamp = vision_state_timestamps_yellow_[id];
+        vision_state = vision_states_yellow_[id];
+      }
       if (
-        std::chrono::steady_clock::now() - vision_state_timestamps_[id] < std::chrono::milliseconds(100) &&
-        vision_states_[id].visible
+        std::chrono::steady_clock::now() - vision_state_timestamp < std::chrono::milliseconds(100) &&
+        vision_state.visible
       ) {
-        // vision data is recent enough to send and not all zero/identity
+        // The robot is visible and the vision state is recent
         control_msg.vision_update = true;
-        control_msg.pose_x_linear_vision = vision_states_[id].pose.position.x;
-        control_msg.pose_y_linear_vision = vision_states_[id].pose.position.y;
-        control_msg.pose_z_angular_vision = GetYaw(vision_states_[id].pose);
+        control_msg.pose_x_linear_vision = vision_state.pose.position.x;
+        control_msg.pose_y_linear_vision = vision_state.pose.position.y;
+        control_msg.pose_z_angular_vision = GetYaw(vision_state.pose);
       } else {
         control_msg.vision_update = false;
       }

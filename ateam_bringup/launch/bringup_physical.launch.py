@@ -114,7 +114,9 @@ def generate_launch_description():
                 ('~/robot_motion_commands/robot', '/robot_motion_commands/robot'),
                 ('~/robot_feedback/basic/robot', '/robot_feedback/basic/robot'),
                 ('~/robot_feedback/extended/robot', '/robot_feedback/extended/robot'),
-                ('~/robot_feedback/connection/robot', '/robot_feedback/connection/robot')
+                ('~/robot_feedback/connection/robot', '/robot_feedback/connection/robot'),
+                ('~/yellow_team/robot', '/yellow_team/robot'),
+                ('~/blue_team/robot', '/blue_team/robot')
             ]),
             # prefix=['xterm -bg black -fg white -e gdb -ex run --args']
         ),
