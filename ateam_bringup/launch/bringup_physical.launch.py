@@ -46,6 +46,8 @@ def generate_launch_description():
 
         DeclareLaunchArgument('command_frequency', default_value='60.0'),
 
+        DeclareLaunchArgument('launch_kenobi', default_value='true'),
+
         DeclareLaunchArgument('controls_enabled_body_pose', default_value='false'),
         DeclareLaunchArgument('controls_enabled_body_twist', default_value='true'),
         DeclareLaunchArgument('controls_enabled_body_accel', default_value='false'),
@@ -86,6 +88,7 @@ def generate_launch_description():
                 'team_name': LaunchConfiguration('team_name'),
                 'vision_offset_robot_x': '0.0',
                 'vision_offset_robot_y': '0.0',
+                'launch_kenobi': LaunchConfiguration('launch_kenobi'),
             }.items()
         ),
 

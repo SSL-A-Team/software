@@ -148,6 +148,7 @@ private:
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
+  std::array<bool, 16> command_topic_active_{};
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     16> vision_state_subscriptions_blue_;
@@ -283,10 +284,18 @@ private:
       }
       BasicControl control_msg;
       // Motion and kicker commands
-      if ((std::chrono::steady_clock::now() - motion_command_timestamps_[id]) >
-        command_timeout_threshold_)
+      const bool command_active = (std::chrono::steady_clock::now() - motion_command_timestamps_[id]) <=
+        command_timeout_threshold_;
+      if (command_active != command_topic_active_[id]) {
+        command_topic_active_[id] = command_active;
+        if (command_active) {
+          RCLCPP_INFO(get_logger(), "Robot %d command topic active. Enabling controls.", id);
+        } else {
+          RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Disabling controls.", id);
+        }
+      }
+      if (!command_active)
       {
-        RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Disabling controls.", id);
         control_msg.body_pose_control_enabled = false;
         control_msg.body_twist_control_enabled = false;
         control_msg.body_accel_control_enabled = false;
@@ -297,6 +306,7 @@ private:
         control_msg.z_angular_cmd = 0.0;
         control_msg.kick_request = KickRequest::KR_DISABLE;
       } else {
+        // command_active == true
         control_msg.body_pose_control_enabled = get_parameter("controls_enabled.body_pose").as_bool();
         control_msg.body_twist_control_enabled = get_parameter("controls_enabled.body_twist").as_bool();
         control_msg.body_accel_control_enabled = get_parameter("controls_enabled.body_accel").as_bool();
@@ -425,6 +435,13 @@ private:
       std::bind(
         &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_data.robot_id,
         std::placeholders::_1, std::placeholders::_2));
+
+    command_topic_active_[robot_id] =
+      (std::chrono::steady_clock::now() - motion_command_timestamps_[robot_id]) <=
+      command_timeout_threshold_;
+    RCLCPP_INFO(
+      get_logger(), "Robot %d command topic %s.", robot_id,
+      command_topic_active_[robot_id] ? "active" : "inactive");
 
     HelloResponse response;
     response.port = connections_[hello_data.robot_id]->GetLocalPort();
