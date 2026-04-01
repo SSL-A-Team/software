@@ -46,11 +46,9 @@ InterceptResults calculateIntercept(
   const auto ball_to_robot = robot.pos - offset_ball_pos;
 
   // robot distance to ball projected onto the balls trajectory
-  const double d = (world.ball.vel * ball_to_robot) /
-    ateam_geometry::norm(world.ball.vel);
+  const double d = (world.ball.vel * ball_to_robot) / vb;
 
-  const auto robot_proj_ball = world.ball.vel * d /
-    ateam_geometry::norm(world.ball.vel);
+  const auto robot_proj_ball = world.ball.vel * d / vb;
 
   const auto robot_perp_ball = ball_to_robot - robot_proj_ball;
 
