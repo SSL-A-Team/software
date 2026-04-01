@@ -114,6 +114,18 @@ Our software can be run against [the ER-Force Framework simulator](https://githu
       source ~/.bashrc
       ```
 
+### Install SSL Game Controller
+
+You can either use a native install or run it in Docker.
+
+For native, download the binary from [the releases page](https://github.com/RoboCup-SSL/ssl-game-controller/releases). We recommend you rename it to 'ssl-game-controller' and save it somewhere in your PATH.
+
+For Docker, ensure Docker is installed, then pull the GC image.
+
+   ```bash
+   docker pull robocupssl/ssl-game-controller
+   ```
+
 ### Starting Simulation Stack
 
 We have a convenient launch file for starting up the complete stack with the simulator.
