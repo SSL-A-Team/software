@@ -49,8 +49,8 @@ public:
   std::array<std::optional<RobotCommand>, 16> runFrame(const World & world) override;
 
 private:
-  static constexpr double kSearchRadius = 0.5;  // m
-  static constexpr unsigned int kSampleCount = 10;
+  static constexpr double kSearchRadius = 1.0;  // m
+  static constexpr unsigned int kSampleCount = 20;
   static constexpr std::chrono::milliseconds kHoldingTimeout = std::chrono::seconds(3);
   static constexpr double kPreemptHoldingScoreThreshold = 500.0;
   static constexpr double kFriendProximityPenalty = 1.0;
@@ -68,6 +68,7 @@ private:
   std::optional<int> receiver_id_;
   std::vector<int> candidate_receiver_ids_;
   std::vector<int> defender_ids_;
+  std::vector<std::tuple<ateam_geometry::Point, double> > candidate_targets_;
 
   std::tuple<ateam_geometry::Point, double> getBestPassTargetForCandidate(const World & world, const Robot & candidate);
 

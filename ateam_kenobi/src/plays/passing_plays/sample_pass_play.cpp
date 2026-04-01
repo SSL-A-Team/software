@@ -212,7 +212,25 @@ std::tuple<ateam_geometry::Point, double> SamplePassPlay::getBestPassTargetForCa
 
 double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, const World & world)
 {
-  // TODO(barulicm): need to disallow pass targets inside of defense areas
+  const ateam_geometry::Rectangle field_rect{
+    *CGAL::top_vertex_2(world.field.field_corners.begin(), world.field.field_corners.end()),
+    *CGAL::bottom_vertex_2(world.field.field_corners.begin(), world.field.field_corners.end())
+  };
+  if (!ateam_geometry::doIntersect(field_rect, target)) {
+    return 0.0;
+  }
+
+  const ateam_geometry::Rectangle their_defense_area {
+    *CGAL::top_vertex_2(
+      world.field.theirs.defense_area_corners.begin(),
+      world.field.theirs.defense_area_corners.end()),
+    *CGAL::bottom_vertex_2(
+      world.field.theirs.defense_area_corners.begin(),
+      world.field.theirs.defense_area_corners.end())
+  };
+  if (ateam_geometry::doIntersect(their_defense_area, target)) {
+    return 0.0;
+  }
 
   double opponent_dist = std::numeric_limits<double>::max();
   const auto pass_segment = ateam_geometry::Segment(world.ball.pos, target);
