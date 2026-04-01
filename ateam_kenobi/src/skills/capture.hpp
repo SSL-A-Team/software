@@ -65,8 +65,8 @@ public:
 private:
   bool done_ = false;
   int ball_detected_filter_ = 0;
-  double approach_radius_ = 0.3;  // m
-  double capture_speed_ = 0.15;  // m/s
+  double approach_radius_ = 0.25;  // m
+  double capture_speed_ = 0.3;  // m/s
   double max_speed_ = 2.0;  // m/s
   double decel_limit_ = 3.0;  // m/s/s
 

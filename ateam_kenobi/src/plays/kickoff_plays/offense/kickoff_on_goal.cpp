@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "kickoff_on_goal.hpp"
+#include <vector>
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 #include "core/play_helpers/window_evaluation.hpp"
@@ -84,7 +85,13 @@ std::array<std::optional<RobotCommand>, 16> KickoffOnGoalPlay::runFrame(
   multi_move_to_.SetFacePoint(world.ball.pos);
 
   play_helpers::GroupAssignmentSet groups;
-  groups.AddPosition("kicker", kick_.GetAssignmentPoint(world));
+
+  std::vector<int> disallowed_strikers;
+  if (world.double_touch_forbidden_id_) {
+    disallowed_strikers.push_back(*world.double_touch_forbidden_id_);
+  }
+
+  groups.AddPosition("kicker", kick_.GetAssignmentPoint(world), disallowed_strikers);
 
   const auto enough_bots_for_defense = available_robots.size() >= 3;
   if (enough_bots_for_defense) {

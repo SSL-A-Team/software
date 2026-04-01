@@ -68,6 +68,11 @@ void FreeKickOnGoalPlay::enter()
   striker_.Reset();
 }
 
+void FreeKickOnGoalPlay::exit()
+{
+  striker_.Reset();
+}
+
 std::array<std::optional<RobotCommand>,
   16> FreeKickOnGoalPlay::runFrame(const World & world)
 {

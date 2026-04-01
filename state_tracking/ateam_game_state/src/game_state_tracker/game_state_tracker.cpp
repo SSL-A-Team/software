@@ -21,6 +21,7 @@
 
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
+#include <ateam_common/time.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/vision_state_ball.hpp>
@@ -36,6 +37,7 @@
 #include "ateam_game_state/type_adapters.hpp"
 #include "double_touch_evaluator.hpp"
 #include "in_play_evaluator.hpp"
+#include "ballsense_filter.hpp"
 
 
 using ateam_common::indexed_topic_helpers::create_indexed_publishers;
@@ -109,6 +111,7 @@ public:
 private:
   DoubleTouchEvaluator double_touch_evaluator_;
   InPlayEvaluator in_play_evaluator_;
+  BallSenseFilter ballsense_filter_;
   rclcpp::Publisher<World>::SharedPtr world_pub_;
   rclcpp::Subscription<Field>::SharedPtr field_sub_;
   rclcpp::Subscription<ateam_msgs::msg::VisionStateBall>::SharedPtr ball_sub_;
@@ -144,11 +147,17 @@ private:
 
   void BallCallback(const std::unique_ptr<ateam_msgs::msg::VisionStateBall> & msg)
   {
-    world_.ball.pos = ateam_geometry::Point(msg->pose.position.x, msg->pose.position.y);
-    world_.ball.vel = ateam_geometry::Vector(msg->twist.linear.x, msg->twist.linear.y);
     world_.ball.visible = msg->visible;
+    const auto ball_visibility_timed_out = ateam_common::TimeDiffSeconds(world_.current_time,
+        world_.ball.last_visible_time) > 0.5;
+
     if(world_.ball.visible) {
+      // Only update ball position if we can see it, otherwise assume it is where we last saw it
+      world_.ball.pos = ateam_geometry::Point(msg->pose.position.x, msg->pose.position.y);
+      world_.ball.vel = ateam_geometry::Vector(msg->twist.linear.x, msg->twist.linear.y);
       world_.ball.last_visible_time = std::chrono::steady_clock::now();
+    } else if (ball_visibility_timed_out) {
+      world_.ball.vel = ateam_geometry::Vector{0.0, 0.0};
     }
   }
 
@@ -249,6 +258,7 @@ private:
     UpdateRefInfo();
     double_touch_evaluator_.Update(world_);
     in_play_evaluator_.Update(world_);
+    ballsense_filter_.Update(world_);
     world_pub_->publish(world_);
   }
 };
