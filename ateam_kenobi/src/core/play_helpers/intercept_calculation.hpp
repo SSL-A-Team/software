@@ -41,7 +41,8 @@ struct InterceptResults
   std::optional<ateam_geometry::Point> intercept_pos = std::nullopt;
 };
 
-// Offset distance indicates how far in front of the ball the robot should be
+/// Calculate the earliest time and location the robot could intercept the ball
+/// @Param offset_distance How far in front of the ball the robot should be at interception time
 InterceptResults calculateIntercept(
   const World & world, const Robot & robot,
   double offset_distance);
