@@ -16,7 +16,7 @@ public:
     {
         declare_parameter<float>("amp", 0.2f);
         declare_parameter<std::string>("dimension", "x");  // x, y, or theta
-        declare_parameter<std::string>("fn_type", "oscillate");  // pulse, oscillate, step, bangbang
+        declare_parameter<std::string>("fn_type", "oscillate");  // pulse, oscillate, step, bangbang_pose, bangbang_accel
         declare_parameter<float>("freq", 1.0f);  // hz (for oscillate)
         declare_parameter<float>("width", 0.5f);  // seconds (for pulse)
         declare_parameter<float>("duration", 0.0f);  // 0 = run forever
@@ -49,7 +49,7 @@ public:
         RCLCPP_INFO(this->get_logger(), "MotionInputNode: w = %f rad/s", w_);
 
         // Compute bang-bang trajectory if selected
-        if (fn_type_ == "bangbang") {
+        if (fn_type_ == "bangbang_pose") {
             Vector6C_t init_state = {{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
             Vector3C_t target_pose = {0.0f, 0.0f, 0.0f};
             if (dimension_ == "x") {
@@ -63,6 +63,8 @@ public:
             ateam_controls_traj_from_target_pose(init_state, target_pose, traj_params, &traj_);
             float traj_end_time = ateam_controls_traj_end_time(traj_);
             RCLCPP_INFO(this->get_logger(), "BangBang trajectory end time: %.3f s", traj_end_time);
+        } else if (fn_type_ == "bangbang_accel") {
+            RCLCPP_INFO(this->get_logger(), "BangBang accel: amp=%.3f, width=%.3f s", amp_, width_);
         }
 
 
@@ -135,8 +137,8 @@ private:
 
             // Compute control value based on fn_type
             float val = 0.0f;
-            if (fn_type_ == "bangbang") {
-                // Use planned velocity from bang-bang trajectory
+            if (fn_type_ == "bangbang_pose") {
+                // Use planned position from bang-bang trajectory
                 Vector6C_t init_state = {{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
                 Vector6C_t state;
                 ateam_controls_traj_state_at(traj_, init_state, 0.0f, t_, &state);
@@ -146,6 +148,15 @@ private:
                     val = state.data[1];
                 } else if (dimension_ == "theta") {
                     val = state.data[2];
+                }
+            } else if (fn_type_ == "bangbang_accel") {
+                // Simple bang-bang: +amp for width seconds, then -amp for width seconds
+                if (t_ < width_) {
+                    val = amp_;
+                } else if (t_ < 2.0f * width_) {
+                    val = -amp_;
+                } else {
+                    val = 0.0f;
                 }
             } else if (fn_type_ == "oscillate") {
                 val = 0.5 * (amp_ - amp_ * cosf(w_ * t_));  // not really amplitute, but just go from 0 to amp and back in a cosine wave
