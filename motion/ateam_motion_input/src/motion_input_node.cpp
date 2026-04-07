@@ -15,7 +15,7 @@ public:
     : Node("motion_input_node")
     {
         declare_parameter<float>("amp", 0.2f);
-        declare_parameter<std::string>("dimension", "x");  // x, y, or theta
+        declare_parameter<std::string>("dimension", "x");  // x, y, xy, or theta
         declare_parameter<std::string>("fn_type", "oscillate");  // pulse, oscillate, step, bangbang_pose, bangbang_accel
         declare_parameter<float>("freq", 1.0f);  // hz (for oscillate)
         declare_parameter<float>("width", 0.5f);  // seconds (for pulse)
@@ -169,6 +169,9 @@ private:
             if (dimension_ == "x") {
                 msg.twist.linear.x = val;
             } else if (dimension_ == "y") {
+                msg.twist.linear.y = val;
+            } else if (dimension_ == "xy") {
+                msg.twist.linear.x = val;
                 msg.twist.linear.y = val;
             } else if (dimension_ == "theta") {
                 msg.twist.angular.z = val;
