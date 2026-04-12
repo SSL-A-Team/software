@@ -40,9 +40,8 @@ def generate_launch_description():
 
         DeclareLaunchArgument('command_frequency', default_value='60.0'),
 
-        DeclareLaunchArgument('controls_enabled_body_pose', default_value='true'),
-        DeclareLaunchArgument('controls_enabled_body_twist', default_value='false'),
-        DeclareLaunchArgument('controls_enabled_body_accel', default_value='false'),
+        # BodyControlMode: 0=OFF, 1=GLOBAL_POSE, 2=GLOBAL_TWIST, 3=LOCAL_TWIST, 4=GLOBAL_ACCEL, 5=LOCAL_ACCEL
+        DeclareLaunchArgument('body_control_mode', default_value='1'),
         DeclareLaunchArgument('controls_enabled_wheel_vel', default_value='false'),
         DeclareLaunchArgument('controls_enabled_wheel_torque', default_value='true'),
 
@@ -100,9 +99,7 @@ def generate_launch_description():
                 'net_interface_address': LaunchConfiguration('radio_interface_address'),
                 'gc_team_name': LaunchConfiguration('team_name'),
                 'command_frequency': LaunchConfiguration('command_frequency'),
-                'controls_enabled.body_pose': LaunchConfiguration('controls_enabled_body_pose'),
-                'controls_enabled.body_twist': LaunchConfiguration('controls_enabled_body_twist'),
-                'controls_enabled.body_accel': LaunchConfiguration('controls_enabled_body_accel'),
+                'body_control_mode': LaunchConfiguration('body_control_mode'),
                 'controls_enabled.wheel_vel': LaunchConfiguration('controls_enabled_wheel_vel'),
                 'controls_enabled.wheel_torque': LaunchConfiguration('controls_enabled_wheel_torque'),
             }],

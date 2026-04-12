@@ -69,12 +69,10 @@ public:
       declare_parameter<std::string>("net_interface_address", "")),
     firmware_parameter_server_(*this, connections_)
   {
+    declare_parameter<int>("body_control_mode", static_cast<int>(BCM_GLOBAL_POSE));
     declare_parameters<bool>("controls_enabled", {
-        {"body_pose", false},
-        {"body_twist", true},
-        {"body_accel", false},
-        {"wheel_vel", true},
-        {"wheel_torque", false}
+        {"wheel_vel", false},
+        {"wheel_torque", true}
     });
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
@@ -296,9 +294,7 @@ private:
       }
       if (!command_active)
       {
-        control_msg.body_pose_control_enabled = false;
-        control_msg.body_twist_control_enabled = false;
-        control_msg.body_accel_control_enabled = false;
+        control_msg.body_control_mode = BCM_OFF;
         control_msg.wheel_vel_control_enabled = false;
         control_msg.wheel_torque_control_enabled = false;
         control_msg.x_linear_cmd = 0.0;
@@ -307,9 +303,8 @@ private:
         control_msg.kick_request = KickRequest::KR_DISABLE;
       } else {
         // command_active == true
-        control_msg.body_pose_control_enabled = get_parameter("controls_enabled.body_pose").as_bool();
-        control_msg.body_twist_control_enabled = get_parameter("controls_enabled.body_twist").as_bool();
-        control_msg.body_accel_control_enabled = get_parameter("controls_enabled.body_accel").as_bool();
+        control_msg.body_control_mode = static_cast<BodyControlMode>(
+          get_parameter("body_control_mode").as_int());
         control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
         control_msg.wheel_torque_control_enabled = get_parameter("controls_enabled.wheel_torque").as_bool();
         control_msg.x_linear_cmd = motion_commands_[id].twist.linear.x;
