@@ -267,110 +267,32 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & parameter)
 {
   switch(parameter) {
-    case KF_PROCESS_STD_POS_LINEAR:
-      return F32;    
-    case KF_PROCESS_STD_POS_ANGULAR:
-      return F32;
-    case KF_PROCESS_STD_VEL_LINEAR:
-      return F32;
-    case KF_PROCESS_STD_VEL_ANGULAR:
-      return F32;
-    case KF_VISION_STD_LINEAR:
-      return F32;
-    case KF_VISION_STD_ANGULAR:
-      return F32;
-    case KF_ENCODER_STD_ANGULAR:
-      return F32;
-    case KF_GYRO_STD_ANGULAR:
-      return F32;
-    case PHYS_WHEEL_ANGLE_ALPHA:
-      return F32;
-    case PHYS_WHEEL_ANGLE_BETA:
-      return F32;
-    case PHYS_WHEEL_DISTANCE:
-      return F32;
-    case PHYS_WHEEL_RADIUS:
-      return F32;
-    case PHYS_BODY_MASS:
-      return F32;
-    case PHYS_BODY_MOMENT_Z:
-      return F32;
-    case PHYS_MOTOR_TORQUE_CONSTANT:
-      return F32;
-    case PHYS_MOTOR_EFFICIENCY_FACTOR:
-      return F32;
-    case PHYS_COULOMB_FRICTION_COEFFICIENT_LINEAR:
-      return F32;
-    case PHYS_COULOMB_FRICTION_COEFFICIENT_ANGULAR:
-      return F32;
-    case PHYS_VISCOUS_FRICTION_COEFFICIENT_LINEAR:
-      return F32;
-    case PHYS_VISCOUS_FRICTION_COEFFICIENT_ANGULAR:
-      return F32;
-    case KF_MAX_POS_LINEAR:
-      return F32;
-    case KF_MAX_POS_ANGULAR:
-      return F32;
-    case KF_MAX_VEL_LINEAR:
-      return F32;
-    case KF_MAX_VEL_ANGULAR:
-      return F32;
-    case PIDII_X:
-      return PID_LIMITED_INTEGRAL_F32;
-    case PIDII_Y:
-      return PID_LIMITED_INTEGRAL_F32;
-    case PIDII_THETA:
-      return PID_LIMITED_INTEGRAL_F32;
-    case PIDII_XD:
-      return PID_LIMITED_INTEGRAL_F32;
-    case PIDII_YD:
-      return PID_LIMITED_INTEGRAL_F32;
-    case PIDII_THETAD:
-      return PID_LIMITED_INTEGRAL_F32;
-    case TRAJ_ALLOWABLE_ERROR_POS_LINEAR:
-      return F32;
-    case TRAJ_ALLOWABLE_ERROR_POS_ANGULAR:
-      return F32;
-    case TRAJ_ALLOWABLE_ERROR_VEL_LINEAR:
-      return F32;
-    case TRAJ_ALLOWABLE_ERROR_VEL_ANGULAR:
-      return F32;
-    case TRAJ_MAX_VEL_LINEAR:
-      return F32;
-    case TRAJ_MAX_VEL_ANGULAR:
-      return F32;
-    case TRAJ_MAX_ACCEL_LINEAR:
-      return F32;
-    case TRAJ_MAX_ACCEL_ANGULAR:
-      return F32;
-    case HYST_PID_ENTER_ERROR_POS_LINEAR:
-      return F32;
-    case HYST_PID_ENTER_ERROR_POS_ANGULAR:
-      return F32;
-    case HYST_PID_EXIT_ERROR_POS_LINEAR:
-      return F32;
-    case HYST_PID_EXIT_ERROR_POS_ANGULAR:
-      return F32;
-    case HYST_PID_ENTER_ERROR_VEL_LINEAR:
-      return F32;
-    case HYST_PID_ENTER_ERROR_VEL_ANGULAR:
-      return F32;
-    case HYST_PID_EXIT_ERROR_VEL_LINEAR:
-      return F32;
-    case HYST_PID_EXIT_ERROR_VEL_ANGULAR:
-      return F32;
-    case TRAJ_RECOMPUTE_ERROR_POS_LINEAR:
-      return F32;
-    case TRAJ_RECOMPUTE_ERROR_VEL_LINEAR:
-      return F32;
-    case TRAJ_RECOMPUTE_ERROR_POS_ANGULAR:
-      return F32;
-    case TRAJ_RECOMPUTE_ERROR_VEL_ANGULAR:
-      return F32;
-    case FEEDFORWARD_GAIN:
-      return F32;
-    case FEEDBACK_GAIN:
-      return F32;
+    case KF_PROCESS_STD:
+      return VEC4_F32;
+    case KF_MEASUREMENT_STD:
+      return VEC4_F32;
+    case KF_MAX_STATE:
+      return VEC4_F32;
+    case PHYS_WHEEL:
+      return VEC4_F32;
+    case PHYS_INERTIA:
+      return VEC2_F32;
+    case PHYS_MOTOR_MODEL:
+      return VEC2_F32;
+    case PHYS_FRICTION_MODEL:
+      return VEC4_F32;
+    case POSE_CONTROL_GAIN:
+      return VEC2_F32;
+    case TRAJ_RECOMPUTE_ERROR:
+      return VEC4_F32;
+    case TRAJ_MAX:
+      return VEC4_F32;
+    case POSE_FB_PIDII_X:
+      return VEC5_F32;
+    case POSE_FB_PIDII_Y:
+      return VEC5_F32;
+    case POSE_FB_PIDII_THETA:
+      return VEC5_F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
@@ -381,16 +303,14 @@ std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format)
   switch(format) {
     case F32:
       return 1;
+    case VEC2_F32:
+      return 2;
     case VEC3_F32:
       return 3;
     case VEC4_F32:
       return 4;
-    case PID_F32:
-      return 3;
-    case PID_LIMITED_INTEGRAL_F32:
+    case VEC5_F32:
       return 5;
-    case MATRIX_F32:
-      return 25;
     default:
       throw std::invalid_argument("GetDataSizeForParameterFormat: Unrecognized parameter data format.");
   }
@@ -402,16 +322,14 @@ float* GetParameterDataForSetFormat(ParameterCommand & command)
   switch(command.data_format) {
     case F32:
       return &command.data.f32;
+    case VEC2_F32:
+      return command.data.vec2_f32;
     case VEC3_F32:
       return command.data.vec3_f32;
     case VEC4_F32:
       return command.data.vec4_f32;
-    case PID_F32:
-      return command.data.pid_f32;
-    case PID_LIMITED_INTEGRAL_F32:
-      return command.data.pidii_f32;
-    case MATRIX_F32:
-      return command.data.matrix_f32;
+    case VEC5_F32:
+      return command.data.vec5_f32;
     default:
       throw std::invalid_argument("GetParameterDataForSetFormat: Unrecognized parameter data format.");
   }

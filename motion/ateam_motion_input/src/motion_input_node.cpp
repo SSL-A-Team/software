@@ -109,17 +109,16 @@ private:
             return params;
         }
         nlohmann::json j = nlohmann::json::parse(f);
-        auto get = [&](const char* key, float& out) {
-            if (j.contains(key)) { out = j[key].get<float>(); }
+        auto get_vec = [&](const char* key, size_t idx, float& out) {
+            if (j.contains(key) && j[key].is_array() && j[key].size() > idx) {
+                out = j[key][idx].get<float>();
+            }
         };
-        get("TRAJ_ALLOWABLE_ERROR_POS_LINEAR", params.allowable_error_pos_linear);
-        get("TRAJ_ALLOWABLE_ERROR_POS_ANGULAR", params.allowable_error_pos_angular);
-        get("TRAJ_ALLOWABLE_ERROR_VEL_LINEAR", params.allowable_error_vel_linear);
-        get("TRAJ_ALLOWABLE_ERROR_VEL_ANGULAR", params.allowable_error_vel_angular);
-        get("TRAJ_MAX_VEL_LINEAR", params.max_vel_linear);
-        get("TRAJ_MAX_VEL_ANGULAR", params.max_vel_angular);
-        get("TRAJ_MAX_ACCEL_LINEAR", params.max_accel_linear);
-        get("TRAJ_MAX_ACCEL_ANGULAR", params.max_accel_angular);
+        // TRAJ_MAX [MAX_VEL_LINEAR, MAX_VEL_ANGULAR, MAX_ACCEL_LINEAR, MAX_ACCEL_ANGULAR]
+        get_vec("TRAJ_MAX", 0, params.max_vel_linear);
+        get_vec("TRAJ_MAX", 1, params.max_vel_angular);
+        get_vec("TRAJ_MAX", 2, params.max_accel_linear);
+        get_vec("TRAJ_MAX", 3, params.max_accel_angular);
         RCLCPP_INFO(this->get_logger(), "Loaded trajectory params from %s", param_json.c_str());
         return params;
     }

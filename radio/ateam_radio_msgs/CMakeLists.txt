@@ -19,6 +19,7 @@ set(RADIO_PACKETS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software-communication
 set(RADIO_STRUCTS_TO_GENERATE
     BasicTelemetry
     ExtendedTelemetry
+    BodyControlTelemetry
     KickerTelemetry
     MotorTelemetry
     CcmTelemetry
@@ -47,6 +48,7 @@ set(MSG_TARGET ${PROJECT_NAME})
 rosidl_generate_interfaces(${MSG_TARGET}
   ${GENERATED_DIR}:msg/BasicTelemetry.msg
   ${GENERATED_DIR}:msg/ExtendedTelemetry.msg
+  ${GENERATED_DIR}:msg/BodyControlTelemetry.msg
   ${GENERATED_DIR}:msg/KickerTelemetry.msg
   ${GENERATED_DIR}:msg/MotorTelemetry.msg
   ${GENERATED_DIR}:msg/CcmTelemetry.msg
