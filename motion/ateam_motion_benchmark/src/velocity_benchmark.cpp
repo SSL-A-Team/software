@@ -364,11 +364,11 @@ private:
     const auto vision_perp_speed = options_.axis == Axis::X ?
       robot.state->twist_body.linear.y : robot.state->twist_body.linear.x;
     const auto firmware_speed = options_.axis == Axis::X ?
-      robot.motion_feedback->kf_body_twist_estimate[0] :
-      robot.motion_feedback->kf_body_twist_estimate[1];
+      robot.motion_feedback->body_control_telemetry.kf_body_twist_estimate[0] :
+      robot.motion_feedback->body_control_telemetry.kf_body_twist_estimate[1];
     const auto firmware_perp_speed = options_.axis == Axis::X ?
-      robot.motion_feedback->kf_body_twist_estimate[1] :
-      robot.motion_feedback->kf_body_twist_estimate[0];
+      robot.motion_feedback->body_control_telemetry.kf_body_twist_estimate[1] :
+      robot.motion_feedback->body_control_telemetry.kf_body_twist_estimate[0];
 
     DataEntry entry{
       .time = std::chrono::duration_cast<std::chrono::duration<double>>(
