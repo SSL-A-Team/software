@@ -13,6 +13,7 @@ find_package(ateam_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Boost REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/vision_filter_node.cpp
@@ -37,6 +38,10 @@ ament_target_dependencies(${PROJECT_NAME}
   ssl_league_msgs
   Eigen3
 )
+target_link_libraries(${PROJECT_NAME}
+  Boost::boost
+)
+
 rclcpp_components_register_node(
   ${PROJECT_NAME}
   PLUGIN "new_super_vision::VisionFilterNode"

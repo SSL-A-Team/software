@@ -25,6 +25,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <boost/circular_buffer.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_common/game_controller_listener.hpp>
@@ -43,19 +44,13 @@ class VisionFilterNode : public rclcpp::Node
 
 public:
   explicit VisionFilterNode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("new_ateam_vision_filter", options),
+  : rclcpp::Node("ateam_new_super_vision", options),
     game_controller_listener_(*this)
   {
     declare_parameters<double>("offsets", {
         {"robots.x", 0.0},
         {"robots.y", 0.0}
     });
-    ssl_vision_subscription_ =
-      create_subscription<ssl_league_msgs::msg::VisionWrapper>(
-                std::string(Topics::kVisionMessages),
-                10,
-                std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1)
-      );
 
     timer_ = create_wall_timer(10ms, std::bind(&VisionFilterNode::timer_callback, this));
 
@@ -102,9 +97,9 @@ private:
   std::vector<FilteredRobot> yellow_robots;
   std::optional<FilteredBall> ball;
 
-  std::vector<BallMeasurement> ball_measurements;
-  std::vector<RobotMeasurement> blue_measurements;
-  std::vector<RobotMeasurement> yellow_measurements;
+  boost::circular_buffer<BallMeasurement> ball_measurements{300};
+  boost::circular_buffer<RobotMeasurement> blue_measurements{300};
+  boost::circular_buffer<RobotMeasurement> yellow_measurements{300};
 
         // All this stuff interacts with other nodes (pub/sub related)
   std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
@@ -137,6 +132,7 @@ private:
                             RobotMeasurement(bot, detect_camera, team_color)
           );
         }
+        RCLCPP_INFO(this->get_logger(), "Number of yellow measurements is: %d", yellow_measurements.size());
 
         for (const auto & bot : detection.robots_blue) {
           ateam_common::TeamColor team_color = ateam_common::TeamColor::Blue;
@@ -144,6 +140,7 @@ private:
                             RobotMeasurement(bot, detect_camera, team_color)
           );
         }
+        RCLCPP_INFO(this->get_logger(), "Number of blue measurements is: %d", blue_measurements.size());
 
                     // Create a measurement from each ball in this message
         for (const auto & ball: detection.balls) {
@@ -151,6 +148,7 @@ private:
                             BallMeasurement(ball, detect_camera)
           );
         }
+        RCLCPP_INFO(this->get_logger(), "Number of ball measurements is: %d", ball_measurements.size());
       }
 
                 // Sort our measurements to make sure they are in order of the time received
