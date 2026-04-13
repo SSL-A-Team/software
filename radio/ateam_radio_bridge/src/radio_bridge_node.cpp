@@ -66,6 +66,10 @@ public:
       declare_parameter<std::string>("net_interface_address", "")),
     firmware_parameter_server_(*this, connections_)
   {
+    std::fill(shutdown_requested_.begin(), shutdown_requested_.end(), false);
+    std::fill(reboot_requested_.begin(), reboot_requested_.end(), false);
+    std::fill(goodbye_received_.begin(), goodbye_received_.end(), false);
+
     declare_parameters<bool>("controls_enabled", {
         {"body_vel", true},
         {"wheel_vel", true},
@@ -125,6 +129,7 @@ private:
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
+  std::array<bool, 16> goodbye_received_;
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
@@ -199,12 +204,19 @@ private:
         connection_publishers_[i]->publish(connection_message);
         shutdown_requested_[i] = false;
         reboot_requested_[i] = false;
+        goodbye_received_[i] = false;
         continue;
       }
       const auto & last_heartbeat_time = last_heartbeat_timestamp_[i];
       const auto time_since_heartbeat = std::chrono::steady_clock::now() - last_heartbeat_time;
       if (time_since_heartbeat > timeout_threshold_) {
         RCLCPP_WARN(get_logger(), "Connection to robot %ld timed out.", i);
+        // release lock early so CloseConnection can grab it
+        lock.unlock();
+        CloseConnection(i);
+      }
+      if(goodbye_received_[i]) {
+        RCLCPP_INFO(get_logger(), "Received goodbye from robot %ld. Closing connection.", i);
         // release lock early so CloseConnection can grab it
         lock.unlock();
         CloseConnection(i);
@@ -295,7 +307,7 @@ private:
 
     const auto robot_id = hello_data.robot_id;
 
-    if (robot_id > connections_.size()) {
+    if (robot_id >= connections_.size()) {
       // invalid robot ID requested
       const auto reply_packet = CreateEmptyPacket(CC_NACK);
       discovery_receiver_.SendTo(
@@ -361,7 +373,7 @@ private:
     switch (packet.command_code) {
       case CC_GOODBYE:
         // close connection. No need to send our own goodbye
-        connections_[robot_id].reset();
+        goodbye_received_[robot_id] = true;
         break;
       case CC_TELEMETRY:
         {
