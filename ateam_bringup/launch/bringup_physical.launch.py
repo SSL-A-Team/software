@@ -49,9 +49,9 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_kenobi', default_value='true'),
 
         # BodyControlMode: 0=OFF, 1=GLOBAL_POSE, 2=GLOBAL_TWIST, 3=LOCAL_TWIST, 4=GLOBAL_ACCEL, 5=LOCAL_ACCEL
-        DeclareLaunchArgument('body_control_mode', default_value='1'),
-        DeclareLaunchArgument('controls_enabled_wheel_vel', default_value='false'),
-        DeclareLaunchArgument('controls_enabled_wheel_torque', default_value='true'),
+        DeclareLaunchArgument('body_control_mode', default_value='3'),
+        DeclareLaunchArgument('controls_enabled_wheel_vel', default_value='true'),
+        DeclareLaunchArgument('controls_enabled_wheel_torque', default_value='false'),
 
         Node(
             package='ateam_bringup',
