@@ -16,9 +16,9 @@ public:
     {
         declare_parameter<float>("amp", 0.2f);
         declare_parameter<std::string>("dimension", "x");  // x, y, xy, or theta
-        declare_parameter<std::string>("fn_type", "oscillate");  // pulse, oscillate, step, bangbang_pose, bangbang_accel
+        declare_parameter<std::string>("fn_type", "oscillate");  // pulse, oscillate, step, bangbang_pose, bangbang_accel, square
         declare_parameter<float>("freq", 1.0f);  // hz (for oscillate)
-        declare_parameter<float>("width", 0.5f);  // seconds (for pulse)
+        declare_parameter<float>("width", 2.0f);  // seconds (for pulse)
         declare_parameter<float>("duration", 0.0f);  // 0 = run forever
         declare_parameter<int>("robot_id", 2);
         declare_parameter<float>("startup_delay", 3.0f);
@@ -39,6 +39,7 @@ public:
         RCLCPP_INFO(this->get_logger(), "MotionInputNode: amp = %f", amp_);
         RCLCPP_INFO(this->get_logger(), "MotionInputNode: dimension = %s", dimension_.c_str());
         RCLCPP_INFO(this->get_logger(), "MotionInputNode: fn_type = %s", fn_type_.c_str());
+        RCLCPP_INFO(this->get_logger(), "MotionInputNode: width = %f s", width_);
         if (dimension_ == "theta") {
             amp_ = amp_ * M_PI / 180.0f; // convert to rad
             RCLCPP_INFO(this->get_logger(), "MotionInputNode: amp (rad) = %f", amp_);
@@ -65,6 +66,15 @@ public:
             RCLCPP_INFO(this->get_logger(), "BangBang trajectory end time: %.3f s", traj_end_time);
         } else if (fn_type_ == "bangbang_accel") {
             RCLCPP_INFO(this->get_logger(), "BangBang accel: amp=%.3f, width=%.3f s", amp_, width_);
+        } else if (fn_type_ == "square") {
+            // Square centered at (0,0): send 4 corner pose commands, dwell at each for width_ seconds
+            float half = amp_ / 2.0f;
+            square_corners_[0][0] =  half;  square_corners_[0][1] = -half;
+            square_corners_[1][0] =  half;  square_corners_[1][1] =  half;
+            square_corners_[2][0] = -half;  square_corners_[2][1] =  half;
+            square_corners_[3][0] = -half;  square_corners_[3][1] = -half;
+            RCLCPP_INFO(this->get_logger(), "Square: amp=%.3f, dwell=%.3f s per corner, total=%.3f s",
+                amp_, width_, width_ * 4.0f);
         }
 
 
@@ -134,46 +144,52 @@ private:
 
             t_ += (float)period_ms_ / 1000.0f;
 
-            // Compute control value based on fn_type
-            float val = 0.0f;
-            if (fn_type_ == "bangbang_pose") {
-                // Use planned position from bang-bang trajectory
-                Vector6C_t init_state = {{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
-                Vector6C_t state;
-                ateam_controls_traj_state_at(traj_, init_state, 0.0f, t_, &state);
-                if (dimension_ == "x") {
-                    val = state.data[0];
-                } else if (dimension_ == "y") {
-                    val = state.data[1];
-                } else if (dimension_ == "theta") {
-                    val = state.data[2];
-                }
-            } else if (fn_type_ == "bangbang_accel") {
-                // Simple bang-bang: +amp for width seconds, then -amp for width seconds
-                if (t_ < width_) {
+            if (fn_type_ == "square") {
+                // Send corner position directly (overloading twist as pose)
+                int corner = static_cast<int>(t_ / width_) % 4;
+                msg.twist.linear.x = square_corners_[corner][0];
+                msg.twist.linear.y = square_corners_[corner][1];
+            } else {
+                float val = 0.0f;
+                if (fn_type_ == "bangbang_pose") {
+                    // Use planned position from bang-bang trajectory
+                    Vector6C_t init_state = {{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
+                    Vector6C_t state;
+                    ateam_controls_traj_state_at(traj_, init_state, 0.0f, t_, &state);
+                    if (dimension_ == "x") {
+                        val = state.data[0];
+                    } else if (dimension_ == "y") {
+                        val = state.data[1];
+                    } else if (dimension_ == "theta") {
+                        val = state.data[2];
+                    }
+                } else if (fn_type_ == "bangbang_accel") {
+                    // Simple bang-bang: +amp for width seconds, then -amp for width seconds
+                    if (t_ < width_) {
+                        val = amp_;
+                    } else if (t_ < 2.0f * width_) {
+                        val = -amp_;
+                    } else {
+                        val = 0.0f;
+                    }
+                } else if (fn_type_ == "oscillate") {
+                    val = 0.5 * (amp_ - amp_ * cosf(w_ * t_));
+                } else if (fn_type_ == "step") {
                     val = amp_;
-                } else if (t_ < 2.0f * width_) {
-                    val = -amp_;
-                } else {
-                    val = 0.0f;
+                } else if (fn_type_ == "pulse") {
+                    val = (fmodf(t_, 1.0f/freq_) <= width_) ? amp_ : 0.0f;
                 }
-            } else if (fn_type_ == "oscillate") {
-                val = 0.5 * (amp_ - amp_ * cosf(w_ * t_));  // not really amplitute, but just go from 0 to amp and back in a cosine wave
-            } else if (fn_type_ == "step") {
-                val = amp_;
-            } else if (fn_type_ == "pulse") {
-                val = (fmodf(t_, 1.0f/freq_) <= width_) ? amp_ : 0.0f;
-            }
 
-            if (dimension_ == "x") {
-                msg.twist.linear.x = val;
-            } else if (dimension_ == "y") {
-                msg.twist.linear.y = val;
-            } else if (dimension_ == "xy") {
-                msg.twist.linear.x = val;
-                msg.twist.linear.y = val;
-            } else if (dimension_ == "theta") {
-                msg.twist.angular.z = val;
+                if (dimension_ == "x") {
+                    msg.twist.linear.x = val;
+                } else if (dimension_ == "y") {
+                    msg.twist.linear.y = val;
+                } else if (dimension_ == "xy") {
+                    msg.twist.linear.x = val;
+                    msg.twist.linear.y = val;
+                } else if (dimension_ == "theta") {
+                    msg.twist.angular.z = val;
+                }
             }
 
             pub_->publish(msg);
@@ -200,6 +216,8 @@ private:
     float t_;
     bool fn_started_;
     BangBangTraj3D_t traj_;
+    // Square corner positions [4][x,y]
+    float square_corners_[4][2];
 };
 
 int main(int argc, char **argv)
