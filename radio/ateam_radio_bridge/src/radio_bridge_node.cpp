@@ -58,7 +58,7 @@ class RadioBridgeNode : public rclcpp::Node
 public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
-    timeout_threshold_(declare_parameter("timeout_ms", 250)),
+    timeout_threshold_(declare_parameter("timeout_ms", 350)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
     game_controller_listener_(*this,
       std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
