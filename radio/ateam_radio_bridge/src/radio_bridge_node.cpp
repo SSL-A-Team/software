@@ -58,7 +58,8 @@ class RadioBridgeNode : public rclcpp::Node
 public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
-    timeout_threshold_(declare_parameter("timeout_ms", 350)),
+    timeout_threshold_(declare_parameter("timeout_ms", 250)),
+    initial_connection_timeout_threshold_(declare_parameter("initial_connection_timeout_ms", 750)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
     game_controller_listener_(*this,
       std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
@@ -136,6 +137,7 @@ public:
 
 private:
   const std::chrono::milliseconds timeout_threshold_;
+  const std::chrono::milliseconds initial_connection_timeout_threshold_;
   const std::chrono::milliseconds command_timeout_threshold_;
   std::mutex mutex_;
   std::array<ateam_msgs::msg::VisionStateRobot, 16> vision_states_blue_;
@@ -147,6 +149,7 @@ private:
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
   std::array<bool, 16> command_topic_active_{};
+  std::array<bool, 16> has_received_telemetry_{};
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     16> vision_state_subscriptions_blue_;
@@ -263,8 +266,14 @@ private:
       }
       const auto & last_heartbeat_time = last_heartbeat_timestamp_[i];
       const auto time_since_heartbeat = std::chrono::steady_clock::now() - last_heartbeat_time;
-      if (time_since_heartbeat > timeout_threshold_) {
-        RCLCPP_WARN(get_logger(), "Connection to robot %ld timed out.", i);
+      const auto & effective_timeout = has_received_telemetry_[i] ?
+        timeout_threshold_ : initial_connection_timeout_threshold_;
+      if (time_since_heartbeat > effective_timeout) {
+        RCLCPP_WARN(
+          get_logger(), "Connection to robot %ld timed out. Time since last heartbeat: %ldms (threshold: %ldms).",
+          i,
+          std::chrono::duration_cast<std::chrono::milliseconds>(time_since_heartbeat).count(),
+          effective_timeout.count());
         // release lock early so CloseConnection can grab it
         lock.unlock();
         CloseConnection(i);
@@ -425,6 +434,7 @@ private:
 
     motion_command_timestamps_[robot_id] = {};
     last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
+    has_received_telemetry_[robot_id] = false;
     connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
       sender_address, sender_port,
       std::bind(
@@ -471,7 +481,17 @@ private:
         break;
       case CC_TELEMETRY:
         {
-          last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
+          const auto now = std::chrono::steady_clock::now();
+          if (!has_received_telemetry_[robot_id]) {
+            const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+              now - last_heartbeat_timestamp_[robot_id]);
+            RCLCPP_INFO(
+              get_logger(),
+              "Robot %d sent first telemetry %ldms after connection established.",
+              robot_id, elapsed.count());
+            has_received_telemetry_[robot_id] = true;
+          }
+          last_heartbeat_timestamp_[robot_id] = now;
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
             RCLCPP_WARN(get_logger(), "Ignoring basic telemetry message from robot %d. %s", robot_id, error.c_str());
