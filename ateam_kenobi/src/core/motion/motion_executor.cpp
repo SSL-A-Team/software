@@ -68,7 +68,8 @@ std::array<std::optional<BodyVelocity>,
           controller.reset_trajectory({robot.pos});
         },
         [&](const intents::linear::VelocityIntent & v) {
-          body_velocity.linear = v.velocity;
+          body_velocity.linear = (v.frame == intents::linear::Frame::World) ?
+            WorldToLocalFrame(v.velocity, robot) : v.velocity;
           use_controller_linvel = false;
           controller.reset_trajectory({robot.pos});
         },

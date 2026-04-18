@@ -47,6 +47,7 @@ def generate_launch_description():
         DeclareLaunchArgument('command_frequency', default_value='60.0'),
 
         DeclareLaunchArgument('launch_kenobi', default_value='true'),
+        DeclareLaunchArgument('use_world_velocities', default_value='false'),
 
         # BodyControlMode: 0=OFF, 1=GLOBAL_POSE, 2=GLOBAL_TWIST, 3=LOCAL_TWIST, 4=GLOBAL_ACCEL, 5=LOCAL_ACCEL
         DeclareLaunchArgument('body_control_mode', default_value='3'),
@@ -88,6 +89,7 @@ def generate_launch_description():
                 'vision_offset_robot_x': '0.0',
                 'vision_offset_robot_y': '0.0',
                 'launch_kenobi': LaunchConfiguration('launch_kenobi'),
+                'use_world_velocities': LaunchConfiguration('use_world_velocities'),
             }.items()
         ),
 
