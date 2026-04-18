@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,20 +28,24 @@
 namespace ateam_kenobi::play_helpers
 {
 
-struct InterceptResults {
-    ateam_geometry::Vector robot_proj_ball_trajectory;
-    ateam_geometry::Vector robot_perp_ball_trajectory;
+struct InterceptResults
+{
+  ateam_geometry::Vector robot_proj_ball_trajectory;
+  ateam_geometry::Vector robot_perp_ball_trajectory;
 
-    double d; // robot distance to ball projected onto the balls trajectory
-    double h; // robot distance tangent to the balls trajectory
+  double d;   // robot distance to ball projected onto the balls trajectory
+  double h;   // robot distance tangent to the balls trajectory
 
-    double t; // time for robot to intercept ball
-    double equation_sign; // -1 or +1 to represent which version of the equation was used
-    std::optional<ateam_geometry::Point> intercept_pos = std::nullopt;
+  double t;   // time for robot to intercept ball
+  double equation_sign;   // -1 or +1 to represent which version of the equation was used
+  std::optional<ateam_geometry::Point> intercept_pos = std::nullopt;
 };
 
-// Offset distance indicates how far in front of the ball the robot should be
-InterceptResults calculateIntercept(const World & world, const Robot & robot, double offset_distance);
+/// Calculate the earliest time and location the robot could intercept the ball
+/// @Param offset_distance How far in front of the ball the robot should be at interception time
+InterceptResults calculateIntercept(
+  const World & world, const Robot & robot,
+  double offset_distance);
 
 }  // namespace ateam_kenobi::play_helpers
 

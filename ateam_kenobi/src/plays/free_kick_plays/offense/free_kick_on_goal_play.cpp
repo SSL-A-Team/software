@@ -68,7 +68,7 @@ void FreeKickOnGoalPlay::enter()
   striker_.Reset();
 }
 
-void FreeKickOnGoalPlay::exit() 
+void FreeKickOnGoalPlay::exit()
 {
   striker_.Reset();
 }

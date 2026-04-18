@@ -70,6 +70,10 @@ public:
       declare_parameter<std::string>("net_interface_address", "")),
     firmware_parameter_server_(*this, connections_)
   {
+    std::fill(shutdown_requested_.begin(), shutdown_requested_.end(), false);
+    std::fill(reboot_requested_.begin(), reboot_requested_.end(), false);
+    std::fill(goodbye_received_.begin(), goodbye_received_.end(), false);
+
     declare_parameter<int>("body_control_mode", static_cast<int>(BCM_GLOBAL_POSE));
     declare_parameters<bool>("controls_enabled", {
         {"wheel_vel", false},
@@ -148,6 +152,7 @@ private:
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
+  std::array<bool, 16> goodbye_received_;
   std::array<bool, 16> command_topic_active_{};
   std::array<bool, 16> has_received_telemetry_{};
   ateam_common::GameControllerListener game_controller_listener_;
@@ -225,7 +230,7 @@ private:
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
-  void CloseConnection(const std::size_t & connection_index)
+  void CloseConnection(const std::size_t & connection_index, bool send_goodbye = true)
   {
     std::unique_ptr<ateam_common::BiDirectionalUDP> connection;
     {
@@ -240,12 +245,14 @@ private:
     RCLCPP_INFO(
       get_logger(), "Closing connection to robot %ld (%s:%d)", connection_index,
       connection->GetRemoteIPAddress().c_str(), connection->GetRemotePort());
-    const auto packet = CreateEmptyPacket(CC_GOODBYE);
-    connection->send(
-      reinterpret_cast<const uint8_t *>(&packet),
-      GetPacketSize(packet.command_code));
-    // Give some time for the message to actually send before closing the connection
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    if (send_goodbye) {
+      const auto packet = CreateEmptyPacket(CC_GOODBYE);
+      connection->send(
+        reinterpret_cast<const uint8_t *>(&packet),
+        GetPacketSize(packet.command_code));
+      // Give some time for the message to actually send before closing the connection
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
   }
 
   /**
@@ -262,6 +269,7 @@ private:
         connection_publishers_[i]->publish(connection_message);
         shutdown_requested_[i] = false;
         reboot_requested_[i] = false;
+        goodbye_received_[i] = false;
         continue;
       }
       const auto & last_heartbeat_time = last_heartbeat_timestamp_[i];
@@ -277,6 +285,13 @@ private:
         // release lock early so CloseConnection can grab it
         lock.unlock();
         CloseConnection(i);
+      }
+      if(goodbye_received_[i]) {
+        RCLCPP_INFO(get_logger(), "Received goodbye from robot %ld.", i);
+        // release lock early so CloseConnection can grab it
+        lock.unlock();
+        // don't send goodbye because we already received one from the robot
+        CloseConnection(i, false);
       }
       // lock released by destructor
     }
@@ -403,7 +418,7 @@ private:
 
     const auto robot_id = hello_data.robot_id;
 
-    if (robot_id > connections_.size()) {
+    if (robot_id >= connections_.size()) {
       // invalid robot ID requested
       const auto reply_packet = CreateEmptyPacket(CC_NACK);
       discovery_receiver_.SendTo(
@@ -477,7 +492,7 @@ private:
     switch (packet.command_code) {
       case CC_GOODBYE:
         // close connection. No need to send our own goodbye
-        connections_[robot_id].reset();
+        goodbye_received_[robot_id] = true;
         break;
       case CC_TELEMETRY:
         {

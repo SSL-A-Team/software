@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__BALLSENSE_FILTER_HPP_
-#define CORE__BALLSENSE_FILTER_HPP_
+#ifndef GAME_STATE_TRACKER__BALLSENSE_FILTER_HPP_
+#define GAME_STATE_TRACKER__BALLSENSE_FILTER_HPP_
 
 #include <ranges>
 #include <array>
@@ -79,6 +79,6 @@ private:
   }
 };
 
-}  // namespace ateam_gamestate
+}  // namespace ateam_game_state
 
-#endif  // CORE__BALLSENSE_FILTER_HPP_
+#endif  // GAME_STATE_TRACKER__BALLSENSE_FILTER_HPP_
