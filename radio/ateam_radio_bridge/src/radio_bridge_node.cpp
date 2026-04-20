@@ -213,12 +213,14 @@ private:
       const auto time_since_heartbeat = std::chrono::steady_clock::now() - last_heartbeat_time;
       if (time_since_heartbeat > timeout_threshold_) {
         RCLCPP_WARN(get_logger(), "Connection to robot %ld timed out.", i);
+        goodbye_received_[i] = false;
         // release lock early so CloseConnection can grab it
         lock.unlock();
         CloseConnection(i);
-      }
-      if(goodbye_received_[i]) {
+      } else if(goodbye_received_[i]) {
+        // don't need to check for goodbye if timeout has occurred, lock would already be released
         RCLCPP_INFO(get_logger(), "Received goodbye from robot %ld.", i);
+        goodbye_received_[i] = false;
         // release lock early so CloseConnection can grab it
         lock.unlock();
         // don't send goodbye because we already received one from the robot
@@ -341,6 +343,7 @@ private:
 
     motion_command_timestamps_[robot_id] = {};
     last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
+    goodbye_received_[robot_id] = false;
     connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
       sender_address, sender_port,
       std::bind(
