@@ -30,13 +30,24 @@ import clang.cindex
 
 def generate_conversion_code(output_directory, header_file, struct_names):
     """Generate conversion functions."""
+    include_root = pathlib.Path(header_file).parent
     index = clang.cindex.Index.create()
-    translation_unit = index.parse(header_file)
-    generate_header_file(output_directory, translation_unit, struct_names)
-    generate_implementation_file(output_directory, translation_unit, struct_names)
+    header_tus = [
+        (h, index.parse(str(h))) for h in sorted(include_root.rglob('*.h'))
+    ]
+    generate_header_file(output_directory, header_tus, struct_names, include_root)
+    generate_implementation_file(output_directory, header_tus, struct_names)
 
 
-def generate_header_file(output_directory, translation_unit, struct_names):
+def _nodes_in_file(translation_unit, header_path):
+    """Yield only top-level nodes whose definition is in header_path."""
+    path_str = str(header_path)
+    for node in translation_unit.cursor.get_children():
+        if node.location.file and node.location.file.name == path_str:
+            yield node
+
+
+def generate_header_file(output_directory, header_tus, struct_names, include_root):
     """Generate header file for conversion functions."""
     header_text = (
         '// Auto-generated conversion functions for ROS2 messages\n'
@@ -46,20 +57,24 @@ def generate_header_file(output_directory, translation_unit, struct_names):
     for struct_name in struct_names:
         header_text += '#include <ateam_radio_msgs/msg/' \
             f'{camel_case_to_snake_case(struct_name)}.hpp>\n'
-    for node in translation_unit.cursor.get_children():
-        if node.kind == clang.cindex.CursorKind.STRUCT_DECL:
-            msg_name = node.spelling
-            if msg_name not in struct_names:
+    _struct_like = (
+        clang.cindex.CursorKind.STRUCT_DECL,
+        clang.cindex.CursorKind.UNION_DECL,
+    )
+    for header_path, translation_unit in header_tus:
+        for node in _nodes_in_file(translation_unit, header_path):
+            if node.kind not in _struct_like:
                 continue
-            declaration_file = pathlib.Path(
-                node.get_definition().location.file.name
-            ).name
-            header_text += f'#include <ateam_radio_msgs/packets/{declaration_file}>\n'
+            if node.spelling not in struct_names:
+                continue
+            relative_path = header_path.relative_to(include_root)
+            header_text += f'#include <ateam_radio_msgs/packets/{relative_path}>\n'
     header_text += 'namespace ateam_radio_msgs {\n'
-    for node in translation_unit.cursor.get_children():
-        if node.kind == clang.cindex.CursorKind.STRUCT_DECL:
-            msg_name = node.spelling
-            if msg_name not in struct_names:
+    for header_path, translation_unit in header_tus:
+        for node in _nodes_in_file(translation_unit, header_path):
+            if node.kind not in _struct_like:
+                continue
+            if node.spelling not in struct_names:
                 continue
             header_text += generate_conversion_function_declaration(node) + '\n'
     header_text += '}  // namespace ateam_radio_msgs\n\n'
@@ -70,21 +85,27 @@ def generate_header_file(output_directory, translation_unit, struct_names):
         f.write(header_text)
 
 
-def generate_implementation_file(output_directory, translation_unit, struct_names):
+def generate_implementation_file(output_directory, header_tus, struct_names):
     """Generate implementation file for conversion functions."""
     enums = []
     impl_text = '#include "conversion.hpp"\n\n' 'namespace ateam_radio_msgs {\n\n'
-    for node in translation_unit.cursor.get_children():
-        match node.kind:
-            case clang.cindex.CursorKind.ENUM_DECL:
-                enums.append(collect_enum_details(node))
-            case clang.cindex.CursorKind.STRUCT_DECL:
-                msg_name = node.spelling
-                if msg_name not in struct_names:
+    for header_path, translation_unit in header_tus:
+        for node in translation_unit.cursor.get_children():
+            match node.kind:
+                case clang.cindex.CursorKind.ENUM_DECL:
+                    if node.location.file and node.location.file.name == str(header_path):
+                        enums.append(collect_enum_details(node))
+                case clang.cindex.CursorKind.STRUCT_DECL | clang.cindex.CursorKind.UNION_DECL:
+                    if node.location.file is None \
+                            or node.location.file.name != str(header_path):
+                        continue
+                    if node.spelling not in struct_names:
+                        continue
+                    impl_text += generate_conversion_function_implementation(
+                        node, enums, struct_names
+                    )
+                case _:
                     continue
-                impl_text += generate_conversion_function_implementation(node, enums)
-            case _:
-                continue
     impl_text += '}  // namespace ateam_radio_bridge\n'
     os.makedirs(f'{output_directory}/src', exist_ok=True)
     file_path = f'{output_directory}/src/conversion.cpp'
@@ -99,7 +120,7 @@ def generate_conversion_function_declaration(struct_node):
     return f'{return_type} Convert(const {struct_node.spelling} & {param_name});'
 
 
-def generate_conversion_function_implementation(struct_node, enums):
+def generate_conversion_function_implementation(struct_node, enums, struct_names):
     """Generate the implementation of a conversion function for the given struct."""
     param_name = camel_case_to_snake_case(struct_node.spelling)
     return_type = f'ateam_radio_msgs::msg::{struct_node.spelling}'
@@ -112,13 +133,13 @@ def generate_conversion_function_implementation(struct_node, enums):
             continue
         if field.spelling.startswith('_'):
             continue
-        impl_text += generate_field_copy_line(field, param_name, enums)
+        impl_text += generate_field_copy_line(field, param_name, enums, struct_names)
     impl_text += '    return msg;\n'
     impl_text += '}\n'
     return impl_text
 
 
-def generate_field_copy_line(field_node, param_name, enums):
+def generate_field_copy_line(field_node, param_name, enums, struct_names):
     """Generate a line of code to copy a field from the struct to the message."""
     field_name = field_node.spelling
     if field_node.type.kind == clang.cindex.TypeKind.CONSTANTARRAY:
@@ -138,10 +159,12 @@ def generate_field_copy_line(field_node, param_name, enums):
             return f'    msg.{field_name} = {param_name}.{field_node.spelling};\n'
         elif field_node.type.spelling in [e['type_name'] for e in enums]:
             return f'    msg.{field_name} = {param_name}.{field_node.spelling};\n'
-        else:
+        elif field_node.type.spelling in struct_names:
             return (
                 f'    msg.{field_name} = Convert({param_name}.{field_node.spelling});\n'
             )
+        else:
+            return ''
     else:
         return f'    msg.{field_name} = {param_name}.{field_node.spelling};\n'
 

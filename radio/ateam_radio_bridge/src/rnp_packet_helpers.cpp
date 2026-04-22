@@ -89,13 +89,13 @@ std::size_t GetPacketSize(const CommandCode & command_code)
  */
 void SetCRC(RadioPacket & packet)
 {
-  const auto crc_size = sizeof(packet.crc32);
-  const auto packet_size = GetPacketSize(packet.command_code);
+  const auto crc_size = sizeof(packet.header.crc32);
+  const auto packet_size = GetPacketSize(packet.header.command_code);
   boost::crc_32_type crc;
   crc.process_bytes(
     reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(&packet) + crc_size),
     packet_size - crc_size);
-  packet.crc32 = crc.checksum();
+  packet.header.crc32 = crc.checksum();
 }
 
 /**
@@ -109,13 +109,13 @@ void SetCRC(RadioPacket & packet)
  */
 bool HasCorrectCRC(const RadioPacket & packet)
 {
-  const auto crc_size = sizeof(packet.crc32);
-  const auto packet_size = GetPacketSize(packet.command_code);
+  const auto crc_size = sizeof(packet.header.crc32);
+  const auto packet_size = GetPacketSize(packet.header.command_code);
   boost::crc_32_type crc;
   crc.process_bytes(
     reinterpret_cast<const void *>(reinterpret_cast<const uint8_t *>(&packet) +
     crc_size), packet_size - crc_size);
-  return packet.crc32 == crc.checksum();
+  return packet.header.crc32 == crc.checksum();
 }
 
 /**
@@ -132,11 +132,7 @@ bool HasCorrectCRC(const RadioPacket & packet)
 RadioPacket CreateEmptyPacket(const CommandCode command_code)
 {
   RadioPacket packet{
-    0,
-    kProtocolVersionMajor,
-    kProtocolVersionMinor,
-    command_code,
-    0,
+    {0, command_code, 0, 0},
     {}
   };
 
@@ -164,19 +160,11 @@ RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std
 
   std::copy_n(data, kPacketHeaderSize, reinterpret_cast<uint8_t *>(&packet));
 
-  const auto packet_size = GetPacketSize(packet.command_code);
+  const auto packet_size = GetPacketSize(packet.header.command_code);
 
   if (data_length != packet_size) {
     error = "Wrong number of bytes. Expected " + std::to_string(packet_size) + " but got " +
       std::to_string(data_length) + ".";
-    return {};
-  }
-
-  if (packet.major_version != kProtocolVersionMajor ||
-    packet.minor_version != kProtocolVersionMinor)
-  {
-    // TODO(barulicm) What should our version compatability rules actually be? This assumes they must match.
-    error = "Protocol versions do not match.";
     return {};
   }
 
@@ -210,10 +198,10 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 {
   PacketDataVariant var;
 
-  switch (packet.command_code) {
+  switch (packet.header.command_code) {
     case CC_HELLO_REQ:
       {
-        if (packet.data_length != sizeof(HelloRequest)) {
+        if (packet.header.data_length != sizeof(HelloRequest)) {
           error = "Incorrect data length for HelloData type.";
           break;
         }
@@ -222,7 +210,7 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
       }
     case CC_TELEMETRY:
       {
-        if (packet.data_length != sizeof(BasicTelemetry)) {
+        if (packet.header.data_length != sizeof(BasicTelemetry)) {
           error = "Incorrect data length for BasicTelemetry type.";
           break;
         }
@@ -231,16 +219,16 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
       }
     case CC_CONTROL_DEBUG_TELEMETRY:
       {
-        if (packet.data_length != sizeof(ExtendedTelemetry)) {
+        if (packet.header.data_length != sizeof(ExtendedTelemetry)) {
           error = "Incorrect data length for ExtendedTelemetry type.";
           break;
         }
-        var = packet.data.control_debug_telemetry;
+        var = packet.data.extended_telemetry;
         break;
       }
     case CC_ROBOT_PARAMETER_COMMAND:
       {
-        if (packet.data_length != sizeof(ParameterCommand)) {
+        if (packet.header.data_length != sizeof(ParameterCommand)) {
           error = "Incorrect data length for ParameterCommand type.";
           break;
         }
@@ -249,7 +237,7 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
       }
     case CC_CONTROL:
       {
-        if (packet.data_length != sizeof(BasicControl)) {
+        if (packet.header.data_length != sizeof(BasicControl)) {
           error = "Incorrect data length for BasicControl type.";
           break;
         }

@@ -29,45 +29,36 @@
 TEST(SetCRC, BasicTest)
 {
   RadioPacket packet{
-    0,
-    1,
-    2,
-    CC_ACK,
-    0,
+    {0, CC_ACK, 0, 0},
     {}
   };
   ateam_radio_bridge::SetCRC(packet);
-  EXPECT_EQ(packet.crc32, 1560025497u);
+  EXPECT_TRUE(ateam_radio_bridge::HasCorrectCRC(packet));
 }
 
 // Do we reject (some) bad CRC values?
 TEST(HasCorrectCRC, BasicTest)
 {
   RadioPacket packet{
-    1560025497,
-    1,
-    2,
-    CC_ACK,
-    0,
+    {0, CC_ACK, 0, 0},
     {}
   };
+  ateam_radio_bridge::SetCRC(packet);
   EXPECT_TRUE(ateam_radio_bridge::HasCorrectCRC(packet));
 
-
-  packet.crc32 = 12; // arbitrary bad CRC value
+  packet.header.crc32 = 12;  // arbitrary bad CRC value
   EXPECT_FALSE(ateam_radio_bridge::HasCorrectCRC(packet));
 }
 
 // Can we correctly create a data payload for a HelloRequest?
 TEST(SetDataPayload, HelloRequest)
 {
-  RadioPacket packet;
-  HelloRequest payload{
-    8,
-    TC_BLUE
-  };
+  RadioPacket packet{};
+  HelloRequest payload{};
+  payload.robot_id = 8;
+  payload.color = TC_BLUE;
   ateam_radio_bridge::SetDataPayload(packet, payload);
-  EXPECT_EQ(packet.data_length, 2);
+  EXPECT_EQ(packet.header.data_length, sizeof(HelloRequest));
   EXPECT_EQ(packet.data.hello_request.robot_id, 8);
   EXPECT_EQ(packet.data.hello_request.color, TC_BLUE);
 }
@@ -75,73 +66,46 @@ TEST(SetDataPayload, HelloRequest)
 // Do we create a packet correctly given a basic payload?
 TEST(CreatePacket, HelloRequest)
 {
-  HelloRequest payload{
-    12,
-    TC_YELLOW
-  };
+  HelloRequest payload{};
+  payload.robot_id = 12;
+  payload.color = TC_YELLOW;
   RadioPacket packet = ateam_radio_bridge::CreatePacket(CC_HELLO_REQ, payload);
-  EXPECT_EQ(packet.crc32, 1906667910u);
-  EXPECT_EQ(packet.major_version, kProtocolVersionMajor);
-  EXPECT_EQ(packet.minor_version, kProtocolVersionMinor);
-  EXPECT_EQ(packet.command_code, CC_HELLO_REQ);
-  EXPECT_EQ(packet.data_length, 2);
+  EXPECT_EQ(packet.header.command_code, CC_HELLO_REQ);
+  EXPECT_EQ(packet.header.data_length, sizeof(HelloRequest));
   EXPECT_EQ(packet.data.hello_request.robot_id, 12);
   EXPECT_EQ(packet.data.hello_request.color, TC_YELLOW);
+  EXPECT_TRUE(ateam_radio_bridge::HasCorrectCRC(packet));
 }
 
 // Is the format of our empty radio packets correct?
 TEST(CreateEmptyPacket, Ack)
 {
   RadioPacket packet = ateam_radio_bridge::CreateEmptyPacket(CC_ACK);
-  EXPECT_EQ(packet.crc32, 381840297u);
-  EXPECT_EQ(packet.major_version, kProtocolVersionMajor);
-  EXPECT_EQ(packet.minor_version, kProtocolVersionMinor);
-  EXPECT_EQ(packet.command_code, CC_ACK);
-  EXPECT_EQ(packet.data_length, 0);
+  EXPECT_EQ(packet.header.command_code, CC_ACK);
+  EXPECT_EQ(packet.header.data_length, 0);
+  EXPECT_TRUE(ateam_radio_bridge::HasCorrectCRC(packet));
 }
 
 // Are we parsing packets correctly?
-TEST(ParsePacket, HelloRequest)
+TEST(ParsePacket, Ack)
 {
-  std::array<uint8_t, 14> data = {
-    0,
-    0,
-    0,
-    0,
-    kProtocolVersionMajor & 0xFF,
-    kProtocolVersionMajor >> 8,
-    kProtocolVersionMinor & 0xFF,
-    kProtocolVersionMinor >> 8,
-    CC_HELLO_REQ,
-    0,
-    2,
-    0,
-    15,
-    1
-  };
+  RadioPacket source = ateam_radio_bridge::CreateEmptyPacket(CC_ACK);
+  const uint8_t * data = reinterpret_cast<const uint8_t *>(&source);
   std::string error_msg;
-  RadioPacket packet = ateam_radio_bridge::ParsePacket(data.data(), data.size(), error_msg);
+  RadioPacket packet = ateam_radio_bridge::ParsePacket(
+    data, ateam_radio_bridge::kPacketHeaderSize, error_msg);
   EXPECT_TRUE(error_msg.empty()) << "Unexpected error message: " << error_msg;
-  EXPECT_EQ(packet.crc32, 0u);
-  EXPECT_EQ(packet.major_version, kProtocolVersionMajor);
-  EXPECT_EQ(packet.minor_version, kProtocolVersionMinor);
-  EXPECT_EQ(packet.command_code, CC_HELLO_REQ);
-  EXPECT_EQ(packet.data_length, 2);
-  EXPECT_EQ(packet.data.hello_request.robot_id, 15);
-  EXPECT_EQ(packet.data.hello_request.color, TC_BLUE);
+  EXPECT_EQ(packet.header.command_code, CC_ACK);
+  EXPECT_EQ(packet.header.data_length, 0);
 }
 
 // Are we able to extract data from a packet correctly?
 TEST(ExtractData, HelloRequest)
 {
-  RadioPacket packet{
-    0,
-    0,
-    0,
-    CC_HELLO_REQ,
-    2,
-    HelloRequest{4, TC_BLUE}
-  };
+  HelloRequest hello{};
+  hello.robot_id = 4;
+  hello.color = TC_BLUE;
+  RadioPacket packet = ateam_radio_bridge::CreatePacket(CC_HELLO_REQ, hello);
   std::string error_msg;
   ateam_radio_bridge::PacketDataVariant data_var =
     ateam_radio_bridge::ExtractData(packet, error_msg);

@@ -74,7 +74,7 @@ public:
     std::fill(reboot_requested_.begin(), reboot_requested_.end(), false);
     std::fill(goodbye_received_.begin(), goodbye_received_.end(), false);
 
-    declare_parameter<int>("body_control_mode", static_cast<int>(BCM_GLOBAL_POSE));
+    declare_parameter<int>("body_control_mode", static_cast<int>(BCM_LOCAL_VELOCITY));
     declare_parameters<bool>("controls_enabled", {
         {"wheel_vel", false},
         {"wheel_torque", true}
@@ -249,7 +249,7 @@ private:
       const auto packet = CreateEmptyPacket(CC_GOODBYE);
       connection->send(
         reinterpret_cast<const uint8_t *>(&packet),
-        GetPacketSize(packet.command_code));
+        GetPacketSize(packet.header.command_code));
       // Give some time for the message to actually send before closing the connection
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
@@ -323,9 +323,7 @@ private:
         control_msg.body_control_mode = BCM_OFF;
         control_msg.wheel_vel_control_enabled = false;
         control_msg.wheel_torque_control_enabled = false;
-        control_msg.x_linear_cmd = 0.0;
-        control_msg.y_linear_cmd = 0.0;
-        control_msg.z_angular_cmd = 0.0;
+        control_msg.cmd = {};
         control_msg.kick_request = KickRequest::KR_DISABLE;
       } else {
         // command_active == true
@@ -333,9 +331,9 @@ private:
           get_parameter("body_control_mode").as_int());
         control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
         control_msg.wheel_torque_control_enabled = get_parameter("controls_enabled.wheel_torque").as_bool();
-        control_msg.x_linear_cmd = motion_commands_[id].twist.linear.x;
-        control_msg.y_linear_cmd = motion_commands_[id].twist.linear.y;
-        control_msg.z_angular_cmd = motion_commands_[id].twist.angular.z;
+        control_msg.cmd.local_vel.local_xd = motion_commands_[id].twist.linear.x;
+        control_msg.cmd.local_vel.local_yd = motion_commands_[id].twist.linear.y;
+        control_msg.cmd.local_vel.local_omega = motion_commands_[id].twist.angular.z;
         control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       }
       // Vision update
@@ -354,9 +352,9 @@ private:
       ) {
         // The robot is visible and the vision state is recent
         control_msg.vision_update = true;
-        control_msg.pose_x_linear_vision = vision_state.pose.position.x;
-        control_msg.pose_y_linear_vision = vision_state.pose.position.y;
-        control_msg.pose_z_angular_vision = GetYaw(vision_state.pose);
+        control_msg.vision_position_update[0] = vision_state.pose.position.x;
+        control_msg.vision_position_update[1] = vision_state.pose.position.y;
+        control_msg.vision_position_update[2] = GetYaw(vision_state.pose);
       } else {
         control_msg.vision_update = false;
       }
@@ -368,12 +366,11 @@ private:
       control_msg.emergency_stop = false;
       control_msg.play_song = 0;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
-      control_msg.dribbler_multiplier = 55;
       control_msg.kick_vel = motion_commands_[id].kick_speed;
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),
-        GetPacketSize(control_packet.command_code));
+        GetPacketSize(control_packet.header.command_code));
     }
   }
 
@@ -388,10 +385,10 @@ private:
       return;
     }
 
-    if (packet.command_code != CC_HELLO_REQ) {
+    if (packet.header.command_code != CC_HELLO_REQ) {
       RCLCPP_WARN(
         get_logger(), "Ignoring discovery packet. Unexpected command code: %d",
-        packet.command_code);
+        packet.header.command_code);
       return;
     }
 
@@ -425,7 +422,7 @@ private:
       const auto reply_packet = CreateEmptyPacket(CC_NACK);
       discovery_receiver_.SendTo(
         sender_address, sender_port,
-        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
       RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Invalid robot ID: %d", robot_id);
       return;
     }
@@ -439,7 +436,7 @@ private:
       const auto reply_packet = CreateEmptyPacket(CC_NACK);
       discovery_receiver_.SendTo(
         sender_address, sender_port,
-        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
       RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Robot ID already connected: %d",
           robot_id);
       return;
@@ -476,7 +473,7 @@ private:
     const auto reply_packet = CreatePacket(CC_HELLO_RESP, response);
     discovery_receiver_.SendTo(
       sender_address, sender_port,
-      reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+      reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
   }
 
   void RobotIncomingPacketCallback(
@@ -492,7 +489,7 @@ private:
 
     const std::lock_guard lock(mutex_);
 
-    switch (packet.command_code) {
+    switch (packet.header.command_code) {
       case CC_GOODBYE:
         // close connection. No need to send our own goodbye
         goodbye_received_[robot_id] = true;
@@ -558,7 +555,7 @@ private:
       default:
         RCLCPP_WARN(
           get_logger(), "Ignoring telemetry message from robot %d. Unsupported command code: %d",
-          robot_id, packet.command_code);
+          robot_id, packet.header.command_code);
         return;
     }
   }

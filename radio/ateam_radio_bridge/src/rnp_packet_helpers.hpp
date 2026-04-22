@@ -29,7 +29,7 @@
 #include <typeinfo>
 #include <variant>
 #include <ateam_radio_msgs/packets/radio.h>
-#include <ateam_radio_msgs/packets/hello_data.h>
+#include <ateam_radio_msgs/packets/discovery.h>
 #include <ateam_radio_msgs/packets/basic_control.h>
 #include <ateam_radio_msgs/packets/basic_telemetry.h>
 #include <ateam_radio_msgs/packets/robot_parameters.h>
@@ -39,7 +39,7 @@ namespace ateam_radio_bridge
 
 std::size_t GetPacketSize(const CommandCode & packet);
 
-constexpr std::size_t kPacketHeaderSize = 12;
+constexpr std::size_t kPacketHeaderSize = sizeof(RadioHeader);
 
 void SetCRC(RadioPacket & packet);
 
@@ -48,20 +48,16 @@ bool HasCorrectCRC(const RadioPacket & packet);
 template<typename DataTypeType>
 void SetDataPayload(RadioPacket & packet, const DataTypeType & payload)
 {
-  packet.data_length = sizeof(DataTypeType);
+  packet.header.data_length = sizeof(DataTypeType);
   auto payload_ptr = reinterpret_cast<const uint8_t *>(&payload);
-  std::copy_n(payload_ptr, packet.data_length, reinterpret_cast<uint8_t *>(&packet.data));
+  std::copy_n(payload_ptr, packet.header.data_length, reinterpret_cast<uint8_t *>(&packet.data));
 }
 
 template<typename DataTypeType>
 RadioPacket CreatePacket(const CommandCode command_code, const DataTypeType & data)
 {
   RadioPacket packet{
-    0,
-    kProtocolVersionMajor,
-    kProtocolVersionMinor,
-    command_code,
-    0,
+    {0, command_code, 0, 0},
     {}
   };
 

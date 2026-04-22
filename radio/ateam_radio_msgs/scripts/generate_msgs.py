@@ -37,20 +37,22 @@ def generate_msgs_for_file(output_dir, file_path, struct_names):
         match node.kind:
             case clang.cindex.CursorKind.ENUM_DECL:
                 enums.append(collect_enum_details(node))
-            case clang.cindex.CursorKind.STRUCT_DECL:
+            case clang.cindex.CursorKind.STRUCT_DECL | clang.cindex.CursorKind.UNION_DECL:
+                if node.location.file is None or node.location.file.name != file_path:
+                    continue
                 msg_name = node.spelling
                 if msg_name not in struct_names:
                     continue
                 declaration_file = pathlib.Path(
                     node.get_definition().location.file.name
                 ).name
-                msg = generate_msg_for_struct(node, enums)
+                msg = generate_msg_for_struct(node, enums, struct_names)
                 write_msg_to_file(output_dir, msg, declaration_file)
             case _:
                 continue
 
 
-def generate_msg_for_struct(struct_ast_node, enums):
+def generate_msg_for_struct(struct_ast_node, enums, struct_names):
     """Generate a ROS2 message definition for a single struct AST node."""
     type_name = struct_ast_node.spelling
     declarations = []
@@ -59,7 +61,7 @@ def generate_msg_for_struct(struct_ast_node, enums):
             continue
         if field.spelling.startswith('_'):
             continue
-        add_field_declarations(declarations, field, enums)
+        add_field_declarations(declarations, field, enums, struct_names)
     return {'type_name': type_name, 'declarations': declarations}
 
 
@@ -75,7 +77,7 @@ def write_msg_to_file(output_dir, msg, input_file_path):
             f.write(f'{declaration}\n')
 
 
-def add_field_declarations(declarations, field_node, enums):
+def add_field_declarations(declarations, field_node, enums, struct_names):
     """Add declarations for a field node to the list of declarations."""
     if field_node.is_bitfield():
         add_bitfield_declaration(declarations, field_node)
@@ -85,6 +87,9 @@ def add_field_declarations(declarations, field_node, enums):
         add_enum_declaration(declarations, field_node, enums)
     else:
         ros2_type = get_ros2_basic_type(field_node.type)
+        if ros2_type.startswith('ateam_radio_msgs/') \
+                and ros2_type.removeprefix('ateam_radio_msgs/') not in struct_names:
+            return
         declarations.append(f'{ros2_type} {field_node.spelling}')
 
 
@@ -192,4 +197,9 @@ if __name__ == '__main__':
             '<struct_name> [<struct_name> ...]'
         )
         sys.exit(1)
-    generate_msgs_for_file(sys.argv[1], sys.argv[2], sys.argv[3:])
+    output_dir = sys.argv[1]
+    source = pathlib.Path(sys.argv[2])
+    struct_names = sys.argv[3:]
+    include_dir = source.parent
+    for header in sorted(include_dir.rglob('*.h')):
+        generate_msgs_for_file(output_dir, str(header), struct_names)
