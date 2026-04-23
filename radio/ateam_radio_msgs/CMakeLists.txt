@@ -50,24 +50,16 @@ generate_conversion_code(
 file(GLOB CONFIG_DEPENDS CONFIGURE_DEPENDS "${RADIO_PACKETS_INCLUDE_DIR}/*.*")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CONFIG_DEPENDS})
 
+file(GLOB _raw_generated_msgs "${GENERATED_DIR}/msg/*.msg")
+set(_generated_msgs "")
+foreach(_msg ${_raw_generated_msgs})
+  string(REPLACE "${GENERATED_DIR}/" "" _rel "${_msg}")
+  list(APPEND _generated_msgs "${GENERATED_DIR}:${_rel}")
+endforeach()
+
 set(MSG_TARGET ${PROJECT_NAME})
 rosidl_generate_interfaces(${MSG_TARGET}
-  ${GENERATED_DIR}:msg/GlobalPositionCommand.msg
-  ${GENERATED_DIR}:msg/GlobalVelocityCommand.msg
-  ${GENERATED_DIR}:msg/LocalVelocityCommand.msg
-  ${GENERATED_DIR}:msg/GlobalAccelerationCommand.msg
-  ${GENERATED_DIR}:msg/LocalAccelerationCommand.msg
-  ${GENERATED_DIR}:msg/BasicTelemetry.msg
-  ${GENERATED_DIR}:msg/BodyControlTelemetry.msg
-  ${GENERATED_DIR}:msg/ExtendedTelemetry.msg
-  ${GENERATED_DIR}:msg/BodyControlExtendedTelemetry.msg
-  ${GENERATED_DIR}:msg/KickerTelemetry.msg
-  ${GENERATED_DIR}:msg/MotorTelemetry.msg
-  ${GENERATED_DIR}:msg/CcmTelemetry.msg
-  ${GENERATED_DIR}:msg/CcmVelocityTelemetry.msg
-  ${GENERATED_DIR}:msg/CcmCurrentTelemetry.msg
-  ${GENERATED_DIR}:msg/PowerTelemetry.msg
-  ${GENERATED_DIR}:msg/BatteryInfo.msg
+  ${_generated_msgs}
 
   msg/ConnectionStatus.msg
 

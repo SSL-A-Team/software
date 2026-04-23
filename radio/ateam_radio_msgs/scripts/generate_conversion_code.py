@@ -28,6 +28,41 @@ import sys
 import clang.cindex
 
 
+def _is_elaborated_union(field_node):
+    """Return True if the field's type is a typedef'd union."""
+    if field_node.type.kind != clang.cindex.TypeKind.ELABORATED:
+        return False
+    # get_declaration() on a typedef'd union returns TYPEDEF_DECL, not UNION_DECL.
+    # The canonical type strips the typedef layer and gives us the underlying record.
+    canon = field_node.type.get_canonical()
+    return (
+        canon.kind == clang.cindex.TypeKind.RECORD
+        and canon.get_declaration().kind == clang.cindex.CursorKind.UNION_DECL
+    )
+
+
+def collect_union_member_types(file_path, struct_names):
+    """Return a list of struct type names used as union members inside struct_names types."""
+    index = clang.cindex.Index.create()
+    tu = index.parse(file_path)
+    extras = []
+    struct_like = (clang.cindex.CursorKind.STRUCT_DECL, clang.cindex.CursorKind.UNION_DECL)
+    for node in tu.cursor.get_children():
+        if node.location.file is None or node.location.file.name != file_path:
+            continue
+        if node.kind not in struct_like or node.spelling not in struct_names:
+            continue
+        for field in node.get_children():
+            if field.kind != clang.cindex.CursorKind.FIELD_DECL:
+                continue
+            if not _is_elaborated_union(field):
+                continue
+            for member in field.type.get_canonical().get_declaration().get_children():
+                if member.kind == clang.cindex.CursorKind.FIELD_DECL:
+                    extras.append(member.type.spelling)
+    return extras
+
+
 def generate_conversion_code(output_directory, header_file, struct_names):
     """Generate conversion functions."""
     include_root = pathlib.Path(header_file).parent
@@ -35,8 +70,16 @@ def generate_conversion_code(output_directory, header_file, struct_names):
     header_tus = [
         (h, index.parse(str(h))) for h in sorted(include_root.rglob('*.h'))
     ]
-    generate_header_file(output_directory, header_tus, struct_names, include_root)
-    generate_implementation_file(output_directory, header_tus, struct_names)
+    # Expand struct_names with types used as union members so Convert() functions are
+    # generated for them — they aren't in the original list but each needs its own
+    # converter because ROS2 unions are expanded into separate named fields.
+    all_struct_names = list(struct_names)
+    for header_path, _ in header_tus:
+        for extra in collect_union_member_types(str(header_path), struct_names):
+            if extra not in all_struct_names:
+                all_struct_names.append(extra)
+    generate_header_file(output_directory, header_tus, all_struct_names, include_root)
+    generate_implementation_file(output_directory, header_tus, all_struct_names)
 
 
 def _nodes_in_file(translation_unit, header_path):
@@ -93,6 +136,8 @@ def generate_implementation_file(output_directory, header_tus, struct_names):
         for node in translation_unit.cursor.get_children():
             match node.kind:
                 case clang.cindex.CursorKind.ENUM_DECL:
+                    # Accumulate enums with a file filter so each enum is collected
+                    # exactly once (each header's TU re-exposes enums from its includes).
                     if node.location.file and node.location.file.name == str(header_path):
                         enums.append(collect_enum_details(node))
                 case clang.cindex.CursorKind.STRUCT_DECL | clang.cindex.CursorKind.UNION_DECL:
@@ -128,25 +173,84 @@ def generate_conversion_function_implementation(struct_node, enums, struct_names
         f'{return_type} Convert(const {struct_node.spelling} & {param_name}) {{\n'
     )
     impl_text += f'    {return_type} msg;\n'
+    # Track the most recently seen enum field; by convention the enum selector
+    # immediately precedes its union field in the struct declaration, so this is
+    # the right field to switch on when we hit a union.
+    last_enum_field = None
     for field in struct_node.get_children():
         if field.kind != clang.cindex.CursorKind.FIELD_DECL:
             continue
         if field.spelling.startswith('_'):
             continue
-        impl_text += generate_field_copy_line(field, param_name, enums, struct_names)
+        if field.type.spelling in [e['type_name'] for e in enums]:
+            last_enum_field = field
+        impl_text += generate_field_copy_line(
+            field, param_name, enums, struct_names, last_enum_field
+        )
     impl_text += '    return msg;\n'
     impl_text += '}\n'
     return impl_text
 
 
-def generate_field_copy_line(field_node, param_name, enums, struct_names):
+def generate_union_switch_copy_lines(field_node, param_name, struct_names, selector_field, enums):
+    """Generate a switch on selector_field to convert only the active union member."""
+    field_name = field_node.spelling
+    union_decl = field_node.type.get_canonical().get_declaration()
+    members = [
+        m for m in union_decl.get_children()
+        if m.kind == clang.cindex.CursorKind.FIELD_DECL
+        and m.type.spelling in struct_names
+    ]
+    enum_details = next(e for e in enums if e['type_name'] == selector_field.type.spelling)
+    # Convention: enum value 0 means "none/off" (no active union member).
+    # Remaining values sorted ascending map positionally to union members in
+    # declaration order, so BCM_GLOBAL_POSITION(1)->global_pos, BCM_GLOBAL_VELOCITY(2)->global_vel, etc.
+    non_zero_cases = sorted(
+        [(name, val) for name, val in enum_details['values'] if val != 0],
+        key=lambda x: x[1],
+    )
+    result = f'    switch ({param_name}.{selector_field.spelling}) {{\n'
+    for (case_name, _), member in zip(non_zero_cases, members):
+        msg_field = f'{field_name}_{member.spelling}'
+        result += f'        case {case_name}:\n'
+        result += (
+            f'            msg.{msg_field} = '
+            f'Convert({param_name}.{field_name}.{member.spelling});\n'
+        )
+        result += '            break;\n'
+    result += '        default:\n'
+    result += '            break;\n'
+    result += '    }\n'
+    return result
+
+
+def generate_field_copy_line(field_node, param_name, enums, struct_names, selector_field=None):
     """Generate a line of code to copy a field from the struct to the message."""
     field_name = field_node.spelling
     if field_node.type.kind == clang.cindex.TypeKind.CONSTANTARRAY:
         return f'    std::ranges::copy({param_name}.{field_node.spelling}, ' \
             f'std::back_inserter(msg.{field_name}));\n'
     elif field_node.type.kind == clang.cindex.TypeKind.ELABORATED:
-        if field_node.type.spelling in [
+        if _is_elaborated_union(field_node):
+            if selector_field is not None:
+                return generate_union_switch_copy_lines(
+                    field_node, param_name, struct_names, selector_field, enums
+                )
+            # No selector enum found — fall back to converting all members unconditionally.
+            union_decl = field_node.type.get_canonical().get_declaration()
+            result = ''
+            for member in union_decl.get_children():
+                if member.kind != clang.cindex.CursorKind.FIELD_DECL:
+                    continue
+                if member.type.spelling not in struct_names:
+                    continue
+                msg_field = f'{field_name}_{member.spelling}'
+                result += (
+                    f'    msg.{msg_field} = '
+                    f'Convert({param_name}.{field_name}.{member.spelling});\n'
+                )
+            return result
+        elif field_node.type.spelling in [
             'uint8_t',
             'uint16_t',
             'uint32_t',
