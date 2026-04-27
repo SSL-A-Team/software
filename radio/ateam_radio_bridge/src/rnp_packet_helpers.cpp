@@ -74,7 +74,7 @@ std::size_t GetPacketSize(const CommandCode & command_code)
       return kPacketHeaderSize + sizeof(ParameterCommand);
       break;
     default:
-      throw std::invalid_argument("Unrecognized command code.");
+      throw std::invalid_argument("Unrecognized command code: " + std::to_string(command_code));
   }
 }
 

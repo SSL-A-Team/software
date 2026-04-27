@@ -306,7 +306,7 @@ private:
       if (connections_[id] == nullptr) {
         continue;
       }
-      BasicControl control_msg;
+      BasicControl control_msg{};
       // Motion and kicker commands
       const bool command_active = (std::chrono::steady_clock::now() - motion_command_timestamps_[id]) <=
         command_timeout_threshold_;
