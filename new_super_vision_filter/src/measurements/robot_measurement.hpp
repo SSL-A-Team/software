@@ -39,7 +39,6 @@ public:
   )
   : camera_id(camera_id), team(team)
   {
-    PosMeasurement pos;
     pos << bot_detection.pose.position.x,
       bot_detection.pose.position.y;
     angle << bot_detection.pose.orientation.w;

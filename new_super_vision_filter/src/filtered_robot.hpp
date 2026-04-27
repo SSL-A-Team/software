@@ -50,7 +50,7 @@ private:
   int health = 2;
   int maxHealth = 20;
   double maxDistance = -1.0;
-  std::chrono::milliseconds update_threshold{50};
+  std::chrono::milliseconds update_threshold{2000};
   std::chrono::time_point<std::chrono::steady_clock> timestamp;
   std::chrono::time_point<std::chrono::steady_clock> last_visible_timestamp;
         // double height; // in m

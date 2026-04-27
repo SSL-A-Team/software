@@ -26,6 +26,7 @@
 #include <chrono>
 #include <Eigen/Core>
 #include <ateam_geometry/ateam_geometry.hpp>
+#include <iostream>
 
 // See https://thekalmanfilter.com/extended-kalman-filter-python-example/
 // or https://thekalmanfilter.com/kalman-filter-explained-simply/
@@ -88,7 +89,10 @@ void FilteredRobot::update(const RobotMeasurement & measurement)
   const std::chrono::time_point<std::chrono::steady_clock> now =
     std::chrono::steady_clock::now();
     // If it's been too long, don't use this message
-  if (now - measurement.getTimestamp() > update_threshold || is_new) {
+  if (now - measurement.getTimestamp() > update_threshold) {
+    return;
+  }
+  if (is_new) {
     return;
   }
     // Predict state forward

@@ -80,11 +80,11 @@ public:
                 10,
                 std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
 
-    field_subscription_ =
-      create_subscription<ateam_msgs::msg::FieldInfo>(
-                std::string(Topics::kField),
-                10,
-                std::bind(&VisionFilterNode::field_callback, this, std::placeholders::_1));
+    // field_subscription_ =
+    //   create_subscription<ateam_msgs::msg::FieldInfo>(
+    //             std::string(Topics::kField),
+    //             10,
+    //             std::bind(&VisionFilterNode::field_callback, this, std::placeholders::_1));
   }
 
     // Will also need to add publishers here and wall clock timer
@@ -97,9 +97,9 @@ private:
   std::vector<FilteredRobot> yellow_robots;
   std::optional<FilteredBall> ball;
 
-  boost::circular_buffer<BallMeasurement> ball_measurements{300};
-  boost::circular_buffer<RobotMeasurement> blue_measurements{300};
-  boost::circular_buffer<RobotMeasurement> yellow_measurements{300};
+  boost::circular_buffer<BallMeasurement> ball_measurements{10};
+  boost::circular_buffer<RobotMeasurement> blue_measurements{50};
+  boost::circular_buffer<RobotMeasurement> yellow_measurements{50};
 
         // All this stuff interacts with other nodes (pub/sub related)
   std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
@@ -128,27 +128,28 @@ private:
                     // Create a measurement from each robot in this message
         for (const auto & bot : detection.robots_yellow) {
           ateam_common::TeamColor team_color = ateam_common::TeamColor::Yellow;
+          auto measurement = RobotMeasurement(bot, detect_camera, team_color);
           yellow_measurements.push_back(
-                            RobotMeasurement(bot, detect_camera, team_color)
+                           measurement 
           );
         }
-        RCLCPP_INFO(this->get_logger(), "Number of yellow measurements is: %d", yellow_measurements.size());
 
         for (const auto & bot : detection.robots_blue) {
           ateam_common::TeamColor team_color = ateam_common::TeamColor::Blue;
+          
+          auto measurement = RobotMeasurement(bot, detect_camera, team_color);
           blue_measurements.push_back(
-                            RobotMeasurement(bot, detect_camera, team_color)
+            measurement
           );
         }
-        RCLCPP_INFO(this->get_logger(), "Number of blue measurements is: %d", blue_measurements.size());
 
                     // Create a measurement from each ball in this message
         for (const auto & ball: detection.balls) {
+          auto measurement = BallMeasurement(ball, detect_camera);
           ball_measurements.push_back(
-                            BallMeasurement(ball, detect_camera)
+                           measurement 
           );
         }
-        RCLCPP_INFO(this->get_logger(), "Number of ball measurements is: %d", ball_measurements.size());
       }
 
                 // Sort our measurements to make sure they are in order of the time received
@@ -163,10 +164,13 @@ private:
           [bot_measurement](const FilteredRobot & bot){return bot_measurement.getId() == bot.getId();}
         );
         if (it == blue_robots.end()) {
+          // std::cerr << "Adding a new robot" << std::endl;
+          // std::cerr << bot_measurement.getId() << std::endl;
           blue_robots.push_back(
                             FilteredRobot(bot_measurement, team_color)
           );
         } else {
+          // std::cerr << "Updating a robot" << std::endl;
           it->update(bot_measurement);
         }
       }
@@ -193,9 +197,8 @@ private:
         }
       }
     }
-
-    return;
-  }
+      return;
+    }
 
   void timer_callback()
   {

@@ -30,7 +30,6 @@ public:
   BallMeasurement(const ssl_league_msgs::msg::VisionDetectionBall & ball_detection, int & camera_id)
   : camera_id(camera_id)
   {
-    PosMeasurement pos;
     pos << ball_detection.pos.x,
       ball_detection.pos.y;
     timestamp = std::chrono::steady_clock::now();
