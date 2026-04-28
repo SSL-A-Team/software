@@ -79,3 +79,8 @@ class TestRadioBridgeNode(unittest.TestCase):
             "Hello response should not hold \
                 port 0",
         )
+
+@launch_testing.post_shutdown_test()
+class TestProcessExit(unittest.TestCase):
+    def test_exit_codes(self, proc_info):
+        launch_testing.asserts.assertExitCodes(proc_info)

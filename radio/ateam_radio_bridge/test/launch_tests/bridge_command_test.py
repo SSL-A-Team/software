@@ -91,3 +91,8 @@ class TestRadioBridgeNode(unittest.TestCase):
             if abs(vel_x_linear - 2.0) < 0.1:
                 # Pass the test
                 return
+
+@launch_testing.post_shutdown_test()
+class TestProcessExit(unittest.TestCase):
+    def test_exit_codes(self, proc_info):
+        launch_testing.asserts.assertExitCodes(proc_info)
