@@ -3,6 +3,7 @@ project(ateam_radio_msgs)
 
 include(cmake/generate_msgs.cmake)
 include(cmake/generate_conversion_code.cmake)
+include(cmake/generate_version_header.cmake)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -46,6 +47,8 @@ generate_conversion_code(
   DESTINATION ${GENERATED_DIR}
   STRUCTS ${RADIO_STRUCTS_TO_GENERATE}
 )
+
+generate_version_header()
 
 file(GLOB CONFIG_DEPENDS CONFIGURE_DEPENDS "${RADIO_PACKETS_INCLUDE_DIR}/*.*")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CONFIG_DEPENDS})
