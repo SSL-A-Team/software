@@ -17,10 +17,20 @@ set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/ateam_generated)
 set(RADIO_PACKETS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/include)
 
 set(RADIO_STRUCTS_TO_GENERATE
+    GlobalPositionCommand
+    GlobalVelocityCommand
+    LocalVelocityCommand
+    GlobalAccelerationCommand
+    LocalAccelerationCommand
     BasicTelemetry
     ExtendedTelemetry
+    BodyControlTelemetry
+    BodyControlExtendedTelemetry
     KickerTelemetry
     MotorTelemetry
+    CcmTelemetry
+    CcmVelocityTelemetry
+    CcmCurrentTelemetry
     PowerTelemetry
     BatteryInfo
 )
@@ -42,12 +52,7 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CONFIG_DEPENDS}
 
 set(MSG_TARGET ${PROJECT_NAME})
 rosidl_generate_interfaces(${MSG_TARGET}
-  ${GENERATED_DIR}:msg/BasicTelemetry.msg
-  ${GENERATED_DIR}:msg/ExtendedTelemetry.msg
-  ${GENERATED_DIR}:msg/KickerTelemetry.msg
-  ${GENERATED_DIR}:msg/MotorTelemetry.msg
-  ${GENERATED_DIR}:msg/PowerTelemetry.msg
-  ${GENERATED_DIR}:msg/BatteryInfo.msg
+  ${GENERATED_MSG_TUPLES}
 
   msg/ConnectionStatus.msg
 
@@ -82,9 +87,8 @@ install(
   DIRECTORY ${GENERATED_DIR}/include/
   DESTINATION include/ateam_radio_msgs/ateam_radio_msgs
 )
-file(GLOB SYMLINKED_INCLUDES include/ateam_radio_msgs/packets/*)
 install(
-  FILES ${SYMLINKED_INCLUDES}
+  DIRECTORY ${RADIO_PACKETS_INCLUDE_DIR}
   DESTINATION include/ateam_radio_msgs/ateam_radio_msgs/packets
 )
 install(
@@ -98,7 +102,7 @@ install(
 
 if(BUILD_TESTING)
   file(GLOB_RECURSE submodule_files software-communication/*)
-  file(GLOB symlinked_headers include/ateam_radio_msgs/packets/*)
+  file(GLOB_RECURSE symlinked_headers include/ateam_radio_msgs/packets/*)
   set(_linter_excludes
     software-communication
     ${submodule_files}

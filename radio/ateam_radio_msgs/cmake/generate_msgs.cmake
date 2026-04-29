@@ -44,6 +44,12 @@ function(generate_msgs)
     list(APPEND generated_msgs_files "${arg_DESTINATION}/${struct}.msg")
   endforeach()
 
+  set(GENERATED_MSG_TUPLES "")
+  foreach(_msg ${generated_msgs_files})
+    string(REPLACE "${arg_DESTINATION}/" "" _rel "${_msg}")
+    list(APPEND GENERATED_MSG_TUPLES "${arg_DESTINATION}:${_rel}")
+  endforeach()
+
   execute_process(
     COMMAND python3 ${_generate_msgs_script} ${arg_DESTINATION} ${arg_SOURCE} ${arg_STRUCTS}
     RESULT_VARIABLE result
