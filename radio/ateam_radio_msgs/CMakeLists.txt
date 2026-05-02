@@ -91,7 +91,7 @@ install(
   DESTINATION include/ateam_radio_msgs/ateam_radio_msgs
 )
 install(
-  DIRECTORY ${RADIO_PACKETS_INCLUDE_DIR}
+  DIRECTORY ${RADIO_PACKETS_INCLUDE_DIR}/
   DESTINATION include/ateam_radio_msgs/ateam_radio_msgs/packets
 )
 install(
