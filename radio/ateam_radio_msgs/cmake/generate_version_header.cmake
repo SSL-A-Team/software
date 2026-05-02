@@ -33,6 +33,8 @@ function(generate_version_header)
   )
 
   string(SUBSTRING "${SOFT_COMMS_SUBMODULE_SHA}" 0 8 SOFT_COMMS_SUBMODULE_SHA_SHORT)
+  set(_hex_string "0x${SOFT_COMMS_SUBMODULE_SHA_SHORT}")
+  math(EXPR SOFT_COMMS_SUBMODULE_SHA_SHORT_NUM "${_hex_string} + 0")
 
   execute_process(
     COMMAND ${GIT_EXECUTABLE} status --porcelain
