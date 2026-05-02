@@ -33,6 +33,7 @@
 #include <ateam_radio_msgs/srv/set_firmware_parameter.hpp>
 #include <ateam_radio_msgs/srv/send_robot_power_request.hpp>
 #include <ateam_radio_msgs/conversion.hpp>
+#include <ateam_radio_msgs/version.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
@@ -321,6 +322,21 @@ private:
     }
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
+
+    const uint32_t incoming_comms_hash = hello_data.coms_hash[0] | (hello_data.coms_hash[1] << 8) |
+      (hello_data.coms_hash[2] << 16) | (hello_data.coms_hash[3] << 24);
+    if (incoming_comms_hash != ateam_radio_msgs::COMMS_HASH) {
+      RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Packet version hash mismatch.");
+      return;
+    }
+
+    if (ateam_radio_msgs::COMMS_DIRTY) {
+      RCLCPP_WARN(get_logger(), "Local packet version is dirty. Compatibility check may be unreliable.");
+    }
+
+    if (hello_data.coms_repo_dirty) {
+      RCLCPP_WARN(get_logger(), "Remote robot's packet version is dirty. Compatibility check may be unreliable.");
+    }
 
     if (!(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&

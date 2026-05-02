@@ -11,6 +11,8 @@ import pytest
 
 import launch_testing.actions
 
+from version_helpers import get_comms_submodule_hash, get_comms_submodule_dirty
+
 
 discovery_address = "224.4.20.70"
 discovery_port = 42069
@@ -49,8 +51,23 @@ class TestRadioBridgeNode(unittest.TestCase):
         cls.sock.close()
 
     def test_discoveryResponse(self):
+        dirty_flags = 0b00000001 if get_comms_submodule_dirty() else 0
+        coms_hash = get_comms_submodule_hash()
         self.sock.sendto(
-            struct.pack("IBBHBBBBIII", 653411691, 21, 0, 16, 0, 0, 0, 0, 0, 0, 0), discovery_endpoint
+            struct.pack(
+                "IBBH BBBIII",
+                653411691,  # crc
+                21,  # cc Hello request
+                0,  # reserved
+                16,  # data length
+                0,  # robot id
+                0,  # color
+                dirty_flags,
+                coms_hash,
+                0,  # controls hash
+                0,  # firmware hash
+            ),
+            discovery_endpoint,
         )
         data, _ = self.sock.recvfrom(16)
         global bridge_endpoint
