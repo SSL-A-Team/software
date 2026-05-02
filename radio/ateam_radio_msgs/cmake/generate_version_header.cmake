@@ -49,6 +49,10 @@ function(generate_version_header)
     set(SOFT_COMMS_SUBMODULE_DIRTY false)
   endif()
 
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/templates/version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/ateam_generated/include/version.hpp" @ONLY) 
+  configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/templates/version.hpp.in
+    "${CMAKE_CURRENT_BINARY_DIR}/ateam_generated/include/version.hpp"
+    @ONLY
+  )
 
 endfunction()

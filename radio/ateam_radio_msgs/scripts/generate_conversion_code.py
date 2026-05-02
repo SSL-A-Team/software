@@ -204,7 +204,8 @@ def generate_union_switch_copy_lines(field_node, param_name, struct_names, selec
     enum_details = next(e for e in enums if e['type_name'] == selector_field.type.spelling)
     # Convention: enum value 0 means "none/off" (no active union member).
     # Remaining values sorted ascending map positionally to union members in
-    # declaration order, so BCM_GLOBAL_POSITION(1)->global_pos, BCM_GLOBAL_VELOCITY(2)->global_vel, etc.
+    # declaration order, so BCM_GLOBAL_POSITION(1)->global_pos,
+    # BCM_GLOBAL_VELOCITY(2)->global_vel, etc.
     non_zero_cases = sorted(
         [(name, val) for name, val in enum_details['values'] if val != 0],
         key=lambda x: x[1],
