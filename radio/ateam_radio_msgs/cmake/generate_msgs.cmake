@@ -32,26 +32,17 @@ function(generate_msgs)
     message(FATAL_ERROR "At least one struct must be specified.")
   endif()
 
-  file(MAKE_DIRECTORY "${arg_DESTINATION}")
+  set(output_msg_dir "${arg_DESTINATION}/msg")
+
+  file(MAKE_DIRECTORY "${output_msg_dir}")
 
   set(_generate_msgs_script "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_msgs.py")
   if(NOT EXISTS "${_generate_msgs_script}")
     message(FATAL_ERROR "Script ${_generate_msgs_script} does not exist.")
   endif()
 
-  set(${generated_msgs_files} "")
-  foreach(struct ${arg_STRUCTS})
-    list(APPEND generated_msgs_files "${arg_DESTINATION}/${struct}.msg")
-  endforeach()
-
-  set(GENERATED_MSG_TUPLES "")
-  foreach(_msg ${generated_msgs_files})
-    string(REPLACE "${arg_DESTINATION}/" "" _rel "${_msg}")
-    list(APPEND GENERATED_MSG_TUPLES "${arg_DESTINATION}:${_rel}")
-  endforeach()
-
   execute_process(
-    COMMAND python3 ${_generate_msgs_script} ${arg_DESTINATION} ${arg_SOURCE} ${arg_STRUCTS}
+    COMMAND python3 ${_generate_msgs_script} ${output_msg_dir} ${arg_SOURCE} ${arg_STRUCTS}
     RESULT_VARIABLE result
     OUTPUT_VARIABLE output
     ERROR_VARIABLE error

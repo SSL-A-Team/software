@@ -38,7 +38,7 @@ set(RADIO_STRUCTS_TO_GENERATE
 
 generate_msgs(
   SOURCE ${RADIO_PACKETS_INCLUDE_DIR}/radio.h
-  DESTINATION ${GENERATED_DIR}/msg
+  DESTINATION ${GENERATED_DIR}
   STRUCTS ${RADIO_STRUCTS_TO_GENERATE}
 )
 
@@ -53,9 +53,16 @@ generate_version_header()
 file(GLOB CONFIG_DEPENDS CONFIGURE_DEPENDS "${RADIO_PACKETS_INCLUDE_DIR}/*.*")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CONFIG_DEPENDS})
 
+file(GLOB _raw_generated_msgs "${GENERATED_DIR}/msg/*.msg")
+set(_generated_msgs "")
+foreach(_msg ${_raw_generated_msgs})
+  string(REPLACE "${GENERATED_DIR}/" "" _rel "${_msg}")
+  list(APPEND _generated_msgs "${GENERATED_DIR}:${_rel}")
+endforeach()
+
 set(MSG_TARGET ${PROJECT_NAME})
 rosidl_generate_interfaces(${MSG_TARGET}
-  ${GENERATED_MSG_TUPLES}
+  ${_generated_msgs}
 
   msg/ConnectionStatus.msg
 
