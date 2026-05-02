@@ -355,8 +355,9 @@ private:
 
     const auto vision_speed = robot.state->twist_body.angular.z;
     const auto vision_perp_speed = robot.state->twist_body.linear.y;
-    const auto firmware_speed = robot.motion_feedback->cgkf_body_velocity_state_estimate[2];
-    const auto firmware_perp_speed = robot.motion_feedback->cgkf_body_velocity_state_estimate[0];
+    // TODO These values are not in the new packet definitions?
+    const auto firmware_speed = 0.0;  // robot.motion_feedback-> cgkf_body_velocity_state_estimate[2];
+    const auto firmware_perp_speed = 0.0;  // robot.motion_feedback->cgkf_body_velocity_state_estimate[0];
 
     DataEntry entry{
       .time = std::chrono::duration_cast<std::chrono::duration<double>>(
