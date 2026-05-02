@@ -50,18 +50,18 @@ class TestRadioBridgeNode(unittest.TestCase):
 
     def test_discoveryResponse(self):
         self.sock.sendto(
-            struct.pack("IHHBHBB", 653411691, 0, 1, 101, 2, 0, 0), discovery_endpoint
+            struct.pack("IBBHBBBBIII", 653411691, 21, 0, 16, 0, 0, 0, 0, 0, 0, 0), discovery_endpoint
         )
-        data, _ = self.sock.recvfrom(52)
+        data, _ = self.sock.recvfrom(16)
         global bridge_endpoint
         self.assertEqual(
-            data[8],
-            202,
+            data[4],
+            22,
             "Radio bridge sent wrong command code. Expected CC_HELLO_RESP \
-                (202).",
+                (22).",
         )
         self.assertEqual(
-            data[9:11],
+            data[5:7],
             bytearray([0, 6]),
             "Radio bridge sent wrong size for reply data. \
                 Expected 6 (size of HelloResponse).",
@@ -69,12 +69,12 @@ class TestRadioBridgeNode(unittest.TestCase):
         # Note: This test does not check full packet contents as they are
         # dynamic and unpredictable from the client
         self.assertNotEqual(
-            data[12:16],
+            data[8:12],
             bytearray([0, 0, 0, 0]),
             "Hello response should not hold IP 0.0.0.0",
         )
         self.assertNotEqual(
-            data[16:18],
+            data[13:15],
             bytearray([0, 0]),
             "Hello response should not hold \
                 port 0",
