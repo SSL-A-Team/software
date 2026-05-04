@@ -21,6 +21,7 @@
 #include "defense_area_enforcement.hpp"
 #include <ateam_geometry/ateam_geometry.hpp>
 #include <ateam_common/robot_constants.hpp>
+#include "core/motion/frame_conversions.hpp"
 
 namespace ateam_kenobi::defense_area_enforcement
 {
@@ -72,8 +73,11 @@ bool WouldVelocityCauseCollision(
   const double delta_t = 0.01;
 
   // TODO(barulicm): This ignores the velocity frame
-  const ateam_geometry::Vector velocity{motion_command.twist.linear.x,
+  ateam_geometry::Vector velocity{motion_command.twist.linear.x,
     motion_command.twist.linear.y};
+  if (motion_command.twist_frame == ateam_msgs::msg::RobotMotionCommand::FRAME_BODY) {
+    velocity = ateam_kenobi::motion::LocalToWorldFrame(velocity, world.our_robots[robot_id]);
+  }
 
   const ateam_geometry::Vector displacement = velocity * delta_t;
 
