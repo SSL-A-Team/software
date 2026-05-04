@@ -72,7 +72,6 @@ bool WouldVelocityCauseCollision(
 
   const double delta_t = 0.01;
 
-  // TODO(barulicm): This ignores the velocity frame
   ateam_geometry::Vector velocity{motion_command.twist.linear.x,
     motion_command.twist.linear.y};
   if (motion_command.twist_frame == ateam_msgs::msg::RobotMotionCommand::FRAME_BODY) {
