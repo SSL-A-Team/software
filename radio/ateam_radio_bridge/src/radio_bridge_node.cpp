@@ -50,12 +50,21 @@ using namespace std::string_literals;
 namespace ateam_radio_bridge
 {
 
+enum class ConnectionState
+{
+  Disconnected,
+  Connecting,
+  Connected,
+  ReadyToClose
+};
+
 class RadioBridgeNode : public rclcpp::Node
 {
 public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
-    timeout_threshold_(declare_parameter("timeout_ms", 250)),
+    sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 250)),
+    connect_timeout_threshold_(declare_parameter("connect_timeout_ms", 750)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
     game_controller_listener_(*this,
       std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
@@ -68,7 +77,7 @@ public:
   {
     std::fill(shutdown_requested_.begin(), shutdown_requested_.end(), false);
     std::fill(reboot_requested_.begin(), reboot_requested_.end(), false);
-    std::fill(goodbye_received_.begin(), goodbye_received_.end(), false);
+    std::fill(connection_states_.begin(), connection_states_.end(), ConnectionState::Disconnected);
 
     declare_parameters<bool>("controls_enabled", {
         {"body_vel", true},
@@ -122,14 +131,18 @@ public:
   }
 
 private:
-  const std::chrono::milliseconds timeout_threshold_;
+  // Incoming timeouts
+  const std::chrono::milliseconds sustain_timeout_threshold_;
+  const std::chrono::milliseconds connect_timeout_threshold_;
+
+  // Outgoing timeouts
   const std::chrono::milliseconds command_timeout_threshold_;
+
   std::mutex mutex_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
-  std::array<bool, 16> goodbye_received_;
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
@@ -143,7 +156,8 @@ private:
   FirmwareParameterServer firmware_parameter_server_;
   rclcpp::Service<ateam_radio_msgs::srv::SendRobotPowerRequest>::SharedPtr power_request_service_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
-  std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
+  std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamps_;
+  std::array<ConnectionState, 16> connection_states_;
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
 
@@ -173,6 +187,7 @@ private:
     {
       std::lock_guard lock(mutex_);
       connections_.at(connection_index).swap(connection);
+      connection_states_[connection_index] = ConnectionState::Disconnected;
     }
     if(!connection) {
       // Connection already closed
@@ -206,22 +221,22 @@ private:
         connection_publishers_[i]->publish(connection_message);
         shutdown_requested_[i] = false;
         reboot_requested_[i] = false;
-        goodbye_received_[i] = false;
+        connection_states_[i] = ConnectionState::Disconnected;
         continue;
       }
-      const auto & last_heartbeat_time = last_heartbeat_timestamp_[i];
+      const auto & last_heartbeat_time = last_heartbeat_timestamps_[i];
       const auto time_since_heartbeat = std::chrono::steady_clock::now() - last_heartbeat_time;
-      if (time_since_heartbeat > timeout_threshold_) {
+      const auto effective_timeout = connection_states_[i] == ConnectionState::Connected ?
+        sustain_timeout_threshold_ : connect_timeout_threshold_;
+      if (time_since_heartbeat > effective_timeout) {
         RCLCPP_WARN(get_logger(), "Connection to robot %ld timed out.", i);
         // release lock early so CloseConnection can grab it
         lock.unlock();
         CloseConnection(i);
       }
-      if(goodbye_received_[i]) {
-        RCLCPP_INFO(get_logger(), "Received goodbye from robot %ld.", i);
+      if(connection_states_[i] == ConnectionState::ReadyToClose) {
         // release lock early so CloseConnection can grab it
         lock.unlock();
-        // don't send goodbye because we already received one from the robot
         CloseConnection(i, false);
       }
       // lock released by destructor
@@ -340,7 +355,8 @@ private:
       sender_address.c_str(), sender_port);
 
     motion_command_timestamps_[robot_id] = {};
-    last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
+    last_heartbeat_timestamps_[robot_id] = std::chrono::steady_clock::now();
+    connection_states_[robot_id] = ConnectionState::Connecting;
     connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
       sender_address, sender_port,
       std::bind(
@@ -376,11 +392,12 @@ private:
     switch (packet.command_code) {
       case CC_GOODBYE:
         // close connection. No need to send our own goodbye
-        goodbye_received_[robot_id] = true;
+        RCLCPP_INFO(get_logger(), "Received goodbye from robot %d.", robot_id);
+        connection_states_[robot_id] = ConnectionState::ReadyToClose;
         break;
       case CC_TELEMETRY:
         {
-          last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
+          OnHeartbeatQualifiedMessageReceived(robot_id);
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
             RCLCPP_WARN(get_logger(), "Ignoring basic telemetry message from robot %d. %s", robot_id, error.c_str());
@@ -424,7 +441,7 @@ private:
           break;
         }
       case CC_KEEPALIVE:
-        last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
+        OnHeartbeatQualifiedMessageReceived(robot_id);
         break;
       default:
         RCLCPP_WARN(
@@ -482,6 +499,13 @@ private:
     }
 
     response->success = true;
+  }
+
+  void OnHeartbeatQualifiedMessageReceived(int robot_id) {
+    last_heartbeat_timestamps_[robot_id] = std::chrono::steady_clock::now();
+    if(connection_states_[robot_id] == ConnectionState::Connecting) {
+      connection_states_[robot_id] = ConnectionState::Connected;
+    }
   }
 
 };

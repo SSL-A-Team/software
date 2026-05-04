@@ -3,6 +3,7 @@
 
 import socket
 import struct
+import time
 from threading import Thread
 
 
@@ -18,6 +19,7 @@ class MockRobot:
         self._last_cmd_packet = None
         self._robot_id = robot_id
         self._color = color
+        self._goodbye_requested = False
         self._async_running = False
         self._async_thread = None
         self._bridge_endpoint = ('', 0)
@@ -31,12 +33,22 @@ class MockRobot:
     def getLastCmdMessage(self) -> bytes:
         return self._last_cmd_packet
 
+    def sendGoodbyeAndShutdown(self) -> None:
+        if not self._connected:
+            return
+        self._goodbye_requested = True
+        time.sleep(0.1)
+        self.stopAsync()
+
     def run(self, run_async=False):
         while True:
             if run_async and not self._async_running:
                 return
             if not self._connected:
                 self._runDiscovery()
+            elif self._goodbye_requested:
+                self._sendGoodbyePacket()
+                self._goodbye_requested = False
             else:
                 self._runConnected()
 
@@ -94,6 +106,17 @@ class MockRobot:
             0,  # Bit Flags
             100,  # Battery Percent
             100,  # Kicker Charge Percent
+        )
+        self._socket.sendto(packet, self._bridge_endpoint)
+    
+    def _sendGoodbyePacket(self):
+        packet = struct.pack(
+            'IHHBH',
+            0,  # CRC
+            0,  # Version Major
+            1,  # Version Minor
+            3,  # CC Goodbye,
+            0,  # Data Length
         )
         self._socket.sendto(packet, self._bridge_endpoint)
 
