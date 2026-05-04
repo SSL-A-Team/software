@@ -23,9 +23,9 @@
 
 namespace ateam_radio_msgs
 {
-  constexpr uint32_t COMMS_HASH = @SOFT_COMMS_SUBMODULE_SHA_SHORT_NUM@;
+  constexpr uint32_t kComsHash = @SOFT_COMS_SUBMODULE_SHA_SHORT_NUM@;
 
-  constexpr bool COMMS_DIRTY = @SOFT_COMMS_SUBMODULE_DIRTY@;
+  constexpr bool kComsDirty = @SOFT_COMS_SUBMODULE_DIRTY@;
 }
 
 #endif  // ATEAM_RADIO_MSGS__VERSION_HPP_

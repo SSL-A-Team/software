@@ -30,10 +30,10 @@ def find_constant_value(symbol_name):
             return tokens[token_index + 2].spelling
     raise RuntimeError(f"Failed to find constant {symbol_name} in version.hpp")
 
-def get_comms_submodule_hash():
+def get_coms_submodule_hash():
     """Get the current commit hash of the software communication submodule."""
-    return int(find_constant_value("COMMS_HASH"))
+    return int(find_constant_value("kComsHash"))
 
-def get_comms_submodule_dirty():
+def get_coms_submodule_dirty():
     """Check if the software communication submodule has uncommitted changes."""
-    return bool(find_constant_value("COMMS_DIRTY"))
+    return bool(find_constant_value("kComsDirty"))

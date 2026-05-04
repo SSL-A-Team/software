@@ -323,14 +323,14 @@ private:
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
 
-    const uint32_t incoming_comms_hash = hello_data.coms_hash[0] | (hello_data.coms_hash[1] << 8) |
+    const uint32_t incoming_coms_hash = hello_data.coms_hash[0] | (hello_data.coms_hash[1] << 8) |
       (hello_data.coms_hash[2] << 16) | (hello_data.coms_hash[3] << 24);
-    if (incoming_comms_hash != ateam_radio_msgs::COMMS_HASH) {
+    if (incoming_coms_hash != ateam_radio_msgs::kComsHash) {
       RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Packet version hash mismatch.");
       return;
     }
 
-    if (ateam_radio_msgs::COMMS_DIRTY) {
+    if (ateam_radio_msgs::kComsDirty) {
       RCLCPP_WARN(get_logger(), "Local packet version is dirty. Compatibility check may be unreliable.");
     }
 

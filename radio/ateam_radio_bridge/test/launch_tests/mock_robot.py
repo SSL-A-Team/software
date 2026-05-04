@@ -5,7 +5,7 @@ import socket
 import struct
 import time
 from threading import Thread
-from version_helpers import get_comms_submodule_hash, get_comms_submodule_dirty
+from version_helpers import get_coms_submodule_hash, get_coms_submodule_dirty
 
 
 class MockRobot:
@@ -66,7 +66,7 @@ class MockRobot:
         self._async_thread = None
 
     def _runDiscovery(self):
-        dirty_flags = 0b00000001 if get_comms_submodule_dirty() else 0
+        dirty_flags = 0b00000001 if get_coms_submodule_dirty() else 0
         packet = struct.pack('IBBH BBBBIII',
                              0,  # CRC
                              21,  # CC Hello Req
@@ -76,7 +76,7 @@ class MockRobot:
                              1 if self._color == 'blue' else 0,  # Team Color
                              dirty_flags,  # dirty flags
                              0,  # reserved
-                             get_comms_submodule_hash(),  # coms hash
+                             get_coms_submodule_hash(),  # coms hash
                              0,  # controls hash
                              0   # firmware hash
                              )
