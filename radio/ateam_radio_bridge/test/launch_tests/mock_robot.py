@@ -125,6 +125,17 @@ class MockRobot:
             0,  # Data Length
         )
         self._socket.sendto(packet, self._bridge_endpoint)
+    
+    def _sendGoodbyePacket(self):
+        packet = struct.pack(
+            'IHHBH',
+            0,  # CRC
+            0,  # Version Major
+            1,  # Version Minor
+            3,  # CC Goodbye,
+            0,  # Data Length
+        )
+        self._socket.sendto(packet, self._bridge_endpoint)
 
     def _runConnected(self):
         try:
