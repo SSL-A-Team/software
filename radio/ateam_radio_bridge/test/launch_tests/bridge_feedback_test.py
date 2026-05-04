@@ -75,7 +75,7 @@ class TestRadioBridgeNode(unittest.TestCase):
         )
         for message in self.feedback_waiter.received_messages(self.feedback_topic_name):
             # Just checks a few fields to make sure it's a reasonably valid message
-            self.assertEqual(message.sequence_number, 1)
+            self.assertEqual(message.transmission_sequence_number, 1)
             self.assertAlmostEqual(message.battery_percent, 100)
 
 @launch_testing.post_shutdown_test()

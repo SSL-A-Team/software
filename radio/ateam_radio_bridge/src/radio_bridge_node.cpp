@@ -33,6 +33,7 @@
 #include <ateam_radio_msgs/srv/set_firmware_parameter.hpp>
 #include <ateam_radio_msgs/srv/send_robot_power_request.hpp>
 #include <ateam_radio_msgs/conversion.hpp>
+#include <ateam_radio_msgs/version.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
@@ -201,7 +202,7 @@ private:
       const auto packet = CreateEmptyPacket(CC_GOODBYE);
       connection->send(
         reinterpret_cast<const uint8_t *>(&packet),
-        GetPacketSize(packet.command_code));
+        GetPacketSize(packet.header.command_code));
       // Give some time for the message to actually send before closing the connection
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
@@ -263,22 +264,31 @@ private:
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
         ateam_common::GameCommand::Stop;
       control_msg.emergency_stop = false;
-      control_msg.body_vel_controls_enabled = get_parameter("controls_enabled.body_vel").as_bool();
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
-      control_msg.play_song = 0;
-      control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
-      control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
-      control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
-      control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
-      control_msg.dribbler_multiplier = 55;
+      control_msg.vision_update = 0;
+      control_msg.reserved1 = 0;
+      control_msg.vision_position_update[0] = 0.0f;
+      control_msg.vision_position_update[1] = 0.0f;
+      control_msg.vision_position_update[2] = 0.0f;
+      control_msg.body_control_mode = BCM_LOCAL_VELOCITY;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
+      control_msg.play_song = 0;
+      control_msg.reserved2[0] = 0;
       control_msg.kick_vel = motion_commands_[id].kick_speed;
+      control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
+      control_msg.cmd.local_vel = {
+        static_cast<float>(motion_commands_[id].twist.linear.x),
+        static_cast<float>(motion_commands_[id].twist.linear.y),
+        static_cast<float>(motion_commands_[id].twist.angular.z),
+        0.0,  // TODO(barulicm): max_linear_acc
+        0.0  // TODO(barulicm): max_angular_acc
+      };
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),
-        GetPacketSize(control_packet.command_code));
+        GetPacketSize(control_packet.header.command_code));
     }
   }
 
@@ -293,10 +303,10 @@ private:
       return;
     }
 
-    if (packet.command_code != CC_HELLO_REQ) {
+    if (packet.header.command_code != CC_HELLO_REQ) {
       RCLCPP_WARN(
         get_logger(), "Ignoring discovery packet. Unexpected command code: %d",
-        packet.command_code);
+        packet.header.command_code);
       return;
     }
 
@@ -312,6 +322,21 @@ private:
     }
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
+
+    const uint32_t incoming_coms_hash = hello_data.coms_hash[0] | (hello_data.coms_hash[1] << 8) |
+      (hello_data.coms_hash[2] << 16) | (hello_data.coms_hash[3] << 24);
+    if (incoming_coms_hash != ateam_radio_msgs::kComsHash) {
+      RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Packet version hash mismatch.");
+      return;
+    }
+
+    if (ateam_radio_msgs::kComsDirty) {
+      RCLCPP_WARN(get_logger(), "Local packet version is dirty. Compatibility check may be unreliable.");
+    }
+
+    if (hello_data.coms_repo_dirty) {
+      RCLCPP_WARN(get_logger(), "Remote robot's packet version is dirty. Compatibility check may be unreliable.");
+    }
 
     if (!(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&
@@ -330,7 +355,7 @@ private:
       const auto reply_packet = CreateEmptyPacket(CC_NACK);
       discovery_receiver_.SendTo(
         sender_address, sender_port,
-        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
       RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Invalid robot ID: %d", robot_id);
       return;
     }
@@ -344,7 +369,7 @@ private:
       const auto reply_packet = CreateEmptyPacket(CC_NACK);
       discovery_receiver_.SendTo(
         sender_address, sender_port,
-        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
       RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Robot ID already connected: %d",
           robot_id);
       return;
@@ -373,7 +398,7 @@ private:
     const auto reply_packet = CreatePacket(CC_HELLO_RESP, response);
     discovery_receiver_.SendTo(
       sender_address, sender_port,
-      reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+      reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
   }
 
   void RobotIncomingPacketCallback(
@@ -389,7 +414,7 @@ private:
 
     const std::lock_guard lock(mutex_);
 
-    switch (packet.command_code) {
+    switch (packet.header.command_code) {
       case CC_GOODBYE:
         // close connection. No need to send our own goodbye
         RCLCPP_INFO(get_logger(), "Received goodbye from robot %d.", robot_id);
@@ -446,7 +471,7 @@ private:
       default:
         RCLCPP_WARN(
           get_logger(), "Ignoring telemetry message from robot %d. Unsupported command code: %d",
-          robot_id, packet.command_code);
+          robot_id, packet.header.command_code);
         return;
     }
   }

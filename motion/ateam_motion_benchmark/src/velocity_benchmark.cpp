@@ -363,12 +363,15 @@ private:
       robot.state->twist_body.linear.x : robot.state->twist_body.linear.y;
     const auto vision_perp_speed = options_.axis == Axis::X ?
       robot.state->twist_body.linear.y : robot.state->twist_body.linear.x;
-    const auto firmware_speed = options_.axis == Axis::X ?
-      robot.motion_feedback->cgkf_body_velocity_state_estimate[0] :
-      robot.motion_feedback->cgkf_body_velocity_state_estimate[1];
-    const auto firmware_perp_speed = options_.axis == Axis::X ?
-      robot.motion_feedback->cgkf_body_velocity_state_estimate[1] :
-      robot.motion_feedback->cgkf_body_velocity_state_estimate[0];
+    // TODO These values are not in the new packet definitions?
+    // const auto firmware_speed = options_.axis == Axis::X ?
+    //   robot.motion_feedback->cgkf_body_velocity_state_estimate[0] :
+    //   robot.motion_feedback->cgkf_body_velocity_state_estimate[1];
+    // const auto firmware_perp_speed = options_.axis == Axis::X ?
+    //   robot.motion_feedback->cgkf_body_velocity_state_estimate[1] :
+    //   robot.motion_feedback->cgkf_body_velocity_state_estimate[0];
+    const auto firmware_speed = 0.0;
+    const auto firmware_perp_speed = 0.0;
 
     DataEntry entry{
       .time = std::chrono::duration_cast<std::chrono::duration<double>>(

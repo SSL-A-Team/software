@@ -41,40 +41,41 @@ namespace ateam_radio_bridge
  */
 std::size_t GetPacketSize(const CommandCode & command_code)
 {
+  const auto packet_header_size = sizeof(RadioHeader);
   // For now, packet size only depends on command code
   switch (command_code) {
     case CC_ACK:
-      return kPacketHeaderSize;
+      return packet_header_size;
       break;
     case CC_NACK:
-      return kPacketHeaderSize;
+      return packet_header_size;
       break;
     case CC_GOODBYE:
-      return kPacketHeaderSize;
+      return packet_header_size;
       break;
     case CC_KEEPALIVE:
-      return kPacketHeaderSize;
+      return packet_header_size;
       break;
     case CC_HELLO_REQ:
-      return kPacketHeaderSize + sizeof(HelloRequest);
+      return packet_header_size + sizeof(HelloRequest);
       break;
     case CC_TELEMETRY:
-      return kPacketHeaderSize + sizeof(BasicTelemetry);
+      return packet_header_size + sizeof(BasicTelemetry);
       break;
     case CC_CONTROL:
-      return kPacketHeaderSize + sizeof(BasicControl);
+      return packet_header_size + sizeof(BasicControl);
       break;
     case CC_HELLO_RESP:
-      return kPacketHeaderSize + sizeof(HelloResponse);
+      return packet_header_size + sizeof(HelloResponse);
       break;
     case CC_CONTROL_DEBUG_TELEMETRY:
-      return kPacketHeaderSize + sizeof(ExtendedTelemetry);
+      return packet_header_size + sizeof(ExtendedTelemetry);
       break;
     case CC_ROBOT_PARAMETER_COMMAND:
-      return kPacketHeaderSize + sizeof(ParameterCommand);
+      return packet_header_size + sizeof(ParameterCommand);
       break;
     default:
-      throw std::invalid_argument("Unrecognized command code.");
+      throw std::invalid_argument("Unrecognized command code: " + std::to_string(command_code));
   }
 }
 
@@ -89,13 +90,13 @@ std::size_t GetPacketSize(const CommandCode & command_code)
  */
 void SetCRC(RadioPacket & packet)
 {
-  const auto crc_size = sizeof(packet.crc32);
-  const auto packet_size = GetPacketSize(packet.command_code);
+  const auto crc_size = sizeof(packet.header.crc32);
+  const auto packet_size = GetPacketSize(packet.header.command_code);
   boost::crc_32_type crc;
   crc.process_bytes(
     reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(&packet) + crc_size),
     packet_size - crc_size);
-  packet.crc32 = crc.checksum();
+  packet.header.crc32 = crc.checksum();
 }
 
 /**
@@ -109,13 +110,13 @@ void SetCRC(RadioPacket & packet)
  */
 bool HasCorrectCRC(const RadioPacket & packet)
 {
-  const auto crc_size = sizeof(packet.crc32);
-  const auto packet_size = GetPacketSize(packet.command_code);
+  const auto crc_size = sizeof(packet.header.crc32);
+  const auto packet_size = GetPacketSize(packet.header.command_code);
   boost::crc_32_type crc;
   crc.process_bytes(
     reinterpret_cast<const void *>(reinterpret_cast<const uint8_t *>(&packet) +
     crc_size), packet_size - crc_size);
-  return packet.crc32 == crc.checksum();
+  return packet.header.crc32 == crc.checksum();
 }
 
 /**
@@ -132,11 +133,12 @@ bool HasCorrectCRC(const RadioPacket & packet)
 RadioPacket CreateEmptyPacket(const CommandCode command_code)
 {
   RadioPacket packet{
-    0,
-    kProtocolVersionMajor,
-    kProtocolVersionMinor,
-    command_code,
-    0,
+    RadioHeader{
+      0,  // crc32
+      command_code,
+      0,  // reserved
+      0  // data length
+    },
     {}
   };
 
@@ -160,11 +162,19 @@ RadioPacket CreateEmptyPacket(const CommandCode command_code)
  */
 RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std::string & error)
 {
+  const auto packet_header_size = sizeof(RadioHeader);
+
   RadioPacket packet;
 
-  std::copy_n(data, kPacketHeaderSize, reinterpret_cast<uint8_t *>(&packet));
+  std::copy_n(data, packet_header_size, reinterpret_cast<uint8_t *>(&packet));
 
-  const auto packet_size = GetPacketSize(packet.command_code);
+  std::size_t packet_size = 0;
+  try {
+    packet_size = GetPacketSize(packet.header.command_code);
+  } catch (const std::invalid_argument & e) {
+    error = "Error getting packet size: " + std::string(e.what());
+    return {};
+  }
 
   if (data_length != packet_size) {
     error = "Wrong number of bytes. Expected " + std::to_string(packet_size) + " but got " +
@@ -172,16 +182,8 @@ RadioPacket ParsePacket(const uint8_t * data, const std::size_t data_length, std
     return {};
   }
 
-  if (packet.major_version != kProtocolVersionMajor ||
-    packet.minor_version != kProtocolVersionMinor)
-  {
-    // TODO(barulicm) What should our version compatability rules actually be? This assumes they must match.
-    error = "Protocol versions do not match.";
-    return {};
-  }
-
   std::copy_n(
-    data + kPacketHeaderSize, packet_size - kPacketHeaderSize,
+    data + packet_header_size, packet_size - packet_header_size,
     reinterpret_cast<uint8_t *>(&packet.data));
 
   // TODO(barulicm) Firmware doesn't implement CRCs yet
@@ -210,10 +212,10 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 {
   PacketDataVariant var;
 
-  switch (packet.command_code) {
+  switch (packet.header.command_code) {
     case CC_HELLO_REQ:
       {
-        if (packet.data_length != sizeof(HelloRequest)) {
+        if (packet.header.data_length != sizeof(HelloRequest)) {
           error = "Incorrect data length for HelloData type.";
           break;
         }
@@ -222,7 +224,7 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
       }
     case CC_TELEMETRY:
       {
-        if (packet.data_length != sizeof(BasicTelemetry)) {
+        if (packet.header.data_length != sizeof(BasicTelemetry)) {
           error = "Incorrect data length for BasicTelemetry type.";
           break;
         }
@@ -231,16 +233,16 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
       }
     case CC_CONTROL_DEBUG_TELEMETRY:
       {
-        if (packet.data_length != sizeof(ExtendedTelemetry)) {
+        if (packet.header.data_length != sizeof(ExtendedTelemetry)) {
           error = "Incorrect data length for ExtendedTelemetry type.";
           break;
         }
-        var = packet.data.control_debug_telemetry;
+        var = packet.data.extended_telemetry;
         break;
       }
     case CC_ROBOT_PARAMETER_COMMAND:
       {
-        if (packet.data_length != sizeof(ParameterCommand)) {
+        if (packet.header.data_length != sizeof(ParameterCommand)) {
           error = "Incorrect data length for ParameterCommand type.";
           break;
         }
@@ -249,7 +251,7 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
       }
     case CC_CONTROL:
       {
-        if (packet.data_length != sizeof(BasicControl)) {
+        if (packet.header.data_length != sizeof(BasicControl)) {
           error = "Incorrect data length for BasicControl type.";
           break;
         }
@@ -267,28 +269,38 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & parameter)
 {
   switch(parameter) {
-    case VEL_PID_X:
-      return PID_LIMITED_INTEGRAL_F32;
-    case VEL_PID_Y:
-      return PID_LIMITED_INTEGRAL_F32;
-    case ANGULAR_VEL_PID_Z:
-      return PID_LIMITED_INTEGRAL_F32;
-    case VEL_CGKF_ENCODER_NOISE:
-      return F32;
-    case VEL_CGKF_GYRO_NOISE:
-      return F32;
-    case VEL_CGKF_PROCESS_NOISE:
-      return F32;
-    case VEL_CGFK_INITIAL_COVARIANCE:
-      return F32;
-    case VEL_CGKF_K_MATRIX:
-      return MATRIX_F32;
-    case RC_BODY_VEL_LIMIT:
-      return VEC3_F32;
-    case RC_BODY_ACC_LIMIT:
-      return VEC3_F32;
-    case RC_WHEEL_ACC_LIMIT:
+    case KF_PROCESS_STD:
       return VEC4_F32;
+    case KF_MEASUREMENT_STD:
+      return VEC4_F32;
+    case KF_MAX_STATE:
+      return VEC4_F32;
+    case PHYS_WHEEL:
+      return VEC4_F32;
+    case PHYS_INERTIA:
+      return VEC2_F32;
+    case PHYS_MOTOR_MODEL:
+      return VEC2_F32;
+    case PHYS_FRICTION_MODEL:
+      return VEC4_F32;
+    case POSE_CONTROL_GAIN:
+      return VEC2_F32;
+    case TRAJ_RECOMPUTE_ERROR:
+      return VEC4_F32;
+    case TRAJ_MAX:
+      return VEC4_F32;
+    case POSE_FB_PIDII_X:
+      return VEC5_F32;
+    case POSE_FB_PIDII_Y:
+      return VEC5_F32;
+    case POSE_FB_PIDII_THETA:
+      return VEC5_F32;
+    case TWIST_FB_PIDII_X:
+      return VEC5_F32;
+    case TWIST_FB_PIDII_Y:
+      return VEC5_F32;
+    case TWIST_FB_PIDII_THETA:
+      return VEC5_F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
@@ -299,16 +311,14 @@ std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format)
   switch(format) {
     case F32:
       return 1;
+    case VEC2_F32:
+      return 2;
     case VEC3_F32:
       return 3;
     case VEC4_F32:
       return 4;
-    case PID_F32:
-      return 3;
-    case PID_LIMITED_INTEGRAL_F32:
+    case VEC5_F32:
       return 5;
-    case MATRIX_F32:
-      return 25;
     default:
       throw std::invalid_argument("GetDataSizeForParameterFormat: Unrecognized parameter data format.");
   }
@@ -320,16 +330,14 @@ float* GetParameterDataForSetFormat(ParameterCommand & command)
   switch(command.data_format) {
     case F32:
       return &command.data.f32;
+    case VEC2_F32:
+      return command.data.vec2_f32;
     case VEC3_F32:
       return command.data.vec3_f32;
     case VEC4_F32:
       return command.data.vec4_f32;
-    case PID_F32:
-      return command.data.pid_f32;
-    case PID_LIMITED_INTEGRAL_F32:
-      return command.data.pidii_f32;
-    case MATRIX_F32:
-      return command.data.matrix_f32;
+    case VEC5_F32:
+      return command.data.vec5_f32;
     default:
       throw std::invalid_argument("GetParameterDataForSetFormat: Unrecognized parameter data format.");
   }

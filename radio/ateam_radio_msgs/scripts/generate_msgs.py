@@ -26,6 +26,41 @@ import sys
 import clang.cindex
 
 
+def _is_elaborated_union(field_node):
+    """Return True if the field's type is a typedef'd union."""
+    if field_node.type.kind != clang.cindex.TypeKind.ELABORATED:
+        return False
+    # get_declaration() on a typedef'd union returns TYPEDEF_DECL, not UNION_DECL.
+    # The canonical type strips the typedef layer and gives us the underlying record.
+    canon = field_node.type.get_canonical()
+    return (
+        canon.kind == clang.cindex.TypeKind.RECORD
+        and canon.get_declaration().kind == clang.cindex.CursorKind.UNION_DECL
+    )
+
+
+def collect_union_member_types(file_path, struct_names):
+    """Return a list of struct type names used as union members inside struct_names types."""
+    index = clang.cindex.Index.create()
+    tu = index.parse(file_path)
+    extras = []
+    struct_like = (clang.cindex.CursorKind.STRUCT_DECL, clang.cindex.CursorKind.UNION_DECL)
+    for node in tu.cursor.get_children():
+        if node.location.file is None or node.location.file.name != file_path:
+            continue
+        if node.kind not in struct_like or node.spelling not in struct_names:
+            continue
+        for field in node.get_children():
+            if field.kind != clang.cindex.CursorKind.FIELD_DECL:
+                continue
+            if not _is_elaborated_union(field):
+                continue
+            for member in field.type.get_canonical().get_declaration().get_children():
+                if member.kind == clang.cindex.CursorKind.FIELD_DECL:
+                    extras.append(member.type.spelling)
+    return extras
+
+
 def generate_msgs_for_file(output_dir, file_path, struct_names):
     """Generate ROS2 message definitions from a C header file."""
     index = clang.cindex.Index.create()
@@ -36,21 +71,26 @@ def generate_msgs_for_file(output_dir, file_path, struct_names):
     for node in translation_unit.cursor.get_children():
         match node.kind:
             case clang.cindex.CursorKind.ENUM_DECL:
+                # Intentionally no file filter: enums defined in included headers (e.g.
+                # BodyControlMode in basic_control.h) must be visible when processing files
+                # that include them, so enum field types resolve correctly.
                 enums.append(collect_enum_details(node))
-            case clang.cindex.CursorKind.STRUCT_DECL:
+            case clang.cindex.CursorKind.STRUCT_DECL | clang.cindex.CursorKind.UNION_DECL:
+                if node.location.file is None or node.location.file.name != file_path:
+                    continue
                 msg_name = node.spelling
                 if msg_name not in struct_names:
                     continue
                 declaration_file = pathlib.Path(
                     node.get_definition().location.file.name
                 ).name
-                msg = generate_msg_for_struct(node, enums)
+                msg = generate_msg_for_struct(node, enums, struct_names)
                 write_msg_to_file(output_dir, msg, declaration_file)
             case _:
                 continue
 
 
-def generate_msg_for_struct(struct_ast_node, enums):
+def generate_msg_for_struct(struct_ast_node, enums, struct_names):
     """Generate a ROS2 message definition for a single struct AST node."""
     type_name = struct_ast_node.spelling
     declarations = []
@@ -59,7 +99,7 @@ def generate_msg_for_struct(struct_ast_node, enums):
             continue
         if field.spelling.startswith('_'):
             continue
-        add_field_declarations(declarations, field, enums)
+        add_field_declarations(declarations, field, enums, struct_names)
     return {'type_name': type_name, 'declarations': declarations}
 
 
@@ -75,17 +115,37 @@ def write_msg_to_file(output_dir, msg, input_file_path):
             f.write(f'{declaration}\n')
 
 
-def add_field_declarations(declarations, field_node, enums):
+def add_field_declarations(declarations, field_node, enums, struct_names):
     """Add declarations for a field node to the list of declarations."""
     if field_node.is_bitfield():
         add_bitfield_declaration(declarations, field_node)
     elif field_node.type.kind == clang.cindex.TypeKind.CONSTANTARRAY:
         add_array_declaration(declarations, field_node)
+    elif _is_elaborated_union(field_node):
+        add_union_field_declarations(declarations, field_node, struct_names)
     elif field_node.type.spelling in [e['type_name'] for e in enums]:
         add_enum_declaration(declarations, field_node, enums)
     else:
         ros2_type = get_ros2_basic_type(field_node.type)
+        # Skip nested struct types not in struct_names: rosidl would fail to resolve
+        # them, and they are intentionally excluded from generation (e.g. RadioHeader).
+        if ros2_type.startswith('ateam_radio_msgs/') \
+                and ros2_type.removeprefix('ateam_radio_msgs/') not in struct_names:
+            return
         declarations.append(f'{ros2_type} {field_node.spelling}')
+
+
+def add_union_field_declarations(declarations, field_node, struct_names):
+    """Expand a union field into one declaration per union member."""
+    field_prefix = field_node.spelling
+    union_decl = field_node.type.get_canonical().get_declaration()
+    for member in union_decl.get_children():
+        if member.kind != clang.cindex.CursorKind.FIELD_DECL:
+            continue
+        member_type = member.type.spelling
+        if member_type not in struct_names:
+            continue
+        declarations.append(f'ateam_radio_msgs/{member_type} {field_prefix}_{member.spelling}')
 
 
 def add_bitfield_declaration(declarations, field_node):
@@ -118,6 +178,8 @@ def add_array_declaration(declarations, field_node):
 def add_enum_declaration(declarations, field_node, enums):
     """Add a declaration for an enum field node."""
     enum_details = [e for e in enums if e['type_name'] == field_node.type.spelling][0]
+    # ROS2 messages don't support enum types, so we use the underlying integer type and
+    # inline the named constants as message-level constants below the field.
     declarations.append(f'{enum_details["underlying_type"]} {field_node.spelling}')
     for value_name, value in enum_details['values']:
         declarations.append(
@@ -192,4 +254,19 @@ if __name__ == '__main__':
             '<struct_name> [<struct_name> ...]'
         )
         sys.exit(1)
-    generate_msgs_for_file(sys.argv[1], sys.argv[2], sys.argv[3:])
+    output_dir = sys.argv[1]
+    source = pathlib.Path(sys.argv[2])
+    struct_names = list(sys.argv[3:])
+    include_dir = source.parent
+    headers = sorted(include_dir.rglob('*.h'))
+    # Two-pass: first discover the struct types used as union members (e.g.
+    # ExtendedGlobalPositionTelemetry inside BodyControlSkillExtendedTelemetry).
+    # These aren't in the original struct_names list but need their own .msg files
+    # because ROS2 doesn't support unions — we expand each union into separate fields.
+    all_struct_names = list(struct_names)
+    for header in headers:
+        for extra in collect_union_member_types(str(header), struct_names):
+            if extra not in all_struct_names:
+                all_struct_names.append(extra)
+    for header in headers:
+        generate_msgs_for_file(output_dir, str(header), all_struct_names)

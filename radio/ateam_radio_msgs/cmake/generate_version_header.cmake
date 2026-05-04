@@ -1,4 +1,4 @@
-# Copyright 2025 A Team
+# Copyright 2026 A Team
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,36 +18,41 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-function(generate_msgs)
-  set(oneValueArgs SOURCE DESTINATION)
-  set(multiValueArgs STRUCTS)
-  cmake_parse_arguments(PARSE_ARGV 0 arg "" "${oneValueArgs}" "${multiValueArgs}")
-  if(NOT arg_SOURCE)
-    message(FATAL_ERROR "Source header must be specified.")
-  endif()
-  if(NOT arg_DESTINATION)
-    message(FATAL_ERROR "Destination directory must be specified.")
-  endif()
-  if(NOT arg_STRUCTS)
-    message(FATAL_ERROR "At least one struct must be specified.")
-  endif()
 
-  set(output_msg_dir "${arg_DESTINATION}/msg")
+function(generate_version_header)
+  set(SOFT_COMS_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/software-communication")
 
-  file(MAKE_DIRECTORY "${output_msg_dir}")
-
-  set(_generate_msgs_script "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_msgs.py")
-  if(NOT EXISTS "${_generate_msgs_script}")
-    message(FATAL_ERROR "Script ${_generate_msgs_script} does not exist.")
-  endif()
+  find_package(Git REQUIRED)
 
   execute_process(
-    COMMAND python3 ${_generate_msgs_script} ${output_msg_dir} ${arg_SOURCE} ${arg_STRUCTS}
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE output
-    ERROR_VARIABLE error
+      COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+      WORKING_DIRECTORY ${SOFT_COMS_SUBMODULE_DIR}
+      OUTPUT_VARIABLE SOFT_COMS_SUBMODULE_SHA
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET
   )
-  if(result)
-    message(FATAL_ERROR "Failed to generate messages: ${error}")
+
+  string(SUBSTRING "${SOFT_COMS_SUBMODULE_SHA}" 0 8 SOFT_COMS_SUBMODULE_SHA_SHORT)
+  set(_hex_string "0x${SOFT_COMS_SUBMODULE_SHA_SHORT}")
+  math(EXPR SOFT_COMS_SUBMODULE_SHA_SHORT_NUM "${_hex_string} + 0")
+
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} status --porcelain
+    WORKING_DIRECTORY ${SOFT_COMS_SUBMODULE_DIR}
+    OUTPUT_VARIABLE SOFT_COMS_SUBMODULE_STATUS
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+  if(SOFT_COMS_SUBMODULE_STATUS)
+    set(SOFT_COMS_SUBMODULE_DIRTY true)
+  else()
+    set(SOFT_COMS_SUBMODULE_DIRTY false)
   endif()
+
+  configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/templates/version.hpp.in
+    "${CMAKE_CURRENT_BINARY_DIR}/ateam_generated/include/version.hpp"
+    @ONLY
+  )
+
 endfunction()
