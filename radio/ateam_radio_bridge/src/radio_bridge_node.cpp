@@ -281,24 +281,78 @@ private:
       control_msg.vision_position_update[0] = 0.0f;
       control_msg.vision_position_update[1] = 0.0f;
       control_msg.vision_position_update[2] = 0.0f;
-      control_msg.body_control_mode = BCM_LOCAL_VELOCITY;
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.play_song = 0;
       control_msg.reserved2[0] = 0;
       control_msg.kick_vel = motion_commands_[id].kick_speed;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
-      control_msg.cmd.local_vel = {
-        static_cast<float>(motion_commands_[id].velocity.x),
-        static_cast<float>(motion_commands_[id].velocity.y),
-        static_cast<float>(motion_commands_[id].velocity.theta),
-        0.0,  // TODO(barulicm): max_linear_acc
-        0.0  // TODO(barulicm): max_angular_acc
-      };
+      FillBodyControl(control_msg, motion_commands_[id]);
+
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),
         GetPacketSize(control_packet.header.command_code));
     }
+  }
+
+  void FillBodyControl(BasicControl & control_msg, const ateam_msgs::msg::RobotMotionCommand & command) {
+    switch(command.body_control_mode) {
+        case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
+          control_msg.body_control_mode = BCM_OFF;
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
+          control_msg.body_control_mode = BCM_GLOBAL_POSITION;
+          control_msg.cmd.global_pos = {
+            static_cast<float>(command.pose.x),
+            static_cast<float>(command.pose.y),
+            static_cast<float>(command.pose.theta),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_angular),
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_angular)
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_VELOCITY:
+          control_msg.body_control_mode = BCM_GLOBAL_VELOCITY;
+          control_msg.cmd.global_vel = {
+            static_cast<float>(command.velocity.x),
+            static_cast<float>(command.velocity.y),
+            static_cast<float>(command.velocity.theta),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_angular)
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY:
+          control_msg.body_control_mode = BCM_LOCAL_VELOCITY;
+          control_msg.cmd.local_vel = {
+            static_cast<float>(command.velocity.x),
+            static_cast<float>(command.velocity.y),
+            static_cast<float>(command.velocity.theta),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_angular)
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_ACCEL:
+          control_msg.body_control_mode = BCM_GLOBAL_ACCEL;
+          control_msg.cmd.global_acc = {
+            static_cast<float>(command.acceleration.x),
+            static_cast<float>(command.acceleration.y),
+            static_cast<float>(command.acceleration.theta),
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_ACCEL:
+          control_msg.body_control_mode = BCM_LOCAL_ACCEL;
+          control_msg.cmd.local_acc = {
+            static_cast<float>(command.acceleration.x),
+            static_cast<float>(command.acceleration.y),
+            static_cast<float>(command.acceleration.theta),
+          };
+          break;
+        default:
+          RCLCPP_WARN(get_logger(), "Unknown body control mode: %d", command.body_control_mode);
+          control_msg.body_control_mode = BCM_OFF;
+          break;
+      }
   }
 
   void DiscoveryMessageCallback(
