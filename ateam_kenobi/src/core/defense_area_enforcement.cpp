@@ -43,8 +43,8 @@ void EnforceDefenseAreaKeepout(
     }
     auto & command = *maybe_command;
     if (WouldVelocityCauseCollision(world, robot_id, command)) {
-      command.twist.linear.x = 0.0;
-      command.twist.linear.y = 0.0;
+      command.velocity.x = 0.0;
+      command.velocity.y = 0.0;
     }
   }
 }
@@ -72,11 +72,13 @@ bool WouldVelocityCauseCollision(
 
   const double delta_t = 0.01;
 
-  ateam_geometry::Vector velocity{motion_command.twist.linear.x,
-    motion_command.twist.linear.y};
-  if (motion_command.twist_frame == ateam_msgs::msg::RobotMotionCommand::FRAME_BODY) {
-    velocity = ateam_kenobi::motion::LocalToWorldFrame(velocity, world.our_robots[robot_id]);
+  if (motion_command.body_control_mode != ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY) {
+    std::cerr <<
+      "WARNING: Non-local velocity motion commands not yet supported by defense area enforcement. "
+      "Skipping check.\n";
+    return false;
   }
+  ateam_geometry::Vector velocity{motion_command.velocity.x, motion_command.velocity.y};
 
   const ateam_geometry::Vector displacement = velocity * delta_t;
 
