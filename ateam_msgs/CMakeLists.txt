@@ -16,7 +16,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/OverlayArray.msg
   msg/RefereeInfo.msg
   msg/RobotMotionCommand.msg
-  msg/TeamClientConnectionStatus.msg
 
   msg/GameStateBall.msg
   msg/GameStateRobot.msg
@@ -37,13 +36,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/PlayInfo.msg
 
   srv/GetFirmwareParameter.srv
-  srv/ReconnectTeamClient.srv
-  srv/SetDesiredKeeper.srv
   srv/SetFirmwareParameter.srv
   srv/SetOverridePlay.srv
   srv/SetPlayEnabled.srv
-  srv/SetTeamAdvantageChoice.srv
-  srv/SubstituteBot.srv
   srv/SetIgnoreFieldSide.srv
   srv/SendSimulatorControlPacket.srv
 
