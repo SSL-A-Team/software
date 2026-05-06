@@ -169,6 +169,19 @@ private:
     }
   }
 
+  void ReplaceNanWithZero(float & val) {
+    if (std::isnan(val)) {
+      RCLCPP_WARN(get_logger(), "Radio bridge is replacing NaNs!");
+      val = 0.0f;
+    }
+  }
+
+  void ReplaceNanWithZero(ateam_msgs::msg::Twist2D & twist) {
+    ReplaceNanWithZero(twist.x);
+    ReplaceNanWithZero(twist.y);
+    ReplaceNanWithZero(twist.theta);
+  }
+
   void MotionCommandCallback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr command_msg,
     int robot_id)
@@ -176,18 +189,15 @@ private:
     const std::lock_guard lock(mutex_);
     motion_commands_[robot_id] = *command_msg;
     auto & command = motion_commands_[robot_id];
-    ReplaceNanWithZero(command.pose.x);
-    ReplaceNanWithZero(command.pose.y);
-    ReplaceNanWithZero(command.pose.theta);
-    ReplaceNanWithZero(command.velocity.x);
-    ReplaceNanWithZero(command.velocity.y);
-    ReplaceNanWithZero(command.velocity.theta);
-    ReplaceNanWithZero(command.acceleration.x);
-    ReplaceNanWithZero(command.acceleration.y);
-    ReplaceNanWithZero(command.acceleration.theta);
-    if(command.body_control_mode != ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY) {
-      RCLCPP_WARN(get_logger(), "Received non-local-velocity command. This is not fully supported by the radio bridge and may cause issues.");
-    }
+    ReplaceNanWithZero(command.pose);
+    ReplaceNanWithZero(command.velocity);
+    ReplaceNanWithZero(command.acceleration);
+    ReplaceNanWithZero(command.limit_vel_linear);
+    ReplaceNanWithZero(command.limit_vel_angular);
+    ReplaceNanWithZero(command.limit_acc_linear);
+    ReplaceNanWithZero(command.limit_acc_angular);
+    ReplaceNanWithZero(command.kick_speed);
+    ReplaceNanWithZero(command.dribbler_speed);
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
