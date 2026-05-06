@@ -16,6 +16,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/OverlayArray.msg
   msg/RefereeInfo.msg
   msg/RobotMotionCommand.msg
+  msg/Twist2D.msg
 
   msg/GameStateBall.msg
   msg/GameStateRobot.msg
