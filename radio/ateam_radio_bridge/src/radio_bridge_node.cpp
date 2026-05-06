@@ -176,9 +176,18 @@ private:
     const std::lock_guard lock(mutex_);
     motion_commands_[robot_id] = *command_msg;
     auto & command = motion_commands_[robot_id];
-    ReplaceNanWithZero(command.twist.linear.x);
-    ReplaceNanWithZero(command.twist.linear.y);
-    ReplaceNanWithZero(command.twist.angular.z);
+    ReplaceNanWithZero(command.pose.x);
+    ReplaceNanWithZero(command.pose.y);
+    ReplaceNanWithZero(command.pose.theta);
+    ReplaceNanWithZero(command.velocity.x);
+    ReplaceNanWithZero(command.velocity.y);
+    ReplaceNanWithZero(command.velocity.theta);
+    ReplaceNanWithZero(command.acceleration.x);
+    ReplaceNanWithZero(command.acceleration.y);
+    ReplaceNanWithZero(command.acceleration.theta);
+    if(command.body_control_mode != ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY) {
+      RCLCPP_WARN(get_logger(), "Received non-local-velocity command. This is not fully supported by the radio bridge and may cause issues.");
+    }
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
@@ -279,9 +288,9 @@ private:
       control_msg.kick_vel = motion_commands_[id].kick_speed;
       control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
       control_msg.cmd.local_vel = {
-        static_cast<float>(motion_commands_[id].twist.linear.x),
-        static_cast<float>(motion_commands_[id].twist.linear.y),
-        static_cast<float>(motion_commands_[id].twist.angular.z),
+        static_cast<float>(motion_commands_[id].velocity.x),
+        static_cast<float>(motion_commands_[id].velocity.y),
+        static_cast<float>(motion_commands_[id].velocity.theta),
         0.0,  // TODO(barulicm): max_linear_acc
         0.0  // TODO(barulicm): max_angular_acc
       };
