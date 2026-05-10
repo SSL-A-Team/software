@@ -7,3 +7,6 @@
 [submodule "controls"]
 	path = controls
 	url = https://github.com/SSL-A-Team/controls.git
+[submodule "new_super_vision_filter/kalman"]
+	path = new_super_vision_filter/kalman
+	url = https://github.com/mherb/kalman.git
