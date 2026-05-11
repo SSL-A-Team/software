@@ -35,6 +35,11 @@ public:
     timestamp = std::chrono::steady_clock::now();
   }
 
+  void invert()
+  {
+    pos *= -1.0;
+  }
+
   PosMeasurement pos;
   std::chrono::time_point<std::chrono::steady_clock> timestamp;
   int camera_id;

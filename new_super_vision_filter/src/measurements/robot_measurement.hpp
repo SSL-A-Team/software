@@ -23,6 +23,7 @@
 
 #include <ateam_common/game_controller_listener.hpp>
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
+#include <angles/angles.h>
 
 #include "filter_types.hpp"
 
@@ -49,6 +50,18 @@ public:
   int getId() const
   {
     return robot_id;
+  }
+
+  void invert()
+  {
+    pos *= -1.0;
+    // A bit kludgy... since we use templating of Eigen types for measurements,
+    // this seemed like the easiest way to modify the data and ensure it's
+    // clamped properly without writing a bunch of extra functions/code
+    double new_angle = angles::normalize_angle_positive(angle.w() + M_PI);
+    AngleMeasurement new_angle_measurement;
+    new_angle_measurement << new_angle;
+    angle = new_angle_measurement;
   }
 
   std::chrono::time_point<std::chrono::steady_clock> getTimestamp() const

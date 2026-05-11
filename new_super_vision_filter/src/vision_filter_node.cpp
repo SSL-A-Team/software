@@ -116,6 +116,7 @@ private:
 
   void vision_callback(const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
   {
+    const auto team_side = game_controller_listener_.GetTeamSide();
             // Add detections to the queues
     if (!vision_wrapper_msg->detection.empty()) {
       for (const auto & detection : vision_wrapper_msg->detection) {
@@ -130,13 +131,13 @@ private:
           ateam_common::TeamColor team_color = ateam_common::TeamColor::Yellow;
           auto measurement = RobotMeasurement(bot, detect_camera, team_color);
           yellow_measurements.push_back(
-                           measurement 
+                           measurement
           );
         }
 
         for (const auto & bot : detection.robots_blue) {
           ateam_common::TeamColor team_color = ateam_common::TeamColor::Blue;
-          
+
           auto measurement = RobotMeasurement(bot, detect_camera, team_color);
           blue_measurements.push_back(
             measurement
@@ -147,8 +148,22 @@ private:
         for (const auto & ball: detection.balls) {
           auto measurement = BallMeasurement(ball, detect_camera);
           ball_measurements.push_back(
-                           measurement 
+                           measurement
           );
+        }
+      }
+
+      if (team_side == ateam_common::TeamSide::PositiveHalf) {
+        for (auto & measurement : yellow_measurements) {
+          measurement.invert();
+        }
+
+        for (auto & measurement : blue_measurements) {
+          measurement.invert();
+        }
+
+        for (auto & measurement : ball_measurements) {
+          measurement.invert();
         }
       }
 
@@ -161,7 +176,9 @@ private:
         auto it = std::find_if(
                         blue_robots.begin(),
                         blue_robots.end(),
-          [bot_measurement](const FilteredRobot & bot){return bot_measurement.getId() == bot.getId();}
+          [bot_measurement](const FilteredRobot & bot){
+            return bot_measurement.getId() == bot.getId();
+                                                                                                     }
         );
         if (it == blue_robots.end()) {
           // std::cerr << "Adding a new robot" << std::endl;
@@ -179,7 +196,9 @@ private:
         auto it = std::find_if(
                         yellow_robots.begin(),
                         yellow_robots.end(),
-          [bot_measurement](const FilteredRobot & bot){return bot_measurement.getId() == bot.getId();}
+          [bot_measurement](const FilteredRobot & bot){
+            return bot_measurement.getId() == bot.getId();
+                                                                                                     }
         );
         if (it == yellow_robots.end()) {
           yellow_robots.push_back(
@@ -197,8 +216,8 @@ private:
         }
       }
     }
-      return;
-    }
+    return;
+  }
 
   void timer_callback()
   {
