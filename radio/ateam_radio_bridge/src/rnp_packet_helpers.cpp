@@ -59,20 +59,22 @@ std::size_t GetPacketSize(const CommandCode & command_code)
     case CC_HELLO_REQ:
       return packet_header_size + sizeof(HelloRequest);
       break;
-    case CC_TELEMETRY:
-      return packet_header_size + sizeof(BasicTelemetry);
-      break;
-    case CC_CONTROL:
-      return packet_header_size + sizeof(BasicControl);
-      break;
     case CC_HELLO_RESP:
       return packet_header_size + sizeof(HelloResponse);
+      break;
+    case CC_TELEMETRY:
+      return packet_header_size + sizeof(BasicTelemetry);
       break;
     case CC_CONTROL_DEBUG_TELEMETRY:
       return packet_header_size + sizeof(ExtendedTelemetry);
       break;
     case CC_ROBOT_PARAMETER_COMMAND:
       return packet_header_size + sizeof(ParameterCommand);
+      break;
+    case CC_ERROR_TELEMETRY:
+      return packet_header_size + sizeof(ErrorTelemetry);
+    case CC_CONTROL:
+      return packet_header_size + sizeof(BasicControl);
       break;
     default:
       throw std::invalid_argument("Unrecognized command code: " + std::to_string(command_code));
