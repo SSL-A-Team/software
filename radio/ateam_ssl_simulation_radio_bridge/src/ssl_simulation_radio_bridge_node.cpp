@@ -208,8 +208,9 @@ public:
     ateam_msgs::msg::RobotMotionCommand msg;
     msg.dribbler_speed = 0.0;
     msg.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
-    msg.twist.linear.x = 0.0;
-    msg.twist.angular.z = 0.0;
+    msg.velocity.x = 0.0;
+    msg.velocity.y = 0.0;
+    msg.velocity.theta = 0.0;
     send_command(msg, id);
   }
 

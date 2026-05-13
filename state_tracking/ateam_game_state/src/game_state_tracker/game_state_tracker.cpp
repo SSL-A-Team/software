@@ -214,9 +214,12 @@ private:
 
   void RobotCommandCallback(const ateam_msgs::msg::RobotMotionCommand::SharedPtr msg, int id)
   {
-    world_.our_robots[id].prev_command_vel = ateam_geometry::Vector(msg->twist.linear.x,
-        msg->twist.linear.y);
-    world_.our_robots[id].prev_command_omega = msg->twist.angular.z;
+    // TODO(barulicm): This assumes we only use the local velocity mode
+    // This is fine for now because by the time we support other modes in Kenobi,
+    // we shouldn't depend on these fields anyway
+    world_.our_robots[id].prev_command_vel = ateam_geometry::Vector(msg->velocity.x,
+        msg->velocity.y);
+    world_.our_robots[id].prev_command_omega = msg->velocity.theta;
   }
 
   void UpdateRefInfo()

@@ -346,8 +346,8 @@ private:
 
     command_speed_ = speed;
 
-    command.twist.angular.z = command_speed_;
-    command.twist.linear.y = -1 * command_speed_ * options_.radius;
+    command.velocity.theta = command_speed_;
+    command.velocity.y = -1 * command_speed_ * options_.radius;
 
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
 
@@ -376,8 +376,8 @@ private:
   {
     timer_.reset();
     ateam_msgs::msg::RobotMotionCommand command;
-    command.twist.linear.x = 0.0;
-    command.twist.linear.y = 0.0;
+    command.velocity.x = 0.0;
+    command.velocity.y = 0.0;
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
     command_pub_->publish(command);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

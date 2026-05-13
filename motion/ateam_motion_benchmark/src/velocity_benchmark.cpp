@@ -350,9 +350,9 @@ private:
     command_speed_ = speed;
 
     if(options_.axis == Axis::X) {
-      command.twist.linear.x = speed;
+      command.velocity.x = speed;
     } else {
-      command.twist.linear.y = speed;
+      command.velocity.y = speed;
     }
 
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
@@ -390,8 +390,8 @@ private:
   {
     timer_.reset();
     ateam_msgs::msg::RobotMotionCommand command;
-    command.twist.linear.x = 0.0;
-    command.twist.linear.y = 0.0;
+    command.velocity.x = 0.0;
+    command.velocity.y = 0.0;
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
     command_pub_->publish(command);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

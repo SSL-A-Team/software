@@ -74,7 +74,8 @@ class TestRadioBridgeNode(unittest.TestCase):
         self.assertTrue(self.robot.isConnected())
 
         cmd_msg = ateam_msgs.msg.RobotMotionCommand()
-        cmd_msg.twist.linear.x = 2.0
+        cmd_msg.body_control_mode = ateam_msgs.msg.RobotMotionCommand.BCM_LOCAL_VELOCITY
+        cmd_msg.velocity.x = 2.0
 
         timeout = time.time() + 1
         while True:
