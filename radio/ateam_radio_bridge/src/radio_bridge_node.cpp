@@ -26,6 +26,7 @@
 #include <thread>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
@@ -35,13 +36,16 @@
 #include <ateam_radio_msgs/conversion.hpp>
 #include <ateam_radio_msgs/version.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
 #include <ateam_common/game_controller_listener.hpp>
+#include <ateam_common/topic_names.hpp>
 
 #include "rnp_packet_helpers.hpp"
 #include "ip_address_helpers.hpp"
+#include "nan_helpers.hpp"
 #include "firmware_parameter_server.hpp"
 
 // TODO(barulicm) add warning if we see another instance of this running via multicast
@@ -66,6 +70,7 @@ public:
   : rclcpp::Node("radio_bridge", options),
     sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 250)),
     connect_timeout_threshold_(declare_parameter("connect_timeout_ms", 750)),
+    vision_state_staleness_threshold_(declare_parameter("vision_state_staleness_ms", 100)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
     game_controller_listener_(*this,
       std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
@@ -82,8 +87,8 @@ public:
 
     declare_parameters<bool>("controls_enabled", {
         {"body_vel", true},
-        {"wheel_vel", true},
-        {"wheel_torque", false}
+        {"wheel_vel", false},
+        {"wheel_torque", true}
     });
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
@@ -128,6 +133,8 @@ public:
       std::chrono::duration<double>(1.0 / declare_parameter<double>("command_frequency", 60.0)),
       std::bind(&RadioBridgeNode::SendCommandsCallback, this));
 
+    SetupVisionSubscribers(game_controller_listener_.GetTeamColor());
+
     RCLCPP_INFO(get_logger(), "Radio bridge node ready.");
   }
 
@@ -135,6 +142,7 @@ private:
   // Incoming timeouts
   const std::chrono::milliseconds sustain_timeout_threshold_;
   const std::chrono::milliseconds connect_timeout_threshold_;
+  const std::chrono::milliseconds vision_state_staleness_threshold_;
 
   // Outgoing timeouts
   const std::chrono::milliseconds command_timeout_threshold_;
@@ -142,11 +150,15 @@ private:
   std::mutex mutex_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
+  std::array<ateam_msgs::msg::VisionStateRobot, 16> vision_states_;
+  std::array<std::chrono::steady_clock::time_point, 16> vision_state_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
+    16> vision_state_subscriptions_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
     16> connection_publishers_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
@@ -162,26 +174,6 @@ private:
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
 
-  void ReplaceNanWithZero(double & val) {
-    if (std::isnan(val)) {
-      RCLCPP_WARN(get_logger(), "Radio bridge is replacing NaNs!");
-      val = 0.0;
-    }
-  }
-
-  void ReplaceNanWithZero(float & val) {
-    if (std::isnan(val)) {
-      RCLCPP_WARN(get_logger(), "Radio bridge is replacing NaNs!");
-      val = 0.0f;
-    }
-  }
-
-  void ReplaceNanWithZero(ateam_msgs::msg::Twist2D & twist) {
-    ReplaceNanWithZero(twist.x);
-    ReplaceNanWithZero(twist.y);
-    ReplaceNanWithZero(twist.theta);
-  }
-
   void MotionCommandCallback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr command_msg,
     int robot_id)
@@ -189,16 +181,18 @@ private:
     const std::lock_guard lock(mutex_);
     motion_commands_[robot_id] = *command_msg;
     auto & command = motion_commands_[robot_id];
-    ReplaceNanWithZero(command.pose);
-    ReplaceNanWithZero(command.velocity);
-    ReplaceNanWithZero(command.acceleration);
-    ReplaceNanWithZero(command.limit_vel_linear);
-    ReplaceNanWithZero(command.limit_vel_angular);
-    ReplaceNanWithZero(command.limit_acc_linear);
-    ReplaceNanWithZero(command.limit_acc_angular);
-    ReplaceNanWithZero(command.kick_speed);
-    ReplaceNanWithZero(command.dribbler_speed);
+    REPLACE_NAN_WITH_ZERO(command);
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
+  }
+
+  void VisionStateCallback(
+    const ateam_msgs::msg::VisionStateRobot::SharedPtr vision_msg,
+    int robot_id)
+  {
+    const std::lock_guard lock(mutex_);
+    vision_states_[robot_id] = *vision_msg;
+    REPLACE_NAN_WITH_ZERO(vision_states_[robot_id]);
+    vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
   void CloseConnection(const std::size_t & connection_index, bool send_goodbye = true)
@@ -275,7 +269,9 @@ private:
       {
         RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Sending zeros.", id);
         motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
+        motion_commands_[id].body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_OFF;
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
+        motion_commands_[id].dribbler_speed = 0.0;
       }
       BasicControl control_msg;
       control_msg.request_shutdown = shutdown_requested_[id];
@@ -286,11 +282,8 @@ private:
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
-      control_msg.vision_update = 0;
       control_msg.reserved1 = 0;
-      control_msg.vision_position_update[0] = 0.0f;
-      control_msg.vision_position_update[1] = 0.0f;
-      control_msg.vision_position_update[2] = 0.0f;
+      FillVisionUpdate(control_msg, vision_states_[id], vision_state_timestamps_[id]);
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.play_song = 0;
       control_msg.reserved2[0] = 0;
@@ -365,6 +358,21 @@ private:
       }
   }
 
+  void FillVisionUpdate(BasicControl & control_msg, const ateam_msgs::msg::VisionStateRobot & vision_state, const std::chrono::steady_clock::time_point & timestamp) {
+    const auto now = std::chrono::steady_clock::now();
+    if (now - timestamp > vision_state_staleness_threshold_) {
+      control_msg.vision_update = 0;
+      control_msg.vision_position_update[0] = 0;
+      control_msg.vision_position_update[1] = 0;
+      control_msg.vision_position_update[2] = 0;
+      return;
+    }
+    control_msg.vision_update = 1;
+    control_msg.vision_position_update[0] = static_cast<float>(vision_state.pose.position.x);
+    control_msg.vision_position_update[1] = static_cast<float>(vision_state.pose.position.y);
+    control_msg.vision_position_update[2] = static_cast<float>(GetYaw(vision_state.pose));
+  }
+
   void DiscoveryMessageCallback(
     const std::string & sender_address, const uint16_t sender_port,
     uint8_t * udp_packet_data, size_t udp_packet_size)
@@ -396,20 +404,22 @@ private:
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
 
-    const uint32_t incoming_coms_hash = hello_data.coms_hash[0] | (hello_data.coms_hash[1] << 8) |
-      (hello_data.coms_hash[2] << 16) | (hello_data.coms_hash[3] << 24);
-    if (incoming_coms_hash != ateam_radio_msgs::kComsHash) {
-      RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Packet version hash mismatch.");
-      return;
-    }
+    // Commented out until firmware implements git hash populating
 
-    if (ateam_radio_msgs::kComsDirty) {
-      RCLCPP_WARN(get_logger(), "Local packet version is dirty. Compatibility check may be unreliable.");
-    }
+    // const uint32_t incoming_coms_hash = hello_data.coms_hash[0] | (hello_data.coms_hash[1] << 8) |
+    //   (hello_data.coms_hash[2] << 16) | (hello_data.coms_hash[3] << 24);
+    // if (incoming_coms_hash != ateam_radio_msgs::kComsHash) {
+    //   RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Packet version hash mismatch.");
+    //   return;
+    // }
 
-    if (hello_data.coms_repo_dirty) {
-      RCLCPP_WARN(get_logger(), "Remote robot's packet version is dirty. Compatibility check may be unreliable.");
-    }
+    // if (ateam_radio_msgs::kComsDirty) {
+    //   RCLCPP_WARN(get_logger(), "Local packet version is dirty. Compatibility check may be unreliable.");
+    // }
+
+    // if (hello_data.coms_repo_dirty) {
+    //   RCLCPP_WARN(get_logger(), "Remote robot's packet version is dirty. Compatibility check may be unreliable.");
+    // }
 
     if (!(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&
@@ -549,11 +559,12 @@ private:
     }
   }
 
-  void TeamColorChangeCallback(const ateam_common::TeamColor)
+  void TeamColorChangeCallback(const ateam_common::TeamColor color)
   {
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);
     }
+    SetupVisionSubscribers(color);
   }
 
   void SendPowerRequestCallback(
@@ -604,6 +615,31 @@ private:
     if(connection_states_[robot_id] == ConnectionState::Connecting) {
       connection_states_[robot_id] = ConnectionState::Connected;
     }
+  }
+
+  void SetupVisionSubscribers(const ateam_common::TeamColor color) {
+    for(auto & sub : vision_state_subscriptions_) {
+      sub.reset();
+    }
+    if(color == ateam_common::TeamColor::Unknown) {
+      return;
+    }
+    const auto topic_prefix = color == ateam_common::TeamColor::Yellow ? Topics::kYellowTeamRobotPrefix : Topics::kBlueTeamRobotPrefix;
+    ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
+      vision_state_subscriptions_,
+      topic_prefix,
+      rclcpp::SystemDefaultsQoS(),
+      &RadioBridgeNode::VisionStateCallback,
+      this);
+  }
+
+  double GetYaw(const geometry_msgs::msg::Pose & pose)
+  {
+    tf2::Quaternion quat;
+    tf2::fromMsg(pose.orientation, quat);
+    double yaw, pitch, roll;
+    tf2::Matrix3x3(quat).getEulerYPR(yaw, pitch, roll);
+    return yaw;
   }
 
 };
