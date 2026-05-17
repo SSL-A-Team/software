@@ -289,19 +289,13 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return VEC2_F32;
     case TRAJ_RECOMPUTE_ERROR:
       return VEC4_F32;
-    case TRAJ_MAX:
-      return VEC4_F32;
-    case POSE_FB_PIDII_X:
+    case POSE_FB_PIDII_LINEAR:
       return VEC5_F32;
-    case POSE_FB_PIDII_Y:
+    case POSE_FB_PIDII_ANGULAR:
       return VEC5_F32;
-    case POSE_FB_PIDII_THETA:
+    case TWIST_FB_PIDII_LINEAR:
       return VEC5_F32;
-    case TWIST_FB_PIDII_X:
-      return VEC5_F32;
-    case TWIST_FB_PIDII_Y:
-      return VEC5_F32;
-    case TWIST_FB_PIDII_THETA:
+    case TWIST_FB_PIDII_ANGULAR:
       return VEC5_F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
