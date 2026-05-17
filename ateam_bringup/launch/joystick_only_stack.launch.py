@@ -21,18 +21,26 @@
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 from ateam_bringup.utils import remap_indexed_topics
 import launch
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
     return launch.LaunchDescription([
+        DeclareLaunchArgument(
+            name='robot_id',
+            default_value="-1"
+        ),
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_joystick_control',
                                               'joystick_controller.launch.xml')
-            )
+            ),
+            launch_arguments={
+                'robot_id': LaunchConfiguration('robot_id')
+            }.items()
         ),
         Node(
             package='ateam_radio_bridge',

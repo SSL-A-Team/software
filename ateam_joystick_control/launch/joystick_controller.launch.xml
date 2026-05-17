@@ -1,5 +1,6 @@
 <launch>
   <arg name="joy_config_file" default="$(find-pkg-share ateam_joystick_control)/config/xbox_joy_config.yaml"/>
+  <arg name="robot_id" default="-1"/>
 
   <node name="joystick_node" pkg="joy" exec="joy_node">
     <param name="deadzone" value="0.1"/>
@@ -9,6 +10,7 @@
     <param from="$(var joy_config_file)"/>
     <param from="$(find-pkg-share ateam_joystick_control)/config/common_params.yaml"/>
     <param name="command_topic_template" value="/robot_motion_commands/robot{}" />
+    <param name="robot_id" value="$(var robot_id)"/>
     <remap from="~/joy" to="/joy"/>
   </node>
 </launch>
