@@ -75,7 +75,9 @@ public:
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
     last_side_change_timestamp_(std::chrono::steady_clock::now()),
     game_controller_listener_(*this,
-      std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
+      std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this),
+      std::bind_front(&RadioBridgeNode::TeamSideChangeCallback, this)
+    ),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
