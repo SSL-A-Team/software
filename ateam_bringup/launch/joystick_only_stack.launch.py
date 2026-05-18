@@ -21,7 +21,7 @@
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 from ateam_bringup.utils import remap_indexed_topics
 import launch
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -31,7 +31,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         DeclareLaunchArgument(
             name='robot_id',
-            default_value="-1"
+            default_value='-1'
         ),
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
