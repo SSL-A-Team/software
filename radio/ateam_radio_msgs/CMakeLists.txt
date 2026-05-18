@@ -24,6 +24,7 @@ set(RADIO_STRUCTS_TO_GENERATE
     GlobalAccelerationCommand
     LocalAccelerationCommand
     BasicTelemetry
+    ErrorTelemetry
     ExtendedTelemetry
     BodyControlTelemetry
     BodyControlExtendedTelemetry

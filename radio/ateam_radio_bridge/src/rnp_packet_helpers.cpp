@@ -242,6 +242,16 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
         var = packet.data.extended_telemetry;
         break;
       }
+    case CC_ERROR_TELEMETRY:
+      {
+        // TODO(barulicm): Restore this sanity check after firmware fixes the packets they're sending us.
+        // if (packet.header.data_length != sizeof(ErrorTelemetry)) {
+        //   error = "Incorrect data length for ErrorTelemtry type. Expected " + std::to_string(sizeof(ErrorTelemetry)) + " but got " + std::to_string(packet.header.data_length);
+        //   break;
+        // }
+        var = packet.data.error_telemetry;
+        break;
+      }
     case CC_ROBOT_PARAMETER_COMMAND:
       {
         if (packet.header.data_length != sizeof(ParameterCommand)) {

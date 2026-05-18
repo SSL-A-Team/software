@@ -30,6 +30,7 @@
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
+#include <ateam_radio_msgs/msg/error_telemetry.hpp>
 #include <ateam_radio_msgs/srv/get_firmware_parameter.hpp>
 #include <ateam_radio_msgs/srv/set_firmware_parameter.hpp>
 #include <ateam_radio_msgs/srv/send_robot_power_request.hpp>
@@ -117,6 +118,12 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::ErrorTelemetry>(
+      error_feedback_publishers_,
+      "~/robot_feedback/error/robot",
+      rclcpp::SystemDefaultsQoS(),
+      this);
+
     power_request_service_ = create_service<ateam_radio_msgs::srv::SendRobotPowerRequest>(
       "~/send_power_request",
       std::bind(&RadioBridgeNode::SendPowerRequestCallback, this, std::placeholders::_1,
@@ -167,6 +174,8 @@ private:
     16> feedback_publishers_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ExtendedTelemetry>::SharedPtr,
     16> motion_feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ErrorTelemetry>::SharedPtr,
+    16> error_feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
   FirmwareParameterServer firmware_parameter_server_;
   rclcpp::Service<ateam_radio_msgs::srv::SendRobotPowerRequest>::SharedPtr power_request_service_;
@@ -535,6 +544,21 @@ private:
           if (std::holds_alternative<ExtendedTelemetry>(data_var)) {
             motion_feedback_publishers_[robot_id]->publish(ateam_radio_msgs::Convert(
               std::get<ExtendedTelemetry>(data_var)));
+          }
+          break;
+        }
+      case CC_ERROR_TELEMETRY:
+        {
+          const auto data_var = ExtractData(packet, error);
+          if (!error.empty()) {
+            RCLCPP_WARN(get_logger(), "Ignoring error telemetry message from robot %d. %s", robot_id, error.c_str());
+            return;
+          }
+
+          if (std::holds_alternative<ErrorTelemetry>(data_var)) {
+            const auto & telem_data = std::get<ErrorTelemetry>(data_var);
+            error_feedback_publishers_[robot_id]->publish(ateam_radio_msgs::Convert(telem_data));
+            RCLCPP_WARN(get_logger(), "Error message from robot %d: %s", robot_id, telem_data.error_message);
           }
           break;
         }
