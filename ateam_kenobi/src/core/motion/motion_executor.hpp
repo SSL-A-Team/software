@@ -29,6 +29,7 @@
 #include "core/visualization/overlays.hpp"
 #include "motion_controller.hpp"
 #include "motion_intent.hpp"
+#include "motion_command.hpp"
 
 namespace ateam_kenobi::motion
 {
@@ -38,7 +39,7 @@ class MotionExecutor
 public:
   explicit MotionExecutor(rclcpp::Logger logger);
 
-  std::array<std::optional<BodyVelocity>,
+  std::array<std::optional<MotionCommand>,
     16> RunFrame(
     std::array<std::optional<MotionIntent>, 16> intents,
     visualization::Overlays & overlays, const World & world);

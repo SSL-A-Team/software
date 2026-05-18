@@ -38,7 +38,7 @@ MotionExecutor::MotionExecutor(rclcpp::Logger logger)
 {
 }
 
-std::array<std::optional<BodyVelocity>,
+std::array<std::optional<MotionCommand>,
   16> MotionExecutor::RunFrame(
   std::array<std::optional<MotionIntent>, 16> intents,
   visualization::Overlays & overlays, const World & world)
@@ -46,7 +46,7 @@ std::array<std::optional<BodyVelocity>,
   const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
     world.current_time.time_since_epoch()).count();
 
-  std::array<std::optional<BodyVelocity>, 16> results;
+  std::array<std::optional<MotionCommand>, 16> results;
 
   for (size_t i = 0; i < intents.size(); ++i) {
     if (!intents[i]) {
@@ -145,7 +145,12 @@ std::array<std::optional<BodyVelocity>,
 
     DrawOverlays(overlays, world, robot, path, intent);
 
-    results[i] = body_velocity;
+    MotionCommand command;
+    command.control_mode = ControlMode::LocalVelocity;
+    command.velocity.x = body_velocity.linear.x();
+    command.velocity.y = body_velocity.linear.y();
+    command.velocity.theta = body_velocity.angular;
+    results[i] = command;
   }
 
   return results;
