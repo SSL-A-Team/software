@@ -72,6 +72,7 @@ public:
     connect_timeout_threshold_(declare_parameter("connect_timeout_ms", 750)),
     vision_state_staleness_threshold_(declare_parameter("vision_state_staleness_ms", 100)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
+    last_side_change_timestamp_(std::chrono::steady_clock::now()),
     game_controller_listener_(*this,
       std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
@@ -154,6 +155,7 @@ private:
   std::array<std::chrono::steady_clock::time_point, 16> vision_state_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
+  std::chrono::steady_clock::time_point last_side_change_timestamp_;
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
@@ -260,11 +262,12 @@ private:
   void SendCommandsCallback()
   {
     const std::lock_guard lock(mutex_);
+    const auto now = std::chrono::steady_clock::now();
     for (auto id = 0; id < 16; ++id) {
       if (connections_[id] == nullptr) {
         continue;
       }
-      if ((std::chrono::steady_clock::now() - motion_command_timestamps_[id]) >
+      if ((now - motion_command_timestamps_[id]) >
         command_timeout_threshold_)
       {
         RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Sending zeros.", id);
@@ -282,6 +285,7 @@ private:
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
+      control_msg.reset_controller = (last_side_change_timestamp_ + sustain_timeout_threshold_) >= now;
       control_msg.reserved1 = 0;
       FillVisionUpdate(control_msg, vision_states_[id], vision_state_timestamps_[id]);
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
@@ -565,6 +569,11 @@ private:
       CloseConnection(i);
     }
     SetupVisionSubscribers(color);
+  }
+
+  void TeamSideChangeCallback(const ateam_common::TeamSide)
+  {
+    last_side_change_timestamp_ = std::chrono::steady_clock::now();
   }
 
   void SendPowerRequestCallback(
