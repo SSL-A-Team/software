@@ -375,7 +375,7 @@ private:
 
   void FillVisionUpdate(BasicControl & control_msg, const ateam_msgs::msg::VisionStateRobot & vision_state, const std::chrono::steady_clock::time_point & timestamp) {
     const auto now = std::chrono::steady_clock::now();
-    if (now - timestamp > vision_state_staleness_threshold_) {
+    if (now - timestamp > vision_state_staleness_threshold_ || !vision_state.visible) {
       control_msg.vision_update = 0;
       control_msg.vision_position_update[0] = 0;
       control_msg.vision_position_update[1] = 0;
