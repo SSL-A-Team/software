@@ -287,7 +287,7 @@ private:
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
         motion_commands_[id].dribbler_speed = 0.0;
       }
-      BasicControl control_msg;
+      BasicControl control_msg{};
       control_msg.request_shutdown = shutdown_requested_[id];
       control_msg.reboot_robot = reboot_requested_[id];
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
