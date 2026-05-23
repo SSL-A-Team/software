@@ -295,6 +295,8 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return VEC2_F32;
     case PHYS_FRICTION_MODEL:
       return VEC4_F32;
+    case COULOMB_COMP_ACCEL_DEADZONE:
+      return F32;
     case POSE_CONTROL_GAIN:
       return VEC2_F32;
     case TRAJ_RECOMPUTE_ERROR:
