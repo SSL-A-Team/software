@@ -121,10 +121,8 @@ ateam_msgs::msg::VisionStateRobot FilteredRobot::toMsg()
     robot_state_msg.twist.linear.x = posXYEstimate.vx();
     robot_state_msg.twist.linear.y = posXYEstimate.vy();
 
-    robot_state_msg.pose.orientation.x = 0;
-    robot_state_msg.pose.orientation.y = 0;
-    robot_state_msg.pose.orientation.z = 1;
-    robot_state_msg.pose.orientation.w = posWEstimate.pw();
+    robot_state_msg.pose.orientation =
+      tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), posWEstimate.pw()));
     robot_state_msg.twist.angular.z = posWEstimate.vw();
 
         // Convert to body velocities for plotting/debugging

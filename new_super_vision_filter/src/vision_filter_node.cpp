@@ -181,13 +181,10 @@ private:
                                                                                                      }
         );
         if (it == blue_robots.end()) {
-          // std::cerr << "Adding a new robot" << std::endl;
-          // std::cerr << bot_measurement.getId() << std::endl;
           blue_robots.push_back(
                             FilteredRobot(bot_measurement, team_color)
           );
         } else {
-          // std::cerr << "Updating a robot" << std::endl;
           it->update(bot_measurement);
         }
       }

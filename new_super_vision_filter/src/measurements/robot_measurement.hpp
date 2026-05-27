@@ -24,6 +24,10 @@
 #include <ateam_common/game_controller_listener.hpp>
 #include <ssl_league_msgs/msg/vision_detection_robot.hpp>
 #include <angles/angles.h>
+// TODO (christian): Which of these do we actually need?
+#include <tf2/utils.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "filter_types.hpp"
 
@@ -42,7 +46,9 @@ public:
   {
     pos << bot_detection.pose.position.x,
       bot_detection.pose.position.y;
-    angle << bot_detection.pose.orientation.w;
+    tf2::Quaternion tf2_quat;
+    tf2::fromMsg(bot_detection.pose.orientation, tf2_quat);
+    angle << tf2::getYaw(tf2_quat);
     robot_id = bot_detection.robot_id;
     timestamp = std::chrono::steady_clock::now();
   }
