@@ -69,8 +69,6 @@ public:
     overlays_(""),
     motion_executor_(get_logger().get_child("motion"))
   {
-    declare_parameter<bool>("use_emulated_ballsense", false);
-
     overlay_publisher_ = create_publisher<ateam_msgs::msg::OverlayArray>(
       "/overlays",
       rclcpp::SystemDefaultsQoS());

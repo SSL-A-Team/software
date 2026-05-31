@@ -30,6 +30,7 @@
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
+#include <ateam_radio_msgs/msg/error_telemetry.hpp>
 #include <ateam_radio_msgs/srv/get_firmware_parameter.hpp>
 #include <ateam_radio_msgs/srv/set_firmware_parameter.hpp>
 #include <ateam_radio_msgs/srv/send_robot_power_request.hpp>
@@ -74,7 +75,9 @@ public:
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
     last_side_change_timestamp_(std::chrono::steady_clock::now()),
     game_controller_listener_(*this,
-      std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
+      std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this),
+      std::bind_front(&RadioBridgeNode::TeamSideChangeCallback, this)
+    ),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
@@ -114,6 +117,12 @@ public:
     ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::ExtendedTelemetry>(
       motion_feedback_publishers_,
       "~/robot_feedback/extended/robot",
+      rclcpp::SystemDefaultsQoS(),
+      this);
+
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::ErrorTelemetry>(
+      error_feedback_publishers_,
+      "~/robot_feedback/error/robot",
       rclcpp::SystemDefaultsQoS(),
       this);
 
@@ -167,6 +176,8 @@ private:
     16> feedback_publishers_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ExtendedTelemetry>::SharedPtr,
     16> motion_feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ErrorTelemetry>::SharedPtr,
+    16> error_feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
   FirmwareParameterServer firmware_parameter_server_;
   rclcpp::Service<ateam_radio_msgs::srv::SendRobotPowerRequest>::SharedPtr power_request_service_;
@@ -276,7 +287,7 @@ private:
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
         motion_commands_[id].dribbler_speed = 0.0;
       }
-      BasicControl control_msg;
+      BasicControl control_msg{};
       control_msg.request_shutdown = shutdown_requested_[id];
       control_msg.reboot_robot = reboot_requested_[id];
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
@@ -364,7 +375,7 @@ private:
 
   void FillVisionUpdate(BasicControl & control_msg, const ateam_msgs::msg::VisionStateRobot & vision_state, const std::chrono::steady_clock::time_point & timestamp) {
     const auto now = std::chrono::steady_clock::now();
-    if (now - timestamp > vision_state_staleness_threshold_) {
+    if (now - timestamp > vision_state_staleness_threshold_ || !vision_state.visible) {
       control_msg.vision_update = 0;
       control_msg.vision_position_update[0] = 0;
       control_msg.vision_position_update[1] = 0;
@@ -535,6 +546,21 @@ private:
           if (std::holds_alternative<ExtendedTelemetry>(data_var)) {
             motion_feedback_publishers_[robot_id]->publish(ateam_radio_msgs::Convert(
               std::get<ExtendedTelemetry>(data_var)));
+          }
+          break;
+        }
+      case CC_ERROR_TELEMETRY:
+        {
+          const auto data_var = ExtractData(packet, error);
+          if (!error.empty()) {
+            RCLCPP_WARN(get_logger(), "Ignoring error telemetry message from robot %d. %s", robot_id, error.c_str());
+            return;
+          }
+
+          if (std::holds_alternative<ErrorTelemetry>(data_var)) {
+            const auto & telem_data = std::get<ErrorTelemetry>(data_var);
+            error_feedback_publishers_[robot_id]->publish(ateam_radio_msgs::Convert(telem_data));
+            RCLCPP_WARN(get_logger(), "Error message from robot %d: %s", robot_id, telem_data.error_message);
           }
           break;
         }

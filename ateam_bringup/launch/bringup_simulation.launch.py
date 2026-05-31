@@ -69,20 +69,15 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
-                                              'autonomy.launch.xml')),
-            launch_arguments={
-                'team_name': LaunchConfiguration('team_name'),
-                'use_emulated_ballsense': 'False',
-                'vision_offset_robot_x': '0.0',
-                'vision_offset_robot_y': '0.0',
-            }.items()
+                                              'ui.launch.xml')),
+            condition=IfCondition(LaunchConfiguration('start_ui'))
         ),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution('ateam_bringup',
-                                              'ui.launch.xml')),
-            condition=IfCondition(LaunchConfiguration('start_ui'))
+                PackageLaunchFileSubstitution('ateam_joystick_control',
+                                              'joystick_controller.launch.xml')
+            )
         ),
 
         Node(
@@ -97,8 +92,19 @@ def generate_launch_description():
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution('ateam_joystick_control',
-                                              'joystick_controller.launch.xml')
+                PackageLaunchFileSubstitution('ateam_bringup',
+                                              'state_tracking.launch.xml')
+            ),
+            launch_arguments={
+                'team_name': LaunchConfiguration('team_name'),
+            }.items()
+        ),
+
+        IncludeLaunchDescription(
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution(
+                    'ateam_bringup', 'kenobi.launch.xml'
+                )
             )
-        )
+        ),
     ])
