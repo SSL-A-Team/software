@@ -46,10 +46,8 @@ void MultiMoveTo::RunFrame(
     }
     const auto & robot = *maybe_robot;
     const auto & target_position = target_points_[ind];
-    RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{target_position};
-    command.motion_intent.angular = angular_intent_;
-    motion_commands.at(robot.id) = command;
+    
+    motion_commands.at(robot.id) = BuildCommand(robot, target_position);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
     getOverlays().drawCircle(
@@ -66,16 +64,38 @@ void MultiMoveTo::RunFrame(
   for (auto ind = 0ul; ind < robots.size(); ++ind) {
     const auto & robot = robots[ind];
     const auto & target_position = target_points_[ind];
-    RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{target_position};
-    command.motion_intent.angular = angular_intent_;
-    motion_commands.at(robot.id) = command;
+
+    motion_commands.at(robot.id) = BuildCommand(robot, target_position);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
     getOverlays().drawCircle(
       "destination_" + std::to_string(
         robot.id), viz_circle, "blue", "transparent");
   }
+}
+
+RobotCommand MultiMoveTo::BuildCommand(const Robot & robot, const ateam_geometry::Point & destination)
+{
+  RobotCommand command;
+  if(std::holds_alternative<std::monostate>(angular_target_)) {
+    motion::intents::Position intent;
+    intent.position = destination;
+    intent.heading = robot.theta;
+    command.motion_intent = intent;
+  }
+  if(const auto heading_target = std::get_if<double>(&angular_target_); heading_target != nullptr) {
+    motion::intents::Position intent;
+    intent.position = destination;
+    intent.heading = *heading_target;
+    command.motion_intent = intent;
+  }
+  if(const auto face_target = std::get_if<ateam_geometry::Point>(&angular_target_); face_target != nullptr) {
+    motion::intents::PositionFacing intent;
+    intent.position = destination;
+    intent.face_target = *face_target;
+    command.motion_intent = intent;
+  }
+  return command;
 }
 
 }  // namespace ateam_kenobi::tactics

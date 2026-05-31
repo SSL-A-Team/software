@@ -68,9 +68,11 @@ std::vector<RobotCommand> Blockers::runFrame(
   for (auto robot_index = 0ul; robot_index < robots.size(); ++robot_index) {
     const auto & robot = robots[robot_index];
     const auto & position = positions[robot_index];
+    motion::intents::PositionFacing intent;
+    intent.position = position;
+    intent.face_target = world.ball.pos;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{position};
-    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+    command.motion_intent = intent;
     motion_commands.push_back(command);
     if (play_info) {
       (*play_info)["Blockers"][std::to_string(robot.id)]["Blocking"] =
