@@ -25,6 +25,7 @@
 #include "core/path_planning/obstacles.hpp"
 #include "core/path_planning/escape_velocity.hpp"
 #include "frame_conversions.hpp"
+#include "pivot_control.hpp"
 
 namespace ateam_kenobi::motion
 {
@@ -169,35 +170,16 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   (void)robot;
   (void)overlays;
   (void)world;
-  MotionCommand command;
-  command.control_mode = ControlMode::LocalVelocity;
-  // command.velocity.x = 0.0;
-  // command.velocity.y = 0.0;
-  // command.velocity.theta = 0.0;
-  command.limit_vel_linear = intent.limits.linear_velocity;
-  command.limit_vel_angular = intent.limits.angular_velocity;
-  command.limit_acc_linear = intent.limits.linear_acceleration;
-  command.limit_acc_angular = intent.limits.angular_acceleration;
-  return command;
+  return PivotAtVelocity(intent);
 }
 
 std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   const intents::PivotHeading & intent, const Robot & robot, visualization::Overlays & overlays,
   const World & world)
 {
-  (void)robot;
   (void)overlays;
   (void)world;
-  MotionCommand command;
-  command.control_mode = ControlMode::LocalVelocity;
-  // command.velocity.x = 0.0;
-  // command.velocity.y = 0.0;
-  // command.velocity.theta = 0.0;
-  command.limit_vel_linear = intent.limits.linear_velocity;
-  command.limit_vel_angular = intent.limits.angular_velocity;
-  command.limit_acc_linear = intent.limits.linear_acceleration;
-  command.limit_acc_angular = intent.limits.angular_acceleration;
-  return command;
+  return PivotToHeading(intent, robot);
 }
 
 }  // namespace ateam_kenobi::motion
