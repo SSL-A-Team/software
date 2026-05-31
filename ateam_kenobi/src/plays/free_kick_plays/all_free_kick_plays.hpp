@@ -21,7 +21,7 @@
 #ifndef PLAYS__FREE_KICK_PLAYS__ALL_FREE_KICK_PLAYS_HPP_
 #define PLAYS__FREE_KICK_PLAYS__ALL_FREE_KICK_PLAYS_HPP_
 
-#include "defense/their_free_kick_play.hpp"
+// #include "defense/their_free_kick_play.hpp"
 #include "offense/free_kick_on_goal_play.hpp"
 
 #endif  // PLAYS__FREE_KICK_PLAYS__ALL_FREE_KICK_PLAYS_HPP_

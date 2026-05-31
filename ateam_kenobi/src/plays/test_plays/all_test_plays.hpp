@@ -21,14 +21,14 @@
 #ifndef PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
 #define PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
 
-#include "controls_test_play.hpp"
-#include "spinning_a_play.hpp"
+// #include "controls_test_play.hpp"
+// #include "spinning_a_play.hpp"
 #include "test_kick_play.hpp"
 #include "test_pass_play.hpp"
-#include "test_pivot_play.hpp"
-#include "test_play.hpp"
+// #include "test_pivot_play.hpp"
+// #include "test_play.hpp"
 #include "test_window_eval.hpp"
-#include "triangle_pass_play.hpp"
-#include "waypoints_play.hpp"
+// #include "triangle_pass_play.hpp"
+// #include "waypoints_play.hpp"
 
 #endif  // PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_

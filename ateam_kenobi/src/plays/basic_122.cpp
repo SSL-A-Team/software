@@ -125,7 +125,10 @@ void Basic122::runStriker(
     const auto ball_to_bot_vec = striker_bot.pos - world.ball.pos;
     const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
     if (ateam_geometry::norm(ball_to_bot_vec) < kRobotDiameter) {
-      motion_command.motion_intent.linear = motion::intents::linear::VelocityIntent{vel};
+      motion::intents::Velocity intent;
+      intent.linear = vel;
+      intent.angular = 0.0;
+      motion_command.motion_intent = intent;
     }
     return;
   }
