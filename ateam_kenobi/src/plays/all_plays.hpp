@@ -36,7 +36,7 @@
 #include "passing_plays/all_passing_plays.hpp"
 #include "free_kick_plays/all_free_kick_plays.hpp"
 #include "kickoff_plays/all_kickoff_plays.hpp"
-// #include "stop_plays/all_stop_plays.hpp"
+#include "stop_plays/all_stop_plays.hpp"
 #include "test_plays/all_test_plays.hpp"
 #include "util_plays/all_util_plays.hpp"
 

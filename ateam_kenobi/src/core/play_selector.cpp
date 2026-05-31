@@ -48,9 +48,9 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<CornerLineupPlay>("TheirRightLineup", stp_options, 1.0, -1.0);
   addPlay<CornerLineupPlay>("OurLeftLineup", stp_options, -1.0, 1.0);
   addPlay<CornerLineupPlay>("OurRightLineup", stp_options, -1.0, -1.0);
-  // addPlay<DefaultStopPlay>(stp_options);
-  // addPlay<OffensiveStopPlay>(stp_options);
-  // addPlay<DefensiveStopPlay>(stp_options);
+  addPlay<DefaultStopPlay>(stp_options);
+  addPlay<OffensiveStopPlay>(stp_options);
+  addPlay<DefensiveStopPlay>(stp_options);
   addPlay<WallPlay>(stp_options);
   addPlay<KickOnGoalPlay>(stp_options);
   addPlay<KickoffOnGoalPlay>(stp_options);

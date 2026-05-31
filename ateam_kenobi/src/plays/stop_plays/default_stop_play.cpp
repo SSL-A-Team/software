@@ -74,7 +74,12 @@ std::array<std::optional<RobotCommand>, 16> DefaultStopPlay::runFrame(
   // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
   for(auto & maybe_cmd : motion_commands) {
     if(!maybe_cmd) {continue;}
-    maybe_cmd->motion_intent.motion_options.max_velocity = 1.0;
+    std::visit([](auto & intent){
+      using IntentType = std::decay_t<decltype(intent)>;
+      if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+        intent.limits.linear_velocity = 1.0;
+      }
+    }, maybe_cmd->motion_intent);
   }
 
   return motion_commands;

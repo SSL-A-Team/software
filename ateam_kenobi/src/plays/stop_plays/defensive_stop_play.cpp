@@ -85,7 +85,12 @@ std::array<std::optional<RobotCommand>, 16> DefensiveStopPlay::runFrame(
   // Rules say <1.5m/s. We'll use 1m/s to give some room for error.
   for(auto & maybe_cmd : motion_commands) {
     if(!maybe_cmd) {continue;}
-    maybe_cmd->motion_intent.motion_options.max_velocity = 1.0;
+    std::visit([](auto & intent){
+      using IntentType = std::decay_t<decltype(intent)>;
+      if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+        intent.limits.linear_velocity = 1.0;
+      }
+    }, maybe_cmd->motion_intent);
   }
 
   return motion_commands;
@@ -116,12 +121,14 @@ void DefensiveStopPlay::runPrepBot(
     return;
   }
 
-  RobotCommand command;
-  command.motion_intent.linear = motion::intents::linear::PositionIntent{target_position};
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-  command.motion_intent.obstacles = {
+  motion::intents::PositionFacing intent;
+  intent.position = target_position;
+  intent.face_target = world.ball.pos;
+  intent.obstacles = {
     ateam_geometry::makeDisk(world.ball.pos, stop_plays::stop_helpers::kKeepoutRadiusRules)
   };
+  RobotCommand command;
+  command.motion_intent = intent;
   maybe_motion_commands[closest_bot.id] = command;
 }
 
