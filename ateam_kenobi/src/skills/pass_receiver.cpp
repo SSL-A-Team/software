@@ -77,7 +77,12 @@ RobotCommand PassReceiver::runFrame(const World & world, const Robot & robot)
     command = runPrePass(world, robot);
   }
 
-  command.motion_intent.motion_options.max_velocity = 2.0;
+  std::visit([](auto && intent){
+    using IntentType = std::decay_t<decltype(intent)>;
+    if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+      intent.limits.linear_velocity = 2.0;
+    }
+  }, command.motion_intent);
 
   return command;
 }
@@ -141,43 +146,28 @@ RobotCommand PassReceiver::runPrePass(
     }
   }
 
+  motion::intents::PositionFacing intent;
+  intent.position = destination;
+  intent.face_target = world.ball.pos;
+  intent.planner_options.avoid_ball = false;
+
   RobotCommand command;
-  command.motion_intent.linear = motion::intents::linear::PositionIntent{destination};
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-  command.motion_intent.planner_options.avoid_ball = false;
+  command.motion_intent = intent;
   return command;
 }
 
 RobotCommand PassReceiver::runPass(const World & world, const Robot & robot)
 {
-  RobotCommand command;
   const ateam_geometry::Ray ball_ray(world.ball.pos, world.ball.vel);
   const auto destination = ball_ray.supporting_line().projection(robot.pos);
-  command.motion_intent.linear = motion::intents::linear::PositionIntent{destination};
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-  command.motion_intent.motion_options.max_deceleration = 4.0;
-  command.motion_intent.planner_options.avoid_ball = false;
-
+  motion::intents::PositionFacing intent;
+  intent.position = destination;
+  intent.face_target = world.ball.pos;
+  intent.limits.linear_acceleration = 4.0;
+  intent.planner_options.avoid_ball = false;
+  RobotCommand command;
+  command.motion_intent = intent;
   command.dribbler_speed = kDefaultDribblerSpeed * 1.2;
-  const auto dist_to_ball = ateam_geometry::norm(robot.pos - world.ball.pos);
-  const auto time_to_ball = dist_to_ball / ateam_geometry::norm(world.ball.vel);
-  if (time_to_ball < 0.5) {
-    const ateam_geometry::Vector robot_backwards_vec =
-      ateam_geometry::directionFromAngle(robot.theta + M_PI).vector();
-    const auto angle_between_vecs = ateam_geometry::ShortestAngleBetween(world.ball.vel,
-        robot_backwards_vec);
-    if(std::abs(angle_between_vecs) < M_PI_2) {
-      command.motion_intent.callback = [](motion::BodyVelocity plan_velocity,
-        const path_planning::Path &, const Robot & robot,
-        const World & world) -> motion::BodyVelocity {
-          const auto multiplier = robot.breakbeam_ball_detected_filtered ? 0.2 : 0.6;
-          plan_velocity.linear +=
-            motion::WorldToLocalFrame(ateam_geometry::normalize(world.ball.vel) * multiplier,
-            robot);
-          return plan_velocity;
-        };
-    }
-  }
   return command;
 }
 
@@ -195,9 +185,12 @@ RobotCommand PassReceiver::runApproachBall(
   const auto ball_to_bot_vector = robot.pos - world.ball.pos;
   const auto target = world.ball.pos + ateam_geometry::normalize(ball_to_bot_vector) *
     kRobotDiameter * 1.05;
+  motion::intents::Position intent;
+  intent.position = target;
+  intent.heading = robot.theta;
+  intent.limits.linear_velocity = 1.0;
   RobotCommand command;
-  command.motion_intent.linear = motion::intents::linear::PositionIntent{target};
-  command.motion_intent.motion_options.max_velocity = 1.0;
+  command.motion_intent = intent;
   return command;
 }
 

@@ -69,17 +69,10 @@ RobotCommand Capture::runMoveToBall(
   const World & world,
   const Robot & robot)
 {
-  RobotCommand command;
-
-  command.motion_intent.linear = motion::intents::linear::VelocityAtPositionIntent{
-    world.ball.pos,
-    ateam_geometry::normalize(world.ball.pos - robot.pos) * capture_speed_
-  };
-
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-
-  command.motion_intent.motion_options.completion_threshold = 0.0;
-  command.motion_intent.planner_options.avoid_ball = false;
+  motion::intents::PositionFacing intent;
+  intent.position = world.ball.pos;
+  intent.face_target = world.ball.pos;
+  intent.planner_options.avoid_ball = false;
 
   const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
       world.ball.pos));
@@ -89,7 +82,10 @@ RobotCommand Capture::runMoveToBall(
   const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
       (capture_speed_ * capture_speed_));
 
-  command.motion_intent.motion_options.max_velocity = std::min(max_decel_vel, max_speed_);
+  intent.limits.linear_velocity = std::min(max_decel_vel, max_speed_);
+
+  RobotCommand command;
+  command.motion_intent = intent;
 
   return command;
 }
@@ -109,25 +105,18 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
     }
   }
 
-  RobotCommand command;
-
-  command.motion_intent.planner_options.avoid_ball = false;
-  command.motion_intent.planner_options.footprint_inflation = 0.0;
-  command.motion_intent.motion_options.completion_threshold = 0.0;
-
-  command.motion_intent.motion_options.max_velocity = capture_speed_;
+  motion::intents::Velocity intent;
+  intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
 
   if(world.ball.visible) {
-    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+    // TODO(barulicm): face ball
+    // command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
   } else {
-    command.motion_intent.angular = motion::intents::angular::HeadingIntent{robot.theta};
+    intent.angular = 0.0;
   }
 
-  command.motion_intent.linear = motion::intents::linear::VelocityIntent{
-    ateam_geometry::Vector{capture_speed_, 0.0},
-    motion::intents::linear::Frame::Local
-  };
-
+  RobotCommand command;
+  command.motion_intent = intent;
   command.dribbler_speed = kDefaultDribblerSpeed;
 
   return command;
