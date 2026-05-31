@@ -63,9 +63,76 @@ void MotionExecutor::ExecutePathPlanningTargets(
   std::array<std::optional<MotionCommand>, 16> & commands,
   visualization::Overlays & overlays, const World & world)
 {
-  (void)commands;
-  (void)overlays;
-  (void)world;
+  for(const auto & target : path_planning_targets_) {
+    const auto & robot = world.our_robots[target.robot_id];
+    auto & planner = planners_[target.robot_id];
+    const auto path = planner.getPath(robot.pos, target.position, world, target.obstacles, target.planner_options);
+    MotionCommand command;
+    if(path.empty()) {
+      command.control_mode = ControlMode::Off;
+    } else {
+      const auto pose = path.front();
+      command.control_mode = ControlMode::GlobalPosition;
+      command.pose.x = pose.x();
+      command.pose.y = pose.y();
+      command.pose.theta = target.heading;
+    }
+    command.limit_vel_linear = target.limits.linear_velocity;
+    command.limit_vel_angular = target.limits.angular_velocity;
+    command.limit_acc_linear = target.limits.linear_acceleration;
+    command.limit_acc_angular = target.limits.angular_acceleration;
+    commands[target.robot_id] = command;
+
+    const auto name_prefix = "motion/robot_" + std::to_string(robot.id) + "/";
+    if(path.empty()) {
+      overlays.drawLine(name_prefix + "path", {robot.pos, target.position}, "Red");
+    } else if(path.size() == 1) {
+      overlays.drawLine(name_prefix + "path", {robot.pos, target.position}, "Purple");
+    } else {
+      const auto [closest_index, closest_point] = ProjectRobotOnPath(path, robot);
+      std::vector<ateam_geometry::Point> path_done(path.begin(), path.begin() + (closest_index));
+      path_done.push_back(closest_point);
+      std::vector<ateam_geometry::Point> path_remaining(path.begin() + (closest_index),
+        path.end());
+      path_remaining.insert(path_remaining.begin(), closest_point);
+      const auto translucent_purple = "#8000805F";
+      overlays.drawLine(name_prefix + "path_done", path_done, translucent_purple);
+      overlays.drawLine(name_prefix + "path_remaining", path_remaining, "Purple");
+      const auto & planner = planners_[robot.id];
+      if (planner.didTimeOut()) {
+        overlays.drawLine(name_prefix + "afterpath", {path.back(), target.position}, "LightSkyBlue");
+      } else if (planner.isPathTruncated()) {
+        overlays.drawLine(name_prefix + "afterpath", {path.back(), target.position}, "LightPink");
+      }
+    }
+    overlays.merge(planner.getOverlays());
+  }
+}
+
+std::pair<size_t, ateam_geometry::Point> MotionExecutor::ProjectRobotOnPath(
+  const path_planning::Path & path, const Robot & robot)
+{
+  if (path.empty()) {
+    return {0, robot.pos};
+  }
+  if (path.size() == 1) {
+    return {0, path[0]};
+  }
+  auto closest_point = ateam_geometry::nearestPointOnSegment(ateam_geometry::Segment(path[0],
+      path[1]), robot.pos);
+  size_t closest_index = 1;
+  double min_distance = CGAL::squared_distance(closest_point, robot.pos);
+  for (size_t i = 1; i < path.size() - 1; ++i) {
+    const auto segment = ateam_geometry::Segment(path[i], path[i + 1]);
+    const auto point_on_segment = ateam_geometry::nearestPointOnSegment(segment, robot.pos);
+    const auto distance = CGAL::squared_distance(point_on_segment, robot.pos);
+    if (distance <= min_distance) {
+      min_distance = distance;
+      closest_point = point_on_segment;
+      closest_index = i + 1;
+    }
+  }
+  return {closest_index, closest_point};
 }
 
 std::optional<MotionCommand> MotionExecutor::ExecuteIntent(

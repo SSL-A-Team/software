@@ -63,6 +63,10 @@ private:
     std::array<std::optional<MotionCommand>, 16> & commands,
     visualization::Overlays & overlays, const World & world);
 
+  std::pair<size_t, ateam_geometry::Point> ProjectRobotOnPath(
+    const path_planning::Path & path,
+    const Robot & robot);
+
   std::optional<MotionCommand> ExecuteIntent(
     const intents::None & intent, const Robot & robot,
     visualization::Overlays & overlays, const World & world);
