@@ -277,62 +277,63 @@ void OurBallPlacementPlay::runExtracting(
           extract_robot.theta
         );
 
-        motion_command.motion_intent.angular =
-          motion::intents::angular::VelocityIntent{std::copysign(0.8, direction)};
+        motion::intents::Velocity intent;
+        intent.linear = ateam_geometry::Vector{0.0, 0.0};
+        intent.angular = std::copysign(0.8, direction);
+        motion_command.motion_intent = intent;
       } else {
         state_ = State::Placing;
       }
     } else {
-      motion_command.motion_intent.motion_options.completion_threshold = 0;
-      motion_command.motion_intent.planner_options.avoid_ball = false;
-      motion_command.motion_intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
-      motion_command.motion_intent.linear =
-        motion::intents::linear::PositionIntent{approach_point_};
-      motion_command.motion_intent.motion_options.max_velocity = 0.2;
-      motion_command.motion_intent.motion_options.max_acceleration = 1.0;
-      motion_command.motion_intent.motion_options.max_deceleration = 1.0;
-
       if (world.ball.visible) {
-        motion_command.motion_intent.angular =
-          motion::intents::angular::FacingIntent{world.ball.pos};
+        motion::intents::PositionFacing intent;
+        intent.position = approach_point_;
+        intent.face_target = world.ball.pos;
+        intent.planner_options.avoid_ball = false;
+        intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
+        intent.limits.linear_velocity = 0.2;
+        intent.limits.linear_acceleration = 1.0;
+        motion_command.motion_intent = intent;
       } else {
         // If the ball is occluded we sometimes drive past its previous position and try to turn
         // around so its better to just keep facing the same direction if we lose track of it
-        motion_command.motion_intent.angular =
-          motion::intents::angular::HeadingIntent{extract_robot.theta};
+        motion::intents::Position intent;
+        intent.position = approach_point_;
+        intent.heading = extract_robot.theta;
+        intent.planner_options.avoid_ball = false;
+        intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
+        intent.limits.linear_velocity = 0.2;
+        intent.limits.linear_acceleration = 1.0;
+        motion_command.motion_intent = intent;
       }
     }
   } else if (robot_already_in_position || robot_near_approach_point) {
     getPlayInfo()["ExtractState"] = "capturing ball";
-    motion_command.motion_intent.motion_options.completion_threshold = 0;
-    motion_command.motion_intent.planner_options.avoid_ball = false;
-    motion_command.motion_intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
+    motion::intents::Velocity intent;
+    intent.frame = motion::Frame::Local;
+    intent.linear = ateam_geometry::Vector(0.35, 0);
+    intent.limits.linear_velocity = 0.35;
+    intent.limits.linear_acceleration = 2.0;
 
-    motion_command.motion_intent.motion_options.max_velocity = 0.35;
-    motion_command.motion_intent.motion_options.max_acceleration = 2.0;
-    motion_command.motion_intent.motion_options.max_deceleration = 2.0;
+    // TODO(barulicm): Handle heading
 
     if (world.ball.visible) {
-      motion_command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+      // motion_command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
     } else {
       // If the ball is occluded we sometimes drive past its previous position and try to turn
       // around so its better to just keep facing the same direction if we lose track of it
-      motion_command.motion_intent.angular =
-        motion::intents::angular::HeadingIntent{extract_robot.theta};
+      // motion_command.motion_intent.angular =
+      //   motion::intents::angular::HeadingIntent{extract_robot.theta};
     }
-    motion_command.motion_intent.linear =
-      motion::intents::linear::VelocityIntent{ateam_geometry::Vector(0.35, 0),
-      motion::intents::linear::Frame::Local};
+    motion_command.motion_intent = intent;
   } else {
     getPlayInfo()["ExtractState"] = "moving to approach point";
-    motion_command.motion_intent.motion_options.max_velocity = 1.5;
-    motion_command.motion_intent.motion_options.max_acceleration = 2.0;
-    motion_command.motion_intent.motion_options.max_deceleration = 2.0;
-
-    motion_command.motion_intent.linear = motion::intents::linear::PositionIntent{approach_point_};
-    motion_command.motion_intent.angular =
-      motion::intents::angular::HeadingIntent{ateam_geometry::ToHeading(world.ball.pos -
-          approach_point_)};
+    motion::intents::Position intent;
+    intent.position = approach_point_;
+    intent.heading = ateam_geometry::ToHeading(world.ball.pos - approach_point_);
+    intent.limits.linear_velocity = 1.5;
+    intent.limits.linear_acceleration = 2.0;
+    motion_command.motion_intent = intent;
   }
 
   const bool should_dribble = extract_robot.breakbeam_ball_detected_filtered ||
@@ -386,9 +387,10 @@ void OurBallPlacementPlay::runDone(
   RobotCommand command;
   // TODO(chachmu): check next ref command to know if we need 0.5 for force start or
   // 0.05 for our free kick
-  command.motion_intent.linear = motion::intents::linear::PositionIntent{
-    world.ball.pos + (0.5 * ateam_geometry::normalize(ball_to_robot))};
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+  motion::intents::PositionFacing intent;
+  intent.position = world.ball.pos + (0.5 * ateam_geometry::normalize(ball_to_robot));
+  intent.face_target = world.ball.pos;
+  command.motion_intent = intent;
   motion_commands[place_robot.id] = command;
 }
 

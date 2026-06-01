@@ -78,11 +78,16 @@ std::array<std::optional<RobotCommand>, 16> TheirPenaltyPlay::runFrame(
       return current;
     });
   multi_move_to_.SetTargetPoints(target_points);
-  multi_move_to_.SetFaceTravel();
+  multi_move_to_.SetFaceAbsolue(0.0);
   multi_move_to_.RunFrame(available_robots, motion_commands);
   for(auto & maybe_cmd : motion_commands) {
     if(!maybe_cmd) {continue;}
-    maybe_cmd->motion_intent.motion_options.max_velocity = 1.5;
+    std::visit([](auto & intent){
+      using IntentType = std::decay_t<decltype(intent)>;
+      if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+        intent.limits.linear_velocity = 1.5;
+      }
+    }, maybe_cmd->motion_intent);
   }
 
   return motion_commands;

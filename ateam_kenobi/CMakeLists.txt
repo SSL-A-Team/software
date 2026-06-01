@@ -52,7 +52,7 @@ target_sources(kenobi_node_component PRIVATE
 # Play Sources
 #
 target_sources(kenobi_node_component PRIVATE
-  # src/plays/free_kick_plays/defense/their_free_kick_play.cpp
+  src/plays/free_kick_plays/defense/their_free_kick_play.cpp
   src/plays/free_kick_plays/offense/free_kick_on_goal_play.cpp
   src/plays/kickoff_plays/defense/their_kickoff_play.cpp
   src/plays/kickoff_plays/offense/kickoff_on_goal.cpp
@@ -72,15 +72,15 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/util_plays/corner_lineup_play.cpp
   src/plays/halt_play.cpp
   src/plays/kick_on_goal_play.cpp
-  # src/plays/our_ball_placement_play.cpp
+  src/plays/our_ball_placement_play.cpp
   src/plays/their_ball_placement_play.cpp
   src/plays/wall_play.cpp
   src/plays/basic_122.cpp
   src/plays/defenders_only_play.cpp
-  # src/plays/our_penalty_play.cpp
-  # src/plays/their_penalty_play.cpp
+  src/plays/our_penalty_play.cpp
+  src/plays/their_penalty_play.cpp
   src/plays/defense_play.cpp
-#   src/plays/extract_play.cpp
+  src/plays/extract_play.cpp
 )
 
 #
