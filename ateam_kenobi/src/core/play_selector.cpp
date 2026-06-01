@@ -43,7 +43,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
     "stp_parameters",
     node.get_node_parameters_interface());
   halt_play_ = addPlay<HaltPlay>(stp_options);
-  // addPlay<TestPlay>(stp_options);
+  addPlay<TestPlay>(stp_options);
   addPlay<CornerLineupPlay>("TheirLeftLineup", stp_options, 1.0, 1.0);
   addPlay<CornerLineupPlay>("TheirRightLineup", stp_options, 1.0, -1.0);
   addPlay<CornerLineupPlay>("OurLeftLineup", stp_options, -1.0, 1.0);
@@ -68,9 +68,9 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   // addPlay<ControlsTestPlay>(stp_options);
   addPlay<DefensePlay>(stp_options);
   // addPlay<ExtractPlay>(stp_options);
-  // addPlay<TrianglePassPlay>(stp_options);
-  // addPlay<WaypointsPlay>(stp_options);
-  // addPlay<SpinningAPlay>(stp_options);
+  addPlay<TrianglePassPlay>(stp_options);
+  addPlay<WaypointsPlay>(stp_options);
+  addPlay<SpinningAPlay>(stp_options);
   addPlay<PassToLanePlay>(
     "PassLeftForwardPlay", stp_options, play_helpers::lanes::Lane::Left,
     PassToLanePlay::PassDirection::Forward);
@@ -91,7 +91,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
     PassToLanePlay::PassDirection::Backward);
   addPlay<FreeKickOnGoalPlay>(stp_options);
   addPlay<TestPassPlay>(stp_options);
-  // addPlay<TestPivotPlay>(stp_options);
+  addPlay<TestPivotPlay>(stp_options);
   addPlay<DefendersOnlyPlay>(stp_options);
 }
 

@@ -85,14 +85,6 @@ public:
     }
     prev_at_target_ = at_target;
 
-    motion_commands[robot.id]->motion_intent.callback = [&play_info](
-      motion::BodyVelocity vel, const path_planning::Path &, const Robot &, const World &)
-      {
-        play_info["Y Cmd"] = vel.linear.y();
-        play_info["Omega Cmd"] = vel.angular;
-        return vel;
-      };
-
     return motion_commands;
   }
 
@@ -145,7 +137,6 @@ private:
     }
 
     const auto angular_vel = std::clamp(trapezoidal_vel, -pivot_speed_, pivot_speed_);
-    command.motion_intent.angular = motion::intents::angular::VelocityIntent{angular_vel};
 
     /* rotate in a circle with diameter 0.0427 + 0.18 = 0.2227 (This might be tunable to use 8cm for
     * real robots)
@@ -157,10 +148,11 @@ private:
     double circumference = M_PI * diameter;
     double velocity = circumference * (angular_vel / (2 * M_PI));
 
-    command.motion_intent.linear = motion::intents::linear::VelocityIntent{
-      ateam_geometry::Vector{0.0, velocity},
-      motion::intents::linear::Frame::Local
-    };
+    motion::intents::Velocity intent;
+    intent.frame = motion::Frame::Local;
+    intent.linear = ateam_geometry::Vector{0.0, velocity};
+    intent.angular = angular_vel;
+    command.motion_intent = intent;
     return command;
   }
 };

@@ -69,7 +69,9 @@ std::array<std::optional<RobotCommand>,
   multi_move_to_.RunFrame(available_robots, motion_commands);
   for(auto & maybe_motion_command : motion_commands) {
     if(!maybe_motion_command) {continue;}
-    maybe_motion_command->motion_intent.planner_options.footprint_inflation = 0.1;
+    if(auto intent = std::get_if<motion::intents::Position>(&maybe_motion_command->motion_intent); intent != nullptr) {
+      intent->planner_options.footprint_inflation = 0.1;
+    }
   }
 
   if (angle_ < kNumRotations * 2 * M_PI) {

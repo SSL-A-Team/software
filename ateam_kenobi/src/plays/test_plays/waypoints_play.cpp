@@ -31,25 +31,93 @@ namespace ateam_kenobi::plays
 WaypointsPlay::WaypointsPlay(stp::Options stp_options)
 : stp::Play(kPlayName, stp_options)
 {
-  addWaypoint(
-    5000, {
-      {0.00, 0, M_PI},
-      {0.30, 0, M_PI},
-      {0.60, 0, M_PI},
-      {0.90, 0, M_PI},
-      {1.20, 0, M_PI},
-      {1.50, 0, M_PI}
-    });
+  // addWaypoint(
+  //   5000, {
+  //     {0.00, 0, M_PI},
+  //     {0.30, 0, M_PI},
+  //     {0.60, 0, M_PI},
+  //     {0.90, 0, M_PI},
+  //     {1.20, 0, M_PI},
+  //     {1.50, 0, M_PI}
+  //   });
 
-  addWaypoint(
-    5000, {
-      {-0.20, -0.11, M_PI},
-      {-0.20, 0.11, M_PI},
-      {0.00, -0.22, M_PI},
-      {0.00, 0.22, M_PI},
-      {0.20, -0.33, M_PI},
-      {0.20, 0.33, M_PI}
-    });
+  // addWaypoint(
+  //   5000, {
+  //     {-0.20, -0.11, M_PI},
+  //     {-0.20, 0.11, M_PI},
+  //     {0.00, -0.22, M_PI},
+  //     {0.00, 0.22, M_PI},
+  //     {0.20, -0.33, M_PI},
+  //     {0.20, 0.33, M_PI}
+  //   });
+
+    // addWaypoint(
+    //   5000, {
+    //     {-1.5, -1.0, 0.0}
+    //   });
+
+    // addWaypoint(
+    //   5000, {
+    //     {1.5, -1.0, 0.0}
+    //   });
+
+    // addWaypoint(
+    //   5000, {
+    //     {1.5,  1.0, 0.0}
+    //   });
+
+    // addWaypoint(
+    //   5000, {
+    //     {-1.5,  1.0, 0.0}
+    //   });
+
+    addWaypoint(
+      5000, {
+        {0.2, -0.5, 0.0}
+      });
+    addWaypoint(
+      5000, {
+        {1.2, -0.5, 0.0}
+      });
+    addWaypoint(
+      5000, {
+        {1.2,  0.5, 0.0}
+      });
+    addWaypoint(
+      5000, {
+        {0.2,  0.5, 0.0}
+      });
+
+    // addWaypoint(
+    //   5000, {
+    //     {1.0, 0.0, 0.0}
+    //   }
+    // );
+    // addWaypoint(
+    //   5000, {
+    //     {1.0, 0.0, M_PI_2}
+    //   }
+    // );
+    // addWaypoint(
+    //   5000, {
+    //     {1.0, 0.0, M_PI}
+    //   }
+    // );
+    // addWaypoint(
+    //   5000, {
+    //     {1.0, 0.0, 1.5 * M_PI}
+    //   }
+    // );
+    // addWaypoint(
+    //   5000, {
+    //     {1.0, 0.0, M_PI}
+    //   }
+    // );
+    // addWaypoint(
+    //   5000, {
+    //     {1.0, 0.0, M_PI_2}
+    //   }
+    // );
 }
 
 void WaypointsPlay::reset()
@@ -82,11 +150,14 @@ std::array<std::optional<RobotCommand>, 16> WaypointsPlay::runFrame(
   for (auto robot_ind = 0ul; robot_ind < num_robots; ++robot_ind) {
     const auto & pose = waypoint.poses[robot_ind];
     const auto & robot = available_robots[robot_ind];
+    motion::intents::Position intent;
+    intent.position = pose.position;
+    intent.heading = pose.heading;
+    intent.planner_options.footprint_inflation = 0.02;
+    intent.planner_options.use_default_obstacles = false;
+    intent.limits.linear_velocity = 1.0;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{pose.position};
-    command.motion_intent.angular = motion::intents::angular::HeadingIntent{pose.heading};
-    command.motion_intent.planner_options.footprint_inflation = 0.02;
-    command.motion_intent.planner_options.use_default_obstacles = false;
+    command.motion_intent = intent;
     motion_commands[robot.id] = command;
   }
 
