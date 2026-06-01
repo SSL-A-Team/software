@@ -42,6 +42,8 @@ std::array<std::optional<MotionCommand>,
 {
   std::array<std::optional<MotionCommand>, 16> commands{};
 
+  path_planning_targets_.clear();
+
   for(auto i = 0ul; i < 16; ++i) {
     const auto & robot = world.our_robots[i];
     const auto & maybe_intent = intents[i];
@@ -71,7 +73,8 @@ void MotionExecutor::ExecutePathPlanningTargets(
     if(path.empty()) {
       command.control_mode = ControlMode::Off;
     } else {
-      const auto pose = path.front();
+      const auto [closest_index, closest_point] = ProjectRobotOnPath(path, robot);
+      const auto pose = path[closest_index];
       command.control_mode = ControlMode::GlobalPosition;
       command.pose.x = pose.x();
       command.pose.y = pose.y();
@@ -217,7 +220,9 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
 {
   (void)overlays;
   (void)world;
-  const auto heading = 0;  // TODO get heading to target
+  const auto heading = atan2(
+          intent.face_target.y() - robot.pos.y(),
+          intent.face_target.x() - robot.pos.x());
   path_planning_targets_.push_back(PathPlanningTarget{
       robot.id,
       intent.position,
