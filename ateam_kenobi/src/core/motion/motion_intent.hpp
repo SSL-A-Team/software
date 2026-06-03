@@ -66,6 +66,22 @@ struct Velocity
   Limits limits;
 };
 
+struct LinearVelocityAngularHeading
+{
+  ateam_geometry::Vector linear;
+  double heading;
+  Frame frame = Frame::World;
+  Limits limits;
+};
+
+struct LinearVelocityAngularFacing
+{
+  ateam_geometry::Vector linear;
+  ateam_geometry::Point face_target;
+  Frame frame = Frame::World;
+  Limits limits;
+};
+
 struct Position
 {
   ateam_geometry::Point position;
@@ -89,14 +105,14 @@ struct PositionFacing
 struct PivotVelocity
 {
   double angular_velocity;
-  double radius; // TODO(barulicm): default to robot holding ball radius
+  double radius = 0.089;  // Estimated radius of bot holding ball
   Limits limits;
 };
 
 struct PivotHeading
 {
   double target_heading;
-  double radius; // TODO(barulicm): default to robot holding ball radius
+  double radius = 0.089;  // Estimated radius of bot holding ball
   Limits limits;
 };
 
@@ -106,6 +122,8 @@ using MotionIntent = std::variant<
   intents::None,
   intents::Stop,
   intents::Velocity,
+  intents::LinearVelocityAngularHeading,
+  intents::LinearVelocityAngularFacing,
   intents::Position,
   intents::PositionFacing,
   intents::PivotVelocity,

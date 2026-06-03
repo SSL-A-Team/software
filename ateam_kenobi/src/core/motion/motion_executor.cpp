@@ -68,7 +68,8 @@ void MotionExecutor::ExecutePathPlanningTargets(
   for(const auto & target : path_planning_targets_) {
     const auto & robot = world.our_robots[target.robot_id];
     auto & planner = planners_[target.robot_id];
-    const auto path = planner.getPath(robot.pos, target.position, world, target.obstacles, target.planner_options);
+    const auto path = planner.getPath(robot.pos, target.position, world, target.obstacles,
+        target.planner_options);
     MotionCommand command;
     if(path.empty()) {
       command.control_mode = ControlMode::Off;
@@ -103,7 +104,8 @@ void MotionExecutor::ExecutePathPlanningTargets(
       overlays.drawLine(name_prefix + "path_remaining", path_remaining, "Purple");
       const auto & planner = planners_[robot.id];
       if (planner.didTimeOut()) {
-        overlays.drawLine(name_prefix + "afterpath", {path.back(), target.position}, "LightSkyBlue");
+        overlays.drawLine(name_prefix + "afterpath", {path.back(), target.position},
+            "LightSkyBlue");
       } else if (planner.isPathTruncated()) {
         overlays.drawLine(name_prefix + "afterpath", {path.back(), target.position}, "LightPink");
       }
@@ -189,6 +191,57 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   command.velocity.x = intent.linear.x();
   command.velocity.y = intent.linear.y();
   command.velocity.theta = intent.angular;
+  command.limit_vel_linear = intent.limits.linear_velocity;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_linear = intent.limits.linear_acceleration;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  return command;
+}
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::LinearVelocityAngularHeading & intent, const Robot & robot,
+  visualization::Overlays & overlays, const World & world)
+{
+  (void)overlays;
+  (void)world;
+  (void)robot;
+  MotionCommand command;
+  switch(intent.frame) {
+    case Frame::Local:
+      command.control_mode = ControlMode::LocalVelocity;
+      break;
+    case Frame::World:
+      command.control_mode = ControlMode::GlobalVelocity;
+      break;
+  }
+  command.velocity.x = intent.linear.x();
+  command.velocity.y = intent.linear.y();
+  command.velocity.theta = 0.0;  // TODO(barulicm): add closed-loop control
+  command.limit_vel_linear = intent.limits.linear_velocity;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_linear = intent.limits.linear_acceleration;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  return command;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::LinearVelocityAngularFacing & intent, const Robot & robot,
+  visualization::Overlays & overlays, const World & world)
+{
+  (void)overlays;
+  (void)world;
+  (void)robot;
+  MotionCommand command;
+  switch(intent.frame) {
+    case Frame::Local:
+      command.control_mode = ControlMode::LocalVelocity;
+      break;
+    case Frame::World:
+      command.control_mode = ControlMode::GlobalVelocity;
+      break;
+  }
+  command.velocity.x = intent.linear.x();
+  command.velocity.y = intent.linear.y();
+  command.velocity.theta = 0.0;  // TODO(barulicm): add closed-loop control
   command.limit_vel_linear = intent.limits.linear_velocity;
   command.limit_vel_angular = intent.limits.angular_velocity;
   command.limit_acc_linear = intent.limits.linear_acceleration;

@@ -77,6 +77,12 @@ private:
     const intents::Velocity & intent, const Robot & robot,
     visualization::Overlays & overlays, const World & world);
   std::optional<MotionCommand> ExecuteIntent(
+    const intents::LinearVelocityAngularHeading & intent, const Robot & robot,
+    visualization::Overlays & overlays, const World & world);
+  std::optional<MotionCommand> ExecuteIntent(
+    const intents::LinearVelocityAngularFacing & intent, const Robot & robot,
+    visualization::Overlays & overlays, const World & world);
+  std::optional<MotionCommand> ExecuteIntent(
     const intents::Position & intent, const Robot & robot,
     visualization::Overlays & overlays, const World & world);
   std::optional<MotionCommand> ExecuteIntent(
