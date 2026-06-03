@@ -19,6 +19,8 @@
 # THE SOFTWARE.
 
 function(generate_conversion_code)
+  message(STATUS "Generating conversion code...")
+
   set(oneValueArgs SOURCE DESTINATION)
   set(multiValueArgs STRUCTS)
   cmake_parse_arguments(PARSE_ARGV 0 arg "" "${oneValueArgs}" "${multiValueArgs}")
@@ -53,4 +55,8 @@ function(generate_conversion_code)
   if(result)
     message(FATAL_ERROR "Failed to generate conversion code: ${error}")
   endif()
+
+  cmake_path(GET arg_SOURCE PARENT_PATH _header_dir)
+  file(GLOB _source_files "${_header_dir}/**/*")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_source_files})
 endfunction()
