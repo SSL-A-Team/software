@@ -23,6 +23,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <angles/angles.h>
 
 #include "kalman/Types.hpp"
 #include "kalman/LinearizedMeasurementModel.hpp"
@@ -252,8 +253,7 @@ public:
     Seconds dt = now - last_update;
     double dt_s = dt.count();
 
-    // Might need to change how this is written - basically this should normalize the angle
-    x_updated(x.PW) = x(x.PW) + x(x.VW) * dt_s % (2 * M_PI);
+    x_updated(x.PW) = angles::normalize_angle(x(x.PW) + x(x.VW) * dt_s);
 
     return x_updated;
   }
