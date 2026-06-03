@@ -32,7 +32,9 @@
 // or https://thekalmanfilter.com/kalman-filter-explained-simply/
 // OR https://github.com/mherb/kalman/blob/master/examples/Robot1/main.cpp
 
-FilteredRobot::FilteredRobot(const RobotMeasurement & measurement, ateam_common::TeamColor & team_color)
+FilteredRobot::FilteredRobot(
+  const RobotMeasurement & measurement,
+  ateam_common::TeamColor & team_color)
 : posFilterXY(), posFilterW(), bot_id(measurement.getId()), team(team_color)
 {
         // Initialize XY KF

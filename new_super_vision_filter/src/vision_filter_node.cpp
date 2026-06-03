@@ -80,11 +80,11 @@ public:
                 10,
                 std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
 
-    // field_subscription_ =
-    //   create_subscription<ateam_msgs::msg::FieldInfo>(
-    //             std::string(Topics::kField),
-    //             10,
-    //             std::bind(&VisionFilterNode::field_callback, this, std::placeholders::_1));
+    field_subscription_ =
+      create_subscription<ateam_msgs::msg::FieldInfo>(
+                std::string(Topics::kField),
+                10,
+                std::bind(&VisionFilterNode::field_callback, this, std::placeholders::_1));
   }
 
     // Will also need to add publishers here and wall clock timer
