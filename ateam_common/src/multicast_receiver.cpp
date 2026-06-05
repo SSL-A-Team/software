@@ -43,42 +43,25 @@ MulticastReceiver::MulticastReceiver(
   ReceiveCallback receive_callback,
   std::string interface_address)
 : receive_callback_(receive_callback),
-  multicast_socket_(io_service_)
+  multicast_socket_(io_service_),
+  multicast_address_(boost::asio::ip::make_address(multicast_address_string).to_v4()),
+  interface_address_(interface_address),
+  rejoin_timer_(io_service_)
 {
-  const auto multicast_address = boost::asio::ip::make_address(multicast_address_string).to_v4();
-  const boost::asio::ip::udp::endpoint multicast_endpoint(multicast_address, multicast_port);
+  const boost::asio::ip::udp::endpoint multicast_endpoint(multicast_address_, multicast_port);
   multicast_socket_.open(multicast_endpoint.protocol());
   multicast_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
   multicast_socket_.bind(multicast_endpoint);
-  if (interface_address.empty()) {
-    // If no interface specified, join on all interfaces
-    const auto available_interface_addresses = GetIpAdresses(false);
-    for(const auto & address : available_interface_addresses) {
-      try {
-        multicast_socket_.set_option(
-        boost::asio::ip::multicast::join_group(
-          multicast_address,
-          boost::asio::ip::make_address_v4(address)));
-      } catch (const boost::system::system_error & e) {
-        /* Ignore "address already in use" exceptions. This just indicates multiple addresses
-         * assigned to the same interface.
-         */
-        if(e.code().value() != EADDRINUSE) {
-          boost::rethrow_exception(boost::current_exception());
-        }
-      }
-    }
-  } else {
-    multicast_socket_.set_option(
-      boost::asio::ip::multicast::join_group(
-        multicast_address,
-        boost::asio::ip::make_address_v4(interface_address)));
-  }
+
+  JoinMulticastGroup();
+
   multicast_socket_.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,
     boost::bind(
       &MulticastReceiver::HandleMulticastReceiveFrom, this,
       boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+
+  ScheduleRejoin();
 
   io_service_thread_ = std::thread(
     [this]() {
@@ -145,6 +128,78 @@ void MulticastReceiver::HandleUDPSendTo(const boost::system::error_code & error,
   if (error) {
     std::cerr << "Error sending UDP data: " << error.message() << std::endl;
   }
+}
+
+void MulticastReceiver::JoinMulticastGroup()
+{
+  if (interface_address_.empty()) {
+    const auto available_interface_addresses = GetIpAdresses(false);
+    for (const auto & address : available_interface_addresses) {
+      try {
+        multicast_socket_.set_option(
+          boost::asio::ip::multicast::join_group(
+            multicast_address_,
+            boost::asio::ip::make_address_v4(address)));
+      } catch (const boost::system::system_error & e) {
+        if (e.code().value() != EADDRINUSE) {
+          boost::rethrow_exception(boost::current_exception());
+        }
+      }
+    }
+  } else {
+    try {
+      multicast_socket_.set_option(
+        boost::asio::ip::multicast::join_group(
+          multicast_address_,
+          boost::asio::ip::make_address_v4(interface_address_)));
+    } catch (const boost::system::system_error & e) {
+      if (e.code().value() != EADDRINUSE) {
+        boost::rethrow_exception(boost::current_exception());
+      }
+    }
+  }
+}
+
+void MulticastReceiver::LeaveMulticastGroup()
+{
+  if (interface_address_.empty()) {
+    const auto available_interface_addresses = GetIpAdresses(false);
+    for (const auto & address : available_interface_addresses) {
+      try {
+        multicast_socket_.set_option(
+          boost::asio::ip::multicast::leave_group(
+            multicast_address_,
+            boost::asio::ip::make_address_v4(address)));
+      } catch (const boost::system::system_error &) {
+        // Ignore errors from leaving groups we aren't in
+      }
+    }
+  } else {
+    try {
+      multicast_socket_.set_option(
+        boost::asio::ip::multicast::leave_group(
+          multicast_address_,
+          boost::asio::ip::make_address_v4(interface_address_)));
+    } catch (const boost::system::system_error &) {
+    }
+  }
+}
+
+void MulticastReceiver::ScheduleRejoin()
+{
+  rejoin_timer_.expires_after(std::chrono::seconds(30));
+  rejoin_timer_.async_wait([this](const boost::system::error_code & ec) {
+    if (ec == boost::asio::error::operation_aborted) {
+      return;
+    }
+    try {
+      LeaveMulticastGroup();
+      JoinMulticastGroup();
+    } catch (const std::exception & e) {
+      std::cerr << "Failed to re-join multicast group: " << e.what() << std::endl;
+    }
+    ScheduleRejoin();
+  });
 }
 
 }  // namespace ateam_common
