@@ -107,6 +107,7 @@ class TestRadioBridgeNode(unittest.TestCase):
         vis_msg.pose.orientation.y = 0.0
         vis_msg.pose.orientation.z = 0.707
         vis_msg.pose.orientation.w = 0.707
+        vis_msg.visible = True
         self.vis_pub.publish(vis_msg)
 
         timeout = time.time() + 1
@@ -118,10 +119,12 @@ class TestRadioBridgeNode(unittest.TestCase):
             self.vis_pub.publish(vis_msg)
             last_packet = self.robot.getLastCmdMessage()
             if len(last_packet) != 64:
+                print(f'unexpected packet length: {len(last_packet)}')
                 continue
             # Extract vision updates
             vision_update_flag = struct.unpack("<B", last_packet[8:9])[0]
             if vision_update_flag & (1 << 6) == 0:
+                print(f'vision flag is 0')
                 continue
             vision_x, vision_y, vision_yaw = struct.unpack("<fff", last_packet[12:24])
             if (
@@ -131,6 +134,8 @@ class TestRadioBridgeNode(unittest.TestCase):
             ):
                 # Pass the test
                 return
+            else:
+                print(f'Values wrong:  x: {vision_x}  y: {vision_y}  t: {vision_yaw}')
 
 @launch_testing.post_shutdown_test()
 class TestProcessExit(unittest.TestCase):

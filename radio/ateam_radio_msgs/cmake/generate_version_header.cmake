@@ -20,6 +20,8 @@
 
 
 function(generate_version_header)
+  message(STATUS "Generating version header...")
+
   set(SOFT_COMS_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/software-communication")
 
   find_package(Git REQUIRED)
@@ -54,5 +56,8 @@ function(generate_version_header)
     "${CMAKE_CURRENT_BINARY_DIR}/ateam_generated/include/version.hpp"
     @ONLY
   )
+
+  file(GLOB submodule_files "${SOFT_COMS_SUBMODULE_DIR}/**/*")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${submodule_files})
 
 endfunction()

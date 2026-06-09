@@ -32,7 +32,8 @@ def find_constant_value(symbol_name):
 
 def get_coms_submodule_hash():
     """Get the current commit hash of the software communication submodule."""
-    return int(find_constant_value("kComsHash"))
+    hash_raw = int(find_constant_value("kComsHash"))
+    return int.from_bytes(hash_raw.to_bytes(4, byteorder='little'), byteorder='big')
 
 def get_coms_submodule_dirty():
     """Check if the software communication submodule has uncommitted changes."""
