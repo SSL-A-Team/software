@@ -91,7 +91,7 @@ public:
 
     declare_parameters<bool>("controls_enabled", {
         {"body_vel", true},
-        {"wheel_vel", false},
+        {"wheel_vel", true},
         {"wheel_torque", true}
     });
 
