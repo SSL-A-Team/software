@@ -156,11 +156,12 @@ private:
 
     ateam_msgs::msg::RobotMotionCommand command_message;
 
-    command_message.twist.linear.x = get_parameter("mapping.linear.x.scale").as_double() *
+    command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
+    command_message.velocity.x = get_parameter("mapping.linear.x.scale").as_double() *
       joy_message->axes[linear_x_axis_];
-    command_message.twist.linear.y = get_parameter("mapping.linear.y.scale").as_double() *
+    command_message.velocity.y = get_parameter("mapping.linear.y.scale").as_double() *
       joy_message->axes[linear_y_axis_];
-    command_message.twist.angular.z = get_parameter("mapping.angular.z.scale").as_double() *
+    command_message.velocity.theta = get_parameter("mapping.angular.z.scale").as_double() *
       joy_message->axes[angular_z_axis_];
 
     if (kick_trigger_(*joy_message)) {

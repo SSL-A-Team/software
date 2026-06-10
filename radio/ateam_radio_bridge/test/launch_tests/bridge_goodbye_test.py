@@ -1,16 +1,18 @@
-"""Tests the bridge's ability to pass feedback packets to ROS."""
+"""Tests the bridge's ability to handle goodbye packets from the robot."""
 
 import time
 import unittest
-import ateam_radio_msgs.msg
+
 import launch
 from launch.actions import TimerAction
+
 import launch_ros.actions
+
 import launch_testing
-from launch_testing_ros.wait_for_topics import WaitForTopics
-import pytest
 
 from mock_robot import MockRobot
+
+import pytest
 
 
 discovery_address = "224.4.20.70"
@@ -45,21 +47,10 @@ class TestRadioBridgeNode(unittest.TestCase):
             discovery_address=discovery_address, discovery_port=discovery_port
         )
         cls.robot.startAsync()
-        cls.feedback_topic_name = "/radio_bridge/robot_feedback/basic/robot0"
-        cls.feedback_waiter = WaitForTopics(
-            [
-                (
-                    cls.feedback_topic_name,
-                    ateam_radio_msgs.msg.BasicTelemetry,
-                )
-            ],
-            timeout=1
-        )
 
     @classmethod
     def tearDownClass(cls):
         cls.robot.stopAsync()
-        cls.feedback_waiter.shutdown()
 
     def test_feedback(self):
         connect_timeout = time.time() + 1
@@ -67,16 +58,10 @@ class TestRadioBridgeNode(unittest.TestCase):
             time.sleep(0.1)
         self.assertTrue(self.robot.isConnected())
 
-        self.assertTrue(self.feedback_waiter.wait())
-        self.assertEqual(
-            len(self.feedback_waiter.topics_received()),
-            1,
-            "Did not receive message on feedback topic.",
-        )
-        for message in self.feedback_waiter.received_messages(self.feedback_topic_name):
-            # Just checks a few fields to make sure it's a reasonably valid message
-            self.assertEqual(message.transmission_sequence_number, 1)
-            self.assertAlmostEqual(message.battery_percent, 100)
+        # Let connection run for a bit
+        time.sleep(0.1)
+
+        self.robot.sendGoodbyeAndShutdown()
 
 @launch_testing.post_shutdown_test()
 class TestProcessExit(unittest.TestCase):

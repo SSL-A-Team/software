@@ -346,8 +346,8 @@ private:
 
     command_speed_ = speed;
 
-    command.twist.angular.z = command_speed_;
-    command.twist.linear.y = -1 * command_speed_ * options_.radius;
+    command.velocity.theta = command_speed_;
+    command.velocity.y = -1 * command_speed_ * options_.radius;
 
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
 
@@ -355,8 +355,9 @@ private:
 
     const auto vision_speed = robot.state->twist_body.angular.z;
     const auto vision_perp_speed = robot.state->twist_body.linear.y;
-    const auto firmware_speed = robot.motion_feedback->cgkf_body_velocity_state_estimate[2];
-    const auto firmware_perp_speed = robot.motion_feedback->cgkf_body_velocity_state_estimate[0];
+    // TODO These values are not in the new packet definitions?
+    const auto firmware_speed = 0.0;  // robot.motion_feedback-> cgkf_body_velocity_state_estimate[2];
+    const auto firmware_perp_speed = 0.0;  // robot.motion_feedback->cgkf_body_velocity_state_estimate[0];
 
     DataEntry entry{
       .time = std::chrono::duration_cast<std::chrono::duration<double>>(
@@ -375,8 +376,8 @@ private:
   {
     timer_.reset();
     ateam_msgs::msg::RobotMotionCommand command;
-    command.twist.linear.x = 0.0;
-    command.twist.linear.y = 0.0;
+    command.velocity.x = 0.0;
+    command.velocity.y = 0.0;
     command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
     command_pub_->publish(command);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

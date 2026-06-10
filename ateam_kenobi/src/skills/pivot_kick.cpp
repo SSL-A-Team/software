@@ -63,7 +63,7 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
 
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
-  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.05) {
+  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.1) {
     if (prev_state_ != State::Pivot) {
       prev_state_ = State::Pivot;
     }
@@ -89,7 +89,9 @@ RobotCommand PivotKick::Capture(
   const World & world,
   const Robot & robot)
 {
-  return capture_.runFrame(world, robot);
+  RobotCommand capture_result = capture_.runFrame(world, robot);
+  ForwardPlayInfo(capture_);
+  return capture_result;
 }
 
 RobotCommand PivotKick::Pivot(const Robot & robot)
@@ -120,7 +122,7 @@ RobotCommand PivotKick::Pivot(const Robot & robot)
     trapezoidal_vel = vel + (error_direction * pivot_accel_ * dt);
   }
 
-  const auto min_angular_vel = 1.0;
+  const auto min_angular_vel = 0.5;
   if (abs(trapezoidal_vel) < min_angular_vel) {
     trapezoidal_vel = std::copysign(min_angular_vel, angle_error);
   }

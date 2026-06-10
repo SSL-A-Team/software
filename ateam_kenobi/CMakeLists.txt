@@ -39,6 +39,7 @@ target_sources(kenobi_node_component PRIVATE
   src/core/motion/motion_controller.cpp
   src/core/motion/motion_executor.cpp
   src/core/visualization/overlays.cpp
+  src/core/play_helpers/intercept_calculation.cpp
   src/core/play_helpers/lanes.cpp
   src/core/play_helpers/possession.cpp
   src/core/play_helpers/available_robots.cpp

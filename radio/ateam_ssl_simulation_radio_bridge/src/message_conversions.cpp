@@ -80,9 +80,9 @@ RobotControl fromMsg(
   RobotMoveCommand * robot_move_command = proto_robot_command->mutable_move_command();
   MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
 
-  local_velocity_command->set_forward(ReplaceNanWithZero(ros_msg.twist.linear.x, logger));
-  local_velocity_command->set_left(ReplaceNanWithZero(ros_msg.twist.linear.y, logger));
-  local_velocity_command->set_angular(ReplaceNanWithZero(ros_msg.twist.angular.z, logger));
+  local_velocity_command->set_forward(ReplaceNanWithZero(ros_msg.velocity.x, logger));
+  local_velocity_command->set_left(ReplaceNanWithZero(ros_msg.velocity.y, logger));
+  local_velocity_command->set_angular(ReplaceNanWithZero(ros_msg.velocity.theta, logger));
 
   return robots_control;
 }
