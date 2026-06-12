@@ -24,8 +24,16 @@ facing the bounce point so the ball runs into the dribbler.
 from enum import auto, Enum
 import math
 
+from ateam_motion_scenarios.overlays import (
+    make_array,
+    make_line,
+    make_point,
+    make_pose_marker,
+    make_text,
+)
 from ateam_msgs.msg import (
     FieldInfo,
+    OverlayArray,
     RobotMotionCommand,
     Twist2D,
     VisionStateBall,
@@ -38,6 +46,7 @@ from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
 
 ROBOT_ID = 2
 TEAM_COLOR = 'blue'
+OVERLAY_NS = 'pass_and_catch_scenario'
 
 
 class State(Enum):
@@ -207,6 +216,8 @@ class PassAndCatchScenario(Node):
 
         self.cmd_pub = self.create_publisher(
             RobotMotionCommand, f'/robot_motion_commands/robot{ROBOT_ID}', 10)
+        self.overlay_pub = self.create_publisher(
+            OverlayArray, '/overlays', 10)
 
         self.state = State.WAIT_FOR_BALL
         self.state_entered = self.get_clock().now()
@@ -476,6 +487,105 @@ class PassAndCatchScenario(Node):
         cmd = self.step_state_machine()
         if cmd is not None:
             self.cmd_pub.publish(cmd)
+        self.publish_overlays()
+
+    # ------------------------------------------------------------- overlays
+    def publish_overlays(self):
+        items = []
+
+        wp = self.wall_hit_point()
+
+        # Pass geometry: ball -> wall hit point -> reflected ray.
+        if wp is not None and self.ball_xy is not None:
+            wx, wy = wp
+            bx, by = self.ball_xy
+            ix = wx - bx
+            iy = wy - by
+            n = math.hypot(ix, iy)
+            if n > 1e-6:
+                items.append(make_line(
+                    OVERLAY_NS, 'pass_aim',
+                    [(bx, by), (wx, wy)],
+                    color='#FFFF00FF', stroke_width=2))
+                rx_dir, ry_dir = self.reflect_dir(ix / n, iy / n)
+                length = max(self.intercept_distance, 0.1)
+                ex = wx + rx_dir * length
+                ey = wy + ry_dir * length
+                items.append(make_line(
+                    OVERLAY_NS, 'reflected_ray',
+                    [(wx, wy), (ex, ey)],
+                    color='#00FFFFFF', stroke_width=2))
+
+        if wp is not None:
+            items.append(make_point(
+                OVERLAY_NS, 'wall_hit', wp,
+                color='#00FFFFFF', radius=0.04))
+
+        if self.ball_xy is not None:
+            items.append(make_point(
+                OVERLAY_NS, 'latched_ball', self.ball_xy,
+                color='#FFA500FF', radius=0.025))
+
+        # Latched intercept pose (set in KICK, refined live in DRIVE).
+        if self.intercept_pose is not None:
+            items.append(make_pose_marker(
+                OVERLAY_NS, 'intercept', self.intercept_pose,
+                self.pos_tol, color='#00FF7FFF',
+                heading_length=0.3))
+
+        # Per-state visualization of the active motion target.
+        s = self.state
+        target_color = '#00BFFFFF'
+        if s == State.APPROACH_STAGING:
+            theta = self.aim_theta()
+            if theta is not None and self.ball_xy is not None:
+                back = self.approach_offset + self.robot_front_offset
+                tx = self.ball_xy[0] - back * math.cos(theta)
+                ty = self.ball_xy[1] - back * math.sin(theta)
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target', (tx, ty, theta),
+                    self.pos_tol, color=target_color))
+        elif s == State.CAPTURE:
+            theta = self.aim_theta()
+            if theta is not None and self.ball_xy is not None:
+                forward = -self.robot_front_offset + self.capture_overdrive
+                tx = self.ball_xy[0] + forward * math.cos(theta)
+                ty = self.ball_xy[1] + forward * math.sin(theta)
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target', (tx, ty, theta),
+                    self.pos_tol, color='#00FF7FFF'))
+        elif s == State.AIM_AT_WALL:
+            rs = self.robot_xy_yaw()
+            theta = self.aim_theta()
+            if rs is not None and theta is not None:
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target',
+                    (rs[0], rs[1], theta),
+                    self.pos_tol, color='#FFFF00FF',
+                    heading_length=0.5))
+        elif s == State.KICK:
+            if self.aim_hold is not None:
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target', self.aim_hold,
+                    self.pos_tol, color='#FF4500FF',
+                    heading_length=0.5))
+        elif s == State.RESET:
+            if self.field is not None and self.field.field_length > 0.0:
+                tx = -self.field.field_length / 2.0 + self.reset_margin
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target', (tx, 0.0, 0.0),
+                    self.pos_tol, color=target_color))
+
+        rs = self.robot_xy_yaw()
+        if rs is not None:
+            items.append(make_text(
+                OVERLAY_NS, 'state',
+                self.state.name,
+                (rs[0], rs[1] + 0.25),
+                color='#FFFFFFFF', font_size=20))
+
+        if items:
+            self.overlay_pub.publish(make_array(*items))
 
     def step_state_machine(self):
         s = self.state
