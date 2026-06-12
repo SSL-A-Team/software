@@ -111,6 +111,14 @@ class PassAndCatchScenario(Node):
         # Optional cap on linear velocity while driving to intercept.
         # 0.0 leaves the firmware default.
         self.declare_parameter('intercept_vel_limit', 0.0)
+        # Live trajectory tracking. When True, DRIVE_TO_INTERCEPT
+        # recomputes the intercept point every tick from the ball's
+        # current position/velocity (projecting through one wall
+        # reflection if needed) and re-targets the robot.
+        self.declare_parameter('tracking_enabled', True)
+        # Below this speed (m/s) the ball motion is too noisy to
+        # extrapolate; fall back to the latched geometric prediction.
+        self.declare_parameter('min_ball_speed_for_tracking', 0.3)
 
         # Tolerances / motion limits
         self.declare_parameter('pos_tol', 0.03)
@@ -162,6 +170,10 @@ class PassAndCatchScenario(Node):
         self.catch_dwell = float(self.get_parameter('catch_dwell').value)
         self.intercept_vel_limit = float(
             self.get_parameter('intercept_vel_limit').value)
+        self.tracking_enabled = bool(
+            self.get_parameter('tracking_enabled').value)
+        self.min_ball_speed_for_tracking = float(self.get_parameter(
+            'min_ball_speed_for_tracking').value)
 
         self.pos_tol = float(self.get_parameter('pos_tol').value)
         self.yaw_tol = float(self.get_parameter('yaw_tol').value)
@@ -361,6 +373,104 @@ class PassAndCatchScenario(Node):
         bx, by = self.ball_xy
         return math.atan2(wy - by, wx - bx)
 
+    def _wall_normal(self):
+        """Outward unit normal toward the configured wall."""
+        if self.wall_axis == 'pos_y':
+            return (0.0, 1.0)
+        if self.wall_axis == 'neg_y':
+            return (0.0, -1.0)
+        if self.wall_axis == 'pos_x':
+            return (1.0, 0.0)
+        return (-1.0, 0.0)  # neg_x
+
+    def _wall_signed_distance(self):
+        """Signed scalar W such that wall is the line ((p . n) == W)."""
+        if self.field is None:
+            return None
+        if self.wall_axis in ('pos_y', 'neg_y'):
+            half = self.field.field_width / 2.0
+        else:
+            half = self.field.field_length / 2.0
+        if half <= 0.0:
+            return None
+        return half - self.wall_inset
+
+    def predict_intercept_pose_live(self):
+        """Recompute the intercept pose from the live ball state.
+
+        Projects the ball's current trajectory forward through (at most)
+        one elastic reflection off the configured wall and returns the
+        pose at which the dribbler should sit on the intercept line.
+
+        Returns None if the ball is not visible, the trajectory cannot
+        be extrapolated reliably, or the ball has already passed the
+        intercept line on the way back from the wall.
+        """
+        if self.ball is None or not self.ball.visible:
+            return None
+        W = self._wall_signed_distance()
+        if W is None:
+            return None
+        nx, ny = self._wall_normal()
+
+        bp = self.ball.pose.position
+        bv = self.ball.twist.linear
+        bx, by = bp.x, bp.y
+        vx, vy = bv.x, bv.y
+        speed = math.hypot(vx, vy)
+        if speed < self.min_ball_speed_for_tracking:
+            return None
+
+        # Decompose along/perpendicular to wall normal.
+        # tangent = perpendicular to n (rotate +90deg)
+        tx, ty = -ny, nx
+        bn = bx * nx + by * ny
+        bt = bx * tx + by * ty
+        vn = vx * nx + vy * ny
+        vt = vx * tx + vy * ty
+
+        intercept_n = W - self.intercept_distance
+
+        if vn > 0.0:
+            # Pre-bounce: extrapolate to wall, reflect, then to intercept
+            if bn >= W:
+                # Already past the wall (vision glitch); bail.
+                return None
+            t_to_wall = (W - bn) / vn
+            t_to_intercept = self.intercept_distance / vn
+            n_at = intercept_n
+            t_at = bt + vt * (t_to_wall + t_to_intercept)
+            # Velocity at intercept (post reflection).
+            vn_at = -vn
+            vt_at = vt
+        else:
+            # Already moving away from wall (post bounce or never headed
+            # there). Catch ball on its current straight trajectory.
+            if bn <= intercept_n:
+                # Ball has already passed the intercept line.
+                return None
+            if vn >= 0.0:
+                # vn == 0: ball drifting parallel to wall; never crosses.
+                return None
+            t_at_param = (intercept_n - bn) / vn  # vn < 0 -> positive
+            n_at = intercept_n
+            t_at = bt + vt * t_at_param
+            vn_at = vn
+            vt_at = vt
+
+        # Convert (n, t) back to (x, y).
+        dx = n_at * nx + t_at * tx
+        dy = n_at * ny + t_at * ty
+        # Velocity at intercept in world frame.
+        vx_at = vn_at * nx + vt_at * tx
+        vy_at = vn_at * ny + vt_at * ty
+        # Robot faces opposite the ball's incoming velocity.
+        theta = math.atan2(-vy_at, -vx_at)
+        # Pull robot center back from dribbler tip by robot_front_offset.
+        cx = dx - self.robot_front_offset * math.cos(theta)
+        cy = dy - self.robot_front_offset * math.sin(theta)
+        return (cx, cy, theta)
+
     # ------------------------------------------------------------------ tick
     def tick(self):
         cmd = self.step_state_machine()
@@ -488,6 +598,14 @@ class PassAndCatchScenario(Node):
             return cmd
 
         if s == State.DRIVE_TO_INTERCEPT:
+            # Live-track: each tick, recompute the intercept from the
+            # ball's current position and velocity. Fall back to the
+            # geometric estimate latched at kick time if tracking is
+            # disabled or the ball motion is too noisy / unavailable.
+            if self.tracking_enabled:
+                live = self.predict_intercept_pose_live()
+                if live is not None:
+                    self.intercept_pose = live
             cx, cy, ct = self.intercept_pose
             cmd = self.make_pos_cmd(
                 cx, cy, ct,
