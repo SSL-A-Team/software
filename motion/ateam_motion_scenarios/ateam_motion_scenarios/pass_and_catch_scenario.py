@@ -52,6 +52,7 @@ OVERLAY_NS = 'pass_and_catch_scenario'
 class State(Enum):
     WAIT_FOR_BALL = auto()
     WAIT_FOR_STATIONARY = auto()
+    ALIGN_STAGING_Y = auto()
     APPROACH_STAGING = auto()
     CAPTURE = auto()
     AIM_AT_WALL = auto()
@@ -107,13 +108,13 @@ class PassAndCatchScenario(Node):
         self.declare_parameter('aim_dwell', 0.3)
         self.declare_parameter('aim_max_angular_vel', 0.5)
         self.declare_parameter('pre_kick_dwell', 0.0)
-        self.declare_parameter('kick_speed', 3.0)
+        self.declare_parameter('kick_speed', 2.0)
         self.declare_parameter('dribbler_speed', 250.0)
 
         # Catch / intercept
         # Distance along the reflected ray from the bounce point at which
         # to place the dribbler. Smaller values catch closer to the wall.
-        self.declare_parameter('intercept_distance', 1.0)
+        self.declare_parameter('intercept_distance', 0.75)
         # Time to dwell at the intercept pose with dribbler on, capturing
         # the ricochet. Set high enough that the ball arrives.
         self.declare_parameter('catch_dwell', 3.0)
@@ -609,11 +610,31 @@ class PassAndCatchScenario(Node):
                     self.ball_xy = (bp.x, bp.y)
                     self.get_logger().info(
                         f'Ball stationary at ({bp.x:.3f}, {bp.y:.3f})')
-                    self.transition(State.APPROACH_STAGING)
+                    self.transition(State.ALIGN_STAGING_Y)
                     return self.make_off_cmd()
             else:
                 self.stationary_since = None
             return self.make_off_cmd()
+
+        if s == State.ALIGN_STAGING_Y:
+            # Match the staging point's y while holding current x so the
+            # path to APPROACH_STAGING doesn't cut through the ball.
+            theta = self.aim_theta()
+            if theta is None:
+                self.get_logger().warn(
+                    'ALIGN_STAGING_Y: waiting for /field...',
+                    throttle_duration_sec=2.0)
+                return self.make_off_cmd()
+            rs = self.robot_xy_yaw()
+            if rs is None:
+                return self.make_off_cmd()
+            back = self.approach_offset + self.robot_front_offset
+            sy = self.ball_xy[1] - back * math.sin(theta)
+            tx = rs[0]
+            ty = sy
+            if abs(rs[1] - ty) <= self.pos_tol:
+                self.transition(State.APPROACH_STAGING)
+            return self.make_pos_cmd(tx, ty, theta)
 
         if s == State.APPROACH_STAGING:
             # Stage behind the ball along the (ball -> wall) line so
