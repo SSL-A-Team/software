@@ -6,15 +6,21 @@ waiting for a human to roll the ball in from the +x edge of the field. Once
 the ball is moving inward (negative x-velocity), continuously sweeps
 candidate intercept times forward along the ball's predicted (linear) path,
 and accepts the earliest candidate where the robot can both translate to
-the intercept point (closed-form bang-bang accel-then-coast time) and
-rotate to face the ball (closed-form rest-to-rest bang-bang time) within
-the candidate ball time. The robot is commanded toward an "overshoot"
-point past that intercept so it is still moving when it crosses the ball;
-if that overshoot lies outside the field, the trial is logged and skipped
-rather than clamped onto the boundary. The dribbler roller is enabled
-while intercepting and the robot is kept facing the ball at the intercept
-point. The selected trajectory and intercept marker are published to
-`/overlays` for visualization in the UI.
+the intercept point and rotate to face it within the candidate ball time
+under closed-form accel-then-(optional)-coast bang-bang motion (no
+terminal deceleration before the catch).
+
+After acceptance, the scenario builds the *full* trajectory that ends at
+rest by extending each axis past the intercept with a symmetric
+deceleration whose magnitude matches that axis's accel from the first
+half. The resulting at-rest pose is the BCM_GLOBAL_POSITION setpoint sent
+to the robot — the firmware's own controller plans through it, so the
+robot naturally passes through the intercept point while still moving
+(catching the ball), then decelerates to rest. If the at-rest pose lies
+outside the field, the trial is logged and skipped rather than clamped
+onto the boundary. The dribbler roller is enabled while intercepting.
+Path overlays are sampled from the same synthetic profile and published
+to `/overlays`.
 
 Run:
 
@@ -29,19 +35,11 @@ Useful parameters (all overridable via `--ros-args -p name:=value`):
 * max_accel_angular      — trajectory angular accel limit, rad/s² (default 12.0)
 * search_t_max           — max intercept time to search, seconds (default 4.0)
 * search_dt              — intercept time step, seconds (default 0.05)
-* feasible_slack         — slack added to t when checking trajectory end time (default 0.05 s)
-* overshoot_distance     — distance past the intercept along the ball path, m (default 0.5)
+* feasible_slack         — slack added to t when checking accel-only arrival (default 0.05 s)
 * field_margin           — keep targets at least this far from field edges, m (default 0.1)
 * incoming_vx_threshold  — ball x-velocity must be below this to start (default -0.05 m/s)
 * dribbler_speed         — dribbler RPM during intercept (default 250)
 * loop                   — return to WAIT_FOR_BALL after DONE (default True)
-* require_controls       — fail to start if `ateam_controls` is unavailable (default True)
-
-Note: requires the `ateam_controls` Python package from the SSL-A-Team/controls
-repo (`uv sync` in that repo, then activate its venv before launching this
-node). If the package can't be imported, the node logs a clear error and
-shuts down (unless `require_controls` is False, in which case it stays in
-WAIT_FOR_BALL forever).
 """
 
 from enum import auto, Enum
@@ -73,7 +71,7 @@ OVERLAY_CMD_REMOVE = 2
 
 OVERLAY_TRAJECTORY_NAME = 'intercept_trajectory'
 OVERLAY_INTERCEPT_NAME = 'intercept_point'
-OVERLAY_OVERSHOOT_NAME = 'overshoot_target'
+OVERLAY_FINAL_NAME = 'final_rest_pose'
 
 
 def yaw_from_quat(q) -> float:
@@ -81,19 +79,6 @@ def yaw_from_quat(q) -> float:
     siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
     cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
     return math.atan2(siny_cosp, cosy_cosp)
-
-
-def _try_import_controls(logger):
-    """Import ateam_controls lazily so the rest of the package keeps working."""
-    try:
-        import ateam_controls  # noqa: F401
-        return ateam_controls
-    except Exception as e:  # ImportError, FileNotFoundError, etc.
-        logger.error(
-            'Failed to import ateam_controls: %s. Install it from the '
-            'SSL-A-Team/controls repository (run `uv sync` there and source '
-            'its .venv) before launching this scenario.' % (e,))
-        return None
 
 
 class State(Enum):
@@ -115,13 +100,11 @@ class BallInterceptScenario(Node):
         self.declare_parameter('search_t_max', 4.0)
         self.declare_parameter('search_dt', 0.05)
         self.declare_parameter('feasible_slack', 0.05)
-        self.declare_parameter('overshoot_distance', 0.5)
         self.declare_parameter('field_margin', 0.1)
         self.declare_parameter('incoming_vx_threshold', -0.05)
         self.declare_parameter('dribbler_speed', 250.0)
         self.declare_parameter('loop', True)
-        self.declare_parameter('require_controls', True)
-        self.declare_parameter('trajectory_sample_dt', 0.05)
+        self.declare_parameter('trajectory_sample_points', 24)
         self.declare_parameter('done_dwell', 0.5)
         self.declare_parameter('home_pose_x', 0.0)
         self.declare_parameter('home_pose_y', 0.0)
@@ -138,17 +121,13 @@ class BallInterceptScenario(Node):
         self.search_dt = float(self.get_parameter('search_dt').value)
         self.feasible_slack = float(
             self.get_parameter('feasible_slack').value)
-        self.overshoot_distance = float(
-            self.get_parameter('overshoot_distance').value)
         self.field_margin = float(self.get_parameter('field_margin').value)
         self.incoming_vx_threshold = float(
             self.get_parameter('incoming_vx_threshold').value)
         self.dribbler_speed = float(self.get_parameter('dribbler_speed').value)
         self.loop = bool(self.get_parameter('loop').value)
-        self.require_controls = bool(
-            self.get_parameter('require_controls').value)
-        self.trajectory_sample_dt = float(
-            self.get_parameter('trajectory_sample_dt').value)
+        self.trajectory_sample_points = max(
+            2, int(self.get_parameter('trajectory_sample_points').value))
         self.done_dwell = float(self.get_parameter('done_dwell').value)
         self.home_xy_theta = (
             float(self.get_parameter('home_pose_x').value),
@@ -156,20 +135,6 @@ class BallInterceptScenario(Node):
             float(self.get_parameter('home_pose_theta').value),
         )
         rate = float(self.get_parameter('publish_rate_hz').value)
-
-        self.controls = _try_import_controls(self.get_logger())
-        if self.controls is None and self.require_controls:
-            raise RuntimeError(
-                'ateam_controls is required but could not be imported.')
-
-        self.traj_params = None
-        if self.controls is not None:
-            self.traj_params = self.controls.TrajectoryParams(
-                max_vel_linear=self.max_vel_linear,
-                max_vel_angular=self.max_vel_angular,
-                max_accel_linear=self.max_accel_linear,
-                max_accel_angular=self.max_accel_angular,
-            )
 
         sensor_qos = QoSProfile(
             depth=1,
@@ -256,57 +221,7 @@ class BallInterceptScenario(Node):
         xmin, ymin, xmax, ymax = bounds
         return xmin <= x <= xmax and ymin <= y <= ymax
 
-    @staticmethod
-    def _clamp_segment_to_bounds(x0, y0, x1, y1, bounds):
-        """Clip endpoint (x1,y1) of segment from (x0,y0) so it stays in bounds.
-
-        Returns the (cx, cy) on the segment closest to (x1,y1) that's in
-        bounds (inclusive of axes). Assumes (x0,y0) is in bounds. If the
-        whole segment is in bounds, returns (x1,y1).
-        """
-        xmin, ymin, xmax, ymax = bounds
-        dx = x1 - x0
-        dy = y1 - y0
-        s = 1.0
-        if dx > 0.0:
-            s = min(s, (xmax - x0) / dx)
-        elif dx < 0.0:
-            s = min(s, (xmin - x0) / dx)
-        if dy > 0.0:
-            s = min(s, (ymax - y0) / dy)
-        elif dy < 0.0:
-            s = min(s, (ymin - y0) / dy)
-        s = max(0.0, min(1.0, s))
-        return (x0 + s * dx, y0 + s * dy)
-
     # ----------------------------------------------------------- intercept
-    def _solve_traj(self, init_state6, target_xy, target_theta):
-        """Solve a bang-bang trajectory; return (traj, t_end) or (None,None)."""
-        c = self.controls
-        if c is None:
-            return None, None
-        try:
-            init = c.Vector6C()
-            init.data[0] = float(init_state6[0])
-            init.data[1] = float(init_state6[1])
-            init.data[2] = float(init_state6[2])
-            init.data[3] = float(init_state6[3])
-            init.data[4] = float(init_state6[4])
-            init.data[5] = float(init_state6[5])
-            target = c.Vector3C(
-                x=float(target_xy[0]),
-                y=float(target_xy[1]),
-                z=float(target_theta),
-            )
-            traj = c.traj_from_target_pose(init, target, self.traj_params)
-            t_end = c.traj_end_time(traj)
-            return traj, float(t_end)
-        except Exception as e:
-            self.get_logger().warn(
-                f'traj_from_target_pose failed: {e}',
-                throttle_duration_sec=2.0)
-            return None, None
-
     def _t_lin_to_distance(self, d: float) -> float:
         """Closed-form time to traverse distance ``d`` from rest under a
         bang-bang accel-then-(optionally)-coast linear profile. No terminal
@@ -324,10 +239,10 @@ class BallInterceptScenario(Node):
         return vmax / amax + (d - d_accel) / vmax
 
     def _t_theta_to_angle(self, dtheta: float) -> float:
-        """Closed-form bang-bang rest-to-rest time to rotate by ``|dtheta|``.
-
-        Uses a triangular profile when the angle is too short to reach
-        ``max_vel_angular``, otherwise a trapezoidal profile.
+        """Closed-form time to rotate by ``|dtheta|`` from rest under a
+        bang-bang accel-then-(optionally)-coast angular profile. No
+        terminal deceleration — yaw matches the linear profile so both
+        axes share the same first-half-only structure.
         """
         a = abs(dtheta)
         if a <= 0.0:
@@ -336,25 +251,76 @@ class BallInterceptScenario(Node):
         amax = self.max_accel_angular
         if amax <= 0.0:
             return float('inf')
-        theta_to_vmax = wmax * wmax / amax  # angle covered in accel+decel
-        if a <= theta_to_vmax:
-            # Triangular: 2 * sqrt(a/amax)
-            return 2.0 * math.sqrt(a / amax)
-        return wmax / amax + a / wmax
+        a_accel = 0.5 * wmax * wmax / amax
+        if a <= a_accel:
+            return math.sqrt(2.0 * a / amax)
+        return wmax / amax + (a - a_accel) / wmax
+
+    def _arrive_speed_lin(self, d: float) -> float:
+        """Speed reached at the intercept under accel-then-coast over ``d``."""
+        if d <= 0.0 or self.max_accel_linear <= 0.0:
+            return 0.0
+        return min(self.max_vel_linear,
+                   math.sqrt(2.0 * self.max_accel_linear * d))
+
+    def _arrive_speed_ang(self, dtheta_abs: float) -> float:
+        """Angular speed reached at the intercept under accel-then-coast."""
+        if dtheta_abs <= 0.0 or self.max_accel_angular <= 0.0:
+            return 0.0
+        return min(self.max_vel_angular,
+                   math.sqrt(2.0 * self.max_accel_angular * dtheta_abs))
+
+    def _final_rest_pose(self, robot6, intercept_xy, intercept_theta):
+        """Build the full at-rest pose past the intercept.
+
+        Per axis: the first half accelerates (then optionally coasts) to
+        reach the intercept point with some velocity. The second half
+        decelerates symmetrically (decel magnitude == that axis's accel
+        magnitude during the first half) from that velocity back to zero.
+        Returns ``(fx, fy, ftheta)``.
+
+        The linear axes share a common scalar speed ``v_arrive`` along the
+        unit vector ``û`` from the robot to the intercept; per-axis accel
+        magnitude is ``amax * |û_i|`` so the per-axis decel distance is
+        ``v_arrive * |û_i| / (2 * amax) * v_arrive`` — combined this is
+        ``û * v_arrive²/(2*amax)`` past the intercept.
+        """
+        rx, ry, rtheta = robot6[0], robot6[1], robot6[2]
+        ix, iy = intercept_xy
+        dx, dy = ix - rx, iy - ry
+        d = math.hypot(dx, dy)
+        v_arr = self._arrive_speed_lin(d)
+        a_lin = self.max_accel_linear
+        extra_lin = (v_arr * v_arr) / (2.0 * a_lin) if a_lin > 0.0 else 0.0
+        if d > 1e-9:
+            ux, uy = dx / d, dy / d
+        else:
+            ux, uy = 0.0, 0.0
+        fx = ix + ux * extra_lin
+        fy = iy + uy * extra_lin
+
+        dtheta = math.atan2(math.sin(intercept_theta - rtheta),
+                            math.cos(intercept_theta - rtheta))
+        w_arr = self._arrive_speed_ang(abs(dtheta))
+        a_ang = self.max_accel_angular
+        extra_ang = (w_arr * w_arr) / (2.0 * a_ang) if a_ang > 0.0 else 0.0
+        sign_t = 1.0 if dtheta >= 0.0 else -1.0
+        ftheta = intercept_theta + sign_t * extra_ang
+        return (fx, fy, ftheta)
 
     def compute_intercept(self, robot6, ball, bounds):
         """
         Search for the earliest reachable intercept along the ball path.
 
         For each candidate ball-time ``t``, the intercept point is
-        ``b0 + v_ball * t`` (linear ball model). Feasibility is checked with
-        closed-form linear and angular bang-bang times: the candidate is
-        reachable when ``max(t_lin, t_theta) <= t + feasible_slack``. If the
-        angular requirement dominates, that's what gates the candidate.
+        ``b0 + v_ball * t`` (linear ball model). Feasibility uses
+        closed-form accel-then-(optional)-coast bang-bang times; the
+        candidate is reachable when ``max(t_lin, t_theta) <= t +
+        feasible_slack``. After acceptance, the full at-rest pose past
+        the intercept is built by ``_final_rest_pose``.
 
-        Returns dict ``{t, t_required, intercept, theta, traj}`` on success,
-        else ``None``. ``traj`` may be ``None`` if the post-search overlay
-        trajectory solve fails.
+        Returns ``{t, t_required, intercept, theta, final_pose}`` on
+        success, else ``None``.
         """
         bx, by, bvx, bvy = ball
         rx, ry, rtheta = robot6[0], robot6[1], robot6[2]
@@ -376,60 +342,73 @@ class BallInterceptScenario(Node):
             t_ang = self._t_theta_to_angle(dtheta)
             t_required = max(t_lin, t_ang)
             if t_required <= t + self.feasible_slack:
-                traj, _t_end = self._solve_traj(robot6, (ix, iy), theta)
+                final_pose = self._final_rest_pose(
+                    robot6, (ix, iy), theta)
                 return {'t': t, 't_required': t_required,
                         'intercept': (ix, iy), 'theta': theta,
-                        'traj': traj}
+                        'final_pose': final_pose}
 
         return None
-
-    def overshoot_target(self, intercept_xy, ball, bounds):
-        bx, by, bvx, bvy = ball
-        bv_mag = math.hypot(bvx, bvy)
-        ix, iy = intercept_xy
-        if bv_mag < 1e-6:
-            ox, oy = ix, iy
-        else:
-            ux, uy = bvx / bv_mag, bvy / bv_mag
-            ox = ix + self.overshoot_distance * ux
-            oy = iy + self.overshoot_distance * uy
-        if bounds is not None:
-            ox, oy = self._clamp_segment_to_bounds(ix, iy, ox, oy, bounds)
-            if not self._point_in_bounds(ox, oy, bounds):
-                ox, oy = self._clamp_segment_to_bounds(
-                    bx, by, ox, oy, bounds)
-        return (ox, oy)
 
     # ----------------------------------------------------------- overlays
     def _ns(self) -> str:
         return self.get_name()
 
-    def publish_overlays(self, traj, t_intercept, robot6, intercept_xy,
-                         overshoot_xy):
-        """Sample the trajectory and publish line+point overlays."""
-        if self.controls is None or traj is None:
-            return
-        c = self.controls
-        cur = c.Vector6C()
-        cur.data[0] = float(robot6[0])
-        cur.data[1] = float(robot6[1])
-        cur.data[2] = float(robot6[2])
-        cur.data[3] = float(robot6[3])
-        cur.data[4] = float(robot6[4])
-        cur.data[5] = float(robot6[5])
+    def _sample_path_polyline(self, robot6, intercept_xy, final_xy):
+        """Sample positions along the synthetic accel-coast-decel profile.
 
-        t_end = max(t_intercept, 0.05)
-        dt = max(self.trajectory_sample_dt, 1e-3)
-        n = max(2, int(math.ceil(t_end / dt)) + 1)
+        The robot moves along a straight line from its start to the
+        ``final_xy`` rest pose. Speed: 0 → v_arrive over the first phase
+        (accel ± optional coast at vmax), then v_arrive → 0 over the
+        symmetric decel phase. We sample ``trajectory_sample_points``
+        evenly in time and convert each to a position on the line.
+        """
+        rx, ry = robot6[0], robot6[1]
+        fx, fy = final_xy
+        ix, iy = intercept_xy
+        dx_total = fx - rx
+        dy_total = fy - ry
+        d_total = math.hypot(dx_total, dy_total)
+        if d_total < 1e-9:
+            # Degenerate: just a single point.
+            return [Point(x=float(rx), y=float(ry), z=0.0)]
+        ux, uy = dx_total / d_total, dy_total / d_total
+
+        # Reconstruct profile parameters along the direction of travel.
+        d_to_intercept = math.hypot(ix - rx, iy - ry)
+        v_arr = self._arrive_speed_lin(d_to_intercept)
+        amax = self.max_accel_linear
+        vmax = self.max_vel_linear
+        if amax <= 0.0 or v_arr <= 0.0:
+            return [Point(x=float(rx), y=float(ry), z=0.0),
+                    Point(x=float(fx), y=float(fy), z=0.0)]
+
+        t_acc = v_arr / amax  # time to reach v_arr from rest
+        d_acc = 0.5 * amax * t_acc * t_acc  # distance covered while accel
+        # Coast phase fills the gap (only present when v_arr == vmax).
+        d_coast = max(0.0, d_to_intercept - d_acc)
+        t_coast = (d_coast / vmax) if vmax > 0.0 else 0.0
+        t_dec = t_acc  # symmetric decel: same magnitude, ends at rest
+        t_total = t_acc + t_coast + t_dec
+
+        n = max(2, int(self.trajectory_sample_points))
         points = []
         for i in range(n):
-            t = min(i * dt, t_end)
-            try:
-                s = c.traj_state_at(traj, cur, 0.0, t)
-                points.append(Point(x=float(s.data[0]),
-                                    y=float(s.data[1]), z=0.0))
-            except Exception:
-                break
+            tau = (t_total * i) / (n - 1)
+            if tau <= t_acc:
+                s = 0.5 * amax * tau * tau
+            elif tau <= t_acc + t_coast:
+                s = d_acc + vmax * (tau - t_acc)
+            else:
+                td = tau - (t_acc + t_coast)
+                s = d_acc + d_coast + v_arr * td - 0.5 * amax * td * td
+            points.append(
+                Point(x=float(rx + ux * s), y=float(ry + uy * s), z=0.0))
+        return points
+
+    def publish_overlays(self, robot6, intercept_xy, final_xy):
+        """Publish line + point overlays for the planned intercept path."""
+        points = self._sample_path_polyline(robot6, intercept_xy, final_xy)
         if len(points) < 2:
             return
 
@@ -453,10 +432,10 @@ class BallInterceptScenario(Node):
             stroke_width=2, lifetime=0, depth=3,
         ))
         msg.overlays.append(Overlay(
-            ns=ns, name=OVERLAY_OVERSHOOT_NAME, visible=True,
+            ns=ns, name=OVERLAY_FINAL_NAME, visible=True,
             type=OVERLAY_POINT, command=OVERLAY_CMD_REPLACE,
             position=Point(
-                x=float(overshoot_xy[0]), y=float(overshoot_xy[1]), z=0.0),
+                x=float(final_xy[0]), y=float(final_xy[1]), z=0.0),
             scale=Point(x=0.08, y=0.08, z=0.0),
             stroke_color='#FF44FFFF', fill_color='#FF44FFFF',
             stroke_width=2, lifetime=0, depth=3,
@@ -470,7 +449,7 @@ class BallInterceptScenario(Node):
         ns = self._ns()
         msg = OverlayArray()
         for name in (OVERLAY_TRAJECTORY_NAME, OVERLAY_INTERCEPT_NAME,
-                     OVERLAY_OVERSHOOT_NAME):
+                     OVERLAY_FINAL_NAME):
             msg.overlays.append(Overlay(
                 ns=ns, name=name, visible=False,
                 type=OVERLAY_LINE, command=OVERLAY_CMD_REMOVE,
@@ -553,26 +532,19 @@ class BallInterceptScenario(Node):
                     robot6[0], robot6[1], robot6[2],
                     dribbler_speed=self.dribbler_speed)
             ix, iy = intercept['intercept']
-            # Compute the overshoot target raw (no clamping); we want to
-            # detect out-of-bounds rather than silently clip onto the edge.
-            overshoot = self.overshoot_target((ix, iy), ball, bounds=None)
+            fx, fy, ftheta = intercept['final_pose']
             if bounds is not None and not self._point_in_bounds(
-                    overshoot[0], overshoot[1], bounds):
+                    fx, fy, bounds):
                 self.get_logger().warn(
-                    'intercept overshoot target '
-                    f'({overshoot[0]:.2f}, {overshoot[1]:.2f}) is outside '
-                    'field bounds; skipping this trial.')
+                    'final at-rest pose '
+                    f'({fx:.2f}, {fy:.2f}) is outside field bounds; '
+                    'skipping this trial.')
                 self.clear_overlays()
                 self.transition(State.DONE)
                 return self.make_off_cmd()
-            # Face the ball (current ball pose), not the intercept point.
-            theta_face = math.atan2(ball[1] - robot6[1],
-                                    ball[0] - robot6[0])
-            self.publish_overlays(
-                intercept['traj'], intercept['t'], robot6,
-                (ix, iy), overshoot)
+            self.publish_overlays(robot6, (ix, iy), (fx, fy))
             return self.make_pos_cmd(
-                overshoot[0], overshoot[1], theta_face,
+                fx, fy, ftheta,
                 dribbler_speed=self.dribbler_speed)
 
         if s == State.DONE:
@@ -586,13 +558,7 @@ class BallInterceptScenario(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    try:
-        node = BallInterceptScenario()
-    except RuntimeError as e:
-        # ateam_controls missing and require_controls=True.
-        print(f'ball_intercept_scenario: {e}')
-        rclpy.try_shutdown()
-        return
+    node = BallInterceptScenario()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
