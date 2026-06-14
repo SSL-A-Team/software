@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'ball_capture_scenario = ateam_motion_scenarios.ball_capture_scenario:main',
+            'ball_intercept_scenario = ateam_motion_scenarios.ball_intercept_scenario:main',
         ],
     },
 )
