@@ -3,14 +3,18 @@ Ball intercept scenario node.
 
 Hardcoded to robot 2 on the blue team. Holds the robot at the origin while
 waiting for a human to roll the ball in from the +x edge of the field. Once
-the ball is moving inward (negative x-velocity), continuously plans a
-bang-bang trajectory (using the Rust-backed `ateam_controls` Python bindings)
-to the earliest reachable point on the ball's predicted path, and commands
-the robot toward an "overshoot" point past that intercept so it is still
-moving when it crosses the ball. The dribbler roller is enabled while
-intercepting and the robot is kept facing the ball at the intercept point.
-The selected trajectory and intercept marker are published to `/overlays`
-for visualization in the UI.
+the ball is moving inward (negative x-velocity), continuously sweeps
+candidate intercept times forward along the ball's predicted (linear) path,
+and accepts the earliest candidate where the robot can both translate to
+the intercept point (closed-form bang-bang accel-then-coast time) and
+rotate to face the ball (closed-form rest-to-rest bang-bang time) within
+the candidate ball time. The robot is commanded toward an "overshoot"
+point past that intercept so it is still moving when it crosses the ball;
+if that overshoot lies outside the field, the trial is logged and skipped
+rather than clamped onto the boundary. The dribbler roller is enabled
+while intercepting and the robot is kept facing the ball at the intercept
+point. The selected trajectory and intercept marker are published to
+`/overlays` for visualization in the UI.
 
 Run:
 
@@ -303,19 +307,59 @@ class BallInterceptScenario(Node):
                 throttle_duration_sec=2.0)
             return None, None
 
+    def _t_lin_to_distance(self, d: float) -> float:
+        """Closed-form time to traverse distance ``d`` from rest under a
+        bang-bang accel-then-(optionally)-coast linear profile. No terminal
+        deceleration — for an interceptor we want to be moving on arrival.
+        """
+        if d <= 0.0:
+            return 0.0
+        vmax = self.max_vel_linear
+        amax = self.max_accel_linear
+        if amax <= 0.0:
+            return float('inf')
+        d_accel = 0.5 * vmax * vmax / amax
+        if d <= d_accel:
+            return math.sqrt(2.0 * d / amax)
+        return vmax / amax + (d - d_accel) / vmax
+
+    def _t_theta_to_angle(self, dtheta: float) -> float:
+        """Closed-form bang-bang rest-to-rest time to rotate by ``|dtheta|``.
+
+        Uses a triangular profile when the angle is too short to reach
+        ``max_vel_angular``, otherwise a trapezoidal profile.
+        """
+        a = abs(dtheta)
+        if a <= 0.0:
+            return 0.0
+        wmax = self.max_vel_angular
+        amax = self.max_accel_angular
+        if amax <= 0.0:
+            return float('inf')
+        theta_to_vmax = wmax * wmax / amax  # angle covered in accel+decel
+        if a <= theta_to_vmax:
+            # Triangular: 2 * sqrt(a/amax)
+            return 2.0 * math.sqrt(a / amax)
+        return wmax / amax + a / wmax
+
     def compute_intercept(self, robot6, ball, bounds):
         """
         Search for the earliest reachable intercept along the ball path.
 
-        Returns dict {t, intercept, traj} on success, else None.
+        For each candidate ball-time ``t``, the intercept point is
+        ``b0 + v_ball * t`` (linear ball model). Feasibility is checked with
+        closed-form linear and angular bang-bang times: the candidate is
+        reachable when ``max(t_lin, t_theta) <= t + feasible_slack``. If the
+        angular requirement dominates, that's what gates the candidate.
+
+        Returns dict ``{t, t_required, intercept, theta, traj}`` on success,
+        else ``None``. ``traj`` may be ``None`` if the post-search overlay
+        trajectory solve fails.
         """
-        if self.controls is None:
-            return None
         bx, by, bvx, bvy = ball
-        rx, ry = robot6[0], robot6[1]
+        rx, ry, rtheta = robot6[0], robot6[1], robot6[2]
 
         n_steps = max(1, int(round(self.search_t_max / self.search_dt)))
-        last_intercept_xy = None
         for k in range(1, n_steps + 1):
             t = k * self.search_dt
             ix = bx + bvx * t
@@ -324,36 +368,20 @@ class BallInterceptScenario(Node):
                     ix, iy, bounds):
                 # ball has left the playable area; stop searching forward.
                 break
+            d = math.hypot(ix - rx, iy - ry)
             theta = math.atan2(iy - ry, ix - rx)
-            traj, t_end = self._solve_traj(robot6, (ix, iy), theta)
-            if traj is None or t_end is None:
-                continue
-            if t_end <= t + self.feasible_slack:
-                return {'t': t, 'intercept': (ix, iy), 'traj': traj,
-                        'theta': theta}
-            last_intercept_xy = (ix, iy)
+            dtheta = math.atan2(math.sin(theta - rtheta),
+                                math.cos(theta - rtheta))
+            t_lin = self._t_lin_to_distance(d)
+            t_ang = self._t_theta_to_angle(dtheta)
+            t_required = max(t_lin, t_ang)
+            if t_required <= t + self.feasible_slack:
+                traj, _t_end = self._solve_traj(robot6, (ix, iy), theta)
+                return {'t': t, 't_required': t_required,
+                        'intercept': (ix, iy), 'theta': theta,
+                        'traj': traj}
 
-        # Fallback: nearest projection of robot onto the ball's line.
-        bv_mag2 = bvx * bvx + bvy * bvy
-        if bv_mag2 < 1e-6:
-            target_xy = (bx, by)
-        else:
-            s = ((rx - bx) * bvx + (ry - by) * bvy) / bv_mag2
-            s = max(0.0, s)  # only forward along ball path
-            target_xy = (bx + s * bvx, by + s * bvy)
-        if bounds is not None:
-            if not self._point_in_bounds(*target_xy, bounds):
-                if last_intercept_xy is not None:
-                    target_xy = last_intercept_xy
-                else:
-                    target_xy = self._clamp_segment_to_bounds(
-                        bx, by, target_xy[0], target_xy[1], bounds)
-        theta = math.atan2(target_xy[1] - ry, target_xy[0] - rx)
-        traj, t_end = self._solve_traj(robot6, target_xy, theta)
-        if traj is None:
-            return None
-        return {'t': float(t_end), 'intercept': target_xy, 'traj': traj,
-                'theta': theta, 'fallback': True}
+        return None
 
     def overshoot_target(self, intercept_xy, ball, bounds):
         bx, by, bvx, bvy = ball
@@ -525,7 +553,18 @@ class BallInterceptScenario(Node):
                     robot6[0], robot6[1], robot6[2],
                     dribbler_speed=self.dribbler_speed)
             ix, iy = intercept['intercept']
-            overshoot = self.overshoot_target((ix, iy), ball, bounds)
+            # Compute the overshoot target raw (no clamping); we want to
+            # detect out-of-bounds rather than silently clip onto the edge.
+            overshoot = self.overshoot_target((ix, iy), ball, bounds=None)
+            if bounds is not None and not self._point_in_bounds(
+                    overshoot[0], overshoot[1], bounds):
+                self.get_logger().warn(
+                    'intercept overshoot target '
+                    f'({overshoot[0]:.2f}, {overshoot[1]:.2f}) is outside '
+                    'field bounds; skipping this trial.')
+                self.clear_overlays()
+                self.transition(State.DONE)
+                return self.make_off_cmd()
             # Face the ball (current ball pose), not the intercept point.
             theta_face = math.atan2(ball[1] - robot6[1],
                                     ball[0] - robot6[0])
