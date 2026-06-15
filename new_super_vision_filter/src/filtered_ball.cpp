@@ -41,7 +41,7 @@ void FilteredBall::update(const BallMeasurement & measurement)
     // Predict state forward
     // Predict covariance forward
     // (All encompassed by the .predict() function)
-  auto xy_pred = posFilterXY.predict(systemModelXY);
+  (void) posFilterXY.predict(systemModelXY);
     // Update the Jacobian matrix (contained in filter)
     // Compute Kalman gain (contained in filter)
     // Update state estimate (returned)

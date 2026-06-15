@@ -30,6 +30,7 @@ Camera::Camera(int camera_id)
 void Camera::process_detection_frame(
   const ssl_league_msgs::msg::VisionDetectionFrame & detection_frame_msg)
 {
+  (void)detection_frame_msg;
 }
 
 // void Camera::process_camera_geometry(const ssl_league_msgs::msg::VisionGeometryData & geometry) {}

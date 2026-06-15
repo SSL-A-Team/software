@@ -236,7 +236,7 @@ private:
 
             // Publish the robots
             // - Blue -
-    for (std::size_t id = 0; id < 16; id++) {
+    for (int id = 0; id < 16; id++) {
       auto robot_msg = ateam_msgs::msg::VisionStateRobot{};
       auto it = std::find_if(
                     blue_robots.begin(),
@@ -249,7 +249,7 @@ private:
       blue_robots_publisher_.at(id)->publish(robot_msg);
     }
             // - Yellow -
-    for (std::size_t id = 0; id < 16; id++) {
+    for (int id = 0; id < 16; id++) {
       auto robot_msg = ateam_msgs::msg::VisionStateRobot{};
       auto it = std::find_if(
                     yellow_robots.begin(),

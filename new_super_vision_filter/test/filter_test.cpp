@@ -66,7 +66,7 @@ TEST_F(FilteredRobotTest, WaitUntilOldEnough)
 {
   ateam_msgs::msg::VisionStateRobot default_msg{};
   int camera = 0;
-  for (size_t i = 0; i < oldEnoughAge; ++i) {
+  for (int i = 0; i < oldEnoughAge; ++i) {
       // Set it up so we can print our messages more effectively
       // https://google.github.io/googletest/advanced.html#teaching-googletest-how-to-print-your-values
     ssl_league_msgs::msg::VisionDetectionRobot fake_vision_data{};

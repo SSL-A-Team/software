@@ -100,8 +100,8 @@ void FilteredRobot::update(const RobotMeasurement & measurement)
     // Predict state forward
     // Predict covariance forward
     // (All encompassed by the .predict() function)
-  auto xy_pred = posFilterXY.predict(systemModelXY);
-  auto w_pred = posFilterW.predict(systemModelW);
+  (void) posFilterXY.predict(systemModelXY);
+  (void) posFilterW.predict(systemModelW);
     // Update the Jacobian matrix (contained in filter)
     // Compute Kalman gain (contained in filter)
     // Update state estimate (returned)

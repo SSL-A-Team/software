@@ -43,8 +43,8 @@ public:
   bool isHealthy() const;
 
 private:
-  int bot_id;
-  ateam_common::TeamColor team;
+  Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
+  Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
   int age = 0;
   int oldEnough = 3;
   int health = 2;
@@ -57,15 +57,15 @@ private:
         // Use the below filtered values when getting X/Y/w (theta) and
         // velocities
         // X, Y
-  Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
   PosSystemModel systemModelXY;
   PosState posXYEstimate{};
   PosMeasurementModel measurementModelXY;
         // Theta
-  Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
   AngleSystemModel systemModelW;
   AngleState posWEstimate{};
   AngleMeasurementModel measurementModelW;
+  int bot_id;
+  ateam_common::TeamColor team;
 };
 
 #endif  // FILTERED_ROBOT_HPP_

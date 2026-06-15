@@ -24,6 +24,7 @@
 #include <chrono>
 #include <iostream>
 #include <angles/angles.h>
+#include <cmath>
 
 #include "kalman/Types.hpp"
 #include "kalman/LinearizedMeasurementModel.hpp"
@@ -79,10 +80,10 @@ public:
   static constexpr size_t VX = 2;
   static constexpr size_t VY = 3;
 
-  const double px() {return (*this)[PX];}
-  const double py() {return (*this)[PY];}
-  const double vx() {return (*this)[VX];}
-  const double vy() {return (*this)[VY];}
+  double px() {return (*this)[PX];}
+  double py() {return (*this)[PY];}
+  double vx() {return (*this)[VX];}
+  double vy() {return (*this)[VY];}
 
 };
 
@@ -110,6 +111,7 @@ public:
 protected:
   void updateJacobians(const PosState & x)
   {
+    (void)x;
     this->H.setZero();
 
     this->H(0, 0) = 1;     // dz_px / d_px
@@ -198,8 +200,8 @@ public:
   static constexpr size_t PW = 0;
   static constexpr size_t VW = 1;
 
-  const double pw() {return (*this)[PW];}
-  const double vw() {return (*this)[VW];}
+  double pw() {return (*this)[PW];}
+  double vw() {return (*this)[VW];}
 };
 
 /*
@@ -222,6 +224,7 @@ public:
     // Jacobian H = ∂h/∂x
   void updateJacobians(const AngleState & x) override
   {
+    (void)x;
     this->H.setZero();
     this->H(0, 0) = 1;     // dz_px / d_px
   }
@@ -253,7 +256,12 @@ public:
     Seconds dt = now - last_update;
     double dt_s = dt.count();
 
-    x_updated(x.PW) = angles::normalize_angle(x(x.PW) + x(x.VW) * dt_s);
+    // Do angle wrapping
+    double to_update = x(x.PW) + x(x.VW) * dt_s;
+
+    to_update = std::fmod((to_update + M_PI), 2 * M_PI) - M_PI;
+
+    x_updated(x.PW) = to_update;
 
     return x_updated;
   }
