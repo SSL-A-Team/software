@@ -294,9 +294,9 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
     case PHYS_MOTOR_MODEL:
       return VEC2_F32;
     case PHYS_FRICTION_MODEL:
+      return VEC6_F32;
+    case FRICTION_COMP_GATING:
       return VEC4_F32;
-    case COULOMB_COMP_ACCEL_DEADZONE:
-      return F32;
     case POSE_CONTROL_GAIN:
       return VEC2_F32;
     case TRAJ_RECOMPUTE_ERROR:
@@ -327,6 +327,8 @@ std::size_t GetDataSizeForParameterFormat(const ParameterDataFormat & format)
       return 4;
     case VEC5_F32:
       return 5;
+    case VEC6_F32:
+      return 6;
     default:
       throw std::invalid_argument("GetDataSizeForParameterFormat: Unrecognized parameter data format.");
   }
@@ -346,6 +348,8 @@ float* GetParameterDataForSetFormat(ParameterCommand & command)
       return command.data.vec4_f32;
     case VEC5_F32:
       return command.data.vec5_f32;
+    case VEC6_F32:
+      return command.data.vec6_f32;
     default:
       throw std::invalid_argument("GetParameterDataForSetFormat: Unrecognized parameter data format.");
   }

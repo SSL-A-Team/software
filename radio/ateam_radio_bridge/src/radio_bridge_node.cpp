@@ -91,7 +91,7 @@ public:
 
     declare_parameters<bool>("controls_enabled", {
         {"body_vel", true},
-        {"wheel_vel", false},
+        {"wheel_vel", true},
         {"wheel_torque", true}
     });
 
@@ -419,22 +419,19 @@ private:
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
 
-    // Commented out until firmware implements git hash populating
+    const uint32_t incoming_coms_hash = hello_data.coms_hash[0] << 24 | hello_data.coms_hash[1] << 16 | hello_data.coms_hash[2] << 8 | hello_data.coms_hash[3];
+    if (incoming_coms_hash != ateam_radio_msgs::kComsHash) {
+      RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Packet version hash mismatch. Robot: %x  Local: %x", incoming_coms_hash, ateam_radio_msgs::kComsHash);
+      return;
+    }
 
-    // const uint32_t incoming_coms_hash = hello_data.coms_hash[0] | (hello_data.coms_hash[1] << 8) |
-    //   (hello_data.coms_hash[2] << 16) | (hello_data.coms_hash[3] << 24);
-    // if (incoming_coms_hash != ateam_radio_msgs::kComsHash) {
-    //   RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Packet version hash mismatch.");
-    //   return;
-    // }
+    if (ateam_radio_msgs::kComsDirty) {
+      RCLCPP_WARN(get_logger(), "Local packet version is dirty. Compatibility check may be unreliable.");
+    }
 
-    // if (ateam_radio_msgs::kComsDirty) {
-    //   RCLCPP_WARN(get_logger(), "Local packet version is dirty. Compatibility check may be unreliable.");
-    // }
-
-    // if (hello_data.coms_repo_dirty) {
-    //   RCLCPP_WARN(get_logger(), "Remote robot's packet version is dirty. Compatibility check may be unreliable.");
-    // }
+    if (hello_data.coms_repo_dirty) {
+      RCLCPP_WARN(get_logger(), "Remote robot's packet version is dirty. Compatibility check may be unreliable.");
+    }
 
     if (!(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&
