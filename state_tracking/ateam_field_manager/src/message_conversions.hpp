@@ -42,6 +42,8 @@ ateam_msgs::msg::FieldInfo fromMsg(
 
 void invertFieldInfo(ateam_msgs::msg::FieldInfo & info);
 
+int32_t mapIgnoredSide(const ateam_common::TeamSide & team_side, const int ignore_side_raw);
+
 std::vector<geometry_msgs::msg::Point32> getPointsFromLines(
   const std::vector<ssl_league_msgs::msg::VisionFieldLineSegment> & lines,
   const std::vector<std::string> & line_names);

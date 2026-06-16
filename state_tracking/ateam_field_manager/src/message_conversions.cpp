@@ -148,7 +148,7 @@ ateam_msgs::msg::FieldInfo fromMsg(
       break;
   }
 
-  field_info.ignore_side = ignore_side;
+  field_info.ignore_side = mapIgnoredSide(team_side, ignore_side);
 
   return field_info;
 }
@@ -167,6 +167,30 @@ void invertFieldInfo(ateam_msgs::msg::FieldInfo & info)
   invert_point_array(info.ours.goal_corners.points);
   invert_point_array(info.theirs.defense_area_corners.points);
   invert_point_array(info.theirs.goal_corners.points);
+}
+
+
+int32_t mapIgnoredSide(const ateam_common::TeamSide & team_side, const int ignore_side_raw)
+{
+  if(ignore_side_raw < 0) {
+    if (team_side == ateam_common::TeamSide::PositiveHalf) {
+      return ateam_msgs::msg::FieldInfo::IGNORE_SIDE_THEIRS;
+    } else if (team_side == ateam_common::TeamSide::NegativeHalf) {
+      return ateam_msgs::msg::FieldInfo::IGNORE_SIDE_OURS;
+    } else {
+      return ateam_msgs::msg::FieldInfo::IGNORE_SIDE_NONE;
+    }
+  } else if (ignore_side_raw > 0) {
+    if (team_side == ateam_common::TeamSide::PositiveHalf) {
+      return ateam_msgs::msg::FieldInfo::IGNORE_SIDE_OURS;
+    } else if (team_side == ateam_common::TeamSide::NegativeHalf) {
+      return ateam_msgs::msg::FieldInfo::IGNORE_SIDE_THEIRS;
+    } else {
+      return ateam_msgs::msg::FieldInfo::IGNORE_SIDE_NONE;
+    }
+  } else {
+    return ateam_msgs::msg::FieldInfo::IGNORE_SIDE_NONE;
+  }
 }
 
 std::vector<geometry_msgs::msg::Point32> getPointsFromLines(
