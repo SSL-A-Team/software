@@ -243,7 +243,7 @@ RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
   intent.face_target = world.ball.pos;
   intent.limits.linear_velocity = kick_drive_velocity;
   intent.planner_options.avoid_ball = false;
-  intent.planner.use_default_obstacles = false;
+  intent.planner_options.use_default_obstacles = false;
 
   // TODO(barulicm) angular velocity to heading
 
