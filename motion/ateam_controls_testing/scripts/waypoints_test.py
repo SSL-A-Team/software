@@ -1,29 +1,43 @@
 #! /usr/bin/env python3
 
+# Copyright 2026 A Team
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 import argparse
-import rclpy
 import time
-from rclpy.qos import qos_profile_system_default
-from rclpy.node import Node
+
 from ateam_msgs.msg import RobotMotionCommand, VisionStateRobot
+import rclpy
+from rclpy.node import Node
+from rclpy.qos import qos_profile_system_default
 from transforms3d.euler import quat2euler
-import math
 
 linear_threshold = 1e-2
 angular_threshold = 0.0349
 
 # x, y, theta, hold time
 waypoints = [
-    # (-2.2, -1.2, math.pi / 2, 5.0),
-    # (2.2, 1.2, -math.pi / 2, 5.0)
-
-    # (1.5, 0.0, 0.0, 5.0),
-    # (1.5, 0.05, 0.0, 5.0),
-
     (-0.5, -0.5, 0.0, 1.0),
-    (-0.5,  0.5, 0.0, 1.0),
-    ( 0.5,  0.5, 0.0, 1.0),
-    ( 0.5, -0.5, 0.0, 1.0),
+    (-0.5, 0.5, 0.0, 1.0),
+    (0.5, 0.5, 0.0, 1.0),
+    (0.5, -0.5, 0.0, 1.0),
 ]
 
 current_index = 0
@@ -57,10 +71,12 @@ def is_at_waypoint(index: int):
     #  get yaw from quat
     q = vision_robot_state_msg.pose.orientation
     _, _, theta = quat2euler([q.w, q.x, q.y, q.z])
-    return vision_robot_state_msg.visible and \
-        abs(vision_robot_state_msg.pose.position.x - waypoint[0]) < linear_threshold and \
-        abs(vision_robot_state_msg.pose.position.y - waypoint[1]) < linear_threshold and \
-        abs(theta - waypoint[2]) < angular_threshold
+    return (
+        vision_robot_state_msg.visible
+        and abs(vision_robot_state_msg.pose.position.x - waypoint[0]) < linear_threshold
+        and abs(vision_robot_state_msg.pose.position.y - waypoint[1]) < linear_threshold
+        and abs(theta - waypoint[2]) < angular_threshold
+    )
 
 
 if __name__ == '__main__':
@@ -75,12 +91,15 @@ if __name__ == '__main__':
     node = Node('waypoints_test')
 
     command_pub = node.create_publisher(
-        RobotMotionCommand, f'/robot_motion_commands/robot{args.robot_id}',
-        qos_profile_system_default
+        RobotMotionCommand,
+        f'/robot_motion_commands/robot{args.robot_id}',
+        qos_profile_system_default,
     )
     vision_sub = node.create_subscription(
-        VisionStateRobot, f'/{args.color}_team/robot{args.robot_id}', vision_callback,
-        qos_profile_system_default
+        VisionStateRobot,
+        f'/{args.color}_team/robot{args.robot_id}',
+        vision_callback,
+        qos_profile_system_default,
     )
 
     while rclpy.ok():
