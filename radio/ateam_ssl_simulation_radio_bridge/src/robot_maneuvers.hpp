@@ -29,6 +29,8 @@
 #include <ateam_msgs/msg/game_state_robot.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 
+#include "ateam_controls/ateam_controls.h"
+
 namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
 {
     void global_position_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
@@ -39,7 +41,7 @@ namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
     void global_acceleration_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
     void local_acceleration_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
 
-    // TrajectoryParams generate_trajectory_params(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+    TrajectoryParams_t generate_trajectory_params(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
 
 
 }  // namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
