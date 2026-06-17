@@ -7,7 +7,7 @@ set -e
 echo "Installing APT dependencies..."
 
 sudo apt update
-sudo apt upgrade
+sudo apt upgrade -y
 
 sudo apt install -y python3-clang net-tools
 
