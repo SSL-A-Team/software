@@ -132,8 +132,10 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
     const auto candidate = world.our_robots[candidate_id];
     const auto [target, score] = getBestPassTargetForCandidate(world, candidate);
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{target};
-    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+    motion::intents::PositionFacing intent;
+    intent.position = target;
+    intent.face_target = world.ball.pos;
+    command.motion_intent = intent;
     commands[candidate.id] = command;
     if (score > best_receiver_score) {
       best_receiver = candidate;
