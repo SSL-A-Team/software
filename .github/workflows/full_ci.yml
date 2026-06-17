@@ -16,15 +16,13 @@ jobs:
           path: src/ateam_software
           submodules: true
       
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1.16.1
+
       - name: Install Dependencies
         shell: bash
         run: |
-          source /opt/ros/jazzy/setup.bash
-          sudo apt-get update
-          rosdep update --rosdistro=jazzy
-          rosdep install --from-paths . --ignore-src -y
-          ./src/ateam_software/ateam_ui/install_deps.sh
-          sudo apt install -y python3-clang
+          ./src/ateam_software/install_dependencies.bash
       
       - name: Build
         shell: bash
