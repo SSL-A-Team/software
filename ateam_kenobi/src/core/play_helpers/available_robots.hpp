@@ -25,6 +25,11 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include "core/types/state_types.hpp"
+
+namespace ateam_kenobi::play_helpers {
+  class GroupAssignmentResult;
+}
+
 namespace ateam_kenobi::play_helpers
 {
 
@@ -35,6 +40,8 @@ std::vector<Robot> getVisibleRobots(const std::array<Robot, 16> & robots);
 void removeGoalie(std::vector<Robot> & robots, const World & world);
 
 void removeRobotWithId(std::vector<Robot> & robots, int id);
+
+void removeAssignedRobots(std::vector<Robot> & robots, const GroupAssignmentResult & assignments);
 
 /**
  * @brief Get the closest robot to the target point.
