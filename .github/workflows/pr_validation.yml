@@ -18,12 +18,7 @@ jobs:
       - name: Install Dependencies
         shell: bash
         run: |
-          source /opt/ros/jazzy/setup.bash
-          sudo apt-get update
-          rosdep update --rosdistro=jazzy
-          rosdep install --from-paths . --ignore-src -y
-          ./src/ateam_software/ateam_ui/install_deps.sh
-          sudo apt install -y python3-clang
+          ./src/software/install_dependencies.bash
       
       - name: Get Changed Packages
         id: get-changed-packages
