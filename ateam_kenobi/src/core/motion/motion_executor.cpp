@@ -69,6 +69,9 @@ std::array<std::optional<BodyVelocity>,
         },
         [&](const intents::linear::VelocityIntent & v) {
           body_velocity.linear = v.velocity;
+          if (v.frame == intents::linear::Frame::World) {
+            body_velocity.linear = WorldToLocalFrame(v.velocity, robot);
+          }
           use_controller_linvel = false;
           controller.reset_trajectory({robot.pos});
         },
@@ -116,7 +119,7 @@ std::array<std::optional<BodyVelocity>,
         }
     }, intent.angular);
 
-    if(!path.empty()) {
+    if(use_controller_linvel || use_controller_omega) {
       auto controller_vel = controller.get_command(robot, current_time, intent.motion_options);
       if (use_controller_linvel) {
         body_velocity.linear = controller_vel.linear;

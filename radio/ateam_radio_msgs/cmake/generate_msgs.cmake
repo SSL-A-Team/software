@@ -19,6 +19,8 @@
 # THE SOFTWARE.
 
 function(generate_msgs)
+  message(STATUS "Generating ROS message types...")
+
   set(oneValueArgs SOURCE DESTINATION)
   set(multiValueArgs STRUCTS)
   cmake_parse_arguments(PARSE_ARGV 0 arg "" "${oneValueArgs}" "${multiValueArgs}")
@@ -32,20 +34,17 @@ function(generate_msgs)
     message(FATAL_ERROR "At least one struct must be specified.")
   endif()
 
-  file(MAKE_DIRECTORY "${arg_DESTINATION}")
+  set(output_msg_dir "${arg_DESTINATION}/msg")
+
+  file(MAKE_DIRECTORY "${output_msg_dir}")
 
   set(_generate_msgs_script "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_msgs.py")
   if(NOT EXISTS "${_generate_msgs_script}")
     message(FATAL_ERROR "Script ${_generate_msgs_script} does not exist.")
   endif()
 
-  set(${generated_msgs_files} "")
-  foreach(struct ${arg_STRUCTS})
-    list(APPEND generated_msgs_files "${arg_DESTINATION}/${struct}.msg")
-  endforeach()
-
   execute_process(
-    COMMAND python3 ${_generate_msgs_script} ${arg_DESTINATION} ${arg_SOURCE} ${arg_STRUCTS}
+    COMMAND python3 ${_generate_msgs_script} ${output_msg_dir} ${arg_SOURCE} ${arg_STRUCTS}
     RESULT_VARIABLE result
     OUTPUT_VARIABLE output
     ERROR_VARIABLE error
@@ -53,4 +52,8 @@ function(generate_msgs)
   if(result)
     message(FATAL_ERROR "Failed to generate messages: ${error}")
   endif()
+
+  cmake_path(GET arg_SOURCE PARENT_PATH _header_dir)
+  file(GLOB _source_files "${_header_dir}/**/*")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_source_files})
 endfunction()

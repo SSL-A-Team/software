@@ -11,6 +11,10 @@ add_launch_test(bridge_command_test.py
   APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
   TIMEOUT 10
 )
+add_launch_test(bridge_goodbye_test.py
+  APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
+  TIMEOUT 10
+)
 
 install(PROGRAMS
   mock_robot.py

@@ -26,21 +26,27 @@
 #include <thread>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
+#include <ateam_radio_msgs/msg/error_telemetry.hpp>
 #include <ateam_radio_msgs/srv/get_firmware_parameter.hpp>
 #include <ateam_radio_msgs/srv/set_firmware_parameter.hpp>
 #include <ateam_radio_msgs/srv/send_robot_power_request.hpp>
 #include <ateam_radio_msgs/conversion.hpp>
+#include <ateam_radio_msgs/version.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
 #include <ateam_common/game_controller_listener.hpp>
+#include <ateam_common/topic_names.hpp>
 
 #include "rnp_packet_helpers.hpp"
 #include "ip_address_helpers.hpp"
+#include "nan_helpers.hpp"
 #include "firmware_parameter_server.hpp"
 
 // TODO(barulicm) add warning if we see another instance of this running via multicast
@@ -50,15 +56,28 @@ using namespace std::string_literals;
 namespace ateam_radio_bridge
 {
 
+enum class ConnectionState
+{
+  Disconnected,
+  Connecting,
+  Connected,
+  ReadyToClose
+};
+
 class RadioBridgeNode : public rclcpp::Node
 {
 public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
-    timeout_threshold_(declare_parameter("timeout_ms", 250)),
+    sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 250)),
+    connect_timeout_threshold_(declare_parameter("connect_timeout_ms", 750)),
+    vision_state_staleness_threshold_(declare_parameter("vision_state_staleness_ms", 100)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
+    last_side_change_timestamp_(std::chrono::steady_clock::now()),
     game_controller_listener_(*this,
-      std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this)),
+      std::bind_front(&RadioBridgeNode::TeamColorChangeCallback, this),
+      std::bind_front(&RadioBridgeNode::TeamSideChangeCallback, this)
+    ),
     discovery_receiver_(declare_parameter<std::string>("discovery_address", "224.4.20.69"),
       declare_parameter<uint16_t>("discovery_port", 42069),
       std::bind(&RadioBridgeNode::DiscoveryMessageCallback, this, std::placeholders::_1,
@@ -66,10 +85,14 @@ public:
       declare_parameter<std::string>("net_interface_address", "")),
     firmware_parameter_server_(*this, connections_)
   {
+    std::fill(shutdown_requested_.begin(), shutdown_requested_.end(), false);
+    std::fill(reboot_requested_.begin(), reboot_requested_.end(), false);
+    std::fill(connection_states_.begin(), connection_states_.end(), ConnectionState::Disconnected);
+
     declare_parameters<bool>("controls_enabled", {
         {"body_vel", true},
         {"wheel_vel", true},
-        {"wheel_torque", false}
+        {"wheel_torque", true}
     });
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
@@ -97,6 +120,12 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
+    ateam_common::indexed_topic_helpers::create_indexed_publishers<ateam_radio_msgs::msg::ErrorTelemetry>(
+      error_feedback_publishers_,
+      "~/robot_feedback/error/robot",
+      rclcpp::SystemDefaultsQoS(),
+      this);
+
     power_request_service_ = create_service<ateam_radio_msgs::srv::SendRobotPowerRequest>(
       "~/send_power_request",
       std::bind(&RadioBridgeNode::SendPowerRequestCallback, this, std::placeholders::_1,
@@ -114,40 +143,49 @@ public:
       std::chrono::duration<double>(1.0 / declare_parameter<double>("command_frequency", 60.0)),
       std::bind(&RadioBridgeNode::SendCommandsCallback, this));
 
+    SetupVisionSubscribers(game_controller_listener_.GetTeamColor());
+
     RCLCPP_INFO(get_logger(), "Radio bridge node ready.");
   }
 
 private:
-  const std::chrono::milliseconds timeout_threshold_;
+  // Incoming timeouts
+  const std::chrono::milliseconds sustain_timeout_threshold_;
+  const std::chrono::milliseconds connect_timeout_threshold_;
+  const std::chrono::milliseconds vision_state_staleness_threshold_;
+
+  // Outgoing timeouts
   const std::chrono::milliseconds command_timeout_threshold_;
+
   std::mutex mutex_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
+  std::array<ateam_msgs::msg::VisionStateRobot, 16> vision_states_;
+  std::array<std::chrono::steady_clock::time_point, 16> vision_state_timestamps_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
+  std::chrono::steady_clock::time_point last_side_change_timestamp_;
   ateam_common::GameControllerListener game_controller_listener_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
+  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
+    16> vision_state_subscriptions_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
     16> connection_publishers_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
     16> feedback_publishers_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ExtendedTelemetry>::SharedPtr,
     16> motion_feedback_publishers_;
+  std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ErrorTelemetry>::SharedPtr,
+    16> error_feedback_publishers_;
   ateam_common::MulticastReceiver discovery_receiver_;
   FirmwareParameterServer firmware_parameter_server_;
   rclcpp::Service<ateam_radio_msgs::srv::SendRobotPowerRequest>::SharedPtr power_request_service_;
   std::array<std::unique_ptr<ateam_common::BiDirectionalUDP>, 16> connections_;
-  std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamp_;
+  std::array<std::chrono::steady_clock::time_point, 16> last_heartbeat_timestamps_;
+  std::array<ConnectionState, 16> connection_states_;
   rclcpp::TimerBase::SharedPtr connection_check_timer_;
   rclcpp::TimerBase::SharedPtr command_send_timer_;
-
-  void ReplaceNanWithZero(double & val) {
-    if (std::isnan(val)) {
-      RCLCPP_WARN(get_logger(), "Radio bridge is replacing NaNs!");
-      val = 0.0;
-    }
-  }
 
   void MotionCommandCallback(
     const ateam_msgs::msg::RobotMotionCommand::SharedPtr command_msg,
@@ -156,18 +194,27 @@ private:
     const std::lock_guard lock(mutex_);
     motion_commands_[robot_id] = *command_msg;
     auto & command = motion_commands_[robot_id];
-    ReplaceNanWithZero(command.twist.linear.x);
-    ReplaceNanWithZero(command.twist.linear.y);
-    ReplaceNanWithZero(command.twist.angular.z);
+    REPLACE_NAN_WITH_ZERO(command);
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
-  void CloseConnection(const std::size_t & connection_index)
+  void VisionStateCallback(
+    const ateam_msgs::msg::VisionStateRobot::SharedPtr vision_msg,
+    int robot_id)
+  {
+    const std::lock_guard lock(mutex_);
+    vision_states_[robot_id] = *vision_msg;
+    REPLACE_NAN_WITH_ZERO(vision_states_[robot_id]);
+    vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
+  }
+
+  void CloseConnection(const std::size_t & connection_index, bool send_goodbye = true)
   {
     std::unique_ptr<ateam_common::BiDirectionalUDP> connection;
     {
       std::lock_guard lock(mutex_);
       connections_.at(connection_index).swap(connection);
+      connection_states_[connection_index] = ConnectionState::Disconnected;
     }
     if(!connection) {
       // Connection already closed
@@ -177,12 +224,14 @@ private:
     RCLCPP_INFO(
       get_logger(), "Closing connection to robot %ld (%s:%d)", connection_index,
       connection->GetRemoteIPAddress().c_str(), connection->GetRemotePort());
-    const auto packet = CreateEmptyPacket(CC_GOODBYE);
-    connection->send(
-      reinterpret_cast<const uint8_t *>(&packet),
-      GetPacketSize(packet.command_code));
-    // Give some time for the message to actually send before closing the connection
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    if (send_goodbye) {
+      const auto packet = CreateEmptyPacket(CC_GOODBYE);
+      connection->send(
+        reinterpret_cast<const uint8_t *>(&packet),
+        GetPacketSize(packet.header.command_code));
+      // Give some time for the message to actually send before closing the connection
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
   }
 
   /**
@@ -199,15 +248,23 @@ private:
         connection_publishers_[i]->publish(connection_message);
         shutdown_requested_[i] = false;
         reboot_requested_[i] = false;
+        connection_states_[i] = ConnectionState::Disconnected;
         continue;
       }
-      const auto & last_heartbeat_time = last_heartbeat_timestamp_[i];
+      const auto & last_heartbeat_time = last_heartbeat_timestamps_[i];
       const auto time_since_heartbeat = std::chrono::steady_clock::now() - last_heartbeat_time;
-      if (time_since_heartbeat > timeout_threshold_) {
+      const auto effective_timeout = connection_states_[i] == ConnectionState::Connected ?
+        sustain_timeout_threshold_ : connect_timeout_threshold_;
+      if (time_since_heartbeat > effective_timeout) {
         RCLCPP_WARN(get_logger(), "Connection to robot %ld timed out.", i);
         // release lock early so CloseConnection can grab it
         lock.unlock();
         CloseConnection(i);
+      }
+      if(connection_states_[i] == ConnectionState::ReadyToClose) {
+        // release lock early so CloseConnection can grab it
+        lock.unlock();
+        CloseConnection(i, false);
       }
       // lock released by destructor
     }
@@ -216,40 +273,119 @@ private:
   void SendCommandsCallback()
   {
     const std::lock_guard lock(mutex_);
+    const auto now = std::chrono::steady_clock::now();
     for (auto id = 0; id < 16; ++id) {
       if (connections_[id] == nullptr) {
         continue;
       }
-      if ((std::chrono::steady_clock::now() - motion_command_timestamps_[id]) >
+      if ((now - motion_command_timestamps_[id]) >
         command_timeout_threshold_)
       {
         RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Sending zeros.", id);
         motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
+        motion_commands_[id].body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_OFF;
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
+        motion_commands_[id].dribbler_speed = 0.0;
       }
-      BasicControl control_msg;
+      BasicControl control_msg{};
       control_msg.request_shutdown = shutdown_requested_[id];
       control_msg.reboot_robot = reboot_requested_[id];
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
         ateam_common::GameCommand::Stop;
       control_msg.emergency_stop = false;
-      control_msg.body_vel_controls_enabled = get_parameter("controls_enabled.body_vel").as_bool();
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
-      control_msg.play_song = 0;
-      control_msg.vel_x_linear = motion_commands_[id].twist.linear.x;
-      control_msg.vel_y_linear = motion_commands_[id].twist.linear.y;
-      control_msg.vel_z_angular = motion_commands_[id].twist.angular.z;
-      control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
-      control_msg.dribbler_multiplier = 55;
+      control_msg.reset_controller = (last_side_change_timestamp_ + sustain_timeout_threshold_) >= now;
+      control_msg.reserved1 = 0;
+      FillVisionUpdate(control_msg, vision_states_[id], vision_state_timestamps_[id]);
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
+      control_msg.play_song = 0;
+      control_msg.reserved2[0] = 0;
       control_msg.kick_vel = motion_commands_[id].kick_speed;
+      control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
+      FillBodyControl(control_msg, motion_commands_[id]);
+
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
       connections_[id]->send(
         reinterpret_cast<const uint8_t *>(&control_packet),
-        GetPacketSize(control_packet.command_code));
+        GetPacketSize(control_packet.header.command_code));
     }
+  }
+
+  void FillBodyControl(BasicControl & control_msg, const ateam_msgs::msg::RobotMotionCommand & command) {
+    switch(command.body_control_mode) {
+        case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
+          control_msg.body_control_mode = BCM_OFF;
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
+          control_msg.body_control_mode = BCM_GLOBAL_POSITION;
+          control_msg.cmd.global_pos = {
+            static_cast<float>(command.pose.x),
+            static_cast<float>(command.pose.y),
+            static_cast<float>(command.pose.theta),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_angular),
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_angular)
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_VELOCITY:
+          control_msg.body_control_mode = BCM_GLOBAL_VELOCITY;
+          control_msg.cmd.global_vel = {
+            static_cast<float>(command.velocity.x),
+            static_cast<float>(command.velocity.y),
+            static_cast<float>(command.velocity.theta),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_angular)
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY:
+          control_msg.body_control_mode = BCM_LOCAL_VELOCITY;
+          control_msg.cmd.local_vel = {
+            static_cast<float>(command.velocity.x),
+            static_cast<float>(command.velocity.y),
+            static_cast<float>(command.velocity.theta),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_angular)
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_ACCEL:
+          control_msg.body_control_mode = BCM_GLOBAL_ACCEL;
+          control_msg.cmd.global_acc = {
+            static_cast<float>(command.acceleration.x),
+            static_cast<float>(command.acceleration.y),
+            static_cast<float>(command.acceleration.theta),
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_ACCEL:
+          control_msg.body_control_mode = BCM_LOCAL_ACCEL;
+          control_msg.cmd.local_acc = {
+            static_cast<float>(command.acceleration.x),
+            static_cast<float>(command.acceleration.y),
+            static_cast<float>(command.acceleration.theta),
+          };
+          break;
+        default:
+          RCLCPP_WARN(get_logger(), "Unknown body control mode: %d", command.body_control_mode);
+          control_msg.body_control_mode = BCM_OFF;
+          break;
+      }
+  }
+
+  void FillVisionUpdate(BasicControl & control_msg, const ateam_msgs::msg::VisionStateRobot & vision_state, const std::chrono::steady_clock::time_point & timestamp) {
+    const auto now = std::chrono::steady_clock::now();
+    if (now - timestamp > vision_state_staleness_threshold_ || !vision_state.visible) {
+      control_msg.vision_update = 0;
+      control_msg.vision_position_update[0] = 0;
+      control_msg.vision_position_update[1] = 0;
+      control_msg.vision_position_update[2] = 0;
+      return;
+    }
+    control_msg.vision_update = 1;
+    control_msg.vision_position_update[0] = static_cast<float>(vision_state.pose.position.x);
+    control_msg.vision_position_update[1] = static_cast<float>(vision_state.pose.position.y);
+    control_msg.vision_position_update[2] = static_cast<float>(GetYaw(vision_state.pose));
   }
 
   void DiscoveryMessageCallback(
@@ -263,10 +399,10 @@ private:
       return;
     }
 
-    if (packet.command_code != CC_HELLO_REQ) {
+    if (packet.header.command_code != CC_HELLO_REQ) {
       RCLCPP_WARN(
         get_logger(), "Ignoring discovery packet. Unexpected command code: %d",
-        packet.command_code);
+        packet.header.command_code);
       return;
     }
 
@@ -283,6 +419,20 @@ private:
 
     HelloRequest hello_data = std::get<HelloRequest>(data_variant);
 
+    const uint32_t incoming_coms_hash = hello_data.coms_hash[0] << 24 | hello_data.coms_hash[1] << 16 | hello_data.coms_hash[2] << 8 | hello_data.coms_hash[3];
+    if (incoming_coms_hash != ateam_radio_msgs::kComsHash) {
+      RCLCPP_WARN(get_logger(), "Ignoring discovery packet. Packet version hash mismatch. Robot: %x  Local: %x", incoming_coms_hash, ateam_radio_msgs::kComsHash);
+      return;
+    }
+
+    if (ateam_radio_msgs::kComsDirty) {
+      RCLCPP_WARN(get_logger(), "Local packet version is dirty. Compatibility check may be unreliable.");
+    }
+
+    if (hello_data.coms_repo_dirty) {
+      RCLCPP_WARN(get_logger(), "Remote robot's packet version is dirty. Compatibility check may be unreliable.");
+    }
+
     if (!(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Blue &&
       hello_data.color == TC_BLUE) &&
       !(game_controller_listener_.GetTeamColor() == ateam_common::TeamColor::Yellow &&
@@ -295,12 +445,12 @@ private:
 
     const auto robot_id = hello_data.robot_id;
 
-    if (robot_id > connections_.size()) {
+    if (robot_id >= connections_.size()) {
       // invalid robot ID requested
       const auto reply_packet = CreateEmptyPacket(CC_NACK);
       discovery_receiver_.SendTo(
         sender_address, sender_port,
-        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
       RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Invalid robot ID: %d", robot_id);
       return;
     }
@@ -314,7 +464,7 @@ private:
       const auto reply_packet = CreateEmptyPacket(CC_NACK);
       discovery_receiver_.SendTo(
         sender_address, sender_port,
-        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+        reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
       RCLCPP_WARN(get_logger(), "Rejecting discovery packet. Robot ID already connected: %d",
           robot_id);
       return;
@@ -325,7 +475,8 @@ private:
       sender_address.c_str(), sender_port);
 
     motion_command_timestamps_[robot_id] = {};
-    last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
+    last_heartbeat_timestamps_[robot_id] = std::chrono::steady_clock::now();
+    connection_states_[robot_id] = ConnectionState::Connecting;
     connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
       sender_address, sender_port,
       std::bind(
@@ -342,7 +493,7 @@ private:
     const auto reply_packet = CreatePacket(CC_HELLO_RESP, response);
     discovery_receiver_.SendTo(
       sender_address, sender_port,
-      reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.command_code));
+      reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
   }
 
   void RobotIncomingPacketCallback(
@@ -358,14 +509,15 @@ private:
 
     const std::lock_guard lock(mutex_);
 
-    switch (packet.command_code) {
+    switch (packet.header.command_code) {
       case CC_GOODBYE:
         // close connection. No need to send our own goodbye
-        connections_[robot_id].reset();
+        RCLCPP_INFO(get_logger(), "Received goodbye from robot %d.", robot_id);
+        connection_states_[robot_id] = ConnectionState::ReadyToClose;
         break;
       case CC_TELEMETRY:
         {
-          last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
+          OnHeartbeatQualifiedMessageReceived(robot_id);
           const auto data_var = ExtractData(packet, error);
           if (!error.empty()) {
             RCLCPP_WARN(get_logger(), "Ignoring basic telemetry message from robot %d. %s", robot_id, error.c_str());
@@ -394,6 +546,21 @@ private:
           }
           break;
         }
+      case CC_ERROR_TELEMETRY:
+        {
+          const auto data_var = ExtractData(packet, error);
+          if (!error.empty()) {
+            RCLCPP_WARN(get_logger(), "Ignoring error telemetry message from robot %d. %s", robot_id, error.c_str());
+            return;
+          }
+
+          if (std::holds_alternative<ErrorTelemetry>(data_var)) {
+            const auto & telem_data = std::get<ErrorTelemetry>(data_var);
+            error_feedback_publishers_[robot_id]->publish(ateam_radio_msgs::Convert(telem_data));
+            RCLCPP_WARN(get_logger(), "Error message from robot %d: %s", robot_id, telem_data.error_message);
+          }
+          break;
+        }
       case CC_ROBOT_PARAMETER_COMMAND:
         {
           const auto data_var = ExtractData(packet, error);
@@ -409,21 +576,27 @@ private:
           break;
         }
       case CC_KEEPALIVE:
-        last_heartbeat_timestamp_[robot_id] = std::chrono::steady_clock::now();
+        OnHeartbeatQualifiedMessageReceived(robot_id);
         break;
       default:
         RCLCPP_WARN(
           get_logger(), "Ignoring telemetry message from robot %d. Unsupported command code: %d",
-          robot_id, packet.command_code);
+          robot_id, packet.header.command_code);
         return;
     }
   }
 
-  void TeamColorChangeCallback(const ateam_common::TeamColor)
+  void TeamColorChangeCallback(const ateam_common::TeamColor color)
   {
     for (auto i = 0ul; i < connections_.size(); ++i) {
       CloseConnection(i);
     }
+    SetupVisionSubscribers(color);
+  }
+
+  void TeamSideChangeCallback(const ateam_common::TeamSide)
+  {
+    last_side_change_timestamp_ = std::chrono::steady_clock::now();
   }
 
   void SendPowerRequestCallback(
@@ -467,6 +640,38 @@ private:
     }
 
     response->success = true;
+  }
+
+  void OnHeartbeatQualifiedMessageReceived(int robot_id) {
+    last_heartbeat_timestamps_[robot_id] = std::chrono::steady_clock::now();
+    if(connection_states_[robot_id] == ConnectionState::Connecting) {
+      connection_states_[robot_id] = ConnectionState::Connected;
+    }
+  }
+
+  void SetupVisionSubscribers(const ateam_common::TeamColor color) {
+    for(auto & sub : vision_state_subscriptions_) {
+      sub.reset();
+    }
+    if(color == ateam_common::TeamColor::Unknown) {
+      return;
+    }
+    const auto topic_prefix = color == ateam_common::TeamColor::Yellow ? Topics::kYellowTeamRobotPrefix : Topics::kBlueTeamRobotPrefix;
+    ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
+      vision_state_subscriptions_,
+      topic_prefix,
+      rclcpp::SystemDefaultsQoS(),
+      &RadioBridgeNode::VisionStateCallback,
+      this);
+  }
+
+  double GetYaw(const geometry_msgs::msg::Pose & pose)
+  {
+    tf2::Quaternion quat;
+    tf2::fromMsg(pose.orientation, quat);
+    double yaw, pitch, roll;
+    tf2::Matrix3x3(quat).getEulerYPR(yaw, pitch, roll);
+    return yaw;
   }
 
 };

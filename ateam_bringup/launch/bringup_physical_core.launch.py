@@ -1,4 +1,4 @@
-# Copyright 2021 A Team
+# Copyright 2026 A Team
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -44,12 +44,6 @@ def generate_launch_description():
         DeclareLaunchArgument('team_name', default_value='A-Team'),
         DeclareLaunchArgument('use_local_gc', default_value='False'),
 
-        Node(
-            package='ateam_bringup',
-            executable='scream_if_wifi_enabled.sh',
-            name='wifi_checker',
-        ),
-
         GroupAction(
             condition=IfCondition(LaunchConfiguration('use_local_gc')),
             scoped=False,
@@ -73,18 +67,32 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
-                                              'autonomy.launch.xml')),
-            launch_arguments={
-                'team_name': LaunchConfiguration('team_name'),
-                'vision_offset_robot_x': '0.0',
-                'vision_offset_robot_y': '0.0',
-            }.items()
+                                              'ui.launch.xml'))
+        ),
+
+        IncludeLaunchDescription(
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution('ateam_joystick_control',
+                                              'joystick_controller.launch.xml')
+            )
         ),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
-                                              'ui.launch.xml'))
+                                              'state_tracking.launch.xml')
+            ),
+            launch_arguments={
+                'team_name': LaunchConfiguration('team_name'),
+                'vision_offset_robot_x': '0.0',
+                'vision_offset_robot_y': '0.0'
+            }.items()
+        ),
+
+        Node(
+            package='ateam_bringup',
+            executable='scream_if_wifi_enabled.sh',
+            name='wifi_checker',
         ),
 
         Node(
@@ -102,13 +110,5 @@ def generate_launch_description():
                 ('~/robot_feedback/extended/robot', '/robot_feedback/extended/robot'),
                 ('~/robot_feedback/connection/robot', '/robot_feedback/connection/robot')
             ]),
-            # prefix=['xterm -bg black -fg white -e gdb -ex run --args']
         ),
-
-        IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution('ateam_joystick_control',
-                                              'joystick_controller.launch.xml')
-            )
-        )
     ])

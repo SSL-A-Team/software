@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(ateam_radio_bridge)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -11,10 +11,12 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/firmware_parameter_server.cpp
   src/ip_address_helpers.cpp
+  src/nan_helpers.cpp
   src/radio_bridge_node.cpp
   src/rnp_packet_helpers.cpp
 )
@@ -27,6 +29,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ateam_radio_msgs
   ateam_msgs
   ateam_common
+  tf2_geometry_msgs
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}

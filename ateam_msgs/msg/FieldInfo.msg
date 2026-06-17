@@ -11,3 +11,8 @@ geometry_msgs/Polygon field_corners
 int32 ignore_side
 FieldSidedInfo ours
 FieldSidedInfo theirs
+
+int32 IGNORE_SIDE_NONE = 0
+
+int32 IGNORE_SIDE_OURS = 1
+int32 IGNORE_SIDE_THEIRS = 2
