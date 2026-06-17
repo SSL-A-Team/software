@@ -21,179 +21,80 @@
 #include "motion_executor.hpp"
 #include <utility>
 #include <vector>
+#include <ateam_geometry/angles.hpp>
 #include <ateam_geometry/nearest_point.hpp>
 #include "core/path_planning/obstacles.hpp"
 #include "core/path_planning/escape_velocity.hpp"
 #include "frame_conversions.hpp"
+#include "pivot_control.hpp"
 
 namespace ateam_kenobi::motion
 {
 
-// helper type for the visitor
-template<class ... Ts>
-struct overloads : Ts ... { using Ts::operator() ...; };
-
 MotionExecutor::MotionExecutor(rclcpp::Logger logger)
 : logger_(std::move(logger))
 {
+  // TODO(barulim): Tune heading PID
+  std::fill(heading_controllers_.begin(), heading_controllers_.end(), PID{1.0, 0.0, 0.0});
 }
 
-std::array<std::optional<BodyVelocity>,
+std::array<std::optional<MotionCommand>,
   16> MotionExecutor::RunFrame(
   std::array<std::optional<MotionIntent>, 16> intents,
   visualization::Overlays & overlays, const World & world)
 {
-  const auto current_time = std::chrono::duration_cast<std::chrono::duration<double>>(
-    world.current_time.time_since_epoch()).count();
+  std::array<std::optional<MotionCommand>, 16> commands{};
 
-  std::array<std::optional<BodyVelocity>, 16> results;
+  path_planning_targets_.clear();
 
-  for (size_t i = 0; i < intents.size(); ++i) {
-    if (!intents[i]) {
-      results[i] = std::nullopt;
+  for(auto i = 0ul; i < 16; ++i) {
+    const auto & robot = world.our_robots[i];
+    const auto & maybe_intent = intents[i];
+    if(!maybe_intent.has_value()) {
       continue;
     }
-
-    const auto & robot = world.our_robots[i];
-    auto & intent = intents[i].value();
-    auto & planner = planners_[i];
-    auto & controller = controllers_[i];
-
-    BodyVelocity body_velocity;
-    path_planning::Path path;
-
-    bool use_controller_linvel = true;
-    std::visit(overloads{
-        [&](const intents::None &) {
-          controller.reset_trajectory({robot.pos});
-        },
-        [&](const intents::linear::VelocityIntent & v) {
-          body_velocity.linear = v.velocity;
-          if (v.frame == intents::linear::Frame::World) {
-            body_velocity.linear = WorldToLocalFrame(v.velocity, robot);
-          }
-          use_controller_linvel = false;
-          controller.reset_trajectory({robot.pos});
-        },
-        [&](const intents::linear::PositionIntent & p) {
-          path = planner.getPath(robot.pos, p.position, world, intent.obstacles,
-          intent.planner_options);
-          if(path.empty()) {
-            return;
-          }
-          if(planner.usedCachedPath()) {
-            controller.update_trajectory(path);
-          } else {
-            controller.reset_trajectory(path);
-          }
-        },
-        [&](const intents::linear::VelocityAtPositionIntent & v) {
-          path = planner.getPath(robot.pos, v.position, world, intent.obstacles,
-          intent.planner_options);
-          if(path.empty()) {
-            return;
-          }
-          if(planner.usedCachedPath()) {
-            controller.update_trajectory(path, v.velocity);
-          } else {
-            controller.reset_trajectory(path, v.velocity);
-          }
-        }
-    }, intent.linear);
-
-    bool use_controller_omega = true;
-    std::visit(overloads{
-        [](const intents::None &) {},
-        [&](const intents::angular::VelocityIntent & v) {
-          body_velocity.angular = v.omega;
-          use_controller_omega = false;
-        },
-        [&](const intents::angular::HeadingIntent & h) {
-          controller.face_absolute(h.theta);
-        },
-        [&](const intents::angular::FacingIntent & f) {
-          controller.face_point(f.target);
-        },
-        [&](const intents::angular::FaceTravelIntent &) {
-          controller.face_travel();
-        }
-    }, intent.angular);
-
-    if(use_controller_linvel || use_controller_omega) {
-      auto controller_vel = controller.get_command(robot, current_time, intent.motion_options);
-      if (use_controller_linvel) {
-        body_velocity.linear = controller_vel.linear;
-      }
-      if (use_controller_omega) {
-        body_velocity.angular = controller_vel.angular;
-      }
-    }
-
-    if (intent.enable_escape_velocities &&
-      (std::holds_alternative<intents::linear::PositionIntent>(intent.linear) ||
-      std::holds_alternative<intents::linear::VelocityAtPositionIntent>(intent.linear)))
-    {
-      auto escape_velocity = GenerateEscapeVelocity(world, robot, intent);
-      if (escape_velocity) {
-        body_velocity = escape_velocity.value();
-      }
-    }
-
-    if(intent.callback.has_value()) {
-      body_velocity = intent.callback.value()(body_velocity, path, robot, world);
-    }
-
-    DrawOverlays(overlays, world, robot, path, intent);
-
-    results[i] = body_velocity;
+    const auto & intent = *maybe_intent;
+    std::visit([this, &robot, &overlays, &world, &commands, &i](const auto & intent){
+        commands[i] = ExecuteIntent(intent, robot, overlays, world);
+    }, intent);
   }
 
-  return results;
+  ExecutePathPlanningTargets(commands, overlays, world);
+
+  return commands;
 }
 
-std::optional<BodyVelocity> MotionExecutor::GenerateEscapeVelocity(
-  const World & world,
-  const Robot & robot,
-  const MotionIntent & intent)
+void MotionExecutor::ExecutePathPlanningTargets(
+  std::array<std::optional<MotionCommand>, 16> & commands,
+  visualization::Overlays & overlays, const World & world)
 {
-  std::vector<ateam_geometry::AnyShape> obstacles = intent.obstacles;
-  if (intent.planner_options.use_default_obstacles) {
-    path_planning::AddDefaultObstacles(world, obstacles);
-  }
-  path_planning::AddRobotObstacles(world.our_robots, robot.id, obstacles);
-  path_planning::AddRobotObstacles(world.their_robots, obstacles);
-
-  auto vel = path_planning::GenerateEscapeVelocity(robot, obstacles,
-      intent.planner_options.footprint_inflation);
-  if (vel) {
-    return BodyVelocity{
-      WorldToLocalFrame(*vel, robot),
-      0.0
-    };
-  } else {
-    return std::nullopt;
-  }
-}
-
-void MotionExecutor::DrawOverlays(
-  visualization::Overlays & overlays, const World & world,
-  const Robot & robot, const path_planning::Path & path,
-  const MotionIntent & intent)
-{
-  (void)world;
-  const auto name_prefix = "motion/robot_" + std::to_string(robot.id) + "/";
-  if(std::holds_alternative<intents::linear::PositionIntent>(intent.linear) ||
-    std::holds_alternative<intents::linear::VelocityAtPositionIntent>(intent.linear))
-  {
-    const auto target_point = std::visit(overloads{
-        [](const intents::linear::PositionIntent & p) {return p.position;},
-        [](const intents::linear::VelocityAtPositionIntent & v) {return v.position;},
-        [](const auto &){return ateam_geometry::Point();}
-    }, intent.linear);
+  for(const auto & target : path_planning_targets_) {
+    const auto & robot = world.our_robots[target.robot_id];
+    auto & planner = planners_[target.robot_id];
+    const auto path = planner.getPath(robot.pos, target.position, world, target.obstacles,
+        target.planner_options);
+    MotionCommand command;
     if(path.empty()) {
-      overlays.drawLine(name_prefix + "path", {robot.pos, target_point}, "Red");
+      command.control_mode = ControlMode::Off;
+    } else {
+      const auto [closest_index, closest_point] = ProjectRobotOnPath(path, robot);
+      const auto pose = path[closest_index];
+      command.control_mode = ControlMode::GlobalPosition;
+      command.pose.x = pose.x();
+      command.pose.y = pose.y();
+      command.pose.theta = target.heading;
+    }
+    command.limit_vel_linear = target.limits.linear_velocity;
+    command.limit_vel_angular = target.limits.angular_velocity;
+    command.limit_acc_linear = target.limits.linear_acceleration;
+    command.limit_acc_angular = target.limits.angular_acceleration;
+    commands[target.robot_id] = command;
+
+    const auto name_prefix = "motion/robot_" + std::to_string(robot.id) + "/";
+    if(path.empty()) {
+      overlays.drawLine(name_prefix + "path", {robot.pos, target.position}, "Red");
     } else if(path.size() == 1) {
-      overlays.drawLine(name_prefix + "path", {robot.pos, target_point}, "Purple");
+      overlays.drawLine(name_prefix + "path", {robot.pos, target.position}, "Purple");
     } else {
       const auto [closest_index, closest_point] = ProjectRobotOnPath(path, robot);
       std::vector<ateam_geometry::Point> path_done(path.begin(), path.begin() + (closest_index));
@@ -206,11 +107,13 @@ void MotionExecutor::DrawOverlays(
       overlays.drawLine(name_prefix + "path_remaining", path_remaining, "Purple");
       const auto & planner = planners_[robot.id];
       if (planner.didTimeOut()) {
-        overlays.drawLine(name_prefix + "afterpath", {path.back(), target_point}, "LightSkyBlue");
+        overlays.drawLine(name_prefix + "afterpath", {path.back(), target.position},
+            "LightSkyBlue");
       } else if (planner.isPathTruncated()) {
-        overlays.drawLine(name_prefix + "afterpath", {path.back(), target_point}, "LightPink");
+        overlays.drawLine(name_prefix + "afterpath", {path.back(), target.position}, "LightPink");
       }
     }
+    overlays.merge(planner.getOverlays());
   }
 }
 
@@ -238,6 +141,178 @@ std::pair<size_t, ateam_geometry::Point> MotionExecutor::ProjectRobotOnPath(
     }
   }
   return {closest_index, closest_point};
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::None & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)robot;
+  (void)intent;
+  (void)overlays;
+  (void)world;
+  MotionCommand command;
+  command.control_mode = ControlMode::Off;
+  return command;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::Stop & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)robot;
+  (void)overlays;
+  (void)world;
+  MotionCommand command;
+  command.control_mode = ControlMode::LocalVelocity;
+  command.velocity.x = 0.0;
+  command.velocity.y = 0.0;
+  command.velocity.theta = 0.0;
+  command.limit_vel_linear = intent.limits.linear_velocity;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_linear = intent.limits.linear_acceleration;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  return command;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::Velocity & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)robot;
+  (void)overlays;
+  (void)world;
+  MotionCommand command;
+  switch(intent.frame) {
+    case Frame::Local:
+      command.control_mode = ControlMode::LocalVelocity;
+      break;
+    case Frame::World:
+      command.control_mode = ControlMode::GlobalVelocity;
+      break;
+  }
+  command.velocity.x = intent.linear.x();
+  command.velocity.y = intent.linear.y();
+  command.velocity.theta = intent.angular;
+  command.limit_vel_linear = intent.limits.linear_velocity;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_linear = intent.limits.linear_acceleration;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  return command;
+}
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::LinearVelocityAngularHeading & intent, const Robot & robot,
+  visualization::Overlays & overlays, const World & world)
+{
+  (void)overlays;
+  (void)world;
+  MotionCommand command;
+  switch(intent.frame) {
+    case Frame::Local:
+      command.control_mode = ControlMode::LocalVelocity;
+      break;
+    case Frame::World:
+      command.control_mode = ControlMode::GlobalVelocity;
+      break;
+  }
+  command.velocity.x = intent.linear.x();
+  command.velocity.y = intent.linear.y();
+  auto angular_controller = heading_controllers_[robot.id];
+  command.velocity.theta =
+    angular_controller.compute_command(angles::shortest_angular_distance(intent.heading,
+      robot.theta), 0.01);
+  command.limit_vel_linear = intent.limits.linear_velocity;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_linear = intent.limits.linear_acceleration;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  return command;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::LinearVelocityAngularFacing & intent, const Robot & robot,
+  visualization::Overlays & overlays, const World & world)
+{
+  (void)overlays;
+  (void)world;
+  MotionCommand command;
+  switch(intent.frame) {
+    case Frame::Local:
+      command.control_mode = ControlMode::LocalVelocity;
+      break;
+    case Frame::World:
+      command.control_mode = ControlMode::GlobalVelocity;
+      break;
+  }
+  command.velocity.x = intent.linear.x();
+  command.velocity.y = intent.linear.y();
+  auto angular_controller = heading_controllers_[robot.id];
+  const auto target_heading = ateam_geometry::ToHeading(intent.face_target - robot.pos);
+  command.velocity.theta =
+    angular_controller.compute_command(angles::shortest_angular_distance(target_heading,
+      robot.theta), 0.01);
+  command.limit_vel_linear = intent.limits.linear_velocity;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_linear = intent.limits.linear_acceleration;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  return command;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::Position & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)overlays;
+  (void)world;
+  path_planning_targets_.push_back(PathPlanningTarget{
+      robot.id,
+      intent.position,
+      intent.heading,
+      intent.planner_options,
+      intent.obstacles,
+      intent.enable_escape_velocities,
+      intent.limits
+  });
+  return std::nullopt;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::PositionFacing & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)overlays;
+  (void)world;
+  const auto heading = atan2(
+          intent.face_target.y() - robot.pos.y(),
+          intent.face_target.x() - robot.pos.x());
+  path_planning_targets_.push_back(PathPlanningTarget{
+      robot.id,
+      intent.position,
+      heading,
+      intent.planner_options,
+      intent.obstacles,
+      intent.enable_escape_velocities,
+      intent.limits
+  });
+  return std::nullopt;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::PivotVelocity & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)robot;
+  (void)overlays;
+  (void)world;
+  return PivotAtVelocity(intent);
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::PivotHeading & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)overlays;
+  (void)world;
+  return PivotToHeading(intent, robot);
 }
 
 }  // namespace ateam_kenobi::motion

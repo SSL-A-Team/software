@@ -31,6 +31,8 @@ namespace ateam_kenobi::tactics
 class MultiMoveTo : public stp::Tactic
 {
 public:
+  using AngularTarget = std::variant<std::monostate, double, ateam_geometry::Point>;
+
   explicit MultiMoveTo(stp::Options stp_options);
 
   std::vector<ateam_geometry::Point> GetAssignmentPoints();
@@ -50,22 +52,17 @@ public:
 
   void SetFaceNone()
   {
-    angular_intent_ = motion::intents::None{};
-  }
-
-  void SetFaceTravel()
-  {
-    angular_intent_ = motion::intents::angular::FaceTravelIntent{};
+    angular_target_ = std::monostate{};
   }
 
   void SetFaceAbsolue(double angle)
   {
-    angular_intent_ = motion::intents::angular::HeadingIntent{angle};
+    angular_target_ = angle;
   }
 
   void SetFacePoint(const ateam_geometry::Point & point)
   {
-    angular_intent_ = motion::intents::angular::FacingIntent{point};
+    angular_target_ = point;
   }
 
   void SetObstacles(const std::vector<ateam_geometry::AnyShape> & obstacles)
@@ -79,11 +76,13 @@ public:
   }
 
 private:
-  motion::MotionIntent::AngularIntent angular_intent_;
+  AngularTarget angular_target_;
 
   std::vector<ateam_geometry::AnyShape> obstacles_;
 
   std::vector<ateam_geometry::Point> target_points_;
+
+  RobotCommand BuildCommand(const Robot & robot, const ateam_geometry::Point & destination);
 };
 
 }  // namespace ateam_kenobi::tactics

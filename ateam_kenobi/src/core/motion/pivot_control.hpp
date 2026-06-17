@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,31 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__HALT_PLAY_HPP_
-#define PLAYS__HALT_PLAY_HPP_
+#ifndef CORE__MOTION__PIVOT_CONTROL_HPP_
+#define CORE__MOTION__PIVOT_CONTROL_HPP_
 
-#include "core/stp/play.hpp"
+#include "motion_intent.hpp"
+#include "motion_command.hpp"
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::motion
 {
-class HaltPlay : public stp::Play
-{
-public:
-  static constexpr const char * kPlayName = "HaltPlay";
 
-  explicit HaltPlay(stp::Options stp_options);
+MotionCommand PivotAtVelocity(const intents::PivotVelocity & intent);
 
-  stp::PlayScore getScore(const World & world) override;
+MotionCommand PivotToHeading(const intents::PivotHeading & intent, const Robot & robot);
 
-  void enter() override;
+}  // namespace ateam_kenobi::motion
 
-  std::array<std::optional<RobotCommand>,
-    16> runFrame(const World & world) override;
-
-private:
-  static constexpr double kHaltThreshold = 0.1;  // m/s
-  std::array<bool, 16> robot_halted_{};
-};
-}  // namespace ateam_kenobi::plays
-
-#endif  // PLAYS__HALT_PLAY_HPP_
+#endif  // CORE__MOTION__PIVOT_CONTROL_HPP_

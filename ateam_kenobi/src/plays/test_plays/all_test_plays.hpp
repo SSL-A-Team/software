@@ -21,7 +21,6 @@
 #ifndef PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
 #define PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
 
-#include "controls_test_play.hpp"
 #include "spinning_a_play.hpp"
 #include "test_kick_play.hpp"
 #include "test_pass_play.hpp"

@@ -229,15 +229,24 @@ private:
       } else {
         const auto & cmd = maybe_cmd.value();
         const auto & motion_cmd = maybe_motion_cmd.value();
-        const auto linear_vel = motion_cmd.linear;
         auto & ros_cmd = ros_commands[id].emplace();
         ros_cmd.dribbler_speed = cmd.dribbler_speed;
         ros_cmd.kick_request = static_cast<uint8_t>(cmd.kick);
         ros_cmd.kick_speed = cmd.kick_speed;
-        ros_cmd.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
-        ros_cmd.velocity.x = linear_vel.x();
-        ros_cmd.velocity.y = linear_vel.y();
-        ros_cmd.velocity.theta = motion_cmd.angular;
+        ros_cmd.body_control_mode = static_cast<uint8_t>(motion_cmd.control_mode);
+        ros_cmd.pose.x = motion_cmd.pose.x;
+        ros_cmd.pose.y = motion_cmd.pose.y;
+        ros_cmd.pose.theta = motion_cmd.pose.theta;
+        ros_cmd.velocity.x = motion_cmd.velocity.x;
+        ros_cmd.velocity.y = motion_cmd.velocity.y;
+        ros_cmd.velocity.theta = motion_cmd.velocity.theta;
+        ros_cmd.acceleration.x = motion_cmd.acceleration.x;
+        ros_cmd.acceleration.y = motion_cmd.acceleration.y;
+        ros_cmd.acceleration.theta = motion_cmd.acceleration.theta;
+        ros_cmd.limit_vel_linear = motion_cmd.limit_vel_linear;
+        ros_cmd.limit_vel_angular = motion_cmd.limit_vel_angular;
+        ros_cmd.limit_acc_linear = motion_cmd.limit_acc_linear;
+        ros_cmd.limit_acc_angular = motion_cmd.limit_acc_angular;
       }
     }
 

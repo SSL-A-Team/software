@@ -21,6 +21,7 @@
 #include "halt_play.hpp"
 #include <limits>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_geometry/normalize.hpp>
 
 namespace ateam_kenobi::plays
 {
@@ -43,19 +44,28 @@ stp::PlayScore HaltPlay::getScore(const World & world)
   }
 }
 
-void HaltPlay::reset()
+void HaltPlay::enter()
 {
+  std::fill(robot_halted_.begin(), robot_halted_.end(), false);
 }
 
 std::array<std::optional<RobotCommand>, 16> HaltPlay::runFrame(
-  const World &)
+  const World & world)
 {
   std::array<std::optional<RobotCommand>, 16> halt_motion_commands;
-  RobotCommand command;
-  command.motion_intent.linear = motion::intents::linear::VelocityIntent{ateam_geometry::Vector{0.0,
-      0.0}};
-  command.motion_intent.angular = motion::intents::angular::VelocityIntent{0.0};
-  for (size_t i = 0; i < 16; ++i) {
+  for (auto i = 0ul; i < 16; ++i) {
+    RobotCommand command;
+
+    if (!robot_halted_[i] && ateam_geometry::norm(world.our_robots[i].vel) <= kHaltThreshold) {
+      robot_halted_[i] = true;
+    }
+
+    if (robot_halted_[i]) {
+      command.motion_intent = motion::intents::None{};
+    } else {
+      command.motion_intent = motion::intents::Stop{};
+    }
+
     halt_motion_commands[i] = command;
   }
   return halt_motion_commands;

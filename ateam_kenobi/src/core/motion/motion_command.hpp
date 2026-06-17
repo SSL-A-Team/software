@@ -1,4 +1,4 @@
-// Copyright 2023 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,31 +18,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PLAYS__HALT_PLAY_HPP_
-#define PLAYS__HALT_PLAY_HPP_
+#ifndef CORE__MOTION__MOTION_COMMAND_HPP_
+#define CORE__MOTION__MOTION_COMMAND_HPP_
 
-#include "core/stp/play.hpp"
+#include <cstdint>
 
-namespace ateam_kenobi::plays
+namespace ateam_kenobi::motion
 {
-class HaltPlay : public stp::Play
+
+struct Twist2D
 {
-public:
-  static constexpr const char * kPlayName = "HaltPlay";
-
-  explicit HaltPlay(stp::Options stp_options);
-
-  stp::PlayScore getScore(const World & world) override;
-
-  void enter() override;
-
-  std::array<std::optional<RobotCommand>,
-    16> runFrame(const World & world) override;
-
-private:
-  static constexpr double kHaltThreshold = 0.1;  // m/s
-  std::array<bool, 16> robot_halted_{};
+  double x = 0.0;
+  double y = 0.0;
+  double theta = 0.0;
 };
-}  // namespace ateam_kenobi::plays
 
-#endif  // PLAYS__HALT_PLAY_HPP_
+enum class ControlMode
+{
+  Off = 0,
+  GlobalPosition = 1,
+  GlobalVelocity = 2,
+  LocalVelocity = 3,
+  GlobalAccel = 4,
+  LocalAccel = 5
+};
+
+struct MotionCommand
+{
+  ControlMode control_mode;
+  Twist2D pose;
+  Twist2D velocity;
+  Twist2D acceleration;
+  double limit_vel_linear = 0.0;
+  double limit_vel_angular = 0.0;
+  double limit_acc_linear = 0.0;
+  double limit_acc_angular = 0.0;
+};
+
+}  // namespace ateam_kenobi::motion
+
+#endif  // CORE__MOTION__MOTION_COMMAND_HPP_

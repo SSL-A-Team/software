@@ -48,11 +48,13 @@ void Defenders::runFrame(
   for (auto i = 0ul; i < num_defenders; ++i) {
     const auto & robot = robots[i];
     const auto & defender_point = defender_points[i];
+    motion::intents::Position intent;
+    intent.position = defender_point;
+    intent.heading = 0.0;
+    intent.planner_options.avoid_ball = false;
+    intent.planner_options.footprint_inflation = 0.03;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{defender_point};
-    command.motion_intent.angular = motion::intents::angular::HeadingIntent{0.0};
-    command.motion_intent.planner_options.avoid_ball = false;
-    command.motion_intent.planner_options.footprint_inflation = 0.03;
+    command.motion_intent = intent;
     motion_commands[robot.id] = command;
   }
 

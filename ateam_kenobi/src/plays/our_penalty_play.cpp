@@ -86,10 +86,12 @@ std::array<std::optional<RobotCommand>, 16> OurPenaltyPlay::runFrame(
     getPlayInfo()["State"] = "Preparing";
     kick_skill_.SetTargetPoint(chooseKickTarget(world));
     const auto destination = kick_skill_.GetAssignmentPoint(world);
+    motion::intents::PositionFacing intent;
+    intent.position = destination;
+    intent.face_target = world.ball.pos;
+    intent.limits.linear_velocity = 1.5;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{destination};
-    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-    command.motion_intent.motion_options.max_velocity = 1.5;
+    command.motion_intent = intent;
     motion_commands[kicking_robot.id] = command;
   } else {
     // Kick ball
@@ -116,10 +118,15 @@ std::array<std::optional<RobotCommand>, 16> OurPenaltyPlay::runFrame(
       return current;
     });
   multi_move_to_.SetTargetPoints(target_points);
-  multi_move_to_.SetFaceTravel();
+  multi_move_to_.SetFaceNone();
   for(auto & maybe_cmd : motion_commands) {
     if(!maybe_cmd) {continue;}
-    maybe_cmd->motion_intent.motion_options.max_velocity = 1.5;
+    std::visit([](auto & intent){
+        using IntentType = std::decay_t<decltype(intent)>;
+        if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+          intent.limits.linear_velocity = 1.5;
+        }
+    }, maybe_cmd->motion_intent);
   }
   multi_move_to_.RunFrame(available_robots, motion_commands);
 
