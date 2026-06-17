@@ -1,67 +1,77 @@
+# Copyright 2026 A Team
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 """Docstring for ateam_software.motion.ateam_path_planning.visualize_paths."""
 
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
 
 paths = [
-  [
-    (0, 0),
-    (0.005, 0),
-    (0.02, 0),
-  ],
-  [
-    (0.045, 0),
-    (0.0779513, 0.00403606),
-    (0.116805, 0.0161442),
-    (0.161562, 0.0363245),
-    (0.212221, 0.0645769),
-    (0.268763, 0.100901),
-    (0.327789, 0.145298),
-    (0.386815, 0.197767),
-    (0.445842, 0.258308),
-    (0.504868, 0.32692),
-    (0.563894, 0.403606),
-    (0.622921, 0.484327),
-    (0.681947, 0.565048),
-    (0.739869, 0.644259),
-    (0.792333, 0.716006),
-    (0.838895, 0.779682),
-    (0.879555, 0.835285),
-    (0.914311, 0.882817),
-    (0.943165, 0.922276),
-    (0.966117, 0.953663),
-    (0.983165, 0.976978),
-    (0.994311, 0.992221),
-    (0.999555, 0.999391),
-  ],
+    [
+        (0, 0),
+        (0.0147118, 0),
+        (0.0588471, 0),
+    ],
+    [
+        (0.132406, 0),
+        (0.22901, 0.012472),
+        (0.342282, 0.0498882),
+        (0.471754, 0.112248),
+        (0.596118, 0.199553),
+        (0.703815, 0.311801),
+        (0.794845, 0.448994),
+        (0.869208, 0.599987),
+        (0.926903, 0.728781),
+        (0.967932, 0.83263),
+        (0.992293, 0.911535),
+        (1, 0.965496),
+        (1, 0.994513),
+    ],
 ]
 
 obstacles = [
-  (0.5, 0.5, 0.1)
+    (0.5, 0.5, 0.1)
 ]
 
 
-if __name__ == "__main__":
-  fig, ax = plt.subplots()
-  diameter = 0.18
-  radius = diameter / 2.0
-  cmap = plt.get_cmap('tab10')
+if __name__ == '__main__':
+    fig, ax = plt.subplots()
+    diameter = 0.18
+    radius = diameter / 2.0
+    cmap = plt.get_cmap('tab10')
 
-  for i, path in enumerate(paths):
-    xs = [p[0] for p in path]
-    ys = [p[1] for p in path]
-    color = cmap(i % 10)
-    ax.plot(xs, ys, '-', color=color)
-    for (x, y) in path:
-      circ = patches.Circle((x, y), radius=radius, fill=False, edgecolor=color)
-      ax.add_patch(circ)
+    for i, path in enumerate(paths):
+        xs = [p[0] for p in path]
+        ys = [p[1] for p in path]
+        color = cmap(i % 10)
+        ax.plot(xs, ys, '-', color=color)
+        for (x, y) in path:
+            circ = patches.Circle((x, y), radius=radius,
+                                  fill=False, edgecolor=color)
+            ax.add_patch(circ)
 
-  for (ox, oy, orad) in obstacles:
-    obs = patches.Circle((ox, oy), radius=orad, fill=True, color='gray', alpha=0.5)
-    ax.add_patch(obs)
+    for (ox, oy, orad) in obstacles:
+        obs = patches.Circle((ox, oy), radius=orad,
+                             fill=True, color='gray', alpha=0.5)
+        ax.add_patch(obs)
 
-  ax.set_aspect('equal', 'box')
-  ax.autoscale_view()
-  plt.show()
-
-
+    ax.set_aspect('equal', 'box')
+    ax.autoscale_view()
+    plt.show()

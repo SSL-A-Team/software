@@ -30,7 +30,9 @@ namespace ateam_path_planning::collisions
 
 std::optional<double> TimeToCollision(
   const BangBangTraj3D & trajectory,
-  const std::vector<Obstacle> & obstacles);
+  const std::vector<Obstacle> & obstacles,
+  const double collision_check_resolution,
+  const double footprint_inflation);
 
 }  // namespace ateam_path_planning::collisions
 

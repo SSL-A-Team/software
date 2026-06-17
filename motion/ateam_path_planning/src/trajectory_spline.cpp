@@ -32,51 +32,94 @@ std::vector<ateam_geometry::Point> TrajectorySpline::ToPoints(double delta_t) co
     return points;
   }
 
-  RigidBodyState current_state = RigidBodyStateFromPose(start_pose);
-  current_state.twist.linear.x = start_velocity.x();
-  current_state.twist.linear.y = start_velocity.y();
+  Vector6C_t current_state {
+    static_cast<float>(start_pose.position.x()),
+    static_cast<float>(start_pose.position.y()),
+    static_cast<float>(start_pose.heading),
+    static_cast<float>(start_velocity.x()),
+    static_cast<float>(start_velocity.y()),
+    0.0f
+  };
+
+  const auto trajectory_params = ateam_controls_default_traj_params();
 
   for(const auto & segment : segments) {
-    const auto trajectory = ateam_controls_compute_optimal_bangbang_traj_3d(
-      current_state, RigidBodyStateFromPose(segment.target));
-    for(double t = 0.0; t < segment.duration; t += delta_t) {
-      const auto state_at_t = ateam_controls_compute_bangbang_traj_3d_state_at_t(
-        trajectory, current_state, 0.0, t);
-      points.push_back(ateam_geometry::Point(
-        state_at_t.pose.position.x,
-        state_at_t.pose.position.y));
+    BangBangTraj3D_t trajectory;
+    if(const auto err =
+      ateam_controls_traj_from_target_pose(current_state, RigidBodyStateFromPose(segment.target),
+        trajectory_params, &trajectory); err != ATEAM_CONTROLS_OK)
+    {
+      return points;
     }
-    current_state = ateam_controls_compute_bangbang_traj_3d_state_at_t(
-      trajectory, current_state, 0.0, segment.duration);
+    for(double t = 0.0; t < segment.duration; t += delta_t) {
+      Vector6C_t state_at_t;
+      if(const auto err =
+        ateam_controls_traj_state_at(trajectory, current_state, 0.0, t, &state_at_t);
+        err != ATEAM_CONTROLS_OK)
+      {
+        return points;
+      }
+      points.push_back(ateam_geometry::Point(
+        state_at_t.data[0],
+        state_at_t.data[1]));
+    }
+    if(const auto err =
+      ateam_controls_traj_state_at(trajectory, current_state, 0.0, segment.duration,
+        &current_state); err != ATEAM_CONTROLS_OK)
+    {
+      return points;
+    }
   }
 
   return points;
 }
 
-std::vector<std::vector<ateam_geometry::Point>> TrajectorySpline::ToPointsBySegment(double delta_t) const
+std::vector<std::vector<ateam_geometry::Point>> TrajectorySpline::ToPointsBySegment(
+  double delta_t) const
 {
   std::vector<std::vector<ateam_geometry::Point>> points;
   if (segments.empty()) {
     return points;
   }
 
-  RigidBodyState current_state = RigidBodyStateFromPose(start_pose);
-  current_state.twist.linear.x = start_velocity.x();
-  current_state.twist.linear.y = start_velocity.y();
+  Vector6C_t current_state {
+    static_cast<float>(start_pose.position.x()),
+    static_cast<float>(start_pose.position.y()),
+    static_cast<float>(start_pose.heading),
+    static_cast<float>(start_velocity.x()),
+    static_cast<float>(start_velocity.y()),
+    0.0f
+  };
+
+  const auto trajectory_params = ateam_controls_default_traj_params();
 
   for(const auto & segment : segments) {
-    const auto trajectory = ateam_controls_compute_optimal_bangbang_traj_3d(
-      current_state, RigidBodyStateFromPose(segment.target));
+    BangBangTraj3D_t trajectory;
+    if(const auto err =
+      ateam_controls_traj_from_target_pose(current_state, RigidBodyStateFromPose(segment.target),
+        trajectory_params, &trajectory); err != ATEAM_CONTROLS_OK)
+    {
+      return points;
+    }
     auto & segment_points = points.emplace_back();
     for(double t = 0.0; t < segment.duration; t += delta_t) {
-      const auto state_at_t = ateam_controls_compute_bangbang_traj_3d_state_at_t(
-        trajectory, current_state, 0.0, t);
+      Vector6C_t state_at_t;
+      if(const auto err =
+        ateam_controls_traj_state_at(trajectory, current_state, 0.0, t, &state_at_t);
+        err != ATEAM_CONTROLS_OK)
+      {
+        return points;
+      }
       segment_points.push_back(ateam_geometry::Point(
-        state_at_t.pose.position.x,
-        state_at_t.pose.position.y));
+        state_at_t.data[0],
+        state_at_t.data[1]));
     }
-    current_state = ateam_controls_compute_bangbang_traj_3d_state_at_t(
-      trajectory, current_state, 0.0, segment.duration);
+    if(const auto err =
+      ateam_controls_traj_state_at(trajectory, current_state, 0.0, segment.duration,
+        &current_state); err != ATEAM_CONTROLS_OK)
+    {
+      return points;
+    }
   }
 
   return points;

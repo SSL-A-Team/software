@@ -33,6 +33,12 @@
 namespace ateam_path_planning
 {
 
+struct PlannerOptions
+{
+  double collision_check_resolution = 0.05;
+  double footprint_inflation = 0.06;
+};
+
 class Planner {
 public:
   Planner() = default;
@@ -40,12 +46,13 @@ public:
   std::array<std::optional<TrajectorySpline>, 16> PlanPathsForAllBots(
     const std::array<std::optional<Pose>, 16> & targets, const std::array<uint8_t, 16> & priorities,
     const ateam_game_state::World & world, const std::vector<Obstacle> & global_obstacles,
-    const std::array<std::vector<Obstacle>, 16> & per_bot_obstacles);
+    const std::array<std::vector<Obstacle>, 16> & per_bot_obstacles,
+    const std::array<PlannerOptions, 16> & options = {});
 
 private:
   std::optional<TrajectorySpline> PlanPath(
     const ateam_game_state::Robot & robot, const Pose & target,
-    const std::vector<Obstacle> & obstacles);
+    const std::vector<Obstacle> & obstacles, const PlannerOptions & options);
 };
 }  // namespace ateam_path_planning
 

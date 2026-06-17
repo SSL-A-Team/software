@@ -29,16 +29,24 @@ namespace ateam_path_planning::collisions
 
 std::optional<double> TimeToCollision(
   const BangBangTraj3D & trajectory,
-  const std::vector<Obstacle> & obstacles)
+  const std::vector<Obstacle> & obstacles,
+  const double collision_check_resolution,
+  const double footprint_inflation)
 {
-  const auto delta_t = 0.1;
   const auto duration = GetBangBangTrajectoryDuration(trajectory);
-  for (double t = 0.0; t < duration; t += delta_t) {
-    const auto state_at_t = ateam_controls_compute_bangbang_traj_3d_state_at_t(
-      trajectory, RigidBodyState{}, 0.0, t);
-    const ateam_geometry::Point robot_pos(state_at_t.pose.position.x, state_at_t.pose.position.y);
+  for (double t = 0.0; t < duration; t += collision_check_resolution) {
+    Vector6C_t state_at_t;
+    if(const auto err =
+      ateam_controls_traj_state_at(trajectory, Vector6C_t{}, 0.0, t, &state_at_t);
+      err != ATEAM_CONTROLS_OK)
+    {
+      return t;
+    }
+    const ateam_geometry::Point robot_pos(state_at_t.data[0], state_at_t.data[1]);
+    const auto robot_footprint = ateam_geometry::makeDisk(robot_pos,
+        kRobotRadius + footprint_inflation);
     for (const auto & obstacle : obstacles) {
-      if(ateam_geometry::doIntersect(ateam_geometry::makeDisk(robot_pos, kRobotRadius),
+      if(ateam_geometry::doIntersect(robot_footprint,
           obstacle.shape))
       {
         return t;

@@ -78,10 +78,10 @@ TEST(Planner, OneBotOneObstacle) {
   world.our_robots[0].theta = 0.0;
   world.our_robots[0].vel = ateam_geometry::Vector(0.0, 0.0);
 
+  const auto obstacle_shape = ateam_geometry::makeDisk(ateam_geometry::Point(0.5, 0.5), 0.1);
+
   std::vector<ateam_path_planning::Obstacle> global_obstacles = {
-    ateam_path_planning::Obstacle{
-      ateam_geometry::makeDisk(ateam_geometry::Point(0.5, 0.5), 0.1),
-      ateam_geometry::Vector(0.0, 0.0)}
+    ateam_path_planning::Obstacle{obstacle_shape, ateam_geometry::Vector(0.0, 0.0)}
   };
 
   const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, global_obstacles, {});
@@ -95,17 +95,9 @@ TEST(Planner, OneBotOneObstacle) {
     PointIsNear(ateam_geometry::Point(1.0, 1.0)));
   EXPECT_FLOAT_EQ(trajectory.segments.back().target.heading, 0.0);
 
-  const auto seg_points = trajectory.ToPointsBySegment();
-  for(const auto & seg : seg_points) {
-    std::cerr << "[\n";
-    for(const auto & pt : seg) {
-      std::cerr << '(' << pt.x() << ", " << pt.y() << "),\n";
-    }
-    std::cerr << "],\n";
-  }
-  FAIL();
-
-  for (size_t i = 1; i < paths.size(); ++i) {
-    EXPECT_FALSE(paths[i].has_value());
+  const auto points = trajectory.ToPoints(0.01);
+  for (const auto & point : points) {
+    EXPECT_FALSE(ateam_geometry::doIntersect(ateam_geometry::makeDisk(point, kRobotRadius),
+      obstacle_shape));
   }
 }

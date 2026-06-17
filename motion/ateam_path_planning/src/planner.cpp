@@ -33,7 +33,8 @@ namespace ateam_path_planning
 std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
   const std::array<std::optional<Pose>, 16> & targets, const std::array<uint8_t, 16> & priorities,
   const ateam_game_state::World & world, const std::vector<Obstacle> & global_obstacles,
-  const std::array<std::vector<Obstacle>, 16> & per_bot_obstacles)
+  const std::array<std::vector<Obstacle>, 16> & per_bot_obstacles,
+  const std::array<PlannerOptions, 16> & options)
 {
   std::array<int, 16> bot_indices;
   std::iota(bot_indices.begin(), bot_indices.end(), 0);
@@ -56,7 +57,7 @@ std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
     bot_obstacles.insert(
       bot_obstacles.end(), per_bot_obstacles[bot_index].begin(),
         per_bot_obstacles[bot_index].end());
-    auto path = PlanPath(bot, targets[bot_index].value(), bot_obstacles);
+    auto path = PlanPath(bot, targets[bot_index].value(), bot_obstacles, options[bot_index]);
     paths[bot_index] = path;
     obstacles.push_back(Obstacle::FromRobot(bot));
   }
@@ -65,7 +66,7 @@ std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
 
 std::optional<TrajectorySpline> Planner::PlanPath(
   const ateam_game_state::Robot & robot, const Pose & target,
-  const std::vector<Obstacle> & obstacles)
+  const std::vector<Obstacle> & obstacles, const PlannerOptions & options)
 {
   const auto init_state = RigidBodyStateFromRobot(robot);
   const auto target_state = RigidBodyStateFromPose(target);
@@ -73,11 +74,14 @@ std::optional<TrajectorySpline> Planner::PlanPath(
   const auto trajectory_params = ateam_controls_default_traj_params();
 
   BangBangTraj3D_t base_trajectory;
-  if(const auto err = ateam_controls_traj_from_target_pose(init_state, target_state, trajectory_params, &base_trajectory); err != ATEAM_CONTROLS_OK) {
+  if(const auto err = ateam_controls_traj_from_target_pose(init_state, target_state,
+      trajectory_params, &base_trajectory); err != ATEAM_CONTROLS_OK)
+  {
     return std::nullopt;
   }
 
-  const auto collision_time = collisions::TimeToCollision(base_trajectory, obstacles);
+  const auto collision_time = collisions::TimeToCollision(base_trajectory, obstacles,
+      options.collision_check_resolution, options.footprint_inflation);
 
   if (!collision_time.has_value()) {
     TrajectorySpline result;
@@ -104,23 +108,34 @@ std::optional<TrajectorySpline> Planner::PlanPath(
       };
       const auto inter_target_state = RigidBodyStateFromPose(inter_target);
       BangBangTraj3D_t inter_traj;
-      if(const auto err = ateam_controls_traj_from_target_pose(init_state, inter_target_state, trajectory_params, &inter_traj); err != ATEAM_CONTROLS_OK) {
+      if(const auto err =
+        ateam_controls_traj_from_target_pose(init_state, inter_target_state, trajectory_params,
+          &inter_traj); err != ATEAM_CONTROLS_OK)
+      {
         return std::nullopt;
       }
-      const auto inter_collision_time = collisions::TimeToCollision(inter_traj, obstacles);
+      const auto inter_collision_time = collisions::TimeToCollision(inter_traj, obstacles,
+          options.collision_check_resolution, options.footprint_inflation);
       const auto max_time =
         inter_collision_time.value_or(GetBangBangTrajectoryDuration(inter_traj));
 
       for(auto transition_time = 0.1; transition_time < max_time; transition_time += 0.1) {
         Vector6C_t transition_state;
-        if (const auto err = ateam_controls_traj_state_at(inter_traj, init_state, 0.0, transition_time, &transition_state); err != ATEAM_CONTROLS_OK) {
+        if (const auto err =
+          ateam_controls_traj_state_at(inter_traj, init_state, 0.0, transition_time,
+            &transition_state); err != ATEAM_CONTROLS_OK)
+        {
           continue;
         }
         BangBangTraj3D_t second_traj;
-        if(const auto err = ateam_controls_traj_from_target_pose(transition_state, target_state, trajectory_params, &second_traj); err != ATEAM_CONTROLS_OK) {
+        if(const auto err =
+          ateam_controls_traj_from_target_pose(transition_state, target_state, trajectory_params,
+            &second_traj); err != ATEAM_CONTROLS_OK)
+        {
           return std::nullopt;
         }
-        const auto second_collision_time = collisions::TimeToCollision(second_traj, obstacles);
+        const auto second_collision_time = collisions::TimeToCollision(second_traj, obstacles,
+            options.collision_check_resolution, options.footprint_inflation);
         if(second_collision_time.has_value()) {
           std::cerr << "Second collision time candidate: " << *second_collision_time << "\n";
         }
