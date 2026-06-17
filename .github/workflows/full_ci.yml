@@ -19,7 +19,7 @@ jobs:
       - name: Install Dependencies
         shell: bash
         run: |
-          ./src/software/install_dependencies.bash
+          ./src/ateam_software/install_dependencies.bash
       
       - name: Build
         shell: bash

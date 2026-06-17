@@ -18,7 +18,7 @@ jobs:
       - name: Install Dependencies
         shell: bash
         run: |
-          ./src/software/install_dependencies.bash
+          ./src/ateam_software/install_dependencies.bash
       
       - name: Get Changed Packages
         id: get-changed-packages
