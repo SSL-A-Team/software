@@ -21,6 +21,7 @@
 #ifndef ROBOT_MANEUVERS_HPP_
 #define ROBOT_MANEUVERS_HPP_
 
+#include <chrono>
 #include <optional>
 #include <vector>
 
@@ -33,9 +34,17 @@
 
 namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
 {
-    void global_position_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
+    struct ManeuverInfo {
+        BangBangTraj3D_t trajectory;
+        Vector6C_t trajectory_state;
+        ateam_msgs::msg::Twist2D target_pose;
+        int32_t maneuver_type = 0;
+        std::chrono::steady_clock::time_point prev_update_time;
+    };
 
-    void global_velocity_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+    void global_position_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot, ManeuverInfo & maneuver_info);
+
+    void global_velocity_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
     void local_velocity_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg);
 
     void global_acceleration_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);

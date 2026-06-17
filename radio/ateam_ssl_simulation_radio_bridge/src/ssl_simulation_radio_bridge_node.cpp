@@ -42,6 +42,7 @@
 #include <ateam_msgs/srv/send_simulator_control_packet.hpp>
 
 #include "message_conversions.hpp"
+#include "robot_maneuvers.hpp"
 
 namespace ateam_ssl_simulation_radio_bridge
 {
@@ -176,7 +177,8 @@ public:
     }
 
     const auto robot = world_.our_robots[robot_id];
-    RobotControl robots_control = message_conversions::fromMsg(msg, robot, get_logger());
+    auto& maneuver_info = manuever_infos_[robot_id];
+    RobotControl robots_control = message_conversions::fromMsg(msg, robot, maneuver_info, get_logger());
     std::vector<uint8_t> buffer;
     buffer.resize(robots_control.ByteSizeLong());
     if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
@@ -250,6 +252,7 @@ private:
     16> connection_publishers_;
   rclcpp::Subscription<ateam_msgs::msg::GameStateWorld>::SharedPtr world_subscription_;
   ateam_msgs::msg::GameStateWorld world_;
+  std::array<ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverInfo, 16> manuever_infos_;
   rclcpp::Service<ateam_msgs::srv::SendSimulatorControlPacket>::SharedPtr
     send_simulator_control_service_;
   rclcpp::TimerBase::SharedPtr zero_command_timer_;
