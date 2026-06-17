@@ -175,28 +175,18 @@ RobotCommand LineKick::RunMoveBehindBall(
 
   const auto prekick_position = GetPreKickPosition(world);
 
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{target_point_};
-
-  auto vel = 0.1 * ateam_geometry::normalize(target_point_ - world.ball.pos);
-  if (ateam_geometry::norm(world.ball.vel) > 0.05) {
-    vel = world.ball.vel;
-  }
-  command.motion_intent.linear =
-    motion::intents::linear::VelocityAtPositionIntent{prekick_position + (0.1 * world.ball.vel),
-    vel};
-
-  command.motion_intent.motion_options.completion_threshold = 0.0;
-  command.motion_intent.planner_options.draw_obstacles = true;
-  command.motion_intent.planner_options.footprint_inflation = std::min(0.015, pre_kick_offset);
-
-  command.motion_intent.motion_options.max_acceleration = 1.5;
-  command.motion_intent.motion_options.max_deceleration = 1.5;
+  motion::intents::PositionFacing motion_intent;
+  motion_intent.face_target = target_point_;
+  motion_intent.position = prekick_position + (0.1 * world.ball.vel);
+  motion_intent.planner_options.draw_obstacles = true;
+  motion_intent.planner_options.footprint_inflation = std::min(0.015, pre_kick_offset);
+  motion_intent.limits.linear_acceleration = 1.5;
 
   double obstacle_radius_multiplier = 1.8;
   const auto robot_to_prekick = prekick_position - robot.pos;
   const auto ball_to_target = target_point_ - world.ball.pos;
   if (this->cowabunga && ateam_geometry::norm(robot_to_prekick) < 2.5 * kRobotDiameter) {
-    command.motion_intent.planner_options.footprint_inflation = -0.1;
+    motion_intent.planner_options.footprint_inflation = -0.1;
     obstacle_radius_multiplier = 5.0;
     getPlayInfo()["COWABUNGA MODE"] = "COWABUNGA";
   } else {
@@ -205,7 +195,7 @@ RobotCommand LineKick::RunMoveBehindBall(
 
   // Add additional obstacles to better avoid ball
   const auto angle = std::atan2(ball_to_target.y(), ball_to_target.x());
-  command.motion_intent.obstacles = {
+  motion_intent.obstacles = {
     // Front Obstacle
     ateam_geometry::makeDisk(
       world.ball.pos + kBallDiameter * ateam_geometry::Vector(
@@ -226,26 +216,33 @@ RobotCommand LineKick::RunMoveBehindBall(
       kBallRadius * obstacle_radius_multiplier)
   };
 
+  command.motion_intent = motion_intent;
+
   return command;
 }
 
-RobotCommand LineKick::RunFaceBall(const World &, const Robot &)
+RobotCommand LineKick::RunFaceBall(const World &, const Robot & robot)
 {
+  motion::intents::PositionFacing intent;
+  intent.face_target = target_point_;
+  intent.position = robot.pos;
   RobotCommand command;
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{target_point_};
+  command.motion_intent = intent;
   return command;
 }
 
 RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
 {
+  motion::intents::PositionFacing intent;
+  intent.position = world.ball.pos;
+  intent.face_target = world.ball.pos;
+  intent.limits.linear_velocity = kick_drive_velocity;
+  intent.planner_options.avoid_ball = false;
+  intent.planner_options.use_default_obstacles = false;
+
   RobotCommand command;
 
-  command.motion_intent.linear =
-    motion::intents::linear::VelocityIntent{ateam_geometry::Vector{kick_drive_velocity, 0.0},
-    motion::intents::linear::Frame::Local};
-
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-
+  command.motion_intent = intent;
   if(KickOrChip() == KickSkill::KickChip::Kick) {
     command.kick = KickState::KickOnTouch;
   } else {

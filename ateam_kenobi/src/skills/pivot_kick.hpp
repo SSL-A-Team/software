@@ -100,7 +100,7 @@ private:
 
   RobotCommand Pivot(const Robot & robot);
 
-  RobotCommand KickBall();
+  RobotCommand KickBall(const Robot & robot);
 };
 
 }  // namespace ateam_kenobi::skills

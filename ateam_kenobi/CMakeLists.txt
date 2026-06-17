@@ -36,8 +36,8 @@ target_sources(kenobi_node_component PRIVATE
   src/core/path_planning/obstacles.cpp
   src/core/path_planning/path_planner.cpp
   src/core/motion/frame_conversions.cpp
-  src/core/motion/motion_controller.cpp
   src/core/motion/motion_executor.cpp
+  src/core/motion/pivot_control.cpp
   src/core/visualization/overlays.cpp
   src/core/play_helpers/intercept_calculation.cpp
   src/core/play_helpers/lanes.cpp
@@ -64,7 +64,6 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/stop_plays/defensive_stop_play.cpp
   src/plays/stop_plays/offensive_stop_play.cpp
   src/plays/stop_plays/stop_helpers.cpp
-  src/plays/test_plays/controls_test_play.cpp
   src/plays/test_plays/spinning_a_play.cpp
   src/plays/test_plays/test_pass_play.cpp
   src/plays/test_plays/test_play.cpp
@@ -100,15 +99,15 @@ target_sources(kenobi_node_component PRIVATE
 # Skill Sources
 #
 target_sources(kenobi_node_component PRIVATE
+  src/skills/capture.cpp
+  src/skills/dribble.cpp
+  src/skills/extract.cpp
   src/skills/goalie.cpp
   src/skills/kick_skill.cpp
   src/skills/lane_idler.cpp
   src/skills/line_kick.cpp
   src/skills/pass_receiver.cpp
   src/skills/pivot_kick.cpp
-  src/skills/dribble.cpp
-  src/skills/extract.cpp
-  src/skills/capture.cpp
   src/skills/universal_kick.cpp
 )
 

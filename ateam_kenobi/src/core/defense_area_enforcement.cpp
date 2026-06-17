@@ -73,9 +73,7 @@ bool WouldVelocityCauseCollision(
   const double delta_t = 0.01;
 
   if (motion_command.body_control_mode != ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY) {
-    std::cerr <<
-      "WARNING: Non-local velocity motion commands not yet supported by defense area enforcement. "
-      "Skipping check.\n";
+    // TODO(barulicm): Non-local velocity motion commands not yet supported
     return false;
   }
   ateam_geometry::Vector velocity{motion_command.velocity.x, motion_command.velocity.y};

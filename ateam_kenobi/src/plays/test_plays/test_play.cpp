@@ -47,10 +47,10 @@ std::array<std::optional<RobotCommand>, 16> TestPlay::runFrame(
   if (current_available_robots.size() > 0) {
     const auto & robot = current_available_robots[0];
     int robot_id = robot.id;
+    motion::intents::PositionFacing intent;
+    intent.position = world.ball.pos + ateam_geometry::Vector(-.2, 0);
+    intent.face_target = world.ball.pos;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{world.ball.pos +
-      ateam_geometry::Vector(-.2, 0)};
-    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
     maybe_motion_commands.at(robot_id) = command;
   }
 

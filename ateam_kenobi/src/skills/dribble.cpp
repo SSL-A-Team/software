@@ -183,16 +183,16 @@ RobotCommand Dribble::runMoveBehindBall(
   const World & world,
   const Robot & robot)
 {
+  motion::intents::PositionFacing intent;
+  intent.position = robot.pos;
+  intent.face_target = target_;
+  intent.planner_options.footprint_inflation = 0.06;
+  intent.planner_options.draw_obstacles = true;
+  intent.planner_options.ignore_start_obstacle = false;
+  intent.limits.linear_velocity = 1.5;
+
   RobotCommand command;
-
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{target_};
-
-  command.motion_intent.motion_options.completion_threshold = 0.0;
-  command.motion_intent.planner_options.footprint_inflation = 0.06;
-  command.motion_intent.planner_options.draw_obstacles = true;
-  command.motion_intent.planner_options.ignore_start_obstacle = false;
-
-  command.motion_intent.motion_options.max_velocity = 1.5;
+  command.motion_intent = intent;
 
   if (ateam_geometry::norm(robot.pos - world.ball.pos) < 0.5) {
     command.dribbler_speed = 130;
@@ -202,22 +202,21 @@ RobotCommand Dribble::runMoveBehindBall(
 
 RobotCommand Dribble::runDribble(const Robot & robot)
 {
-  RobotCommand command;
-
-  command.motion_intent.planner_options.avoid_ball = false;
-  command.motion_intent.planner_options.footprint_inflation = 0.0;
-  command.motion_intent.planner_options.use_default_obstacles = false;
-  command.motion_intent.planner_options.draw_obstacles = true;
-
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{target_};
-
   const auto robot_to_target = target_ - robot.pos;
   const auto position_target = target_ -
     (kRobotRadius * ateam_geometry::normalize(robot_to_target));
-  command.motion_intent.linear = motion::intents::linear::PositionIntent{position_target};
 
-  command.motion_intent.motion_options.max_velocity = 0.35;
+  motion::intents::PositionFacing intent;
+  intent.position = position_target;
+  intent.face_target = target_;
+  intent.planner_options.avoid_ball = false;
+  intent.planner_options.footprint_inflation = 0.0;
+  intent.planner_options.use_default_obstacles = false;
+  intent.planner_options.draw_obstacles = true;
+  intent.limits.linear_velocity = 0.35;
 
+  RobotCommand command;
+  command.motion_intent = intent;
   command.dribbler_speed = 130;
 
   return command;
@@ -227,26 +226,27 @@ RobotCommand Dribble::runBackAway(const World & world, const Robot & robot)
 {
   RobotCommand command;
 
-  command.motion_intent.planner_options.avoid_ball = false;
-  command.motion_intent.planner_options.footprint_inflation = 0.0;
-  command.motion_intent.planner_options.use_default_obstacles = false;
-  command.motion_intent.planner_options.draw_obstacles = true;
-
-  command.dribbler_speed = 0;
-
-  command.motion_intent.motion_options.max_velocity = 0.35;
-
   // Wait for the dribbler to wind down before moving
   if ((std::chrono::steady_clock::now() - back_away_duration_.value()) > back_away_start_) {
     if (!world.ball.visible) {
-      command.motion_intent.linear = motion::intents::linear::VelocityIntent{
-        ateam_geometry::Vector{-0.35, 0.0},
-        motion::intents::linear::Frame::Local};
+      motion::intents::Velocity intent;
+      intent.linear = ateam_geometry::Vector{-0.35, 0.0};
+      intent.angular = 0.0;
+      intent.frame = motion::Frame::Local;
+      intent.limits.linear_velocity = 0.35;
+      command.motion_intent = intent;
     } else {
       const auto ball_to_robot = robot.pos - world.ball.pos;
-      const auto position_target = robot.pos +
-        (0.2 * ateam_geometry::normalize(ball_to_robot));
-      command.motion_intent.linear = motion::intents::linear::PositionIntent{position_target};
+      const auto position_target = robot.pos + (0.2 * ateam_geometry::normalize(ball_to_robot));
+      motion::intents::Position intent;
+      intent.position = position_target;
+      intent.heading = robot.theta;
+      intent.planner_options.avoid_ball = false;
+      intent.planner_options.footprint_inflation = 0.0;
+      intent.planner_options.use_default_obstacles = false;
+      intent.planner_options.draw_obstacles = true;
+      intent.limits.linear_velocity = 0.35;
+      command.motion_intent = intent;
     }
   }
 

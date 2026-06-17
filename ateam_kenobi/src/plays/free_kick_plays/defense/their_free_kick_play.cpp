@@ -121,10 +121,12 @@ void TheirFreeKickPlay::runBlockers(
   for (auto i = 0ul; i < std::min(robots.size(), points.size()); ++i) {
     const auto & robot = robots[i];
     const auto & point = points[i];
+    motion::intents::PositionFacing intent;
+    intent.position = point;
+    intent.face_target = world.ball.pos;
+    intent.obstacles = obstacles;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{point};
-    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-    command.motion_intent.obstacles = obstacles;
+    command.motion_intent = intent;
     motion_commands[robot.id] = command;
   }
 }

@@ -49,30 +49,29 @@ RobotCommand Extract::RunFrame(const World & world, const Robot & robot)
 
   const auto ball_far = ateam_geometry::norm(robot.pos - world.ball.pos) > 0.4;
 
-  RobotCommand command;
+  motion::intents::PositionFacing intent;
 
   if (should_rip) {
     if (!rip_start_time_) {
       rip_start_time_ = std::chrono::steady_clock::now();
     }
-    command.motion_intent.planner_options.avoid_ball = false;
-    command.motion_intent.planner_options.footprint_inflation = -0.1;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{
-      robot.pos + ateam_geometry::normalize(world.ball.pos - robot.pos) * 0.25
-    };
-    command.motion_intent.motion_options.max_angular_velocity = 2.0;
+    intent.position = robot.pos + ateam_geometry::normalize(world.ball.pos - robot.pos) * 0.25;
+    intent.planner_options.footprint_inflation = -0.1;
+    intent.limits.angular_velocity = 2.0;
   } else if (ball_far) {
-    command.motion_intent.planner_options.avoid_ball = false;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{world.ball.pos};
-    command.motion_intent.motion_options.max_angular_velocity = 2.0;
+    intent.position = world.ball.pos;
+    intent.limits.angular_velocity = 2.0;
   } else {
-    command.motion_intent.planner_options.avoid_ball = false;
-    command.motion_intent.planner_options.footprint_inflation = -0.1;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{world.ball.pos};
-    command.motion_intent.motion_options.max_velocity = 0.35;
+    intent.position = world.ball.pos;
+    intent.planner_options.footprint_inflation = -0.1;
+    intent.limits.angular_velocity = 0.35;
   }
 
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+  intent.planner_options.avoid_ball = false;
+  intent.face_target = world.ball.pos;
+
+  RobotCommand command;
+  command.motion_intent = intent;
 
   if (robot.breakbeam_ball_detected) {
     command.dribbler_speed = kDefaultDribblerSpeed;

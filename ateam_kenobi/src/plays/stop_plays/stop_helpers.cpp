@@ -257,12 +257,13 @@ void moveBotsTooCloseToBall(
     if(motion_commands[bot.id]) {
       continue;
     }
+    motion::intents::PositionFacing intent;
+    intent.position = spot;
+    intent.face_target = world.ball.pos;
+    intent.planner_options.use_default_obstacles = bot.id != world.referee_info.our_goalie_id;
+    intent.obstacles = added_obstacles;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{spot};
-    command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
-    command.motion_intent.planner_options.use_default_obstacles = bot.id !=
-      world.referee_info.our_goalie_id;
-    command.motion_intent.obstacles = added_obstacles;
+    command.motion_intent = intent;
     motion_commands[bot.id] = command;
     overlays.drawCircle(
       "spot" + std::to_string(spot_ind),
@@ -290,11 +291,12 @@ void moveBotsInObstacles(
     if(!opt_escape_vel) {
       continue;
     }
+    motion::intents::Velocity intent;
+    intent.frame = motion::Frame::World;
+    intent.linear = *opt_escape_vel;
+    intent.angular = 0.0;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::VelocityIntent{
-      *opt_escape_vel,
-      motion::intents::linear::Frame::World
-    };
+    command.motion_intent = intent;
     motion_commands[i] = command;
     play_info_bots.push_back(robot.id);
   }
