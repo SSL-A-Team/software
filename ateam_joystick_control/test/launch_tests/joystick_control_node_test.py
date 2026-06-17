@@ -126,43 +126,15 @@ class TestJoystickControlNode(unittest.TestCase):
         return TestJoystickControlNode.set_parameter_client \
             .call(set_param_request)
 
-    def test_0_defaultRobotIdIsZero(self):
-        joy_msg = sensor_msgs.msg.Joy()
-        joy_msg.axes = [
-            1.0,
-            1.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0
-        ]
-        joy_msg.buttons = [0] * 11
-
-        timeout = time.time() + 1
-        while TestJoystickControlNode.received_msg_0 is None and \
-                TestJoystickControlNode.received_msg_1 is None:
-            TestJoystickControlNode.pub.publish(joy_msg)
-            time.sleep(0.1)
-            if time.time() >= timeout:
-                break
-
-        self.assertIsNotNone(TestJoystickControlNode.received_msg_0)
-        self.assertIsNone(TestJoystickControlNode.received_msg_1)
-
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.linear.x, 1.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.linear.y, 1.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.linear.z, 0.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.angular.x, 0.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.angular.y, 0.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.angular.z, 1.0)
+    def test_0_prepScenario(self):
+        # The control node defaults to ID -1, so we need to switch it to 0 first to make the rest
+        # of the test sequence work
+        set_param_response = self.setRobotId(0)
+        if not set_param_response.results[0].successful:
+            TestJoystickControlNode.node.get_logger() \
+                .error(f'Setting parameter failed with reason: \
+                   {set_param_response.results[0].reason}')
+        self.assertTrue(set_param_response.results[0].successful)
 
     def test_1_shouldSendStopWhenJoystickSwitchesId(self):
         set_param_response = self.setRobotId(1)
@@ -180,17 +152,11 @@ class TestJoystickControlNode(unittest.TestCase):
 
         self.assertIsNotNone(TestJoystickControlNode.received_msg_0)
         self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.linear.x, 0.0)
+            TestJoystickControlNode.received_msg_0.velocity.x, 0.0)
         self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.linear.y, 0.0)
+            TestJoystickControlNode.received_msg_0.velocity.y, 0.0)
         self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.linear.z, 0.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.angular.x, 0.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.angular.y, 0.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_0.twist.angular.z, 0.0)
+            TestJoystickControlNode.received_msg_0.velocity.theta, 0.0)
 
     def test_2_afterIdChangeCommandsShouldGoToNewRobot(self):
         joy_msg = sensor_msgs.msg.Joy()
@@ -215,17 +181,11 @@ class TestJoystickControlNode(unittest.TestCase):
 
         self.assertIsNotNone(TestJoystickControlNode.received_msg_1)
         self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_1.twist.linear.x, -1.0)
+            TestJoystickControlNode.received_msg_1.velocity.x, -1.0)
         self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_1.twist.linear.y, -1.0)
+            TestJoystickControlNode.received_msg_1.velocity.y, -1.0)
         self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_1.twist.linear.z, 0.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_1.twist.angular.x, 0.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_1.twist.angular.y, 0.0)
-        self.assertAlmostEqual(
-            TestJoystickControlNode.received_msg_1.twist.angular.z, -1.0)
+            TestJoystickControlNode.received_msg_1.velocity.theta, -1.0)
 
     def test_3_invalidRobotIdsShouldBeRejected(self):
         self.assertFalse(self.setRobotId(-2).results[0].successful)

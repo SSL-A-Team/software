@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <ateam_msgs/msg/vision_state_mht.hpp>
+#include <ateam_msgs/msg/field_info.hpp>
 
 #include "filters/kalman_filter.hpp"
 #include "filters/interacting_multiple_model_filter.hpp"
@@ -140,10 +141,10 @@ void Camera::removeMeasurementsOnIngoredHalf(std::vector<Eigen::VectorXd> & meas
   measurements.erase(
     std::remove_if(
       measurements.begin(), measurements.end(), [this](const auto & m) {
-        if (ignore_half_ < 0 && m[0] < 0.0) {
+        if (ignore_half_ == ateam_msgs::msg::FieldInfo::IGNORE_SIDE_OURS && m[0] < 0.0) {
           return true;
         }
-        if (ignore_half_ > 0 && m[0] > 0.0) {
+        if (ignore_half_ == ateam_msgs::msg::FieldInfo::IGNORE_SIDE_THEIRS && m[0] > 0.0) {
           return true;
         }
         return false;

@@ -107,12 +107,7 @@ public:
   void field_callback(
     const ateam_msgs::msg::FieldInfo::SharedPtr field_info_msg)
   {
-    const auto team_side = game_controller_listener_.GetTeamSide();
-    if (team_side == ateam_common::TeamSide::PositiveHalf) {
-      ignore_side_ = -field_info_msg->ignore_side;
-    } else {
-      ignore_side_ = field_info_msg->ignore_side;
-    }
+    ignore_side_ = field_info_msg->ignore_side;
   }
 
   void timer_callback()

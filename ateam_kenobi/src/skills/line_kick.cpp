@@ -177,8 +177,8 @@ RobotCommand LineKick::RunMoveBehindBall(
 
   command.motion_intent.angular = motion::intents::angular::FacingIntent{target_point_};
 
-  auto vel = ateam_geometry::Vector(0.002, 0);
-  if (ateam_geometry::norm(world.ball.vel) > 0) {
+  auto vel = 0.1 * ateam_geometry::normalize(target_point_ - world.ball.pos);
+  if (ateam_geometry::norm(world.ball.vel) > 0.05) {
     vel = world.ball.vel;
   }
   command.motion_intent.linear =

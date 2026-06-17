@@ -23,50 +23,31 @@
 namespace ateam_path_planning
 {
 
-RigidBodyState RigidBodyStateFromRobot(const ateam_game_state::Robot & robot)
+Vector6C_t RigidBodyStateFromRobot(const ateam_game_state::Robot & robot)
 {
-  RigidBodyState state;
-  state.pose.position.x = robot.pos.x();
-  state.pose.position.y = robot.pos.y();
-  state.pose.position.z = 0.0;
-  double half_theta = robot.theta / 2.0;
-  state.pose.orientation.x = 0.0;
-  state.pose.orientation.y = 0.0;
-  state.pose.orientation.z = sin(half_theta);
-  state.pose.orientation.w = cos(half_theta);
-  state.twist.linear.x = robot.vel.x();
-  state.twist.linear.y = robot.vel.y();
-  state.twist.linear.z = 0.0;
-  state.twist.angular.x = 0.0;
-  state.twist.angular.y = 0.0;
-  state.twist.angular.z = robot.omega;
-  return state;
+  return Vector6C_t{
+    static_cast<float>(robot.pos.x()),
+    static_cast<float>(robot.pos.y()),
+    static_cast<float>(robot.theta),
+    static_cast<float>(robot.vel.x()),
+    static_cast<float>(robot.vel.y()),
+    static_cast<float>(robot.omega)
+  };
 }
 
 
-RigidBodyState RigidBodyStateFromPose(const Pose & pose)
+Vector3C_t RigidBodyStateFromPose(const Pose & pose)
 {
-  RigidBodyState state;
-  state.pose.position.x = pose.position.x();
-  state.pose.position.y = pose.position.y();
-  state.pose.position.z = 0.0;
-  double half_theta = pose.heading / 2.0;
-  state.pose.orientation.x = 0.0;
-  state.pose.orientation.y = 0.0;
-  state.pose.orientation.z = sin(half_theta);
-  state.pose.orientation.w = cos(half_theta);
-  state.twist.linear.x = 0.0;
-  state.twist.linear.y = 0.0;
-  state.twist.linear.z = 0.0;
-  state.twist.angular.x = 0.0;
-  state.twist.angular.y = 0.0;
-  state.twist.angular.z = 0.0;
-  return state;
+  return Vector3C_t{
+    static_cast<float>(pose.position.x()),
+    static_cast<float>(pose.position.y()),
+    static_cast<float>(pose.heading)
+  };
 }
 
 double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory)
 {
-  return std::max(std::max(trajectory.x_traj.t4, trajectory.y_traj.t4), trajectory.z_traj.t4);
+  return std::max(std::max(trajectory.x.t4, trajectory.y.t4), trajectory.z.t4);
 }
 
 }  // namespace ateam_path_planning

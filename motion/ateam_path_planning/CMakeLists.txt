@@ -5,12 +5,8 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 find_package(ateam_geometry REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(ateam_controls REQUIRED)
 find_package(ateam_game_state REQUIRED)
-
-add_subdirectory(ateam_controls)
-if(NOT TARGET ateam_controls)
-  message(FATAL_ERROR "Failed to build or find ateam_controls library")
-endif()
 
 add_library(${PROJECT_NAME} SHARED
   src/collisions.cpp
@@ -23,14 +19,12 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra -Wpedantic)
 ament_target_dependencies(${PROJECT_NAME}
   ateam_geometry
   ateam_common
+  ateam_controls
   ateam_game_state
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(${PROJECT_NAME}
-  ateam_controls
 )
 
 install(
@@ -48,10 +42,6 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  file(GLOB_RECURSE AMENT_LINT_AUTO_FILE_EXCLUDE
-    # Exclude all files in controls submodule
-    ateam_controls/*
-  )
   ament_lint_auto_find_test_dependencies()
   add_subdirectory(test)
 endif()

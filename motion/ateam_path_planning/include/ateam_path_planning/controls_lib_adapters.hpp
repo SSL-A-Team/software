@@ -28,9 +28,9 @@
 namespace ateam_path_planning
 {
 
-RigidBodyState RigidBodyStateFromRobot(const ateam_game_state::Robot & robot);
+Vector6C_t RigidBodyStateFromRobot(const ateam_game_state::Robot & robot);
 
-RigidBodyState RigidBodyStateFromPose(const Pose & pose);
+Vector3C_t RigidBodyStateFromPose(const Pose & pose);
 
 double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory);
 
