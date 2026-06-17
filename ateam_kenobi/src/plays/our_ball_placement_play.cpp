@@ -309,23 +309,23 @@ void OurBallPlacementPlay::runExtracting(
     }
   } else if (robot_already_in_position || robot_near_approach_point) {
     getPlayInfo()["ExtractState"] = "capturing ball";
-    motion::intents::Velocity intent;
-    intent.frame = motion::Frame::Local;
-    intent.linear = ateam_geometry::Vector(0.35, 0);
-    intent.limits.linear_velocity = 0.35;
-    intent.limits.linear_acceleration = 2.0;
-
-    // TODO(barulicm): Handle heading
-
     if (world.ball.visible) {
-      // motion_command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+      motion::intents::LinearVelocityAngularFacing intent;
+      intent.linear = ateam_geometry::Vector(0.35, 0);
+      intent.limits.linear_velocity = 0.35;
+      intent.limits.linear_acceleration = 2.0;
+      intent.face_target = world.ball.pos;
+      motion_command.motion_intent = intent;
     } else {
       // If the ball is occluded we sometimes drive past its previous position and try to turn
       // around so its better to just keep facing the same direction if we lose track of it
-      // motion_command.motion_intent.angular =
-      //   motion::intents::angular::HeadingIntent{extract_robot.theta};
+      motion::intents::LinearVelocityAngularHeading intent;
+      intent.linear = ateam_geometry::Vector(0.35, 0);
+      intent.limits.linear_velocity = 0.35;
+      intent.limits.linear_acceleration = 2.0;
+      intent.heading = extract_robot.theta;
+      motion_command.motion_intent = intent;
     }
-    motion_command.motion_intent = intent;
   } else {
     getPlayInfo()["ExtractState"] = "moving to approach point";
     motion::intents::Position intent;

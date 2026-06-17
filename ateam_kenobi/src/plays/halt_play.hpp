@@ -34,12 +34,14 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
-  void reset() override;
+  void enter() override;
 
   std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
 
 private:
+  static constexpr double kHaltThreshold = 0.1;  // m/s
+  std::array<bool, 16> robot_halted_{};
 };
 }  // namespace ateam_kenobi::plays
 

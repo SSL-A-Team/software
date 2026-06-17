@@ -233,19 +233,12 @@ RobotCommand LineKick::RunFaceBall(const World &, const Robot & robot)
 
 RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
 {
-  (void)world;
-  // motion::intents::Velocity intent{};
-  // intent.linear = ateam_geometry::Vector{kick_drive_velocity, 0.0};
-  // intent.frame = motion::Frame::Local;
-
   motion::intents::PositionFacing intent;
   intent.position = world.ball.pos;
   intent.face_target = world.ball.pos;
   intent.limits.linear_velocity = kick_drive_velocity;
   intent.planner_options.avoid_ball = false;
   intent.planner_options.use_default_obstacles = false;
-
-  // TODO(barulicm) angular velocity to heading
 
   RobotCommand command;
 

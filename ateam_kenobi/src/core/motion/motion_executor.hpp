@@ -29,6 +29,7 @@
 #include "core/visualization/overlays.hpp"
 #include "motion_intent.hpp"
 #include "motion_command.hpp"
+#include "pid.hpp"
 
 namespace ateam_kenobi::motion
 {
@@ -57,6 +58,7 @@ private:
 
   rclcpp::Logger logger_;
   std::array<path_planning::PathPlanner, 16> planners_;
+  std::array<PID, 16> heading_controllers_;
   std::vector<PathPlanningTarget> path_planning_targets_;
 
   void ExecutePathPlanningTargets(

@@ -105,18 +105,20 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
     }
   }
 
-  motion::intents::Velocity intent;
-  intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
+  RobotCommand command;
 
   if(world.ball.visible) {
-    // TODO(barulicm): face ball
-    // command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+    motion::intents::LinearVelocityAngularFacing intent;
+    intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
+    intent.face_target = world.ball.pos;
+    command.motion_intent = intent;
   } else {
+    motion::intents::Velocity intent;
+    intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
     intent.angular = 0.0;
+    command.motion_intent = intent;
   }
 
-  RobotCommand command;
-  command.motion_intent = intent;
   command.dribbler_speed = kDefaultDribblerSpeed;
 
   return command;
