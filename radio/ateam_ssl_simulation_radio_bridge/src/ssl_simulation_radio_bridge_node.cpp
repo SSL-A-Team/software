@@ -38,6 +38,7 @@
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/msg/game_state_world.hpp>
 #include <ateam_msgs/srv/send_simulator_control_packet.hpp>
 
 #include "message_conversions.hpp"
@@ -84,6 +85,10 @@ public:
       Topics::kRobotConnectionStatusPrefix,
       rclcpp::SystemDefaultsQoS(),
       this);
+
+    world_subscription_ = create_subscription<ateam_msgs::msg::GameStateWorld>(
+      std::string(Topics::kWorld), rclcpp::SystemDefaultsQoS(),
+      std::bind(&SSLSimulationRadioBridgeNode::world_callback, this, std::placeholders::_1));
 
     send_simulator_control_service_ =
       create_service<ateam_msgs::srv::SendSimulatorControlPacket>("~/send_simulator_control_packet",
@@ -160,12 +165,18 @@ public:
       std::bind_front(&SSLSimulationRadioBridgeNode::feedback_callback, this));
   }
 
+  void world_callback(const ateam_msgs::msg::GameStateWorld & msg) {
+    world_ = msg;
+  }
+
   void send_command(const ateam_msgs::msg::RobotMotionCommand & msg, const int robot_id)
   {
     if (!udp_robot_control_) {
       return;
     }
-    RobotControl robots_control = message_conversions::fromMsg(msg, robot_id, get_logger());
+
+    const auto robot = world_.our_robots[robot_id];
+    RobotControl robots_control = message_conversions::fromMsg(msg, robot, get_logger());
     std::vector<uint8_t> buffer;
     buffer.resize(robots_control.ByteSizeLong());
     if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
@@ -237,6 +248,8 @@ private:
     16> feedback_publishers_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
     16> connection_publishers_;
+  rclcpp::Subscription<ateam_msgs::msg::GameStateWorld>::SharedPtr world_subscription_;
+  ateam_msgs::msg::GameStateWorld world_;
   rclcpp::Service<ateam_msgs::srv::SendSimulatorControlPacket>::SharedPtr
     send_simulator_control_service_;
   rclcpp::TimerBase::SharedPtr zero_command_timer_;

@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "message_conversions.hpp"
+#include "robot_maneuvers.hpp"
 #include <tf2/convert.h>
 #include <tf2/utils.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -52,13 +53,13 @@ double ReplaceNanWithZero(const double val, rclcpp::Logger logger)
 }
 
 RobotControl fromMsg(
-  const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id,
+  const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot,
   rclcpp::Logger logger)
 {
   RobotControl robots_control;
   RobotCommand * proto_robot_command = robots_control.add_robot_commands();
 
-  proto_robot_command->set_id(robot_id);
+  proto_robot_command->set_id(robot.id);
   proto_robot_command->set_dribbler_speed(ReplaceNanWithZero(9.5492968 * ros_msg.dribbler_speed,
       logger));
 
@@ -78,11 +79,27 @@ RobotControl fromMsg(
   }
 
   RobotMoveCommand * robot_move_command = proto_robot_command->mutable_move_command();
-  MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
 
-  local_velocity_command->set_forward(ReplaceNanWithZero(ros_msg.velocity.x, logger));
-  local_velocity_command->set_left(ReplaceNanWithZero(ros_msg.velocity.y, logger));
-  local_velocity_command->set_angular(ReplaceNanWithZero(ros_msg.velocity.theta, logger));
+  switch(ros_msg.body_control_mode) {
+    case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
+      ateam_ssl_simulation_radio_bridge::robot_maneuvers::local_velocity_maneuver(robot_move_command, ros_msg);
+      break;
+    case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
+      ateam_ssl_simulation_radio_bridge::robot_maneuvers::global_position_maneuver(robot_move_command, ros_msg, robot);
+      break;
+    case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_VELOCITY:
+      ateam_ssl_simulation_radio_bridge::robot_maneuvers::global_velocity_maneuver(robot_move_command, ros_msg);
+      break;
+    case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY:
+      ateam_ssl_simulation_radio_bridge::robot_maneuvers::local_velocity_maneuver(robot_move_command, ros_msg);
+      break;
+    case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_ACCEL:
+      ateam_ssl_simulation_radio_bridge::robot_maneuvers::global_acceleration_maneuver(robot_move_command, ros_msg, robot);
+      break;
+    case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_ACCEL:
+      ateam_ssl_simulation_radio_bridge::robot_maneuvers::local_acceleration_maneuver(robot_move_command, ros_msg, robot);
+      break;
+  }
 
   return robots_control;
 }

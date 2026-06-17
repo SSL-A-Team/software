@@ -18,6 +18,7 @@ find_package(ssl_league_protobufs REQUIRED)
 add_library(${PROJECT_NAME} SHARED
   src/ssl_simulation_radio_bridge_node.cpp
   src/message_conversions.cpp
+  src/robot_maneuvers.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME}
