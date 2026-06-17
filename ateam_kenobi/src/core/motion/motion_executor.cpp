@@ -34,7 +34,8 @@ namespace ateam_kenobi::motion
 MotionExecutor::MotionExecutor(rclcpp::Logger logger)
 : logger_(std::move(logger))
 {
-  std::fill(heading_controllers_.begin(), heading_controllers_.end(), PID{1.0, 0.0, 0.0}); // TODO(barulim): Tune heading PID
+  // TODO(barulim): Tune heading PID
+  std::fill(heading_controllers_.begin(), heading_controllers_.end(), PID{1.0, 0.0, 0.0});
 }
 
 std::array<std::optional<MotionCommand>,
@@ -217,7 +218,9 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   command.velocity.x = intent.linear.x();
   command.velocity.y = intent.linear.y();
   auto angular_controller = heading_controllers_[robot.id];
-  command.velocity.theta = angular_controller.compute_command(angles::shortest_angular_distance(intent.heading, robot.theta), 0.01);
+  command.velocity.theta =
+    angular_controller.compute_command(angles::shortest_angular_distance(intent.heading,
+      robot.theta), 0.01);
   command.limit_vel_linear = intent.limits.linear_velocity;
   command.limit_vel_angular = intent.limits.angular_velocity;
   command.limit_acc_linear = intent.limits.linear_acceleration;
@@ -244,7 +247,9 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   command.velocity.y = intent.linear.y();
   auto angular_controller = heading_controllers_[robot.id];
   const auto target_heading = ateam_geometry::ToHeading(intent.face_target - robot.pos);
-  command.velocity.theta = angular_controller.compute_command(angles::shortest_angular_distance(target_heading, robot.theta), 0.01);
+  command.velocity.theta =
+    angular_controller.compute_command(angles::shortest_angular_distance(target_heading,
+      robot.theta), 0.01);
   command.limit_vel_linear = intent.limits.linear_velocity;
   command.limit_vel_angular = intent.limits.angular_velocity;
   command.limit_acc_linear = intent.limits.linear_acceleration;

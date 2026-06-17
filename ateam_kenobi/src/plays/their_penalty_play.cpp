@@ -83,10 +83,10 @@ std::array<std::optional<RobotCommand>, 16> TheirPenaltyPlay::runFrame(
   for(auto & maybe_cmd : motion_commands) {
     if(!maybe_cmd) {continue;}
     std::visit([](auto & intent){
-      using IntentType = std::decay_t<decltype(intent)>;
-      if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
-        intent.limits.linear_velocity = 1.5;
-      }
+        using IntentType = std::decay_t<decltype(intent)>;
+        if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+          intent.limits.linear_velocity = 1.5;
+        }
     }, maybe_cmd->motion_intent);
   }
 

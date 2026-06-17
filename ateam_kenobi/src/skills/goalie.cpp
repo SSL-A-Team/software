@@ -236,7 +236,8 @@ RobotCommand Goalie::runBlockShot(
   }
 
   motion::intents::Position intent;
-  intent.position = ateam_geometry::nearestPointOnSegment(goalie_line, shot_point_on_extended_goalie_line);
+  intent.position = ateam_geometry::nearestPointOnSegment(goalie_line,
+      shot_point_on_extended_goalie_line);
   intent.heading = M_PI_2;
   intent.planner_options = default_planner_options_;
   intent.obstacles = getCustomObstacles(world);
@@ -322,10 +323,14 @@ RobotCommand Goalie::runClearBall(
   kick_.SetTargetPoint(target_point);
 
   auto command = kick_.RunFrame(world, goalie);
-  if(auto intent = std::get_if<motion::intents::Position>(&command.motion_intent); intent != nullptr) {
+  if(auto intent = std::get_if<motion::intents::Position>(&command.motion_intent);
+    intent != nullptr)
+  {
     intent->planner_options.use_default_obstacles = false;
   }
-  if(auto intent = std::get_if<motion::intents::PositionFacing>(&command.motion_intent); intent != nullptr) {
+  if(auto intent = std::get_if<motion::intents::PositionFacing>(&command.motion_intent);
+    intent != nullptr)
+  {
     intent->planner_options.use_default_obstacles = false;
   }
   ForwardPlayInfo(kick_);
@@ -354,10 +359,14 @@ RobotCommand Goalie::runSideEjectBall(
   kick_.SetTargetPoint(world.ball.pos + shoot_vec);
 
   auto command = kick_.RunFrame(world, goalie);
-  if(auto intent = std::get_if<motion::intents::Position>(&command.motion_intent); intent != nullptr) {
+  if(auto intent = std::get_if<motion::intents::Position>(&command.motion_intent);
+    intent != nullptr)
+  {
     intent->planner_options.use_default_obstacles = false;
   }
-  if(auto intent = std::get_if<motion::intents::PositionFacing>(&command.motion_intent); intent != nullptr) {
+  if(auto intent = std::get_if<motion::intents::PositionFacing>(&command.motion_intent);
+    intent != nullptr)
+  {
     intent->planner_options.use_default_obstacles = false;
   }
   ForwardPlayInfo(kick_);

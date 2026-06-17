@@ -69,7 +69,10 @@ std::array<std::optional<RobotCommand>,
   multi_move_to_.RunFrame(available_robots, motion_commands);
   for(auto & maybe_motion_command : motion_commands) {
     if(!maybe_motion_command) {continue;}
-    if(auto intent = std::get_if<motion::intents::Position>(&maybe_motion_command->motion_intent); intent != nullptr) {
+    if(auto intent =
+      std::get_if<motion::intents::Position>(&maybe_motion_command->motion_intent);
+      intent != nullptr)
+    {
       intent->planner_options.footprint_inflation = 0.1;
     }
   }

@@ -71,21 +71,21 @@ WaypointsPlay::WaypointsPlay(stp::Options stp_options)
     //     {-1.5,  1.0, 0.0}
     //   });
 
-    addWaypoint(
+  addWaypoint(
       5000, {
-        {0.2, -0.5, 0.0}
+      {0.2, -0.5, 0.0}
       });
-    addWaypoint(
+  addWaypoint(
       5000, {
-        {1.2, -0.5, 0.0}
+      {1.2, -0.5, 0.0}
       });
-    addWaypoint(
+  addWaypoint(
       5000, {
-        {1.2,  0.5, 0.0}
+      {1.2, 0.5, 0.0}
       });
-    addWaypoint(
+  addWaypoint(
       5000, {
-        {0.2,  0.5, 0.0}
+      {0.2, 0.5, 0.0}
       });
 
     // addWaypoint(

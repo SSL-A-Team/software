@@ -46,7 +46,7 @@ void MultiMoveTo::RunFrame(
     }
     const auto & robot = *maybe_robot;
     const auto & target_position = target_points_[ind];
-    
+
     motion_commands.at(robot.id) = BuildCommand(robot, target_position);
 
     auto viz_circle = ateam_geometry::makeCircle(target_position, kRobotRadius);
@@ -74,7 +74,9 @@ void MultiMoveTo::RunFrame(
   }
 }
 
-RobotCommand MultiMoveTo::BuildCommand(const Robot & robot, const ateam_geometry::Point & destination)
+RobotCommand MultiMoveTo::BuildCommand(
+  const Robot & robot,
+  const ateam_geometry::Point & destination)
 {
   RobotCommand command;
   if(std::holds_alternative<std::monostate>(angular_target_)) {
@@ -89,7 +91,9 @@ RobotCommand MultiMoveTo::BuildCommand(const Robot & robot, const ateam_geometry
     intent.heading = *heading_target;
     command.motion_intent = intent;
   }
-  if(const auto face_target = std::get_if<ateam_geometry::Point>(&angular_target_); face_target != nullptr) {
+  if(const auto face_target = std::get_if<ateam_geometry::Point>(&angular_target_);
+    face_target != nullptr)
+  {
     motion::intents::PositionFacing intent;
     intent.position = destination;
     intent.face_target = *face_target;

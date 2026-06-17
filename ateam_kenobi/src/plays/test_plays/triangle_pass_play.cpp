@@ -21,10 +21,10 @@
 
 #include "triangle_pass_play.hpp"
 #include <angles/angles.h>
+#include <CGAL/centroid.h>
 #include <algorithm>
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
-#include <CGAL/centroid.h>
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 

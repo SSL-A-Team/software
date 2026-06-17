@@ -78,10 +78,10 @@ RobotCommand PassReceiver::runFrame(const World & world, const Robot & robot)
   }
 
   std::visit([](auto && intent){
-    using IntentType = std::decay_t<decltype(intent)>;
-    if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
-      intent.limits.linear_velocity = 2.0;
-    }
+      using IntentType = std::decay_t<decltype(intent)>;
+      if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+        intent.limits.linear_velocity = 2.0;
+      }
   }, command.motion_intent);
 
   return command;

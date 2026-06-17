@@ -24,6 +24,7 @@
 #include <array>
 #include <optional>
 #include <utility>
+#include <vector>
 #include <rclcpp/logger.hpp>
 #include "core/path_planning/path_planner.hpp"
 #include "core/visualization/overlays.hpp"
@@ -96,7 +97,6 @@ private:
   std::optional<MotionCommand> ExecuteIntent(
     const intents::PivotHeading & intent, const Robot & robot,
     visualization::Overlays & overlays, const World & world);
-
 };
 
 }  // namespace ateam_kenobi::motion

@@ -40,8 +40,6 @@ MotionCommand PivotAtVelocity(const intents::PivotVelocity & intent)
 
 MotionCommand PivotToHeading(const intents::PivotHeading & intent, const Robot & robot)
 {
-  (void)intent;
-  (void)robot;  
   const auto angle_error = angles::shortest_angular_distance(robot.theta, intent.target_heading);
   const auto dt = 0.01;
   const auto prev_vel = robot.omega;

@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef CORE__MOTION__PIVOT_CONTROL_HPP
-#define CORE__MOTION__PIVOT_CONTROL_HPP
+#ifndef CORE__MOTION__PIVOT_CONTROL_HPP_
+#define CORE__MOTION__PIVOT_CONTROL_HPP_
 
 #include "motion_intent.hpp"
 #include "motion_command.hpp"
@@ -33,4 +33,4 @@ MotionCommand PivotToHeading(const intents::PivotHeading & intent, const Robot &
 
 }  // namespace ateam_kenobi::motion
 
-#endif  // CORE__MOTION__PIVOT_CONTROL_HPP
+#endif  // CORE__MOTION__PIVOT_CONTROL_HPP_
