@@ -216,6 +216,5 @@ TEST(Planner, TwoBotOneObstacle) {
     EXPECT_THAT(paths[i], Eq(std::nullopt));
   }
 
-  EXPECT_TRUE(false);
   PrintPathsOnFailure(paths);
 }
