@@ -46,7 +46,7 @@ std::vector<ateam_geometry::Point> TrajectorySpline::ToPoints(double delta_t) co
   for(const auto & segment : segments) {
     BangBangTraj3D_t trajectory;
     if(const auto err =
-      ateam_controls_traj_from_target_pose(current_state, RigidBodyStateFromPose(segment.target),
+      ateam_controls_traj_from_target_pose(current_state, Vector3FromPose(segment.target),
         trajectory_params, &trajectory); err != ATEAM_CONTROLS_OK)
     {
       return points;
@@ -96,7 +96,7 @@ std::vector<std::vector<ateam_geometry::Point>> TrajectorySpline::ToPointsBySegm
   for(const auto & segment : segments) {
     BangBangTraj3D_t trajectory;
     if(const auto err =
-      ateam_controls_traj_from_target_pose(current_state, RigidBodyStateFromPose(segment.target),
+      ateam_controls_traj_from_target_pose(current_state, Vector3FromPose(segment.target),
         trajectory_params, &trajectory); err != ATEAM_CONTROLS_OK)
     {
       return points;

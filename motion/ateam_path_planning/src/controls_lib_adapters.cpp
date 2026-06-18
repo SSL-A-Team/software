@@ -23,7 +23,7 @@
 namespace ateam_path_planning
 {
 
-Vector6C_t RigidBodyStateFromRobot(const ateam_game_state::Robot & robot)
+Vector6C_t Vector6FromRobot(const ateam_game_state::Robot & robot)
 {
   return Vector6C_t{
     static_cast<float>(robot.pos.x()),
@@ -36,7 +36,7 @@ Vector6C_t RigidBodyStateFromRobot(const ateam_game_state::Robot & robot)
 }
 
 
-Vector3C_t RigidBodyStateFromPose(const Pose & pose)
+Vector3C_t Vector3FromPose(const Pose & pose)
 {
   return Vector3C_t{
     static_cast<float>(pose.position.x()),

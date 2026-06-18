@@ -22,6 +22,7 @@
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/do_intersect.hpp>
 #include <ateam_geometry/creation_helpers.hpp>
+#include <ateam_geometry/printing.hpp>
 #include "ateam_path_planning/controls_lib_adapters.hpp"
 
 namespace ateam_path_planning::collisions
@@ -29,6 +30,7 @@ namespace ateam_path_planning::collisions
 
 std::optional<double> TimeToCollision(
   const BangBangTraj3D & trajectory,
+  const Vector6C_t & start_state,
   const std::vector<Obstacle> & obstacles,
   const double collision_check_resolution,
   const double footprint_inflation)
@@ -37,9 +39,10 @@ std::optional<double> TimeToCollision(
   for (double t = 0.0; t < duration; t += collision_check_resolution) {
     Vector6C_t state_at_t;
     if(const auto err =
-      ateam_controls_traj_state_at(trajectory, Vector6C_t{}, 0.0, t, &state_at_t);
+      ateam_controls_traj_state_at(trajectory, start_state, 0.0, t, &state_at_t);
       err != ATEAM_CONTROLS_OK)
     {
+      std::cerr << "collision due to error: " << err << '\n';
       return t;
     }
     const ateam_geometry::Point robot_pos(state_at_t.data[0], state_at_t.data[1]);
@@ -49,6 +52,7 @@ std::optional<double> TimeToCollision(
       if(ateam_geometry::doIntersect(robot_footprint,
           obstacle.shape))
       {
+        std::cerr << "collision at time " << t << " with " << obstacle.shape << '\n';
         return t;
       }
     }
