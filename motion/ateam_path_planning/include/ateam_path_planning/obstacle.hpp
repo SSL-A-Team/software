@@ -21,6 +21,8 @@
 #ifndef ATEAM_PATH_PLANNING__OBSTACLE_HPP_
 #define ATEAM_PATH_PLANNING__OBSTACLE_HPP_
 
+#include <variant>
+#include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_game_state/robot.hpp>
 #include <ateam_geometry/any_shape.hpp>
@@ -30,15 +32,32 @@
 namespace ateam_path_planning
 {
 
+struct ObstacleTrajectory
+{
+  std::vector<ateam_geometry::Point> points;
+  double time_step;
+};
+
 struct Obstacle
 {
   ateam_geometry::AnyShape shape;
-  ateam_geometry::Vector velocity = CGAL::NULL_VECTOR;
+  std::variant<std::monostate, ateam_geometry::Vector, ObstacleTrajectory> expected_motion;
 
   static Obstacle FromRobot(const ateam_game_state::Robot & robot)
   {
     return Obstacle{ateam_geometry::makeDisk(robot.pos, kRobotRadius), robot.vel};
   }
+
+  static Obstacle FromRobot(
+    const ateam_game_state::Robot & robot,
+    const std::vector<ateam_geometry::Point> & trajectory, double time_step)
+  {
+    return Obstacle{ateam_geometry::makeDisk(robot.pos, kRobotRadius),
+      ObstacleTrajectory{trajectory, time_step}};
+  }
+
+  /// Transform the obstacle shape t seconds into the future based on @c expected_motion
+  ateam_geometry::AnyShape ShapeAtT(const double t) const;
 };
 
 }  // namespace ateam_path_planning

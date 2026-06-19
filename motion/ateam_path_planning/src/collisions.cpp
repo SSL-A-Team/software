@@ -28,9 +28,12 @@
 namespace ateam_path_planning::collisions
 {
 
+// TODO(barulicm): check state validity (in bounds)
+
 std::optional<double> TimeToCollision(
   const BangBangTraj3D & trajectory,
   const Vector6C_t & start_state,
+  const double & start_t,
   const std::vector<Obstacle> & obstacles,
   const double collision_check_resolution,
   const double footprint_inflation)
@@ -50,9 +53,10 @@ std::optional<double> TimeToCollision(
         kRobotRadius + footprint_inflation);
     for (const auto & obstacle : obstacles) {
       if(ateam_geometry::doIntersect(robot_footprint,
-          obstacle.shape))
+          obstacle.ShapeAtT(t + start_t)))
       {
-        std::cerr << "collision at time " << t << " with " << obstacle.shape << '\n';
+        std::cerr << "collision at time " << t << " with " << obstacle.ShapeAtT(t + start_t) <<
+          '\n';
         return t;
       }
     }

@@ -11,6 +11,7 @@ find_package(ateam_game_state REQUIRED)
 add_library(${PROJECT_NAME} SHARED
   src/collisions.cpp
   src/controls_lib_adapters.cpp
+  src/obstacle.cpp
   src/planner.cpp
   src/trajectory_spline.cpp
 )

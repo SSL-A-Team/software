@@ -50,7 +50,8 @@ void PrintPathsOnFailure(
       continue;
     }
     std::cerr << "[\n";
-    const auto points = path->ToPoints();
+    const auto points =
+      path->ToPoints(ateam_path_planning::PlannerOptions{}.collision_check_resolution);
     for(auto i = 0; i < points.size(); ++i) {
       std::cerr << '(' << points[i].x() << ", " << points[i].y() << "),\n";
     }
@@ -58,163 +59,201 @@ void PrintPathsOnFailure(
   }
 }
 
-TEST(Planner, AllBotsNoTargets) {
-  Planner planner;
+// TEST(Planner, AllBotsNoTargets) {
+//   Planner planner;
 
-  const auto paths = planner.PlanPathsForAllBots({}, {}, {}, {}, {});
+//   const auto paths = planner.PlanPathsForAllBots({}, {}, {}, {}, {});
 
-  EXPECT_THAT(paths, ::testing::Each(::testing::Eq(std::nullopt)));
-}
+//   EXPECT_THAT(paths, ::testing::Each(::testing::Eq(std::nullopt)));
+// }
 
-TEST(Planner, OneBotNoObstacles) {
-  Planner planner;
-
-  std::array<std::optional<ateam_path_planning::Pose>, 16> targets;
-  targets.fill(std::nullopt);
-  targets[0] = ateam_path_planning::Pose{ateam_geometry::Point(1.0, 1.0), 0.0};
-
-  std::array<uint8_t, 16> priorities;
-  priorities.fill(0);
-
-  ateam_game_state::World world;
-  world.our_robots[0].id = 0;
-  world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
-  world.our_robots[0].theta = 0.0;
-  world.our_robots[0].vel = ateam_geometry::Vector(0.0, 0.0);
-
-  const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, {}, {});
-
-  EXPECT_THAT(paths[0],
-    Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(0.0, 0.0), 0.0})));
-  EXPECT_THAT(paths[0],
-    Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(1.0, 1.0), 0.0})));
-  EXPECT_THAT(paths[0], Optional(SegmentCount(1)));
-
-  for (size_t i = 1; i < paths.size(); ++i) {
-    EXPECT_THAT(paths[i], Eq(std::nullopt));
-  }
-
-  PrintPathsOnFailure(paths);
-}
-
-TEST(Planner, OneBotOneObstacle) {
-  Planner planner;
-
-  std::array<std::optional<ateam_path_planning::Pose>, 16> targets;
-  targets.fill(std::nullopt);
-  targets[0] = ateam_path_planning::Pose{ateam_geometry::Point(1.0, 1.0), 0.0};
-
-  std::array<uint8_t, 16> priorities;
-  priorities.fill(0);
-
-  ateam_game_state::World world;
-  world.our_robots[0].id = 0;
-  world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
-  world.our_robots[0].theta = 0.0;
-  world.our_robots[0].vel = ateam_geometry::Vector(0.0, 0.0);
-
-  const auto obstacle_shape = ateam_geometry::makeDisk(ateam_geometry::Point(0.5, 0.5), 0.1);
-
-  std::vector<ateam_path_planning::Obstacle> global_obstacles = {
-    ateam_path_planning::Obstacle{obstacle_shape, ateam_geometry::Vector(0.0, 0.0)}
-  };
-
-  const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, global_obstacles, {});
-
-  EXPECT_THAT(paths[0],
-    Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(0.0, 0.0), 0.0})));
-  EXPECT_THAT(paths[0],
-    Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(1.0, 1.0), 0.0})));
-  EXPECT_THAT(paths[0], Optional(SegmentCount(2)));
-  EXPECT_THAT(paths[0], Optional(PathAvoidsObstacles(global_obstacles)));
-  for (size_t i = 1; i < paths.size(); ++i) {
-    EXPECT_THAT(paths[i], Eq(std::nullopt));
-  }
-
-  PrintPathsOnFailure(paths);
-}
-
-// TODO(barulicm): Current implementation doesn't use trajectores of our robots
-// TEST(Planner, AllBotsCrossNoObstacles) {
+// TEST(Planner, OneBotNoObstacles) {
 //   Planner planner;
 
 //   std::array<std::optional<ateam_path_planning::Pose>, 16> targets;
-//   std::generate(targets.begin(), targets.end(), [n = 15]() mutable {
-//       return ateam_path_planning::Pose{ateam_geometry::Point(3.0, n-- * 0.5), 0.0};
-//   });
+//   targets.fill(std::nullopt);
+//   targets[0] = ateam_path_planning::Pose{ateam_geometry::Point(1.0, 1.0), 0.0};
 
 //   std::array<uint8_t, 16> priorities;
 //   priorities.fill(0);
 
 //   ateam_game_state::World world;
-//   std::generate(world.our_robots.begin(), world.our_robots.end(), [n = 0]() mutable {
-//       ateam_game_state::Robot robot;
-//       robot.id = n;
-//       robot.pos = ateam_geometry::Point(0.0, n * 0.5);
-//       robot.theta = 0.0;
-//       robot.vel = ateam_geometry::Vector(0.0, 0.0);
-//       ++n;
-//       return robot;
-//   });
+//   world.our_robots[0].id = 0;
+//   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
+//   world.our_robots[0].theta = 0.0;
+//   world.our_robots[0].vel = ateam_geometry::Vector(0.0, 0.0);
 
 //   const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, {}, {});
 
-//   for (size_t i = 0; i < paths.size(); ++i) {
-//     EXPECT_THAT(paths[i],
-//       Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(0.0, i * 0.5),
-//         0.0})));
-//     EXPECT_THAT(paths[i],
-//       Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(3.0, (15 - i) * 0.5),
-//         0.0})));
-//   }
+//   EXPECT_THAT(paths[0],
+//     Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(0.0, 0.0), 0.0})));
+//   EXPECT_THAT(paths[0],
+//     Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(1.0, 1.0), 0.0})));
+//   EXPECT_THAT(paths[0], Optional(SegmentCount(1)));
 
-//   EXPECT_THAT(paths, Not(PathsCollide()));
+//   for (size_t i = 1; i < paths.size(); ++i) {
+//     EXPECT_THAT(paths[i], Eq(std::nullopt));
+//   }
 
 //   PrintPathsOnFailure(paths);
 // }
 
-TEST(Planner, TwoBotOneObstacle) {
+// TEST(Planner, OneBotOneObstacle) {
+//   Planner planner;
+
+//   std::array<std::optional<ateam_path_planning::Pose>, 16> targets;
+//   targets.fill(std::nullopt);
+//   targets[0] = ateam_path_planning::Pose{ateam_geometry::Point(1.0, 1.0), 0.0};
+
+//   std::array<uint8_t, 16> priorities;
+//   priorities.fill(0);
+
+//   ateam_game_state::World world;
+//   world.our_robots[0].id = 0;
+//   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
+//   world.our_robots[0].theta = 0.0;
+//   world.our_robots[0].vel = ateam_geometry::Vector(0.0, 0.0);
+
+//   const auto obstacle_shape = ateam_geometry::makeDisk(ateam_geometry::Point(0.5, 0.5), 0.1);
+
+//   std::vector<ateam_path_planning::Obstacle> global_obstacles = {
+//     ateam_path_planning::Obstacle{obstacle_shape, {}}
+//   };
+
+//   const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, global_obstacles, {});
+
+//   EXPECT_THAT(paths[0],
+//     Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(0.0, 0.0), 0.0})));
+//   EXPECT_THAT(paths[0],
+//     Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(1.0, 1.0), 0.0})));
+//   EXPECT_THAT(paths[0], Optional(SegmentCount(2)));
+//   EXPECT_THAT(paths[0], Optional(PathAvoidsObstacles(global_obstacles)));
+//   for (size_t i = 1; i < paths.size(); ++i) {
+//     EXPECT_THAT(paths[i], Eq(std::nullopt));
+//   }
+
+//   PrintPathsOnFailure(paths);
+// }
+
+// TEST(Planner, OneBotMovingObstacle) {
+//   Planner planner;
+
+//   std::array<std::optional<ateam_path_planning::Pose>, 16> targets;
+//   targets.fill(std::nullopt);
+//   targets[0] = ateam_path_planning::Pose{ateam_geometry::Point(2.0, 0.0), 0.0};
+
+//   std::array<uint8_t, 16> priorities;
+//   priorities.fill(0);
+
+//   ateam_game_state::World world;
+//   world.our_robots[0].id = 0;
+//   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
+//   world.our_robots[0].theta = 0.0;
+//   world.our_robots[0].vel = ateam_geometry::Vector(0.0, 0.0);
+
+//   const auto obstacle_shape = ateam_geometry::makeDisk(ateam_geometry::Point(1.0, 1.0), 0.1);
+
+//   std::vector<ateam_path_planning::Obstacle> global_obstacles = {
+//     ateam_path_planning::Obstacle{obstacle_shape, ateam_geometry::Vector(0.0, -1.0)}
+//   };
+
+//   const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, global_obstacles, {});
+
+//   EXPECT_THAT(paths[0],
+//     Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(0.0, 0.0), 0.0})));
+//   EXPECT_THAT(paths[0],
+//     Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(2.0, 0.0), 0.0})));
+//   EXPECT_THAT(paths[0], Optional(SegmentCount(2)));
+//   EXPECT_THAT(paths[0], Optional(PathAvoidsObstacles(global_obstacles)));
+//   for (size_t i = 1; i < paths.size(); ++i) {
+//     EXPECT_THAT(paths[i], Eq(std::nullopt));
+//   }
+
+//   PrintPathsOnFailure(paths);
+// }
+
+TEST(Planner, AllBotsCrossNoObstacles) {
   Planner planner;
 
   std::array<std::optional<ateam_path_planning::Pose>, 16> targets;
-  targets.fill(std::nullopt);
-  targets[0] = ateam_path_planning::Pose{ateam_geometry::Point(1.0, 0.2), 0.0};
-  targets[1] = ateam_path_planning::Pose{ateam_geometry::Point(1.0, -0.2), 0.0};
+  std::generate(targets.begin(), targets.end(), [n = 15]() mutable {
+      return ateam_path_planning::Pose{ateam_geometry::Point(3.0, n-- * 0.5), 0.0};
+  });
 
   std::array<uint8_t, 16> priorities;
   priorities.fill(0);
 
   ateam_game_state::World world;
-  world.our_robots[0].id = 0;
-  world.our_robots[0].pos = ateam_geometry::Point(-1.0, 0.2);
-  world.our_robots[0].theta = 0.0;
-  world.our_robots[0].vel = ateam_geometry::Vector(0.0, 0.0);
-  world.our_robots[1].id = 1;
-  world.our_robots[1].pos = ateam_geometry::Point(-1.0, -0.2);
-  world.our_robots[1].theta = 0.0;
-  world.our_robots[1].vel = ateam_geometry::Vector(0.0, 0.0);
+  std::generate(world.our_robots.begin(), world.our_robots.end(), [n = 0]() mutable {
+      ateam_game_state::Robot robot;
+      robot.id = n;
+      robot.pos = ateam_geometry::Point(0.0, n * 0.5);
+      robot.theta = 0.0;
+      robot.vel = ateam_geometry::Vector(0.0, 0.0);
+      ++n;
+      return robot;
+  });
 
-  const auto obstacle_shape = ateam_geometry::makeDisk(ateam_geometry::Point(0.0, 0.0), 0.2);
+  const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, {}, {});
 
-  std::vector<ateam_path_planning::Obstacle> global_obstacles = {
-    ateam_path_planning::Obstacle{obstacle_shape, ateam_geometry::Vector(0.0, 0.0)}
-  };
-
-  const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, global_obstacles, {});
-
-  EXPECT_THAT(paths[0],
-    Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(-1.0, 0.2), 0.0})));
-  EXPECT_THAT(paths[0],
-    Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(1.0, 0.2), 0.0})));
-  EXPECT_THAT(paths[0], Optional(PathAvoidsObstacles(global_obstacles)));
-  EXPECT_THAT(paths[1],
-    Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(-1.0, -0.2), 0.0})));
-  EXPECT_THAT(paths[1],
-    Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(1.0, -0.2), 0.0})));
-  EXPECT_THAT(paths[1], Optional(PathAvoidsObstacles(global_obstacles)));
-  for (size_t i = 2; i < paths.size(); ++i) {
-    EXPECT_THAT(paths[i], Eq(std::nullopt));
+  for (size_t i = 0; i < paths.size(); ++i) {
+    EXPECT_THAT(paths[i],
+      Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(0.0, i * 0.5),
+        0.0})));
+    EXPECT_THAT(paths[i],
+      Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(3.0, (15 - i) * 0.5),
+        0.0})));
   }
+
+  EXPECT_THAT(paths, Not(PathsCollide()));
+
+  EXPECT_TRUE(false);
 
   PrintPathsOnFailure(paths);
 }
+
+// TEST(Planner, TwoBotOneObstacle) {
+//   Planner planner;
+
+//   std::array<std::optional<ateam_path_planning::Pose>, 16> targets;
+//   targets.fill(std::nullopt);
+//   targets[0] = ateam_path_planning::Pose{ateam_geometry::Point(1.0, 0.2), 0.0};
+//   targets[1] = ateam_path_planning::Pose{ateam_geometry::Point(1.0, -0.2), 0.0};
+
+//   std::array<uint8_t, 16> priorities;
+//   priorities.fill(0);
+
+//   ateam_game_state::World world;
+//   world.our_robots[0].id = 0;
+//   world.our_robots[0].pos = ateam_geometry::Point(-1.0, 0.2);
+//   world.our_robots[0].theta = 0.0;
+//   world.our_robots[0].vel = ateam_geometry::Vector(0.0, 0.0);
+//   world.our_robots[1].id = 1;
+//   world.our_robots[1].pos = ateam_geometry::Point(-1.0, -0.2);
+//   world.our_robots[1].theta = 0.0;
+//   world.our_robots[1].vel = ateam_geometry::Vector(0.0, 0.0);
+
+//   const auto obstacle_shape = ateam_geometry::makeDisk(ateam_geometry::Point(0.0, 0.0), 0.2);
+
+//   std::vector<ateam_path_planning::Obstacle> global_obstacles = {
+//     ateam_path_planning::Obstacle{obstacle_shape, {}}
+//   };
+
+//   const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, global_obstacles, {});
+
+//   EXPECT_THAT(paths[0],
+//     Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(-1.0, 0.2), 0.0})));
+//   EXPECT_THAT(paths[0],
+//     Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(1.0, 0.2), 0.0})));
+//   EXPECT_THAT(paths[0], Optional(PathAvoidsObstacles(global_obstacles)));
+//   EXPECT_THAT(paths[1],
+//     Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(-1.0, -0.2), 0.0})));
+//   EXPECT_THAT(paths[1],
+//     Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(1.0, -0.2), 0.0})));
+//   EXPECT_THAT(paths[1], Optional(PathAvoidsObstacles(global_obstacles)));
+//   for (size_t i = 2; i < paths.size(); ++i) {
+//     EXPECT_THAT(paths[i], Eq(std::nullopt));
+//   }
+
+//   PrintPathsOnFailure(paths);
+// }

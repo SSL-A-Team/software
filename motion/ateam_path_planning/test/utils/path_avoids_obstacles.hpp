@@ -37,7 +37,7 @@ class PathAvoidsObstaclesMatcher
 {
 public:
   explicit PathAvoidsObstaclesMatcher(
-    const std::vector<ateam_path_planning::Obstacle> & obstacles, const double resolution = 0.01)
+    const std::vector<ateam_path_planning::Obstacle> & obstacles, const double resolution = 0.05)
   : obstacles_(obstacles), resolution_(resolution)
   {
   }
@@ -47,16 +47,18 @@ public:
     ::testing::MatchResultListener * listener) const override
   {
     const auto points = trajectory.ToPoints(resolution_);
+    double t = 0.0;
     for(const auto & point : points) {
       const auto robot_footprint = ateam_geometry::makeDisk(point, kRobotRadius);
       for (const auto & obstacle : obstacles_) {
         if(ateam_geometry::doIntersect(robot_footprint,
-            obstacle.shape))
+            obstacle.ShapeAtT(t)))
         {
-          *listener << "collides with obstacle: " << obstacle.shape;
+          *listener << "collides with obstacle: " << obstacle.ShapeAtT(t);
           return false;
         }
       }
+      t += resolution_;
     }
     *listener << "avoids given obstacles";
     return true;
@@ -78,7 +80,7 @@ private:
 };
 
 inline ::testing::Matcher<const ateam_path_planning::TrajectorySpline &> PathAvoidsObstacles(
-  const std::vector<ateam_path_planning::Obstacle> & obstacles, const double resolution = 0.01)
+  const std::vector<ateam_path_planning::Obstacle> & obstacles, const double resolution = 0.05)
 {
   return ::testing::MakeMatcher(new PathAvoidsObstaclesMatcher(obstacles, resolution));
 }

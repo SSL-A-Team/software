@@ -58,7 +58,10 @@ std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
         per_bot_obstacles[bot_index].end());
     auto path = PlanPath(bot, targets[bot_index].value(), bot_obstacles, options[bot_index]);
     paths[bot_index] = path;
-    obstacles.push_back(Obstacle::FromRobot(bot));
+    const auto obstacle_trajectory_time_step = options[bot_index].collision_check_resolution;
+    const auto obstacle_trajectory = path->ToPoints(obstacle_trajectory_time_step);
+    obstacles.push_back(Obstacle::FromRobot(bot, obstacle_trajectory,
+        obstacle_trajectory_time_step));
   }
   return paths;
 }
@@ -80,8 +83,8 @@ std::optional<TrajectorySpline> Planner::PlanPath(
     return std::nullopt;
   }
 
-  const auto collision_time = collisions::TimeToCollision(base_trajectory, init_state, obstacles,
-      options.collision_check_resolution, options.footprint_inflation);
+  const auto collision_time = collisions::TimeToCollision(base_trajectory, init_state, 0.0,
+      obstacles, options.collision_check_resolution, options.footprint_inflation);
 
   if (!collision_time.has_value()) {
     TrajectorySpline result;
@@ -120,7 +123,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         std::cerr << "No path by inter traj err: " << err << '\n';
         return std::nullopt;
       }
-      const auto inter_collision_time = collisions::TimeToCollision(inter_traj, init_state,
+      const auto inter_collision_time = collisions::TimeToCollision(inter_traj, init_state, 0.0,
           obstacles, options.collision_check_resolution, options.footprint_inflation);
       const auto max_time =
         inter_collision_time.value_or(GetBangBangTrajectoryDuration(inter_traj));
@@ -143,7 +146,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
           return std::nullopt;
         }
         const auto second_collision_time = collisions::TimeToCollision(second_traj,
-            transition_state, obstacles, options.collision_check_resolution,
+            transition_state, transition_time, obstacles, options.collision_check_resolution,
             options.footprint_inflation);
         if (!second_collision_time.has_value()) {
           const auto second_traj_duration = GetBangBangTrajectoryDuration(second_traj);
