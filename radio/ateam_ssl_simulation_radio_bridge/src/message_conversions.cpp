@@ -54,7 +54,7 @@ double ReplaceNanWithZero(const double val, rclcpp::Logger logger)
 
 RobotControl fromMsg(
   const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot,
-  ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverInfo & maneuver_info, rclcpp::Logger logger)
+  ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor & maneuver_executor, rclcpp::Logger logger)
 {
   RobotControl robots_control;
   RobotCommand * proto_robot_command = robots_control.add_robot_commands();
@@ -79,27 +79,7 @@ RobotControl fromMsg(
   }
 
   RobotMoveCommand * robot_move_command = proto_robot_command->mutable_move_command();
-
-  switch(ros_msg.body_control_mode) {
-    case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
-      ateam_ssl_simulation_radio_bridge::robot_maneuvers::local_velocity_maneuver(robot_move_command, ros_msg);
-      break;
-    case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
-      ateam_ssl_simulation_radio_bridge::robot_maneuvers::global_position_maneuver(robot_move_command, ros_msg, robot, maneuver_info);
-      break;
-    case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_VELOCITY:
-      ateam_ssl_simulation_radio_bridge::robot_maneuvers::global_velocity_maneuver(robot_move_command, ros_msg);
-      break;
-    case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY:
-      ateam_ssl_simulation_radio_bridge::robot_maneuvers::local_velocity_maneuver(robot_move_command, ros_msg);
-      break;
-    case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_ACCEL:
-      ateam_ssl_simulation_radio_bridge::robot_maneuvers::global_acceleration_maneuver(robot_move_command, ros_msg, robot);
-      break;
-    case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_ACCEL:
-      ateam_ssl_simulation_radio_bridge::robot_maneuvers::local_acceleration_maneuver(robot_move_command, ros_msg, robot);
-      break;
-  }
+  maneuver_executor.execute_maneuver(robot_move_command, ros_msg, robot);
 
   return robots_control;
 }

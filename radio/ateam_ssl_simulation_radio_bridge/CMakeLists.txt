@@ -12,6 +12,7 @@ find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_controls REQUIRED)
+find_package(ateam_geometry REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ssl_league_protobufs REQUIRED)
@@ -29,6 +30,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ateam_msgs
   ateam_radio_msgs
   ateam_controls
+  ateam_geometry
   tf2
   tf2_geometry_msgs
   ssl_league_protobufs

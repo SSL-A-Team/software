@@ -65,7 +65,7 @@ public:
     declare_parameter("ssl_sim_blue_port", 10301);
     declare_parameter("ssl_sim_yellow_port", 10302);
 
-    team_color_change_callback(ateam_common::TeamColor::Blue);
+    team_color_change_callback(ateam_common::TeamColor::Unknown);
 
     create_indexed_subscribers
     <ateam_msgs::msg::RobotMotionCommand>(
@@ -177,12 +177,15 @@ public:
     }
 
     const auto robot = world_.our_robots[robot_id];
-    auto& maneuver_info = manuever_infos_[robot_id];
-    RobotControl robots_control = message_conversions::fromMsg(msg, robot, maneuver_info, get_logger());
-    std::vector<uint8_t> buffer;
-    buffer.resize(robots_control.ByteSizeLong());
-    if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
-      udp_robot_control_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
+    // Somehow nonvisible robots have their id set to 0 in the world topic, easier to just not interact with them
+    if (robot.visible) {
+      auto& maneuver_executor = manuever_executors_[robot_id];
+      RobotControl robots_control = message_conversions::fromMsg(msg, robot, maneuver_executor, get_logger());
+      std::vector<uint8_t> buffer;
+      buffer.resize(robots_control.ByteSizeLong());
+      if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
+        udp_robot_control_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
+      }
     }
   }
 
@@ -252,7 +255,7 @@ private:
     16> connection_publishers_;
   rclcpp::Subscription<ateam_msgs::msg::GameStateWorld>::SharedPtr world_subscription_;
   ateam_msgs::msg::GameStateWorld world_;
-  std::array<ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverInfo, 16> manuever_infos_;
+  std::array<ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor, 16> manuever_executors_;
   rclcpp::Service<ateam_msgs::srv::SendSimulatorControlPacket>::SharedPtr
     send_simulator_control_service_;
   rclcpp::TimerBase::SharedPtr zero_command_timer_;

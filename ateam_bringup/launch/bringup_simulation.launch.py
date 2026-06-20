@@ -100,11 +100,11 @@ def generate_launch_description():
             }.items()
         ),
 
-        # IncludeLaunchDescription(
-        #     FrontendLaunchDescriptionSource(
-        #         PackageLaunchFileSubstitution(
-        #             'ateam_bringup', 'kenobi.launch.xml'
-        #         )
-        #     )
-        # ),
+        IncludeLaunchDescription(
+            FrontendLaunchDescriptionSource(
+                PackageLaunchFileSubstitution(
+                    'ateam_bringup', 'kenobi.launch.xml'
+                )
+            )
+        ),
     ])
