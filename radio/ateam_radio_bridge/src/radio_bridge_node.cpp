@@ -369,13 +369,11 @@ private:
         case ateam_msgs::msg::RobotMotionCommand::BCM_PIVOT:
           control_msg.body_control_mode = BCM_PIVOT;
           control_msg.cmd.pivot = {
-            static_cast<float>(command.pose.x),
-            static_cast<float>(command.pose.y),
             static_cast<float>(command.pose.theta),
             static_cast<float>(command.limit_vel_angular),
             static_cast<float>(command.limit_acc_angular),
             static_cast<float>(command.pivot_orbit_radius),
-            static_cast<float>(command.pivot_heading_lag)
+            static_cast<float>(command.pivot_inset_angle)
           };
           break;
         default:

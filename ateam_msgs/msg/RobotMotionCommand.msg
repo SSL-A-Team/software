@@ -7,9 +7,9 @@ float64 limit_vel_angular  # (rad/s)
 float64 limit_acc_linear  # (m/s/s)
 float64 limit_acc_angular  # (rad/s/s)
 
-# pivot maneuver parameters (used when body_control_mode == BCM_PIVOT)
+# pivot parameters
 float64 pivot_orbit_radius  # (m)
-float64 pivot_heading_lag  # (rad)
+float64 pivot_inset_angle  # (rad)
 
 uint8 kick_request
 float32 kick_speed  # (m/s)
