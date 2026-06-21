@@ -82,7 +82,7 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
   }
 
   getPlayInfo()["State"] = "Kick";
-  return KickBall();
+  return KickBall(robot);
 }
 
 RobotCommand PivotKick::Capture(
@@ -99,61 +99,27 @@ RobotCommand PivotKick::Pivot(const Robot & robot)
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
 
-  const auto angle_error = angles::shortest_angular_distance(robot.theta, robot_to_target_angle);
+  motion::intents::PivotHeading intent;
+  intent.radius = 0.095 * 1.05;
+  intent.target_heading = robot_to_target_angle;
 
   RobotCommand command;
-
-  const double vel = robot.prev_command_omega;
-  const double dt = 0.01;
-
-  double deceleration_to_reach_target = (vel * vel) / (2 * angle_error);
-
-  // Cruise
-  double trapezoidal_vel = std::copysign(pivot_speed_, angle_error);
-  const double error_direction = std::copysign(1, angle_error);
-  const double decel_direction = std::copysign(1, vel * angle_error);
-
-  // Decelerate to target velocity
-  if (decel_direction > 0 && abs(deceleration_to_reach_target) > pivot_accel_ * 0.95) {
-    trapezoidal_vel = vel - (error_direction * deceleration_to_reach_target * dt);
-
-  // Accelerate to speed
-  } else if (abs(vel) < pivot_speed_) {
-    trapezoidal_vel = vel + (error_direction * pivot_accel_ * dt);
-  }
-
-  const auto min_angular_vel = 0.5;
-  if (abs(trapezoidal_vel) < min_angular_vel) {
-    trapezoidal_vel = std::copysign(min_angular_vel, angle_error);
-  }
-
-  const auto angular_vel = std::clamp(trapezoidal_vel, -pivot_speed_, pivot_speed_);
-  command.motion_intent.angular = motion::intents::angular::VelocityIntent{angular_vel};
-
-  /* rotate in a circle with diameter 0.0427 + 0.18 = 0.2227 (This might be tunable to use 8cm for
-   * real robots)
-   * circumference of 0.6996 meters in a full rotation.
-   * Calculate m/rev * rev/s to get linear m/s
-   */
-  // double diameter = kBallDiameter + kRobotDiameter;
-  double diameter = (2 * .095) * 1.05;
-  double circumference = M_PI * diameter;
-  double velocity = circumference * (angular_vel / (2 * M_PI));
-
-  command.motion_intent.linear = motion::intents::linear::VelocityIntent{
-    ateam_geometry::Vector(0, -velocity),
-    motion::intents::linear::Frame::Local};
-
+  command.motion_intent = intent;
   command.dribbler_speed = kDefaultDribblerSpeed;
 
   return command;
 }
 
-RobotCommand PivotKick::KickBall()
+RobotCommand PivotKick::KickBall(const Robot & robot)
 {
+  motion::intents::PositionFacing intent;
+
+  intent.face_target = target_point_;
+  intent.position = robot.pos;
+
   RobotCommand command;
 
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{target_point_};
+  command.motion_intent = intent;
 
   command.dribbler_speed = kDefaultDribblerSpeed;
 

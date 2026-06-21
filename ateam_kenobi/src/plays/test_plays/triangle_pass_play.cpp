@@ -21,6 +21,7 @@
 
 #include "triangle_pass_play.hpp"
 #include <angles/angles.h>
+#include <CGAL/centroid.h>
 #include <algorithm>
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
@@ -123,12 +124,18 @@ void TrianglePassPlay::runSetup(
     pass_tactic_.reset();
   }
 
-  for (auto pos_ind = 0ul; pos_ind < positions.size(); ++pos_ind) {
+  const auto num_points = positions.size();
+
+  const auto center_point = CGAL::centroid(positions.begin(), positions.end());
+
+  for (auto pos_ind = 0ul; pos_ind < num_points; ++pos_ind) {
     const auto & position = positions[pos_ind];
     const auto & robot = robots[pos_ind];
+    motion::intents::PositionFacing intent;
+    intent.position = position;
+    intent.face_target = center_point;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{position};
-    command.motion_intent.angular = motion::intents::angular::FaceTravelIntent{};
+    command.motion_intent = intent;
     motion_commands[robot.id] = command;
   }
 }
@@ -161,10 +168,11 @@ void TrianglePassPlay::runPassing(
 
   pass_tactic_.runFrame(world, kicker_bot, receiver_bot, kicker_command, receiver_command);
 
+  motion::intents::PositionFacing intent;
+  intent.position = positions[idler_index];
+  intent.face_target = world.ball.pos;
   RobotCommand command;
-  command.motion_intent.linear = motion::intents::linear::PositionIntent{
-    positions[idler_index]};
-  command.motion_intent.angular = motion::intents::angular::FacingIntent{world.ball.pos};
+  command.motion_intent = intent;
   motion_commands[idler_bot.id] = command;
 }
 
@@ -194,9 +202,11 @@ void TrianglePassPlay::runBackOff(
     pass_tactic_.reset();
   }
 
+  motion::intents::Velocity intent;
+  intent.linear = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
+  intent.angular = 0.0;
   RobotCommand command;
-  const auto vel = ateam_geometry::normalize(ball_to_bot_vec) * 0.25;
-  command.motion_intent.linear = motion::intents::linear::VelocityIntent{vel};
+  command.motion_intent = intent;
   motion_commands[receiver_robot.id] = command;
 }
 
@@ -209,9 +219,11 @@ void TrianglePassPlay::runIdlers(
   const ateam_geometry::Vector step(kRobotDiameter * 1.5, 0);
   for( auto i = 0ul; i < robots.size(); ++i) {
     auto & robot = robots[i];
+    motion::intents::Position intent;
+    intent.position = first_pos + (step * i);
+    intent.heading = 0.0;
     RobotCommand command;
-    command.motion_intent.linear = motion::intents::linear::PositionIntent{first_pos + step * i};
-    command.motion_intent.angular = motion::intents::angular::HeadingIntent{0.0};
+    command.motion_intent = intent;
     motion_commands[robot.id] = command;
   }
 }

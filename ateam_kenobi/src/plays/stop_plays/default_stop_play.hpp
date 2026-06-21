@@ -21,10 +21,6 @@
 #ifndef PLAYS__STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
 #define PLAYS__STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
 
-#include <vector>
-#include <ateam_common/robot_constants.hpp>
-#include "core/path_planning/path_planner.hpp"
-#include "core/motion/motion_controller.hpp"
 #include "core/stp/play.hpp"
 
 namespace ateam_kenobi::plays

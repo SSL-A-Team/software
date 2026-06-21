@@ -34,89 +34,100 @@
 namespace ateam_kenobi::motion
 {
 
-namespace intents
-{
-
-struct None {};
-
-namespace linear
-{
-
 enum class Frame
 {
   World,
   Local
 };
 
-struct VelocityIntent
+struct Limits
 {
-  ateam_geometry::Vector velocity;
+  double linear_velocity = 0.0;
+  double linear_acceleration = 0.0;
+  double angular_velocity = 0.0;
+  double angular_acceleration = 0.0;
+};
+
+namespace intents
+{
+
+struct None {};
+
+struct Stop
+{
+  Limits limits;
+};
+
+struct Velocity
+{
+  ateam_geometry::Vector linear;
+  double angular;
   Frame frame = Frame::World;
+  Limits limits;
 };
 
-struct PositionIntent
+struct LinearVelocityAngularHeading
+{
+  ateam_geometry::Vector linear;
+  double heading;
+  Frame frame = Frame::World;
+  Limits limits;
+};
+
+struct LinearVelocityAngularFacing
+{
+  ateam_geometry::Vector linear;
+  ateam_geometry::Point face_target;
+  Frame frame = Frame::World;
+  Limits limits;
+};
+
+struct Position
 {
   ateam_geometry::Point position;
+  double heading;
+  path_planning::PlannerOptions planner_options;
+  std::vector<ateam_geometry::AnyShape> obstacles;
+  bool enable_escape_velocities = true;
+  Limits limits;
 };
 
-struct VelocityAtPositionIntent
+struct PositionFacing
 {
   ateam_geometry::Point position;
-  ateam_geometry::Vector velocity;  // Must be world frame
+  ateam_geometry::Point face_target;
+  path_planning::PlannerOptions planner_options;
+  std::vector<ateam_geometry::AnyShape> obstacles;
+  bool enable_escape_velocities = true;
+  Limits limits;
 };
 
-}  // namespace linear
-
-namespace angular
+struct PivotVelocity
 {
-
-struct VelocityIntent
-{
-  double omega;
+  double angular_velocity;
+  double radius = 0.089;  // Estimated radius of bot holding ball
+  Limits limits;
 };
 
-struct HeadingIntent
+struct PivotHeading
 {
-  double theta;
+  double target_heading;
+  double radius = 0.089;  // Estimated radius of bot holding ball
+  Limits limits;
 };
-
-struct FacingIntent
-{
-  ateam_geometry::Point target;
-};
-
-struct FaceTravelIntent {};
-
-}  // namespace angular
 
 }  // namespace intents
 
-/// @brief Intended command velocity in local frame
-struct BodyVelocity
-{
-  ateam_geometry::Vector linear{0.0, 0.0};
-  double angular = 0.0;
-};
-
-struct MotionIntent
-{
-  using LinearIntent = std::variant<intents::None, intents::linear::VelocityIntent,
-      intents::linear::PositionIntent,
-      intents::linear::VelocityAtPositionIntent>;
-  using AngularIntent = std::variant<intents::None, intents::angular::VelocityIntent,
-      intents::angular::HeadingIntent,
-      intents::angular::FacingIntent, intents::angular::FaceTravelIntent>;
-  using PostCallback = std::function<BodyVelocity(BodyVelocity, const path_planning::Path &,
-      const Robot &, const World &)>;
-
-  LinearIntent linear = intents::None{};
-  AngularIntent angular = intents::None{};
-  std::optional<PostCallback> callback;
-  path_planning::PlannerOptions planner_options;
-  MotionOptions motion_options;
-  std::vector<ateam_geometry::AnyShape> obstacles;
-  bool enable_escape_velocities = true;
-};
+using MotionIntent = std::variant<
+  intents::None,
+  intents::Stop,
+  intents::Velocity,
+  intents::LinearVelocityAngularHeading,
+  intents::LinearVelocityAngularFacing,
+  intents::Position,
+  intents::PositionFacing,
+  intents::PivotVelocity,
+  intents::PivotHeading>;
 
 }  // namespace ateam_kenobi::motion
 
