@@ -489,8 +489,13 @@ private:
     motion_command_timestamps_[robot_id] = {};
     last_heartbeat_timestamps_[robot_id] = std::chrono::steady_clock::now();
     connection_states_[robot_id] = ConnectionState::Connecting;
+    // Use the agreed robot listen port rather than the hello source port.
+    // Robots bind their data socket to this fixed port so software can reach them
+    // reliably. Compatible with ODIN (which also uses this port as its source port).
+    const uint16_t robot_listen_port =
+      static_cast<uint16_t>(get_parameter("discovery_port").as_int());
     connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
-      sender_address, sender_port,
+      sender_address, robot_listen_port,
       std::bind(
         &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_data.robot_id,
         std::placeholders::_1, std::placeholders::_2));
@@ -504,7 +509,7 @@ private:
 
     const auto reply_packet = CreatePacket(CC_HELLO_RESP, response);
     discovery_receiver_.SendTo(
-      sender_address, sender_port,
+      sender_address, robot_listen_port,
       reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
   }
 
