@@ -42,7 +42,7 @@
    # In the ateam_ws directory
    ./src/software/ateam_ui/install_deps.sh
 
-   sudo apt install python3-clang net-tools
+   sudo apt install python3-clang
    ```
    <!-- TODO(braulicm): Add custom rosdep keys file -->
 
@@ -114,6 +114,18 @@ Our software can be run against [the ER-Force Framework simulator](https://githu
       source ~/.bashrc
       ```
 
+### Install SSL Game Controller
+
+You can either use a native install or run it in Docker.
+
+For native, download the binary from [the releases page](https://github.com/RoboCup-SSL/ssl-game-controller/releases). We recommend you rename it to 'ssl-game-controller' and save it somewhere in your PATH.
+
+For Docker, ensure Docker is installed, then pull the GC image.
+
+   ```bash
+   docker pull robocupssl/ssl-game-controller
+   ```
+
 ### Starting Simulation Stack
 
 We have a convenient launch file for starting up the complete stack with the simulator.
@@ -124,20 +136,7 @@ ros2 launch ateam_bringup bringup_simulation.launch.py
 
 This will start the simlator, game controller, and our full autonomous gameplay stack at one. Launch arguments are available to disable starting up certain components.
 
-**Note:** If you notice issues receiving vision messages from the simulator, or if vision messages are coming in at an unexpectedly low rate, you may need to enable multicast on your loopback interface. We have a script for that:
-
-```bash
-ros2 run ateam_bringup enable_loopback_multicast.sh
-```
-
-**Note:** If you get a permission error regarding Docker launching (game controller), you need to add you user to the docker permission group.
-
-> [docker-2] docker: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Head "http://%2Fvar%2Frun%2Fdocker.sock/_ping": dial unix /var/run/docker.sock: connect: permission denied
-
-```bash
-sudo usermod -aG docker $USER
-# you need to log out and log back in after this command. On some Ubuntu 24.04 LTS, you need a full reboot.
-```
+See [Tips & Tricks](#tips-tricks) for common issues.
 
 #### Running Two Gameplay Stacks for Self-Scrimmaging.
 
@@ -151,4 +150,27 @@ ros2 launch ateam_bringup bringup_simulation.launch.py
 
 # In the second terminal
 ros2 launch ateam_bringup bringup_simulation.launch.py start_sim:=false start_gc:=false start_ui:=false team_name:=Unknown
+```
+
+## Tips & Tricks
+
+### Local Multicast
+
+If you notice issues receiving vision messages from the simulator, or if vision messages are coming in at an unexpectedly low rate, you may need to enable multicast on your loopback interface. We have a script for that:
+
+```bash
+ros2 run ateam_bringup enable_loopback_multicast.sh
+```
+
+### Docker Issues
+
+As a general note, prefer installing Docker using one of the [officially supported methods](https://docs.docker.com/engine/install/ubuntu/). The Docker snap package is known to have a lot of usability issues.
+
+If you get a permission error regarding Docker launching (game controller), you need to add you user to the docker permission group.
+
+> [docker-2] docker: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Head "http://%2Fvar%2Frun%2Fdocker.sock/_ping": dial unix /var/run/docker.sock: connect: permission denied
+
+```bash
+sudo usermod -aG docker $USER
+# you need to log out and log back in after this command. On some Ubuntu 24.04 LTS, you need a full reboot.
 ```

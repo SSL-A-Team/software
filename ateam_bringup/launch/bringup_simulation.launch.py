@@ -49,7 +49,7 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
-                                              'ssl_game_controller.launch.xml')),
+                                              'ssl_game_controller.launch.py')),
             condition=IfCondition(LaunchConfiguration('start_gc'))
         ),
 
