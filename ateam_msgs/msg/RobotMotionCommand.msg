@@ -7,6 +7,10 @@ float64 limit_vel_angular  # (rad/s)
 float64 limit_acc_linear  # (m/s/s)
 float64 limit_acc_angular  # (rad/s/s)
 
+# pivot parameters
+float64 pivot_orbit_radius  # (m)
+float64 pivot_inset_angle  # (rad)
+
 uint8 kick_request
 float32 kick_speed  # (m/s)
 float32 dribbler_speed  # (rpm)
@@ -28,3 +32,4 @@ uint8 BCM_GLOBAL_VELOCITY = 2
 uint8 BCM_LOCAL_VELOCITY = 3
 uint8 BCM_GLOBAL_ACCEL = 4
 uint8 BCM_LOCAL_ACCEL = 5
+uint8 BCM_PIVOT = 6
