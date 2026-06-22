@@ -83,7 +83,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
     return std::nullopt;
   }
 
-  const auto collision_time = collisions::TimeToCollision(base_trajectory, init_state, 0.0,
+  const auto collision_time = collisions::TimeToCollision(base_trajectory, 0.0,
       obstacles, options.collision_check_resolution, options.footprint_inflation);
 
   if (!collision_time.has_value()) {
@@ -123,7 +123,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         std::cerr << "No path by inter traj err: " << err << '\n';
         return std::nullopt;
       }
-      const auto inter_collision_time = collisions::TimeToCollision(inter_traj, init_state, 0.0,
+      const auto inter_collision_time = collisions::TimeToCollision(inter_traj, 0.0,
           obstacles, options.collision_check_resolution, options.footprint_inflation);
       const auto max_time =
         inter_collision_time.value_or(GetBangBangTrajectoryDuration(inter_traj));
@@ -132,7 +132,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         std::cerr << "Transition time: " << transition_time << '\n';
         Vector6C_t transition_state;
         if (const auto err =
-          ateam_controls_traj_state_at(inter_traj, init_state, 0.0, transition_time,
+          ateam_controls_traj_state_at(inter_traj, transition_time,
             &transition_state); err != ATEAM_CONTROLS_OK)
         {
           continue;
@@ -146,7 +146,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
           return std::nullopt;
         }
         const auto second_collision_time = collisions::TimeToCollision(second_traj,
-            transition_state, transition_time, obstacles, options.collision_check_resolution,
+            transition_time, obstacles, options.collision_check_resolution,
             options.footprint_inflation);
         if (!second_collision_time.has_value()) {
           const auto second_traj_duration = GetBangBangTrajectoryDuration(second_traj);

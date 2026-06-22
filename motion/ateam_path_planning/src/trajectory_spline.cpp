@@ -54,7 +54,7 @@ std::vector<ateam_geometry::Point> TrajectorySpline::ToPoints(double delta_t) co
     for(double t = 0.0; t < segment.duration; t += delta_t) {
       Vector6C_t state_at_t;
       if(const auto err =
-        ateam_controls_traj_state_at(trajectory, current_state, 0.0, t, &state_at_t);
+        ateam_controls_traj_state_at(trajectory, t, &state_at_t);
         err != ATEAM_CONTROLS_OK)
       {
         return points;
@@ -64,7 +64,7 @@ std::vector<ateam_geometry::Point> TrajectorySpline::ToPoints(double delta_t) co
         state_at_t.data[1]));
     }
     if(const auto err =
-      ateam_controls_traj_state_at(trajectory, current_state, 0.0, segment.duration,
+      ateam_controls_traj_state_at(trajectory, segment.duration,
         &current_state); err != ATEAM_CONTROLS_OK)
     {
       return points;
@@ -105,7 +105,7 @@ std::vector<std::vector<ateam_geometry::Point>> TrajectorySpline::ToPointsBySegm
     for(double t = 0.0; t < segment.duration; t += delta_t) {
       Vector6C_t state_at_t;
       if(const auto err =
-        ateam_controls_traj_state_at(trajectory, current_state, 0.0, t, &state_at_t);
+        ateam_controls_traj_state_at(trajectory, t, &state_at_t);
         err != ATEAM_CONTROLS_OK)
       {
         return points;
@@ -115,7 +115,7 @@ std::vector<std::vector<ateam_geometry::Point>> TrajectorySpline::ToPointsBySegm
         state_at_t.data[1]));
     }
     if(const auto err =
-      ateam_controls_traj_state_at(trajectory, current_state, 0.0, segment.duration,
+      ateam_controls_traj_state_at(trajectory, segment.duration,
         &current_state); err != ATEAM_CONTROLS_OK)
     {
       return points;
