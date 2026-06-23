@@ -6,237 +6,167 @@ namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
 {
 
   void ManeuverExecutor::execute_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot) {
-    command_ = ros_msg;
-
     switch(ros_msg.body_control_mode) {
       case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
-        bcm_off_maneuver(robot_move_command);
-        prev_body_command_ = ateam_msgs::msg::Twist2D();
-        prev_update_time_ = std::chrono::steady_clock::now();
+        bcm_off_maneuver();
         return; // Ignores acceleration limits set in message and immediately stops the robot
+
+      // Trajectory Maneuvers
       case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
-        global_position_maneuver(robot_move_command, ros_msg, robot);
+        global_position_maneuver(ros_msg, robot);
         break;
+
+      // Global Maneuvers
       case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_VELOCITY:
-        global_velocity_maneuver(robot_move_command, ros_msg, robot);
-        break;
-      case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY:
-        local_velocity_maneuver(robot_move_command, ros_msg);
+        global_velocity_maneuver(ros_msg);
         break;
       case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_ACCEL:
-        global_acceleration_maneuver(robot_move_command, ros_msg, robot);
+        global_acceleration_maneuver(ros_msg);
+        break;
+
+      // Local Maneuvers
+      case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY:
+        local_velocity_maneuver(ros_msg, robot);
         break;
       case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_ACCEL:
-        local_acceleration_maneuver(robot_move_command, ros_msg, robot);
+        local_acceleration_maneuver(ros_msg, robot);
         break;
     }
 
-    finalize_command(robot_move_command, robot);
+    finalize_command(robot_move_command, ros_msg, robot);
   }
 
-  void ManeuverExecutor::global_position_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot) {
-    const Vector3C_t new_target_pose{
-      float(ros_msg.pose.x),
-      float(ros_msg.pose.y),
-      float(ros_msg.pose.theta)
-    };
-
-    tf2::Quaternion quat;
-    tf2::fromMsg(robot.pose.orientation, quat);
-    double yaw, pitch, roll;
-    tf2::Matrix3x3(quat).getEulerYPR(yaw, pitch, roll);
-
-    // Check if new target is too far from previous
-    double target_change_dist = std::hypot(target_pose_.x - ros_msg.pose.x, target_pose_.y - ros_msg.pose.y);
-    bool target_pos_needs_replan = target_change_dist > 0.01 || angles::shortest_angular_distance(target_pose_.theta, ros_msg.pose.theta) > 0.01;
-
-    // Check current position against predicted position
-    double current_dist = std::hypot(robot.pose.position.x - trajectory_state_.data[0], robot.pose.position.y - trajectory_state_.data[1]);
-    bool current_pos_needs_replan = current_dist > 0.5 || angles::shortest_angular_distance(yaw, trajectory_state_.data[2]) > 0.2;
-
-    bool maneuver_type_mismatch = command_.body_control_mode != ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION;
-
-    bool replanning = maneuver_type_mismatch || target_pos_needs_replan || current_pos_needs_replan;
-
-    // Use previously predicted state unless we need to replan
-    Vector6C_t seed_state = trajectory_state_;
-    if (replanning) {
-      seed_state = Vector6C_t{
-        float(robot.pose.position.x),
-        float(robot.pose.position.y),
-        float(yaw),
-        float(robot.velocity.linear.x),
-        float(robot.velocity.linear.y),
-        float(robot.velocity.angular.z)
-      };
-    }
-
-    TrajectoryParams_t traj_params = generate_trajectory_params(ros_msg);
-
-    BangBangTraj3D_t traj;
-    ateam_controls_traj_from_target_pose(
-      seed_state,
-      new_target_pose,
-      traj_params,
-      &traj
-    );
-
-    // TODO (chachmu): The controls process may need to be shuffled around to calculate the trajectory state at the beginning of the function
-    // so that the actual dt for that timestep can be properly calculated
-    // float dt = float(get_dt());
-    float dt = 0.01;
-
-    const double global_x_err = seed_state.data[0] - robot.pose.position.x;
-    const double global_y_err = seed_state.data[1] - robot.pose.position.y;
-    const double global_theta_err = seed_state.data[2] - yaw;
-
-    // const double kPos = 1.2;
-    // const double kAngle = 1.0;
-    const double kPos = 0;
-    const double kAngle = 0;
-
-    ateam_msgs::msg::Twist2D global_vel = ateam_msgs::msg::Twist2D();
-    global_vel.x = seed_state.data[3] + (kPos * global_x_err);
-    global_vel.y = seed_state.data[4] + (kPos * global_y_err);
-    global_vel.theta = seed_state.data[5] + (kAngle * global_theta_err);
-
-    ateam_msgs::msg::Twist2D local_vel = rotate_frame(global_vel, robot.pose);
-
-    MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
-    local_velocity_command->set_forward(local_vel.x);
-    local_velocity_command->set_left(local_vel.y);
-    local_velocity_command->set_angular(local_vel.theta);
-
-    // Update the trajectory state for the next iteration
-    ateam_controls_traj_state_at(
-      traj,
-      seed_state,
-      0.0f,
-      dt,
-      &trajectory_state_
-    );
-    trajectory_ = traj;
-
-    // Only update the target once we are sure we haven't errored out of using the maneuver
-    if (replanning) {
-      target_pose_ = ros_msg.pose;
-    }
-  }
-
-  void ManeuverExecutor::global_velocity_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot) {
-    MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
-
-    const ateam_msgs::msg::Twist2D local_vel = rotate_frame(ros_msg.velocity, robot.pose);
-    local_velocity_command->set_forward(local_vel.x);
-    local_velocity_command->set_left(local_vel.y);
-    local_velocity_command->set_angular(local_vel.theta);
-  }
-
-  void ManeuverExecutor::local_velocity_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg) {
-    MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
-
-    local_velocity_command->set_forward(ros_msg.velocity.x);
-    local_velocity_command->set_left(ros_msg.velocity.y);
-    local_velocity_command->set_angular(ros_msg.velocity.theta);
-  }
-
-  void ManeuverExecutor::bcm_off_maneuver(RobotMoveCommand * robot_move_command) {
-    MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
-
-    local_velocity_command->set_forward(0.0);
-    local_velocity_command->set_left(0.0);
-    local_velocity_command->set_angular(0.0);
-  }
-
-  void ManeuverExecutor::global_acceleration_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot) {
-    MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
-    const double dt = get_dt();
-
-    ateam_msgs::msg::Twist2D global_accel = ateam_msgs::msg::Twist2D();
-    global_accel.x = robot.velocity.linear.x + dt * ros_msg.acceleration.x;
-    global_accel.y = robot.velocity.linear.y + dt * ros_msg.acceleration.y;
-    global_accel.theta = robot.velocity.angular.z + dt * ros_msg.acceleration.theta;
-
-    const ateam_msgs::msg::Twist2D local_accel = rotate_frame(global_accel, robot.pose);
-
-    local_velocity_command->set_forward(local_accel.x);
-    local_velocity_command->set_left(local_accel.y);
-    local_velocity_command->set_angular(local_accel.theta);
-  }
-
-  void ManeuverExecutor::local_acceleration_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot) {
-    MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
-    const double dt = get_dt();
-
-    local_velocity_command->set_forward(robot.velocity.linear.x + dt * ros_msg.acceleration.x);
-    local_velocity_command->set_left(robot.velocity.linear.y +  dt * ros_msg.acceleration.y);
-    local_velocity_command->set_angular(robot.velocity.angular.z + dt * ros_msg.acceleration.theta);
-  }
-
-  void ManeuverExecutor::finalize_command(RobotMoveCommand * robot_move_command, ateam_msgs::msg::GameStateRobot robot) {
-
-    // TODO (chachmu): Expose default limits from the rust controls package
-    double limit_vel_linear = 3.0;
-    double limit_vel_angular = 5.0 * M_PI;
-    double limit_acc_linear = 3.0;
-    double limit_acc_angular = 10.0 * M_PI;
-
-    if (command_.limit_vel_linear != 0.0) {
-      limit_vel_linear = command_.limit_vel_linear;
-    }
-    if (command_.limit_vel_angular != 0.0) {
-      limit_vel_angular = command_.limit_vel_angular;
-    }
-    if (command_.limit_acc_linear != 0.0) {
-      limit_acc_linear = command_.limit_acc_linear;
-    }
-    if (command_.limit_acc_angular != 0.0) {
-      limit_acc_angular = command_.limit_acc_angular;
-    }
-
-    double dt = get_dt();
-    if (dt == 0.0 || std::isnan(dt) || dt > 0.1) {
-      // This is a bit hacky but should keep dt from going too crazy
-      dt = 0.01;
-    }
-
-    if (robot_move_command->has_local_velocity()) {
-      MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
-
-      ateam_msgs::msg::Twist2D local_command = ateam_msgs::msg::Twist2D();
-      local_command.x = local_velocity_command->forward();
-      local_command.y = local_velocity_command->left();
-      local_command.theta = local_velocity_command->angular();
-
-      local_command = apply_xy_motion_limits(prev_body_command_, local_command, limit_vel_linear, limit_acc_linear, dt);
-      local_command.theta = apply_1d_motion_limits(prev_body_command_.theta, local_command.theta, limit_vel_angular, limit_acc_angular, dt);
-
-      local_velocity_command->set_forward(local_command.x);
-      local_velocity_command->set_left(local_command.y);
-      local_velocity_command->set_angular(local_command.theta);
-
-      prev_body_command_ = local_command;
-    } else if (robot_move_command->has_global_velocity()) {
-      MoveGlobalVelocity * global_velocity_command = robot_move_command->mutable_global_velocity();
-
-      ateam_msgs::msg::Twist2D global_command = ateam_msgs::msg::Twist2D();
-      global_command.x = global_velocity_command->x();
-      global_command.y = global_velocity_command->y();
-      global_command.theta = global_velocity_command->angular();
-
-      global_command = apply_xy_motion_limits(prev_body_command_, global_command, limit_vel_linear, limit_acc_linear, dt);
-      global_command.theta = apply_1d_motion_limits(prev_body_command_.theta, global_command.theta, limit_vel_angular, limit_acc_angular, dt);
-
-      global_velocity_command->set_x(global_command.x);
-      global_velocity_command->set_y(global_command.y);
-      global_velocity_command->set_angular(global_command.theta);
-
-      prev_body_command_ = rotate_frame(global_command, robot.pose);
-    }
-
+  void ManeuverExecutor::bcm_off_maneuver() {
+    current_global_command_ = ateam_msgs::msg::Twist2D();
+    prev_global_command_ = ateam_msgs::msg::Twist2D();
     prev_update_time_ = std::chrono::steady_clock::now();
   }
 
+  // Trajectory Maneuvers
+  void ManeuverExecutor::global_position_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot) {
+
+    // Update trajectory state to current time
+    float dt = float(get_dt());
+    ateam_controls_tick_traj(&trajectory_, dt);
+
+    double yaw = get_yaw(robot.pose);
+
+    // Check current position against predicted position
+    double current_dist = std::hypot(robot.pose.position.x - trajectory_.state.data[0], robot.pose.position.y - trajectory_.state.data[1]);
+    bool current_pos_needs_replan = current_dist > 0.5 || angles::shortest_angular_distance(yaw, trajectory_.state.data[2]) > 0.3;
+
+    bool target_changed = std::hypot(command_.pose.x - ros_msg.pose.x, command_.pose.y - ros_msg.pose.y) > 0.02 || angles::shortest_angular_distance(command_.pose.theta, ros_msg.pose.theta) > 0.1;
+
+    // bool maneuver_command_changed = (command_ != ros_msg);
+    bool maneuver_command_changed = (command_.body_control_mode != ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION || target_changed);
+
+    bool replanning = maneuver_command_changed || current_pos_needs_replan;
+
+    if (replanning) {
+      std::cerr << "replanning id " << robot.id << ": (" << maneuver_command_changed << ", " << current_pos_needs_replan << ")" << std::endl;
+      Vector6C_t starting_state = Vector6C_t{
+        float(robot.pose.position.x),
+        float(robot.pose.position.y),
+        float(yaw),
+        // float(robot.velocity.linear.x),
+        // float(robot.velocity.linear.y),
+        // float(robot.velocity.angular.z)
+        float(prev_global_command_.x),
+        float(prev_global_command_.y),
+        float(prev_global_command_.theta),
+      };
+
+      const Vector3C_t target_pose{
+        float(ros_msg.pose.x),
+        float(ros_msg.pose.y),
+        float(ros_msg.pose.theta)
+      };
+
+      command_ = ros_msg;
+      traj_params_ = generate_trajectory_params(ros_msg);
+      ateam_controls_traj_from_target_pose(
+        starting_state,
+        target_pose,
+        traj_params_,
+        &trajectory_
+      );
+    }
+
+    ateam_msgs::msg::Twist2D global_target_err = ateam_msgs::msg::Twist2D();
+    global_target_err.x = command_.pose.x - robot.pose.position.x;
+    global_target_err.y = command_.pose.y - robot.pose.position.y;
+
+    const double kpPos = 1.0;
+    const double kdPos = 0.0;
+    const double kpAngle = 0.0;
+
+    ateam_msgs::msg::Twist2D global_feedback = ateam_msgs::msg::Twist2D();
+
+    // Provide some minor xy feedback to account for slight final position offsets
+    if (abs(global_target_err.x) < 0.05) {
+      global_feedback.x += std::clamp(kpPos * global_target_err.x, -0.05, 0.05);
+    }
+    if (abs(global_target_err.y) < 0.05) {
+      global_feedback.y += std::clamp(kpPos * global_target_err.y, -0.05, 0.05);
+    }
+
+    current_global_command_.x = trajectory_.state.data[3] + global_feedback.x;
+    current_global_command_.y = trajectory_.state.data[4] + global_feedback.y;
+    current_global_command_.theta = trajectory_.state.data[5] + global_feedback.theta;
+  }
+
+  // Global Maneuvers
+  void ManeuverExecutor::global_velocity_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg) {
+    current_global_command_ = ros_msg.velocity;
+    std::cerr << "global command, global vel: " << current_global_command_.x << ", " << current_global_command_.y << ", " << current_global_command_.theta << std::endl;
+  }
+
+  void ManeuverExecutor::global_acceleration_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg) {
+    const double dt = get_dt();
+
+    current_global_command_.x = prev_global_command_.x + dt * ros_msg.acceleration.x;
+    current_global_command_.y = prev_global_command_.y + dt * ros_msg.acceleration.y;
+    current_global_command_.theta = prev_global_command_.theta + dt * ros_msg.acceleration.theta;
+  }
+
+  // Local Maneuvers
+  void ManeuverExecutor::local_velocity_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot) {
+    current_global_command_ = rotate_frame(ros_msg.velocity, -get_yaw(robot.pose));
+    std::cerr << "local command, global vel: " << current_global_command_.x << ", " << current_global_command_.y << ", " << current_global_command_.theta << std::endl;
+  }
+
+  void ManeuverExecutor::local_acceleration_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot) {
+    ateam_msgs::msg::Twist2D global_accel = rotate_frame(ros_msg.acceleration, -get_yaw(robot.pose));
+    const double dt = get_dt();
+
+    current_global_command_.x = prev_global_command_.x + dt * global_accel.x;
+    current_global_command_.y = prev_global_command_.y + dt * global_accel.y;
+    current_global_command_.theta = prev_global_command_.theta + dt * global_accel.theta;
+  }
+
+  void ManeuverExecutor::finalize_command(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot) {
+    command_ = ros_msg;
+    double dt = get_dt();
+
+    traj_params_ = generate_trajectory_params(command_);
+    current_global_command_ = apply_xy_motion_limits(prev_global_command_, current_global_command_, traj_params_.max_vel_linear, traj_params_.max_accel_linear, dt);
+    current_global_command_.theta = apply_1d_motion_limits(prev_global_command_.theta, current_global_command_.theta, traj_params_.max_vel_angular, traj_params_.max_accel_angular, dt);
+
+    ateam_msgs::msg::Twist2D local_command;
+    if (use_trajectory_angle()) {
+      local_command = rotate_frame(current_global_command_, trajectory_.state.data[2]);
+    } else {
+      local_command = rotate_frame(current_global_command_, get_yaw(robot.pose));
+    }
+
+    MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
+    local_velocity_command->set_forward(local_command.x);
+    local_velocity_command->set_left(local_command.y);
+    local_velocity_command->set_angular(local_command.theta);
+
+    prev_global_command_ = current_global_command_;
+    prev_update_time_ = std::chrono::steady_clock::now();
+  }
 
   ateam_msgs::msg::Twist2D ManeuverExecutor::apply_xy_motion_limits(ateam_msgs::msg::Twist2D prev, ateam_msgs::msg::Twist2D command, double vel_limit, double acc_limit, double dt) {
     ateam_geometry::Vector prev_xy{prev.x, prev.y};
@@ -262,17 +192,18 @@ namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
   }
 
   double ManeuverExecutor::get_dt() {
-    const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - prev_update_time_;
-    return elapsed.count();
+    // const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - prev_update_time_;
+    // return elapsed.count();
+    return 0.01;
   }
 
-  ateam_msgs::msg::Twist2D ManeuverExecutor::rotate_frame(ateam_msgs::msg::Twist2D input_frame, geometry_msgs::msg::Pose pose) {
+  double ManeuverExecutor::get_yaw(geometry_msgs::msg::Pose pose) {
     tf2::Quaternion quat;
     tf2::fromMsg(pose.orientation, quat);
     double yaw, pitch, roll;
     tf2::Matrix3x3(quat).getEulerYPR(yaw, pitch, roll);
 
-    return rotate_frame(input_frame, yaw);
+    return yaw;
   }
 
   ateam_msgs::msg::Twist2D ManeuverExecutor::rotate_frame(ateam_msgs::msg::Twist2D input_frame, double angle) {
@@ -300,6 +231,18 @@ namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
       traj_params.max_accel_angular = ros_msg.limit_acc_angular;
     }
 
+    // std::cerr << "traj limits: " << traj_params.max_vel_linear << ", " << traj_params.max_vel_angular << ", " << traj_params.max_accel_linear << ", " << traj_params.max_accel_angular << std::endl;
     return traj_params;
+  }
+
+  bool ManeuverExecutor::use_trajectory_angle() {
+    switch(command_.body_control_mode) {
+      case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
+      case ateam_msgs::msg::RobotMotionCommand::BCM_PIVOT:
+        return true;
+
+      default:
+        return false;
+    }
   }
 }  // namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers

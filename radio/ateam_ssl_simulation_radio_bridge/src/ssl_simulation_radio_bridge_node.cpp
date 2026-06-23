@@ -64,6 +64,7 @@ public:
     declare_parameter("ssl_sim_control_port", 10300);
     declare_parameter("ssl_sim_blue_port", 10301);
     declare_parameter("ssl_sim_yellow_port", 10302);
+    declare_parameter("command_timeout_ms", 100);
 
     team_color_change_callback(ateam_common::TeamColor::Unknown);
 
@@ -97,13 +98,10 @@ public:
         std::placeholders::_1, std::placeholders::_2));
 
     std::ranges::fill(command_timestamps_, std::chrono::steady_clock::now());
-    zero_command_timer_ =
+    send_command_timer_ =
       create_wall_timer(
-      std::chrono::milliseconds(
-        declare_parameter(
-          "command_timeout_ms",
-          100)),
-      std::bind(&SSLSimulationRadioBridgeNode::zero_command_timer_callback, this));
+      std::chrono::milliseconds(10),
+      std::bind(&SSLSimulationRadioBridgeNode::send_command_timer_callback, this));
 
 
     udp_sim_control_ = std::make_unique<ateam_common::BiDirectionalUDP>(
@@ -194,7 +192,7 @@ public:
     int robot_id)
   {
     command_timestamps_[robot_id] = std::chrono::steady_clock::now();
-    send_command(*robot_commands_msg, robot_id);
+    commands_[robot_id] = *robot_commands_msg;
   }
 
   void feedback_callback(const uint8_t * buffer, size_t bytes_received)
@@ -219,18 +217,7 @@ public:
     }
   }
 
-  void send_zero_command(const int id)
-  {
-    ateam_msgs::msg::RobotMotionCommand msg;
-    msg.dribbler_speed = 0.0;
-    msg.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
-    msg.velocity.x = 0.0;
-    msg.velocity.y = 0.0;
-    msg.velocity.theta = 0.0;
-    send_command(msg, id);
-  }
-
-  void zero_command_timer_callback()
+  void send_command_timer_callback()
   {
     const auto timeout_duration = std::chrono::milliseconds(
       get_parameter(
@@ -238,8 +225,12 @@ public:
     const auto timeout_time = std::chrono::steady_clock::now() - timeout_duration;
     for (auto id = 0; id < 16; ++id) {
       if (command_timestamps_[id] < timeout_time) {
-        send_zero_command(id);
+        ateam_msgs::msg::RobotMotionCommand zero_command = ateam_msgs::msg::RobotMotionCommand();
+        zero_command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
+        commands_[id] = zero_command;
       }
+
+      send_command(commands_[id], id);
     }
   }
 
@@ -255,10 +246,11 @@ private:
     16> connection_publishers_;
   rclcpp::Subscription<ateam_msgs::msg::GameStateWorld>::SharedPtr world_subscription_;
   ateam_msgs::msg::GameStateWorld world_;
+  std::array<ateam_msgs::msg::RobotMotionCommand, 16> commands_;
   std::array<ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor, 16> manuever_executors_;
   rclcpp::Service<ateam_msgs::srv::SendSimulatorControlPacket>::SharedPtr
     send_simulator_control_service_;
-  rclcpp::TimerBase::SharedPtr zero_command_timer_;
+  rclcpp::TimerBase::SharedPtr send_command_timer_;
   std::array<std::chrono::steady_clock::time_point, 16> command_timestamps_;
 };
 

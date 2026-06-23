@@ -40,37 +40,47 @@ namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
 
     public:
     ManeuverExecutor() {
+      traj_params_ = ateam_controls_default_traj_params();
       prev_update_time_ = std::chrono::steady_clock::now();
+    }
+
+    void set_command(ateam_msgs::msg::RobotMotionCommand command) {
+      command_ = command;
     }
 
     void execute_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
 
-    void global_position_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
-
-    void global_velocity_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
-    void local_velocity_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg);
-    void bcm_off_maneuver(RobotMoveCommand * robot_move_command);
-
-    void global_acceleration_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
-    void local_acceleration_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
-
     private:
-    void finalize_command(RobotMoveCommand * robot_move_command, ateam_msgs::msg::GameStateRobot robot);
+    void bcm_off_maneuver();
+
+    // Trajectory Maneuvers
+    void global_position_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
+
+    // Global Maneuvers
+    void global_velocity_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+    void global_acceleration_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+
+    // Local Maneuvers
+    void local_velocity_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
+    void local_acceleration_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
+
+    void finalize_command(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
 
     ateam_msgs::msg::Twist2D apply_xy_motion_limits(ateam_msgs::msg::Twist2D prev, ateam_msgs::msg::Twist2D command, double vel_limit, double acc_limit, double dt);
     double apply_1d_motion_limits(double prev, double commanded, double vel_limit, double acc_limit, double dt);
 
     double get_dt();
-    ateam_msgs::msg::Twist2D rotate_frame(ateam_msgs::msg::Twist2D input_frame, geometry_msgs::msg::Pose pose);
+    double get_yaw(geometry_msgs::msg::Pose pose);
     ateam_msgs::msg::Twist2D rotate_frame(ateam_msgs::msg::Twist2D input_frame, double angle);
     TrajectoryParams_t generate_trajectory_params(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+    bool use_trajectory_angle();
 
     BangBangTraj3D_t trajectory_;
-    Vector6C_t trajectory_state_; // Predicted location of robot
-    ateam_msgs::msg::RobotMotionCommand command_; // Current command, updates with every new message
-    ateam_msgs::msg::Twist2D target_pose_; // Current target point, only updates when moving far enough to limit replanning
+    TrajectoryParams_t traj_params_;
+    ateam_msgs::msg::RobotMotionCommand command_; // Current ros command, updates with every new message
 
-    ateam_msgs::msg::Twist2D prev_body_command_;
+    ateam_msgs::msg::Twist2D current_global_command_; // Velocity to be commanded this frame
+    ateam_msgs::msg::Twist2D prev_global_command_; // Velocity commanded previous frame
     std::chrono::steady_clock::time_point prev_update_time_;
   };
 
