@@ -19,12 +19,12 @@
 // THE SOFTWARE.
 
 #include "message_conversions.hpp"
-#include "robot_maneuvers.hpp"
 #include <tf2/convert.h>
 #include <tf2/utils.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <stdexcept>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include "robot_maneuvers.hpp"
 
 namespace ateam_ssl_simulation_radio_bridge::message_conversions
 {
@@ -54,7 +54,8 @@ double ReplaceNanWithZero(const double val, rclcpp::Logger logger)
 
 RobotControl fromMsg(
   const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot,
-  ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor & maneuver_executor, rclcpp::Logger logger)
+  ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor & maneuver_executor,
+  rclcpp::Logger logger)
 {
   RobotControl robots_control;
   RobotCommand * proto_robot_command = robots_control.add_robot_commands();

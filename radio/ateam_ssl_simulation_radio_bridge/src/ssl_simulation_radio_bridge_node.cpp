@@ -164,7 +164,8 @@ public:
       std::bind_front(&SSLSimulationRadioBridgeNode::feedback_callback, this));
   }
 
-  void world_callback(const ateam_msgs::msg::GameStateWorld & msg) {
+  void world_callback(const ateam_msgs::msg::GameStateWorld & msg)
+  {
     world_ = msg;
   }
 
@@ -175,10 +176,12 @@ public:
     }
 
     const auto robot = world_.our_robots[robot_id];
-    // Somehow nonvisible robots have their id set to 0 in the world topic, easier to just not interact with them
+    // Somehow nonvisible robots have their id set to 0 in the world topic
+    // easier to just not interact with them
     if (robot.visible) {
-      auto& maneuver_executor = manuever_executors_[robot_id];
-      RobotControl robots_control = message_conversions::fromMsg(msg, robot, maneuver_executor, get_logger());
+      auto & maneuver_executor = manuever_executors_[robot_id];
+      RobotControl robots_control = message_conversions::fromMsg(msg, robot, maneuver_executor,
+          get_logger());
       std::vector<uint8_t> buffer;
       buffer.resize(robots_control.ByteSizeLong());
       if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
@@ -247,7 +250,8 @@ private:
   rclcpp::Subscription<ateam_msgs::msg::GameStateWorld>::SharedPtr world_subscription_;
   ateam_msgs::msg::GameStateWorld world_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> commands_;
-  std::array<ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor, 16> manuever_executors_;
+  std::array<ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor,
+    16> manuever_executors_;
   rclcpp::Service<ateam_msgs::srv::SendSimulatorControlPacket>::SharedPtr
     send_simulator_control_service_;
   rclcpp::TimerBase::SharedPtr send_command_timer_;

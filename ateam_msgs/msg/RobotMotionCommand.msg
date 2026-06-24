@@ -8,6 +8,7 @@ float64 limit_acc_linear  # (m/s/s)
 float64 limit_acc_angular  # (rad/s/s)
 
 # pivot parameters
+float64 pivot_global_theta # (rad)
 float64 pivot_orbit_radius  # (m)
 float64 pivot_inset_angle  # (rad)
 

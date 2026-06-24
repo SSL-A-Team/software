@@ -21,68 +21,108 @@
 #ifndef ROBOT_MANEUVERS_HPP_
 #define ROBOT_MANEUVERS_HPP_
 
+#include <angles/angles.h>
+#include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
+
 #include <chrono>
 #include <optional>
 #include <vector>
 
-#include <ssl_league_protobufs/ssl_simulation_robot_control.pb.h>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/game_state_robot.hpp>
-#include <ateam_msgs/msg/robot_motion_command.hpp>
 
-#include <angles/angles.h>
 #include <ateam_geometry/ateam_geometry.hpp>
+#include "pid.hpp"
 #include "ateam_controls/ateam_controls.h"
 
 namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
 {
-  class ManeuverExecutor {
+class ManeuverExecutor {
+public:
+  ManeuverExecutor()
+  {
+    traj_params_ = ateam_controls_default_traj_params();
+    prev_update_time_ = std::chrono::steady_clock::now();
 
-    public:
-    ManeuverExecutor() {
-      traj_params_ = ateam_controls_default_traj_params();
-      prev_update_time_ = std::chrono::steady_clock::now();
-    }
+    pid_x_traj_ = PID(3.0, 0.0, 0.0);
+    pid_y_traj_ = PID(3.0, 0.0, 0.0);
+    pid_theta_traj_ = PID(0.0, 0.0, 0.0);
 
-    void set_command(ateam_msgs::msg::RobotMotionCommand command) {
-      command_ = command;
-    }
+    pid_x_target_ = PID(4.0, 0.0, 0.001);
+    pid_y_target_ = PID(4.0, 0.0, 0.001);
+    pid_theta_target_ = PID(0.0, 0.0, 0.0);
+  }
 
-    void execute_maneuver(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
+  void set_command(ateam_msgs::msg::RobotMotionCommand command)
+  {
+    command_ = command;
+  }
 
-    private:
-    void bcm_off_maneuver();
+  void execute_maneuver(
+    RobotMoveCommand * robot_move_command,
+    const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
+
+private:
+  void bcm_off_maneuver();
 
     // Trajectory Maneuvers
-    void global_position_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
+  void trajectory_maneuver(
+    const ateam_msgs::msg::RobotMotionCommand & ros_msg,
+    ateam_msgs::msg::GameStateRobot robot);
 
     // Global Maneuvers
-    void global_velocity_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
-    void global_acceleration_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+  void global_velocity_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+  void global_acceleration_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
 
     // Local Maneuvers
-    void local_velocity_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
-    void local_acceleration_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
+  void local_velocity_maneuver(
+    const ateam_msgs::msg::RobotMotionCommand & ros_msg,
+    ateam_msgs::msg::GameStateRobot robot);
+  void local_acceleration_maneuver(
+    const ateam_msgs::msg::RobotMotionCommand & ros_msg,
+    ateam_msgs::msg::GameStateRobot robot);
 
-    void finalize_command(RobotMoveCommand * robot_move_command, const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
+  void finalize_command(
+    RobotMoveCommand * robot_move_command,
+    const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
 
-    ateam_msgs::msg::Twist2D apply_xy_motion_limits(ateam_msgs::msg::Twist2D prev, ateam_msgs::msg::Twist2D command, double vel_limit, double acc_limit, double dt);
-    double apply_1d_motion_limits(double prev, double commanded, double vel_limit, double acc_limit, double dt);
+  ateam_msgs::msg::Twist2D apply_xy_motion_limits(
+    ateam_msgs::msg::Twist2D prev,
+    ateam_msgs::msg::Twist2D command, double vel_limit, double acc_limit, double dt);
+  double apply_1d_motion_limits(
+    double prev, double commanded, double vel_limit, double acc_limit,
+    double dt);
 
-    double get_dt();
-    double get_yaw(geometry_msgs::msg::Pose pose);
-    ateam_msgs::msg::Twist2D rotate_frame(ateam_msgs::msg::Twist2D input_frame, double angle);
-    TrajectoryParams_t generate_trajectory_params(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
-    bool use_trajectory_angle();
+  double get_dt();
+  double get_yaw(geometry_msgs::msg::Pose pose);
+  ateam_msgs::msg::Twist2D rotate_frame(ateam_msgs::msg::Twist2D input_frame, double angle);
 
-    BangBangTraj3D_t trajectory_;
-    TrajectoryParams_t traj_params_;
-    ateam_msgs::msg::RobotMotionCommand command_; // Current ros command, updates with every new message
+  TrajectoryParams_t generate_trajectory_params(
+    const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+  bool command_uses_trajectory();
+  Vector6C_t get_trajectory_state();
+  void plan_trajectory(Vector6C_t starting_state);
+  void tick_trajectory(float dt);
 
-    ateam_msgs::msg::Twist2D current_global_command_; // Velocity to be commanded this frame
-    ateam_msgs::msg::Twist2D prev_global_command_; // Velocity commanded previous frame
-    std::chrono::steady_clock::time_point prev_update_time_;
-  };
+  PID pid_x_traj_;
+  PID pid_y_traj_;
+  PID pid_theta_traj_;
+
+  PID pid_x_target_;
+  PID pid_y_target_;
+  PID pid_theta_target_;
+
+  ateam_msgs::msg::RobotMotionCommand command_;   // Current ros command, updates every frame
+  ateam_msgs::msg::Twist2D current_global_command_;   // Velocity to be commanded this frame
+  ateam_msgs::msg::Twist2D prev_global_command_;   // Velocity commanded previous frame
+  std::chrono::steady_clock::time_point prev_update_time_;
+
+  BangBangTraj3D_t position_trajectory_;
+  TrajectoryParams_t traj_params_;
+
+  PivotTrajectory_t pivot_trajectory_;
+  PivotParams_t pivot_params_;
+};
 
 }  // namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
 

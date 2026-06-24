@@ -42,7 +42,8 @@ ateam_radio_msgs::msg::BasicTelemetry fromProto(const RobotFeedback & proto_msg)
 
 RobotControl fromMsg(
   const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot,
-  ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor & maneuver_executor, rclcpp::Logger logger);
+  ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor & maneuver_executor,
+  rclcpp::Logger logger);
 
 SimulatorControl fromMsg(const ssl_league_msgs::msg::SimulatorControl & ros_msg);
 

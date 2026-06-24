@@ -109,11 +109,13 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
 
   if(world.ball.visible) {
     motion::intents::LinearVelocityAngularFacing intent;
+    intent.frame = ateam_kenobi::motion::Frame::Local;
     intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
     intent.face_target = world.ball.pos;
     command.motion_intent = intent;
   } else {
     motion::intents::Velocity intent;
+    intent.frame = ateam_kenobi::motion::Frame::Local;
     intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
     intent.angular = 0.0;
     command.motion_intent = intent;
