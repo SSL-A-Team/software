@@ -23,7 +23,8 @@ set(RADIO_STRUCTS_TO_GENERATE
     LocalVelocityCommand
     GlobalAccelerationCommand
     LocalAccelerationCommand
-    PivotCommand
+    PointPivotCommand
+    HeadingPivotCommand
     BasicTelemetry
     ErrorTelemetry
     ExtendedTelemetry
