@@ -267,7 +267,6 @@ export class RosManager {
         return function(msg: any): void {
             // Convert timestamp to millis
             appState.realtimeWorld.timestamp = (msg.current_time.sec * 1e3) + (msg.current_time.nanosec / 1e6);
-            appState.lastTimeReceivedKenobi = Date.now();
 
             appState.realtimeWorld.ball.pose = msg.ball.pose;
             appState.realtimeWorld.ball.visible = msg.ball.visible;
@@ -485,7 +484,7 @@ export class RosManager {
     getKenobiStatusCallback(appState: AppState): (msg: any) => void {
         return function(msg: any): void {
             appState.realtimeWorld.fps = msg.fps;
-
+            appState.lastTimeReceivedKenobi = Date.now();
         }
     }
 }
