@@ -102,6 +102,10 @@ RobotCommand PivotKick::Pivot(const Robot & robot)
   motion::intents::PivotHeading intent;
   intent.radius = 0.095 * 1.05;
   intent.target_heading = robot_to_target_angle;
+  intent.inset_angle = M_PI / 2.0;
+
+  intent.limits.angular_velocity = 2.0;
+  intent.limits.angular_acceleration = 2.0;
 
   RobotCommand command;
   command.motion_intent = intent;

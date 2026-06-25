@@ -11,6 +11,8 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
+find_package(ateam_controls REQUIRED)
+find_package(ateam_geometry REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ssl_league_protobufs REQUIRED)
@@ -18,6 +20,7 @@ find_package(ssl_league_protobufs REQUIRED)
 add_library(${PROJECT_NAME} SHARED
   src/ssl_simulation_radio_bridge_node.cpp
   src/message_conversions.cpp
+  src/robot_maneuvers.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 ament_target_dependencies(${PROJECT_NAME}
@@ -26,6 +29,8 @@ ament_target_dependencies(${PROJECT_NAME}
   ateam_common
   ateam_msgs
   ateam_radio_msgs
+  ateam_controls
+  ateam_geometry
   tf2
   tf2_geometry_msgs
   ssl_league_protobufs
