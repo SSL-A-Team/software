@@ -34,10 +34,10 @@ angular_threshold = 0.0349
 
 # x, y, theta, hold time
 waypoints = [
-    (-0.5, -0.5, 0.0, 1.0),
-    (-0.5, 0.5, 0.0, 1.0),
-    (0.5, 0.5, 0.0, 1.0),
-    (0.5, -0.5, 0.0, 1.0),
+    (0.0, -0.5, 0.0, 1.0),
+    (0.0, 0.5, 0.0, 1.0),
+    (-1.0, 0.5, 0.0, 1.0),
+    (-1.0, -0.5, 0.0, 1.0),
 ]
 
 current_index = 0
@@ -59,10 +59,10 @@ def publish_waypoint_command(index: int):
     command_msg.pose.y = waypoint[1]
     command_msg.pose.theta = waypoint[2]
     command_msg.kick_request = RobotMotionCommand.KR_DISABLE
-    command_msg.limit_acc_linear = 3.0
-    command_msg.limit_vel_linear = 3.0
-    command_msg.limit_acc_angular = 8.0
-    command_msg.limit_vel_angular = 4.0
+    # command_msg.limit_acc_linear = 3.0
+    # command_msg.limit_vel_linear = 3.0
+    # command_msg.limit_acc_angular = 8.0
+    # command_msg.limit_vel_angular = 4.0
     command_pub.publish(command_msg)
 
 

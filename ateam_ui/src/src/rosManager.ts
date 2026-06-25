@@ -402,7 +402,7 @@ export class RosManager {
             }
 
             world.field.fieldDimensions = newFieldDimensions;
-            world.ignoreSide = msg.ignore_side;
+            world.ignoreSide = msg.ignore_side_raw;
         }
     }
 
