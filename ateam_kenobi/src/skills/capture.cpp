@@ -58,7 +58,7 @@ void Capture::chooseState(const World & world, const Robot & robot)
 {
   if(state_ == State::Capture && !world.ball.visible) {
     state_ = State::Capture;
-  } else if (ateam_geometry::norm(world.ball.pos - robot.pos) < approach_radius_) {
+  } else if (ateam_geometry::norm(world.ball.pos - robot.pos) < approach_radius_ + kRobotRadius) {
     state_ = State::Capture;
   } else {
     state_ = State::MoveToBall;
@@ -69,10 +69,10 @@ RobotCommand Capture::runMoveToBall(
   const World & world,
   const Robot & robot)
 {
-  (void)robot;
+  const auto robot_to_ball_vector = world.ball.pos - robot.pos;
 
   motion::intents::PositionFacing intent;
-  intent.position = world.ball.pos;
+  intent.position = world.ball.pos - approach_radius_ * ateam_geometry::normalize(robot_to_ball_vector);
   intent.face_target = world.ball.pos;
   intent.planner_options.avoid_ball = false;
 

@@ -328,7 +328,7 @@ export default {
         getTeamColor: {
             handler() {
                 this.redraw();
-            }
+            },
         }
     }
 }

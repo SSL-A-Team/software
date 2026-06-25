@@ -150,23 +150,32 @@ void ManeuverExecutor::trajectory_maneuver(
       {
         global_feedback.theta = 0.0;
 
+        // Might be better to check the error between the trajectory setpoint and the final target instead
+
         // Handle slight xy overshoot and final position offset due to vision filter delay
-        const double threshold = 0.05;
-        if (abs(global_target_err.x) < threshold) {
+        const double linear_threshold = 0.01;
+        const double angular_threshold = 0.1;
+
+        if (abs(global_target_err.x) < linear_threshold) {
           global_feedforward.x = 0.0;
           global_feedback.x = pid_x_target_.compute_command(global_target_err.x, dt);
         }
 
-        if (abs(global_target_err.y) < threshold) {
+        if (abs(global_target_err.y) < linear_threshold) {
           global_feedforward.y = 0.0;
           global_feedback.y = pid_y_target_.compute_command(global_target_err.y, dt);
         }
+
+        if (abs(global_target_err.theta) < angular_threshold) {
+          global_feedforward.theta = 0.0;
+          global_feedback.theta = pid_y_target_.compute_command(global_target_err.theta, dt);
+        }
+
         break;
       }
 
     case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
     case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
-      std::cerr << "radius: " << command_.pivot_orbit_radius << std::endl;
       global_feedback.x = 0.0;
       global_feedback.y = 0.0;
       break;
