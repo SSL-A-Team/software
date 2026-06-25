@@ -69,21 +69,25 @@ RobotCommand Capture::runMoveToBall(
   const World & world,
   const Robot & robot)
 {
+  (void)robot;
+
   motion::intents::PositionFacing intent;
   intent.position = world.ball.pos;
   intent.face_target = world.ball.pos;
   intent.planner_options.avoid_ball = false;
 
-  const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
-      world.ball.pos));
+  // const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
+  //     world.ball.pos));
 
-  const auto decel_distance = distance_to_ball - approach_radius_;
+  // const auto decel_distance = distance_to_ball - approach_radius_;
 
-  const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
-      (capture_speed_ * capture_speed_));
+  // const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
+  //     (capture_speed_ * capture_speed_));
 
-  intent.limits.linear_velocity = std::min(max_decel_vel, max_speed_);
+  // intent.limits.linear_velocity = std::min(max_decel_vel, max_speed_);
 
+  intent.limits.linear_velocity = max_speed_;
+  intent.limits.linear_acceleration = decel_limit_;
   RobotCommand command;
   command.motion_intent = intent;
 
@@ -108,16 +112,14 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
   RobotCommand command;
 
   if(world.ball.visible) {
-    motion::intents::LinearVelocityAngularFacing intent;
-    intent.frame = ateam_kenobi::motion::Frame::Local;
-    intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
+    motion::intents::PositionFacing intent;
+    intent.position = world.ball.pos;
     intent.face_target = world.ball.pos;
     command.motion_intent = intent;
   } else {
-    motion::intents::Velocity intent;
-    intent.frame = ateam_kenobi::motion::Frame::Local;
-    intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
-    intent.angular = 0.0;
+    motion::intents::Position intent;
+    intent.position = world.ball.pos;
+    intent.heading = robot.theta;
     command.motion_intent = intent;
   }
 

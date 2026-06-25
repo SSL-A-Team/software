@@ -312,7 +312,41 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
 {
   (void)overlays;
   (void)world;
-  return PivotToHeading(intent, robot);
+  (void)robot;
+
+  MotionCommand command;
+  command.control_mode = ControlMode::HeadingPivot;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  command.pivot_global_theta = intent.target_heading;
+  command.pivot_orbit_radius = intent.radius;
+  command.pivot_inset_angle = intent.inset_angle;
+  command.pivot_direction = static_cast<uint8_t>(intent.direction);
+  command.pivot_commpute_inset_angle = intent.compute_inset_angle;
+
+  return command;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::PivotPoint & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)overlays;
+  (void)world;
+  (void)robot;
+
+  MotionCommand command;
+  command.control_mode = ControlMode::PointPivot;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  command.pivot_target_x = intent.target_x;
+  command.pivot_target_y = intent.target_y;
+  command.pivot_orbit_radius = intent.radius;
+  command.pivot_inset_angle = intent.inset_angle;
+  command.pivot_direction = static_cast<uint8_t>(intent.direction);
+  command.pivot_commpute_inset_angle = intent.compute_inset_angle;
+
+  return command;
 }
 
 }  // namespace ateam_kenobi::motion

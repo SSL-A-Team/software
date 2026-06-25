@@ -31,12 +31,16 @@ from rclpy.qos import qos_profile_system_default
 from transforms3d.euler import quat2euler
 
 linear_threshold = 10
-angular_threshold = 0.0349
+angular_threshold = 0.1
 
 # x, y, theta, orbit_radius, inset angle, hold time
 waypoints = [
-    (-0.5, -0.5, 0.0, 0.5, 0.0, 1.0),
-    (-0.5, -0.5, math.pi, 0.5, 0.0, 1.0),
+    # (-0.5, -0.5, 0.0, 0.5, 0.0, 1.0),
+    # (-0.5, -0.5, math.pi, 0.5, 0.0, 1.0),
+    (-0.5, -0.5, 0.0, 0.09975, math.pi/2, 1.0),
+    (-0.5, -0.5, math.pi / 2.0, 0.09975, math.pi/2, 1.0),
+    (-0.5, -0.5, math.pi, 0.09975, math.pi/2, 1.0),
+    (-0.5, -0.5, -math.pi / 2.0, 0.09975, math.pi/2, 1.0),
 ]
 
 current_index = 0
@@ -53,7 +57,7 @@ def vision_callback(msg: VisionStateRobot):
 def publish_waypoint_command(index: int):
     waypoint = waypoints[index]
     command_msg = RobotMotionCommand()
-    command_msg.body_control_mode = RobotMotionCommand.BCM_PIVOT
+    command_msg.body_control_mode = RobotMotionCommand.BCM_HEADING_PIVOT
     command_msg.pose.x = waypoint[0]
     command_msg.pose.y = waypoint[1]
     command_msg.pose.theta = waypoint[2]

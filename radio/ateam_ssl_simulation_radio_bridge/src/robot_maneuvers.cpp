@@ -32,15 +32,16 @@ void ManeuverExecutor::execute_maneuver(
   switch(ros_msg.body_control_mode) {
     case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
       bcm_off_maneuver();
-      return;   // Ignores acceleration limits set in message and immediately stops the robot
+      return;  // Ignores acceleration limits set in message and immediately stops the robot
 
-      // Trajectory Maneuvers
+    // Trajectory Maneuvers
     case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
-    case ateam_msgs::msg::RobotMotionCommand::BCM_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
       trajectory_maneuver(ros_msg, robot);
       break;
 
-      // Global Maneuvers
+    // Global Maneuvers
     case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_VELOCITY:
       global_velocity_maneuver(ros_msg);
       break;
@@ -48,7 +49,7 @@ void ManeuverExecutor::execute_maneuver(
       global_acceleration_maneuver(ros_msg);
       break;
 
-      // Local Maneuvers
+    // Local Maneuvers
     case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY:
       local_velocity_maneuver(ros_msg, robot);
       break;
@@ -67,7 +68,7 @@ void ManeuverExecutor::bcm_off_maneuver()
   prev_update_time_ = std::chrono::steady_clock::now();
 }
 
-  // Trajectory Maneuvers
+// Trajectory Maneuvers
 void ManeuverExecutor::trajectory_maneuver(
   const ateam_msgs::msg::RobotMotionCommand & ros_msg,
   ateam_msgs::msg::GameStateRobot robot)
@@ -88,13 +89,10 @@ void ManeuverExecutor::trajectory_maneuver(
   bool maneuver_command_changed = (command_ != ros_msg);
   bool replanning = maneuver_command_changed || current_pos_needs_replan;
   if (replanning) {
-    Vector6C_t starting_state;
+    Vector6C_t starting_state = state; // start from trajectory predicted state
 
-      // If previous command used trajectory controller initialize from the trajectory state
-    if (command_uses_trajectory()) {
-      starting_state = state;
-    } else {
-        // Previously commanded velocity is more accurate than vision estimate
+    if (current_pos_needs_replan) {
+      // Predicted robot state is inaccurate
       starting_state = Vector6C_t{
         static_cast<float>(robot.pose.position.x),
         static_cast<float>(robot.pose.position.y),
@@ -103,6 +101,11 @@ void ManeuverExecutor::trajectory_maneuver(
         static_cast<float>(prev_global_command_.y),
         static_cast<float>(prev_global_command_.theta),
       };
+    } else if (!command_uses_trajectory()) {
+      // If previous command did not use trajectory controller use prev commanded velocities instead
+      starting_state.data[3] = static_cast<float>(prev_global_command_.x);
+      starting_state.data[4] = static_cast<float>(prev_global_command_.y);
+      starting_state.data[5] = static_cast<float>(prev_global_command_.theta);
     }
 
     command_ = ros_msg;
@@ -121,18 +124,18 @@ void ManeuverExecutor::trajectory_maneuver(
   ateam_msgs::msg::Twist2D global_target_err = ateam_msgs::msg::Twist2D();
   global_target_err.x = command_.pose.x - robot.pose.position.x;
   global_target_err.y = command_.pose.y - robot.pose.position.y;
-  global_target_err.theta = angles::shortest_angular_distance(command_.pose.theta,
-      get_yaw(robot.pose));
+  global_target_err.theta = angles::shortest_angular_distance(get_yaw(robot.pose),
+    command_.pose.theta);
 
   ateam_msgs::msg::Twist2D global_traj_err = ateam_msgs::msg::Twist2D();
   global_traj_err.x = state.data[0] - robot.pose.position.x;
   global_traj_err.y = state.data[1] - robot.pose.position.y;
-  global_traj_err.theta = angles::shortest_angular_distance(state.data[2], get_yaw(robot.pose));
+  global_traj_err.theta = angles::shortest_angular_distance(get_yaw(robot.pose), state.data[2]);
 
   ateam_msgs::msg::Twist2D global_feedforward = ateam_msgs::msg::Twist2D();
   ateam_msgs::msg::Twist2D global_feedback = ateam_msgs::msg::Twist2D();
 
-    // Default Control Behavior
+  // Default Control Behavior
   global_feedforward.x = state.data[3];
   global_feedforward.y = state.data[4];
   global_feedforward.theta = state.data[5];
@@ -141,10 +144,12 @@ void ManeuverExecutor::trajectory_maneuver(
   global_feedback.y = pid_y_traj_.compute_command(global_traj_err.y, dt);
   global_feedback.theta = pid_theta_traj_.compute_command(global_traj_err.theta, dt);
 
-    // Custom trajectory control behavior
+  // Custom trajectory control behavior
   switch(command_.body_control_mode) {
     case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
       {
+        global_feedback.theta = 0.0;
+
         // Handle slight xy overshoot and final position offset due to vision filter delay
         const double threshold = 0.05;
         if (abs(global_target_err.x) < threshold) {
@@ -159,7 +164,9 @@ void ManeuverExecutor::trajectory_maneuver(
         break;
       }
 
-    case ateam_msgs::msg::RobotMotionCommand::BCM_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
+      std::cerr << "radius: " << command_.pivot_orbit_radius << std::endl;
       global_feedback.x = 0.0;
       global_feedback.y = 0.0;
       break;
@@ -168,9 +175,11 @@ void ManeuverExecutor::trajectory_maneuver(
   current_global_command_.x = global_feedforward.x + global_feedback.x;
   current_global_command_.y = global_feedforward.y + global_feedback.y;
   current_global_command_.theta = global_feedforward.theta + global_feedback.theta;
+
+  std::cerr << "theta: " << get_yaw(robot.pose) << ", final err: " << global_target_err.theta << ", traj err: " << global_traj_err.theta << std::endl;
 }
 
-  // Global Maneuvers
+// Global Maneuvers
 void ManeuverExecutor::global_velocity_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg)
 {
   current_global_command_ = ros_msg.velocity;
@@ -186,7 +195,7 @@ void ManeuverExecutor::global_acceleration_maneuver(
   current_global_command_.theta = prev_global_command_.theta + dt * ros_msg.acceleration.theta;
 }
 
-  // Local Maneuvers
+// Local Maneuvers
 void ManeuverExecutor::local_velocity_maneuver(
   const ateam_msgs::msg::RobotMotionCommand & ros_msg,
   ateam_msgs::msg::GameStateRobot robot)
@@ -214,11 +223,11 @@ void ManeuverExecutor::finalize_command(
 
   ateam_msgs::msg::Twist2D local_command;
   if (command_uses_trajectory()) {
-      // Motion limits for trajectory type maneuvers are mostly handled by the planner
+    // Motion limits for trajectory type maneuvers are mostly handled by the planner
     Vector6C_t state = get_trajectory_state();
     local_command = rotate_frame(current_global_command_, state.data[2]);
   } else {
-      // Handle non-trajectory type maneuver motion limits
+    // Handle non-trajectory type maneuver motion limits
     traj_params_ = generate_trajectory_params(command_);
     current_global_command_ = apply_xy_motion_limits(prev_global_command_, current_global_command_,
         traj_params_.max_vel_linear, traj_params_.max_accel_linear, dt);
@@ -321,11 +330,31 @@ TrajectoryParams_t ManeuverExecutor::generate_trajectory_params(
   return traj_params;
 }
 
+PivotParams_t ManeuverExecutor::generate_pivot_params(
+  const ateam_msgs::msg::RobotMotionCommand & ros_msg)
+{
+  PivotParams_t pivot_params = ateam_controls_default_pivot_params();
+  if (ros_msg.limit_vel_angular != 0.0) {
+    pivot_params.max_vel_angular = ros_msg.limit_vel_angular;
+  }
+  if (ros_msg.limit_acc_angular != 0.0) {
+    pivot_params.max_accel_angular = ros_msg.limit_acc_angular;
+  }
+
+  pivot_params.orbit_radius = ros_msg.pivot_orbit_radius;
+  pivot_params.inset_angle = ros_msg.pivot_inset_angle;
+  pivot_params.compute_inset_angle = ros_msg.pivot_compute_inset_angle;
+  pivot_params.direction = static_cast<PivotDirection_t>(ros_msg.pivot_direction);
+
+  return pivot_params;
+}
+
 bool ManeuverExecutor::command_uses_trajectory()
 {
   switch(command_.body_control_mode) {
     case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
-    case ateam_msgs::msg::RobotMotionCommand::BCM_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
       return true;
 
     default:
@@ -338,7 +367,8 @@ Vector6C_t ManeuverExecutor::get_trajectory_state()
   switch(command_.body_control_mode) {
     case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
       return position_trajectory_.state;
-    case ateam_msgs::msg::RobotMotionCommand::BCM_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
       return pivot_trajectory_.state;
     default:
       return Vector6C_t();
@@ -364,20 +394,24 @@ void ManeuverExecutor::plan_trajectory(Vector6C_t starting_state)
         );
         break;
       }
-    case ateam_msgs::msg::RobotMotionCommand::BCM_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
       {
-        pivot_params_ = ateam_controls_default_pivot_params();
-        if (command_.limit_vel_angular != 0.0) {
-          pivot_params_.max_vel_angular = command_.limit_vel_angular;
-        }
-        if (command_.limit_acc_angular != 0.0) {
-          pivot_params_.max_accel_angular = command_.limit_acc_angular;
-        }
-        pivot_params_.orbit_radius = command_.pivot_orbit_radius;
-        pivot_params_.inset_angle = command_.pivot_inset_angle;
-        ateam_controls_pivot_traj_new(
+        pivot_params_ = generate_pivot_params(command_);
+        ateam_controls_pivot_traj_from_target_heading(
           starting_state,
           command_.pivot_global_theta,
+          pivot_params_,
+          &pivot_trajectory_
+        );
+        break;
+      }
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
+      {
+        pivot_params_ = generate_pivot_params(command_);
+        ateam_controls_pivot_traj_from_target_point(
+          starting_state,
+          command_.pivot_target_x,
+          command_.pivot_target_y,
           pivot_params_,
           &pivot_trajectory_
         );
@@ -392,7 +426,8 @@ void ManeuverExecutor::tick_trajectory(float dt)
     case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
       ateam_controls_traj_tick(&position_trajectory_, dt);
       break;
-    case ateam_msgs::msg::RobotMotionCommand::BCM_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
       ateam_controls_pivot_traj_tick(&pivot_trajectory_, dt);
       break;
   }

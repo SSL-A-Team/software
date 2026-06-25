@@ -46,7 +46,7 @@ public:
 
     pid_x_traj_ = PID(3.0, 0.0, 0.0);
     pid_y_traj_ = PID(3.0, 0.0, 0.0);
-    pid_theta_traj_ = PID(0.0, 0.0, 0.0);
+    pid_theta_traj_ = PID(0.1, 0.0, 0.0);
 
     pid_x_target_ = PID(4.0, 0.0, 0.001);
     pid_y_target_ = PID(4.0, 0.0, 0.001);
@@ -98,6 +98,8 @@ private:
   ateam_msgs::msg::Twist2D rotate_frame(ateam_msgs::msg::Twist2D input_frame, double angle);
 
   TrajectoryParams_t generate_trajectory_params(
+    const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+  PivotParams_t generate_pivot_params(
     const ateam_msgs::msg::RobotMotionCommand & ros_msg);
   bool command_uses_trajectory();
   Vector6C_t get_trajectory_state();

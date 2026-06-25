@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 import argparse
+import math
 import time
 
 from ateam_msgs.msg import RobotMotionCommand, VisionStateRobot
