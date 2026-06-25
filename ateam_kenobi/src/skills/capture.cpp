@@ -113,17 +113,23 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
 
   if(world.ball.visible) {
     motion::intents::PositionFacing intent;
+    intent.planner_options.avoid_ball = false;
     intent.position = world.ball.pos;
     intent.face_target = world.ball.pos;
+    intent.limits.linear_velocity = capture_speed_;
+    intent.limits.linear_acceleration = 1.5;
     command.motion_intent = intent;
   } else {
     motion::intents::Position intent;
+    intent.planner_options.avoid_ball = false;
     intent.position = world.ball.pos;
     intent.heading = robot.theta;
+    intent.limits.linear_velocity = capture_speed_;
+    intent.limits.linear_acceleration = 1.5;
     command.motion_intent = intent;
   }
 
-  command.dribbler_speed = kDefaultDribblerSpeed;
+  command.dribbler_speed = 1.5 * kDefaultDribblerSpeed;
 
   return command;
 }

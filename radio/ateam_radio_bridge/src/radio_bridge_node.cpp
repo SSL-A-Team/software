@@ -383,7 +383,7 @@ private:
         case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
           control_msg.body_control_mode = BCM_HEADING_PIVOT;
           control_msg.cmd.heading_pivot = {
-            static_cast<float>(command.pose.theta),
+            static_cast<float>(command.pivot_global_theta),
             static_cast<float>(command.limit_vel_angular),
             static_cast<float>(command.limit_acc_angular),
             static_cast<float>(command.pivot_orbit_radius),
@@ -396,8 +396,8 @@ private:
         case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
           control_msg.body_control_mode = BCM_POINT_PIVOT;
           control_msg.cmd.point_pivot = {
-            static_cast<float>(command.pose.x),
-            static_cast<float>(command.pose.y),
+            static_cast<float>(command.pivot_target_x),
+            static_cast<float>(command.pivot_target_y),
             static_cast<float>(command.limit_vel_angular),
             static_cast<float>(command.limit_acc_angular),
             static_cast<float>(command.pivot_orbit_radius),
