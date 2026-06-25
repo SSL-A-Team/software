@@ -167,7 +167,7 @@ export class RosManager {
         let sendPowerRequestService = new ROSLIB.Service({
             ros: this.ros,
             name: '/radio_bridge/send_power_request',
-            serviceType: 'ateam_msgs/srv/SendRobotPowerRequest'
+            serviceType: 'ateam_radio_msgs/srv/SendRobotPowerRequest'
         })
         this.services.set("sendPowerRequest", sendPowerRequestService);
 
