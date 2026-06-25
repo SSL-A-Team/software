@@ -38,9 +38,11 @@
 #include <ateam_radio_msgs/msg/basic_telemetry.hpp>
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_msgs/msg/game_state_world.hpp>
 #include <ateam_msgs/srv/send_simulator_control_packet.hpp>
 
 #include "message_conversions.hpp"
+#include "robot_maneuvers.hpp"
 
 namespace ateam_ssl_simulation_radio_bridge
 {
@@ -62,8 +64,9 @@ public:
     declare_parameter("ssl_sim_control_port", 10300);
     declare_parameter("ssl_sim_blue_port", 10301);
     declare_parameter("ssl_sim_yellow_port", 10302);
+    declare_parameter("command_timeout_ms", 100);
 
-    team_color_change_callback(ateam_common::TeamColor::Blue);
+    team_color_change_callback(ateam_common::TeamColor::Unknown);
 
     create_indexed_subscribers
     <ateam_msgs::msg::RobotMotionCommand>(
@@ -85,19 +88,20 @@ public:
       rclcpp::SystemDefaultsQoS(),
       this);
 
+    world_subscription_ = create_subscription<ateam_msgs::msg::GameStateWorld>(
+      std::string(Topics::kWorld), rclcpp::SystemDefaultsQoS(),
+      std::bind(&SSLSimulationRadioBridgeNode::world_callback, this, std::placeholders::_1));
+
     send_simulator_control_service_ =
       create_service<ateam_msgs::srv::SendSimulatorControlPacket>("~/send_simulator_control_packet",
         std::bind(&SSLSimulationRadioBridgeNode::handle_send_simulator_control, this,
         std::placeholders::_1, std::placeholders::_2));
 
     std::ranges::fill(command_timestamps_, std::chrono::steady_clock::now());
-    zero_command_timer_ =
+    send_command_timer_ =
       create_wall_timer(
-      std::chrono::milliseconds(
-        declare_parameter(
-          "command_timeout_ms",
-          100)),
-      std::bind(&SSLSimulationRadioBridgeNode::zero_command_timer_callback, this));
+      std::chrono::milliseconds(10),
+      std::bind(&SSLSimulationRadioBridgeNode::send_command_timer_callback, this));
 
 
     udp_sim_control_ = std::make_unique<ateam_common::BiDirectionalUDP>(
@@ -160,16 +164,29 @@ public:
       std::bind_front(&SSLSimulationRadioBridgeNode::feedback_callback, this));
   }
 
+  void world_callback(const ateam_msgs::msg::GameStateWorld & msg)
+  {
+    world_ = msg;
+  }
+
   void send_command(const ateam_msgs::msg::RobotMotionCommand & msg, const int robot_id)
   {
     if (!udp_robot_control_) {
       return;
     }
-    RobotControl robots_control = message_conversions::fromMsg(msg, robot_id, get_logger());
-    std::vector<uint8_t> buffer;
-    buffer.resize(robots_control.ByteSizeLong());
-    if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
-      udp_robot_control_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
+
+    const auto robot = world_.our_robots[robot_id];
+    // Somehow nonvisible robots have their id set to 0 in the world topic
+    // easier to just not interact with them
+    if (robot.visible) {
+      auto & maneuver_executor = manuever_executors_[robot_id];
+      RobotControl robots_control = message_conversions::fromMsg(msg, robot, maneuver_executor,
+          get_logger());
+      std::vector<uint8_t> buffer;
+      buffer.resize(robots_control.ByteSizeLong());
+      if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
+        udp_robot_control_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
+      }
     }
   }
 
@@ -178,7 +195,7 @@ public:
     int robot_id)
   {
     command_timestamps_[robot_id] = std::chrono::steady_clock::now();
-    send_command(*robot_commands_msg, robot_id);
+    commands_[robot_id] = *robot_commands_msg;
   }
 
   void feedback_callback(const uint8_t * buffer, size_t bytes_received)
@@ -203,18 +220,7 @@ public:
     }
   }
 
-  void send_zero_command(const int id)
-  {
-    ateam_msgs::msg::RobotMotionCommand msg;
-    msg.dribbler_speed = 0.0;
-    msg.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
-    msg.velocity.x = 0.0;
-    msg.velocity.y = 0.0;
-    msg.velocity.theta = 0.0;
-    send_command(msg, id);
-  }
-
-  void zero_command_timer_callback()
+  void send_command_timer_callback()
   {
     const auto timeout_duration = std::chrono::milliseconds(
       get_parameter(
@@ -222,8 +228,12 @@ public:
     const auto timeout_time = std::chrono::steady_clock::now() - timeout_duration;
     for (auto id = 0; id < 16; ++id) {
       if (command_timestamps_[id] < timeout_time) {
-        send_zero_command(id);
+        ateam_msgs::msg::RobotMotionCommand zero_command = ateam_msgs::msg::RobotMotionCommand();
+        zero_command.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
+        commands_[id] = zero_command;
       }
+
+      send_command(commands_[id], id);
     }
   }
 
@@ -237,9 +247,14 @@ private:
     16> feedback_publishers_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
     16> connection_publishers_;
+  rclcpp::Subscription<ateam_msgs::msg::GameStateWorld>::SharedPtr world_subscription_;
+  ateam_msgs::msg::GameStateWorld world_;
+  std::array<ateam_msgs::msg::RobotMotionCommand, 16> commands_;
+  std::array<ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor,
+    16> manuever_executors_;
   rclcpp::Service<ateam_msgs::srv::SendSimulatorControlPacket>::SharedPtr
     send_simulator_control_service_;
-  rclcpp::TimerBase::SharedPtr zero_command_timer_;
+  rclcpp::TimerBase::SharedPtr send_command_timer_;
   std::array<std::chrono::steady_clock::time_point, 16> command_timestamps_;
 };
 

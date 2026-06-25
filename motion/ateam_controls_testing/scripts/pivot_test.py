@@ -30,15 +30,17 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 from transforms3d.euler import quat2euler
 
-linear_threshold = 1e-2
-angular_threshold = 0.0349
+linear_threshold = 10
+angular_threshold = 0.1
 
-# x, y, theta, hold time
+# x, y, theta, orbit_radius, inset angle, hold time
 waypoints = [
-    (-0.5, -0.5, 0.0, 1.0),
-    (-0.5, 0.5, 0.0, 1.0),
-    (0.5, 0.5, 0.0, 1.0),
-    (0.5, -0.5, 0.0, 1.0),
+    # (-0.5, -0.5, 0.0, 0.5, 0.0, 1.0),
+    # (-0.5, -0.5, math.pi, 0.5, 0.0, 1.0),
+    (-0.5, -0.5, 0.0, 0.09975, math.pi/2, 1.0),
+    (-0.5, -0.5, math.pi / 2.0, 0.09975, math.pi/2, 1.0),
+    (-0.5, -0.5, math.pi, 0.09975, math.pi/2, 1.0),
+    (-0.5, -0.5, -math.pi / 2.0, 0.09975, math.pi/2, 1.0),
 ]
 
 current_index = 0
@@ -55,11 +57,14 @@ def vision_callback(msg: VisionStateRobot):
 def publish_waypoint_command(index: int):
     waypoint = waypoints[index]
     command_msg = RobotMotionCommand()
-    command_msg.body_control_mode = RobotMotionCommand.BCM_GLOBAL_POSITION
+    command_msg.body_control_mode = RobotMotionCommand.BCM_HEADING_PIVOT
     command_msg.pose.x = waypoint[0]
     command_msg.pose.y = waypoint[1]
     command_msg.pose.theta = waypoint[2]
     command_msg.kick_request = RobotMotionCommand.KR_DISABLE
+    command_msg.pivot_global_theta = waypoint[2]
+    command_msg.pivot_orbit_radius = waypoint[3]
+    command_msg.pivot_inset_angle = waypoint[4]
     command_msg.limit_acc_linear = 3.0
     command_msg.limit_vel_linear = 3.0
     command_msg.limit_acc_angular = 8.0
@@ -82,14 +87,14 @@ def is_at_waypoint(index: int):
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(
-        description='Test node for sending waypoints to the robot'
+        description='Test node for sending pivots to the robot'
     )
     argparser.add_argument('robot_id', type=int)
     argparser.add_argument('--color', '-c', type=str, default='blue')
     args = argparser.parse_args()
 
     rclpy.init()
-    node = Node('waypoints_test')
+    node = Node('pivot_test')
 
     command_pub = node.create_publisher(
         RobotMotionCommand,

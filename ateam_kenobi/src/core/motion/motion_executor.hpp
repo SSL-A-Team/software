@@ -97,6 +97,9 @@ private:
   std::optional<MotionCommand> ExecuteIntent(
     const intents::PivotHeading & intent, const Robot & robot,
     visualization::Overlays & overlays, const World & world);
+  std::optional<MotionCommand> ExecuteIntent(
+    const intents::PivotPoint & intent, const Robot & robot,
+    visualization::Overlays & overlays, const World & world);
 };
 
 }  // namespace ateam_kenobi::motion
