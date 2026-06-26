@@ -162,7 +162,7 @@ Connection status is published on `~/robot_feedback/connection/robot{id}` as `at
 
 The radio bridge has parameters that control which firmware control loops are active:
 - `controls_enabled.body_vel` (default `true`) — enable body velocity control
-- `controls_enabled.wheel_vel` (default `false`) — enable wheel velocity feedforward
+- `controls_enabled.wheel_vel` (default `true`) — enable wheel velocity feedforward
 - `controls_enabled.wheel_torque` (default `true`) — enable wheel torque (current) control
 
 These map to bit flags in the `BasicControl` packet: `wheel_vel_control_enabled` and `wheel_torque_control_enabled`.
@@ -416,6 +416,8 @@ Always sends `BCM_LOCAL_VELOCITY` mode.
 
 Python (ament_python, no recompile) package under `motion/` for scripted motion-profiling routines. Each scenario is a single `rclpy` node driven by a state machine that publishes `RobotMotionCommand` messages directly to `/robot_motion_commands/robot{id}`. Tune behavior via ROS params at launch — no rebuild needed.
 
+Shared helper module `overlays.py` provides `make_array`, `make_line`, `make_point`, `make_pose_marker`, and `make_text` builders; scenarios use these to publish debug visualizations to `/overlays` (`ateam_msgs/OverlayArray`) under a per-scenario `OVERLAY_NS`.
+
 ### Scenarios
 
 - **`ball_capture_scenario`** — Hardcoded robot 2 / blue. Subscribes `/ball`, `/blue_team/robot2`, `/field`. Drives the robot through:
@@ -430,12 +432,28 @@ Python (ament_python, no recompile) package under `motion/` for scripted motion-
   - Field positive-x is the +x goal; "behind" the ball means smaller x.
   - Run: `ros2 run ateam_motion_scenarios ball_capture_scenario` (override any param with `--ros-args -p name:=value`).
 
+- **`pass_and_catch_scenario`** — Hardcoded robot 2 / blue. Captures a stationary ball, aims at a configurable point on a field-edge "wall", kicks, then drives to intercept the geometrically reflected ricochet (perfectly elastic bounce, no friction/spin). State machine:
+
+  `WAIT_FOR_BALL → WAIT_FOR_STATIONARY → ALIGN_STAGING_Y → APPROACH_STAGING → CAPTURE → AIM_AT_WALL → KICK → DRIVE_TO_INTERCEPT → CATCH_DWELL → RESET → DONE (loops)`
+
+  - Wall is one of `pos_y` / `neg_y` (touchlines, reflect y) or `pos_x` / `neg_x` (goallines, reflect x). Hit point parameterized by `wall_hit_offset` (signed, along the wall from field center); `wall_inset` shifts inward to account for ball radius.
+  - Intercept pose places the dribbler `intercept_distance` meters along the reflected ray from the bounce point, facing the bounce so the ball runs into the dribbler.
+  - Run: `ros2 run ateam_motion_scenarios pass_and_catch_scenario`.
+
+- **`pivot_scenario`** — Hardcoded robot 2 / blue. Captures the ball, backs up so the ball sits at `circle_radius` from the field origin, then pivots around the origin while continuously facing the origin. Optionally pauses (`HOLD`) at fixed angular intervals to simulate turning to pass/shoot. State machine:
+
+  `WAIT_FOR_BALL → WAIT_FOR_STATIONARY → ALIGN_STAGING_Y → APPROACH_STAGING → CAPTURE → BACKUP_TO_RADIUS → PIVOT → [HOLD] → DONE`
+
+  - `circle_radius` is the distance of the *ball* from the origin; the robot body sits at `circle_radius + robot_front_offset`. For angle `phi`: `robot_theta = phi + π` (robot +x points toward origin).
+  - Run: `ros2 run ateam_motion_scenarios pivot_scenario`.
+
 ### Conventions for adding new scenarios
 
 - New scenarios go in `motion/ateam_motion_scenarios/ateam_motion_scenarios/` as Python modules, added as new entry points in `setup.py`.
 - Always send `BCM_GLOBAL_POSITION` or `BCM_GLOBAL_VELOCITY` from these scenarios; reserve `BCM_LOCAL_VELOCITY` for kenobi/joystick.
 - Reuse the `pos_tol` / `yaw_tol` pattern instead of introducing per-phase tolerances.
 - Leave limit fields at `0.0` when you want the firmware defaults; only set positive values to clamp.
+- Use the shared `overlays.py` helpers to publish debug visualizations to `/overlays` rather than rolling new overlay builders.
 - Run kenobi off (or disable the target robot in the playbook) before running a scenario, since both will publish to the same `/robot_motion_commands/robot{id}` topic.
 
 ---
