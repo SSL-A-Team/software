@@ -55,6 +55,7 @@ OVERLAY_NS = 'pivot_scenario'
 class State(Enum):
     WAIT_FOR_BALL = auto()
     WAIT_FOR_STATIONARY = auto()
+    ALIGN_STAGING_Y = auto()
     APPROACH_STAGING = auto()
     CAPTURE = auto()
     BACKUP_TO_RADIUS = auto()
@@ -100,8 +101,16 @@ class PivotScenario(Node):
         self.declare_parameter('limit_acc_angular', 15.0)
 
         # Pivot params.
-        self.declare_parameter('circle_radius', 1.0)
-        self.declare_parameter('circle_linear_speed', 0.5)
+        self.declare_parameter('circle_radius', 0.1)
+        self.declare_parameter('circle_angular_speed', 2.0)
+        # Bias added to the robot's heading (phi - pi), in radians. Applied
+        # in the direction of travel so a positive value leads the pivot.
+        self.declare_parameter('angular_lead', 0)
+        # If true, drive the PIVOT state with BCM_GLOBAL_VELOCITY commands
+        # (tangential linear velocity + angular rate) instead of
+        # BCM_GLOBAL_POSITION. HOLD still uses position so the robot stays
+        # planted at the hold pose.
+        self.declare_parameter('velocity_control', True)
         # +1 = counter-clockwise (math positive), -1 = clockwise.
         self.declare_parameter('circle_direction', 1)
         self.declare_parameter('circle_max_angular_vel', 0.0)
@@ -144,8 +153,12 @@ class PivotScenario(Node):
 
         self.circle_radius = float(
             self.get_parameter('circle_radius').value)
-        self.circle_linear_speed = float(
-            self.get_parameter('circle_linear_speed').value)
+        self.circle_angular_speed = float(
+            self.get_parameter('circle_angular_speed').value)
+        self.angular_lead = float(
+            self.get_parameter('angular_lead').value)
+        self.velocity_control = bool(
+            self.get_parameter('velocity_control').value)
         cdir = int(self.get_parameter('circle_direction').value)
         self.circle_direction = 1 if cdir >= 0 else -1
         self.circle_max_angular_vel = float(
@@ -215,7 +228,7 @@ class PivotScenario(Node):
         self.get_logger().info(
             f'pivot_scenario started for robot {ROBOT_ID} ({TEAM_COLOR}). '
             f'R={self.circle_radius:.3f} m, '
-            f'v={self.circle_linear_speed:.3f} m/s, '
+            f'v={self.circle_angular_speed:.3f} rad/s, '
             f'dir={self.circle_direction:+d}. '
             'State: WAIT_FOR_BALL')
 
@@ -290,6 +303,22 @@ class PivotScenario(Node):
         cmd.dribbler_speed = float(dribbler_speed)
         return cmd
 
+    def make_global_vel_cmd(self, vx: float, vy: float, vtheta: float,
+                            kick_request: int = RobotMotionCommand.KR_DISABLE,
+                            dribbler_speed: float = 0.0,
+                            kick_speed: float = 0.0) -> RobotMotionCommand:
+        cmd = RobotMotionCommand()
+        cmd.body_control_mode = RobotMotionCommand.BCM_GLOBAL_VELOCITY
+        cmd.pose = Twist2D()
+        cmd.velocity = Twist2D(x=float(vx), y=float(vy), theta=float(vtheta))
+        cmd.acceleration = Twist2D()
+        cmd.limit_acc_linear = self.limit_acc_linear
+        cmd.limit_acc_angular = self.limit_acc_angular
+        cmd.kick_request = kick_request
+        cmd.kick_speed = float(kick_speed)
+        cmd.dribbler_speed = float(dribbler_speed)
+        return cmd
+
     def make_off_cmd(self) -> RobotMotionCommand:
         cmd = RobotMotionCommand()
         cmd.body_control_mode = RobotMotionCommand.BCM_OFF
@@ -304,7 +333,7 @@ class PivotScenario(Node):
         r_robot = self.circle_radius + self.robot_front_offset
         return (r_robot * math.cos(phi),
                 r_robot * math.sin(phi),
-                phi + math.pi)
+                phi + math.pi + self.circle_direction * self.angular_lead)
 
     # ------------------------------------------------------------------ tick
     def tick(self):
@@ -449,11 +478,23 @@ class PivotScenario(Node):
                     self.ball_xy = (bp.x, bp.y)
                     self.get_logger().info(
                         f'Ball stationary at ({bp.x:.3f}, {bp.y:.3f})')
-                    self.transition(State.APPROACH_STAGING)
+                    self.transition(State.ALIGN_STAGING_Y)
                     return self.make_off_cmd()
             else:
                 self.stationary_since = None
             return self.make_off_cmd()
+
+        if s == State.ALIGN_STAGING_Y:
+            # Move to the staging y while holding current x so the path to
+            # APPROACH_STAGING doesn't pass through the ball.
+            rs = self.robot_xy_yaw()
+            if rs is None:
+                return self.make_off_cmd()
+            tx = rs[0]
+            ty = self.ball_xy[1]
+            if abs(rs[1] - ty) <= self.pos_tol:
+                self.transition(State.APPROACH_STAGING)
+            return self.make_pos_cmd(tx, ty)
 
         if s == State.APPROACH_STAGING:
             tx = self.ball_xy[0] - self.approach_offset \
@@ -510,7 +551,7 @@ class PivotScenario(Node):
                 dt = (now - self.last_tick_time).nanoseconds * 1e-9
             self.last_tick_time = now
 
-            omega = self.circle_linear_speed / self.circle_radius
+            omega = self.circle_angular_speed
             if self.circle_max_angular_vel > 0.0:
                 omega = min(omega, self.circle_max_angular_vel)
             d_phi = self.circle_direction * omega * dt
@@ -542,6 +583,16 @@ class PivotScenario(Node):
                 return self.make_off_cmd()
 
             tx, ty, ttheta = self.pose_for_phi(self.phi)
+            if self.velocity_control:
+                phi_dot = self.circle_direction * omega
+                r_robot = self.circle_radius + self.robot_front_offset
+                vx = -r_robot * math.sin(self.phi) * phi_dot
+                vy = r_robot * math.cos(self.phi) * phi_dot
+                return self.make_global_vel_cmd(
+                    vx, vy, phi_dot,
+                    kick_request=RobotMotionCommand.KR_ARM,
+                    dribbler_speed=self.dribbler_speed,
+                )
             return self.make_pos_cmd(
                 tx, ty, ttheta,
                 kick_request=RobotMotionCommand.KR_ARM,
