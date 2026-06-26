@@ -39,6 +39,7 @@ the trajectory end pose) outside the playable field minus
 latched intercept (or no command, if none is latched yet).
 """
 
+from collections import deque
 from enum import auto, Enum
 import math
 import os
@@ -46,6 +47,7 @@ import sys
 
 from ateam_motion_scenarios.overlays import (
     make_array,
+    make_circle,
     make_line,
     make_point,
     make_pose_marker,
@@ -135,14 +137,29 @@ class CatchScenario(Node):
         # Mode selection
         self.declare_parameter('mode', 'simple')
 
+        # Trajectory limits. These are the
+        # caps used both by the in-process bang-bang simulation and by
+        # the limit fields sent to the firmware so the two solvers
+        # produce the same trajectory.
+        self.declare_parameter('max_vel_linear', 1.0)
+        self.declare_parameter('max_vel_angular', 3.0 * math.pi)
+        self.declare_parameter('max_accel_linear', 3.0)
+        self.declare_parameter('max_accel_angular', 3.0 * math.pi)
+
         # Geometry / robot
         self.declare_parameter('robot_radius', 0.09)
+        self.declare_parameter('ball_radius', 0.0215)
         self.declare_parameter('robot_front_offset', 0.09)
         # Safety margin added to robot_radius when checking field bounds.
         self.declare_parameter('field_safety_margin', 0.05)
 
         # Ball gating
-        self.declare_parameter('min_ball_speed', 0.3)
+        self.declare_parameter('min_ball_speed', 0.2)
+        # Lower bound used only by the collision detector's rolling
+        # history. Samples below this speed are still kept in the
+        # window so the "post" average can see a captured / stopped
+        # ball. Should be <= min_ball_speed.
+        self.declare_parameter('min_ball_speed_detector', 0.0)
         # Only act on balls moving toward -x (rolled in from +x edge).
         self.declare_parameter('require_negative_vx', True)
         # End-to-end latency to compensate for: vision pipeline +
@@ -150,16 +167,17 @@ class CatchScenario(Node):
         # ball position/velocity is propagated forward by this amount
         # (constant-velocity model) so the intercept solver targets
         # where the ball will be when the command actually lands.
-        self.declare_parameter('latency_compensation_s', 0.2)
-
-        # Trajectory limits (matching firmware defaults). These are the
-        # caps used both by the in-process bang-bang simulation and by
-        # the limit fields sent to the firmware so the two solvers
-        # produce the same trajectory.
-        self.declare_parameter('max_vel_linear', 3.0)
-        self.declare_parameter('max_vel_angular', 3.0 * math.pi)
-        self.declare_parameter('max_accel_linear', 2.0)
-        self.declare_parameter('max_accel_angular', 2.0 * math.pi)
+        self.declare_parameter('latency_compensation_s', 0.0)
+        # Intercept solver scheduling:
+        # - `single_intercept_calculation`: if true, the solver runs at
+        #   most once per ball cycle (no replanning while the robot
+        #   drives). Useful for evaluating an open-loop plan.
+        # - `intercept_calc_delay`: wait this many seconds after the
+        #   first valid ball observation in INTERCEPT before solving.
+        #   Gives the vision filter time to converge on the ball's
+        #   velocity before committing to a plan.
+        self.declare_parameter('single_intercept_calculation', False)
+        self.declare_parameter('intercept_calc_delay', 0.0)
 
         # Interception search
         self.declare_parameter('search_d_min', 0.05)
@@ -172,12 +190,53 @@ class CatchScenario(Node):
         self.declare_parameter('pos_tol', 0.04)
         self.declare_parameter('yaw_tol', 0.08)
         self.declare_parameter('catch_dwell', 1.5)
+        # After collision is detected, the robot drives to the latched
+        # intercept target and dwells. If it can't reach that target
+        # within this many seconds, give up and reset anyway. Counted
+        # from the moment of collision.
+        self.declare_parameter('post_collision_arrival_timeout', 3.0)
         # If the ball isn't visible / valid for this long while in
         # INTERCEPT, give up and reset to the back edge.
-        self.declare_parameter('ball_lost_timeout', 0.75)
+        self.declare_parameter('ball_lost_timeout', 0.5)
+        # How long WAIT_FOR_INCOMING will wait for a valid (visible,
+        # fast-enough, negative-vx) ball before giving up and going
+        # back to WAIT_FOR_BALL. Prevents getting stuck when the ball
+        # is visible but stationary or moving the wrong way.
+        self.declare_parameter('wait_for_incoming_timeout', 3.0)
+        # Realized-intercept event detection. Compares the averaged
+        # ball velocity in two non-overlapping rolling windows:
+        #   * "pre"  window: from `dir_window_total` ago up to
+        #                    `dir_window_total - dir_window_pre` ago.
+        #   * "post" window: the most recent `dir_window_post` seconds.
+        # Latches a collision when the velocity-retention metric
+        #     r = (pre . post) / (pre . pre)
+        # drops below `intercept_velocity_retention_threshold`. r = 1.0
+        # means the ball is unchanged, 0.0 means stopped or perpendicular,
+        # negative values mean reversal. The default 0.4 catches both
+        # a sharp deflection and a big speed drop while still heading
+        # in the same direction.
+        self.declare_parameter('intercept_velocity_retention_threshold', 0.4)
+        self.declare_parameter('dir_window_pre', 0.08)
+        self.declare_parameter('dir_window_post', 0.04)
+        self.declare_parameter('dir_window_total', 0.15)
+        self.declare_parameter('dir_min_samples', 3)
         self.declare_parameter('reset_margin', 0.3)
-        self.declare_parameter('publish_rate_hz', 60.0)
+        # Status-text placement on the /overlays layer. By default the
+        # state name + timing is rendered just below the negative-y
+        # touchline of the field, off the playing surface. Provide
+        # finite `status_text_x` / `status_text_y` (meters in field
+        # frame) to override.
+        self.declare_parameter('status_text_x', float('nan'))
+        self.declare_parameter('status_text_y', float('nan'))
+        self.declare_parameter('status_text_margin', 0.2)
+        # Overlay visibility toggles.
+        self.declare_parameter('show_detected_collision_overlay', True)
+        self.declare_parameter('publish_rate_hz', 100.0)
         self.declare_parameter('loop', True)
+        # One-shot mode: run the state machine for a single complete
+        # cycle (RESET -> WAIT_FOR_BALL -> INTERCEPT -> CATCH_DWELL ->
+        # RESET -> DONE), then call rclpy.shutdown(). Implies loop=False.
+        self.declare_parameter('one_shot', False)
 
         # ------------------------------------------------------------------
         self.mode = str(self.get_parameter('mode').value).lower()
@@ -187,16 +246,23 @@ class CatchScenario(Node):
             self.mode = 'simple'
 
         self.robot_radius = float(self.get_parameter('robot_radius').value)
+        self.ball_radius = float(self.get_parameter('ball_radius').value)
         self.robot_front_offset = float(self.get_parameter(
             'robot_front_offset').value)
         self.field_safety_margin = float(self.get_parameter(
             'field_safety_margin').value)
 
         self.min_ball_speed = float(self.get_parameter('min_ball_speed').value)
+        self.min_ball_speed_detector = float(self.get_parameter(
+            'min_ball_speed_detector').value)
         self.require_negative_vx = bool(self.get_parameter(
             'require_negative_vx').value)
         self.latency_compensation_s = float(self.get_parameter(
             'latency_compensation_s').value)
+        self.single_intercept_calculation = bool(self.get_parameter(
+            'single_intercept_calculation').value)
+        self.intercept_calc_delay = float(self.get_parameter(
+            'intercept_calc_delay').value)
 
         self.max_vel_linear = float(self.get_parameter('max_vel_linear').value)
         self.max_vel_angular = float(self.get_parameter(
@@ -216,10 +282,36 @@ class CatchScenario(Node):
         self.pos_tol = float(self.get_parameter('pos_tol').value)
         self.yaw_tol = float(self.get_parameter('yaw_tol').value)
         self.catch_dwell = float(self.get_parameter('catch_dwell').value)
+        self.post_collision_arrival_timeout = float(self.get_parameter(
+            'post_collision_arrival_timeout').value)
         self.ball_lost_timeout = float(self.get_parameter(
             'ball_lost_timeout').value)
+        self.wait_for_incoming_timeout = float(self.get_parameter(
+            'wait_for_incoming_timeout').value)
+        self.intercept_velocity_retention_threshold = float(
+            self.get_parameter(
+                'intercept_velocity_retention_threshold').value)
+        self.dir_window_pre = float(self.get_parameter(
+            'dir_window_pre').value)
+        self.dir_window_post = float(self.get_parameter(
+            'dir_window_post').value)
+        self.dir_window_total = float(self.get_parameter(
+            'dir_window_total').value)
+        self.dir_min_samples = int(self.get_parameter(
+            'dir_min_samples').value)
         self.reset_margin = float(self.get_parameter('reset_margin').value)
+        sx = float(self.get_parameter('status_text_x').value)
+        sy = float(self.get_parameter('status_text_y').value)
+        self._status_text_x = None if math.isnan(sx) else sx
+        self._status_text_y = None if math.isnan(sy) else sy
+        self.status_text_margin = float(self.get_parameter(
+            'status_text_margin').value)
+        self.show_detected_collision_overlay = bool(self.get_parameter(
+            'show_detected_collision_overlay').value)
         self.loop = bool(self.get_parameter('loop').value)
+        self.one_shot = bool(self.get_parameter('one_shot').value)
+        if self.one_shot:
+            self.loop = False
         rate = float(self.get_parameter('publish_rate_hz').value)
 
         # ateam_controls bindings (only required for complex mode).
@@ -268,12 +360,37 @@ class CatchScenario(Node):
         self.last_solution_d = None
         self.last_solution_T = None
         self.last_ball_seen = None  # rclpy.Time of last valid ball
+        # Solver scheduling state.
+        self.first_valid_ball_time = None  # earliest valid ball this cycle
+        self.intercept_solved_once = False
+
+        # Realized intercept tracking: when the ball reverses direction
+        # we treat that as the realized interception event and pin its
+        # last observed position on the overlay until the next cycle.
+        self.realized_intercept = None  # (x, y) or None
+        # Captured states at the exact moment of collision detection.
+        self.collision_ball_xy = None       # (x, y) ball pos at trigger
+        self.collision_robot_pose = None    # (x, y, theta) robot pose at trigger
+        # Once a collision is detected, freeze the plan overlays and
+        # stop chasing the ball for the remainder of the cycle.
+        self.collision_detected = False
+        self.collision_time = None  # rclpy.Time when collision was latched
+        # Last raw ball observation (independent of gating) used to
+        # detect the direction-change event.
+        self._last_ball_pos = None
+        self._last_ball_vel = None
+        self._last_ball_visible = False
+        self._last_ball_speed = 0.0
+        # Rolling history of visible ball samples: deque of
+        # (t_sec, (x, y), (vx, vy), speed). Pruned to dir_window_total.
+        self._ball_history = deque()
 
         self.timer = self.create_timer(1.0 / rate, self.tick)
 
         self.get_logger().info(
             f'catch_scenario started for robot {ROBOT_ID} ({TEAM_COLOR}), '
-            f'mode={self.mode}. State: RESET (driving to back edge)')
+            f'mode={self.mode}, one_shot={self.one_shot}. '
+            'State: RESET (driving to back edge)')
 
     # ------------------------------------------------------------------ subs
     def ball_cb(self, msg: VisionStateBall):
@@ -332,6 +449,19 @@ class CatchScenario(Node):
         cmd.acceleration = Twist2D()
         cmd.kick_request = RobotMotionCommand.KR_DISABLE
         return cmd
+
+    def make_hold_cmd(self) -> RobotMotionCommand:
+        """Hold the reset/back-edge pose so the firmware control loop
+        stays warm (motors energized, KF active) instead of decaying
+        to BCM_OFF while we wait for a ball."""
+        if self.field is not None and self.field.field_length > 0.0:
+            tx = -self.field.field_length / 2.0 + self.reset_margin
+        else:
+            rs = self.robot_xy_yaw()
+            if rs is None:
+                return self.make_off_cmd()
+            tx = rs[0]
+        return self.make_pos_cmd(tx, 0.0, 0.0)
 
     # --------------------------------------------------------- field bounds
     def in_bounds(self, x: float, y: float) -> bool:
@@ -571,10 +701,127 @@ class CatchScenario(Node):
 
     # ------------------------------------------------------------------ tick
     def tick(self):
+        self.detect_realized_intercept()
         cmd = self.step_state_machine()
         if cmd is not None:
             self.cmd_pub.publish(cmd)
         self.publish_overlays()
+        if self.one_shot and self.state == State.DONE:
+            self.get_logger().info(
+                'one_shot cycle complete, shutting down.')
+            try:
+                self.cmd_pub.publish(self.make_off_cmd())
+            except Exception:
+                pass
+            self.timer.cancel()
+            rclpy.shutdown()
+
+    def detect_realized_intercept(self):
+        """Watch ball observations for a sustained direction-trend
+        change (or a disappearance) while in INTERCEPT / CATCH_DWELL.
+        Uses two sliding windows of past ball velocities to compare
+        the longer-term trajectory direction (pre-window) against the
+        recent direction (post-window) and latches when the angle
+        between the averaged velocities exceeds the configured
+        threshold.
+        """
+        active = self.state in (State.INTERCEPT, State.CATCH_DWELL)
+        if self.ball is None:
+            return
+        visible = bool(self.ball.visible)
+        bp = self.ball.pose.position
+        bv = self.ball.twist.linear
+        speed = math.hypot(bv.x, bv.y)
+        cur_pos = (bp.x, bp.y)
+        cur_vel = (bv.x, bv.y)
+        t = self.get_clock().now().nanoseconds * 1e-9
+
+        # Maintain rolling history of every visible sample at or above
+        # the detector floor (kept loose so the "post" window can see
+        # a captured / stopped ball).
+        if visible and speed >= self.min_ball_speed_detector:
+            self._ball_history.append((t, cur_pos, cur_vel, speed))
+        # Prune older than dir_window_total.
+        cutoff = t - self.dir_window_total
+        while self._ball_history and self._ball_history[0][0] < cutoff:
+            self._ball_history.popleft()
+
+        if active and not self.collision_detected:
+            # Disappearance trigger.
+            if (not visible and self._last_ball_visible
+                    and self._last_ball_speed >= self.min_ball_speed):
+                self.realized_intercept = self._last_ball_pos
+                self._latch_collision(self._last_ball_pos)
+                self.get_logger().info(
+                    f'Realized intercept (disappear) at '
+                    f'({self._last_ball_pos[0]:.3f}, '
+                    f'{self._last_ball_pos[1]:.3f})')
+            else:
+                # Trend-direction-change trigger using sliding windows.
+                self._check_dir_trend(t)
+
+        if visible:
+            self._last_ball_pos = cur_pos
+            self._last_ball_vel = cur_vel
+            self._last_ball_speed = speed
+        self._last_ball_visible = visible
+
+    def _check_dir_trend(self, t_now):
+        """Compare averaged velocity in the pre window (older portion
+        of history) vs the post window (most recent portion). Latch
+        collision when the velocity-retention metric
+            r = (pre . post) / (pre . pre)
+        drops below the configured threshold. This catches both sharp
+        deflections (negative dot) and big speed drops in the same
+        direction (small but positive r).
+        """
+        pre_hi = t_now - self.dir_window_total + self.dir_window_pre
+        pre_lo = t_now - self.dir_window_total
+        post_lo = t_now - self.dir_window_post
+
+        pre_vx = pre_vy = 0.0
+        pre_n = 0
+        post_vx = post_vy = 0.0
+        post_n = 0
+        post_pos = None
+        for ts, pos, vel, _sp in self._ball_history:
+            if pre_lo <= ts <= pre_hi:
+                pre_vx += vel[0]
+                pre_vy += vel[1]
+                pre_n += 1
+            if ts >= post_lo:
+                post_vx += vel[0]
+                post_vy += vel[1]
+                post_n += 1
+                post_pos = pos
+        if pre_n < self.dir_min_samples or post_n < self.dir_min_samples:
+            return
+        pre_vx /= pre_n
+        pre_vy /= pre_n
+        post_vx /= post_n
+        post_vy /= post_n
+        pre_mag_sq = pre_vx * pre_vx + pre_vy * pre_vy
+        if pre_mag_sq < self.min_ball_speed * self.min_ball_speed:
+            return
+        dot = pre_vx * post_vx + pre_vy * post_vy
+        retention = dot / pre_mag_sq
+        if retention < self.intercept_velocity_retention_threshold:
+            self.realized_intercept = post_pos
+            self._latch_collision(post_pos)
+            self.get_logger().info(
+                f'Realized intercept (retention={retention:.2f}, '
+                f'|pre|={math.sqrt(pre_mag_sq):.2f}, '
+                f'|post|={math.hypot(post_vx, post_vy):.2f}, '
+                f'pre_n={pre_n}, post_n={post_n}) at '
+                f'({post_pos[0]:.3f}, {post_pos[1]:.3f})')
+
+    def _latch_collision(self, ball_pos):
+        """Common bookkeeping for collision detection: latch flag,
+        timestamp, ball position at trigger and current robot pose."""
+        self.collision_detected = True
+        self.collision_time = self.get_clock().now()
+        self.collision_ball_xy = ball_pos
+        self.collision_robot_pose = self.robot_xy_yaw()
 
     def step_state_machine(self):
         s = self.state
@@ -582,19 +829,41 @@ class CatchScenario(Node):
         if s == State.WAIT_FOR_BALL:
             if self.ball is not None and self.ball.visible:
                 self.transition(State.WAIT_FOR_INCOMING)
-            return self.make_off_cmd()
+            return self.make_hold_cmd()
 
         if s == State.WAIT_FOR_INCOMING:
             ball = self.ball_state()
             if ball is None:
-                return self.make_off_cmd()
+                if (self.wait_for_incoming_timeout > 0.0
+                        and self.time_in_state()
+                        >= self.wait_for_incoming_timeout):
+                    self.get_logger().info(
+                        f'WAIT_FOR_INCOMING timeout '
+                        f'({self.wait_for_incoming_timeout:.2f}s); going '
+                        'back to WAIT_FOR_BALL.')
+                    self.transition(State.WAIT_FOR_BALL)
+                return self.make_hold_cmd()
             rs = self.robot_xy_yaw()
             if rs is None:
-                return self.make_off_cmd()
+                return self.make_hold_cmd()
             # Latch initial rest position.
             self.S = (rs[0], rs[1])
+            # New cycle starts: clear prior realized intercept and
+            # all plan overlays.
+            self.realized_intercept = None
+            self.collision_detected = False
+            self.collision_time = None
+            self.collision_ball_xy = None
+            self.collision_robot_pose = None
+            self.intercept_P = None
+            self.intercept_target = None
+            self.last_solution_d = None
+            self.last_solution_T = None
+            self._ball_history.clear()
+            self.first_valid_ball_time = None
+            self.intercept_solved_once = False
             self.transition(State.INTERCEPT)
-            return self.make_off_cmd()
+            return self.make_hold_cmd()
 
         if s == State.INTERCEPT:
             ball = self.ball_state()
@@ -602,33 +871,63 @@ class CatchScenario(Node):
             if rs is None:
                 return self.make_off_cmd()
             now = self.get_clock().now()
-            if ball is not None:
-                self.last_ball_seen = now
-                sol = None
-                if self.mode == 'simple':
-                    res = self.solve_simple(ball, self.S)
-                    if res is not None:
-                        P_drib, P_center, theta, t_int = res
-                        sol = (P_drib, P_center, theta,
-                               (P_center[0], P_center[1], theta), t_int)
-                else:
-                    sol = self.solve_search(ball, self.S, self.mode)
-                if sol is not None:
-                    P_drib, P_center, theta, target, t_int = sol
-                    self.intercept_P = (P_drib[0], P_drib[1], theta)
-                    self.intercept_target = target
-                    self.last_solution_d = math.hypot(
-                        P_drib[0] - ball[0][0], P_drib[1] - ball[0][1])
-                    self.last_solution_T = t_int
-            else:
-                # Ball lost (off field, occluded, or below min_ball_speed).
-                # If it stays gone for ball_lost_timeout, reset to back edge.
-                if self.last_ball_seen is None:
+            # While no collision is detected, refresh the plan from the
+            # latest ball observation. After collision, the plan stays
+            # frozen and the robot drives to the latched target, dwells,
+            # then resets.
+            if not self.collision_detected:
+                if ball is not None:
                     self.last_ball_seen = now
-                elapsed = (now - self.last_ball_seen).nanoseconds * 1e-9
-                if elapsed >= self.ball_lost_timeout:
+                    if self.first_valid_ball_time is None:
+                        self.first_valid_ball_time = now
+                    elapsed_since_first = (
+                        now - self.first_valid_ball_time).nanoseconds * 1e-9
+                    may_solve = (
+                        elapsed_since_first >= self.intercept_calc_delay
+                        and not (self.single_intercept_calculation
+                                 and self.intercept_solved_once))
+                    sol = None
+                    if may_solve:
+                        if self.mode == 'simple':
+                            res = self.solve_simple(ball, self.S)
+                            if res is not None:
+                                P_drib, P_center, theta, t_int = res
+                                sol = (P_drib, P_center, theta,
+                                       (P_center[0], P_center[1], theta),
+                                       t_int)
+                        else:
+                            sol = self.solve_search(ball, self.S, self.mode)
+                    if sol is not None:
+                        P_drib, P_center, theta, target, t_int = sol
+                        self.intercept_P = (P_drib[0], P_drib[1], theta)
+                        self.intercept_target = target
+                        self.last_solution_d = math.hypot(
+                            P_drib[0] - ball[0][0], P_drib[1] - ball[0][1])
+                        self.last_solution_T = t_int
+                        self.intercept_solved_once = True
+                else:
+                    # Ball lost without collision detection (no plan yet
+                    # or ball never reached us). Reset after timeout.
+                    if self.last_ball_seen is None:
+                        self.last_ball_seen = now
+                    elapsed = (now - self.last_ball_seen).nanoseconds * 1e-9
+                    if elapsed >= self.ball_lost_timeout:
+                        self.get_logger().info(
+                            f'Ball lost for {elapsed:.2f}s, resetting.')
+                        self.transition(State.RESET)
+                        return self.make_off_cmd()
+            # Post-collision behavior: either we have a frozen target to
+            # arrive at (then CATCH_DWELL), or we never had a plan -
+            # either way bail to RESET after a bounded time.
+            if self.collision_detected:
+                elapsed = 0.0
+                if self.collision_time is not None:
+                    elapsed = (now - self.collision_time).nanoseconds * 1e-9
+                if (self.intercept_target is None
+                        or elapsed >= self.post_collision_arrival_timeout):
                     self.get_logger().info(
-                        f'Ball lost for {elapsed:.2f}s, resetting.')
+                        f'Post-collision timeout ({elapsed:.2f}s) or no '
+                        'latched plan; resetting.')
                     self.transition(State.RESET)
                     return self.make_off_cmd()
             if self.intercept_target is None:
@@ -688,12 +987,9 @@ class CatchScenario(Node):
             rs = self.robot_xy_yaw()
             if rs is not None and math.hypot(
                     rs[0] - tx, rs[1] - ty) <= self.pos_tol:
-                # Clear latched state before re-arming for the next ball.
-                self.S = None
-                self.intercept_P = None
-                self.intercept_target = None
-                self.last_solution_d = None
-                self.last_solution_T = None
+                # Keep latched overlays visible across RESET arrival;
+                # they are cleared when the next ball cycle starts in
+                # WAIT_FOR_INCOMING.
                 self.transition(self.post_reset_state)
             return self.make_pos_cmd(tx, ty, 0.0)
 
@@ -722,27 +1018,40 @@ class CatchScenario(Node):
                 color='#FFA500FF', stroke_width=2))
 
         if self.intercept_P is not None:
+            # Ball at the intercept point: ball-sized filled circle.
             items.append(make_point(
                 OVERLAY_NS, 'intercept_dribbler',
                 (self.intercept_P[0], self.intercept_P[1]),
-                color='#00FF7FFF', radius=0.04))
+                color='#00FF7FFF', radius=self.ball_radius))
             theta = self.intercept_P[2]
             cx = self.intercept_P[0] - self.robot_front_offset * math.cos(
                 theta)
             cy = self.intercept_P[1] - self.robot_front_offset * math.sin(
                 theta)
+            # Robot at the intercept: robot-sized outline + heading.
+            items.append(make_circle(
+                OVERLAY_NS, 'intercept_center', (cx, cy),
+                self.robot_radius,
+                stroke_color='#00FF7FFF', fill_color='#00000000',
+                stroke_width=2))
             items.append(make_pose_marker(
-                OVERLAY_NS, 'intercept_center', (cx, cy, theta),
+                OVERLAY_NS, 'intercept_center_pose', (cx, cy, theta),
                 self.pos_tol, color='#00FF7FFF',
-                heading_length=0.25))
+                heading_length=self.robot_radius + 0.05))
 
         if (self.mode == 'complex' and self.intercept_target is not None
                 and self.intercept_P is not None):
             tx, ty, ttheta = self.intercept_target
+            # Robot at firmware target (end of bang-bang traj): robot-sized.
+            items.append(make_circle(
+                OVERLAY_NS, 'firmware_target', (tx, ty),
+                self.robot_radius,
+                stroke_color='#00BFFFFF', fill_color='#00000000',
+                stroke_width=2))
             items.append(make_pose_marker(
-                OVERLAY_NS, 'firmware_target', (tx, ty, ttheta),
+                OVERLAY_NS, 'firmware_target_pose', (tx, ty, ttheta),
                 self.pos_tol, color='#00BFFFFF',
-                heading_length=0.3))
+                heading_length=self.robot_radius + 0.05))
             # Segment from intercept center -> firmware target (the
             # second half of the symmetric trajectory).
             theta = self.intercept_P[2]
@@ -760,14 +1069,46 @@ class CatchScenario(Node):
                     [(self.S[0], self.S[1]), (cx, cy)],
                     color='#00BFFFFF', stroke_width=2))
 
-        rs = self.robot_xy_yaw()
-        if rs is not None:
+        if self.show_detected_collision_overlay:
+            if self.collision_ball_xy is not None:
+                cbx, cby = self.collision_ball_xy
+                items.append(make_point(
+                    OVERLAY_NS, 'collision_ball', (cbx, cby),
+                    color='#FF0000FF', radius=self.ball_radius))
+            if self.collision_robot_pose is not None:
+                crx, cry, crt = self.collision_robot_pose
+                items.append(make_circle(
+                    OVERLAY_NS, 'collision_robot', (crx, cry),
+                    self.robot_radius,
+                    stroke_color='#FF0000FF', fill_color='#00000000',
+                    stroke_width=2))
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'collision_robot_pose', (crx, cry, crt),
+                    self.pos_tol, color='#FF0000FF',
+                    heading_length=self.robot_radius + 0.05))
+
+        # (The realized intercept point is rendered in red via the
+        # collision_ball / collision_robot captures above.)
+
+        # State/time status text - placed outside the playable field
+        # (below the negative-y touchline by `status_text_margin`).
+        # Configurable via status_text_x / status_text_y; if both are
+        # finite, that absolute position overrides the auto placement.
+        sx = self._status_text_x
+        sy = self._status_text_y
+        if (sx is None or sy is None) and self.field is not None \
+                and self.field.field_width > 0.0:
+            half_w = self.field.field_width / 2.0
+            boundary = getattr(self.field, 'boundary_width', 0.0) or 0.0
+            sx = 0.0 if sx is None else sx
+            sy = -(half_w + boundary + self.status_text_margin) \
+                if sy is None else sy
+        if sx is not None and sy is not None:
             label = f'{self.state.name}  mode={self.mode}'
             if self.last_solution_T is not None:
                 label += f'  T={self.last_solution_T:.2f}s'
             items.append(make_text(
-                OVERLAY_NS, 'state', label,
-                (rs[0], rs[1] + 0.25),
+                OVERLAY_NS, 'state', label, (sx, sy),
                 color='#FFFFFFFF', font_size=20))
 
         if items:
