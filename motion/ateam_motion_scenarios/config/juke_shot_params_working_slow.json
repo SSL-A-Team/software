@@ -13,7 +13,7 @@
     "stationary_dwell": 0.2,
     "approach_offset": 0.10,
     "robot_front_offset": 0.09,
-    "capture_overdrive": 0.1,
+    "capture_overdrive": 0.05,
     "capture_vel_limit": 0.15,
     "capture_dwell": 0.0,
 
@@ -22,10 +22,10 @@
 
     "dribbler_speed": 300.0,
 
-    "limit_vel_linear": 2.0,
-    "limit_vel_angular": 10.0,
-    "limit_acc_linear": 1.5,
-    "limit_acc_angular": 20.0,
+    "limit_vel_linear": 1.0,
+    "limit_vel_angular": 6.283185,
+    "limit_acc_linear": 1.0,
+    "limit_acc_angular": 6.283185,
 
     "juke_type": "none",
 
@@ -51,13 +51,13 @@
     "goal_y_dynamic": true,
     "goal_y": 4.5,
     "final_pivot_radius": 0.2,
-    "final_pivot_heading_lag": 0.2,
-    "final_pivot_angular_vel": 10.0,
-    "final_pivot_angular_acc": 10.0,
+    "final_pivot_heading_lag": 0.05,
+    "final_pivot_angular_vel": 3.14,
+    "final_pivot_angular_acc": 3.14,
     "final_pivot_dwell": 0.0,
     "final_pivot_yaw_tol": 0.05,
 
-    "kick_speed": 3.0,
+    "kick_speed": 2.0,
     "kick_dwell": 0.0,
 
     "loop": true,

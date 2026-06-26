@@ -172,19 +172,23 @@ class JukeShotScenario(Node):
                 f"juke_type '{self.juke_type}' is not implemented yet; "
                 "treating it as 'none' (capture then pivot to goal)")
 
-        # Ending (final) pivot toward the goal. The goal is a point on the
-        # +y goalline at x = 0; the goal heading is computed at runtime as
-        # the direction from the robot (after capture / potential juke) to
-        # that point. ``final_pivot_radius`` is the radius of the arc the
-        # robot follows while rotating from its current heading to the goal
-        # heading (0 = pivot in place). These params are independent of the
-        # juke pivot / juke double pivot above.
+        # Ending (final) pivot toward the goal, executed with the firmware's
+        # built-in BCM_PIVOT maneuver. The robot orbits a center point while
+        # facing it, rotating to the goal heading. The center is placed
+        # ``final_pivot_radius`` ahead of the robot (= the orbit radius); set
+        # it near ``robot_front_offset`` so the center coincides with the
+        # dribbled ball and the shot drives the ball at the goal point on the
+        # +y goalline at x = 0. ``final_pivot_heading_lag`` delays the facing
+        # rotation behind the orbit travel (keeps the ball trapped). These
+        # params are independent of the juke pivot / double pivot above.
         # When ``goal_y_dynamic`` is true the +y goalline is taken from the
         # live field geometry (top edge); ``goal_y`` is only the fallback.
         self.goal_x = float(self._p('goal_x', 0.0))
         self.goal_y_dynamic = bool(self._p('goal_y_dynamic', True))
         self.goal_y = float(self._p('goal_y', 4.5))
-        self.final_pivot_radius = float(self._p('final_pivot_radius', 0.2))
+        self.final_pivot_radius = float(self._p('final_pivot_radius', 0.09))
+        self.final_pivot_heading_lag = float(
+            self._p('final_pivot_heading_lag', 0.05))
         self.final_pivot_angular_vel = float(
             self._p('final_pivot_angular_vel', 2.0 * math.pi))
         self.final_pivot_angular_acc = float(
@@ -247,15 +251,12 @@ class JukeShotScenario(Node):
         self.aim_since = None     # time yaw first within tolerance in pivot
         self.start_arrived_at = None  # time robot first reached start pose
 
-        # Final-pivot geometry, latched on entry to FINAL_PIVOT.
-        self.final_goal_heading = None  # heading that points at the goal
-        self.final_center = None        # pivot-circle center (x, y)
-        self.final_radius = 0.0         # pivot-circle radius actually used
-        self.final_turn_sign = 1        # +1 CCW, -1 CW
-        self.final_alpha = None         # current orbit angle (center->robot)
-        self.final_alpha_target = None  # orbit angle at goal heading
-        self.final_pose = None          # final (x, y, theta) for the kick
-        self.final_last_tick = None     # last tick time for arc stepping
+        # Final-pivot geometry, latched on entry to FINAL_PIVOT and sent to
+        # the firmware as a BCM_PIVOT command.
+        self.final_goal_heading = None  # target heading (faces center->goal)
+        self.final_center = None        # pivot orbit center (x, y)
+        self.final_radius = 0.0         # pivot orbit radius
+        self.final_pose = None          # final robot (x, y, theta)
 
         self.timer = self.create_timer(1.0 / rate, self.tick)
 
@@ -366,6 +367,42 @@ class JukeShotScenario(Node):
         cmd.dribbler_speed = float(dribbler_speed)
         return cmd
 
+    def make_pivot_cmd(self, center_x: float, center_y: float,
+                       target_heading: float, orbit_radius: float,
+                       heading_lag: float = 0.0,
+                       ang_vel_limit: float = 0.0,
+                       ang_acc_limit: float = 0.0,
+                       kick_request: int = RobotMotionCommand.KR_DISABLE,
+                       dribbler_speed: float = 0.0,
+                       kick_speed: float = 0.0) -> RobotMotionCommand:
+        """
+        Build a firmware BCM_PIVOT command.
+
+        The robot orbits ``(center_x, center_y)`` at ``orbit_radius`` while
+        facing the center, rotating from its current heading to
+        ``target_heading``. ``pose`` carries the center (x, y) and the
+        target heading; the angular limits and pivot fields drive the
+        firmware's pivot maneuver.
+        """
+        cmd = RobotMotionCommand()
+        cmd.body_control_mode = RobotMotionCommand.BCM_PIVOT
+        cmd.pose = Twist2D(x=float(center_x), y=float(center_y),
+                           theta=float(target_heading))
+        cmd.velocity = Twist2D()
+        cmd.acceleration = Twist2D()
+        cmd.limit_vel_angular = (
+            float(ang_vel_limit) if ang_vel_limit > 0.0
+            else self.limit_vel_angular)
+        cmd.limit_acc_angular = (
+            float(ang_acc_limit) if ang_acc_limit > 0.0
+            else self.limit_acc_angular)
+        cmd.pivot_orbit_radius = float(orbit_radius)
+        cmd.pivot_heading_lag = float(heading_lag)
+        cmd.kick_request = kick_request
+        cmd.kick_speed = float(kick_speed)
+        cmd.dribbler_speed = float(dribbler_speed)
+        return cmd
+
     def make_off_cmd(self) -> RobotMotionCommand:
         cmd = RobotMotionCommand()
         cmd.body_control_mode = RobotMotionCommand.BCM_OFF
@@ -435,76 +472,65 @@ class JukeShotScenario(Node):
 
     def _enter_final_pivot(self):
         """
-        Latch the final-pivot geometry from the robot's current pose.
+        Latch the built-in (BCM_PIVOT) final-pivot geometry.
 
-        Computes the goal heading (direction from the robot to the goal
-        point at ``(goal_x, goal_y)``) and, using ``final_pivot_radius``,
-        the center of the arc the robot follows while rotating from its
-        current heading to that goal heading. With radius 0 the pivot is
-        performed in place.
+        The robot orbits a center point while facing it, rotating from its
+        current heading to the goal heading. The center is placed
+        ``final_pivot_radius`` ahead of the robot along its current heading
+        (so the robot already faces the center and sits exactly one orbit
+        radius away); with ``final_pivot_radius`` close to
+        ``robot_front_offset`` the center coincides with the dribbled ball,
+        so kicking along the final heading drives the ball at the goal.
+        ``target_heading`` is the direction from that center to the goal
+        point at ``(goal_x, goal_y)``.
         """
         goal_y = self._goal_y()
         rs = self.robot_xy_yaw()
         if rs is None:
-            # No pose available; fall back to an in-place pivot to +y.
+            # No pose available; fall back to facing +y in place.
             self.final_goal_heading = math.pi / 2.0
             self.final_center = None
-            self.final_alpha = None
-            self.final_alpha_target = None
+            self.final_radius = 0.0
             self.final_pose = (0.0, 0.0, math.pi / 2.0)
             return
         rx, ry, ryaw = rs
 
-        # Heading that points the robot's +x axis at the goal point.
-        theta_goal = math.atan2(goal_y - ry, self.goal_x - rx)
-        self.final_goal_heading = theta_goal
-
-        # Shortest signed turn from current heading to the goal heading.
-        dtheta = ang_diff(theta_goal, ryaw)
-        self.final_turn_sign = 1 if dtheta >= 0.0 else -1
-
-        r = self.final_pivot_radius
+        r = max(self.final_pivot_radius, 1e-6)
         self.final_radius = r
-        self.final_last_tick = None
 
-        if r <= 1e-6:
-            # Pivot in place: center at the robot, no orbit stepping.
-            self.final_center = (rx, ry)
-            self.final_alpha = None
-            self.final_alpha_target = None
-            self.final_pose = (rx, ry, theta_goal)
-            return
-
-        # Center is perpendicular to the heading, on the turn side
-        # (left for a CCW turn, right for a CW turn).
-        perp = ryaw + self.final_turn_sign * (math.pi / 2.0)
-        cx = rx + r * math.cos(perp)
-        cy = ry + r * math.sin(perp)
+        # Orbit center: r ahead of the robot along its current heading.
+        cx = rx + r * math.cos(ryaw)
+        cy = ry + r * math.sin(ryaw)
         self.final_center = (cx, cy)
 
-        # Orbit angle (center -> robot) and its target after turning dtheta.
-        alpha0 = math.atan2(ry - cy, rx - cx)
-        self.final_alpha = alpha0
-        self.final_alpha_target = alpha0 + dtheta
+        # Target heading: face the center toward the goal point.
+        theta_goal = math.atan2(goal_y - cy, self.goal_x - cx)
+        self.final_goal_heading = theta_goal
 
-        fx = cx + r * math.cos(self.final_alpha_target)
-        fy = cy + r * math.sin(self.final_alpha_target)
+        # Final robot pose once the pivot completes (robot faces center).
+        fx = cx - r * math.cos(theta_goal)
+        fy = cy - r * math.sin(theta_goal)
         self.final_pose = (fx, fy, theta_goal)
 
+        dtheta = ang_diff(theta_goal, ryaw)
         self.get_logger().info(
-            f'Final pivot: goal=(0.00, {goal_y:.2f}), '
-            f'heading_to_goal={math.degrees(theta_goal):.1f} deg, '
-            f'turn={math.degrees(dtheta):.1f} deg, '
-            f'center=({cx:.2f}, {cy:.2f}), R={r:.2f}')
+            f'Final pivot (BCM_PIVOT): goal=(0.00, {goal_y:.2f}), '
+            f'center=({cx:.2f}, {cy:.2f}), R={r:.2f}, '
+            f'target_heading={math.degrees(theta_goal):.1f} deg, '
+            f'turn={math.degrees(dtheta):.1f} deg')
 
-    def _final_pivot_pose_for_alpha(self, alpha):
-        """Return the (x, y, theta) pose at a given orbit angle."""
+    def _final_pivot_cmd(self, kick_request, kick_speed=0.0):
+        """Build the BCM_PIVOT command for the latched final-pivot geometry."""
         cx, cy = self.final_center
-        r = self.final_radius
-        x = cx + r * math.cos(alpha)
-        y = cy + r * math.sin(alpha)
-        theta = alpha + self.final_turn_sign * (math.pi / 2.0)
-        return (x, y, theta)
+        return self.make_pivot_cmd(
+            cx, cy, self.final_goal_heading, self.final_radius,
+            heading_lag=self.final_pivot_heading_lag,
+            ang_vel_limit=self.final_pivot_angular_vel,
+            ang_acc_limit=self.final_pivot_angular_acc,
+            kick_request=kick_request,
+            kick_speed=kick_speed,
+            dribbler_speed=self.dribbler_speed,
+        )
 
     # --------------------------------------------------------- visualization
     def publish_overlays(self):
@@ -654,56 +680,18 @@ class JukeShotScenario(Node):
             return cmd
 
         if s == State.FINAL_PIVOT:
-            # Rotate from the current heading to the goal heading along an
-            # arc of radius final_pivot_radius (in place if radius == 0),
-            # keeping the ball dribbled and the kicker armed. Uses the
-            # dedicated final-pivot limits/tolerance.
+            # Use the firmware's built-in pivot maneuver (BCM_PIVOT): the
+            # robot orbits the latched center while facing it, rotating from
+            # its current heading to the goal heading. We hold the kicker
+            # armed and dribbler on, and watch the robot's yaw to detect
+            # completion.
+            cmd = self._final_pivot_cmd(
+                kick_request=RobotMotionCommand.KR_ARM)
             now = self.get_clock().now()
-
-            if self.final_alpha is None:
-                # In-place pivot to the latched goal heading.
-                px, py, th = self.final_pose
-                cmd = self.make_pos_cmd(
-                    px, py, th,
-                    ang_vel_limit=self.final_pivot_angular_vel,
-                    ang_acc_limit=self.final_pivot_angular_acc,
-                    kick_request=RobotMotionCommand.KR_ARM,
-                    dribbler_speed=self.dribbler_speed,
-                )
-                done = self.at_pose(
-                    (px, py), self.pos_tol, yaw_target=th,
-                    yaw_tol=self.final_pivot_yaw_tol)
-            else:
-                # Step the orbit angle toward its target and command the
-                # corresponding pose on the arc.
-                if self.final_last_tick is None:
-                    dt = 0.0
-                else:
-                    dt = (now - self.final_last_tick).nanoseconds * 1e-9
-                self.final_last_tick = now
-
-                remaining = self.final_alpha_target - self.final_alpha
-                step = self.final_turn_sign * self.final_pivot_angular_vel * dt
-                if abs(step) >= abs(remaining):
-                    self.final_alpha = self.final_alpha_target
-                else:
-                    self.final_alpha += step
-
-                px, py, th = self._final_pivot_pose_for_alpha(self.final_alpha)
-                cmd = self.make_pos_cmd(
-                    px, py, th,
-                    ang_vel_limit=self.final_pivot_angular_vel,
-                    ang_acc_limit=self.final_pivot_angular_acc,
-                    kick_request=RobotMotionCommand.KR_ARM,
-                    dribbler_speed=self.dribbler_speed,
-                )
-                fx, fy, fth = self.final_pose
-                done = (self.final_alpha == self.final_alpha_target
-                        and self.at_pose(
-                            (fx, fy), self.pos_tol, yaw_target=fth,
-                            yaw_tol=self.final_pivot_yaw_tol))
-
-            if done:
+            rs = self.robot_xy_yaw()
+            aimed = (rs is not None and abs(ang_diff(
+                rs[2], self.final_goal_heading)) <= self.final_pivot_yaw_tol)
+            if aimed:
                 if self.aim_since is None:
                     self.aim_since = now
                 elif (now - self.aim_since).nanoseconds * 1e-9 \
@@ -714,13 +702,9 @@ class JukeShotScenario(Node):
             return cmd
 
         if s == State.KICK:
-            px, py, th = self.final_pose
-            cmd = self.make_pos_cmd(
-                px, py, th,
+            cmd = self._final_pivot_cmd(
                 kick_request=RobotMotionCommand.KR_KICK_NOW,
-                kick_speed=self.kick_speed,
-                dribbler_speed=self.dribbler_speed,
-            )
+                kick_speed=self.kick_speed)
             if self.time_in_state() >= self.kick_dwell:
                 self.transition(State.DONE)
             return cmd
@@ -730,10 +714,10 @@ class JukeShotScenario(Node):
                 self.ball_xy = None
                 self.approach_dir = None
                 self.final_center = None
-                self.final_alpha = None
-                self.final_alpha_target = None
                 self.final_pose = None
-                self.transition(State.WAIT_FOR_BALL)
+                # Drive back to the start pose before the next trial.
+                self.start_arrived_at = None
+                self.transition(State.PLACE_ROBOT)
             return self.make_off_cmd()
 
         return self.make_off_cmd()
