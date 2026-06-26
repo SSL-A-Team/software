@@ -295,7 +295,7 @@ private:
       if ((now - motion_command_timestamps_[id]) >
         command_timeout_threshold_)
       {
-        RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Sending zeros.", id);
+        // RCLCPP_WARN(get_logger(), "Robot %d command topic inactive. Sending zeros.", id);
         motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
         motion_commands_[id].body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_OFF;
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
