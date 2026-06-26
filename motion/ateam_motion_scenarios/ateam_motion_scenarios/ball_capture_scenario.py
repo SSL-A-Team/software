@@ -9,8 +9,17 @@ forward, then reset toward the back of the field.
 from enum import auto, Enum
 import math
 
+from ateam_motion_scenarios.overlays import (
+    make_arrows,
+    make_array,
+    make_line,
+    make_point,
+    make_pose_marker,
+    make_text,
+)
 from ateam_msgs.msg import (
     FieldInfo,
+    OverlayArray,
     RobotMotionCommand,
     Twist2D,
     VisionStateBall,
@@ -23,6 +32,7 @@ from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
 
 ROBOT_ID = 2
 TEAM_COLOR = 'blue'
+OVERLAY_NS = 'ball_capture_scenario'
 
 
 class State(Enum):
@@ -144,6 +154,8 @@ class BallCaptureScenario(Node):
 
         self.cmd_pub = self.create_publisher(
             RobotMotionCommand, f'/robot_motion_commands/robot{ROBOT_ID}', 10)
+        self.overlay_pub = self.create_publisher(
+            OverlayArray, '/overlays', 10)
 
         self.state = State.WAIT_FOR_BALL
         self.state_entered = self.get_clock().now()
@@ -262,6 +274,127 @@ class BallCaptureScenario(Node):
         cmd = self.step_state_machine()
         if cmd is not None:
             self.cmd_pub.publish(cmd)
+        self.publish_overlays()
+
+    # ------------------------------------------------------------- overlays
+    def _approach_target(self):
+        if self.ball_xy is None:
+            return None
+        return (self.ball_xy[0] - self.approach_offset
+                - self.robot_front_offset,
+                self.ball_xy[1])
+
+    def _capture_target(self):
+        if self.ball_xy is None:
+            return None
+        return (self.ball_xy[0] - self.robot_front_offset
+                + self.capture_overdrive,
+                self.ball_xy[1])
+
+    def _aim_pose(self):
+        rs = self.robot_xy_yaw()
+        if rs is None or self.field is None \
+                or self.field.field_length <= 0.0:
+            return None
+        rx, ry, _ = rs
+        target_x = self.field.field_length / 2.0
+        target_y = 0.0
+        theta = math.atan2(target_y - ry, target_x - rx)
+        return (rx, ry, theta)
+
+    def publish_overlays(self):
+        items = []
+
+        # Field-aim reference line: ball/robot toward +x goal center.
+        if self.field is not None and self.field.field_length > 0.0:
+            goal_x = self.field.field_length / 2.0
+            origin = self.ball_xy
+            if origin is None:
+                rs = self.robot_xy_yaw()
+                origin = (rs[0], rs[1]) if rs is not None else None
+            if origin is not None:
+                items.append(make_line(
+                    OVERLAY_NS, 'goal_aim_ref',
+                    [origin, (goal_x, 0.0)],
+                    color='#FFFFFF40', stroke_width=1))
+
+        # Latched ball position from WAIT_FOR_STATIONARY.
+        if self.ball_xy is not None:
+            items.append(make_point(
+                OVERLAY_NS, 'latched_ball', self.ball_xy,
+                color='#FFA500FF', radius=0.025))
+
+        # Per-state visualization.
+        s = self.state
+        target_color = '#00BFFFFF'  # deep sky blue
+        if s == State.APPROACH_STAGING:
+            tgt = self._approach_target()
+            if tgt is not None:
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target',
+                    (tgt[0], tgt[1], 0.0),
+                    self.pos_tol, color=target_color))
+        elif s == State.CAPTURE:
+            tgt = self._capture_target()
+            if tgt is not None:
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target',
+                    (tgt[0], tgt[1], 0.0),
+                    self.pos_tol, color='#00FF7FFF'))
+        elif s == State.RETREAT_WITH_BALL or s == State.WAIT_BEFORE_KICK:
+            tgt = self._approach_target()
+            if tgt is not None:
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target',
+                    (tgt[0], tgt[1], 0.0),
+                    self.pos_tol, color=target_color))
+        elif s == State.STRAFE:
+            rs = self.robot_xy_yaw()
+            if rs is not None:
+                vx = self.strafe_speed * math.sin(self.strafe_angle_rad)
+                vy = -self.strafe_speed * math.cos(self.strafe_angle_rad)
+                items.append(make_arrows(
+                    OVERLAY_NS, 'strafe_velocity',
+                    [((rs[0], rs[1]), (vx, vy))],
+                    color='#FF00FFFF', stroke_width=4))
+        elif s == State.AIM:
+            pose = self._aim_pose()
+            if pose is not None:
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target', pose,
+                    self.pos_tol, color='#FFFF00FF',
+                    heading_length=0.5))
+        elif s == State.KICK_AIMED:
+            if self.aim_hold is not None:
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target', self.aim_hold,
+                    self.pos_tol, color='#FF4500FF',
+                    heading_length=0.5))
+        elif s == State.KICK:
+            tgt = self._approach_target()
+            if tgt is not None:
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target',
+                    (tgt[0], tgt[1], 0.0),
+                    self.pos_tol, color='#FF4500FF'))
+        elif s == State.RESET:
+            if self.field is not None and self.field.field_length > 0.0:
+                tx = -self.field.field_length / 2.0 + self.reset_margin
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target', (tx, 0.0, 0.0),
+                    self.pos_tol, color=target_color))
+
+        # State label, anchored above the robot when visible.
+        rs = self.robot_xy_yaw()
+        if rs is not None:
+            items.append(make_text(
+                OVERLAY_NS, 'state',
+                self.state.name,
+                (rs[0], rs[1] + 0.25),
+                color='#FFFFFFFF', font_size=20))
+
+        if items:
+            self.overlay_pub.publish(make_array(*items))
 
     def step_state_machine(self):
         s = self.state
