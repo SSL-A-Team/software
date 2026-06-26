@@ -1,3 +1,5 @@
+from glob import glob
+
 from setuptools import find_packages, setup
 
 package_name = 'ateam_motion_scenarios'
@@ -10,6 +12,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/config', glob('config/*.json')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -22,6 +25,7 @@ setup(
         'console_scripts': [
             'ball_capture_scenario = ateam_motion_scenarios.ball_capture_scenario:main',
             'catch_scenario = ateam_motion_scenarios.catch_scenario:main',
+            'juke_shot_scenario = ateam_motion_scenarios.juke_shot_scenario:main',
             'pass_and_catch_scenario = ateam_motion_scenarios.pass_and_catch_scenario:main',
             'pivot_scenario = ateam_motion_scenarios.pivot_scenario:main',
         ],
