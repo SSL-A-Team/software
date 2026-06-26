@@ -129,7 +129,7 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
     command.motion_intent = intent;
   }
 
-  command.dribbler_speed = 1.5 * kDefaultDribblerSpeed;
+  command.dribbler_speed = 0.3 * kDefaultDribblerSpeed;
 
   return command;
 }

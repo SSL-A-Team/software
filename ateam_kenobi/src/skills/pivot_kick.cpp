@@ -112,17 +112,17 @@ RobotCommand PivotKick::Pivot(
   // motion::intents::PivotPoint intent;
   // intent.target_x = target_point_.x();
   // intent.target_y = target_point_.y();
-  intent.radius = 0.095 * 1.05;
+  intent.radius = 0.095  * 0.9;
   // intent.target_heading = robot_to_target_angle;
   intent.target_heading = ball_to_target_angle;
   intent.inset_angle = M_PI / 2.0;
 
-  intent.limits.angular_velocity = 1.5;
-  intent.limits.angular_acceleration = 0.5;
+  intent.limits.angular_velocity = 4.0;
+  intent.limits.angular_acceleration = 1.8;
 
   RobotCommand command;
   command.motion_intent = intent;
-  command.dribbler_speed = 1.5 * kDefaultDribblerSpeed;
+  command.dribbler_speed = 0.3 * kDefaultDribblerSpeed;
 
   return command;
 }
