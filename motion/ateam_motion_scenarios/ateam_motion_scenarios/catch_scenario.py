@@ -62,6 +62,7 @@ from ateam_msgs.msg import (
     VisionStateRobot,
 )
 import rclpy
+from rclpy.duration import Duration
 from rclpy.node import Node
 from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
 
@@ -124,7 +125,11 @@ class State(Enum):
     WAIT_FOR_BALL = auto()
     WAIT_FOR_INCOMING = auto()
     INTERCEPT = auto()
+    GIVE = auto()
     CATCH_DWELL = auto()
+    KICK_BACK = auto()
+    COLLECT_APPROACH = auto()
+    COLLECT_CAPTURE = auto()
     RESET = auto()
     DONE = auto()
 
@@ -143,8 +148,8 @@ class CatchScenario(Node):
         # produce the same trajectory.
         self.declare_parameter('max_vel_linear', 1.0)
         self.declare_parameter('max_vel_angular', 3.0 * math.pi)
-        self.declare_parameter('max_accel_linear', 3.0)
-        self.declare_parameter('max_accel_angular', 3.0 * math.pi)
+        self.declare_parameter('max_accel_linear', 2.0)
+        self.declare_parameter('max_accel_angular', 6.0 * math.pi)
 
         # Geometry / robot
         self.declare_parameter('robot_radius', 0.09)
@@ -190,6 +195,47 @@ class CatchScenario(Node):
         self.declare_parameter('pos_tol', 0.04)
         self.declare_parameter('yaw_tol', 0.08)
         self.declare_parameter('catch_dwell', 1.5)
+
+        # "Give" - just before the ball arrives, shift the position
+        # target back along the ball travel direction so the robot is
+        # already moving away at the moment of contact, softening the
+        # catch. Stays in BCM_GLOBAL_POSITION mode the entire time.
+        self.declare_parameter('give_enabled', False)
+        # Distance (m) between robot center and ball at which to switch
+        # the position target into the retreated pose.
+        self.declare_parameter('give_trigger_distance', 0.6)
+        # Distance (m) to retreat backward along the ball travel line.
+        self.declare_parameter('give_retreat_distance', 0.15)
+        # How long to hold the retreated target before transitioning to
+        # CATCH_DWELL (which then dwells wherever the robot ended up).
+        self.declare_parameter('give_duration', 1.0)
+
+        # Touch pass: hold KR_KICK_TOUCH armed throughout the intercept
+        # (and during GIVE) so the firmware fires the kicker the
+        # instant the breakbeam detects ball contact - bouncing the
+        # ball back out as a one-touch pass. Mutually useful with
+        # `give_*` for a soft redirect. Overrides any post-catch
+        # behavior (CATCH_DWELL still runs to keep the robot in place,
+        # but the ball will already be gone).
+        self.declare_parameter('touch_pass_enabled', True)
+        self.declare_parameter('touch_pass_speed', 1.5)  # m/s
+        self.declare_parameter('kick_back_enabled', False)
+        self.declare_parameter('kick_back_speed', 1.5)   # m/s
+        self.declare_parameter('kick_back_aim_dwell', 0.3)
+        self.declare_parameter('kick_back_post_dwell', 0.2)
+        self.declare_parameter('kick_back_max_angular_vel', 0.0)  # 0 = default
+
+        # After a missed pass (ball passed the robot or stopped without
+        # being caught), drive over and collect the ball from whichever
+        # side approaches it from the robot's starting position. The
+        # approach point sits on the segment between the robot start
+        # pose `S` and the ball, offset back from the ball.
+        self.declare_parameter('collect_missed_enabled', False)
+        self.declare_parameter('collect_approach_offset', 0.15)  # m
+        self.declare_parameter('collect_capture_overdrive', 0.04)
+        self.declare_parameter('collect_capture_vel_limit', 0.2)
+        self.declare_parameter('collect_capture_dwell', 0.5)
+        self.declare_parameter('collect_stationary_threshold', 0.1)  # m/s
         # After collision is detected, the robot drives to the latched
         # intercept target and dwells. If it can't reach that target
         # within this many seconds, give up and reset anyway. Counted
@@ -282,6 +328,42 @@ class CatchScenario(Node):
         self.pos_tol = float(self.get_parameter('pos_tol').value)
         self.yaw_tol = float(self.get_parameter('yaw_tol').value)
         self.catch_dwell = float(self.get_parameter('catch_dwell').value)
+
+        self.give_enabled = bool(self.get_parameter('give_enabled').value)
+        self.give_trigger_distance = float(self.get_parameter(
+            'give_trigger_distance').value)
+        self.give_retreat_distance = float(self.get_parameter(
+            'give_retreat_distance').value)
+        self.give_duration = float(self.get_parameter('give_duration').value)
+
+        self.touch_pass_enabled = bool(self.get_parameter(
+            'touch_pass_enabled').value)
+        self.touch_pass_speed = float(self.get_parameter(
+            'touch_pass_speed').value)
+
+        self.kick_back_enabled = bool(self.get_parameter(
+            'kick_back_enabled').value)
+        self.kick_back_speed = float(self.get_parameter(
+            'kick_back_speed').value)
+        self.kick_back_aim_dwell = float(self.get_parameter(
+            'kick_back_aim_dwell').value)
+        self.kick_back_post_dwell = float(self.get_parameter(
+            'kick_back_post_dwell').value)
+        self.kick_back_max_angular_vel = float(self.get_parameter(
+            'kick_back_max_angular_vel').value)
+
+        self.collect_missed_enabled = bool(self.get_parameter(
+            'collect_missed_enabled').value)
+        self.collect_approach_offset = float(self.get_parameter(
+            'collect_approach_offset').value)
+        self.collect_capture_overdrive = float(self.get_parameter(
+            'collect_capture_overdrive').value)
+        self.collect_capture_vel_limit = float(self.get_parameter(
+            'collect_capture_vel_limit').value)
+        self.collect_capture_dwell = float(self.get_parameter(
+            'collect_capture_dwell').value)
+        self.collect_stationary_threshold = float(self.get_parameter(
+            'collect_stationary_threshold').value)
         self.post_collision_arrival_timeout = float(self.get_parameter(
             'post_collision_arrival_timeout').value)
         self.ball_lost_timeout = float(self.get_parameter(
@@ -363,6 +445,22 @@ class CatchScenario(Node):
         # Solver scheduling state.
         self.first_valid_ball_time = None  # earliest valid ball this cycle
         self.intercept_solved_once = False
+        # Wall-clock time at which the solver predicts the ball will
+        # reach the planned intercept (updated each tick the solver
+        # runs).
+        self.predicted_impact_time = None
+        # Latched position target for GIVE: the retreated dribbler
+        # tip pose backward along the ball line. (x, y, theta) of the
+        # robot center.
+        self.give_pose = None
+        # Pose latched on entry to CATCH_DWELL (or after a give) so the
+        # dwell holds wherever the robot actually ended up.
+        self.catch_dwell_pose = None
+        # Latched aim heading + position for KICK_BACK.
+        self.kick_back_pose = None
+        self.kick_back_aim_arrived_at = None
+        # Latched ball position when entering the COLLECT flow.
+        self.collect_ball_xy = None
 
         # Realized intercept tracking: when the ball reverses direction
         # we treat that as the realized interception event and pin its
@@ -426,6 +524,7 @@ class CatchScenario(Node):
                      accel_limit_linear: float = 0.0,
                      accel_limit_angular: float = 0.0,
                      kick_request: int = RobotMotionCommand.KR_DISABLE,
+                     kick_speed: float = 0.0,
                      dribbler_speed: float = 0.0) -> RobotMotionCommand:
         cmd = RobotMotionCommand()
         cmd.body_control_mode = RobotMotionCommand.BCM_GLOBAL_POSITION
@@ -437,7 +536,7 @@ class CatchScenario(Node):
         cmd.limit_acc_linear = float(accel_limit_linear)
         cmd.limit_acc_angular = float(accel_limit_angular)
         cmd.kick_request = kick_request
-        cmd.kick_speed = 0.0
+        cmd.kick_speed = float(kick_speed)
         cmd.dribbler_speed = float(dribbler_speed)
         return cmd
 
@@ -462,6 +561,22 @@ class CatchScenario(Node):
                 return self.make_off_cmd()
             tx = rs[0]
         return self.make_pos_cmd(tx, 0.0, 0.0)
+
+    def make_global_vel_cmd(self, vx: float, vy: float, vtheta: float = 0.0,
+                            kick_request: int = RobotMotionCommand.KR_DISABLE,
+                            dribbler_speed: float = 0.0
+                            ) -> RobotMotionCommand:
+        cmd = RobotMotionCommand()
+        cmd.body_control_mode = RobotMotionCommand.BCM_GLOBAL_VELOCITY
+        cmd.pose = Twist2D()
+        cmd.velocity = Twist2D(x=float(vx), y=float(vy), theta=float(vtheta))
+        cmd.acceleration = Twist2D()
+        cmd.limit_acc_linear = float(self.max_accel_linear)
+        cmd.limit_acc_angular = float(self.max_accel_angular)
+        cmd.kick_request = kick_request
+        cmd.kick_speed = 0.0
+        cmd.dribbler_speed = float(dribbler_speed)
+        return cmd
 
     # --------------------------------------------------------- field bounds
     def in_bounds(self, x: float, y: float) -> bool:
@@ -823,6 +938,45 @@ class CatchScenario(Node):
         self.collision_ball_xy = ball_pos
         self.collision_robot_pose = self.robot_xy_yaw()
 
+    def _touch_pass_kick(self):
+        """Return (kick_request, kick_speed) honoring `touch_pass_enabled`.
+        When enabled, holds KR_KICK_TOUCH armed at `touch_pass_speed` so
+        the firmware fires immediately on breakbeam detection.
+        """
+        if self.touch_pass_enabled:
+            return (RobotMotionCommand.KR_KICK_TOUCH, self.touch_pass_speed)
+        return (RobotMotionCommand.KR_DISABLE, 0.0)
+
+    def _enter_collect_if_possible(self) -> bool:
+        """If collect_missed is enabled and we know where the ball is
+        (currently visible, or last seen and roughly stationary), latch
+        the ball position and transition into COLLECT_APPROACH. Returns
+        True if a transition happened."""
+        if not self.collect_missed_enabled:
+            return False
+        # Prefer current visible ball; fall back to last seen.
+        bxy = None
+        if self.ball is not None and self.ball.visible:
+            bp = self.ball.pose.position
+            bv = self.ball.twist.linear
+            speed = math.hypot(bv.x, bv.y)
+            # Either it's stationary, or it's still moving but we missed
+            # the catch and want to chase. Either case is OK.
+            bxy = (bp.x, bp.y)
+            del speed
+        elif self._last_ball_pos is not None:
+            bxy = self._last_ball_pos
+        if bxy is None:
+            return False
+        if not self.in_bounds(bxy[0], bxy[1]):
+            return False
+        self.collect_ball_xy = bxy
+        self.get_logger().info(
+            f'Entering COLLECT_APPROACH for missed ball at '
+            f'({bxy[0]:.2f}, {bxy[1]:.2f})')
+        self.transition(State.COLLECT_APPROACH)
+        return True
+
     def step_state_machine(self):
         s = self.state
 
@@ -837,6 +991,17 @@ class CatchScenario(Node):
                 if (self.wait_for_incoming_timeout > 0.0
                         and self.time_in_state()
                         >= self.wait_for_incoming_timeout):
+                    # If the ball is still visible but stationary /
+                    # heading wrong, try to go fetch it instead of
+                    # giving up.
+                    if self.collect_missed_enabled:
+                        # Latch S as current robot pose so the COLLECT
+                        # geometry can use the "start -> ball" line.
+                        rs = self.robot_xy_yaw()
+                        if rs is not None:
+                            self.S = (rs[0], rs[1])
+                            if self._enter_collect_if_possible():
+                                return self.make_hold_cmd()
                     self.get_logger().info(
                         f'WAIT_FOR_INCOMING timeout '
                         f'({self.wait_for_incoming_timeout:.2f}s); going '
@@ -862,6 +1027,12 @@ class CatchScenario(Node):
             self._ball_history.clear()
             self.first_valid_ball_time = None
             self.intercept_solved_once = False
+            self.predicted_impact_time = None
+            self.give_pose = None
+            self.catch_dwell_pose = None
+            self.kick_back_pose = None
+            self.kick_back_aim_arrived_at = None
+            self.collect_ball_xy = None
             self.transition(State.INTERCEPT)
             return self.make_hold_cmd()
 
@@ -905,13 +1076,26 @@ class CatchScenario(Node):
                             P_drib[0] - ball[0][0], P_drib[1] - ball[0][1])
                         self.last_solution_T = t_int
                         self.intercept_solved_once = True
+                        # Latch the earliest predicted impact time.
+                        # Subsequent solves can pull it earlier (sooner
+                        # impact) but never push it later — otherwise
+                        # `time_to_impact` stays equal to `t_int` and
+                        # never counts down to the give window.
+                        candidate = now + Duration(seconds=float(t_int))
+                        if (self.predicted_impact_time is None
+                                or candidate < self.predicted_impact_time):
+                            self.predicted_impact_time = candidate
                 else:
                     # Ball lost without collision detection (no plan yet
-                    # or ball never reached us). Reset after timeout.
+                    # or ball never reached us). If collect-missed is
+                    # enabled and the ball is still somewhere on the
+                    # field, try to go pick it up. Otherwise reset.
                     if self.last_ball_seen is None:
                         self.last_ball_seen = now
                     elapsed = (now - self.last_ball_seen).nanoseconds * 1e-9
                     if elapsed >= self.ball_lost_timeout:
+                        if self._enter_collect_if_possible():
+                            return self.make_off_cmd()
                         self.get_logger().info(
                             f'Ball lost for {elapsed:.2f}s, resetting.')
                         self.transition(State.RESET)
@@ -932,12 +1116,50 @@ class CatchScenario(Node):
                     return self.make_off_cmd()
             if self.intercept_target is None:
                 return self.make_off_cmd()
+            # GIVE trigger: distance-based. Once the ball is within
+            # `give_trigger_distance` of the robot center and we're
+            # still actively chasing, latch a retreated position
+            # target backward along the ball travel direction. Uses
+            # the raw ball pose (not ball_state) so a slowing ball
+            # still triggers; uses raw ball velocity for direction
+            # but falls back to the intercept heading otherwise.
+            if (self.give_enabled
+                    and not self.collision_detected
+                    and self.intercept_P is not None
+                    and self.ball is not None
+                    and self.ball.visible):
+                bp = self.ball.pose.position
+                bv = self.ball.twist.linear
+                dist_to_ball = math.hypot(rs[0] - bp.x, rs[1] - bp.y)
+                if dist_to_ball <= self.give_trigger_distance:
+                    sp = math.hypot(bv.x, bv.y)
+                    if sp > 1e-6:
+                        ux, uy = bv.x / sp, bv.y / sp
+                    else:
+                        ttheta = self.intercept_P[2]
+                        ux, uy = -math.cos(ttheta), -math.sin(ttheta)
+                    base_cx = (self.intercept_P[0]
+                               - self.robot_front_offset
+                               * math.cos(self.intercept_P[2]))
+                    base_cy = (self.intercept_P[1]
+                               - self.robot_front_offset
+                               * math.sin(self.intercept_P[2]))
+                    gx = base_cx + ux * self.give_retreat_distance
+                    gy = base_cy + uy * self.give_retreat_distance
+                    self.give_pose = (gx, gy, self.intercept_P[2])
+                    self.get_logger().info(
+                        f'GIVE triggered (ball_dist={dist_to_ball:.2f}m); '
+                        f'retreat to ({gx:.2f}, {gy:.2f})')
+                    self.transition(State.GIVE)
+                    return self.make_off_cmd()
             tx, ty, ttheta = self.intercept_target
+            kreq, kspd = self._touch_pass_kick()
             cmd = self.make_pos_cmd(
                 tx, ty, ttheta,
                 accel_limit_linear=self.max_accel_linear,
                 accel_limit_angular=self.max_accel_angular,
-                kick_request=RobotMotionCommand.KR_DISABLE,
+                kick_request=kreq,
+                kick_speed=kspd,
                 dribbler_speed=self.dribbler_speed,
             )
             # Arrival check uses the dribbler intercept pose (where we
@@ -951,29 +1173,166 @@ class CatchScenario(Node):
                 if (math.hypot(rs[0] - px, rs[1] - py) <= self.pos_tol
                         and abs(ang_diff(rs[2], self.intercept_P[2]))
                         <= self.yaw_tol):
+                    self.catch_dwell_pose = (rs[0], rs[1], rs[2])
                     self.transition(State.CATCH_DWELL)
             return cmd
 
+        if s == State.GIVE:
+            if self.give_pose is None:
+                self.catch_dwell_pose = self.robot_xy_yaw()
+                self.transition(State.CATCH_DWELL)
+                return self.make_off_cmd()
+            gx, gy, gtheta = self.give_pose
+            kreq, kspd = self._touch_pass_kick()
+            cmd = self.make_pos_cmd(
+                gx, gy, gtheta,
+                accel_limit_linear=self.max_accel_linear,
+                accel_limit_angular=self.max_accel_angular,
+                kick_request=kreq,
+                kick_speed=kspd,
+                dribbler_speed=self.dribbler_speed,
+            )
+            if self.time_in_state() >= self.give_duration:
+                self.catch_dwell_pose = self.robot_xy_yaw()
+                self.transition(State.CATCH_DWELL)
+            return cmd
+
         if s == State.CATCH_DWELL:
-            if self.intercept_P is None:
+            # Hold wherever we ended up (post-give or post-arrival).
+            if self.catch_dwell_pose is None:
+                rs = self.robot_xy_yaw()
+                if rs is not None:
+                    self.catch_dwell_pose = (rs[0], rs[1], rs[2])
+            if self.catch_dwell_pose is None:
                 self.transition(State.RESET)
                 return self.make_off_cmd()
-            theta = self.intercept_P[2]
-            px = self.intercept_P[0] - self.robot_front_offset * math.cos(
-                theta)
-            py = self.intercept_P[1] - self.robot_front_offset * math.sin(
-                theta)
+            hx, hy, htheta = self.catch_dwell_pose
             cmd = self.make_pos_cmd(
-                px, py, theta,
+                hx, hy, htheta,
                 kick_request=RobotMotionCommand.KR_DISABLE,
                 dribbler_speed=self.dribbler_speed,
             )
             if self.time_in_state() >= self.catch_dwell:
-                # If non-looping, this is the last cycle: go to DONE
-                # after the post-catch reset. Looping always re-arms.
                 self.post_reset_state = (
                     State.WAIT_FOR_BALL if self.loop else State.DONE)
+                if self.kick_back_enabled:
+                    self.transition(State.KICK_BACK)
+                else:
+                    self.transition(State.RESET)
+            return cmd
+
+        if s == State.KICK_BACK:
+            rs = self.robot_xy_yaw()
+            if rs is None:
+                return self.make_off_cmd()
+            half_l = (self.field.field_length / 2.0
+                      if self.field is not None
+                      and self.field.field_length > 0.0
+                      else 4.5)
+            aim_theta = math.atan2(0.0 - rs[1], half_l - rs[0])
+            self.kick_back_pose = (rs[0], rs[1], aim_theta)
+            yaw_ok = abs(ang_diff(rs[2], aim_theta)) <= self.yaw_tol
+            now = self.get_clock().now()
+            if yaw_ok:
+                if self.kick_back_aim_arrived_at is None:
+                    self.kick_back_aim_arrived_at = now
+                aim_elapsed = (
+                    now - self.kick_back_aim_arrived_at).nanoseconds * 1e-9
+                if aim_elapsed >= self.kick_back_aim_dwell:
+                    # Fire kick.
+                    cmd = self.make_pos_cmd(
+                        rs[0], rs[1], aim_theta,
+                        ang_vel_limit=self.kick_back_max_angular_vel,
+                        kick_request=RobotMotionCommand.KR_KICK_NOW,
+                        kick_speed=self.kick_back_speed,
+                        dribbler_speed=self.dribbler_speed,
+                    )
+                    if aim_elapsed >= (self.kick_back_aim_dwell
+                                       + self.kick_back_post_dwell):
+                        self.transition(State.RESET)
+                    return cmd
+            else:
+                self.kick_back_aim_arrived_at = None
+            return self.make_pos_cmd(
+                rs[0], rs[1], aim_theta,
+                ang_vel_limit=self.kick_back_max_angular_vel,
+                kick_request=RobotMotionCommand.KR_ARM,
+                dribbler_speed=self.dribbler_speed,
+            )
+
+        if s == State.COLLECT_APPROACH:
+            if self.collect_ball_xy is None:
                 self.transition(State.RESET)
+                return self.make_off_cmd()
+            rs = self.robot_xy_yaw()
+            if rs is None:
+                return self.make_off_cmd()
+            bx, by = self.collect_ball_xy
+            sx, sy = self.S if self.S is not None else (rs[0], rs[1])
+            dx = bx - sx
+            dy = by - sy
+            d = math.hypot(dx, dy)
+            if d < 1e-6:
+                # Robot start coincides with ball — just capture.
+                self.transition(State.COLLECT_CAPTURE)
+                return self.make_off_cmd()
+            ux, uy = dx / d, dy / d
+            theta = math.atan2(uy, ux)
+            back = self.collect_approach_offset + self.robot_front_offset
+            tx = bx - back * ux
+            ty = by - back * uy
+            if not self.in_bounds(tx, ty):
+                self.get_logger().warn(
+                    'COLLECT approach target out of bounds; aborting.',
+                    throttle_duration_sec=1.0)
+                self.transition(State.RESET)
+                return self.make_off_cmd()
+            cmd = self.make_pos_cmd(
+                tx, ty, theta,
+                kick_request=RobotMotionCommand.KR_DISABLE,
+                dribbler_speed=self.dribbler_speed,
+            )
+            if (math.hypot(rs[0] - tx, rs[1] - ty) <= self.pos_tol
+                    and abs(ang_diff(rs[2], theta)) <= self.yaw_tol):
+                self.transition(State.COLLECT_CAPTURE)
+            return cmd
+
+        if s == State.COLLECT_CAPTURE:
+            if self.collect_ball_xy is None:
+                self.transition(State.RESET)
+                return self.make_off_cmd()
+            rs = self.robot_xy_yaw()
+            if rs is None:
+                return self.make_off_cmd()
+            bx, by = self.collect_ball_xy
+            sx, sy = self.S if self.S is not None else (rs[0], rs[1])
+            dx = bx - sx
+            dy = by - sy
+            d = math.hypot(dx, dy)
+            if d < 1e-6:
+                self.transition(State.RESET)
+                return self.make_off_cmd()
+            ux, uy = dx / d, dy / d
+            theta = math.atan2(uy, ux)
+            forward = -self.robot_front_offset + self.collect_capture_overdrive
+            tx = bx + forward * ux
+            ty = by + forward * uy
+            cmd = self.make_pos_cmd(
+                tx, ty, theta,
+                vel_limit=self.collect_capture_vel_limit,
+                kick_request=RobotMotionCommand.KR_ARM,
+                dribbler_speed=self.dribbler_speed,
+            )
+            if (math.hypot(rs[0] - tx, rs[1] - ty) <= self.pos_tol
+                    and abs(ang_diff(rs[2], theta)) <= self.yaw_tol):
+                if self.time_in_state() >= self.collect_capture_dwell:
+                    self.catch_dwell_pose = (rs[0], rs[1], rs[2])
+                    self.post_reset_state = (
+                        State.WAIT_FOR_BALL if self.loop else State.DONE)
+                    if self.kick_back_enabled:
+                        self.transition(State.KICK_BACK)
+                    else:
+                        self.transition(State.RESET)
             return cmd
 
         if s == State.RESET:
