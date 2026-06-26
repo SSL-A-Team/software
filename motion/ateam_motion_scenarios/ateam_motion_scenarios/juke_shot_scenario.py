@@ -57,6 +57,7 @@ from ateam_msgs.msg import (
     VisionStateBall,
     VisionStateRobot,
 )
+from ateam_radio_msgs.msg import ConnectionStatus
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
@@ -69,6 +70,7 @@ DEFAULT_PARAM_FILE = os.path.join(
 
 
 class State(Enum):
+    WAIT_FOR_CONNECTION = auto()
     PLACE_ROBOT = auto()
     WAIT_FOR_BALL = auto()
     WAIT_FOR_STATIONARY = auto()
@@ -214,6 +216,13 @@ class JukeShotScenario(Node):
             float(self._p('start_pose_theta_deg', 0.0)))
         self.start_dwell = float(self._p('start_dwell', 0.3))
 
+        # Radio connection monitoring. When ``require_connection`` is true the
+        # scenario waits for the robot's radio link before driving and
+        # restarts the state machine if the link drops mid-run.
+        self.require_connection = bool(self._p('require_connection', True))
+        self.connection_topic = str(self._p('connection_topic', '')) \
+            or f'/robot_feedback/connection/robot{self.robot_id}'
+
         rate = float(self._p('publish_rate_hz', 60.0))
 
         sensor_qos = QoSProfile(
@@ -225,6 +234,7 @@ class JukeShotScenario(Node):
         self.ball = None
         self.robot = None
         self.field = None
+        self.radio_connected = None  # None until first connection message
 
         self.ball_sub = self.create_subscription(
             VisionStateBall, '/ball', self.ball_cb, sensor_qos)
@@ -233,6 +243,9 @@ class JukeShotScenario(Node):
             self.robot_cb, sensor_qos)
         self.field_sub = self.create_subscription(
             FieldInfo, '/field', self.field_cb, 10)
+        self.connection_sub = self.create_subscription(
+            ConnectionStatus, self.connection_topic,
+            self.connection_cb, sensor_qos)
 
         self.cmd_pub = self.create_publisher(
             RobotMotionCommand,
@@ -240,8 +253,10 @@ class JukeShotScenario(Node):
         self.overlay_pub = self.create_publisher(
             OverlayArray, '/overlays', 10)
 
-        # State machine.
-        self.state = State.PLACE_ROBOT
+        # State machine. Start by waiting for the radio link when connection
+        # monitoring is enabled; otherwise jump straight to placement.
+        self.state = (State.WAIT_FOR_CONNECTION if self.require_connection
+                      else State.PLACE_ROBOT)
         self.state_entered = self.get_clock().now()
         self.stationary_since = None
         self.capture_arrived_at = None
@@ -267,7 +282,7 @@ class JukeShotScenario(Node):
             f'({self.team_color}). juke_type={self.juke_type}, '
             f'goal=(x={self.goal_x:.2f}, y={goal_y_desc}), '
             f'final_pivot_radius={self.final_pivot_radius:.2f}. '
-            'State: PLACE_ROBOT')
+            f'State: {self.state.name}')
 
     # --------------------------------------------------------------- params
     def _load_defaults(self) -> dict:
@@ -298,6 +313,9 @@ class JukeShotScenario(Node):
 
     def field_cb(self, msg: FieldInfo):
         self.field = msg
+
+    def connection_cb(self, msg: ConnectionStatus):
+        self.radio_connected = msg.radio_connected
 
     # --------------------------------------------------------------- helpers
     def transition(self, new_state: State):
@@ -414,10 +432,36 @@ class JukeShotScenario(Node):
 
     # ------------------------------------------------------------------ tick
     def tick(self):
+        self._check_connection()
         cmd = self.step_state_machine()
         if cmd is not None:
             self.cmd_pub.publish(cmd)
         self.publish_overlays()
+
+    def _check_connection(self):
+        """Restart the state machine if the robot's radio link drops."""
+        if not self.require_connection:
+            return
+        # Only react once we are actually running (past the connection wait)
+        # and the link is known to be down.
+        if self.state == State.WAIT_FOR_CONNECTION:
+            return
+        if self.radio_connected is False:
+            self.get_logger().warn(
+                'Robot disconnected; restarting state machine')
+            self._reset_run_state()
+            self.transition(State.WAIT_FOR_CONNECTION)
+
+    def _reset_run_state(self):
+        """Clear all latched per-run state."""
+        self.ball_xy = None
+        self.approach_dir = None
+        self.final_center = None
+        self.final_pose = None
+        self.start_arrived_at = None
+        self.stationary_since = None
+        self.capture_arrived_at = None
+        self.aim_since = None
 
     # --------------------------------------------------------------- pickup
     def _compute_approach(self, robot_xy):
@@ -589,6 +633,12 @@ class JukeShotScenario(Node):
     # --------------------------------------------------------- state machine
     def step_state_machine(self):
         s = self.state
+
+        if s == State.WAIT_FOR_CONNECTION:
+            if self.radio_connected:
+                self.get_logger().info('Robot connected; starting scenario')
+                self.transition(State.PLACE_ROBOT)
+            return self.make_off_cmd()
 
         if s == State.PLACE_ROBOT:
             if not self.drive_to_start:
