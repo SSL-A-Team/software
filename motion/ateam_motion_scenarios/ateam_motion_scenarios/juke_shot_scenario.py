@@ -55,7 +55,11 @@ from ateam_motion_scenarios.common.overlays import (
     make_pose_marker,
     make_text,
 )
-from ateam_motion_scenarios.common.pivot import load_pivot_defaults, make_pivot_cmd
+from ateam_motion_scenarios.common.pivot import (
+    load_pivot_defaults,
+    make_heading_pivot_cmd,
+    make_point_pivot_cmd,
+)
 from ateam_msgs.msg import (
     FieldInfo,
     OverlayArray,
@@ -194,19 +198,18 @@ class JukeShotScenario(Node):
             self.juke_type = 'none'
 
         # Ending (final) pivot toward the goal, executed with the firmware's
-        # built-in BCM_PIVOT maneuver. The firmware derives the orbit center
-        # from the robot's current pose, ``final_pivot_radius`` (orbit radius)
-        # and ``final_pivot_inset_angle`` (heading offset from the radius
-        # line; 0 = face the center); only the target heading is commanded.
-        # The robot orbits until its heading reaches the goal heading
-        # (direction toward the goal point on the +y goalline at x = 0).
-        # The firmware-pivot tuning defaults (orbit radius, inset, angular
-        # limits) come from the shared ``config/skill_pivot_params.json`` so they
-        # stay consistent with every other pivoting scenario; either can still
-        # be overridden per scenario. These params are independent of the juke
-        # pivot / double pivot above. When ``goal_y_dynamic`` is true the +y
-        # goalline is taken from the live field geometry (top edge); ``goal_y``
-        # is only the fallback.
+        # built-in BCM_POINT_PIVOT maneuver. The firmware derives the orbit
+        # center from the robot's current pose, ``final_pivot_radius`` (orbit
+        # radius) and ``final_pivot_inset_angle``, then orbits until the robot
+        # faces the goal point ``(goal_x, goal_y)`` -- accounting for the body
+        # translation during the orbit, so the firmware (not this scenario)
+        # solves the aim. The firmware-pivot tuning defaults (orbit radius,
+        # inset, angular limits) come from the shared
+        # ``config/skill_pivot_params.json`` so they stay consistent with every
+        # other pivoting scenario; either can still be overridden per scenario.
+        # These params are independent of the juke pivot / double pivot above.
+        # When ``goal_y_dynamic`` is true the +y goalline is taken from the
+        # live field geometry (top edge); ``goal_y`` is only the fallback.
         piv_def = load_pivot_defaults()
         self.goal_x = float(self._p('goal_x', 0.0))
         self.goal_y_dynamic = bool(self._p('goal_y_dynamic', True))
@@ -308,12 +311,13 @@ class JukeShotScenario(Node):
         self.juke_start_xy = None  # latched robot (x, y) at juke start
         self.juke_heading = 0.0    # heading held during the linear juke
 
-        # Final-pivot geometry, latched on entry to FINAL_PIVOT and sent to
-        # the firmware as a BCM_PIVOT command.
-        self.final_goal_heading = None  # target heading (faces center->goal)
-        self.final_center = None        # pivot orbit center (x, y)
+        # Final-pivot geometry: the goal point is sent to the firmware as a
+        # BCM_POINT_PIVOT command; these latched values are the closed-form
+        # *prediction* of the resulting orbit, used only for the overlay.
+        self.final_goal_heading = None  # predicted heading (faces ->goal)
+        self.final_center = None        # predicted pivot orbit center (x, y)
         self.final_radius = 0.0         # pivot orbit radius
-        self.final_pose = None          # final robot (x, y, theta)
+        self.final_pose = None          # predicted final robot (x, y, theta)
 
         self.timer = self.create_timer(1.0 / rate, self.tick)
 
@@ -446,13 +450,14 @@ class JukeShotScenario(Node):
                        dribbler_speed: float = 0.0,
                        kick_speed: float = 0.0) -> RobotMotionCommand:
         """
-        Build a firmware BCM_PIVOT command (delegates to the shared builder).
+        Build a firmware BCM_HEADING_PIVOT command (delegates to the shared
+        builder).
 
         The firmware derives the orbit center from the robot's current pose,
         ``orbit_radius`` and ``inset_angle``; only the target heading is
         commanded. Unset angular limits fall back to the scenario defaults.
         """
-        return make_pivot_cmd(
+        return make_heading_pivot_cmd(
             target_heading, orbit_radius, inset_angle,
             ang_vel_limit if ang_vel_limit > 0.0 else self.limit_vel_angular,
             ang_acc_limit if ang_acc_limit > 0.0 else self.limit_acc_angular,
@@ -650,16 +655,13 @@ class JukeShotScenario(Node):
 
     def _enter_final_pivot(self):
         """
-        Latch the built-in (BCM_PIVOT) final-pivot target.
+        Latch the goal and predict the final-pivot pose for visualization.
 
-        Only the target heading is commanded; the firmware derives the orbit
-        center from the robot's pose, ``final_pivot_radius`` and
-        ``final_pivot_inset_angle``. Because the robot orbits to a new
-        position during the pivot, the target heading is solved so the ball
-        (held ``robot_front_offset`` ahead of the robot) is aimed at the goal
-        point ``(goal_x, goal_y)`` at the *end* of the orbit -- not from the
-        robot's pre-pivot position. The orbit center and final pose are
-        reconstructed here only for visualization.
+        The actual aim is now performed by the firmware ``BCM_POINT_PIVOT``
+        maneuver (see :meth:`_final_pivot_cmd`), which orbits until the robot
+        faces the goal point, accounting for the body translation. The
+        closed-form solver below is retained only to predict the orbit center
+        and final pose for the overlay; it does not drive the command.
         """
         goal_y = self._goal_y()
         rs = self.robot_xy_yaw()
@@ -687,15 +689,22 @@ class JukeShotScenario(Node):
         dtheta = ang_diff(theta_goal, ryaw)
         self.kick_latched = False
         self.get_logger().info(
-            f'Final pivot (BCM_PIVOT): goal=({self.goal_x:.2f}, '
-            f'{goal_y:.2f}), target_heading={math.degrees(theta_goal):.1f} '
-            f'deg, turn={math.degrees(dtheta):.1f} deg, R={r:.2f}, '
+            f'Final pivot (BCM_POINT_PIVOT): goal=({self.goal_x:.2f}, '
+            f'{goal_y:.2f}), predicted_heading={math.degrees(theta_goal):.1f} '
+            f'deg, predicted_turn={math.degrees(dtheta):.1f} deg, R={r:.2f}, '
             f'inset={self.final_pivot_inset_angle:.2f} rad')
 
     def _final_pivot_cmd(self, kick_request, kick_speed=0.0):
-        """Build the BCM_PIVOT command for the latched final-pivot target."""
-        return self.make_pivot_cmd(
-            self.final_goal_heading, self.final_radius,
+        """Build the BCM_POINT_PIVOT command aiming the ball at the goal.
+
+        The firmware orbits (center derived from the robot pose,
+        ``final_pivot_radius`` and ``final_pivot_inset_angle``) until the
+        robot faces the goal point, accounting for the body translation during
+        the orbit -- so the scenario just streams the goal point and lets the
+        firmware solve the aim.
+        """
+        return make_point_pivot_cmd(
+            self.goal_x, self._goal_y(), self.final_pivot_radius,
             inset_angle=self.final_pivot_inset_angle,
             ang_vel_limit=self.final_pivot_angular_vel,
             ang_acc_limit=self.final_pivot_angular_acc,
@@ -847,7 +856,8 @@ class JukeShotScenario(Node):
 
         if s == State.PRE_JUKE_PIVOT:
             # Optional pivot (around the ball) to the juke inset heading
-            # before the linear juke, using the firmware BCM_PIVOT maneuver.
+            # before the linear juke, using the firmware BCM_HEADING_PIVOT
+            # maneuver.
             cmd = self.make_pivot_cmd(
                 self.juke_heading, self.final_pivot_radius,
                 inset_angle=self.final_pivot_inset_angle,
@@ -890,15 +900,21 @@ class JukeShotScenario(Node):
             )
 
         if s == State.FINAL_PIVOT:
-            # Built-in pivot maneuver (BCM_PIVOT): orbit the latched center
-            # while rotating toward the goal heading. Once the robot first
-            # reaches aim, latch the kick command and keep streaming it
-            # (KR_KICK_NOW) through the final_pivot_dwell -- it does not
-            # revert to KR_ARM if the aim momentarily wobbles.
+            # Built-in pivot maneuver (BCM_POINT_PIVOT): the firmware orbits
+            # while rotating to face the goal point, accounting for the body
+            # translation during the orbit. The robot is "aimed" once its
+            # heading points at the goal from its current pose (recomputed each
+            # tick, since the firmware -- not us -- decides the final pose).
+            # Once aimed, latch the kick and keep streaming it (KR_KICK_NOW)
+            # through final_pivot_dwell without reverting to KR_ARM.
             now = self.get_clock().now()
             rs = self.robot_xy_yaw()
-            aimed = (rs is not None and abs(ang_diff(
-                rs[2], self.final_goal_heading)) <= self.final_pivot_yaw_tol)
+            aimed = False
+            if rs is not None:
+                aim_heading = math.atan2(
+                    self._goal_y() - rs[1], self.goal_x - rs[0])
+                aimed = abs(ang_diff(rs[2], aim_heading)) \
+                    <= self.final_pivot_yaw_tol
             if aimed and self.aim_since is None:
                 self.aim_since = now
                 self.kick_latched = True

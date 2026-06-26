@@ -11,7 +11,12 @@
     "ball_lost_count": 30,
     "require_ball": true,
 
-    "pivot_interval_deg": 45.0,
+    "pivot_interval_deg": 180.0,
     "pivot_exec_duration": 3.0,
-    "pivot_hold_duration": 1.0
+    "pivot_hold_duration": 1.0,
+
+    "pivot_mode": "heading",
+    "pivot_slide_enabled": false,
+    "pivot_slide_distance": 0.5,
+    "pivot_slide_heading_frac": 0.5
 }

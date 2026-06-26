@@ -1,11 +1,12 @@
 """
-Shared firmware-pivot (BCM_PIVOT) helpers for motion scenarios.
+Shared firmware-pivot helpers for motion scenarios.
 
-The firmware pivot maneuver orbits the robot around a center it derives from
-the robot pose, ``orbit_radius`` and ``inset_angle``, rotating the robot's
-heading to a commanded global ``target_heading``. This module provides a pure
-command builder plus a small config/sequencing helper so scenarios don't have
-to duplicate the BCM_PIVOT wiring (mirrors how ``capture.py`` is shared).
+The firmware pivot maneuvers orbit the robot around a center it derives from
+the robot pose, ``orbit_radius`` and ``inset_angle``, while rotating the robot
+either toward a commanded global heading (``BCM_HEADING_PIVOT``) or until it
+faces a target point (``BCM_POINT_PIVOT``). This module provides pure command
+builders plus a small config/sequencing helper so scenarios don't have to
+duplicate the pivot wiring (mirrors how ``capture.py`` is shared).
 """
 
 from dataclasses import dataclass
@@ -32,6 +33,8 @@ _BUILTIN_DEFAULTS = {
     'max_angular_vel': math.pi,
     'max_angular_acc': 2.0 * math.pi,
     'dribbler_speed': 300.0,
+    'direction': RobotMotionCommand.PD_FORWARD,
+    'compute_inset_angle': False,
 }
 
 
@@ -52,21 +55,9 @@ def load_pivot_defaults(param_file: str = None) -> dict:
     return defaults
 
 
-def make_pivot_cmd(target_heading, orbit_radius, inset_angle=0.0,
-                   ang_vel_limit=0.0, ang_acc_limit=0.0,
-                   kick_request=RobotMotionCommand.KR_DISABLE,
-                   dribbler_speed=0.0, kick_speed=0.0) -> RobotMotionCommand:
-    """
-    Build a firmware ``BCM_PIVOT`` command.
-
-    Only the target heading is commanded (via ``pose.theta``); the firmware
-    derives the orbit center from the robot pose, ``orbit_radius`` and
-    ``inset_angle``. Angular limits of ``0.0`` mean "use the firmware
-    default".
-    """
-    cmd = RobotMotionCommand()
-    cmd.body_control_mode = RobotMotionCommand.BCM_PIVOT
-    cmd.pose = Twist2D(x=0.0, y=0.0, theta=float(target_heading))
+def _fill_common_pivot(cmd, orbit_radius, inset_angle, ang_vel_limit,
+                       ang_acc_limit, direction, compute_inset_angle,
+                       kick_request, dribbler_speed, kick_speed):
     cmd.velocity = Twist2D()
     cmd.acceleration = Twist2D()
     if ang_vel_limit > 0.0:
@@ -75,9 +66,64 @@ def make_pivot_cmd(target_heading, orbit_radius, inset_angle=0.0,
         cmd.limit_acc_angular = float(ang_acc_limit)
     cmd.pivot_orbit_radius = float(orbit_radius)
     cmd.pivot_inset_angle = float(inset_angle)
+    cmd.pivot_direction = int(direction)
+    cmd.pivot_compute_inset_angle = bool(compute_inset_angle)
     cmd.kick_request = kick_request
     cmd.kick_speed = float(kick_speed)
     cmd.dribbler_speed = float(dribbler_speed)
+
+
+def make_heading_pivot_cmd(target_heading, orbit_radius, inset_angle=0.0,
+                           ang_vel_limit=0.0, ang_acc_limit=0.0,
+                           direction=RobotMotionCommand.PD_FORWARD,
+                           compute_inset_angle=False,
+                           kick_request=RobotMotionCommand.KR_DISABLE,
+                           dribbler_speed=0.0,
+                           kick_speed=0.0) -> RobotMotionCommand:
+    """
+    Build a firmware ``BCM_HEADING_PIVOT`` command.
+
+    The robot orbits until its heading reaches the global ``target_heading``
+    (commanded via ``pose.theta``); the firmware derives the orbit center from
+    the robot pose, ``orbit_radius`` and ``inset_angle``. Angular limits of
+    ``0.0`` mean "use the firmware default". When ``compute_inset_angle`` is
+    true the firmware derives the inset from a centrifugal-lean model and
+    ``inset_angle`` is ignored.
+    """
+    cmd = RobotMotionCommand()
+    cmd.body_control_mode = RobotMotionCommand.BCM_HEADING_PIVOT
+    cmd.pose = Twist2D(x=0.0, y=0.0, theta=float(target_heading))
+    _fill_common_pivot(
+        cmd, orbit_radius, inset_angle, ang_vel_limit, ang_acc_limit,
+        direction, compute_inset_angle, kick_request, dribbler_speed,
+        kick_speed)
+    return cmd
+
+
+def make_point_pivot_cmd(target_x, target_y, orbit_radius, inset_angle=0.0,
+                         ang_vel_limit=0.0, ang_acc_limit=0.0,
+                         direction=RobotMotionCommand.PD_FORWARD,
+                         compute_inset_angle=False,
+                         kick_request=RobotMotionCommand.KR_DISABLE,
+                         dribbler_speed=0.0,
+                         kick_speed=0.0) -> RobotMotionCommand:
+    """
+    Build a firmware ``BCM_POINT_PIVOT`` command.
+
+    The robot orbits until it faces the global target point
+    ``(target_x, target_y)`` (commanded via ``pose.x`` / ``pose.y``),
+    accounting for the translation of its body around the orbit. The firmware
+    derives the orbit center from the robot pose, ``orbit_radius`` and
+    ``inset_angle``. Angular limits of ``0.0`` mean "use the firmware
+    default".
+    """
+    cmd = RobotMotionCommand()
+    cmd.body_control_mode = RobotMotionCommand.BCM_POINT_PIVOT
+    cmd.pose = Twist2D(x=float(target_x), y=float(target_y), theta=0.0)
+    _fill_common_pivot(
+        cmd, orbit_radius, inset_angle, ang_vel_limit, ang_acc_limit,
+        direction, compute_inset_angle, kick_request, dribbler_speed,
+        kick_speed)
     return cmd
 
 
@@ -117,15 +163,17 @@ class PivotConfig:
     max_angular_vel: float = math.pi
     max_angular_acc: float = 2.0 * math.pi
     dribbler_speed: float = 300.0
+    direction: int = RobotMotionCommand.PD_FORWARD
+    compute_inset_angle: bool = False
 
     @staticmethod
     def from_params(p, prefix: str = 'pivot_') -> 'PivotConfig':
         """
         Build a config from a ``p(name, default)`` parameter getter.
 
-        The defaults come from the shared ``config/skill_pivot_params.json`` so every
-        scenario uses the same firmware-pivot tuning unless it explicitly
-        overrides a value via its own ROS params / command line.
+        The defaults come from the shared ``config/skill_pivot_params.json``
+        so every scenario uses the same firmware-pivot tuning unless it
+        explicitly overrides a value via its own ROS params / command line.
         """
         d = load_pivot_defaults()
         return PivotConfig(
@@ -137,14 +185,31 @@ class PivotConfig:
                 p(prefix + 'max_angular_acc', d['max_angular_acc'])),
             dribbler_speed=float(
                 p(prefix + 'dribbler_speed', d['dribbler_speed'])),
+            direction=int(p(prefix + 'direction', d['direction'])),
+            compute_inset_angle=bool(
+                p(prefix + 'compute_inset_angle', d['compute_inset_angle'])),
         )
 
-    def command(self, target_heading,
-                kick_request=RobotMotionCommand.KR_DISABLE,
-                kick_speed=0.0) -> RobotMotionCommand:
-        """Build a BCM_PIVOT command for ``target_heading`` using this config."""
-        return make_pivot_cmd(
+    def heading_command(self, target_heading,
+                        kick_request=RobotMotionCommand.KR_DISABLE,
+                        kick_speed=0.0) -> RobotMotionCommand:
+        """Build a BCM_HEADING_PIVOT command using this config."""
+        return make_heading_pivot_cmd(
             target_heading, self.orbit_radius, self.inset_angle,
             self.max_angular_vel, self.max_angular_acc,
+            direction=self.direction,
+            compute_inset_angle=self.compute_inset_angle,
+            kick_request=kick_request, dribbler_speed=self.dribbler_speed,
+            kick_speed=kick_speed)
+
+    def point_command(self, target_x, target_y,
+                      kick_request=RobotMotionCommand.KR_DISABLE,
+                      kick_speed=0.0) -> RobotMotionCommand:
+        """Build a BCM_POINT_PIVOT command facing a point with this config."""
+        return make_point_pivot_cmd(
+            target_x, target_y, self.orbit_radius, self.inset_angle,
+            self.max_angular_vel, self.max_angular_acc,
+            direction=self.direction,
+            compute_inset_angle=self.compute_inset_angle,
             kick_request=kick_request, dribbler_speed=self.dribbler_speed,
             kick_speed=kick_speed)

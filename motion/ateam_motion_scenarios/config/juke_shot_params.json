@@ -4,8 +4,8 @@
     "publish_rate_hz": 60.0,
 
     "drive_to_start": true,
-    "start_pose_x": -0.3,
-    "start_pose_y": -0.3,
+    "start_pose_x": -0.4,
+    "start_pose_y": -0.4,
     "start_pose_theta_deg": 0.0,
     "start_dwell": 0.0,
 
@@ -26,11 +26,11 @@
     "limit_acc_angular": 6.283185,
 
     "juke_type": "linear",
-    "juke_distance": 0.50,
+    "juke_distance": 0.30,
     "_juke_speed": 0.5,
     "juke_speed": 0.25,
-    "juke_accel": 1.0,
-    "juke_inset_angle": 1.0,
+    "juke_accel": 2.0,
+    "juke_inset_angle": 0.6,
     "juke_target_field_edge": true,
     "juke_field_edge_x": 4.5,
     "juke_pre_pivot": true,

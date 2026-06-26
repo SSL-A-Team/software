@@ -60,7 +60,10 @@ from ateam_motion_scenarios.common.overlays import (
     make_pose_marker,
     make_text,
 )
-from ateam_motion_scenarios.common.pivot import make_pivot_cmd, PivotConfig
+from ateam_motion_scenarios.common.pivot import (
+    make_heading_pivot_cmd,
+    PivotConfig,
+)
 from ateam_msgs.msg import (
     FieldInfo,
     OverlayArray,
@@ -257,7 +260,7 @@ class CatchScenario(Node):
         self._declare('kick_back_aim_dwell', 0.3)
         self._declare('kick_back_post_dwell', 0.2)
         # KICK_BACK turns the robot back toward the +x goal with the firmware
-        # BCM_PIVOT maneuver (orbit radius / inset / angular limits come from
+        # BCM_HEADING_PIVOT maneuver (orbit radius / inset / angular limits come from
         # the shared config/skill_pivot_params.json via kick_back_pivot_* params).
         # 0 = use the shared pivot angular-velocity limit; >0 overrides it.
         self._declare('kick_back_max_angular_vel', 0.0)
@@ -1500,10 +1503,12 @@ class CatchScenario(Node):
                     now - self.kick_back_aim_arrived_at).nanoseconds * 1e-9
                 if aim_elapsed >= self.kick_back_aim_dwell:
                     # Fire kick (still pivoting to hold the heading).
-                    cmd = make_pivot_cmd(
+                    cmd = make_heading_pivot_cmd(
                         aim_theta, pc.orbit_radius, pc.inset_angle,
                         ang_vel_limit=ang_vel,
                         ang_acc_limit=pc.max_angular_acc,
+                        direction=pc.direction,
+                        compute_inset_angle=pc.compute_inset_angle,
                         kick_request=RobotMotionCommand.KR_KICK_NOW,
                         kick_speed=self.kick_back_speed,
                         dribbler_speed=self.dribbler_speed,
@@ -1515,11 +1520,13 @@ class CatchScenario(Node):
             else:
                 self.kick_back_aim_arrived_at = None
             # Pivot toward the kick-back heading, holding the ball on the
-            # dribbler via the firmware BCM_PIVOT maneuver.
-            return make_pivot_cmd(
+            # dribbler via the firmware BCM_HEADING_PIVOT maneuver.
+            return make_heading_pivot_cmd(
                 aim_theta, pc.orbit_radius, pc.inset_angle,
                 ang_vel_limit=ang_vel,
                 ang_acc_limit=pc.max_angular_acc,
+                direction=pc.direction,
+                compute_inset_angle=pc.compute_inset_angle,
                 kick_request=RobotMotionCommand.KR_ARM,
                 dribbler_speed=self.dribbler_speed,
             )
