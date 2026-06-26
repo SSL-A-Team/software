@@ -145,6 +145,12 @@ class CatchScenario(Node):
         self.declare_parameter('min_ball_speed', 0.3)
         # Only act on balls moving toward -x (rolled in from +x edge).
         self.declare_parameter('require_negative_vx', True)
+        # End-to-end latency to compensate for: vision pipeline +
+        # command publish + radio + firmware actuation. The observed
+        # ball position/velocity is propagated forward by this amount
+        # (constant-velocity model) so the intercept solver targets
+        # where the ball will be when the command actually lands.
+        self.declare_parameter('latency_compensation_s', 0.2)
 
         # Trajectory limits (matching firmware defaults). These are the
         # caps used both by the in-process bang-bang simulation and by
@@ -189,6 +195,8 @@ class CatchScenario(Node):
         self.min_ball_speed = float(self.get_parameter('min_ball_speed').value)
         self.require_negative_vx = bool(self.get_parameter(
             'require_negative_vx').value)
+        self.latency_compensation_s = float(self.get_parameter(
+            'latency_compensation_s').value)
 
         self.max_vel_linear = float(self.get_parameter('max_vel_linear').value)
         self.max_vel_angular = float(self.get_parameter(
@@ -416,7 +424,12 @@ class CatchScenario(Node):
 
     # ----------------------------------------------------- ball prediction
     def ball_state(self):
-        """Return ((bx, by), (vx, vy), speed) or None."""
+        """Return ((bx, by), (vx, vy), speed) or None.
+
+        Position is propagated forward by ``latency_compensation_s``
+        using a constant-velocity model so the solver targets where
+        the ball will be by the time the command is actuated.
+        """
         if self.ball is None or not self.ball.visible:
             return None
         bp = self.ball.pose.position
@@ -426,7 +439,10 @@ class CatchScenario(Node):
             return None
         if self.require_negative_vx and bv.x >= 0.0:
             return None
-        return ((bp.x, bp.y), (bv.x, bv.y), speed)
+        dt = self.latency_compensation_s
+        bx = bp.x + bv.x * dt
+        by = bp.y + bv.y * dt
+        return ((bx, by), (bv.x, bv.y), speed)
 
     def ball_dribbler_target(self, d, ball):
         """For an intercept at distance `d` along the ball line, return
