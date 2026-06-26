@@ -57,7 +57,7 @@ from ateam_msgs.msg import (
     VisionStateBall,
     VisionStateRobot,
 )
-from ateam_radio_msgs.msg import ConnectionStatus
+from ateam_radio_msgs.msg import BasicTelemetry, ConnectionStatus
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import (
@@ -79,7 +79,7 @@ class State(Enum):
     PLACE_ROBOT = auto()
     WAIT_FOR_BALL = auto()
     WAIT_FOR_STATIONARY = auto()
-    APPROACH_STAGING = auto()
+    MOVE_TO_BALL = auto()
     CAPTURE = auto()
     FINAL_PIVOT = auto()
     KICK = auto()
@@ -113,15 +113,42 @@ class JukeShotScenario(Node):
         self.robot_id = int(self._p('robot_id', 2))
         self.team_color = str(self._p('team_color', 'blue'))
 
-        # Capture / staging params (mirrors ball_capture_scenario).
+        # Capture params. Two phases, both global-position commands:
+        #   1. APPROACH: drive to a staging point ``approach_radius`` from the
+        #      ball (on the robot->ball line) facing the ball. Complete only
+        #      once the robot is within approach_pos_tol / approach_yaw_tol of
+        #      that pose AND its speed is below capture_speed.
+        #   2. CAPTURE: a constantly-updating global position straight at the
+        #      ball, oriented along the robot-center -> ball-center line, with
+        #      the velocity limited to capture_speed and accel to
+        #      capture_accel. Completes when the ball is settled on the
+        #      dribbler (firmware breakbeam, like the kenobi Capture skill).
         self.stationary_ball_threshold = float(
             self._p('stationary_ball_threshold', 0.005))
         self.stationary_dwell = float(self._p('stationary_dwell', 0.5))
-        self.approach_offset = float(self._p('approach_offset', 0.10))
         self.robot_front_offset = float(self._p('robot_front_offset', 0.09))
-        self.capture_overdrive = float(self._p('capture_overdrive', 0.05))
-        self.capture_vel_limit = float(self._p('capture_vel_limit', 0.15))
-        self.capture_dwell = float(self._p('capture_dwell', 0.5))
+        self.approach_radius = float(self._p('approach_radius', 0.25))
+        self.approach_pos_tol = float(self._p('approach_pos_tol', 0.05))
+        self.approach_yaw_tol = math.radians(
+            float(self._p('approach_yaw_tol_deg', 5.0)))
+        self.capture_speed = float(self._p('capture_speed', 0.3))
+        self.capture_accel = float(self._p('capture_accel', 1.0))
+        # Frames the ball must be settled on the dribbler before "done"
+        # (mirrors the kenobi 30-frame breakbeam filter; +1 detected, -2 not).
+        self.capture_filter_count = int(self._p('capture_filter_count', 30))
+        # Capture completion source. By default the real firmware breakbeam
+        # (BasicTelemetry.breakbeam_ball_detected on the basic feedback
+        # topic) is used, mirroring the kenobi Capture skill. When breakbeam
+        # telemetry is unavailable (or use_breakbeam is false) a vision proxy
+        # is used instead: the ball within robot_front_offset + tol, or
+        # occluded by the robot.
+        self.use_breakbeam = bool(self._p('use_breakbeam', True))
+        self.breakbeam_topic = str(self._p('breakbeam_topic', '')) \
+            or f'/robot_feedback/basic/robot{self.robot_id}'
+        # Vision proxy for the breakbeam: the ball is considered on the
+        # dribbler when it is within robot_front_offset + this tolerance.
+        self.capture_dribbler_tol = float(
+            self._p('capture_dribbler_tol', 0.03))
 
         self.pos_tol = float(self._p('pos_tol', 0.03))
         self.yaw_tol = float(self._p('yaw_tol', 0.05))
@@ -251,6 +278,7 @@ class JukeShotScenario(Node):
         self.robot = None
         self.field = None
         self.radio_connected = None  # None until first connection message
+        self.breakbeam_detected = None  # None until first basic telemetry
 
         self.ball_sub = self.create_subscription(
             VisionStateBall, '/ball', self.ball_cb, sensor_qos)
@@ -262,6 +290,11 @@ class JukeShotScenario(Node):
         self.connection_sub = self.create_subscription(
             ConnectionStatus, self.connection_topic,
             self.connection_cb, connection_qos)
+        # Basic telemetry carries breakbeam state (RELIABLE + VOLATILE, like
+        # the radio bridge's SystemDefaultsQoS publisher).
+        self.telemetry_sub = self.create_subscription(
+            BasicTelemetry, self.breakbeam_topic,
+            self.telemetry_cb, connection_qos)
 
         self.cmd_pub = self.create_publisher(
             RobotMotionCommand,
@@ -275,12 +308,12 @@ class JukeShotScenario(Node):
                       else State.PLACE_ROBOT)
         self.state_entered = self.get_clock().now()
         self.stationary_since = None
-        self.capture_arrived_at = None
         self.ball_xy = None       # latched ball (x, y) at WAIT_FOR_STATIONARY
-        self.approach_dir = None  # unit vec ball->robot (nearest-side pickup)
-        self.approach_theta = 0.0  # robot yaw facing the ball during pickup
-        self.aim_since = None     # time yaw first within tolerance in pivot
+        self.aim_since = None      # time yaw first within tolerance in pivot
+        self.kick_latched = False  # once aimed, latch the kick command on
+        self.approach_arrived_at = None  # time settled at the staging pose
         self.start_arrived_at = None  # time robot first reached start pose
+        self.ball_detected_filter = 0  # capture completion filter
 
         # Final-pivot geometry, latched on entry to FINAL_PIVOT and sent to
         # the firmware as a BCM_PIVOT command.
@@ -333,6 +366,9 @@ class JukeShotScenario(Node):
     def connection_cb(self, msg: ConnectionStatus):
         self.radio_connected = msg.radio_connected
 
+    def telemetry_cb(self, msg: BasicTelemetry):
+        self.breakbeam_detected = msg.breakbeam_ball_detected
+
     # --------------------------------------------------------------- helpers
     def transition(self, new_state: State):
         self.get_logger().info(
@@ -340,7 +376,6 @@ class JukeShotScenario(Node):
         self.state = new_state
         self.state_entered = self.get_clock().now()
         self.stationary_since = None
-        self.capture_arrived_at = None
         self.aim_since = None
 
     def time_in_state(self) -> float:
@@ -356,6 +391,12 @@ class JukeShotScenario(Node):
         if self.ball is None:
             return float('inf')
         v = self.ball.twist.linear
+        return math.hypot(v.x, v.y)
+
+    def robot_speed(self) -> float:
+        if self.robot is None or not self.robot.visible:
+            return float('inf')
+        v = self.robot.twist.linear
         return math.hypot(v.x, v.y)
 
     def at_pose(self, target_xy, pos_tol: float = None,
@@ -377,6 +418,7 @@ class JukeShotScenario(Node):
 
     def make_pos_cmd(self, x: float, y: float, theta: float = 0.0,
                      vel_limit: float = 0.0,
+                     acc_limit: float = 0.0,
                      ang_vel_limit: float = 0.0,
                      ang_acc_limit: float = 0.0,
                      kick_request: int = RobotMotionCommand.KR_DISABLE,
@@ -392,7 +434,8 @@ class JukeShotScenario(Node):
         cmd.limit_vel_angular = (
             float(ang_vel_limit) if ang_vel_limit > 0.0
             else self.limit_vel_angular)
-        cmd.limit_acc_linear = self.limit_acc_linear
+        cmd.limit_acc_linear = (
+            float(acc_limit) if acc_limit > 0.0 else self.limit_acc_linear)
         cmd.limit_acc_angular = (
             float(ang_acc_limit) if ang_acc_limit > 0.0
             else self.limit_acc_angular)
@@ -469,49 +512,46 @@ class JukeShotScenario(Node):
     def _reset_run_state(self):
         """Clear all latched per-run state."""
         self.ball_xy = None
-        self.approach_dir = None
         self.final_center = None
         self.final_pose = None
         self.start_arrived_at = None
+        self.approach_arrived_at = None
         self.stationary_since = None
-        self.capture_arrived_at = None
         self.aim_since = None
+        self.kick_latched = False
+        self.ball_detected_filter = 0
 
     # --------------------------------------------------------------- pickup
-    def _compute_approach(self, robot_xy):
-        """
-        Latch the nearest-side pickup geometry for the current ball.
+    def ball_pos(self):
+        """Return the live ball (x, y) if visible, else the latched ball."""
+        if self.ball is not None and self.ball.visible:
+            p = self.ball.pose.position
+            return (p.x, p.y)
+        return self.ball_xy
 
-        ``approach_dir`` is the unit vector pointing from the ball toward
-        the robot's position, so the robot stages on the side of the ball
-        nearest to it. ``approach_theta`` faces the robot at the ball.
+    def _approach_staging(self, robot_xy):
         """
-        bx, by = self.ball_xy
-        dx = robot_xy[0] - bx
-        dy = robot_xy[1] - by
+        Compute the approach staging pose for the current ball.
+
+        Returns ``(target_xy, theta)`` where ``target_xy`` is the point
+        ``approach_radius`` from the ball on the robot->ball line (the
+        robot's current side) and ``theta`` faces the ball, or ``None`` if
+        geometry is unavailable.
+        """
+        bp = self.ball_pos()
+        if bp is None:
+            return None
+        dx = robot_xy[0] - bp[0]
+        dy = robot_xy[1] - bp[1]
         d = math.hypot(dx, dy)
         if d < 1e-6:
-            # Degenerate: robot on top of ball. Fall back to -x side.
-            self.approach_dir = (-1.0, 0.0)
+            ux, uy = -1.0, 0.0
         else:
-            self.approach_dir = (dx / d, dy / d)
-        # Face the ball (opposite the approach direction).
-        self.approach_theta = math.atan2(-self.approach_dir[1],
-                                         -self.approach_dir[0])
-
-    def _staging_target(self):
-        if self.ball_xy is None or self.approach_dir is None:
-            return None
-        dist = self.approach_offset + self.robot_front_offset
-        return (self.ball_xy[0] + self.approach_dir[0] * dist,
-                self.ball_xy[1] + self.approach_dir[1] * dist)
-
-    def _capture_target(self):
-        if self.ball_xy is None or self.approach_dir is None:
-            return None
-        dist = self.robot_front_offset - self.capture_overdrive
-        return (self.ball_xy[0] + self.approach_dir[0] * dist,
-                self.ball_xy[1] + self.approach_dir[1] * dist)
+            ux, uy = dx / d, dy / d
+        target = (bp[0] + ux * self.approach_radius,
+                  bp[1] + uy * self.approach_radius)
+        theta = math.atan2(bp[1] - robot_xy[1], bp[0] - robot_xy[0])
+        return target, theta
 
     # ----------------------------------------------------------- final pivot
     def _goal_y(self) -> float:
@@ -649,6 +689,7 @@ class JukeShotScenario(Node):
         self.final_pose = (fx, fy, theta_goal)
 
         dtheta = ang_diff(theta_goal, ryaw)
+        self.kick_latched = False
         self.get_logger().info(
             f'Final pivot (BCM_PIVOT): goal=({self.goal_x:.2f}, '
             f'{goal_y:.2f}), target_heading={math.degrees(theta_goal):.1f} '
@@ -684,20 +725,22 @@ class JukeShotScenario(Node):
                 (self.start_pose_x, self.start_pose_y,
                  self.start_pose_theta_rad),
                 self.pos_tol, color=target_color, heading_length=0.3))
-        elif s == State.APPROACH_STAGING:
-            tgt = self._staging_target()
-            if tgt is not None:
+        elif s == State.MOVE_TO_BALL:
+            rs = self.robot_xy_yaw()
+            staging = self._approach_staging((rs[0], rs[1])) \
+                if rs is not None else None
+            if staging is not None:
+                (tx, ty), theta = staging
                 items.append(make_pose_marker(
-                    OVERLAY_NS, 'target',
-                    (tgt[0], tgt[1], self.approach_theta),
-                    self.pos_tol, color=target_color, heading_length=0.3))
+                    OVERLAY_NS, 'target', (tx, ty, theta),
+                    self.approach_pos_tol, color=target_color,
+                    heading_length=0.3))
         elif s == State.CAPTURE:
-            tgt = self._capture_target()
-            if tgt is not None:
-                items.append(make_pose_marker(
-                    OVERLAY_NS, 'target',
-                    (tgt[0], tgt[1], self.approach_theta),
-                    self.pos_tol, color='#00FF7FFF', heading_length=0.3))
+            bp = self.ball_pos()
+            if bp is not None:
+                items.append(make_point(
+                    OVERLAY_NS, 'target', bp,
+                    color='#00FF7FFF', radius=0.03))
         elif s in (State.FINAL_PIVOT, State.KICK) \
                 and self.final_pose is not None:
             items.append(make_pose_marker(
@@ -771,75 +814,116 @@ class JukeShotScenario(Node):
                         >= self.stationary_dwell:
                     bp = self.ball.pose.position
                     self.ball_xy = (bp.x, bp.y)
-                    rs = self.robot_xy_yaw()
-                    robot_xy = (rs[0], rs[1]) if rs is not None \
-                        else (bp.x - 1.0, bp.y)
-                    self._compute_approach(robot_xy)
+                    self.approach_arrived_at = None
                     self.get_logger().info(
                         f'Ball stationary at ({bp.x:.3f}, {bp.y:.3f}); '
-                        'picking up from nearest side '
-                        f'(dir={self.approach_dir[0]:.2f}, '
-                        f'{self.approach_dir[1]:.2f})')
-                    self.transition(State.APPROACH_STAGING)
+                        'moving to staging point')
+                    self.transition(State.MOVE_TO_BALL)
                     return self.make_off_cmd()
             else:
                 self.stationary_since = None
             return self.make_off_cmd()
 
-        if s == State.APPROACH_STAGING:
-            tgt = self._staging_target()
-            tx, ty = tgt
-            if self.at_pose((tx, ty), self.pos_tol,
-                            yaw_target=self.approach_theta,
-                            yaw_tol=self.yaw_tol):
+        if s == State.MOVE_TO_BALL:
+            # Approach phase: global position to a staging point
+            # ``approach_radius`` from the ball (on the robot->ball line),
+            # facing the ball. Complete only once the robot is within
+            # approach_pos_tol / approach_yaw_tol of that pose AND has slowed
+            # below capture_speed.
+            rs = self.robot_xy_yaw()
+            staging = self._approach_staging((rs[0], rs[1])) \
+                if rs is not None else None
+            if staging is None:
+                return self.make_off_cmd()
+            (tx, ty), theta = staging
+            settled = self.at_pose(
+                (tx, ty), self.approach_pos_tol,
+                yaw_target=theta, yaw_tol=self.approach_yaw_tol)
+            if settled and self.robot_speed() < self.capture_speed:
+                now = self.get_clock().now()
+                if self.approach_arrived_at is None:
+                    self.approach_arrived_at = now
+                # One settled frame at/under speed is enough; proceed.
+                self.ball_detected_filter = 0
+                self.get_logger().info('Settled at staging point; capturing')
                 self.transition(State.CAPTURE)
-            return self.make_pos_cmd(tx, ty, self.approach_theta)
-
-        if s == State.CAPTURE:
-            tgt = self._capture_target()
-            tx, ty = tgt
-            cmd = self.make_pos_cmd(
-                tx, ty, self.approach_theta,
-                vel_limit=self.capture_vel_limit,
+            else:
+                self.approach_arrived_at = None
+            return self.make_pos_cmd(
+                tx, ty, theta,
                 kick_request=RobotMotionCommand.KR_ARM,
                 dribbler_speed=self.dribbler_speed,
             )
-            if self.at_pose((tx, ty), self.pos_tol,
-                            yaw_target=self.approach_theta,
-                            yaw_tol=self.yaw_tol):
-                now = self.get_clock().now()
-                if self.capture_arrived_at is None:
-                    self.capture_arrived_at = now
-                elif (now - self.capture_arrived_at).nanoseconds * 1e-9 \
-                        >= self.capture_dwell:
-                    # (Juke would go here in a future increment.) Compute
-                    # the final-pivot geometry from the current pose.
-                    self._enter_final_pivot()
-                    self.transition(State.FINAL_PIVOT)
+
+        if s == State.CAPTURE:
+            # Capture phase: a constantly-updating global position straight
+            # at the ball, oriented along the robot-center -> ball-center
+            # line, with the velocity limited to capture_speed and the
+            # acceleration to capture_accel. Completes when the ball is
+            # settled on the dribbler (firmware breakbeam preferred).
+            rs = self.robot_xy_yaw()
+            if rs is None:
+                return self.make_off_cmd()
+            rx, ry, _ = rs
+            ball_visible = self.ball is not None and self.ball.visible
+            bp = self.ball_pos()
+
+            # Capture-complete detection. Prefer the firmware breakbeam from
+            # basic telemetry (like the kenobi Capture skill); fall back to a
+            # vision proxy (ball within dribbler range, or occluded by the
+            # robot) when breakbeam telemetry is unavailable.
+            if self.use_breakbeam and self.breakbeam_detected is not None:
+                detected = self.breakbeam_detected
             else:
-                self.capture_arrived_at = None
-            return cmd
+                on_dribbler = bp is not None and \
+                    math.hypot(bp[0] - rx, bp[1] - ry) \
+                    <= self.robot_front_offset + self.capture_dribbler_tol
+                detected = on_dribbler or not ball_visible
+            if detected:
+                self.ball_detected_filter += 1
+            else:
+                self.ball_detected_filter = max(
+                    0, self.ball_detected_filter - 2)
+            if self.ball_detected_filter >= self.capture_filter_count:
+                self._enter_final_pivot()
+                self.transition(State.FINAL_PIVOT)
+                return self.make_off_cmd()
+
+            if bp is None:
+                return self.make_off_cmd()
+            theta = math.atan2(bp[1] - ry, bp[0] - rx)
+            return self.make_pos_cmd(
+                bp[0], bp[1], theta,
+                vel_limit=self.capture_speed,
+                acc_limit=self.capture_accel,
+                kick_request=RobotMotionCommand.KR_ARM,
+                dribbler_speed=self.dribbler_speed,
+            )
 
         if s == State.FINAL_PIVOT:
-            # Use the firmware's built-in pivot maneuver (BCM_PIVOT): the
-            # robot orbits the latched center while facing it, rotating from
-            # its current heading to the goal heading. We hold the kicker
-            # armed and dribbler on, and watch the robot's yaw to detect
-            # completion.
-            cmd = self._final_pivot_cmd(
-                kick_request=RobotMotionCommand.KR_ARM)
+            # Built-in pivot maneuver (BCM_PIVOT): orbit the latched center
+            # while rotating toward the goal heading. Once the robot first
+            # reaches aim, latch the kick command and keep streaming it
+            # (KR_KICK_NOW) through the final_pivot_dwell -- it does not
+            # revert to KR_ARM if the aim momentarily wobbles.
             now = self.get_clock().now()
             rs = self.robot_xy_yaw()
             aimed = (rs is not None and abs(ang_diff(
                 rs[2], self.final_goal_heading)) <= self.final_pivot_yaw_tol)
-            if aimed:
-                if self.aim_since is None:
-                    self.aim_since = now
-                elif (now - self.aim_since).nanoseconds * 1e-9 \
-                        >= self.final_pivot_dwell:
-                    self.transition(State.KICK)
+            if aimed and self.aim_since is None:
+                self.aim_since = now
+                self.kick_latched = True
+            if self.kick_latched:
+                cmd = self._final_pivot_cmd(
+                    kick_request=RobotMotionCommand.KR_KICK_NOW,
+                    kick_speed=self.kick_speed)
             else:
-                self.aim_since = None
+                cmd = self._final_pivot_cmd(
+                    kick_request=RobotMotionCommand.KR_ARM)
+            if self.aim_since is not None and \
+                    (now - self.aim_since).nanoseconds * 1e-9 \
+                    >= self.final_pivot_dwell:
+                self.transition(State.KICK)
             return cmd
 
         if s == State.KICK:
@@ -853,9 +937,9 @@ class JukeShotScenario(Node):
         if s == State.DONE:
             if self.loop and self.time_in_state() >= self.loop_dwell:
                 self.ball_xy = None
-                self.approach_dir = None
                 self.final_center = None
                 self.final_pose = None
+                self.approach_arrived_at = None
                 # Drive back to the start pose before the next trial.
                 self.start_arrived_at = None
                 self.transition(State.PLACE_ROBOT)
