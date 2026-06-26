@@ -73,7 +73,7 @@ class BallCaptureScenario(Node):
         self.declare_parameter('post_kick_strafe', 0.0)
         self.declare_parameter('aim_enabled', True)
         self.declare_parameter('aim_dwell', 0.3)
-        self.declare_parameter('aim_max_angular_vel', 1.0)
+        self.declare_parameter('aim_max_angular_vel', 0.5)
         self.declare_parameter('pos_tol', 0.03)
         self.declare_parameter('yaw_tol', 0.08)
         self.declare_parameter('capture_vel_limit', 0.15)
@@ -85,6 +85,8 @@ class BallCaptureScenario(Node):
         self.declare_parameter('publish_rate_hz', 60.0)
         self.declare_parameter('loop', True)
         self.declare_parameter('loop_dwell', 0.0)
+        self.declare_parameter('limit_acc_linear', 1.5)
+        self.declare_parameter('limit_acc_angular', 15.0)
 
         self.stationary_ball_threshold = self.get_parameter(
             'stationary_ball_threshold').value
@@ -116,6 +118,10 @@ class BallCaptureScenario(Node):
         self.reset_margin = self.get_parameter('reset_margin').value
         self.loop = bool(self.get_parameter('loop').value)
         self.loop_dwell = float(self.get_parameter('loop_dwell').value)
+        self.limit_acc_linear = float(
+            self.get_parameter('limit_acc_linear').value)
+        self.limit_acc_angular = float(
+            self.get_parameter('limit_acc_angular').value)
         rate = float(self.get_parameter('publish_rate_hz').value)
 
         sensor_qos = QoSProfile(
@@ -218,8 +224,8 @@ class BallCaptureScenario(Node):
         cmd.acceleration = Twist2D()
         cmd.limit_vel_linear = float(vel_limit)
         cmd.limit_vel_angular = float(ang_vel_limit)
-        cmd.limit_acc_linear = 0.0
-        cmd.limit_acc_angular = 0.0
+        cmd.limit_acc_linear = self.limit_acc_linear
+        cmd.limit_acc_angular = self.limit_acc_angular
         cmd.kick_request = kick_request
         cmd.kick_speed = float(kick_speed)
         cmd.dribbler_speed = float(dribbler_speed)
@@ -235,6 +241,8 @@ class BallCaptureScenario(Node):
         cmd.velocity = Twist2D(
             x=float(vx), y=float(vy), theta=float(vtheta))
         cmd.acceleration = Twist2D()
+        cmd.limit_acc_linear = self.limit_acc_linear
+        cmd.limit_acc_angular = self.limit_acc_angular
         cmd.kick_request = kick_request
         cmd.kick_speed = float(kick_speed)
         cmd.dribbler_speed = float(dribbler_speed)
