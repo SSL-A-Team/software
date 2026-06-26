@@ -60,7 +60,12 @@ from ateam_msgs.msg import (
 from ateam_radio_msgs.msg import ConnectionStatus
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
+from rclpy.qos import (
+    DurabilityPolicy,
+    HistoryPolicy,
+    QoSProfile,
+    ReliabilityPolicy,
+)
 
 
 OVERLAY_NS = 'juke_shot_scenario'
@@ -175,24 +180,26 @@ class JukeShotScenario(Node):
                 "treating it as 'none' (capture then pivot to goal)")
 
         # Ending (final) pivot toward the goal, executed with the firmware's
-        # built-in BCM_PIVOT maneuver. The robot orbits a center point while
-        # facing it, rotating to the goal heading. The center is placed
-        # ``final_pivot_radius`` ahead of the robot (= the orbit radius); set
-        # it near ``robot_front_offset`` so the center coincides with the
-        # dribbled ball and the shot drives the ball at the goal point on the
-        # +y goalline at x = 0. ``final_pivot_heading_lag`` delays the facing
-        # rotation behind the orbit travel (keeps the ball trapped). These
-        # params are independent of the juke pivot / double pivot above.
-        # When ``goal_y_dynamic`` is true the +y goalline is taken from the
-        # live field geometry (top edge); ``goal_y`` is only the fallback.
+        # built-in BCM_PIVOT maneuver. The firmware derives the orbit center
+        # from the robot's current pose, ``final_pivot_radius`` (orbit radius)
+        # and ``final_pivot_inset_angle`` (heading offset from the radius
+        # line; 0 = face the center); only the target heading is commanded.
+        # The robot orbits until its heading reaches the goal heading
+        # (direction toward the goal point on the +y goalline at x = 0).
+        # Defaults mirror the firmware PivotParams::default(): orbit_radius
+        # 0.2 m, inset_angle 0.5 rad, max angular vel pi rad/s, max angular
+        # acc 2*pi rad/s^2. These params are independent of the juke pivot /
+        # double pivot above. When ``goal_y_dynamic`` is true the +y goalline
+        # is taken from the live field geometry (top edge); ``goal_y`` is only
+        # the fallback.
         self.goal_x = float(self._p('goal_x', 0.0))
         self.goal_y_dynamic = bool(self._p('goal_y_dynamic', True))
         self.goal_y = float(self._p('goal_y', 4.5))
-        self.final_pivot_radius = float(self._p('final_pivot_radius', 0.09))
-        self.final_pivot_heading_lag = float(
-            self._p('final_pivot_heading_lag', 0.05))
+        self.final_pivot_radius = float(self._p('final_pivot_radius', 0.2))
+        self.final_pivot_inset_angle = float(
+            self._p('final_pivot_inset_angle', 0.5))
         self.final_pivot_angular_vel = float(
-            self._p('final_pivot_angular_vel', 2.0 * math.pi))
+            self._p('final_pivot_angular_vel', 1.0 * math.pi))
         self.final_pivot_angular_acc = float(
             self._p('final_pivot_angular_acc', 2.0 * math.pi))
         self.final_pivot_dwell = float(self._p('final_pivot_dwell', 0.2))
@@ -231,6 +238,15 @@ class JukeShotScenario(Node):
             history=HistoryPolicy.KEEP_LAST,
         )
 
+        # Match the joystick node's QoS for robot topics:
+        # SystemDefaultsQoS().keep_last(1) == RELIABLE + VOLATILE, depth 1.
+        connection_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+        )
+
         self.ball = None
         self.robot = None
         self.field = None
@@ -245,7 +261,7 @@ class JukeShotScenario(Node):
             FieldInfo, '/field', self.field_cb, 10)
         self.connection_sub = self.create_subscription(
             ConnectionStatus, self.connection_topic,
-            self.connection_cb, sensor_qos)
+            self.connection_cb, connection_qos)
 
         self.cmd_pub = self.create_publisher(
             RobotMotionCommand,
@@ -385,9 +401,8 @@ class JukeShotScenario(Node):
         cmd.dribbler_speed = float(dribbler_speed)
         return cmd
 
-    def make_pivot_cmd(self, center_x: float, center_y: float,
-                       target_heading: float, orbit_radius: float,
-                       heading_lag: float = 0.0,
+    def make_pivot_cmd(self, target_heading: float, orbit_radius: float,
+                       inset_angle: float = 0.0,
                        ang_vel_limit: float = 0.0,
                        ang_acc_limit: float = 0.0,
                        kick_request: int = RobotMotionCommand.KR_DISABLE,
@@ -396,16 +411,15 @@ class JukeShotScenario(Node):
         """
         Build a firmware BCM_PIVOT command.
 
-        The robot orbits ``(center_x, center_y)`` at ``orbit_radius`` while
-        facing the center, rotating from its current heading to
-        ``target_heading``. ``pose`` carries the center (x, y) and the
-        target heading; the angular limits and pivot fields drive the
-        firmware's pivot maneuver.
+        The firmware derives the orbit center from the robot's current pose,
+        ``orbit_radius`` and ``inset_angle``; only the target heading is
+        commanded (via ``pose.theta``). The robot orbits at ``orbit_radius``
+        holding ``inset_angle`` off the radius line (0 = face the center)
+        until its heading reaches ``target_heading``.
         """
         cmd = RobotMotionCommand()
         cmd.body_control_mode = RobotMotionCommand.BCM_PIVOT
-        cmd.pose = Twist2D(x=float(center_x), y=float(center_y),
-                           theta=float(target_heading))
+        cmd.pose = Twist2D(x=0.0, y=0.0, theta=float(target_heading))
         cmd.velocity = Twist2D()
         cmd.acceleration = Twist2D()
         cmd.limit_vel_angular = (
@@ -415,7 +429,7 @@ class JukeShotScenario(Node):
             float(ang_acc_limit) if ang_acc_limit > 0.0
             else self.limit_acc_angular)
         cmd.pivot_orbit_radius = float(orbit_radius)
-        cmd.pivot_heading_lag = float(heading_lag)
+        cmd.pivot_inset_angle = float(inset_angle)
         cmd.kick_request = kick_request
         cmd.kick_speed = float(kick_speed)
         cmd.dribbler_speed = float(dribbler_speed)
@@ -514,27 +528,110 @@ class JukeShotScenario(Node):
                 return half
         return self.goal_y
 
+    def _pivot_geometry(self, rx, ry, ryaw, theta_target):
+        """
+        Reproduce the firmware pivot geometry for a candidate target heading.
+
+        Returns ``(center_x, center_y, final_x, final_y, heading_offset)``
+        where ``(final_x, final_y)`` is the robot-center position at the end
+        of the orbit (heading == ``theta_target``).
+        """
+        r = max(self.final_pivot_radius, 1e-6)
+        d = 1.0 if ang_diff(theta_target, ryaw) >= 0.0 else -1.0
+        heading_offset = math.pi - d * self.final_pivot_inset_angle
+        orbit_start = ryaw - heading_offset
+        cx = rx - r * math.cos(orbit_start)
+        cy = ry - r * math.sin(orbit_start)
+        phi_target = theta_target - heading_offset
+        fx = cx + r * math.cos(phi_target)
+        fy = cy + r * math.sin(phi_target)
+        return cx, cy, fx, fy, heading_offset
+
+    def _solve_aim_heading(self, rx, ry, ryaw, goal_x, goal_y):
+        """
+        Closed-form target heading that aims the ball at the goal post-pivot.
+
+        The orbit center is fixed by the robot's current pose, the orbit
+        radius ``r`` and the inset angle (it does not move during the pivot).
+        At orbit angle phi the robot is at ``center + r*(cos phi, sin phi)``
+        with heading ``theta = phi + ho`` where ``ho = pi - d*inset``.
+        Requiring the heading ray to pass through the goal reduces to
+
+            L * sin(theta - alpha) = r * sin(ho)
+
+        where ``L`` and ``alpha`` are the distance and bearing from the orbit
+        center to the goal. (The dribbler front-offset cancels: sliding the
+        ball along the aim ray does not change the ray's direction.) Each
+        turn direction ``d`` gives a fixed center and up to two roots; the
+        smallest self-consistent turn whose heading points the ball *toward*
+        the goal is chosen. Falls back to the least-error front-facing
+        heading when the goal lies inside the orbit's tangent envelope (no
+        exact aim exists, e.g. capturing very close to the goal line).
+        """
+        r = max(self.final_pivot_radius, 1e-6)
+        best = None       # (abs_turn, theta): self-consistent and front-facing
+        fallback = None   # (residual, theta): front-facing only
+        for d in (1.0, -1.0):
+            ho = math.pi - d * self.final_pivot_inset_angle
+            orbit_start = ryaw - ho
+            cx = rx - r * math.cos(orbit_start)
+            cy = ry - r * math.sin(orbit_start)
+            dist = math.hypot(goal_x - cx, goal_y - cy)
+            if dist < 1e-9:
+                continue
+            s = r * math.sin(ho) / dist
+            if abs(s) > 1.0:
+                continue
+            alpha = math.atan2(goal_y - cy, goal_x - cx)
+            asin_s = math.asin(s)
+            for theta in (alpha + asin_s, alpha + math.pi - asin_s):
+                theta = math.atan2(math.sin(theta), math.cos(theta))
+                phi = theta - ho
+                bx = cx + r * math.cos(phi) \
+                    + self.robot_front_offset * math.cos(theta)
+                by = cy + r * math.sin(phi) \
+                    + self.robot_front_offset * math.sin(theta)
+                # Reject headings that point away from the goal.
+                if (goal_x - bx) * math.cos(theta) \
+                        + (goal_y - by) * math.sin(theta) <= 0.0:
+                    continue
+                turn = ang_diff(theta, ryaw)
+                consistent = (1.0 if turn >= 0.0 else -1.0) == d
+                residual = abs(ang_diff(
+                    math.atan2(goal_y - by, goal_x - bx), theta))
+                if consistent and (best is None or abs(turn) < best[0]):
+                    best = (abs(turn), theta)
+                if fallback is None or residual < fallback[0]:
+                    fallback = (residual, theta)
+        if best is not None:
+            return best[1]
+        if fallback is not None:
+            self.get_logger().warn(
+                'No exact pivot aim solution (goal inside orbit envelope); '
+                'using closest heading')
+            return fallback[1]
+        return math.atan2(goal_y - ry, goal_x - rx)
+
     def _enter_final_pivot(self):
         """
-        Latch the built-in (BCM_PIVOT) final-pivot geometry.
+        Latch the built-in (BCM_PIVOT) final-pivot target.
 
-        The robot orbits a center point while facing it, rotating from its
-        current heading to the goal heading. The center is placed
-        ``final_pivot_radius`` ahead of the robot along its current heading
-        (so the robot already faces the center and sits exactly one orbit
-        radius away); with ``final_pivot_radius`` close to
-        ``robot_front_offset`` the center coincides with the dribbled ball,
-        so kicking along the final heading drives the ball at the goal.
-        ``target_heading`` is the direction from that center to the goal
-        point at ``(goal_x, goal_y)``.
+        Only the target heading is commanded; the firmware derives the orbit
+        center from the robot's pose, ``final_pivot_radius`` and
+        ``final_pivot_inset_angle``. Because the robot orbits to a new
+        position during the pivot, the target heading is solved so the ball
+        (held ``robot_front_offset`` ahead of the robot) is aimed at the goal
+        point ``(goal_x, goal_y)`` at the *end* of the orbit -- not from the
+        robot's pre-pivot position. The orbit center and final pose are
+        reconstructed here only for visualization.
         """
         goal_y = self._goal_y()
         rs = self.robot_xy_yaw()
         if rs is None:
-            # No pose available; fall back to facing +y in place.
+            # No pose available; fall back to facing +y.
             self.final_goal_heading = math.pi / 2.0
             self.final_center = None
-            self.final_radius = 0.0
+            self.final_radius = self.final_pivot_radius
             self.final_pose = (0.0, 0.0, math.pi / 2.0)
             return
         rx, ry, ryaw = rs
@@ -542,33 +639,27 @@ class JukeShotScenario(Node):
         r = max(self.final_pivot_radius, 1e-6)
         self.final_radius = r
 
-        # Orbit center: r ahead of the robot along its current heading.
-        cx = rx + r * math.cos(ryaw)
-        cy = ry + r * math.sin(ryaw)
-        self.final_center = (cx, cy)
-
-        # Target heading: face the center toward the goal point.
-        theta_goal = math.atan2(goal_y - cy, self.goal_x - cx)
+        # Target heading: aim the ball at the goal from the robot's FINAL
+        # (post-orbit) position, not its current position.
+        theta_goal = self._solve_aim_heading(rx, ry, ryaw, self.goal_x, goal_y)
         self.final_goal_heading = theta_goal
 
-        # Final robot pose once the pivot completes (robot faces center).
-        fx = cx - r * math.cos(theta_goal)
-        fy = cy - r * math.sin(theta_goal)
+        cx, cy, fx, fy, _ = self._pivot_geometry(rx, ry, ryaw, theta_goal)
+        self.final_center = (cx, cy)
         self.final_pose = (fx, fy, theta_goal)
 
         dtheta = ang_diff(theta_goal, ryaw)
         self.get_logger().info(
-            f'Final pivot (BCM_PIVOT): goal=(0.00, {goal_y:.2f}), '
-            f'center=({cx:.2f}, {cy:.2f}), R={r:.2f}, '
-            f'target_heading={math.degrees(theta_goal):.1f} deg, '
-            f'turn={math.degrees(dtheta):.1f} deg')
+            f'Final pivot (BCM_PIVOT): goal=({self.goal_x:.2f}, '
+            f'{goal_y:.2f}), target_heading={math.degrees(theta_goal):.1f} '
+            f'deg, turn={math.degrees(dtheta):.1f} deg, R={r:.2f}, '
+            f'inset={self.final_pivot_inset_angle:.2f} rad')
 
     def _final_pivot_cmd(self, kick_request, kick_speed=0.0):
-        """Build the BCM_PIVOT command for the latched final-pivot geometry."""
-        cx, cy = self.final_center
+        """Build the BCM_PIVOT command for the latched final-pivot target."""
         return self.make_pivot_cmd(
-            cx, cy, self.final_goal_heading, self.final_radius,
-            heading_lag=self.final_pivot_heading_lag,
+            self.final_goal_heading, self.final_radius,
+            inset_angle=self.final_pivot_inset_angle,
             ang_vel_limit=self.final_pivot_angular_vel,
             ang_acc_limit=self.final_pivot_angular_acc,
             kick_request=kick_request,
