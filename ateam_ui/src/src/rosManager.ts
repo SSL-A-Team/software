@@ -52,6 +52,15 @@ export class RosManager {
 
                 robotBasicTopic.subscribe(this.getRobotBasicCallback(appState.realtimeWorld, i));
                 this.subscriptions.set("/robot_feedback/basic/robot" + i, robotBasicTopic);
+
+                let robotErrorTopic = new ROSLIB.Topic({
+                    ros: this.ros,
+                    name: '/robot_feedback/error/robot' + i,
+                    messageType: 'ateam_radio_msgs/msg/ErrorTelemetry'
+                });
+
+                robotErrorTopic.subscribe(this.getRobotErrorCallback(appState.realtimeWorld, i));
+                this.subscriptions.set("/robot_feedback/error/robot" + i, robotErrorTopic);
             }
         }
 
@@ -320,6 +329,15 @@ export class RosManager {
             for (const member of Object.getOwnPropertyNames(msg)) {
                 robot.status[member] = msg[member];
             }
+        };
+    }
+
+    getRobotErrorCallback(world: WorldState, id: number): (msg: any) => void {
+        return function(msg: any): void {
+            let robot = world.teams.get(world.team).robots[id];
+
+            robot.error_telem.error_message = String.fromCharCode(...msg.error_message);
+            robot.error_telem.received_time = world.timestamp;
         };
     }
 
