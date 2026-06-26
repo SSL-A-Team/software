@@ -416,7 +416,7 @@ Always sends `BCM_LOCAL_VELOCITY` mode.
 
 Python (ament_python, no recompile) package under `motion/` for scripted motion-profiling routines. Each scenario is a single `rclpy` node driven by a state machine that publishes `RobotMotionCommand` messages directly to `/robot_motion_commands/robot{id}`. Tune behavior via ROS params at launch — no rebuild needed.
 
-Shared, ROS-agnostic helper modules live in the `common/` subpackage (`ateam_motion_scenarios/common/`): `overlays.py` (`make_array`/`make_line`/`make_point`/`make_pose_marker`/`make_text` overlay builders, published to `/overlays` under a per-scenario `OVERLAY_NS`), `capture.py` (the shared two-phase `Capture` skill + `skill_capture_params.json` loader), and `pivot.py` (firmware `BCM_PIVOT` command builder + `PivotConfig` sourced from `skill_pivot_params.json`).
+Shared, ROS-agnostic helper modules live in the `common/` subpackage (`ateam_motion_scenarios/common/`): `overlays.py` (`make_array`/`make_line`/`make_point`/`make_pose_marker`/`make_text` overlay builders, published to `/overlays` under a per-scenario `OVERLAY_NS`), `capture.py` (the shared two-phase `Capture` skill + `skill_capture_params.json` loader), and `pivot.py` (firmware `BCM_HEADING_PIVOT` / `BCM_POINT_PIVOT` command builders + `PivotConfig` sourced from `skill_pivot_params.json`).
 
 Each scenario loads its parameters from a `config/<scenario>_params.json` file (via a `_load_defaults()`/`_p()` helper, overridable with the `param_file` ROS param); `robot_id` and `team_color` live there too. When `require_connection` is true, scenarios start in a `WAIT_FOR_CONNECTION` state and restart their state machine if the robot's radio link drops mid-run.
 
@@ -448,7 +448,7 @@ Each scenario loads its parameters from a `config/<scenario>_params.json` file (
 - New scenarios go in `motion/ateam_motion_scenarios/ateam_motion_scenarios/` as Python modules, added as new entry points in `setup.py`. Put shared, reusable, ROS-agnostic logic in the `common/` subpackage instead of duplicating it per scenario.
 - Load parameters from a per-scenario `config/<scenario>_params.json` via the `_load_defaults()`/`_p()` helper; keep `robot_id` / `team_color` (and other tuning) in that JSON rather than hardcoding module-level constants.
 - Support `require_connection`: start in `WAIT_FOR_CONNECTION` and reset the state machine if the radio link drops (`ConnectionStatus` on `~/robot_feedback/connection/robot{id}`).
-- Always send `BCM_GLOBAL_POSITION`, `BCM_GLOBAL_VELOCITY`, or the firmware `BCM_PIVOT` from these scenarios; reserve `BCM_LOCAL_VELOCITY` for kenobi/joystick.
+- Always send `BCM_GLOBAL_POSITION`, `BCM_GLOBAL_VELOCITY`, or the firmware `BCM_HEADING_PIVOT`/`BCM_POINT_PIVOT` from these scenarios; reserve `BCM_LOCAL_VELOCITY` for kenobi/joystick.
 - Reuse the `pos_tol` / `yaw_tol` pattern instead of introducing per-phase tolerances.
 - Leave limit fields at `0.0` when you want the firmware defaults; only set positive values to clamp.
 - Use the shared `common/overlays.py` helpers to publish debug visualizations to `/overlays` rather than rolling new overlay builders.
