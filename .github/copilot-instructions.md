@@ -24,7 +24,9 @@ software/
 ├── ateam_kenobi/           # AI strategy node (play selection, STP framework, motion planning)
 ├── ateam_msgs/             # Custom ROS message and service definitions
 ├── ateam_ui/               # Web-based UI (Neutralino + rosbridge) for visualization and control
-├── motion/                 # Motion benchmarking tools
+├── motion/                 # Motion benchmarking & scripted scenarios
+│   ├── ateam_motion_benchmark/         # C++ velocity/angular-velocity benchmarks
+│   └── ateam_motion_scenarios/         # Python scripted motion-profiling scenarios
 ├── radio/                  # Radio bridge packages (real + simulation)
 │   ├── ateam_radio_bridge/             # Physical robot radio bridge (WiFi/UDP)
 │   ├── ateam_radio_msgs/               # Radio-specific ROS messages + software-communication submodule
@@ -407,6 +409,34 @@ Manual control of individual robots via a gamepad.
 - `kick_speed`, `chip_speed`, `dribbler_speed_step`, `mapping.dribbler.max/min`
 
 Always sends `BCM_LOCAL_VELOCITY` mode.
+
+---
+
+## Motion Scenarios (`ateam_motion_scenarios`)
+
+Python (ament_python, no recompile) package under `motion/` for scripted motion-profiling routines. Each scenario is a single `rclpy` node driven by a state machine that publishes `RobotMotionCommand` messages directly to `/robot_motion_commands/robot{id}`. Tune behavior via ROS params at launch — no rebuild needed.
+
+### Scenarios
+
+- **`ball_capture_scenario`** — Hardcoded robot 2 / blue. Subscribes `/ball`, `/blue_team/robot2`, `/field`. Drives the robot through:
+
+  `WAIT_FOR_BALL → WAIT_FOR_STATIONARY → APPROACH_STAGING → CAPTURE → RETREAT_WITH_BALL → [STRAFE] → [AIM → KICK_AIMED | WAIT_BEFORE_KICK → KICK] → RESET → DONE (loops)`
+
+  - **CAPTURE** target = `(ball_x - robot_front_offset + capture_overdrive, ball_y)` with `limit_vel_linear = capture_vel_limit` so the dribbler reaches the ball gently.
+  - **STRAFE** issues `BCM_GLOBAL_VELOCITY` for `strafe_duration` seconds at `strafe_speed` along an angle measured from −y (positive = toward +x).
+  - **AIM** continuously commands `BCM_GLOBAL_POSITION` at the robot's *current* xy with `theta = atan2(0 - ry, field_length/2 - rx)` and `limit_vel_angular = aim_max_angular_vel`. The "stay-at-current-xy" target acts as a brake while the robot rotates. Latches the pose and fires once yaw is within `yaw_tol` for `aim_dwell` seconds.
+  - **RESET** drives to `(-field_length/2 + reset_margin, 0)` using `/field`.
+  - Unified `pos_tol` and `yaw_tol` are used for every arrival check across all states.
+  - Field positive-x is the +x goal; "behind" the ball means smaller x.
+  - Run: `ros2 run ateam_motion_scenarios ball_capture_scenario` (override any param with `--ros-args -p name:=value`).
+
+### Conventions for adding new scenarios
+
+- New scenarios go in `motion/ateam_motion_scenarios/ateam_motion_scenarios/` as Python modules, added as new entry points in `setup.py`.
+- Always send `BCM_GLOBAL_POSITION` or `BCM_GLOBAL_VELOCITY` from these scenarios; reserve `BCM_LOCAL_VELOCITY` for kenobi/joystick.
+- Reuse the `pos_tol` / `yaw_tol` pattern instead of introducing per-phase tolerances.
+- Leave limit fields at `0.0` when you want the firmware defaults; only set positive values to clamp.
+- Run kenobi off (or disable the target robot in the playbook) before running a scenario, since both will publish to the same `/robot_motion_commands/robot{id}` topic.
 
 ---
 
