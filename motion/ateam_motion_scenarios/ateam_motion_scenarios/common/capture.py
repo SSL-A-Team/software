@@ -24,7 +24,7 @@ dribbler_tol``, or occluded by the robot.
 
 Usage from a scenario node::
 
-    from ateam_motion_scenarios.capture import Capture, CaptureConfig
+    from ateam_motion_scenarios.common.capture import Capture, CaptureConfig
 
     self.capture = Capture(CaptureConfig.from_params(self._p))
     # each tick, while capturing:
@@ -53,7 +53,7 @@ from ateam_msgs.msg import RobotMotionCommand, Twist2D
 # the command line) can still override any value via their own ROS params.
 CAPTURE_PARAM_FILE = os.path.join(
     get_package_share_directory('ateam_motion_scenarios'),
-    'config', 'capture_params.json')
+    'config', 'skill_capture_params.json')
 
 # Built-in fallback defaults (kenobi Capture skill), used when the shared
 # JSON file is missing or a key is absent from it.
@@ -126,7 +126,7 @@ class CaptureConfig:
 
         ``p`` is any callable that returns the resolved value for a named
         scenario parameter (e.g. a node's JSON-backed ``_p`` helper). The
-        defaults come from the shared ``config/capture_params.json`` so every
+        defaults come from the shared ``config/skill_capture_params.json`` so every
         scenario uses the same capture tuning unless it explicitly overrides a
         value via its own ROS params / command line.
         """

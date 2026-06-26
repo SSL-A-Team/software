@@ -41,16 +41,18 @@ latched intercept (or no command, if none is latched yet).
 
 from collections import deque
 from enum import auto, Enum
+import json
 import math
 import os
 import sys
 
-from ateam_motion_scenarios.capture import (
+from ament_index_python.packages import get_package_share_directory
+from ateam_motion_scenarios.common.capture import (
     Capture,
     CaptureConfig,
     load_capture_defaults,
 )
-from ateam_motion_scenarios.overlays import (
+from ateam_motion_scenarios.common.overlays import (
     make_array,
     make_circle,
     make_line,
@@ -58,6 +60,7 @@ from ateam_motion_scenarios.overlays import (
     make_pose_marker,
     make_text,
 )
+from ateam_motion_scenarios.common.pivot import make_pivot_cmd, PivotConfig
 from ateam_msgs.msg import (
     FieldInfo,
     OverlayArray,
@@ -66,7 +69,7 @@ from ateam_msgs.msg import (
     VisionStateBall,
     VisionStateRobot,
 )
-from ateam_radio_msgs.msg import BasicTelemetry
+from ateam_radio_msgs.msg import BasicTelemetry, ConnectionStatus
 import rclpy
 from rclpy.duration import Duration
 from rclpy.node import Node
@@ -78,9 +81,10 @@ from rclpy.qos import (
 )
 
 
-ROBOT_ID = 2
-TEAM_COLOR = 'blue'
 OVERLAY_NS = 'catch_scenario'
+DEFAULT_PARAM_FILE = os.path.join(
+    get_package_share_directory('ateam_motion_scenarios'),
+    'config', 'catch_params.json')
 
 
 # --------------------------------------------------------------------------
@@ -133,6 +137,7 @@ def ang_diff(a: float, b: float) -> float:
 
 
 class State(Enum):
+    WAIT_FOR_CONNECTION = auto()
     WAIT_FOR_BALL = auto()
     WAIT_FOR_INCOMING = auto()
     INTERCEPT = auto()
@@ -151,40 +156,56 @@ class CatchScenario(Node):
     def __init__(self):
         super().__init__('catch_scenario')
 
+        self.defaults = self._load_defaults()
+        self.robot_id = int(self._p('robot_id', 2))
+        self.team_color = str(self._p('team_color', 'blue'))
+
         # Mode selection
-        self.declare_parameter('mode', 'simple')
+        self._declare('mode', 'simple')
 
         # Trajectory limits. These are the
         # caps used both by the in-process bang-bang simulation and by
         # the limit fields sent to the firmware so the two solvers
         # produce the same trajectory.
-        self.declare_parameter('max_vel_linear', 1.0)
-        self.declare_parameter('max_vel_angular', 3.0 * math.pi)
-        self.declare_parameter('max_accel_linear', 2.0)
-        self.declare_parameter('max_accel_angular', 6.0 * math.pi)
+        self._declare('max_vel_linear', 1.0)
+        self._declare('max_vel_angular', 3.0 * math.pi)
+        self._declare('max_accel_linear', 2.0)
+        self._declare('max_accel_angular', 6.0 * math.pi)
 
         # Geometry / robot
-        self.declare_parameter('robot_radius', 0.09)
-        self.declare_parameter('ball_radius', 0.0215)
-        self.declare_parameter('robot_front_offset', 0.09)
+        self._declare('robot_radius', 0.09)
+        self._declare('ball_radius', 0.0215)
+        # Sourced from the shared capture config (config/skill_capture_params.json)
+        # so the dribbler offset stays consistent with the Capture skill.
+        self._declare(
+            'robot_front_offset',
+            load_capture_defaults().get('robot_front_offset', 0.09))
         # Safety margin added to robot_radius when checking field bounds.
-        self.declare_parameter('field_safety_margin', 0.05)
+        self._declare('field_safety_margin', 0.05)
 
         # Ball gating
-        self.declare_parameter('min_ball_speed', 0.2)
+        self._declare('min_ball_speed', 0.01)
+        # Lower speed floor used while actively tracking an incoming pass
+        # (the INTERCEPT state) and by the realized-intercept detector.
+        # `min_ball_speed` gates when a pass is first considered "incoming",
+        # but once we're chasing it we keep recomputing the intercept and
+        # stay responsive until the ball stops moving forward (its forward
+        # velocity drops below this floor or reverses). Must be > 0 so the
+        # ball-direction unit vector stays well defined; should be small.
+        self._declare('min_ball_speed_tracking', 0.01)
         # Lower bound used only by the collision detector's rolling
         # history. Samples below this speed are still kept in the
         # window so the "post" average can see a captured / stopped
         # ball. Should be <= min_ball_speed.
-        self.declare_parameter('min_ball_speed_detector', 0.0)
+        self._declare('min_ball_speed_detector', 0.0)
         # Only act on balls moving toward -x (rolled in from +x edge).
-        self.declare_parameter('require_negative_vx', True)
+        self._declare('require_negative_vx', True)
         # End-to-end latency to compensate for: vision pipeline +
         # command publish + radio + firmware actuation. The observed
         # ball position/velocity is propagated forward by this amount
         # (constant-velocity model) so the intercept solver targets
         # where the ball will be when the command actually lands.
-        self.declare_parameter('latency_compensation_s', 0.0)
+        self._declare('latency_compensation_s', 0.0)
         # Intercept solver scheduling:
         # - `single_intercept_calculation`: if true, the solver runs at
         #   most once per ball cycle (no replanning while the robot
@@ -193,34 +214,34 @@ class CatchScenario(Node):
         #   first valid ball observation in INTERCEPT before solving.
         #   Gives the vision filter time to converge on the ball's
         #   velocity before committing to a plan.
-        self.declare_parameter('single_intercept_calculation', False)
-        self.declare_parameter('intercept_calc_delay', 0.0)
+        self._declare('single_intercept_calculation', False)
+        self._declare('intercept_calc_delay', 0.0)
 
         # Interception search
-        self.declare_parameter('search_d_min', 0.05)
-        self.declare_parameter('search_d_max', 8.0)
-        self.declare_parameter('search_tolerance', 0.01)
-        self.declare_parameter('search_max_iter', 40)
+        self._declare('search_d_min', 0.05)
+        self._declare('search_d_max', 8.0)
+        self._declare('search_tolerance', 0.01)
+        self._declare('search_max_iter', 40)
 
         # Catch hold and reset
-        self.declare_parameter('dribbler_speed', 300.0)
-        self.declare_parameter('pos_tol', 0.04)
-        self.declare_parameter('yaw_tol', 0.08)
-        self.declare_parameter('catch_dwell', 1.5)
+        self._declare('dribbler_speed', 300.0)
+        self._declare('pos_tol', 0.04)
+        self._declare('yaw_tol', 0.08)
+        self._declare('catch_dwell', 1.5)
 
         # "Give" - just before the ball arrives, shift the position
         # target back along the ball travel direction so the robot is
         # already moving away at the moment of contact, softening the
         # catch. Stays in BCM_GLOBAL_POSITION mode the entire time.
-        self.declare_parameter('give_enabled', False)
+        self._declare('give_enabled', False)
         # Distance (m) between robot center and ball at which to switch
         # the position target into the retreated pose.
-        self.declare_parameter('give_trigger_distance', 0.6)
+        self._declare('give_trigger_distance', 0.6)
         # Distance (m) to retreat backward along the ball travel line.
-        self.declare_parameter('give_retreat_distance', 0.15)
+        self._declare('give_retreat_distance', 0.15)
         # How long to hold the retreated target before transitioning to
         # CATCH_DWELL (which then dwells wherever the robot ended up).
-        self.declare_parameter('give_duration', 1.0)
+        self._declare('give_duration', 1.0)
 
         # Touch pass: hold KR_KICK_TOUCH armed throughout the intercept
         # (and during GIVE) so the firmware fires the kicker the
@@ -229,54 +250,58 @@ class CatchScenario(Node):
         # `give_*` for a soft redirect. Overrides any post-catch
         # behavior (CATCH_DWELL still runs to keep the robot in place,
         # but the ball will already be gone).
-        self.declare_parameter('touch_pass_enabled', True)
-        self.declare_parameter('touch_pass_speed', 1.5)  # m/s
-        self.declare_parameter('kick_back_enabled', True)
-        self.declare_parameter('kick_back_speed', 1.5)   # m/s
-        self.declare_parameter('kick_back_aim_dwell', 0.3)
-        self.declare_parameter('kick_back_post_dwell', 0.2)
-        self.declare_parameter('kick_back_max_angular_vel', 0.0)  # 0 = default
+        self._declare('touch_pass_enabled', True)
+        self._declare('touch_pass_speed', 1.5)  # m/s
+        self._declare('kick_back_enabled', True)
+        self._declare('kick_back_speed', 1.5)   # m/s
+        self._declare('kick_back_aim_dwell', 0.3)
+        self._declare('kick_back_post_dwell', 0.2)
+        # KICK_BACK turns the robot back toward the +x goal with the firmware
+        # BCM_PIVOT maneuver (orbit radius / inset / angular limits come from
+        # the shared config/skill_pivot_params.json via kick_back_pivot_* params).
+        # 0 = use the shared pivot angular-velocity limit; >0 overrides it.
+        self._declare('kick_back_max_angular_vel', 0.0)
 
         # After a missed pass (ball passed the robot or stopped without
         # being caught), drive over and collect the ball from whichever
         # side approaches it from the robot's starting position. The
         # approach point sits on the segment between the robot start
         # pose `S` and the ball, offset back from the ball.
-        self.declare_parameter('collect_missed_enabled', False)
-        self.declare_parameter('collect_approach_offset', 0.15)  # m
-        self.declare_parameter('collect_capture_overdrive', 0.04)
-        self.declare_parameter('collect_capture_vel_limit', 0.2)
-        self.declare_parameter('collect_capture_dwell', 0.5)
-        self.declare_parameter('collect_stationary_threshold', 0.1)  # m/s
+        self._declare('collect_missed_enabled', False)
+        self._declare('collect_approach_offset', 0.15)  # m
+        self._declare('collect_capture_overdrive', 0.04)
+        self._declare('collect_capture_vel_limit', 0.2)
+        self._declare('collect_capture_dwell', 0.5)
+        self._declare('collect_stationary_threshold', 0.1)  # m/s
         # After a successful catch (CATCH_DWELL), optionally drive over and
         # capture the ball if it ended up within capture_after_catch_radius
         # of the robot. This uses the shared Capture skill (capture.py),
         # honoring its parameters (approach_radius, capture_speed,
         # capture_accel, capture_filter_count, use_breakbeam, ...).
-        self.declare_parameter('capture_after_catch_enabled', True)
-        self.declare_parameter('capture_after_catch_radius', 0.5)  # m
+        self._declare('capture_after_catch_enabled', True)
+        self._declare('capture_after_catch_radius', 0.5)  # m
         # The shared Capture skill's parameters (approach_radius,
         # capture_speed, capture_accel, capture_filter_count, use_breakbeam,
         # ...) are declared on demand by CaptureConfig.from_params with their
-        # defaults sourced from config/capture_params.json, so they are not
+        # defaults sourced from config/skill_capture_params.json, so they are not
         # re-declared here. breakbeam_topic is read directly by this node, so
         # default it from the shared capture config.
-        self.declare_parameter(
+        self._declare(
             'breakbeam_topic',
             load_capture_defaults().get('breakbeam_topic', ''))
         # After collision is detected, the robot drives to the latched
         # intercept target and dwells. If it can't reach that target
         # within this many seconds, give up and reset anyway. Counted
         # from the moment of collision.
-        self.declare_parameter('post_collision_arrival_timeout', 3.0)
+        self._declare('post_collision_arrival_timeout', 3.0)
         # If the ball isn't visible / valid for this long while in
         # INTERCEPT, give up and reset to the back edge.
-        self.declare_parameter('ball_lost_timeout', 0.5)
+        self._declare('ball_lost_timeout', 0.5)
         # How long WAIT_FOR_INCOMING will wait for a valid (visible,
         # fast-enough, negative-vx) ball before giving up and going
         # back to WAIT_FOR_BALL. Prevents getting stuck when the ball
         # is visible but stationary or moving the wrong way.
-        self.declare_parameter('wait_for_incoming_timeout', 3.0)
+        self._declare('wait_for_incoming_timeout', 3.0)
         # Realized-intercept event detection. Compares the averaged
         # ball velocity in two non-overlapping rolling windows:
         #   * "pre"  window: from `dir_window_total` ago up to
@@ -289,28 +314,38 @@ class CatchScenario(Node):
         # negative values mean reversal. The default 0.4 catches both
         # a sharp deflection and a big speed drop while still heading
         # in the same direction.
-        self.declare_parameter('intercept_velocity_retention_threshold', 0.4)
-        self.declare_parameter('dir_window_pre', 0.08)
-        self.declare_parameter('dir_window_post', 0.04)
-        self.declare_parameter('dir_window_total', 0.15)
-        self.declare_parameter('dir_min_samples', 3)
-        self.declare_parameter('reset_margin', 0.3)
+        # When `collision_detection_enabled` is false the robot keeps
+        # tracking the ball through INTERCEPT without ever latching a
+        # realized-intercept / collision event.
+        self._declare('collision_detection_enabled', False)
+        self._declare('intercept_velocity_retention_threshold', 0.4)
+        self._declare('dir_window_pre', 0.08)
+        self._declare('dir_window_post', 0.04)
+        self._declare('dir_window_total', 0.15)
+        self._declare('dir_min_samples', 3)
+        self._declare('reset_margin', 0.3)
         # Status-text placement on the /overlays layer. By default the
         # state name + timing is rendered just below the negative-y
         # touchline of the field, off the playing surface. Provide
         # finite `status_text_x` / `status_text_y` (meters in field
         # frame) to override.
-        self.declare_parameter('status_text_x', float('nan'))
-        self.declare_parameter('status_text_y', float('nan'))
-        self.declare_parameter('status_text_margin', 0.2)
+        self._declare('status_text_x', float('nan'))
+        self._declare('status_text_y', float('nan'))
+        self._declare('status_text_margin', 0.2)
         # Overlay visibility toggles.
-        self.declare_parameter('show_detected_collision_overlay', True)
-        self.declare_parameter('publish_rate_hz', 100.0)
-        self.declare_parameter('loop', True)
+        self._declare('show_detected_collision_overlay', True)
+        self._declare('publish_rate_hz', 100.0)
+        self._declare('loop', True)
         # One-shot mode: run the state machine for a single complete
         # cycle (RESET -> WAIT_FOR_BALL -> INTERCEPT -> CATCH_DWELL ->
         # RESET -> DONE), then call rclpy.shutdown(). Implies loop=False.
-        self.declare_parameter('one_shot', False)
+        self._declare('one_shot', False)
+
+        # Radio connection monitoring. When ``require_connection`` is true the
+        # scenario waits for the robot's radio link before driving and
+        # restarts the state machine if the link drops mid-run.
+        self._declare('require_connection', True)
+        self._declare('connection_topic', '')
 
         # ------------------------------------------------------------------
         self.mode = str(self.get_parameter('mode').value).lower()
@@ -327,6 +362,8 @@ class CatchScenario(Node):
             'field_safety_margin').value)
 
         self.min_ball_speed = float(self.get_parameter('min_ball_speed').value)
+        self.min_ball_speed_tracking = float(self.get_parameter(
+            'min_ball_speed_tracking').value)
         self.min_ball_speed_detector = float(self.get_parameter(
             'min_ball_speed_detector').value)
         self.require_negative_vx = bool(self.get_parameter(
@@ -400,8 +437,14 @@ class CatchScenario(Node):
         # parameters via the get-parameter adapter below.
         self.breakbeam_topic = str(self.get_parameter(
             'breakbeam_topic').value) \
-            or f'/robot_feedback/basic/robot{ROBOT_ID}'
+            or f'/robot_feedback/basic/robot{self.robot_id}'
         self.capture = Capture(CaptureConfig.from_params(self._capture_param))
+        # Firmware-pivot tuning for the kick-back turn (orbit radius, inset,
+        # angular limits, dribbler). Defaults come from the shared
+        # config/skill_pivot_params.json; override per scenario via
+        # kick_back_pivot_* ROS params.
+        self.kick_back_pivot = PivotConfig.from_params(
+            self._capture_param, prefix='kick_back_pivot_')
         self.breakbeam_detected = None
         self.post_collision_arrival_timeout = float(self.get_parameter(
             'post_collision_arrival_timeout').value)
@@ -412,6 +455,8 @@ class CatchScenario(Node):
         self.intercept_velocity_retention_threshold = float(
             self.get_parameter(
                 'intercept_velocity_retention_threshold').value)
+        self.collision_detection_enabled = bool(self.get_parameter(
+            'collision_detection_enabled').value)
         self.dir_window_pre = float(self.get_parameter(
             'dir_window_pre').value)
         self.dir_window_post = float(self.get_parameter(
@@ -433,6 +478,11 @@ class CatchScenario(Node):
         self.one_shot = bool(self.get_parameter('one_shot').value)
         if self.one_shot:
             self.loop = False
+        self.require_connection = bool(self.get_parameter(
+            'require_connection').value)
+        self.connection_topic = str(self.get_parameter(
+            'connection_topic').value) \
+            or f'/robot_feedback/connection/robot{self.robot_id}'
         rate = float(self.get_parameter('publish_rate_hz').value)
 
         # ateam_controls bindings (only required for complex mode).
@@ -453,11 +503,12 @@ class CatchScenario(Node):
         self.ball = None
         self.robot = None
         self.field = None
+        self.radio_connected = None  # None until first connection message
 
         self.ball_sub = self.create_subscription(
             VisionStateBall, '/ball', self.ball_cb, sensor_qos)
         self.robot_sub = self.create_subscription(
-            VisionStateRobot, f'/{TEAM_COLOR}_team/robot{ROBOT_ID}',
+            VisionStateRobot, f'/{self.team_color}_team/robot{self.robot_id}',
             self.robot_cb, sensor_qos)
         self.field_sub = self.create_subscription(
             FieldInfo, '/field', self.field_cb, 10)
@@ -472,13 +523,18 @@ class CatchScenario(Node):
         self.telemetry_sub = self.create_subscription(
             BasicTelemetry, self.breakbeam_topic,
             self.telemetry_cb, feedback_qos)
+        self.connection_sub = self.create_subscription(
+            ConnectionStatus, self.connection_topic,
+            self.connection_cb, feedback_qos)
 
         self.cmd_pub = self.create_publisher(
-            RobotMotionCommand, f'/robot_motion_commands/robot{ROBOT_ID}', 10)
+            RobotMotionCommand,
+            f'/robot_motion_commands/robot{self.robot_id}', 10)
         self.overlay_pub = self.create_publisher(
             OverlayArray, '/overlays', 10)
 
-        self.state = State.RESET
+        self.state = (State.WAIT_FOR_CONNECTION if self.require_connection
+                      else State.RESET)
         self.state_entered = self.get_clock().now()
         self.catch_arrived_at = None
         # After RESET arrival, transition to this state. Set to DONE
@@ -536,9 +592,9 @@ class CatchScenario(Node):
         self.timer = self.create_timer(1.0 / rate, self.tick)
 
         self.get_logger().info(
-            f'catch_scenario started for robot {ROBOT_ID} ({TEAM_COLOR}), '
-            f'mode={self.mode}, one_shot={self.one_shot}. '
-            'State: RESET (driving to back edge)')
+            f'catch_scenario started for robot {self.robot_id} '
+            f'({self.team_color}), mode={self.mode}, '
+            f'one_shot={self.one_shot}. State: {self.state.name}')
 
     # ------------------------------------------------------------------ subs
     def ball_cb(self, msg: VisionStateBall):
@@ -553,11 +609,48 @@ class CatchScenario(Node):
     def telemetry_cb(self, msg: BasicTelemetry):
         self.breakbeam_detected = msg.breakbeam_ball_detected
 
+    def connection_cb(self, msg: ConnectionStatus):
+        self.radio_connected = msg.radio_connected
+
     # --------------------------------------------------------------- helpers
-    def _capture_param(self, name, default):
-        """Adapter exposing get_parameter as a p(name, default) getter."""
+    def _load_defaults(self) -> dict:
+        self.declare_parameter('param_file', '')
+        pf = str(self.get_parameter('param_file').value) or DEFAULT_PARAM_FILE
+        try:
+            with open(pf) as f:
+                data = json.load(f)
+            self.get_logger().info(f'Loaded params from {pf}')
+            return data
+        except (OSError, ValueError) as exc:
+            self.get_logger().warn(
+                f'Could not load param file {pf} ({exc}); using built-in '
+                'defaults')
+            return {}
+
+    def _p(self, name: str, default):
+        """Declare a ROS param defaulting to the JSON value, return value."""
         if not self.has_parameter(name):
-            self.declare_parameter(name, default)
+            self.declare_parameter(name, self.defaults.get(name, default))
+        return self.get_parameter(name).value
+
+    def _declare(self, name, default):
+        """Declare a ROS param, sourcing its default from the JSON file.
+
+        The hardcoded ``default`` is only used as a fallback when the
+        parameter is absent from ``config/catch_params.json``.
+        """
+        self.declare_parameter(name, self.defaults.get(name, default))
+
+    def _capture_param(self, name, default):
+        """Adapter exposing get_parameter as a p(name, default) getter.
+
+        Like :meth:`_declare`, the default is taken from the JSON file when
+        present so the shared Capture/Pivot tuning can also be overridden
+        per scenario via ``config/catch_params.json``; otherwise it falls
+        back to the shared-config default passed in by the caller.
+        """
+        if not self.has_parameter(name):
+            self.declare_parameter(name, self.defaults.get(name, default))
         return self.get_parameter(name).value
 
     def transition(self, new_state: State):
@@ -733,19 +826,26 @@ class CatchScenario(Node):
         return self._bang_bang_time_2d_fallback(S, P_end)
 
     # ----------------------------------------------------- ball prediction
-    def ball_state(self):
+    def ball_state(self, min_speed=None):
         """Return ((bx, by), (vx, vy), speed) or None.
 
         Position is propagated forward by ``latency_compensation_s``
         using a constant-velocity model so the solver targets where
         the ball will be by the time the command is actuated.
+
+        ``min_speed`` overrides the speed floor below which the ball is
+        treated as no longer in play (defaults to ``min_ball_speed``).
+        Callers that keep tracking a decelerating pass pass the lower
+        ``min_ball_speed_tracking`` floor instead.
         """
+        if min_speed is None:
+            min_speed = self.min_ball_speed
         if self.ball is None or not self.ball.visible:
             return None
         bp = self.ball.pose.position
         bv = self.ball.twist.linear
         speed = math.hypot(bv.x, bv.y)
-        if speed < self.min_ball_speed:
+        if speed < min_speed:
             return None
         if self.require_negative_vx and bv.x >= 0.0:
             return None
@@ -881,6 +981,7 @@ class CatchScenario(Node):
 
     # ------------------------------------------------------------------ tick
     def tick(self):
+        self._check_connection()
         self.detect_realized_intercept()
         cmd = self.step_state_machine()
         if cmd is not None:
@@ -895,6 +996,48 @@ class CatchScenario(Node):
                 pass
             self.timer.cancel()
             rclpy.shutdown()
+
+    def _check_connection(self):
+        """Restart the state machine if the robot's radio link drops."""
+        if not self.require_connection:
+            return
+        if self.state == State.WAIT_FOR_CONNECTION:
+            return
+        if self.radio_connected is False:
+            self.get_logger().warn(
+                'Robot disconnected; restarting state machine')
+            self._reset_run_state()
+            self.transition(State.WAIT_FOR_CONNECTION)
+
+    def _reset_run_state(self):
+        """Clear all latched per-run state."""
+        self.catch_arrived_at = None
+        self.post_reset_state = State.WAIT_FOR_BALL
+        self.S = None
+        self.intercept_P = None
+        self.intercept_target = None
+        self.last_solution_d = None
+        self.last_solution_T = None
+        self.last_ball_seen = None
+        self.first_valid_ball_time = None
+        self.intercept_solved_once = False
+        self.predicted_impact_time = None
+        self.give_pose = None
+        self.catch_dwell_pose = None
+        self.kick_back_pose = None
+        self.kick_back_aim_arrived_at = None
+        self.collect_ball_xy = None
+        self.realized_intercept = None
+        self.collision_ball_xy = None
+        self.collision_robot_pose = None
+        self.collision_detected = False
+        self.collision_time = None
+        self._last_ball_pos = None
+        self._last_ball_vel = None
+        self._last_ball_visible = False
+        self._last_ball_speed = 0.0
+        self._ball_history.clear()
+        self.capture.reset()
 
     def detect_realized_intercept(self):
         """Watch ball observations for a sustained direction-trend
@@ -926,10 +1069,11 @@ class CatchScenario(Node):
         while self._ball_history and self._ball_history[0][0] < cutoff:
             self._ball_history.popleft()
 
-        if active and not self.collision_detected:
+        if (self.collision_detection_enabled and active
+                and not self.collision_detected):
             # Disappearance trigger.
             if (not visible and self._last_ball_visible
-                    and self._last_ball_speed >= self.min_ball_speed):
+                    and self._last_ball_speed >= self.min_ball_speed_tracking):
                 self.realized_intercept = self._last_ball_pos
                 self._latch_collision(self._last_ball_pos)
                 self.get_logger().info(
@@ -981,7 +1125,8 @@ class CatchScenario(Node):
         post_vx /= post_n
         post_vy /= post_n
         pre_mag_sq = pre_vx * pre_vx + pre_vy * pre_vy
-        if pre_mag_sq < self.min_ball_speed * self.min_ball_speed:
+        track_floor = self.min_ball_speed_tracking
+        if pre_mag_sq < track_floor * track_floor:
             return
         dot = pre_vx * post_vx + pre_vy * post_vy
         retention = dot / pre_mag_sq
@@ -1076,6 +1221,12 @@ class CatchScenario(Node):
 
         s = self.state
 
+        if s == State.WAIT_FOR_CONNECTION:
+            if self.radio_connected:
+                self.get_logger().info('Robot connected')
+                self.transition(State.RESET)
+            return self.make_off_cmd()
+
         if s == State.WAIT_FOR_BALL:
             if self.ball is not None and self.ball.visible:
                 self.transition(State.WAIT_FOR_INCOMING)
@@ -1133,7 +1284,11 @@ class CatchScenario(Node):
             return self.make_hold_cmd()
 
         if s == State.INTERCEPT:
-            ball = self.ball_state()
+            # Keep solving the intercept from the latest ball observation
+            # using the lower tracking floor so a decelerating pass stays
+            # tracked (and the robot responsive) until the ball stops
+            # moving forward, rather than cutting out at min_ball_speed.
+            ball = self.ball_state(self.min_ball_speed_tracking)
             rs = self.robot_xy_yaw()
             if rs is None:
                 return self.make_off_cmd()
@@ -1330,6 +1485,12 @@ class CatchScenario(Node):
                       else 4.5)
             aim_theta = math.atan2(0.0 - rs[1], half_l - rs[0])
             self.kick_back_pose = (rs[0], rs[1], aim_theta)
+            pc = self.kick_back_pivot
+            # `kick_back_max_angular_vel` (>0) overrides the shared pivot
+            # angular-velocity limit; otherwise use the pivot config value.
+            ang_vel = (self.kick_back_max_angular_vel
+                       if self.kick_back_max_angular_vel > 0.0
+                       else pc.max_angular_vel)
             yaw_ok = abs(ang_diff(rs[2], aim_theta)) <= self.yaw_tol
             now = self.get_clock().now()
             if yaw_ok:
@@ -1338,10 +1499,11 @@ class CatchScenario(Node):
                 aim_elapsed = (
                     now - self.kick_back_aim_arrived_at).nanoseconds * 1e-9
                 if aim_elapsed >= self.kick_back_aim_dwell:
-                    # Fire kick.
-                    cmd = self.make_pos_cmd(
-                        rs[0], rs[1], aim_theta,
-                        ang_vel_limit=self.kick_back_max_angular_vel,
+                    # Fire kick (still pivoting to hold the heading).
+                    cmd = make_pivot_cmd(
+                        aim_theta, pc.orbit_radius, pc.inset_angle,
+                        ang_vel_limit=ang_vel,
+                        ang_acc_limit=pc.max_angular_acc,
                         kick_request=RobotMotionCommand.KR_KICK_NOW,
                         kick_speed=self.kick_back_speed,
                         dribbler_speed=self.dribbler_speed,
@@ -1352,9 +1514,12 @@ class CatchScenario(Node):
                     return cmd
             else:
                 self.kick_back_aim_arrived_at = None
-            return self.make_pos_cmd(
-                rs[0], rs[1], aim_theta,
-                ang_vel_limit=self.kick_back_max_angular_vel,
+            # Pivot toward the kick-back heading, holding the ball on the
+            # dribbler via the firmware BCM_PIVOT maneuver.
+            return make_pivot_cmd(
+                aim_theta, pc.orbit_radius, pc.inset_angle,
+                ang_vel_limit=ang_vel,
+                ang_acc_limit=pc.max_angular_acc,
                 kick_request=RobotMotionCommand.KR_ARM,
                 dribbler_speed=self.dribbler_speed,
             )
@@ -1487,7 +1652,10 @@ class CatchScenario(Node):
     def publish_overlays(self):
         items = []
 
-        ball = self.ball_state()
+        # Use the same low tracking floor as the INTERCEPT solver so the
+        # ball-trajectory line stays visible (and matches the robot's
+        # adjustment) as long as the ball is still moving forward.
+        ball = self.ball_state(self.min_ball_speed_tracking)
         if ball is not None:
             (bx, by), (vx, vy), speed = ball
             # Ball line extended by ~2x current solution distance (or

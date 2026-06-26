@@ -34,14 +34,14 @@ import math
 import os
 
 from ament_index_python.packages import get_package_share_directory
-from ateam_motion_scenarios.overlays import (
+from ateam_motion_scenarios.common.overlays import (
     make_array,
     make_circle,
     make_point,
     make_pose_marker,
     make_text,
 )
-from ateam_motion_scenarios.pivot import (
+from ateam_motion_scenarios.common.pivot import (
     circle_leg_count,
     leg_target,
     PivotConfig,

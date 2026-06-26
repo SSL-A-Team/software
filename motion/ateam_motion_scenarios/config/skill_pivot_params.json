@@ -1,0 +1,9 @@
+{
+    "_orbit_radius": 0.15,
+    "_orbit_radius": 0.3,
+    "orbit_radius": 0.15,
+    "inset_angle": 1.0,
+    "max_angular_vel": 2.0,
+    "max_angular_acc": 4.0,
+    "dribbler_speed": 400.0
+}

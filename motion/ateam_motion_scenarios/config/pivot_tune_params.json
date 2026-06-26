@@ -13,11 +13,5 @@
 
     "pivot_interval_deg": 45.0,
     "pivot_exec_duration": 3.0,
-    "pivot_hold_duration": 1.0,
-
-    "pivot_orbit_radius": 0.2,
-    "pivot_inset_angle": 0.5,
-    "pivot_max_angular_vel": 3.14159,
-    "pivot_max_angular_acc": 6.28319,
-    "pivot_dribbler_speed": 300.0
+    "pivot_hold_duration": 1.0
 }

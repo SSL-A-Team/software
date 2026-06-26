@@ -19,12 +19,19 @@ edge if desired (e.g. to account for ball radius).
 The intercept pose places the dribbler at a point `intercept_distance`
 meters along the reflected ray from the bounce point, with the robot
 facing the bounce point so the ball runs into the dribbler.
+
+After catching the ricochet, the robot pivots in place to a configurable
+heading (`pivot_heading`, default 0 = facing the +x goal) and then kicks
+the ball back.
 """
 
 from enum import auto, Enum
+import json
 import math
+import os
 
-from ateam_motion_scenarios.overlays import (
+from ament_index_python.packages import get_package_share_directory
+from ateam_motion_scenarios.common.overlays import (
     make_array,
     make_line,
     make_point,
@@ -39,17 +46,20 @@ from ateam_msgs.msg import (
     VisionStateBall,
     VisionStateRobot,
 )
+from ateam_radio_msgs.msg import ConnectionStatus
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
 
 
-ROBOT_ID = 2
-TEAM_COLOR = 'blue'
 OVERLAY_NS = 'pass_and_catch_scenario'
+DEFAULT_PARAM_FILE = os.path.join(
+    get_package_share_directory('ateam_motion_scenarios'),
+    'config', 'pass_and_catch_params.json')
 
 
 class State(Enum):
+    WAIT_FOR_CONNECTION = auto()
     WAIT_FOR_BALL = auto()
     WAIT_FOR_STATIONARY = auto()
     ALIGN_STAGING_Y = auto()
@@ -59,6 +69,8 @@ class State(Enum):
     KICK = auto()
     DRIVE_TO_INTERCEPT = auto()
     CATCH_DWELL = auto()
+    PIVOT_BACK = auto()
+    KICK_BACK = auto()
     RESET = auto()
     DONE = auto()
 
@@ -83,6 +95,10 @@ class PassAndCatchScenario(Node):
 
     def __init__(self):
         super().__init__('pass_and_catch_scenario')
+
+        self.defaults = self._load_defaults()
+        self.robot_id = int(self._p('robot_id', 2))
+        self.team_color = str(self._p('team_color', 'blue'))
 
         # Ball / capture
         self.declare_parameter('stationary_ball_threshold', 0.005)
@@ -118,6 +134,13 @@ class PassAndCatchScenario(Node):
         # Time to dwell at the intercept pose with dribbler on, capturing
         # the ricochet. Set high enough that the ball arrives.
         self.declare_parameter('catch_dwell', 3.0)
+        # After catching, pivot in place to this heading (radians) before
+        # kicking the ball back. 0.0 faces the +x goal.
+        self.declare_parameter('pivot_heading', 0.0)
+        # How long the heading must be held within yaw_tol before kicking.
+        self.declare_parameter('pivot_dwell', 0.3)
+        # Speed of the kick-back after pivoting (m/s).
+        self.declare_parameter('kick_back_speed', 2.0)
         # Optional cap on linear velocity while driving to intercept.
         # 0.0 leaves the firmware default.
         self.declare_parameter('intercept_vel_limit', 0.0)
@@ -141,6 +164,11 @@ class PassAndCatchScenario(Node):
         self.declare_parameter('publish_rate_hz', 60.0)
         self.declare_parameter('loop', True)
         self.declare_parameter('loop_dwell', 0.0)
+        # Radio connection monitoring. When ``require_connection`` is true the
+        # scenario waits for the robot's radio link before driving and
+        # restarts the state machine if the link drops mid-run.
+        self.declare_parameter('require_connection', True)
+        self.declare_parameter('connection_topic', '')
 
         # ------------------------------------------------------------------
         self.stationary_ball_threshold = float(self.get_parameter(
@@ -178,6 +206,11 @@ class PassAndCatchScenario(Node):
         self.intercept_distance = float(
             self.get_parameter('intercept_distance').value)
         self.catch_dwell = float(self.get_parameter('catch_dwell').value)
+        self.pivot_heading = float(
+            self.get_parameter('pivot_heading').value)
+        self.pivot_dwell = float(self.get_parameter('pivot_dwell').value)
+        self.kick_back_speed = float(
+            self.get_parameter('kick_back_speed').value)
         self.intercept_vel_limit = float(
             self.get_parameter('intercept_vel_limit').value)
         self.tracking_enabled = bool(
@@ -195,6 +228,11 @@ class PassAndCatchScenario(Node):
         self.reset_margin = float(self.get_parameter('reset_margin').value)
         self.loop = bool(self.get_parameter('loop').value)
         self.loop_dwell = float(self.get_parameter('loop_dwell').value)
+        self.require_connection = bool(self.get_parameter(
+            'require_connection').value)
+        self.connection_topic = str(self.get_parameter(
+            'connection_topic').value) \
+            or f'/robot_feedback/connection/robot{self.robot_id}'
         rate = float(self.get_parameter('publish_rate_hz').value)
 
         sensor_qos = QoSProfile(
@@ -202,25 +240,38 @@ class PassAndCatchScenario(Node):
             reliability=ReliabilityPolicy.BEST_EFFORT,
             history=HistoryPolicy.KEEP_LAST,
         )
+        # Match the radio bridge's SystemDefaultsQoS for connection status
+        # (RELIABLE; VOLATILE is the QoSProfile default).
+        connection_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            history=HistoryPolicy.KEEP_LAST,
+        )
 
         self.ball = None
         self.robot = None
         self.field = None
+        self.radio_connected = None  # None until first connection message
 
         self.ball_sub = self.create_subscription(
             VisionStateBall, '/ball', self.ball_cb, sensor_qos)
         self.robot_sub = self.create_subscription(
-            VisionStateRobot, f'/{TEAM_COLOR}_team/robot{ROBOT_ID}',
+            VisionStateRobot, f'/{self.team_color}_team/robot{self.robot_id}',
             self.robot_cb, sensor_qos)
         self.field_sub = self.create_subscription(
             FieldInfo, '/field', self.field_cb, 10)
+        self.connection_sub = self.create_subscription(
+            ConnectionStatus, self.connection_topic,
+            self.connection_cb, connection_qos)
 
         self.cmd_pub = self.create_publisher(
-            RobotMotionCommand, f'/robot_motion_commands/robot{ROBOT_ID}', 10)
+            RobotMotionCommand,
+            f'/robot_motion_commands/robot{self.robot_id}', 10)
         self.overlay_pub = self.create_publisher(
             OverlayArray, '/overlays', 10)
 
-        self.state = State.WAIT_FOR_BALL
+        self.state = (State.WAIT_FOR_CONNECTION if self.require_connection
+                      else State.WAIT_FOR_BALL)
         self.state_entered = self.get_clock().now()
         self.stationary_since = None
         self.capture_arrived_at = None
@@ -228,12 +279,13 @@ class PassAndCatchScenario(Node):
         self.ball_xy = None        # latched ball (x, y) at capture time
         self.aim_hold = None       # latched (x, y, theta) for KICK
         self.intercept_pose = None  # latched (x, y, theta) for catch
+        self.pivot_hold = None     # latched (x, y, theta) for pivot/kick-back
 
         self.timer = self.create_timer(1.0 / rate, self.tick)
 
         self.get_logger().info(
-            f'pass_and_catch_scenario started for robot {ROBOT_ID} '
-            f'({TEAM_COLOR}). State: WAIT_FOR_BALL')
+            f'pass_and_catch_scenario started for robot {self.robot_id} '
+            f'({self.team_color}). State: {self.state.name}')
 
     # ------------------------------------------------------------------ subs
     def ball_cb(self, msg: VisionStateBall):
@@ -245,7 +297,30 @@ class PassAndCatchScenario(Node):
     def field_cb(self, msg: FieldInfo):
         self.field = msg
 
+    def connection_cb(self, msg: ConnectionStatus):
+        self.radio_connected = msg.radio_connected
+
     # --------------------------------------------------------------- helpers
+    def _load_defaults(self) -> dict:
+        self.declare_parameter('param_file', '')
+        pf = str(self.get_parameter('param_file').value) or DEFAULT_PARAM_FILE
+        try:
+            with open(pf) as f:
+                data = json.load(f)
+            self.get_logger().info(f'Loaded params from {pf}')
+            return data
+        except (OSError, ValueError) as exc:
+            self.get_logger().warn(
+                f'Could not load param file {pf} ({exc}); using built-in '
+                'defaults')
+            return {}
+
+    def _p(self, name: str, default):
+        """Declare a ROS param defaulting to the JSON value, return value."""
+        if not self.has_parameter(name):
+            self.declare_parameter(name, self.defaults.get(name, default))
+        return self.get_parameter(name).value
+
     def transition(self, new_state: State):
         self.get_logger().info(
             f'State {self.state.name} -> {new_state.name}')
@@ -254,6 +329,7 @@ class PassAndCatchScenario(Node):
         self.stationary_since = None
         self.capture_arrived_at = None
         self.aim_arrived_at = None
+        self.pivot_arrived_at = None
 
     def time_in_state(self) -> float:
         return (self.get_clock().now() - self.state_entered).nanoseconds * 1e-9
@@ -485,10 +561,30 @@ class PassAndCatchScenario(Node):
 
     # ------------------------------------------------------------------ tick
     def tick(self):
+        self._check_connection()
         cmd = self.step_state_machine()
         if cmd is not None:
             self.cmd_pub.publish(cmd)
         self.publish_overlays()
+
+    def _check_connection(self):
+        """Restart the state machine if the robot's radio link drops."""
+        if not self.require_connection:
+            return
+        if self.state == State.WAIT_FOR_CONNECTION:
+            return
+        if self.radio_connected is False:
+            self.get_logger().warn(
+                'Robot disconnected; restarting state machine')
+            self._reset_run_state()
+            self.transition(State.WAIT_FOR_CONNECTION)
+
+    def _reset_run_state(self):
+        """Clear all latched per-run state."""
+        self.ball_xy = None
+        self.aim_hold = None
+        self.intercept_pose = None
+        self.pivot_hold = None
 
     # ------------------------------------------------------------- overlays
     def publish_overlays(self):
@@ -570,6 +666,12 @@ class PassAndCatchScenario(Node):
                     OVERLAY_NS, 'target', self.aim_hold,
                     self.pos_tol, color='#FF4500FF',
                     heading_length=0.5))
+        elif s in (State.PIVOT_BACK, State.KICK_BACK):
+            if self.pivot_hold is not None:
+                items.append(make_pose_marker(
+                    OVERLAY_NS, 'target', self.pivot_hold,
+                    self.pos_tol, color='#FF4500FF',
+                    heading_length=0.5))
         elif s == State.RESET:
             if self.field is not None and self.field.field_length > 0.0:
                 tx = -self.field.field_length / 2.0 + self.reset_margin
@@ -590,6 +692,12 @@ class PassAndCatchScenario(Node):
 
     def step_state_machine(self):
         s = self.state
+
+        if s == State.WAIT_FOR_CONNECTION:
+            if self.radio_connected:
+                self.get_logger().info('Robot connected')
+                self.transition(State.WAIT_FOR_BALL)
+            return self.make_off_cmd()
 
         if s == State.WAIT_FOR_BALL:
             if self.ball is not None and self.ball.visible:
@@ -756,6 +864,49 @@ class PassAndCatchScenario(Node):
                 dribbler_speed=self.dribbler_speed,
             )
             if self.time_in_state() >= self.catch_dwell:
+                self.transition(State.PIVOT_BACK)
+            return cmd
+
+        if s == State.PIVOT_BACK:
+            # Pivot in place to the kick-back heading while holding the
+            # ball with the dribbler. Latch the catch xy so the robot
+            # rotates about its current position.
+            if self.pivot_hold is None:
+                rs = self.robot_xy_yaw()
+                if rs is None:
+                    return self.make_off_cmd()
+                self.pivot_hold = (rs[0], rs[1], self.pivot_heading)
+            px, py, ptheta = self.pivot_hold
+            cmd = self.make_pos_cmd(
+                px, py, ptheta,
+                ang_vel_limit=self.aim_max_angular_vel,
+                kick_request=RobotMotionCommand.KR_ARM,
+                dribbler_speed=self.dribbler_speed,
+            )
+            rs = self.robot_xy_yaw()
+            yaw_ok = rs is not None \
+                and abs(ang_diff(rs[2], ptheta)) <= self.yaw_tol
+            if yaw_ok:
+                now = self.get_clock().now()
+                if self.pivot_arrived_at is None:
+                    self.pivot_arrived_at = now
+                elif (now - self.pivot_arrived_at).nanoseconds * 1e-9 \
+                        >= self.pivot_dwell:
+                    self.transition(State.KICK_BACK)
+            else:
+                self.pivot_arrived_at = None
+            return cmd
+
+        if s == State.KICK_BACK:
+            px, py, ptheta = self.pivot_hold
+            cmd = self.make_pos_cmd(
+                px, py, ptheta,
+                ang_vel_limit=self.aim_max_angular_vel,
+                kick_request=RobotMotionCommand.KR_KICK_NOW,
+                kick_speed=self.kick_back_speed,
+                dribbler_speed=self.dribbler_speed,
+            )
+            if self.time_in_state() >= 0.2:
                 self.transition(State.RESET)
             return cmd
 
@@ -776,6 +927,7 @@ class PassAndCatchScenario(Node):
                 self.ball_xy = None
                 self.aim_hold = None
                 self.intercept_pose = None
+                self.pivot_hold = None
                 self.transition(State.WAIT_FOR_BALL)
             return self.make_off_cmd()
 

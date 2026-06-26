@@ -43,19 +43,19 @@ import math
 import os
 
 from ament_index_python.packages import get_package_share_directory
-from ateam_motion_scenarios.capture import (
+from ateam_motion_scenarios.common.capture import (
     Capture,
     CaptureConfig,
     CapturePhase,
     load_capture_defaults,
 )
-from ateam_motion_scenarios.overlays import (
+from ateam_motion_scenarios.common.overlays import (
     make_array,
     make_point,
     make_pose_marker,
     make_text,
 )
-from ateam_motion_scenarios.pivot import make_pivot_cmd
+from ateam_motion_scenarios.common.pivot import load_pivot_defaults, make_pivot_cmd
 from ateam_msgs.msg import (
     FieldInfo,
     OverlayArray,
@@ -125,7 +125,7 @@ class JukeShotScenario(Node):
         self.stationary_ball_threshold = float(
             self._p('stationary_ball_threshold', 0.005))
         self.stationary_dwell = float(self._p('stationary_dwell', 0.5))
-        # Shared capture defaults (config/capture_params.json) source the
+        # Shared capture defaults (config/skill_capture_params.json) source the
         # robot front offset and breakbeam topic so they stay consistent with
         # the capture skill; either can still be overridden per scenario.
         cap_def = load_capture_defaults()
@@ -200,25 +200,28 @@ class JukeShotScenario(Node):
         # line; 0 = face the center); only the target heading is commanded.
         # The robot orbits until its heading reaches the goal heading
         # (direction toward the goal point on the +y goalline at x = 0).
-        # Defaults mirror the firmware PivotParams::default(): orbit_radius
-        # 0.2 m, inset_angle 0.5 rad, max angular vel pi rad/s, max angular
-        # acc 2*pi rad/s^2. These params are independent of the juke pivot /
-        # double pivot above. When ``goal_y_dynamic`` is true the +y goalline
-        # is taken from the live field geometry (top edge); ``goal_y`` is only
-        # the fallback.
+        # The firmware-pivot tuning defaults (orbit radius, inset, angular
+        # limits) come from the shared ``config/skill_pivot_params.json`` so they
+        # stay consistent with every other pivoting scenario; either can still
+        # be overridden per scenario. These params are independent of the juke
+        # pivot / double pivot above. When ``goal_y_dynamic`` is true the +y
+        # goalline is taken from the live field geometry (top edge); ``goal_y``
+        # is only the fallback.
+        piv_def = load_pivot_defaults()
         self.goal_x = float(self._p('goal_x', 0.0))
         self.goal_y_dynamic = bool(self._p('goal_y_dynamic', True))
         self.goal_y = float(self._p('goal_y', 4.5))
-        self.final_pivot_radius = float(self._p('final_pivot_radius', 0.2))
+        self.final_pivot_radius = float(
+            self._p('final_pivot_radius', piv_def['orbit_radius']))
         self.final_pivot_inset_angle = float(
-            self._p('final_pivot_inset_angle', 0.5))
+            self._p('final_pivot_inset_angle', piv_def['inset_angle']))
         # Resolve the linear-juke inset default to the firmware pivot inset.
         if self.juke_inset_angle < 0.0:
             self.juke_inset_angle = self.final_pivot_inset_angle
         self.final_pivot_angular_vel = float(
-            self._p('final_pivot_angular_vel', 1.0 * math.pi))
+            self._p('final_pivot_angular_vel', piv_def['max_angular_vel']))
         self.final_pivot_angular_acc = float(
-            self._p('final_pivot_angular_acc', 2.0 * math.pi))
+            self._p('final_pivot_angular_acc', piv_def['max_angular_acc']))
         self.final_pivot_dwell = float(self._p('final_pivot_dwell', 0.2))
         self.final_pivot_yaw_tol = float(
             self._p('final_pivot_yaw_tol', 0.05))

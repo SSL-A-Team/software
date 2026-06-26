@@ -7,9 +7,12 @@ forward, then reset toward the back of the field.
 """
 
 from enum import auto, Enum
+import json
 import math
+import os
 
-from ateam_motion_scenarios.overlays import (
+from ament_index_python.packages import get_package_share_directory
+from ateam_motion_scenarios.common.overlays import (
     make_arrows,
     make_array,
     make_line,
@@ -25,17 +28,20 @@ from ateam_msgs.msg import (
     VisionStateBall,
     VisionStateRobot,
 )
+from ateam_radio_msgs.msg import ConnectionStatus
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
 
 
-ROBOT_ID = 2
-TEAM_COLOR = 'blue'
 OVERLAY_NS = 'ball_capture_scenario'
+DEFAULT_PARAM_FILE = os.path.join(
+    get_package_share_directory('ateam_motion_scenarios'),
+    'config', 'ball_capture_params.json')
 
 
 class State(Enum):
+    WAIT_FOR_CONNECTION = auto()
     WAIT_FOR_BALL = auto()
     WAIT_FOR_STATIONARY = auto()
     APPROACH_STAGING = auto()
@@ -71,6 +77,10 @@ class BallCaptureScenario(Node):
     def __init__(self):
         super().__init__('ball_capture_scenario')
 
+        self.defaults = self._load_defaults()
+        self.robot_id = int(self._p('robot_id', 2))
+        self.team_color = str(self._p('team_color', 'blue'))
+
         self.declare_parameter('stationary_ball_threshold', 0.005)
         self.declare_parameter('stationary_dwell', 0.5)
         self.declare_parameter('approach_offset', 0.10)
@@ -97,6 +107,11 @@ class BallCaptureScenario(Node):
         self.declare_parameter('loop_dwell', 0.0)
         self.declare_parameter('limit_acc_linear', 1.5)
         self.declare_parameter('limit_acc_angular', 15.0)
+        # Radio connection monitoring. When ``require_connection`` is true the
+        # scenario waits for the robot's radio link before driving and
+        # restarts the state machine if the link drops mid-run.
+        self.declare_parameter('require_connection', True)
+        self.declare_parameter('connection_topic', '')
 
         self.stationary_ball_threshold = self.get_parameter(
             'stationary_ball_threshold').value
@@ -132,6 +147,11 @@ class BallCaptureScenario(Node):
             self.get_parameter('limit_acc_linear').value)
         self.limit_acc_angular = float(
             self.get_parameter('limit_acc_angular').value)
+        self.require_connection = bool(self.get_parameter(
+            'require_connection').value)
+        self.connection_topic = str(self.get_parameter(
+            'connection_topic').value) \
+            or f'/robot_feedback/connection/robot{self.robot_id}'
         rate = float(self.get_parameter('publish_rate_hz').value)
 
         sensor_qos = QoSProfile(
@@ -139,25 +159,38 @@ class BallCaptureScenario(Node):
             reliability=ReliabilityPolicy.BEST_EFFORT,
             history=HistoryPolicy.KEEP_LAST,
         )
+        # Match the radio bridge's SystemDefaultsQoS for connection status
+        # (RELIABLE; VOLATILE is the QoSProfile default).
+        connection_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            history=HistoryPolicy.KEEP_LAST,
+        )
 
         self.ball = None
         self.robot = None
         self.field = None
+        self.radio_connected = None  # None until first connection message
 
         self.ball_sub = self.create_subscription(
             VisionStateBall, '/ball', self.ball_cb, sensor_qos)
         self.robot_sub = self.create_subscription(
-            VisionStateRobot, f'/{TEAM_COLOR}_team/robot{ROBOT_ID}',
+            VisionStateRobot, f'/{self.team_color}_team/robot{self.robot_id}',
             self.robot_cb, sensor_qos)
         self.field_sub = self.create_subscription(
             FieldInfo, '/field', self.field_cb, 10)
+        self.connection_sub = self.create_subscription(
+            ConnectionStatus, self.connection_topic,
+            self.connection_cb, connection_qos)
 
         self.cmd_pub = self.create_publisher(
-            RobotMotionCommand, f'/robot_motion_commands/robot{ROBOT_ID}', 10)
+            RobotMotionCommand,
+            f'/robot_motion_commands/robot{self.robot_id}', 10)
         self.overlay_pub = self.create_publisher(
             OverlayArray, '/overlays', 10)
 
-        self.state = State.WAIT_FOR_BALL
+        self.state = (State.WAIT_FOR_CONNECTION if self.require_connection
+                      else State.WAIT_FOR_BALL)
         self.state_entered = self.get_clock().now()
         self.stationary_since = None
         self.capture_arrived_at = None
@@ -168,8 +201,29 @@ class BallCaptureScenario(Node):
         self.timer = self.create_timer(1.0 / rate, self.tick)
 
         self.get_logger().info(
-            f'ball_capture_scenario started for robot {ROBOT_ID} '
-            f'({TEAM_COLOR}). State: WAIT_FOR_BALL')
+            f'ball_capture_scenario started for robot {self.robot_id} '
+            f'({self.team_color}). State: {self.state.name}')
+
+    # --------------------------------------------------------------- params
+    def _load_defaults(self) -> dict:
+        self.declare_parameter('param_file', '')
+        pf = str(self.get_parameter('param_file').value) or DEFAULT_PARAM_FILE
+        try:
+            with open(pf) as f:
+                data = json.load(f)
+            self.get_logger().info(f'Loaded params from {pf}')
+            return data
+        except (OSError, ValueError) as exc:
+            self.get_logger().warn(
+                f'Could not load param file {pf} ({exc}); using built-in '
+                'defaults')
+            return {}
+
+    def _p(self, name: str, default):
+        """Declare a ROS param defaulting to the JSON value, return value."""
+        if not self.has_parameter(name):
+            self.declare_parameter(name, self.defaults.get(name, default))
+        return self.get_parameter(name).value
 
     # ------------------------------------------------------------------ subs
     def ball_cb(self, msg: VisionStateBall):
@@ -180,6 +234,9 @@ class BallCaptureScenario(Node):
 
     def field_cb(self, msg: FieldInfo):
         self.field = msg
+
+    def connection_cb(self, msg: ConnectionStatus):
+        self.radio_connected = msg.radio_connected
 
     # --------------------------------------------------------------- helpers
     def transition(self, new_state: State):
@@ -271,10 +328,28 @@ class BallCaptureScenario(Node):
 
     # ------------------------------------------------------------------ tick
     def tick(self):
+        self._check_connection()
         cmd = self.step_state_machine()
         if cmd is not None:
             self.cmd_pub.publish(cmd)
         self.publish_overlays()
+
+    def _check_connection(self):
+        """Restart the state machine if the robot's radio link drops."""
+        if not self.require_connection:
+            return
+        if self.state == State.WAIT_FOR_CONNECTION:
+            return
+        if self.radio_connected is False:
+            self.get_logger().warn(
+                'Robot disconnected; restarting state machine')
+            self._reset_run_state()
+            self.transition(State.WAIT_FOR_CONNECTION)
+
+    def _reset_run_state(self):
+        """Clear all latched per-run state."""
+        self.ball_xy = None
+        self.aim_hold = None
 
     # ------------------------------------------------------------- overlays
     def _approach_target(self):
@@ -398,6 +473,12 @@ class BallCaptureScenario(Node):
 
     def step_state_machine(self):
         s = self.state
+
+        if s == State.WAIT_FOR_CONNECTION:
+            if self.radio_connected:
+                self.get_logger().info('Robot connected')
+                self.transition(State.WAIT_FOR_BALL)
+            return self.make_off_cmd()
 
         if s == State.WAIT_FOR_BALL:
             if self.ball is not None and self.ball.visible:

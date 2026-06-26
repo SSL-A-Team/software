@@ -9,9 +9,47 @@ to duplicate the BCM_PIVOT wiring (mirrors how ``capture.py`` is shared).
 """
 
 from dataclasses import dataclass
+import json
 import math
+import os
 
+from ament_index_python.packages import get_package_share_directory
 from ateam_msgs.msg import RobotMotionCommand, Twist2D
+
+
+# Shared firmware-pivot tuning used by every scenario that pivots. Individual
+# scenarios (or the command line) can still override any value via their own
+# ROS params.
+PIVOT_PARAM_FILE = os.path.join(
+    get_package_share_directory('ateam_motion_scenarios'),
+    'config', 'skill_pivot_params.json')
+
+# Built-in fallback defaults (firmware PivotParams::default()), used when the
+# shared JSON file is missing or a key is absent from it.
+_BUILTIN_DEFAULTS = {
+    'orbit_radius': 0.2,
+    'inset_angle': 0.5,
+    'max_angular_vel': math.pi,
+    'max_angular_acc': 2.0 * math.pi,
+    'dribbler_speed': 300.0,
+}
+
+
+def load_pivot_defaults(param_file: str = None) -> dict:
+    """
+    Load the shared firmware-pivot parameter defaults from the JSON file.
+
+    Returns a dict merged over the built-in defaults so missing keys always
+    resolve. Falls back to the built-ins if the file cannot be read.
+    """
+    defaults = dict(_BUILTIN_DEFAULTS)
+    path = param_file or PIVOT_PARAM_FILE
+    try:
+        with open(path) as f:
+            defaults.update(json.load(f))
+    except (OSError, ValueError):
+        pass
+    return defaults
 
 
 def make_pivot_cmd(target_heading, orbit_radius, inset_angle=0.0,
@@ -82,14 +120,23 @@ class PivotConfig:
 
     @staticmethod
     def from_params(p, prefix: str = 'pivot_') -> 'PivotConfig':
-        """Build a config from a ``p(name, default)`` parameter getter."""
+        """
+        Build a config from a ``p(name, default)`` parameter getter.
+
+        The defaults come from the shared ``config/skill_pivot_params.json`` so every
+        scenario uses the same firmware-pivot tuning unless it explicitly
+        overrides a value via its own ROS params / command line.
+        """
+        d = load_pivot_defaults()
         return PivotConfig(
-            orbit_radius=float(p(prefix + 'orbit_radius', 0.2)),
-            inset_angle=float(p(prefix + 'inset_angle', 0.5)),
-            max_angular_vel=float(p(prefix + 'max_angular_vel', math.pi)),
+            orbit_radius=float(p(prefix + 'orbit_radius', d['orbit_radius'])),
+            inset_angle=float(p(prefix + 'inset_angle', d['inset_angle'])),
+            max_angular_vel=float(
+                p(prefix + 'max_angular_vel', d['max_angular_vel'])),
             max_angular_acc=float(
-                p(prefix + 'max_angular_acc', 2.0 * math.pi)),
-            dribbler_speed=float(p(prefix + 'dribbler_speed', 300.0)),
+                p(prefix + 'max_angular_acc', d['max_angular_acc'])),
+            dribbler_speed=float(
+                p(prefix + 'dribbler_speed', d['dribbler_speed'])),
         )
 
     def command(self, target_heading,
