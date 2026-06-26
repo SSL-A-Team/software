@@ -28,6 +28,7 @@ setup(
             'juke_shot_scenario = ateam_motion_scenarios.juke_shot_scenario:main',
             'pass_and_catch_scenario = ateam_motion_scenarios.pass_and_catch_scenario:main',
             'pivot_scenario = ateam_motion_scenarios.pivot_scenario:main',
+            'pivot_tune_scenario = ateam_motion_scenarios.pivot_tune_scenario:main',
         ],
     },
 )

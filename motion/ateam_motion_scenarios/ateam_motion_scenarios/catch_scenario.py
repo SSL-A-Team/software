@@ -45,6 +45,11 @@ import math
 import os
 import sys
 
+from ateam_motion_scenarios.capture import (
+    Capture,
+    CaptureConfig,
+    load_capture_defaults,
+)
 from ateam_motion_scenarios.overlays import (
     make_array,
     make_circle,
@@ -61,10 +66,16 @@ from ateam_msgs.msg import (
     VisionStateBall,
     VisionStateRobot,
 )
+from ateam_radio_msgs.msg import BasicTelemetry
 import rclpy
 from rclpy.duration import Duration
 from rclpy.node import Node
-from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
+from rclpy.qos import (
+    DurabilityPolicy,
+    HistoryPolicy,
+    QoSProfile,
+    ReliabilityPolicy,
+)
 
 
 ROBOT_ID = 2
@@ -130,6 +141,7 @@ class State(Enum):
     KICK_BACK = auto()
     COLLECT_APPROACH = auto()
     COLLECT_CAPTURE = auto()
+    CAPTURE_SKILL = auto()
     RESET = auto()
     DONE = auto()
 
@@ -219,7 +231,7 @@ class CatchScenario(Node):
         # but the ball will already be gone).
         self.declare_parameter('touch_pass_enabled', True)
         self.declare_parameter('touch_pass_speed', 1.5)  # m/s
-        self.declare_parameter('kick_back_enabled', False)
+        self.declare_parameter('kick_back_enabled', True)
         self.declare_parameter('kick_back_speed', 1.5)   # m/s
         self.declare_parameter('kick_back_aim_dwell', 0.3)
         self.declare_parameter('kick_back_post_dwell', 0.2)
@@ -236,6 +248,22 @@ class CatchScenario(Node):
         self.declare_parameter('collect_capture_vel_limit', 0.2)
         self.declare_parameter('collect_capture_dwell', 0.5)
         self.declare_parameter('collect_stationary_threshold', 0.1)  # m/s
+        # After a successful catch (CATCH_DWELL), optionally drive over and
+        # capture the ball if it ended up within capture_after_catch_radius
+        # of the robot. This uses the shared Capture skill (capture.py),
+        # honoring its parameters (approach_radius, capture_speed,
+        # capture_accel, capture_filter_count, use_breakbeam, ...).
+        self.declare_parameter('capture_after_catch_enabled', True)
+        self.declare_parameter('capture_after_catch_radius', 0.5)  # m
+        # The shared Capture skill's parameters (approach_radius,
+        # capture_speed, capture_accel, capture_filter_count, use_breakbeam,
+        # ...) are declared on demand by CaptureConfig.from_params with their
+        # defaults sourced from config/capture_params.json, so they are not
+        # re-declared here. breakbeam_topic is read directly by this node, so
+        # default it from the shared capture config.
+        self.declare_parameter(
+            'breakbeam_topic',
+            load_capture_defaults().get('breakbeam_topic', ''))
         # After collision is detected, the robot drives to the latched
         # intercept target and dwells. If it can't reach that target
         # within this many seconds, give up and reset anyway. Counted
@@ -364,6 +392,17 @@ class CatchScenario(Node):
             'collect_capture_dwell').value)
         self.collect_stationary_threshold = float(self.get_parameter(
             'collect_stationary_threshold').value)
+        self.capture_after_catch_enabled = bool(self.get_parameter(
+            'capture_after_catch_enabled').value)
+        self.capture_after_catch_radius = float(self.get_parameter(
+            'capture_after_catch_radius').value)
+        # Shared two-phase capture skill (see capture.py). Reads its own
+        # parameters via the get-parameter adapter below.
+        self.breakbeam_topic = str(self.get_parameter(
+            'breakbeam_topic').value) \
+            or f'/robot_feedback/basic/robot{ROBOT_ID}'
+        self.capture = Capture(CaptureConfig.from_params(self._capture_param))
+        self.breakbeam_detected = None
         self.post_collision_arrival_timeout = float(self.get_parameter(
             'post_collision_arrival_timeout').value)
         self.ball_lost_timeout = float(self.get_parameter(
@@ -422,6 +461,17 @@ class CatchScenario(Node):
             self.robot_cb, sensor_qos)
         self.field_sub = self.create_subscription(
             FieldInfo, '/field', self.field_cb, 10)
+        # Basic telemetry carries the breakbeam used by the capture skill
+        # (RELIABLE + VOLATILE, matching the radio bridge's SystemDefaultsQoS).
+        feedback_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+        )
+        self.telemetry_sub = self.create_subscription(
+            BasicTelemetry, self.breakbeam_topic,
+            self.telemetry_cb, feedback_qos)
 
         self.cmd_pub = self.create_publisher(
             RobotMotionCommand, f'/robot_motion_commands/robot{ROBOT_ID}', 10)
@@ -500,7 +550,16 @@ class CatchScenario(Node):
     def field_cb(self, msg: FieldInfo):
         self.field = msg
 
+    def telemetry_cb(self, msg: BasicTelemetry):
+        self.breakbeam_detected = msg.breakbeam_ball_detected
+
     # --------------------------------------------------------------- helpers
+    def _capture_param(self, name, default):
+        """Adapter exposing get_parameter as a p(name, default) getter."""
+        if not self.has_parameter(name):
+            self.declare_parameter(name, default)
+        return self.get_parameter(name).value
+
     def transition(self, new_state: State):
         self.get_logger().info(
             f'State {self.state.name} -> {new_state.name}')
@@ -517,6 +576,12 @@ class CatchScenario(Node):
             return None
         p = self.robot.pose.position
         return (p.x, p.y, yaw_from_quat(self.robot.pose.orientation))
+
+    def robot_speed(self) -> float:
+        if self.robot is None or not self.robot.visible:
+            return float('inf')
+        v = self.robot.twist.linear
+        return math.hypot(v.x, v.y)
 
     def make_pos_cmd(self, x: float, y: float, theta: float = 0.0,
                      vel_limit: float = 0.0,
@@ -977,7 +1042,38 @@ class CatchScenario(Node):
         self.transition(State.COLLECT_APPROACH)
         return True
 
+    def _enter_capture_after_catch_if_possible(self) -> bool:
+        """If enabled and the ball ended up within capture_after_catch_radius
+        of the robot after a catch, run the shared Capture skill to drive
+        over and pick it up. Returns True if a transition happened."""
+        if not self.capture_after_catch_enabled:
+            return False
+        rs = self.robot_xy_yaw()
+        if rs is None:
+            return False
+        bxy = None
+        if self.ball is not None and self.ball.visible:
+            bp = self.ball.pose.position
+            bxy = (bp.x, bp.y)
+        elif self._last_ball_pos is not None:
+            bxy = self._last_ball_pos
+        if bxy is None:
+            return False
+        dist = math.hypot(bxy[0] - rs[0], bxy[1] - rs[1])
+        if dist > self.capture_after_catch_radius:
+            return False
+        if not self.in_bounds(bxy[0], bxy[1]):
+            return False
+        self.collect_ball_xy = bxy
+        self.capture.reset()
+        self.get_logger().info(
+            f'Ball within {dist:.2f} m after catch; running capture skill '
+            f'(ball at ({bxy[0]:.2f}, {bxy[1]:.2f}))')
+        self.transition(State.CAPTURE_SKILL)
+        return True
+
     def step_state_machine(self):
+
         s = self.state
 
         if s == State.WAIT_FOR_BALL:
@@ -1215,6 +1311,9 @@ class CatchScenario(Node):
             if self.time_in_state() >= self.catch_dwell:
                 self.post_reset_state = (
                     State.WAIT_FOR_BALL if self.loop else State.DONE)
+                # Optionally capture the ball if it ended up close by.
+                if self._enter_capture_after_catch_if_possible():
+                    return cmd
                 if self.kick_back_enabled:
                     self.transition(State.KICK_BACK)
                 else:
@@ -1334,6 +1433,33 @@ class CatchScenario(Node):
                     else:
                         self.transition(State.RESET)
             return cmd
+
+        if s == State.CAPTURE_SKILL:
+            # Drive over and pick up the nearby ball using the shared
+            # Capture skill (honors approach_radius / capture_speed /
+            # capture_accel / capture_filter_count / use_breakbeam, ...).
+            rs = self.robot_xy_yaw()
+            ball_xy = None
+            ball_visible = self.ball is not None and self.ball.visible
+            if ball_visible:
+                bp = self.ball.pose.position
+                ball_xy = (bp.x, bp.y)
+            elif self.collect_ball_xy is not None:
+                ball_xy = self.collect_ball_xy
+            cmd = self.capture.run_frame(
+                rs, self.robot_speed(), ball_xy,
+                ball_visible, self.breakbeam_detected)
+            if self.capture.is_done():
+                if rs is not None:
+                    self.catch_dwell_pose = (rs[0], rs[1], rs[2])
+                self.post_reset_state = (
+                    State.WAIT_FOR_BALL if self.loop else State.DONE)
+                if self.kick_back_enabled:
+                    self.transition(State.KICK_BACK)
+                else:
+                    self.transition(State.RESET)
+                return self.make_off_cmd()
+            return cmd if cmd is not None else self.make_off_cmd()
 
         if s == State.RESET:
             if self.field is None or self.field.field_length <= 0.0:
