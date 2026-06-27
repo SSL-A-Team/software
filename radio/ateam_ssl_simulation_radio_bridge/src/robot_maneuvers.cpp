@@ -184,8 +184,6 @@ void ManeuverExecutor::trajectory_maneuver(
   current_global_command_.x = global_feedforward.x + global_feedback.x;
   current_global_command_.y = global_feedforward.y + global_feedback.y;
   current_global_command_.theta = global_feedforward.theta + global_feedback.theta;
-
-  std::cerr << "theta: " << get_yaw(robot.pose) << ", final err: " << global_target_err.theta << ", traj err: " << global_traj_err.theta << std::endl;
 }
 
 // Global Maneuvers
