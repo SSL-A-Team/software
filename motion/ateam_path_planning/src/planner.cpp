@@ -47,7 +47,6 @@ std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
 
   std::array<std::optional<TrajectorySpline>, 16> paths;
   for (int bot_index : bot_indices) {
-    // std::cerr << "Robot " << bot_index << '\n';
     if (!targets[bot_index].has_value()) {
       continue;
     }
@@ -79,7 +78,6 @@ std::optional<TrajectorySpline> Planner::PlanPath(
   if(const auto err = ateam_controls_traj_from_target_pose(init_state, target_state,
       trajectory_params, &base_trajectory); err != ATEAM_CONTROLS_OK)
   {
-    std::cerr << "No path by base traj error: " << err << '\n';
     return std::nullopt;
   }
 
@@ -107,8 +105,6 @@ std::optional<TrajectorySpline> Planner::PlanPath(
       inter_target_angle < (2 * M_PI);
       inter_target_angle += options.inter_target_angle_step)
     {
-      std::cerr << "Inter target: Dist: " << inter_target_dist << "   Angle: " <<
-        inter_target_angle << '\n';
       const Pose inter_target {
         robot.pos +
         (ateam_geometry::directionFromAngle(inter_target_angle).vector() * inter_target_dist),
@@ -120,7 +116,6 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         ateam_controls_traj_from_target_pose(init_state, inter_target_state, trajectory_params,
           &inter_traj); err != ATEAM_CONTROLS_OK)
       {
-        std::cerr << "No path by inter traj err: " << err << '\n';
         return std::nullopt;
       }
       const auto inter_collision_time = collisions::TimeToCollision(inter_traj, 0.0,
@@ -129,7 +124,6 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         inter_collision_time.value_or(GetBangBangTrajectoryDuration(inter_traj));
 
       for(auto transition_time = 0.1; transition_time < max_time; transition_time += 0.1) {
-        std::cerr << "Transition time: " << transition_time << '\n';
         Vector6C_t transition_state;
         if (const auto err =
           ateam_controls_traj_state_at(inter_traj, transition_time,
@@ -142,7 +136,6 @@ std::optional<TrajectorySpline> Planner::PlanPath(
           ateam_controls_traj_from_target_pose(transition_state, target_state, trajectory_params,
             &second_traj); err != ATEAM_CONTROLS_OK)
         {
-          std::cerr << "No path by second traj err: " << err << '\n';
           return std::nullopt;
         }
         const auto second_collision_time = collisions::TimeToCollision(second_traj,
@@ -168,7 +161,6 @@ std::optional<TrajectorySpline> Planner::PlanPath(
   }
 
   if(!found_collision_free) {
-    std::cerr << "No path because could not find collision-free route\n";
     return std::nullopt;
   }
 

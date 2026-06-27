@@ -44,7 +44,6 @@ std::optional<double> TimeToCollision(
       ateam_controls_traj_state_at(trajectory, t, &state_at_t);
       err != ATEAM_CONTROLS_OK)
     {
-      std::cerr << "collision due to error: " << err << '\n';
       return t;
     }
     const ateam_geometry::Point robot_pos(state_at_t.data[0], state_at_t.data[1]);
@@ -54,8 +53,6 @@ std::optional<double> TimeToCollision(
       if(ateam_geometry::doIntersect(robot_footprint,
           obstacle.ShapeAtT(t + start_t)))
       {
-        std::cerr << "collision at time " << t << " with " << obstacle.ShapeAtT(t + start_t) <<
-          '\n';
         return t;
       }
     }
