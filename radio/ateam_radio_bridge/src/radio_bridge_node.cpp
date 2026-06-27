@@ -366,14 +366,31 @@ private:
             static_cast<float>(command.acceleration.theta),
           };
           break;
-        case ateam_msgs::msg::RobotMotionCommand::BCM_PIVOT:
-          control_msg.body_control_mode = BCM_PIVOT;
-          control_msg.cmd.pivot = {
+        case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
+          control_msg.body_control_mode = BCM_HEADING_PIVOT;
+          control_msg.cmd.heading_pivot = {
             static_cast<float>(command.pose.theta),
             static_cast<float>(command.limit_vel_angular),
             static_cast<float>(command.limit_acc_angular),
             static_cast<float>(command.pivot_orbit_radius),
-            static_cast<float>(command.pivot_inset_angle)
+            static_cast<float>(command.pivot_inset_angle),
+            static_cast<PivotDirection>(command.pivot_direction),
+            static_cast<uint8_t>(command.pivot_compute_inset_angle),
+            {0, 0}
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
+          control_msg.body_control_mode = BCM_POINT_PIVOT;
+          control_msg.cmd.point_pivot = {
+            static_cast<float>(command.pose.x),
+            static_cast<float>(command.pose.y),
+            static_cast<float>(command.limit_vel_angular),
+            static_cast<float>(command.limit_acc_angular),
+            static_cast<float>(command.pivot_orbit_radius),
+            static_cast<float>(command.pivot_inset_angle),
+            static_cast<PivotDirection>(command.pivot_direction),
+            static_cast<uint8_t>(command.pivot_compute_inset_angle),
+            {0, 0}
           };
           break;
         default:
