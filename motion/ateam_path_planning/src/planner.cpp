@@ -78,7 +78,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
   if(const auto err = ateam_controls_traj_from_target_pose(init_state, target_state,
       trajectory_params, &base_trajectory); err != ATEAM_CONTROLS_OK)
   {
-    return std::nullopt;
+    throw ControlsException(err);
   }
 
   const auto collision_time = collisions::TimeToCollision(base_trajectory, 0.0,
@@ -121,7 +121,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         ateam_controls_traj_from_target_pose(init_state, inter_target_state, trajectory_params,
           &inter_traj); err != ATEAM_CONTROLS_OK)
       {
-        return std::nullopt;
+        continue;
       }
       const auto inter_collision_time = collisions::TimeToCollision(inter_traj, 0.0,
           obstacles, options.collision_check_resolution, options.collision_check_horizon,
@@ -142,7 +142,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
           ateam_controls_traj_from_target_pose(transition_state, target_state, trajectory_params,
             &second_traj); err != ATEAM_CONTROLS_OK)
         {
-          return std::nullopt;
+          continue;
         }
         const auto second_collision_time = collisions::TimeToCollision(second_traj,
             transition_time, obstacles, options.collision_check_resolution,

@@ -49,7 +49,7 @@ std::vector<ateam_geometry::Point> TrajectorySpline::ToPoints(double delta_t) co
       ateam_controls_traj_from_target_pose(current_state, Vector3FromPose(segment.target),
         trajectory_params, &trajectory); err != ATEAM_CONTROLS_OK)
     {
-      return points;
+      throw ControlsException(err);
     }
     for(double t = 0.0; t < segment.duration; t += delta_t) {
       Vector6C_t state_at_t;
@@ -57,7 +57,7 @@ std::vector<ateam_geometry::Point> TrajectorySpline::ToPoints(double delta_t) co
         ateam_controls_traj_state_at(trajectory, t, &state_at_t);
         err != ATEAM_CONTROLS_OK)
       {
-        return points;
+        throw ControlsException(err);
       }
       points.push_back(ateam_geometry::Point(
         state_at_t.data[0],
@@ -67,7 +67,7 @@ std::vector<ateam_geometry::Point> TrajectorySpline::ToPoints(double delta_t) co
       ateam_controls_traj_state_at(trajectory, segment.duration,
         &current_state); err != ATEAM_CONTROLS_OK)
     {
-      return points;
+      throw ControlsException(err);
     }
   }
 
@@ -99,7 +99,7 @@ std::vector<std::vector<ateam_geometry::Point>> TrajectorySpline::ToPointsBySegm
       ateam_controls_traj_from_target_pose(current_state, Vector3FromPose(segment.target),
         trajectory_params, &trajectory); err != ATEAM_CONTROLS_OK)
     {
-      return points;
+      throw ControlsException(err);
     }
     auto & segment_points = points.emplace_back();
     for(double t = 0.0; t < segment.duration; t += delta_t) {
@@ -108,7 +108,7 @@ std::vector<std::vector<ateam_geometry::Point>> TrajectorySpline::ToPointsBySegm
         ateam_controls_traj_state_at(trajectory, t, &state_at_t);
         err != ATEAM_CONTROLS_OK)
       {
-        return points;
+        throw ControlsException(err);
       }
       segment_points.push_back(ateam_geometry::Point(
         state_at_t.data[0],
@@ -118,7 +118,7 @@ std::vector<std::vector<ateam_geometry::Point>> TrajectorySpline::ToPointsBySegm
       ateam_controls_traj_state_at(trajectory, segment.duration,
         &current_state); err != ATEAM_CONTROLS_OK)
     {
-      return points;
+      throw ControlsException(err);
     }
   }
 

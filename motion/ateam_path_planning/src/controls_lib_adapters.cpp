@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "ateam_path_planning/controls_lib_adapters.hpp"
+#include <ateam_controls/ateam_controls.h>
 
 namespace ateam_path_planning
 {
@@ -48,6 +49,26 @@ Vector3C_t Vector3FromPose(const Pose & pose)
 double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory)
 {
   return std::max(std::max(trajectory.x.t4, trajectory.y.t4), trajectory.z.t4);
+}
+
+const char * ControlsException::what() const noexcept
+{
+  switch(raw_) {
+    case ATEAM_CONTROLS_OK:
+      return "OK";
+    case ATEAM_CONTROLS_INVALID_INPUT:
+      return "Invalid Input";
+    case ATEAM_CONTROLS_SINGULAR:
+      return "Singular";
+    case ATEAM_CONTROLS_NO_SOLUTION:
+      return "No Solution";
+    case ATEAM_CONTROLS_INVALID_TIME:
+      return "Invalid Time";
+    case ATEAM_CONTROLS_EXCEEDS_LIMIT:
+      return "Exceeds Limit";
+    default:
+      return "Unknown";
+  }
 }
 
 }  // namespace ateam_path_planning

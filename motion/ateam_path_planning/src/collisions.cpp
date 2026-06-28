@@ -46,7 +46,7 @@ std::optional<double> TimeToCollision(
       ateam_controls_traj_state_at(trajectory, t, &state_at_t);
       err != ATEAM_CONTROLS_OK)
     {
-      return t;
+      throw ControlsException(err);
     }
     const ateam_geometry::Point robot_pos(state_at_t.data[0], state_at_t.data[1]);
     const auto robot_footprint = ateam_geometry::makeDisk(robot_pos,

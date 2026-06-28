@@ -34,6 +34,25 @@ Vector3C_t Vector3FromPose(const Pose & pose);
 
 double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory);
 
+class ControlsException : public std::exception
+{
+public:
+  explicit ControlsException(int32_t err)
+  : raw_(err) {}
+
+  ~ControlsException() override = default;
+
+  const char * what() const noexcept override;
+
+  int32_t GetRaw() const
+  {
+    return raw_;
+  }
+
+private:
+  int32_t raw_;
+};
+
 }  // namespace ateam_path_planning
 
 #endif  // ATEAM_PATH_PLANNING__CONTROLS_LIB_ADAPTERS_HPP_
