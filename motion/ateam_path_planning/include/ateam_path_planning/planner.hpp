@@ -35,12 +35,13 @@ namespace ateam_path_planning
 
 struct PlannerOptions
 {
-  double collision_check_resolution = 0.05;
+  double collision_check_resolution = 0.1;
+  double collision_check_horizon = 3.0;
   double footprint_inflation = 0.06;
   double inter_target_dist_min = 1.0;
   double inter_target_dist_max = 5.0;
   double inter_target_dist_step = 1.0;
-  double inter_target_angle_step = M_PI_4;
+  double inter_target_angle_step = 0.5;
 };
 
 class Planner {

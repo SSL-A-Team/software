@@ -35,9 +35,11 @@ std::optional<double> TimeToCollision(
   const double & start_t,
   const std::vector<Obstacle> & obstacles,
   const double collision_check_resolution,
+  const double collision_check_horizon,
   const double footprint_inflation)
 {
-  const auto duration = GetBangBangTrajectoryDuration(trajectory);
+  const auto duration = std::min(GetBangBangTrajectoryDuration(trajectory),
+      collision_check_horizon);
   for (double t = 0.0; t < duration; t += collision_check_resolution) {
     Vector6C_t state_at_t;
     if(const auto err =

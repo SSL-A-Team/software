@@ -37,8 +37,8 @@ class PathsCollideMatcher
     const std::array<std::optional<ateam_path_planning::TrajectorySpline>, 16> &>
 {
 public:
-  explicit PathsCollideMatcher(const double resolution = 0.05)
-  : resolution_(resolution)
+  explicit PathsCollideMatcher(const double resolution = 0.1, const double horizon = 3.0)
+  : resolution_(resolution), horizon_(horizon)
   {
   }
 
@@ -55,7 +55,9 @@ public:
       path_points.push_back(path_opt->ToPoints(resolution_));
       max_path_length = std::max(max_path_length, path_points.back().size());
     }
-    for (auto i = 0ul; i < max_path_length; ++i) {
+    const auto horizon_path_length = static_cast<size_t>(horizon_ / resolution_);
+    const auto loop_limit = std::min(max_path_length, horizon_path_length);
+    for (auto i = 0ul; i < loop_limit; ++i) {
       std::vector<std::optional<ateam_geometry::Disk>> disks;
       for (const auto & path : path_points) {
         if(path.size() > i) {
@@ -75,7 +77,7 @@ public:
               disks[b]->center()));
             *listener << "paths " << a << " and " << b << " collide at " << collision_time <<
               "s. Positions: " << disks[a]->center() << " and " << disks[b]->center() <<
-              " (Distance: " << distance << ')';
+              " (Distance: " << distance << ")  (Time: " << (i * resolution_) << ')';
             return true;
           }
         }
@@ -98,13 +100,14 @@ public:
 
 private:
   const double resolution_;
+  const double horizon_;
 };
 
 inline ::testing::Matcher<const std::array<std::optional<ateam_path_planning::TrajectorySpline>,
   16> &> PathsCollide(
-  double resolution = 0.05)
+  double resolution = 0.1, double horizon = 3.0)
 {
-  return ::testing::MakeMatcher(new PathsCollideMatcher(resolution));
+  return ::testing::MakeMatcher(new PathsCollideMatcher(resolution, horizon));
 }
 
 #endif  // UTILS__PATHS_COLLIDE_HPP_

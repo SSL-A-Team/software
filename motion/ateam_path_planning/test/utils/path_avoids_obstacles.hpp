@@ -37,8 +37,9 @@ class PathAvoidsObstaclesMatcher
 {
 public:
   explicit PathAvoidsObstaclesMatcher(
-    const std::vector<ateam_path_planning::Obstacle> & obstacles, const double resolution = 0.05)
-  : obstacles_(obstacles), resolution_(resolution)
+    const std::vector<ateam_path_planning::Obstacle> & obstacles, const double resolution = 0.1,
+    const double horizon = 3.0)
+  : obstacles_(obstacles), resolution_(resolution), horizon_(horizon)
   {
   }
 
@@ -59,6 +60,9 @@ public:
         }
       }
       t += resolution_;
+      if (t > horizon_) {
+        break;
+      }
     }
     *listener << "avoids given obstacles";
     return true;
@@ -77,12 +81,14 @@ public:
 private:
   const std::vector<ateam_path_planning::Obstacle> obstacles_;
   const double resolution_;
+  const double horizon_;
 };
 
 inline ::testing::Matcher<const ateam_path_planning::TrajectorySpline &> PathAvoidsObstacles(
-  const std::vector<ateam_path_planning::Obstacle> & obstacles, const double resolution = 0.05)
+  const std::vector<ateam_path_planning::Obstacle> & obstacles, const double resolution = 0.1,
+  const double horizon = 3.0)
 {
-  return ::testing::MakeMatcher(new PathAvoidsObstaclesMatcher(obstacles, resolution));
+  return ::testing::MakeMatcher(new PathAvoidsObstaclesMatcher(obstacles, resolution, horizon));
 }
 
 #endif  // UTILS__PATH_AVOIDS_OBSTACLES_HPP_

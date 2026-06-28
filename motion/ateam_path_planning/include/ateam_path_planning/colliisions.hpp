@@ -33,6 +33,7 @@ std::optional<double> TimeToCollision(
   const double & start_t,
   const std::vector<Obstacle> & obstacles,
   const double collision_check_resolution,
+  const double collision_check_horizon,
   const double footprint_inflation);
 
 }  // namespace ateam_path_planning::collisions

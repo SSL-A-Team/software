@@ -210,6 +210,68 @@ TEST(Planner, AllBotsCrossNoObstacles) {
   PrintPathsOnFailure(paths);
 }
 
+TEST(Planner, PerformanceCheck) {
+  /* This test sets up a game-realistic scenario and makes sure the run time of the path planner
+   * meets requirements
+   */
+
+  Planner planner;
+
+  std::array<std::optional<ateam_path_planning::Pose>, 16> targets;
+  std::generate_n(targets.begin(), 6, [n = 0]() mutable {
+      return ateam_path_planning::Pose{ateam_geometry::Point(3.0, n++ * 0.5), 0.0};
+  });
+
+  std::array<uint8_t, 16> priorities;
+  priorities.fill(0);
+
+  ateam_game_state::World world;
+  std::generate_n(world.our_robots.begin(), 6, [n = 0]() mutable {
+      ateam_game_state::Robot robot;
+      robot.id = n;
+      robot.pos = ateam_geometry::Point(0.0, n * 0.5);
+      robot.theta = 0.0;
+      robot.vel = ateam_geometry::Vector(0.0, 0.0);
+      ++n;
+      return robot;
+  });
+
+  std::vector<ateam_path_planning::Obstacle> obstacles {
+    // opp def area
+    {ateam_geometry::Rectangle(ateam_geometry::Point(8, -1), ateam_geometry::Point(9, 1)), {}},
+    // ball
+    {ateam_geometry::makeDisk(ateam_geometry::Point(6, 6), kBallRadius),
+      ateam_geometry::Vector(1, 1)},
+  };
+  // opp robots
+  std::generate_n(std::back_inserter(obstacles), 6, [n = 0]() mutable {
+      return ateam_path_planning::Obstacle{
+      ateam_geometry::makeDisk(ateam_geometry::Point(n * 1, 4), kRobotRadius),
+      ateam_geometry::Vector(1, 0)
+      };
+  });
+
+  const auto start = std::chrono::steady_clock::now();
+  const auto paths = planner.PlanPathsForAllBots(targets, priorities, world, obstacles, {});
+  const auto end = std::chrono::steady_clock::now();
+  const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end -
+    start).count();
+  EXPECT_LT(elapsed_ms, 5);
+
+  for (size_t i = 0; i < 6; ++i) {
+    EXPECT_THAT(paths[i],
+      Optional(PathStartsAt(ateam_path_planning::Pose{ateam_geometry::Point(0.0, i * 0.5),
+        0.0})));
+    EXPECT_THAT(paths[i],
+      Optional(PathEndsAt(ateam_path_planning::Pose{ateam_geometry::Point(3.0, i * 0.5),
+        0.0})));
+  }
+
+  EXPECT_THAT(paths, Not(PathsCollide()));
+
+  PrintPathsOnFailure(paths);
+}
+
 TEST(Planner, TwoBotOneObstacle) {
   Planner planner;
 

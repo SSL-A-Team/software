@@ -82,7 +82,8 @@ std::optional<TrajectorySpline> Planner::PlanPath(
   }
 
   const auto collision_time = collisions::TimeToCollision(base_trajectory, 0.0,
-      obstacles, options.collision_check_resolution, options.footprint_inflation);
+      obstacles, options.collision_check_resolution, options.collision_check_horizon,
+      options.footprint_inflation);
 
   if (!collision_time.has_value()) {
     TrajectorySpline result;
@@ -101,10 +102,14 @@ std::optional<TrajectorySpline> Planner::PlanPath(
     inter_target_dist <= options.inter_target_dist_max;
     inter_target_dist += options.inter_target_dist_step)
   {
-    for(auto inter_target_angle = 0.0;
-      inter_target_angle < (2 * M_PI);
-      inter_target_angle += options.inter_target_angle_step)
+    const auto inter_target_angle_offset_limit = M_PI_2 - std::fmod(M_PI_2,
+        options.inter_target_angle_step);
+    const auto angle_to_target = ateam_geometry::ToHeading(target.position - robot.pos);
+    for(auto inter_target_angle_offset = -inter_target_angle_offset_limit;
+      inter_target_angle_offset <= inter_target_angle_offset_limit;
+      inter_target_angle_offset += options.inter_target_angle_step)
     {
+      const auto inter_target_angle = angle_to_target + inter_target_angle_offset;
       const Pose inter_target {
         robot.pos +
         (ateam_geometry::directionFromAngle(inter_target_angle).vector() * inter_target_dist),
@@ -119,7 +124,8 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         return std::nullopt;
       }
       const auto inter_collision_time = collisions::TimeToCollision(inter_traj, 0.0,
-          obstacles, options.collision_check_resolution, options.footprint_inflation);
+          obstacles, options.collision_check_resolution, options.collision_check_horizon,
+          options.footprint_inflation);
       const auto max_time =
         inter_collision_time.value_or(GetBangBangTrajectoryDuration(inter_traj));
 
@@ -140,6 +146,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         }
         const auto second_collision_time = collisions::TimeToCollision(second_traj,
             transition_time, obstacles, options.collision_check_resolution,
+            options.collision_check_horizon,
             options.footprint_inflation);
         if (!second_collision_time.has_value()) {
           const auto second_traj_duration = GetBangBangTrajectoryDuration(second_traj);
