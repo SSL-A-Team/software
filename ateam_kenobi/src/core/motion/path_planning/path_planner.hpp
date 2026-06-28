@@ -19,9 +19,10 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__PATH_PLANNING__PATH_PLANNER_HPP_
-#define CORE__PATH_PLANNING__PATH_PLANNER_HPP_
+#ifndef CORE__MOTION__PATH_PLANNING__PATH_PLANNER_HPP_
+#define CORE__MOTION__PATH_PLANNING__PATH_PLANNER_HPP_
 
+#include <memory>
 #include <vector>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/any_shape.hpp>
@@ -35,6 +36,8 @@
 namespace ateam_path_planning
 {
 class Planner;
+class Obstacle;
+class TrajectorySpline;
 }
 
 namespace ateam_kenobi::motion::path_planning
@@ -43,7 +46,7 @@ namespace ateam_kenobi::motion::path_planning
 class PathPlanner
 {
 public:
-  explicit PathPlanner();
+  PathPlanner();
 
   ~PathPlanner();
 
@@ -55,8 +58,16 @@ public:
 private:
   std::unique_ptr<ateam_path_planning::Planner> planner_;
 
+  void DrawObstacles(
+    visualization::Overlays & overlays,
+    const std::vector<ateam_path_planning::Obstacle> & obstacles);
+
+  void DrawTrajectory(
+    visualization::Overlays & overlays,
+    const std::optional<ateam_path_planning::TrajectorySpline> & maybe_path, const Robot & robot,
+    const ateam_geometry::Point & target, const PlannerOptions & options);
 };
 
-}  // namespace ateam_kenobi::path_planning
+}  // namespace ateam_kenobi::motion::path_planning
 
-#endif  // CORE__PATH_PLANNING__PATH_PLANNER_HPP_
+#endif  // CORE__MOTION__PATH_PLANNING__PATH_PLANNER_HPP_

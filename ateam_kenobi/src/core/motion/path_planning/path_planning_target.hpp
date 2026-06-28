@@ -18,9 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_KENOBI__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
-#define ATEAM_KENOBI__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
+#ifndef CORE__MOTION__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
+#define CORE__MOTION__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
 
+#include <vector>
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/any_shape.hpp>
 #include "planner_options.hpp"
@@ -42,4 +43,4 @@ struct PathPlanningTarget
 }  // namespace ateam_kenobi::motion::path_planning
 
 
-#endif  // ATEAM_KENOBI__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
+#endif  // CORE__MOTION__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_

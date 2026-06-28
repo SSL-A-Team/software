@@ -62,6 +62,8 @@ struct TrajectorySplineImpl
   Pose GetEndPose() const;
 
   size_t GetSegmentCount() const;
+
+  std::chrono::steady_clock::time_point GetStartTime() const;
 };
 
 TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl &);

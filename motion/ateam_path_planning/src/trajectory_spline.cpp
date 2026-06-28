@@ -95,6 +95,11 @@ size_t TrajectorySpline::GetSegmentCount() const
   return impl_->GetSegmentCount();
 }
 
+std::chrono::steady_clock::time_point TrajectorySpline::GetStartTime() const
+{
+  return impl_->GetStartTime();
+}
+
 TrajectorySpline::TrajectorySpline(TrajectorySplineImpl & impl)
 : impl_(std::make_unique<TrajectorySplineImpl>(impl))
 {

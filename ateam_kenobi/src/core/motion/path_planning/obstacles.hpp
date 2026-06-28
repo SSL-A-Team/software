@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__PATH_PLANNING__OBSTACLES_HPP_
-#define CORE__PATH_PLANNING__OBSTACLES_HPP_
+#ifndef CORE__MOTION__PATH_PLANNING__OBSTACLES_HPP_
+#define CORE__MOTION__PATH_PLANNING__OBSTACLES_HPP_
 
 #include <vector>
 #include <ateam_geometry/any_shape.hpp>
@@ -61,6 +61,6 @@ bool IsPointInBounds(
   const ateam_geometry::Point & state, const World & world,
   const double bounds_offset = 0.0);
 
-}  // namespace ateam_kenobi::path_planning
+}  // namespace ateam_kenobi::motion::path_planning
 
-#endif  // CORE__PATH_PLANNING__OBSTACLES_HPP_
+#endif  // CORE__MOTION__PATH_PLANNING__OBSTACLES_HPP_

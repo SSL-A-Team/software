@@ -20,6 +20,8 @@
 
 
 #include "path_planner.hpp"
+#include <algorithm>
+#include <memory>
 #include <ateam_path_planning/planner.hpp>
 #include "obstacles.hpp"
 
@@ -38,8 +40,6 @@ void PathPlanner::Execute(
   const std::vector<PathPlanningTarget> & targets, const World & world,
   visualization::Overlays & overlays)
 {
-  (void)overlays;  // TODO(barulicm): draw overlays
-
   std::array<std::optional<ateam_path_planning::Pose>, 16> target_poses;
   std::array<std::vector<ateam_path_planning::Obstacle>, 16> per_bot_obstacles;
   std::array<ateam_path_planning::PlannerOptions, 16> options;
@@ -82,6 +82,10 @@ void PathPlanner::Execute(
           std::back_inserter(per_bot_obstacles[target.robot_id]));
     }
 
+    if(target.planner_options.draw_obstacles) {
+      DrawObstacles(overlays, per_bot_obstacles[target.robot_id]);
+    }
+
     options[target.robot_id] = ateam_path_planning::PlannerOptions{
       .collision_check_resolution = target.planner_options.collision_check_resolution,
       .collision_check_horizon = target.planner_options.collision_check_horizon,
@@ -99,8 +103,8 @@ void PathPlanner::Execute(
   std::vector<ateam_path_planning::Obstacle> global_obstacles;
   for(const auto & robot : world.their_robots) {
     global_obstacles.push_back(ateam_path_planning::Obstacle{
-      .shape = ateam_geometry::makeDisk(robot.pos, kRobotRadius),
-      .expected_motion = robot.vel
+        .shape = ateam_geometry::makeDisk(robot.pos, kRobotRadius),
+        .expected_motion = robot.vel
     });
   }
 
@@ -109,6 +113,8 @@ void PathPlanner::Execute(
 
   for(auto i = 0ul; i < paths.size(); ++i) {
     const auto & path = paths[i];
+    DrawTrajectory(overlays, path, world.our_robots[i], targets[i].position,
+        targets[i].planner_options);
     if(!path.has_value()) {
       continue;
     }
@@ -129,4 +135,74 @@ void PathPlanner::Execute(
   }
 }
 
-}  // namespace ateam_kenobi::path_planning
+void PathPlanner::DrawObstacles(
+  visualization::Overlays & overlays,
+  const std::vector<ateam_path_planning::Obstacle> & obstacles)
+{
+  auto drawObstacle = [&overlays, obstacle_ind = 0](const auto & shape) mutable {
+      const auto name = "obstacle" + std::to_string(obstacle_ind);
+      const auto color = "FF00007F";
+      using ShapeT = std::decay_t<decltype(shape)>;
+      if constexpr (std::is_same_v<ShapeT, ateam_geometry::Point>) {
+        overlays.drawCircle(name, ateam_geometry::makeCircle(shape, 2.5), color, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Segment>) {
+        overlays.drawLine(name, {shape.source(), shape.target()}, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Ray>) {
+        overlays.drawLine(name, {shape.source(), shape.point(10)}, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Rectangle>) {
+        overlays.drawRectangle(name, shape, color, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Circle>) {
+        overlays.drawCircle(name, shape, color, color);
+      } else if constexpr (std::is_same_v<ShapeT, ateam_geometry::Disk>) {
+        overlays.drawCircle(name, shape.asCircle(), color, color);
+      } else {
+        // RCLCPP_WARN(
+        //   getLogger(), "Unsupported shape type in drawObstacles: %s ",
+        //   typeid(shape).name());
+      }
+      obstacle_ind++;
+    };
+
+  std::ranges::for_each(obstacles, [&drawObstacle](const auto & o) {
+      std::visit(drawObstacle, o.shape);
+    });
+}
+
+void PathPlanner::DrawTrajectory(
+  visualization::Overlays & overlays,
+  const std::optional<ateam_path_planning::TrajectorySpline> & maybe_path, const Robot & robot,
+  const ateam_geometry::Point & target, const PlannerOptions & options)
+{
+  constexpr double kTimeStep = 0.2;
+  const auto name_prefix = "pathing/robot_" + std::to_string(robot.id) + "/";
+  if(!maybe_path.has_value()) {
+    overlays.drawLine(name_prefix + "path", {robot.pos, target}, "Ted");
+    return;
+  }
+  const auto & path = *maybe_path;
+  const auto start_time = path.GetStartTime();
+  const auto now = std::chrono::steady_clock::now();
+  const auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now -
+      start_time).count();
+  const auto elapsed_point_count = static_cast<size_t>(elapsed / kTimeStep);
+  const auto collision_checked_time = elapsed + options.collision_check_horizon;
+  const auto collision_checked_point_count = static_cast<size_t>(collision_checked_time /
+    kTimeStep);
+  const auto points = path.ToPoints(kTimeStep);
+  std::vector<ateam_geometry::Point> points_done;
+  std::copy_n(points.begin(), elapsed_point_count, std::back_inserter(points_done));
+  const auto translucent_purple = "#8000805F";
+  overlays.drawLine(name_prefix + "done", points_done, translucent_purple);
+
+  std::vector<ateam_geometry::Point> points_checked;
+  std::copy_n(points.begin() + elapsed_point_count,
+      collision_checked_point_count - elapsed_point_count, std::back_inserter(points_checked));
+  overlays.drawLine(name_prefix + "checked", points_checked, "Purple");
+
+  std::vector<ateam_geometry::Point> points_unchecked;
+  std::copy(points.begin() + elapsed_point_count + collision_checked_point_count, points.end(),
+      std::back_inserter(points_unchecked));
+  overlays.drawLine(name_prefix + "unchecked", points_unchecked, "LightSkyBlue");
+}
+
+}  // namespace ateam_kenobi::motion::path_planning

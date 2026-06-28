@@ -74,6 +74,8 @@ public:
 
   size_t GetSegmentCount() const;
 
+  std::chrono::steady_clock::time_point GetStartTime() const;
+
 private:
   explicit TrajectorySpline(TrajectorySplineImpl & impl);
 

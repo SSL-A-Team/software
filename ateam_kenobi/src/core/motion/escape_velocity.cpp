@@ -109,4 +109,4 @@ std::optional<ateam_geometry::Vector> GenerateEscapeVelocity(
   return GenerateEscapeVelocity(robot, *colliding_obstacle);
 }
 
-}  // namespace ateam_kenobi::path_planning
+}  // namespace ateam_kenobi::motion

@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__PATH_PLANNING__PLANNER_OPTIONS_HPP_
-#define CORE__PATH_PLANNING__PLANNER_OPTIONS_HPP_
+#ifndef CORE__MOTION__PATH_PLANNING__PLANNER_OPTIONS_HPP_
+#define CORE__MOTION__PATH_PLANNING__PLANNER_OPTIONS_HPP_
 
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_path_planning/planner_options.hpp>
@@ -70,7 +70,7 @@ struct PlannerOptions
   ateam_path_planning::ReplanThresholds replan_thresholds;
 };
 
-}  // namespace ateam_kenobi::path_planning
+}  // namespace ateam_kenobi::motion::path_planning
 
 
-#endif  // CORE__PATH_PLANNING__PLANNER_OPTIONS_HPP_
+#endif  // CORE__MOTION__PATH_PLANNING__PLANNER_OPTIONS_HPP_
