@@ -23,7 +23,9 @@
 
 #include <ateam_controls/ateam_controls.h>
 #include <vector>
+#include <ateam_game_state/world.hpp>
 #include "obstacle.hpp"
+#include "trajectory_spline.hpp"
 
 namespace ateam_path_planning::collisions
 {
@@ -32,8 +34,27 @@ std::optional<double> TimeToCollision(
   const BangBangTraj3D & trajectory,
   const double & start_t,
   const std::vector<Obstacle> & obstacles,
+  const ateam_game_state::World & world,
   const double collision_check_resolution,
   const double collision_check_horizon,
+  const double footprint_inflation);
+
+std::optional<double> TimeToCollision(
+  const TrajectorySpline & spline,
+  const std::vector<Obstacle> & obstacles,
+  const ateam_game_state::World & world,
+  const double collision_check_resolution,
+  const double collision_check_horizon,
+  const double footprint_inflation);
+
+bool DoesStateCollideWithObstacles(
+  const Vector6C_t & state,
+  const double & t,
+  const std::vector<Obstacle> & obstacles,
+  const double footprint_inflation);
+
+bool IsStateInBounds(
+  const Vector6C_t & state, const ateam_game_state::World & world,
   const double footprint_inflation);
 
 }  // namespace ateam_path_planning::collisions

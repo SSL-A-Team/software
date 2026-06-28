@@ -14,6 +14,7 @@ add_library(${PROJECT_NAME} SHARED
   src/obstacle.cpp
   src/planner.cpp
   src/trajectory_spline.cpp
+  src/trajectory_spline_impl.cpp
 )
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra -Wpedantic)
@@ -25,6 +26,7 @@ ament_target_dependencies(${PROJECT_NAME}
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:include>
 )
 

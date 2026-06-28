@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,43 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
-#define ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
+#ifndef TRAJECTORY_SPLINE_IMPL_HPP_
+#define TRAJECTORY_SPLINE_IMPL_HPP_
 
-#include <chrono>
-#include <memory>
+#include <ateam_controls/ateam_controls.h>
 #include <optional>
 #include <vector>
-#include <ateam_game_state/world.hpp>
 #include <ateam_geometry/types.hpp>
-#include "pose.hpp"
+#include "ateam_path_planning/pose.hpp"
+#include "ateam_path_planning/trajectory_spline.hpp"
 
 namespace ateam_path_planning
 {
-class TrajectorySpline;
-struct TrajectorySplineImpl;
-struct Obstacle;
-namespace collisions
+
+struct TrajectorySplineSegment
 {
-std::optional<double> TimeToCollision(
-  const TrajectorySpline & spline,
-  const std::vector<Obstacle> & obstacles,
-  const ateam_game_state::World & world,
-  const double collision_check_resolution,
-  const double collision_check_horizon,
-  const double footprint_inflation);
-}
+  double duration;
+  Pose target;
+  BangBangTraj3D_t trajectory;
+};
 
-class TrajectorySpline
+struct TrajectorySplineImpl
 {
-public:
-  TrajectorySpline(const TrajectorySpline & other);
-  TrajectorySpline(TrajectorySpline && other);
-
-  ~TrajectorySpline();
-
-  TrajectorySpline & operator=(const TrajectorySpline & other);
-  TrajectorySpline & operator=(TrajectorySpline && other);
+  std::chrono::steady_clock::time_point start_time;
+  Vector6C_t start_state;
+  TrajectoryParams_t trajectory_params;
+  std::vector<TrajectorySplineSegment> segments;
 
   std::optional<Pose> GetStateAtT(double t) const;
 
@@ -73,20 +62,10 @@ public:
   Pose GetEndPose() const;
 
   size_t GetSegmentCount() const;
-
-private:
-  explicit TrajectorySpline(TrajectorySplineImpl & impl);
-
-  std::unique_ptr<TrajectorySplineImpl> impl_;
-
-  friend TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl &);
-
-  friend std::optional<double> collisions::TimeToCollision(
-    const TrajectorySpline & spline,
-    const std::vector<Obstacle> & obstacles, const ateam_game_state::World & world,
-    const double collision_check_resolution, const double collision_check_horizon,
-    const double footprint_inflation);
 };
+
+TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl &);
+
 }  // namespace ateam_path_planning
 
-#endif  // ATEAM_PATH_PLANNING__TRAJECTORY_SPLINE_HPP_
+#endif  // TRAJECTORY_SPLINE_IMPL_HPP_

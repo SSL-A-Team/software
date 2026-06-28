@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,19 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef ATEAM_KENOBI__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
+#define ATEAM_KENOBI__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
 
-#ifndef CORE__PATH_PLANNING__PATH_HPP_
-#define CORE__PATH_PLANNING__PATH_HPP_
-
-#include <vector>
 #include <ateam_geometry/types.hpp>
+#include <ateam_geometry/any_shape.hpp>
+#include "planner_options.hpp"
+#include "core/motion/motion_intent.hpp"
 
-namespace ateam_kenobi::path_planning
+namespace ateam_kenobi::motion::path_planning
 {
 
-using Position = ateam_geometry::Point;
-using Path = std::vector<Position>;
+struct PathPlanningTarget
+{
+  int robot_id;
+  ateam_geometry::Point position;
+  double heading;
+  PlannerOptions planner_options;
+  std::vector<ateam_geometry::AnyShape> obstacles;
+  motion::Limits limits;
+};
 
-}  // namespace ateam_kenobi::path_planning
+}  // namespace ateam_kenobi::motion::path_planning
 
-#endif  // CORE__PATH_PLANNING__PATH_HPP_
+
+#endif  // ATEAM_KENOBI__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_

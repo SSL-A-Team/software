@@ -18,8 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ateam_path_planning/controls_lib_adapters.hpp"
+#include "controls_lib_adapters.hpp"
 #include <ateam_controls/ateam_controls.h>
+#include <algorithm>
 
 namespace ateam_path_planning
 {
@@ -46,9 +47,43 @@ Vector3C_t Vector3FromPose(const Pose & pose)
   };
 }
 
+Pose PoseFromVector3(const Vector3C_t & vector)
+{
+  return Pose{
+    .position = ateam_geometry::Point(vector.x, vector.y),
+    .heading = vector.z
+  };
+}
+
+Pose PoseFromVector6(const Vector6C_t & vector)
+{
+  return Pose{
+    .position = ateam_geometry::Point(vector.data[0], vector.data[1]),
+    .heading = vector.data[2]
+  };
+}
+
 double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory)
 {
   return std::max(std::max(trajectory.x.t4, trajectory.y.t4), trajectory.z.t4);
+}
+
+TrajectoryParams_t BuildTrajectoryParams(const Limits & limits)
+{
+  auto params = ateam_controls_default_traj_params();
+  if(limits.angular_acceleration != 0.0f) {
+    params.max_accel_angular = limits.angular_acceleration;
+  }
+  if(limits.angular_velocity != 0.0f) {
+    params.max_vel_angular = limits.angular_velocity;
+  }
+  if(limits.linear_acceleration != 0.0f) {
+    params.max_accel_linear = limits.linear_acceleration;
+  }
+  if(limits.linear_velocity != 0.0f) {
+    params.max_vel_linear = limits.linear_velocity;
+  }
+  return params;
 }
 
 const char * ControlsException::what() const noexcept

@@ -25,7 +25,8 @@
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/creation_helpers.hpp>
 #include "ateam_path_planning/colliisions.hpp"
-#include "ateam_path_planning/controls_lib_adapters.hpp"
+#include "controls_lib_adapters.hpp"
+#include "trajectory_spline_impl.hpp"
 
 namespace ateam_path_planning
 {
@@ -55,24 +56,42 @@ std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
     bot_obstacles.insert(
       bot_obstacles.end(), per_bot_obstacles[bot_index].begin(),
         per_bot_obstacles[bot_index].end());
-    auto path = PlanPath(bot, targets[bot_index].value(), bot_obstacles, options[bot_index]);
-    paths[bot_index] = path;
-    const auto obstacle_trajectory_time_step = options[bot_index].collision_check_resolution;
-    const auto obstacle_trajectory = path->ToPoints(obstacle_trajectory_time_step);
-    obstacles.push_back(Obstacle::FromRobot(bot, obstacle_trajectory,
-        obstacle_trajectory_time_step));
+
+    const auto should_replan = ShouldReplan(bot, targets[bot_index].value(), bot_obstacles,
+        options[bot_index], world);
+    if(should_replan) {
+      paths[bot_index] = PlanPath(bot, targets[bot_index].value(), bot_obstacles,
+          options[bot_index], world);
+      cache_[bot_index] = CacheEntry{
+        .trajectory = paths[bot_index].value(),
+        .options = options[bot_index],
+        .target = targets[bot_index].value()
+      };
+    } else {
+      paths[bot_index] = cache_[bot_index]->trajectory;
+    }
+    if(paths[bot_index].has_value()) {
+      const auto obstacle_trajectory_time_step = options[bot_index].collision_check_resolution;
+      const auto obstacle_trajectory = paths[bot_index]->ToPoints(obstacle_trajectory_time_step);
+      obstacles.push_back(Obstacle::FromRobot(bot, obstacle_trajectory,
+          obstacle_trajectory_time_step));
+    } else {
+      obstacles.push_back(Obstacle::FromRobot(bot));
+    }
   }
   return paths;
 }
 
 std::optional<TrajectorySpline> Planner::PlanPath(
   const ateam_game_state::Robot & robot, const Pose & target,
-  const std::vector<Obstacle> & obstacles, const PlannerOptions & options)
+  const std::vector<Obstacle> & obstacles, const PlannerOptions & options,
+  const ateam_game_state::World & world)
 {
   const auto init_state = Vector6FromRobot(robot);
   const auto target_state = Vector3FromPose(target);
+  const auto start_time = std::chrono::steady_clock::now();
 
-  const auto trajectory_params = ateam_controls_default_traj_params();
+  const auto trajectory_params = BuildTrajectoryParams(options.limits);
 
   BangBangTraj3D_t base_trajectory;
   if(const auto err = ateam_controls_traj_from_target_pose(init_state, target_state,
@@ -82,20 +101,21 @@ std::optional<TrajectorySpline> Planner::PlanPath(
   }
 
   const auto collision_time = collisions::TimeToCollision(base_trajectory, 0.0,
-      obstacles, options.collision_check_resolution, options.collision_check_horizon,
+      obstacles, world, options.collision_check_resolution, options.collision_check_horizon,
       options.footprint_inflation);
 
   if (!collision_time.has_value()) {
-    TrajectorySpline result;
-    result.start_pose.position = robot.pos;
-    result.start_pose.heading = robot.theta;
-    result.start_velocity = robot.vel;
-    result.segments.emplace_back(GetBangBangTrajectoryDuration(base_trajectory), target);
-    return result;
+    TrajectorySplineImpl result;
+    result.start_time = start_time;
+    result.start_state = init_state;
+    result.trajectory_params = trajectory_params;
+    result.segments.emplace_back(GetBangBangTrajectoryDuration(base_trajectory), target,
+        base_trajectory);
+    return std::make_optional(MakeTrajectorySpline(result));
   }
 
   auto fastest_time = std::numeric_limits<double>::infinity();
-  TrajectorySpline fastest_trajectory;
+  std::optional<TrajectorySpline> fastest_trajectory = std::nullopt;
   bool found_collision_free = false;
 
   for(auto inter_target_dist = options.inter_target_dist_min;
@@ -124,7 +144,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
         continue;
       }
       const auto inter_collision_time = collisions::TimeToCollision(inter_traj, 0.0,
-          obstacles, options.collision_check_resolution, options.collision_check_horizon,
+          obstacles, world, options.collision_check_resolution, options.collision_check_horizon,
           options.footprint_inflation);
       const auto max_time =
         inter_collision_time.value_or(GetBangBangTrajectoryDuration(inter_traj));
@@ -145,7 +165,7 @@ std::optional<TrajectorySpline> Planner::PlanPath(
           continue;
         }
         const auto second_collision_time = collisions::TimeToCollision(second_traj,
-            transition_time, obstacles, options.collision_check_resolution,
+            transition_time, obstacles, world, options.collision_check_resolution,
             options.collision_check_horizon,
             options.footprint_inflation);
         if (!second_collision_time.has_value()) {
@@ -153,13 +173,13 @@ std::optional<TrajectorySpline> Planner::PlanPath(
           const auto total_time = transition_time + second_traj_duration;
           if (total_time < fastest_time) {
             fastest_time = total_time;
-            TrajectorySpline result;
-            result.start_pose.position = robot.pos;
-            result.start_pose.heading = robot.theta;
-            result.start_velocity = robot.vel;
-            result.segments.emplace_back(transition_time, inter_target);
-            result.segments.emplace_back(second_traj_duration, target);
-            fastest_trajectory = result;
+            TrajectorySplineImpl result;
+            result.start_time = start_time;
+            result.start_state = init_state;
+            result.trajectory_params = trajectory_params;
+            result.segments.emplace_back(transition_time, inter_target, inter_traj);
+            result.segments.emplace_back(second_traj_duration, target, second_traj);
+            fastest_trajectory = MakeTrajectorySpline(result);
             found_collision_free = true;
           }
         }
@@ -172,6 +192,54 @@ std::optional<TrajectorySpline> Planner::PlanPath(
   }
 
   return fastest_trajectory;
+}
+
+bool Planner::ShouldReplan(
+  const ateam_game_state::Robot & robot, const Pose & target,
+  const std::vector<Obstacle> & obstacles, const PlannerOptions & options,
+  const ateam_game_state::World & world)
+{
+  const auto & cache = cache_[robot.id];
+  if(!cache.has_value()) {
+    return true;
+  }
+
+  if(cache->options != options) {
+    return true;
+  }
+
+  if(CGAL::squared_distance(target.position,
+      cache->target.position) >=
+    (options.replan_thresholds.goal_distance * options.replan_thresholds.goal_distance))
+  {
+    return true;
+  }
+
+  const auto & cached_path = cache->trajectory;
+
+  const auto check_time = std::chrono::steady_clock::now() -
+    std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(
+      options.replan_thresholds.lag_estimate));
+  const auto expected_state = cached_path.GetStateAt(check_time);
+  if(!expected_state.has_value()) {
+    return true;
+  }
+
+  if(CGAL::squared_distance(robot.pos,
+      expected_state->position) >=
+    (options.replan_thresholds.deviation_distance * options.replan_thresholds.deviation_distance))
+  {
+    return true;
+  }
+
+  const auto collision_time = collisions::TimeToCollision(cached_path, obstacles, world,
+      options.collision_check_resolution, options.collision_check_horizon,
+      options.footprint_inflation);
+  if(collision_time.has_value()) {
+    return true;
+  }
+
+  return false;
 }
 
 }  // namespace ateam_path_planning

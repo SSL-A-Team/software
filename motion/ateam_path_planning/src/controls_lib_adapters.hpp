@@ -1,4 +1,4 @@
-// Copyright 2026 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,43 +18,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef CORE__MOTION__MOTION_COMMAND_HPP_
-#define CORE__MOTION__MOTION_COMMAND_HPP_
+#ifndef CONTROLS_LIB_ADAPTERS_HPP_
+#define CONTROLS_LIB_ADAPTERS_HPP_
 
-#include <cstdint>
+#include <ateam_controls/ateam_controls.h>
+#include <ateam_game_state/robot.hpp>
+#include "ateam_path_planning/pose.hpp"
+#include "ateam_path_planning/planner_options.hpp"
 
-namespace ateam_kenobi::motion
+namespace ateam_path_planning
 {
 
-struct Twist2D
+Vector6C_t Vector6FromRobot(const ateam_game_state::Robot & robot);
+
+Vector3C_t Vector3FromPose(const Pose & pose);
+
+Pose PoseFromVector3(const Vector3C_t & vector);
+
+Pose PoseFromVector6(const Vector6C_t & vector);
+
+double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory);
+
+TrajectoryParams_t BuildTrajectoryParams(const Limits & limits);
+
+class ControlsException : public std::exception
 {
-  double x = 0.0;
-  double y = 0.0;
-  double theta = 0.0;
+public:
+  explicit ControlsException(int32_t err)
+  : raw_(err) {}
+
+  ~ControlsException() override = default;
+
+  const char * what() const noexcept override;
+
+  int32_t GetRaw() const
+  {
+    return raw_;
+  }
+
+private:
+  int32_t raw_;
 };
 
-enum class ControlMode
-{
-  Off = 0,
-  GlobalPosition = 1,
-  GlobalVelocity = 2,
-  LocalVelocity = 3,
-  GlobalAccel = 4,
-  LocalAccel = 5
-};
+}  // namespace ateam_path_planning
 
-struct MotionCommand
-{
-  ControlMode control_mode = ControlMode::Off;
-  Twist2D pose;
-  Twist2D velocity;
-  Twist2D acceleration;
-  double limit_vel_linear = 0.0;
-  double limit_vel_angular = 0.0;
-  double limit_acc_linear = 0.0;
-  double limit_acc_angular = 0.0;
-};
-
-}  // namespace ateam_kenobi::motion
-
-#endif  // CORE__MOTION__MOTION_COMMAND_HPP_
+#endif  // CONTROLS_LIB_ADAPTERS_HPP_

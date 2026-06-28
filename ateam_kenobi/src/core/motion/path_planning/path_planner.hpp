@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,41 +18,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_PATH_PLANNING__CONTROLS_LIB_ADAPTERS_HPP_
-#define ATEAM_PATH_PLANNING__CONTROLS_LIB_ADAPTERS_HPP_
 
-#include <ateam_controls/ateam_controls.h>
-#include <ateam_game_state/robot.hpp>
-#include "pose.hpp"
+#ifndef CORE__PATH_PLANNING__PATH_PLANNER_HPP_
+#define CORE__PATH_PLANNING__PATH_PLANNER_HPP_
+
+#include <vector>
+#include <ateam_common/robot_constants.hpp>
+#include <ateam_geometry/any_shape.hpp>
+#include <ateam_geometry/types.hpp>
+#include "core/types/state_types.hpp"
+#include "core/motion/motion_command.hpp"
+#include "planner_options.hpp"
+#include "path_planning_target.hpp"
+#include "core/visualization/overlays.hpp"
 
 namespace ateam_path_planning
 {
+class Planner;
+}
 
-Vector6C_t Vector6FromRobot(const ateam_game_state::Robot & robot);
+namespace ateam_kenobi::motion::path_planning
+{
 
-Vector3C_t Vector3FromPose(const Pose & pose);
-
-double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory);
-
-class ControlsException : public std::exception
+class PathPlanner
 {
 public:
-  explicit ControlsException(int32_t err)
-  : raw_(err) {}
+  explicit PathPlanner();
 
-  ~ControlsException() override = default;
+  ~PathPlanner();
 
-  const char * what() const noexcept override;
-
-  int32_t GetRaw() const
-  {
-    return raw_;
-  }
+  void Execute(
+    std::array<std::optional<MotionCommand>, 16> & commands,
+    const std::vector<PathPlanningTarget> & targets, const World & world,
+    visualization::Overlays & overlays);
 
 private:
-  int32_t raw_;
+  std::unique_ptr<ateam_path_planning::Planner> planner_;
+
 };
 
-}  // namespace ateam_path_planning
+}  // namespace ateam_kenobi::path_planning
 
-#endif  // ATEAM_PATH_PLANNING__CONTROLS_LIB_ADAPTERS_HPP_
+#endif  // CORE__PATH_PLANNING__PATH_PLANNER_HPP_

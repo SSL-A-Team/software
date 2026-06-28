@@ -29,20 +29,10 @@
 #include "obstacle.hpp"
 #include "pose.hpp"
 #include "trajectory_spline.hpp"
+#include "planner_options.hpp"
 
 namespace ateam_path_planning
 {
-
-struct PlannerOptions
-{
-  double collision_check_resolution = 0.1;
-  double collision_check_horizon = 3.0;
-  double footprint_inflation = 0.06;
-  double inter_target_dist_min = 1.0;
-  double inter_target_dist_max = 5.0;
-  double inter_target_dist_step = 1.0;
-  double inter_target_angle_step = 0.5;
-};
 
 class Planner {
 public:
@@ -55,9 +45,24 @@ public:
     const std::array<PlannerOptions, 16> & options = {});
 
 private:
+  struct CacheEntry
+  {
+    TrajectorySpline trajectory;
+    PlannerOptions options;
+    Pose target;
+  };
+
+  std::array<std::optional<CacheEntry>, 16> cache_;
+
   std::optional<TrajectorySpline> PlanPath(
     const ateam_game_state::Robot & robot, const Pose & target,
-    const std::vector<Obstacle> & obstacles, const PlannerOptions & options);
+    const std::vector<Obstacle> & obstacles, const PlannerOptions & options,
+    const ateam_game_state::World & world);
+
+  bool ShouldReplan(
+    const ateam_game_state::Robot & robot, const Pose & target,
+    const std::vector<Obstacle> & obstacles, const PlannerOptions & options,
+    const ateam_game_state::World & world);
 };
 }  // namespace ateam_path_planning
 

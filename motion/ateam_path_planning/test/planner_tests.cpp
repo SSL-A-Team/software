@@ -30,13 +30,13 @@
 using ateam_path_planning::Planner;
 
 using ::testing::Eq;
-using ::testing::Field;
+using ::testing::Property;
 using ::testing::Not;
 using ::testing::Optional;
 using ::testing::SizeIs;
 
 
-#define SegmentCount(c) Field(&ateam_path_planning::TrajectorySpline::segments, SizeIs(c))
+#define SegmentCount(c) Property(&ateam_path_planning::TrajectorySpline::GetSegmentCount, Eq(c))
 
 void PrintPathsOnFailure(
   const std::array<std::optional<ateam_path_planning::TrajectorySpline>,
@@ -78,6 +78,8 @@ TEST(Planner, OneBotNoObstacles) {
   priorities.fill(0);
 
   ateam_game_state::World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
   world.our_robots[0].theta = 0.0;
@@ -109,6 +111,8 @@ TEST(Planner, OneBotOneObstacle) {
   priorities.fill(0);
 
   ateam_game_state::World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
   world.our_robots[0].theta = 0.0;
@@ -146,6 +150,8 @@ TEST(Planner, OneBotMovingObstacle) {
   priorities.fill(0);
 
   ateam_game_state::World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
   world.our_robots[0].theta = 0.0;
@@ -184,6 +190,8 @@ TEST(Planner, AllBotsCrossNoObstacles) {
   priorities.fill(0);
 
   ateam_game_state::World world;
+  world.field.field_length = 20.0;
+  world.field.field_width = 20.0;
   std::generate(world.our_robots.begin(), world.our_robots.end(), [n = 0]() mutable {
       ateam_game_state::Robot robot;
       robot.id = n;
@@ -226,6 +234,8 @@ TEST(Planner, PerformanceCheck) {
   priorities.fill(0);
 
   ateam_game_state::World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
   std::generate_n(world.our_robots.begin(), 6, [n = 0]() mutable {
       ateam_game_state::Robot robot;
       robot.id = n;
@@ -284,6 +294,8 @@ TEST(Planner, TwoBotOneObstacle) {
   priorities.fill(0);
 
   ateam_game_state::World world;
+  world.field.field_length = 9.0;
+  world.field.field_width = 6.0;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(-1.0, 0.2);
   world.our_robots[0].theta = 0.0;

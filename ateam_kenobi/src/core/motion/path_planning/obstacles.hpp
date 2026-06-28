@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@
 #include <ateam_geometry/any_shape.hpp>
 #include "core/types/state_types.hpp"
 
-namespace ateam_kenobi::path_planning
+namespace ateam_kenobi::motion::path_planning
 {
 
 std::vector<ateam_geometry::AnyShape> GetDefaultObstacles(const World & world);

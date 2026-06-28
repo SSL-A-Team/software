@@ -23,7 +23,8 @@
 #include <ateam_geometry/do_intersect.hpp>
 #include <ateam_geometry/creation_helpers.hpp>
 #include <ateam_geometry/printing.hpp>
-#include "ateam_path_planning/controls_lib_adapters.hpp"
+#include "controls_lib_adapters.hpp"
+#include "trajectory_spline_impl.hpp"
 
 namespace ateam_path_planning::collisions
 {
@@ -34,6 +35,7 @@ std::optional<double> TimeToCollision(
   const BangBangTraj3D & trajectory,
   const double & start_t,
   const std::vector<Obstacle> & obstacles,
+  const ateam_game_state::World & world,
   const double collision_check_resolution,
   const double collision_check_horizon,
   const double footprint_inflation)
@@ -48,19 +50,73 @@ std::optional<double> TimeToCollision(
     {
       throw ControlsException(err);
     }
-    const ateam_geometry::Point robot_pos(state_at_t.data[0], state_at_t.data[1]);
-    const auto robot_footprint = ateam_geometry::makeDisk(robot_pos,
-        kRobotRadius + footprint_inflation);
-    for (const auto & obstacle : obstacles) {
-      if(ateam_geometry::doIntersect(robot_footprint,
-          obstacle.ShapeAtT(t + start_t)))
-      {
-        return t;
-      }
+    if(DoesStateCollideWithObstacles(state_at_t, t + start_t, obstacles, footprint_inflation)) {
+      return t;
+    }
+    if(!IsStateInBounds(state_at_t, world, footprint_inflation)) {
+      return t;
     }
   }
 
   return std::nullopt;
+}
+
+std::optional<double> TimeToCollision(
+  const TrajectorySpline & spline,
+  const std::vector<Obstacle> & obstacles,
+  const ateam_game_state::World & world,
+  const double collision_check_resolution,
+  const double collision_check_horizon,
+  const double footprint_inflation)
+{
+  double path_t = 0.0;
+  for(const auto & segment : spline.impl_->segments) {
+    if(path_t >= collision_check_horizon) {
+      return std::nullopt;
+    }
+    const auto horizon = std::min(collision_check_horizon - path_t, segment.duration);
+    const auto segment_collision_time = TimeToCollision(segment.trajectory, path_t, obstacles,
+        world, collision_check_resolution, horizon, footprint_inflation);
+    if(segment_collision_time.has_value()) {
+      return segment_collision_time;
+    }
+    path_t += segment.duration;
+  }
+  return std::nullopt;
+}
+
+bool DoesStateCollideWithObstacles(
+  const Vector6C_t & state,
+  const double & t,
+  const std::vector<Obstacle> & obstacles,
+  const double footprint_inflation)
+{
+  const ateam_geometry::Point robot_pos(state.data[0], state.data[1]);
+  const auto robot_footprint = ateam_geometry::makeDisk(robot_pos,
+        kRobotRadius + footprint_inflation);
+  for (const auto & obstacle : obstacles) {
+    if(ateam_geometry::doIntersect(robot_footprint,
+          obstacle.ShapeAtT(t)))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool IsStateInBounds(
+  const Vector6C_t & state, const ateam_game_state::World & world,
+  const double footprint_inflation)
+{
+  const auto x = state.data[0];
+  const auto y = state.data[1];
+  if((std::fabs(x) + kRobotRadius + footprint_inflation) >= (world.field.field_length / 2.0)) {
+    return false;
+  }
+  if((std::fabs(y) + kRobotRadius + footprint_inflation) >= (world.field.field_width / 2.0)) {
+    return false;
+  }
+  return true;
 }
 
 }  // namespace ateam_path_planning::collisions

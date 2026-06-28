@@ -44,11 +44,11 @@ public:
     const ateam_path_planning::TrajectorySpline & trajectory,
     ::testing::MatchResultListener * listener) const override
   {
-    *listener << "starts at (" << trajectory.start_pose.position.x() << ", " <<
-      trajectory.start_pose.position.y() << ", " << trajectory.start_pose.heading << ')';
-    return ateam_geometry::nearEqual(trajectory.start_pose.position, target_.position,
-      position_threshold_) &&
-           std::abs(angles::shortest_angular_distance(trajectory.start_pose.heading,
+    const auto start_pose = trajectory.GetStartPose();
+    *listener << "starts at (" << start_pose.position.x() << ", " << start_pose.position.y() <<
+      ", " << start_pose.heading << ')';
+    return ateam_geometry::nearEqual(start_pose.position, target_.position,
+      position_threshold_) && std::abs(angles::shortest_angular_distance(start_pose.heading,
       target_.heading)) < heading_threshold_;
   }
 

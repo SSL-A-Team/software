@@ -12,6 +12,7 @@ find_package(ateam_msgs REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(ateam_game_state REQUIRED)
+find_package(ateam_path_planning REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ateam_geometry REQUIRED)
@@ -32,12 +33,12 @@ target_sources(kenobi_node_component PRIVATE
   src/core/in_play_eval.cpp
   src/core/joystick_enforcer.cpp
   src/core/play_selector.cpp
-  src/core/path_planning/escape_velocity.cpp
-  src/core/path_planning/obstacles.cpp
-  src/core/path_planning/path_planner.cpp
+  src/core/motion/escape_velocity.cpp
   src/core/motion/frame_conversions.cpp
   src/core/motion/motion_executor.cpp
   src/core/motion/pivot_control.cpp
+  src/core/motion/path_planning/obstacles.cpp
+  src/core/motion/path_planning/path_planner.cpp
   src/core/visualization/overlays.cpp
   src/core/play_helpers/intercept_calculation.cpp
   src/core/play_helpers/lanes.cpp
@@ -124,6 +125,7 @@ ament_target_dependencies(
   "ateam_msgs"
   "ateam_common"
   "ateam_game_state"
+  "ateam_path_planning"
   "tf2"
   "tf2_geometry_msgs"
   "ateam_geometry"

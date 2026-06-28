@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,110 +19,86 @@
 // THE SOFTWARE.
 
 #include "ateam_path_planning/trajectory_spline.hpp"
-#include <ateam_controls/ateam_controls.h>
-#include "ateam_path_planning/controls_lib_adapters.hpp"
+#include "trajectory_spline_impl.hpp"
 
 namespace ateam_path_planning
 {
 
+TrajectorySpline::TrajectorySpline(const TrajectorySpline & other)
+: impl_(std::make_unique<TrajectorySplineImpl>(*other.impl_))
+{
+}
+
+TrajectorySpline::TrajectorySpline(TrajectorySpline && other)
+: impl_(std::move(other.impl_))
+{
+}
+
+TrajectorySpline::~TrajectorySpline() = default;
+
+TrajectorySpline & TrajectorySpline::operator=(const TrajectorySpline & other)
+{
+  impl_ = std::make_unique<TrajectorySplineImpl>(*other.impl_);
+  return *this;
+}
+
+TrajectorySpline & TrajectorySpline::operator=(TrajectorySpline && other)
+{
+  impl_ = std::move(other.impl_);
+  return *this;
+}
+
+std::optional<Pose> TrajectorySpline::GetStateAtT(double t) const
+{
+  return impl_->GetStateAtT(t);
+}
+
+std::optional<Pose> TrajectorySpline::GetStateAt(
+  const std::chrono::steady_clock::time_point & time_point) const
+{
+  return impl_->GetStateAt(time_point);
+}
+
+std::optional<Pose> TrajectorySpline::GetTargetAtT(double t) const
+{
+  return impl_->GetTargetAtT(t);
+}
+
+std::optional<Pose> TrajectorySpline::GetTargetAtNow() const
+{
+  return impl_->GetTargetAtNow();
+}
+
 std::vector<ateam_geometry::Point> TrajectorySpline::ToPoints(double delta_t) const
 {
-  std::vector<ateam_geometry::Point> points;
-  if (segments.empty()) {
-    return points;
-  }
-
-  Vector6C_t current_state {
-    static_cast<float>(start_pose.position.x()),
-    static_cast<float>(start_pose.position.y()),
-    static_cast<float>(start_pose.heading),
-    static_cast<float>(start_velocity.x()),
-    static_cast<float>(start_velocity.y()),
-    0.0f
-  };
-
-  const auto trajectory_params = ateam_controls_default_traj_params();
-
-  for(const auto & segment : segments) {
-    BangBangTraj3D_t trajectory;
-    if(const auto err =
-      ateam_controls_traj_from_target_pose(current_state, Vector3FromPose(segment.target),
-        trajectory_params, &trajectory); err != ATEAM_CONTROLS_OK)
-    {
-      throw ControlsException(err);
-    }
-    for(double t = 0.0; t < segment.duration; t += delta_t) {
-      Vector6C_t state_at_t;
-      if(const auto err =
-        ateam_controls_traj_state_at(trajectory, t, &state_at_t);
-        err != ATEAM_CONTROLS_OK)
-      {
-        throw ControlsException(err);
-      }
-      points.push_back(ateam_geometry::Point(
-        state_at_t.data[0],
-        state_at_t.data[1]));
-    }
-    if(const auto err =
-      ateam_controls_traj_state_at(trajectory, segment.duration,
-        &current_state); err != ATEAM_CONTROLS_OK)
-    {
-      throw ControlsException(err);
-    }
-  }
-
-  return points;
+  return impl_->ToPoints(delta_t);
 }
 
 std::vector<std::vector<ateam_geometry::Point>> TrajectorySpline::ToPointsBySegment(
   double delta_t) const
 {
-  std::vector<std::vector<ateam_geometry::Point>> points;
-  if (segments.empty()) {
-    return points;
-  }
-
-  Vector6C_t current_state {
-    static_cast<float>(start_pose.position.x()),
-    static_cast<float>(start_pose.position.y()),
-    static_cast<float>(start_pose.heading),
-    static_cast<float>(start_velocity.x()),
-    static_cast<float>(start_velocity.y()),
-    0.0f
-  };
-
-  const auto trajectory_params = ateam_controls_default_traj_params();
-
-  for(const auto & segment : segments) {
-    BangBangTraj3D_t trajectory;
-    if(const auto err =
-      ateam_controls_traj_from_target_pose(current_state, Vector3FromPose(segment.target),
-        trajectory_params, &trajectory); err != ATEAM_CONTROLS_OK)
-    {
-      throw ControlsException(err);
-    }
-    auto & segment_points = points.emplace_back();
-    for(double t = 0.0; t < segment.duration; t += delta_t) {
-      Vector6C_t state_at_t;
-      if(const auto err =
-        ateam_controls_traj_state_at(trajectory, t, &state_at_t);
-        err != ATEAM_CONTROLS_OK)
-      {
-        throw ControlsException(err);
-      }
-      segment_points.push_back(ateam_geometry::Point(
-        state_at_t.data[0],
-        state_at_t.data[1]));
-    }
-    if(const auto err =
-      ateam_controls_traj_state_at(trajectory, segment.duration,
-        &current_state); err != ATEAM_CONTROLS_OK)
-    {
-      throw ControlsException(err);
-    }
-  }
-
-  return points;
+  return impl_->ToPointsBySegment(delta_t);
 }
+
+Pose TrajectorySpline::GetStartPose() const
+{
+  return impl_->GetStartPose();
+}
+
+Pose TrajectorySpline::GetEndPose() const
+{
+  return impl_->GetEndPose();
+}
+
+size_t TrajectorySpline::GetSegmentCount() const
+{
+  return impl_->GetSegmentCount();
+}
+
+TrajectorySpline::TrajectorySpline(TrajectorySplineImpl & impl)
+: impl_(std::make_unique<TrajectorySplineImpl>(impl))
+{
+}
+
 
 }  // namespace ateam_path_planning
