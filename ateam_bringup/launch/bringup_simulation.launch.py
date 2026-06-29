@@ -20,7 +20,7 @@
 
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 import launch
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -50,6 +50,20 @@ def generate_launch_description():
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
                                               'ssl_game_controller.launch.xml')),
+            condition=IfCondition(LaunchConfiguration('start_gc'))
+        ),
+
+        # Hardcode the game-controller's blue team name to our team so that our
+        # team_client_node registration binds to blue automatically (no manual GC
+        # UI step). One-shot; retries until the GC API is reachable.
+        ExecuteProcess(
+            cmd=[
+                'ros2', 'run', 'ateam_bringup', 'set_gc_team_name.py',
+                '--team-name', LaunchConfiguration('team_name'),
+                '--gc-address', 'localhost',
+                '--gc-port', '8081',
+            ],
+            output='screen',
             condition=IfCondition(LaunchConfiguration('start_gc'))
         ),
 
