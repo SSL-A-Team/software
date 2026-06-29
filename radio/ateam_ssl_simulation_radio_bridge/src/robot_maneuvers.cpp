@@ -31,6 +31,7 @@ void ManeuverExecutor::execute_maneuver(
 {
   switch(ros_msg.body_control_mode) {
     case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_ESTOP_BRAKE:
       bcm_off_maneuver();
       return;  // Ignores acceleration limits set in message and immediately stops the robot
 

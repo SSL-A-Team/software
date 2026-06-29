@@ -36,7 +36,7 @@ struct Twist2D
 enum class ControlMode
 {
   Off = 0,
-  EstopBrake = 1,
+  EStopBrake = 1,
   GlobalPosition = 10,
   GlobalVelocity = 11,
   LocalVelocity = 12,
