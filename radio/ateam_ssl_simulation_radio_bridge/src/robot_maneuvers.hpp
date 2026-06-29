@@ -42,6 +42,8 @@ public:
   ManeuverExecutor()
   {
     traj_params_ = ateam_controls_default_traj_params();
+    pivot_params_ = ateam_controls_default_pivot_params();
+    linear_params_ = ateam_controls_default_linear_params();
     prev_update_time_ = std::chrono::steady_clock::now();
 
     pid_x_traj_ = PID(3.0, 0.0, 0.0);
@@ -101,6 +103,9 @@ private:
     const ateam_msgs::msg::RobotMotionCommand & ros_msg);
   PivotParams_t generate_pivot_params(
     const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+  LinearParams_t generate_linear_params(
+    const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+
   bool command_uses_trajectory();
   Vector6C_t get_trajectory_state();
   void plan_trajectory(Vector6C_t starting_state);
@@ -124,6 +129,9 @@ private:
 
   PivotTrajectory_t pivot_trajectory_;
   PivotParams_t pivot_params_;
+
+  LinearTrajectory_t linear_trajectory_;
+  LinearParams_t linear_params_;
 };
 
 }  // namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers

@@ -39,6 +39,8 @@ void ManeuverExecutor::execute_maneuver(
     case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
     case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
     case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE:
       trajectory_maneuver(ros_msg, robot);
       break;
 
@@ -180,6 +182,10 @@ void ManeuverExecutor::trajectory_maneuver(
       global_feedback.x = 0.0;
       global_feedback.y = 0.0;
       break;
+
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE:
+    break;
   }
 
   current_global_command_.x = global_feedforward.x + global_feedback.x;
@@ -357,12 +363,29 @@ PivotParams_t ManeuverExecutor::generate_pivot_params(
   return pivot_params;
 }
 
+LinearParams_t ManeuverExecutor::generate_linear_params(
+  const ateam_msgs::msg::RobotMotionCommand & ros_msg)
+{
+  LinearParams_t linear_params = ateam_controls_default_linear_params();
+  if (ros_msg.line_velocity != 0.0) {
+    linear_params.max_vel_colinear = ros_msg.line_velocity;
+  }
+
+  if (ros_msg.line_colinear_start_thresh != 0.0) {
+    linear_params.colinear_start_thresh_linear = ros_msg.line_colinear_start_thresh;
+  }
+
+  return linear_params;
+}
+
 bool ManeuverExecutor::command_uses_trajectory()
 {
   switch(command_.body_control_mode) {
     case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
     case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
     case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE:
       return true;
 
     default:
@@ -378,6 +401,9 @@ Vector6C_t ManeuverExecutor::get_trajectory_state()
     case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
     case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
       return pivot_trajectory_.state;
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE:
+      return linear_trajectory_.state;
     default:
       return Vector6C_t();
   }
@@ -425,6 +451,35 @@ void ManeuverExecutor::plan_trajectory(Vector6C_t starting_state)
         );
         break;
       }
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE:
+      {
+        linear_params_ = generate_linear_params(command_);
+        ateam_controls_linear_traj_from_line(
+          starting_state,
+          command_.pose.theta, // This doesn't match the rest of the commands
+          Vector2C_t{float(command_.line_start_x), float(command_.line_start_y)},
+          Vector2C_t{float(command_.line_dir_x), float(command_.line_dir_y)},
+          command_.line_velocity,
+          linear_params_,
+          &linear_trajectory_
+        );
+        break;
+      }
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE:
+      {
+        linear_params_ = generate_linear_params(command_);
+        ateam_controls_linear_traj_from_point(
+          starting_state,
+          command_.line_target_x,
+          command_.line_target_y,
+          Vector2C_t{float(command_.line_start_x), float(command_.line_start_y)},
+          Vector2C_t{float(command_.line_dir_x), float(command_.line_dir_y)},
+          command_.line_velocity,
+          linear_params_,
+          &linear_trajectory_
+        );
+        break;
+      }
   }
 }
 
@@ -437,6 +492,10 @@ void ManeuverExecutor::tick_trajectory(float dt)
     case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
     case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
       ateam_controls_pivot_traj_tick(&pivot_trajectory_, dt);
+      break;
+    case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE:
+    case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE:
+      ateam_controls_linear_traj_tick(&linear_trajectory_, dt);
       break;
   }
 }
