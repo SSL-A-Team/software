@@ -306,6 +306,8 @@ private:
       control_msg.reboot_robot = reboot_requested_[id];
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
         ateam_common::GameCommand::Stop;
+      control_msg.game_state_in_halt = game_controller_listener_.GetGameCommand() ==
+        ateam_common::GameCommand::Halt;
       control_msg.emergency_stop = false;
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
       control_msg.wheel_torque_control_enabled =
