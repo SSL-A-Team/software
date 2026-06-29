@@ -48,10 +48,12 @@ void PathPlanner::Execute(
 
   std::vector<ateam_path_planning::Obstacle> global_obstacles;
   for(const auto & robot : world.their_robots) {
-    global_obstacles.push_back(ateam_path_planning::Obstacle{
-        .shape = ateam_geometry::makeDisk(robot.pos, kRobotRadius),
-        .expected_motion = robot.vel
-    });
+    if(robot.visible) {
+      global_obstacles.push_back(ateam_path_planning::Obstacle{
+          .shape = ateam_geometry::makeDisk(robot.pos, kRobotRadius),
+          .expected_motion = robot.vel
+      });
+    }
   }
 
   const auto paths = planner_->PlanPathsForAllBots(target_poses, {}, world, global_obstacles,
@@ -158,7 +160,7 @@ void PathPlanner::FillMotionCommands(
         commands[i] = command;
       } else {
         MotionCommand command;
-        command.control_mode = ControlMode::EstopBrake;
+        command.control_mode = ControlMode::EStopBrake;
         commands[i] = command;
       }
       continue;
@@ -227,31 +229,54 @@ void PathPlanner::DrawTrajectory(
     return;
   }
   const auto & path = result->path;
+  const auto points = path.ToPoints(kTimeStep);
+  auto points_iter = points.begin();
+
   const auto start_time = path.GetStartTime();
   const auto now = std::chrono::steady_clock::now();
   const auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now -
       start_time).count();
-  const auto elapsed_point_count = static_cast<size_t>(elapsed / kTimeStep);
-  const auto collision_checked_time = elapsed + options.collision_check_horizon;
-  const auto collision_checked_point_count = static_cast<size_t>(collision_checked_time /
-    kTimeStep);
-  const auto points = path.ToPoints(kTimeStep);
-  std::vector<ateam_geometry::Point> points_done;
-  std::copy_n(points.begin(), elapsed_point_count, std::back_inserter(points_done));
-  const auto translucent_purple = "#8000805F";
-  overlays.drawLine(name_prefix + "done", points_done, translucent_purple);
+  const auto elapsed_point_count = std::min(static_cast<ptrdiff_t>(elapsed / kTimeStep),
+      static_cast<ptrdiff_t>(points.size()));
+  if(elapsed_point_count > 0) {
+    const auto translucent_purple = "#8000805F";
+    overlays.drawLine(name_prefix + "done",
+        std::vector<ateam_geometry::Point>(points_iter, points_iter + elapsed_point_count),
+        translucent_purple);
+    points_iter += elapsed_point_count - 1;
+  }
 
-  std::vector<ateam_geometry::Point> points_checked;
-  std::copy_n(points.begin() + elapsed_point_count,
-      collision_checked_point_count - elapsed_point_count, std::back_inserter(points_checked));
-  overlays.drawLine(name_prefix + "checked", points_checked, "Purple");
+  const auto & collision_stats = result->collision_stats;
+  const auto checked_point_count = std::min(static_cast<ptrdiff_t>(options.collision_check_horizon /
+      kTimeStep), std::distance(points_iter, points.end()));
+  if(collision_stats.new_collision_start_time.has_value() &&
+    collision_stats.new_collision_start_time.value() > elapsed + kTimeStep)
+  {
+    const auto collision_time = collision_stats.new_collision_start_time.value() - elapsed;
+    const auto collision_point_count = static_cast<ptrdiff_t>(collision_time / kTimeStep);
+    overlays.drawLine(name_prefix + "colliding",
+        std::vector<ateam_geometry::Point>(points_iter, points_iter + collision_point_count),
+        "Yellow");
+    points_iter += collision_point_count - 1;
 
-  std::vector<ateam_geometry::Point> points_unchecked;
-  std::copy(points.begin() + elapsed_point_count + collision_checked_point_count, points.end(),
-      std::back_inserter(points_unchecked));
-  overlays.drawLine(name_prefix + "unchecked", points_unchecked, "LightSkyBlue");
+    const auto remaining_checked_point_count = checked_point_count - collision_point_count;
+    overlays.drawLine(name_prefix + "checked",
+        std::vector<ateam_geometry::Point>(points_iter,
+        points_iter + remaining_checked_point_count), "Purple");
+    points_iter += remaining_checked_point_count - 1;
+  } else {
+    overlays.drawLine(name_prefix + "checked",
+        std::vector<ateam_geometry::Point>(points_iter, points_iter + checked_point_count),
+        "Purple");
+    points_iter += checked_point_count - 1;
+  }
 
-  if(CGAL::squared_distance(points.back(), target) > 1e-4) {
+  if(points_iter != points.end()) {
+    overlays.drawLine(name_prefix + "unchecked",
+        std::vector<ateam_geometry::Point>(points_iter, points.end()), "LightSkyBlue");
+  }
+
+  if(CGAL::squared_distance(points.back(), target) > 1e-2) {
     overlays.drawLine(name_prefix + "truncated", {points.back(), target}, "LightPink");
   }
 }

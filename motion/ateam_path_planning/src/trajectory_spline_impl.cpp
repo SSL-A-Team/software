@@ -40,13 +40,7 @@ std::optional<Pose> TrajectorySplineImpl::GetStateAtT(double t) const
       path_t += segment.duration;
       continue;
     }
-    Vector6C_t state;
-    if(const auto err =
-      ateam_controls_traj_state_at(segment.trajectory, t - path_t,
-        &state); err != ATEAM_CONTROLS_OK)
-    {
-      throw ControlsException(err);
-    }
+    const auto state = ateam_path_planning::GetStateAtT(segment.trajectory, t - path_t);
     return PoseFromVector6(state);
   }
   return segments.back().target;
@@ -91,13 +85,7 @@ std::vector<ateam_geometry::Point> TrajectorySplineImpl::ToPoints(double delta_t
 
   for(const auto & segment : segments) {
     for(double t = 0.0; t < segment.duration; t += delta_t) {
-      Vector6C_t state_at_t;
-      if(const auto err =
-        ateam_controls_traj_state_at(segment.trajectory, t, &state_at_t);
-        err != ATEAM_CONTROLS_OK)
-      {
-        throw ControlsException(err);
-      }
+      const auto state_at_t = ateam_path_planning::GetStateAtT(segment.trajectory, t);
       points.push_back(ateam_geometry::Point(
         state_at_t.data[0],
         state_at_t.data[1]));
@@ -118,13 +106,7 @@ std::vector<std::vector<ateam_geometry::Point>> TrajectorySplineImpl::ToPointsBy
   for(const auto & segment : segments) {
     auto & segment_points = points.emplace_back();
     for(double t = 0.0; t < segment.duration; t += delta_t) {
-      Vector6C_t state_at_t;
-      if(const auto err =
-        ateam_controls_traj_state_at(segment.trajectory, t, &state_at_t);
-        err != ATEAM_CONTROLS_OK)
-      {
-        throw ControlsException(err);
-      }
+      const auto state_at_t = ateam_path_planning::GetStateAtT(segment.trajectory, t);
       segment_points.push_back(ateam_geometry::Point(
         state_at_t.data[0],
         state_at_t.data[1]));

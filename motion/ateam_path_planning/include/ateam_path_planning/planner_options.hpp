@@ -47,7 +47,7 @@ struct ReplanThresholds
    * Distance, in meters, that the robot must deviate from the expected state, based on time, to
    * trigger a replan.
    */
-  double deviation_distance = kRobotRadius;
+  double deviation_distance = kRobotDiameter;
 
   /**
    * Time, in seconds, to look behind now for the robot's expected state along the path

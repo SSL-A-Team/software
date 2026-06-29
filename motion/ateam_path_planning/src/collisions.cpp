@@ -31,32 +31,34 @@ namespace ateam_path_planning::collisions
 
 CollisionStats GetCollisionStats(
   const BangBangTraj3D_t & trajectory,
-  const double & start_t,
+  const double traj_start_t,
   const std::vector<Obstacle> & obstacles,
   const ateam_game_state::World & world,
   const double collision_check_resolution,
   const double collision_check_horizon,
-  const double footprint_inflation)
+  const double footprint_inflation,
+  const double search_start_t)
 {
   const auto duration = std::min(GetBangBangTrajectoryDuration(trajectory),
       collision_check_horizon);
   const auto init_state = GetStateAtT(trajectory, 0.0);
-  bool was_in_collision = DoesStateCollideWithObstacles(init_state, start_t, obstacles,
+  bool was_in_collision = DoesStateCollideWithObstacles(init_state, traj_start_t, obstacles,
       footprint_inflation);
   CollisionStats stats;
-  for (double t = collision_check_resolution; t < duration; t += collision_check_resolution) {
+  const auto t0 = std::max(search_start_t, collision_check_resolution);
+  for (double t = t0; t < duration; t += collision_check_resolution) {
     const auto state_at_t = GetStateAtT(trajectory, t);
-    const auto is_colliding = DoesStateCollideWithObstacles(state_at_t, t + start_t, obstacles,
+    const auto is_colliding = DoesStateCollideWithObstacles(state_at_t, t + traj_start_t, obstacles,
         footprint_inflation);
     if(was_in_collision && !is_colliding) {
-      stats.init_collision_end_time = t + start_t;
+      stats.init_collision_end_time = t + traj_start_t;
     }
     if(!was_in_collision && is_colliding) {
-      stats.new_collision_start_time = t + start_t;
+      stats.new_collision_start_time = t + traj_start_t;
       return stats;
     }
     if(!IsStateInBounds(state_at_t, world, footprint_inflation)) {
-      stats.new_collision_start_time = t + start_t;
+      stats.new_collision_start_time = t + traj_start_t;
       return stats;
     }
     was_in_collision = is_colliding;
@@ -71,7 +73,8 @@ CollisionStats GetCollisionStats(
   const ateam_game_state::World & world,
   const double collision_check_resolution,
   const double collision_check_horizon,
-  const double footprint_inflation)
+  const double footprint_inflation,
+  const double search_start_t)
 {
   CollisionStats stats;
   if(spline.GetSegmentCount() == 0) {
@@ -85,9 +88,14 @@ CollisionStats GetCollisionStats(
     if(path_t >= collision_check_horizon) {
       return stats;
     }
+    if(path_t + segment.duration < search_start_t) {
+      path_t += segment.duration;
+      continue;
+    }
     const auto horizon = std::min(collision_check_horizon - path_t, segment.duration);
+    const auto segment_search_start_t = std::max(search_start_t - path_t, 0.0);
     const auto segment_collision_stats = GetCollisionStats(segment.trajectory, path_t, obstacles,
-        world, collision_check_resolution, horizon, footprint_inflation);
+        world, collision_check_resolution, horizon, footprint_inflation, segment_search_start_t);
     if(segment_collision_stats.init_collision_end_time.has_value()) {
       if(was_in_collision) {
         stats.init_collision_end_time = segment_collision_stats.init_collision_end_time;
@@ -130,10 +138,10 @@ bool IsPointInBounds(
 {
   const auto x = point.x();
   const auto y = point.y();
-  if((std::fabs(x) + kRobotRadius + footprint_inflation) >= (world.field.field_length / 2.0)) {
+  if((std::fabs(x) + kRobotRadius + footprint_inflation) >= ((world.field.field_length / 2.0) + world.field.boundary_width)) {
     return false;
   }
-  if((std::fabs(y) + kRobotRadius + footprint_inflation) >= (world.field.field_width / 2.0)) {
+  if((std::fabs(y) + kRobotRadius + footprint_inflation) >= ((world.field.field_width / 2.0) + world.field.boundary_width)) {
     return false;
   }
   return true;
@@ -155,10 +163,10 @@ bool IsStateInBounds(
 {
   const auto x = state.data[0];
   const auto y = state.data[1];
-  if((std::fabs(x) + kRobotRadius + footprint_inflation) >= (world.field.field_length / 2.0)) {
+  if((std::fabs(x) + kRobotRadius + footprint_inflation) >= ((world.field.field_length / 2.0) + world.field.boundary_width)) {
     return false;
   }
-  if((std::fabs(y) + kRobotRadius + footprint_inflation) >= (world.field.field_width / 2.0)) {
+  if((std::fabs(y) + kRobotRadius + footprint_inflation) >= ((world.field.field_width / 2.0) + world.field.boundary_width)) {
     return false;
   }
   return true;

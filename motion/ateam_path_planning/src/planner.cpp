@@ -66,16 +66,23 @@ std::array<std::optional<PathPlanResult>, 16> Planner::PlanPathsForAllBots(
     if(should_replan) {
       paths[bot_index] = PlanPath(bot, targets[bot_index].value(), bot_obstacles,
           options[bot_index], world);
-      cache_[bot_index] = CacheEntry{
-        .trajectory = paths[bot_index].value().path,
-        .options = options[bot_index],
-        .target = targets[bot_index].value()
-      };
+      if(paths[bot_index].has_value()) {
+        cache_[bot_index] = CacheEntry{
+          .trajectory = paths[bot_index].value().path,
+          .options = options[bot_index],
+          .target = targets[bot_index].value()
+        };
+      } else {
+        cache_[bot_index].reset();
+      }
     } else {
       const auto & cached_trajectory = cache_[bot_index]->trajectory;
+      const auto elapsed =
+        std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() -
+          cached_trajectory.GetStartTime()).count();
       const auto collision_stats = collisions::GetCollisionStats(cached_trajectory, bot_obstacles,
           world, options[bot_index].collision_check_resolution,
-          options[bot_index].collision_check_horizon, options[bot_index].footprint_inflation);
+          options[bot_index].collision_check_horizon, options[bot_index].footprint_inflation, elapsed);
       paths[bot_index] = PathPlanResult{
         cached_trajectory,
         collision_stats
@@ -127,7 +134,7 @@ std::optional<PathPlanResult> Planner::PlanPath(
 
   const auto direct_collision_stats = collisions::GetCollisionStats(direct_path, obstacles, world,
       options.collision_check_resolution, options.collision_check_horizon,
-      options.footprint_inflation);
+      options.footprint_inflation, 0.0);
 
   if (!direct_collision_stats.HasCollision()) {
     return PathPlanResult{
@@ -182,7 +189,7 @@ std::optional<PathPlanResult> Planner::PlanPath(
 
           const auto candidate_collision_stats = collisions::GetCollisionStats(candidate_path,
               obstacles, world, options.collision_check_resolution, options.collision_check_horizon,
-              options.footprint_inflation);
+              options.footprint_inflation, 0.0);
 
           if(ComparePaths(candidate_path, candidate_collision_stats, best_path,
               best_path_collision_stats) == std::partial_ordering::greater)
@@ -241,9 +248,12 @@ bool Planner::ShouldReplan(
     return true;
   }
 
+  const auto elapsed =
+        std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() -
+          cached_path.GetStartTime()).count();
   const auto collision_stats = collisions::GetCollisionStats(cached_path, obstacles, world,
       options.collision_check_resolution, options.collision_check_horizon,
-      options.footprint_inflation);
+      options.footprint_inflation, elapsed);
 
   if(collision_stats.HasCollision()) {
     return true;
@@ -293,25 +303,26 @@ std::partial_ordering Planner::ComparePaths(
   const TrajectorySpline & path_l, const CollisionStats & stats_l,
   const TrajectorySpline & path_r, const CollisionStats & stats_r)
 {
-  const auto collision_free_time = [](const TrajectorySpline & path, const CollisionStats & stats){
-      const auto init_collision_end = stats.init_collision_end_time.value_or(0.0);
-      const auto new_collision_start =
-        stats.new_collision_start_time.value_or(path.GetTotalDuration());
-      return new_collision_start - init_collision_end;
-    };
+  // const auto collision_free_time = [](const TrajectorySpline & path, const CollisionStats & stats){
+  //     const auto init_collision_end = stats.init_collision_end_time.value_or(0.0);
+  //     const auto new_collision_start =
+  //       stats.new_collision_start_time.value_or(path.GetTotalDuration());
+  //     return new_collision_start - init_collision_end;
+  //   };
   if(stats_l.HasCollision()) {
     if(stats_r.HasCollision()) {
-      if(auto cmp = collision_free_time(path_l, stats_l) <=> collision_free_time(path_r, stats_r);
-        cmp != std::partial_ordering::equivalent)
-      {
-        return cmp;
-      }
-      if(auto cmp = stats_l.init_collision_end_time.value_or(0.0) <=>
-        stats_r.init_collision_end_time.value_or(0.0); cmp != std::partial_ordering::equivalent)
-      {
-        return cmp;
-      }
-      return path_l.GetTotalDuration() <=> path_r.GetTotalDuration();
+      // if(auto cmp = collision_free_time(path_l, stats_l) <=> collision_free_time(path_r, stats_r);
+      //   cmp != std::partial_ordering::equivalent)
+      // {
+      //   return cmp;
+      // }
+      // if(auto cmp = stats_l.init_collision_end_time.value_or(0.0) <=>
+      //   stats_r.init_collision_end_time.value_or(0.0); cmp != std::partial_ordering::equivalent)
+      // {
+      //   return cmp;
+      // }
+      // Compare total durations with opposite l/r because lower durations are better
+      return path_r.GetTotalDuration() <=> path_l.GetTotalDuration();
     } else {
       return std::partial_ordering::less;
     }
@@ -319,7 +330,7 @@ std::partial_ordering Planner::ComparePaths(
     if(stats_r.HasCollision()) {
       return std::partial_ordering::greater;
     } else {
-      return path_l.GetTotalDuration() <=> path_r.GetTotalDuration();
+      return path_r.GetTotalDuration() <=> path_l.GetTotalDuration();
     }
   }
 }

@@ -33,12 +33,13 @@ namespace ateam_path_planning::collisions
 
 CollisionStats GetCollisionStats(
   const BangBangTraj3D_t & trajectory,
-  const double & start_t,
+  const double traj_start_t,
   const std::vector<Obstacle> & obstacles,
   const ateam_game_state::World & world,
   const double collision_check_resolution,
   const double collision_check_horizon,
-  const double footprint_inflation);
+  const double footprint_inflation,
+  const double search_start_t);
 
 CollisionStats GetCollisionStats(
   const TrajectorySpline & spline,
@@ -46,7 +47,8 @@ CollisionStats GetCollisionStats(
   const ateam_game_state::World & world,
   const double collision_check_resolution,
   const double collision_check_horizon,
-  const double footprint_inflation);
+  const double footprint_inflation,
+  const double search_start_t);
 
 bool DoesPointCollideWithObstacles(
   const ateam_geometry::Point & point,
