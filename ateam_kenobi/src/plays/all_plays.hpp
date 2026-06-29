@@ -32,6 +32,7 @@
 #include "our_penalty_play.hpp"
 #include "their_penalty_play.hpp"
 #include "defense_play.hpp"
+#include "defense_clear_play.hpp"
 #include "extract_play.hpp"
 #include "passing_plays/all_passing_plays.hpp"
 #include "free_kick_plays/all_free_kick_plays.hpp"

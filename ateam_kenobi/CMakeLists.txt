@@ -80,6 +80,7 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/our_penalty_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/defense_play.cpp
+  src/plays/defense_clear_play.cpp
   src/plays/extract_play.cpp
 )
 

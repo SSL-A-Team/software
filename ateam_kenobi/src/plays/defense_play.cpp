@@ -66,8 +66,15 @@ std::array<std::optional<RobotCommand>, 16> DefensePlay::runFrame(
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
+  int num_robots = available_robots.size();
+
   play_helpers::GroupAssignmentSet groups;
-  groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
+
+  const auto defense_points = defense_tactic_.getAssignmentPoints(world);
+  groups.AddGroup("defense", defense_points);
+  num_robots -= defense_points.size();
+
+  blockers_.setMaxBlockerCount(num_robots);
   groups.AddGroup("blockers", blockers_.getAssignmentPoints(world));
   const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
