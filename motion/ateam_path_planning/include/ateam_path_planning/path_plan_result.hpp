@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,19 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef ATEAM_PATH_PLANNING__PATH_PLAN_RESULT_HPP_
+#define ATEAM_PATH_PLANNING__PATH_PLAN_RESULT_HPP_
 
-#ifndef CORE__PATH_PLANNING__PATH_HPP_
-#define CORE__PATH_PLANNING__PATH_HPP_
+#include "trajectory_spline.hpp"
+#include "collision_stats.hpp"
 
-#include <vector>
-#include <ateam_geometry/types.hpp>
-
-namespace ateam_kenobi::path_planning
+namespace ateam_path_planning
 {
 
-using Position = ateam_geometry::Point;
-using Path = std::vector<Position>;
+struct PathPlanResult
+{
+  TrajectorySpline path;
+  CollisionStats collision_stats;
+};
 
-}  // namespace ateam_kenobi::path_planning
+}  // namespace ateam_path_planning
 
-#endif  // CORE__PATH_PLANNING__PATH_HPP_
+#endif  // ATEAM_PATH_PLANNING__PATH_PLAN_RESULT_HPP_

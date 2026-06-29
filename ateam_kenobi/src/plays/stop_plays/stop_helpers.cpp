@@ -23,8 +23,8 @@
 #include <ateam_common/robot_constants.hpp>
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/window_evaluation.hpp"
-#include "core/path_planning/obstacles.hpp"
-#include "core/path_planning/escape_velocity.hpp"
+#include "core/motion/path_planning/obstacles.hpp"
+#include "core/motion/escape_velocity.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 
 namespace ateam_kenobi::plays::stop_plays::stop_helpers
@@ -101,7 +101,8 @@ std::vector<ateam_geometry::Point> getOpenSpots(
   spots.erase(
     std::remove_if(
       spots.begin(), spots.end(), [&world](const auto & p) {
-        return (!path_planning::IsPointInBounds(p, world)) || isPointInOrBehindGoal(p, world);
+        return (!motion::path_planning::IsPointInBounds(p, world)) || isPointInOrBehindGoal(p,
+        world);
       }), spots.end());
 
   return spots;
@@ -287,7 +288,7 @@ void moveBotsInObstacles(
     if(motion_commands[i]) {
       continue;
     }
-    const auto opt_escape_vel = path_planning::GenerateEscapeVelocity(robot, added_obstacles);
+    const auto opt_escape_vel = motion::GenerateEscapeVelocity(robot, added_obstacles);
     if(!opt_escape_vel) {
       continue;
     }

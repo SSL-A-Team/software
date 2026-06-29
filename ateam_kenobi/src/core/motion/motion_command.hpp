@@ -50,7 +50,7 @@ enum class ControlMode
 
 struct MotionCommand
 {
-  ControlMode control_mode;
+  ControlMode control_mode = ControlMode::Off;
   Twist2D pose;
   Twist2D velocity;
   Twist2D acceleration;

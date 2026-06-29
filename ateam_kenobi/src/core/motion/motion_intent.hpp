@@ -27,9 +27,8 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include "core/types/state_types.hpp"
-#include "core/path_planning/path.hpp"
-#include "core/path_planning/planner_options.hpp"
 #include "motion_options.hpp"
+#include "path_planning/planner_options.hpp"
 
 namespace ateam_kenobi::motion
 {
@@ -93,7 +92,6 @@ struct Position
   double heading;
   path_planning::PlannerOptions planner_options;
   std::vector<ateam_geometry::AnyShape> obstacles;
-  bool enable_escape_velocities = true;
   Limits limits;
 };
 
@@ -103,7 +101,6 @@ struct PositionFacing
   ateam_geometry::Point face_target;
   path_planning::PlannerOptions planner_options;
   std::vector<ateam_geometry::AnyShape> obstacles;
-  bool enable_escape_velocities = true;
   Limits limits;
 };
 

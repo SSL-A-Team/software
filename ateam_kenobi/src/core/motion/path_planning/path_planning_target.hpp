@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,25 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
-#define ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+#ifndef CORE__MOTION__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
+#define CORE__MOTION__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
 
-// This is a convenience header for including all ateam_geometry utilities
+#include <vector>
+#include <ateam_geometry/types.hpp>
+#include <ateam_geometry/any_shape.hpp>
+#include "planner_options.hpp"
+#include "core/motion/motion_intent.hpp"
 
-#include "angles.hpp"
-#include "any_shape.hpp"
-#include "arc.hpp"
-#include "comparisons.hpp"
-#include "creation_helpers.hpp"
-#include "disk.hpp"
-#include "do_intersect.hpp"
-#include "eigen_conversions.hpp"
-#include "epsilon.hpp"
-#include "intersection.hpp"
-#include "nearest_point.hpp"
-#include "normalize.hpp"
-#include "orientation.hpp"
-#include "printing.hpp"
-#include "types.hpp"
+namespace ateam_kenobi::motion::path_planning
+{
 
-#endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_
+struct PathPlanningTarget
+{
+  int robot_id;
+  ateam_geometry::Point position;
+  double heading;
+  PlannerOptions planner_options;
+  std::vector<ateam_geometry::AnyShape> obstacles;
+  motion::Limits limits;
+};
+
+}  // namespace ateam_kenobi::motion::path_planning
+
+
+#endif  // CORE__MOTION__PATH_PLANNING__PATH_PLANNING_TARGET_HPP_
