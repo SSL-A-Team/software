@@ -58,7 +58,7 @@ void Capture::chooseState(const World & world, const Robot & robot)
 {
   if(state_ == State::Capture && !world.ball.visible) {
     state_ = State::Capture;
-  } else if (ateam_geometry::norm(world.ball.pos - robot.pos) < approach_radius_) {
+  } else if (ateam_geometry::norm(world.ball.pos - robot.pos) < approach_radius_ + kRobotRadius) {
     state_ = State::Capture;
   } else {
     state_ = State::MoveToBall;
@@ -69,21 +69,25 @@ RobotCommand Capture::runMoveToBall(
   const World & world,
   const Robot & robot)
 {
+  const auto robot_to_ball_vector = world.ball.pos - robot.pos;
+
   motion::intents::PositionFacing intent;
-  intent.position = world.ball.pos;
+  intent.position = world.ball.pos - approach_radius_ * ateam_geometry::normalize(robot_to_ball_vector);
   intent.face_target = world.ball.pos;
   intent.planner_options.avoid_ball = false;
 
-  const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
-      world.ball.pos));
+  // const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
+  //     world.ball.pos));
 
-  const auto decel_distance = distance_to_ball - approach_radius_;
+  // const auto decel_distance = distance_to_ball - approach_radius_;
 
-  const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
-      (capture_speed_ * capture_speed_));
+  // const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
+  //     (capture_speed_ * capture_speed_));
 
-  intent.limits.linear_velocity = std::min(max_decel_vel, max_speed_);
+  // intent.limits.linear_velocity = std::min(max_decel_vel, max_speed_);
 
+  intent.limits.linear_velocity = max_speed_;
+  intent.limits.linear_acceleration = decel_limit_;
   RobotCommand command;
   command.motion_intent = intent;
 
@@ -108,18 +112,24 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
   RobotCommand command;
 
   if(world.ball.visible) {
-    motion::intents::LinearVelocityAngularFacing intent;
-    intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
+    motion::intents::PositionFacing intent;
+    intent.planner_options.avoid_ball = false;
+    intent.position = world.ball.pos;
     intent.face_target = world.ball.pos;
+    intent.limits.linear_velocity = capture_speed_;
+    intent.limits.linear_acceleration = 1.5;
     command.motion_intent = intent;
   } else {
-    motion::intents::Velocity intent;
-    intent.linear = ateam_geometry::Vector{capture_speed_, 0.0};
-    intent.angular = 0.0;
+    motion::intents::Position intent;
+    intent.planner_options.avoid_ball = false;
+    intent.position = world.ball.pos;
+    intent.heading = robot.theta;
+    intent.limits.linear_velocity = capture_speed_;
+    intent.limits.linear_acceleration = 1.5;
     command.motion_intent = intent;
   }
 
-  command.dribbler_speed = kDefaultDribblerSpeed;
+  command.dribbler_speed = 0.3 * kDefaultDribblerSpeed;
 
   return command;
 }

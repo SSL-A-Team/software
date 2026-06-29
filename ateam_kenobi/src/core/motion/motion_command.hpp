@@ -40,7 +40,9 @@ enum class ControlMode
   GlobalVelocity = 2,
   LocalVelocity = 3,
   GlobalAccel = 4,
-  LocalAccel = 5
+  LocalAccel = 5,
+  HeadingPivot = 6,
+  PointPivot = 7
 };
 
 struct MotionCommand
@@ -53,6 +55,15 @@ struct MotionCommand
   double limit_vel_angular = 0.0;
   double limit_acc_linear = 0.0;
   double limit_acc_angular = 0.0;
+
+  double pivot_target_x = 0.0;
+  double pivot_target_y = 0.0;
+  double pivot_global_theta = 0.0;
+  double pivot_orbit_radius = 0.0;
+  double pivot_inset_angle = 0.0;
+
+  uint8_t pivot_direction = 0;
+  bool pivot_commpute_inset_angle = false;
 };
 
 }  // namespace ateam_kenobi::motion

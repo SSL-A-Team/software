@@ -39,6 +39,11 @@ enum class Frame
   Local
 };
 
+enum class PivotDirection {
+  Forward = 0,
+  Backward = 1
+};
+
 struct Limits
 {
   double linear_velocity = 0.0;
@@ -110,6 +115,20 @@ struct PivotHeading
 {
   double target_heading;
   double radius = 0.089;  // Estimated radius of bot holding ball
+  double inset_angle = 0.0;
+  PivotDirection direction = PivotDirection::Forward;
+  bool compute_inset_angle = false;
+  Limits limits;
+};
+
+struct PivotPoint
+{
+  double target_x;
+  double target_y;
+  double radius = 0.089;  // Estimated radius of bot holding ball
+  double inset_angle = 0.0;
+  PivotDirection direction = PivotDirection::Forward;
+  bool compute_inset_angle = false;
   Limits limits;
 };
 
@@ -124,7 +143,8 @@ using MotionIntent = std::variant<
   intents::Position,
   intents::PositionFacing,
   intents::PivotVelocity,
-  intents::PivotHeading>;
+  intents::PivotHeading,
+  intents::PivotPoint>;
 
 }  // namespace ateam_kenobi::motion
 

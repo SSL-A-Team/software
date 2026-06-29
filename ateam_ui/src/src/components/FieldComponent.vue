@@ -267,6 +267,9 @@ export default {
         },
         getFieldRotation: function() {
             return this.state.renderConfig.angle;
+        },
+        getTeamColor: function() {
+            return this.state.world.team;
         }
     },
     watch: {
@@ -321,6 +324,11 @@ export default {
                 this.redraw();
             },
             deep: false
+        },
+        getTeamColor: {
+            handler() {
+                this.redraw();
+            },
         }
     }
 }

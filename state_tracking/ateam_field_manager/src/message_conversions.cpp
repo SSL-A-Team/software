@@ -148,6 +148,7 @@ ateam_msgs::msg::FieldInfo fromMsg(
       break;
   }
 
+  field_info.ignore_side_raw = ignore_side;
   field_info.ignore_side = mapIgnoredSide(team_side, ignore_side);
 
   return field_info;

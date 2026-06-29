@@ -98,7 +98,7 @@ private:
 
   RobotCommand Capture(const World & world, const Robot & robot);
 
-  RobotCommand Pivot(const Robot & robot);
+  RobotCommand Pivot(const World & world, const Robot & robot);
 
   RobotCommand KickBall(const Robot & robot);
 };

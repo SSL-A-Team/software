@@ -24,6 +24,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <stdexcept>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include "robot_maneuvers.hpp"
 
 namespace ateam_ssl_simulation_radio_bridge::message_conversions
 {
@@ -52,13 +53,14 @@ double ReplaceNanWithZero(const double val, rclcpp::Logger logger)
 }
 
 RobotControl fromMsg(
-  const ateam_msgs::msg::RobotMotionCommand & ros_msg, int robot_id,
+  const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot,
+  ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor & maneuver_executor,
   rclcpp::Logger logger)
 {
   RobotControl robots_control;
   RobotCommand * proto_robot_command = robots_control.add_robot_commands();
 
-  proto_robot_command->set_id(robot_id);
+  proto_robot_command->set_id(robot.id);
   proto_robot_command->set_dribbler_speed(ReplaceNanWithZero(9.5492968 * ros_msg.dribbler_speed,
       logger));
 
@@ -78,11 +80,7 @@ RobotControl fromMsg(
   }
 
   RobotMoveCommand * robot_move_command = proto_robot_command->mutable_move_command();
-  MoveLocalVelocity * local_velocity_command = robot_move_command->mutable_local_velocity();
-
-  local_velocity_command->set_forward(ReplaceNanWithZero(ros_msg.velocity.x, logger));
-  local_velocity_command->set_left(ReplaceNanWithZero(ros_msg.velocity.y, logger));
-  local_velocity_command->set_angular(ReplaceNanWithZero(ros_msg.velocity.theta, logger));
+  maneuver_executor.execute_maneuver(robot_move_command, ros_msg, robot);
 
   return robots_control;
 }
