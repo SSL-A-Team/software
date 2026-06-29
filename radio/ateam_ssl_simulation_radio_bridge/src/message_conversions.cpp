@@ -61,8 +61,7 @@ RobotControl fromMsg(
   RobotCommand * proto_robot_command = robots_control.add_robot_commands();
 
   proto_robot_command->set_id(robot.id);
-  proto_robot_command->set_dribbler_speed(ReplaceNanWithZero(9.5492968 * ros_msg.dribbler_speed,
-      logger));
+  proto_robot_command->set_dribbler_speed(3000);  // hardcoded to 3,000 RPM because our dribbler setpoint is an effort factor
 
   switch (ros_msg.kick_request) {
     case ateam_msgs::msg::RobotMotionCommand::KR_ARM:

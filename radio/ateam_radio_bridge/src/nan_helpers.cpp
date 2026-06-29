@@ -58,7 +58,7 @@ void ReplaceNanWithZero(ateam_msgs::msg::RobotMotionCommand & command, rclcpp::L
   ReplaceNanWithZero(command.limit_acc_linear, logger);
   ReplaceNanWithZero(command.limit_acc_angular, logger);
   ReplaceNanWithZero(command.kick_speed, logger);
-  ReplaceNanWithZero(command.dribbler_speed, logger);
+  ReplaceNanWithZero(command.dribbler_setpoint, logger);
 }
 
 void ReplaceNanWithZero(ateam_msgs::msg::VisionStateRobot & vision_state, rclcpp::Logger logger)
