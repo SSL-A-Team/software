@@ -66,7 +66,7 @@ public:
     declare_parameter("ssl_sim_yellow_port", 10302);
     declare_parameter("command_timeout_ms", 100);
 
-    team_color_change_callback(ateam_common::TeamColor::Unknown);
+    team_color_change_callback(ateam_common::TeamColor::Blue);
 
     create_indexed_subscribers
     <ateam_msgs::msg::RobotMotionCommand>(
@@ -169,9 +169,13 @@ public:
     world_ = msg;
   }
 
-  void send_command(const ateam_msgs::msg::RobotMotionCommand & msg, const int robot_id)
+  void send_command(const ateam_msgs::msg::RobotMotionCommand & msg, int robot_id)
   {
     if (!udp_robot_control_) {
+      return;
+    }
+
+    if (robot_id >= world_.our_robots.size()) {
       return;
     }
 
