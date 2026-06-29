@@ -77,12 +77,12 @@ public:
         {"linear.x.scale", 1.0},
         {"linear.y.scale", 1.0},
         {"angular.z.scale", 1.0},
-        {"dribbler.max", 1000.0},
+        {"dribbler.max", 1.0},
         {"dribbler.min", 0.0}
       });
 
     // controls the size of steps when changing dribbler speed
-    declare_parameter<double>("dribbler_speed_step", 10.0);
+    declare_parameter<double>("dribbler_speed_step", 0.01);
 
     declare_parameter<double>("kick_speed", 5.0);
     declare_parameter<double>("chip_speed", 5.0);
@@ -185,9 +185,9 @@ private:
       dribbler_speed_, static_cast<float>(get_parameter("mapping.dribbler.min").as_double()),
       static_cast<float>(get_parameter("mapping.dribbler.max").as_double()));
     if (dribbler_spin_trigger_(*joy_message)) {
-      command_message.dribbler_speed = dribbler_speed_;
+      command_message.dribbler_setpoint = dribbler_speed_;
     } else {
-      command_message.dribbler_speed = 0.0;
+      command_message.dribbler_setpoint = 0.0;
     }
 
     control_publisher_->publish(command_message);
