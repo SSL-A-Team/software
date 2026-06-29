@@ -36,13 +36,16 @@ struct Twist2D
 enum class ControlMode
 {
   Off = 0,
-  GlobalPosition = 1,
-  GlobalVelocity = 2,
-  LocalVelocity = 3,
-  GlobalAccel = 4,
-  LocalAccel = 5,
-  HeadingPivot = 6,
-  PointPivot = 7
+  EstopBrake = 1,
+  GlobalPosition = 10,
+  GlobalVelocity = 11,
+  LocalVelocity = 12,
+  GlobalAccel = 13,
+  LocalAccel = 14,
+  HeadingPivot = 20,
+  PointPivot = 21,
+  HeadingLine = 30,
+  PointLine = 31
 };
 
 struct MotionCommand

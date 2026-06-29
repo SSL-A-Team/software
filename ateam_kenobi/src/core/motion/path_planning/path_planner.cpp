@@ -157,16 +157,8 @@ void PathPlanner::FillMotionCommands(
         command.limit_vel_linear = target.limits.linear_velocity;
         commands[i] = command;
       } else {
-        // TODO(barulicm) use new e-stop mode
         MotionCommand command;
-        command.control_mode = ControlMode::LocalVelocity;
-        command.velocity.x = 0.0;
-        command.velocity.y = 0.0;
-        command.velocity.theta = 0.0;
-        command.limit_acc_angular = target.limits.angular_acceleration;
-        command.limit_vel_angular = target.limits.angular_velocity;
-        command.limit_acc_linear = target.limits.linear_acceleration;
-        command.limit_vel_linear = target.limits.linear_velocity;
+        command.control_mode = ControlMode::EstopBrake;
         commands[i] = command;
       }
       continue;
