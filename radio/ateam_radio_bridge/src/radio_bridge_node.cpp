@@ -299,13 +299,15 @@ private:
         motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
         motion_commands_[id].body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_OFF;
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
-        motion_commands_[id].dribbler_speed = 0.0;
+        motion_commands_[id].dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_DISABLE;
       }
       BasicControl control_msg{};
       control_msg.request_shutdown = shutdown_requested_[id];
       control_msg.reboot_robot = reboot_requested_[id];
       control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
         ateam_common::GameCommand::Stop;
+      control_msg.game_state_in_halt = game_controller_listener_.GetGameCommand() ==
+        ateam_common::GameCommand::Halt;
       control_msg.emergency_stop = false;
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
       control_msg.wheel_torque_control_enabled =
@@ -315,9 +317,9 @@ private:
       FillVisionUpdate(control_msg, id);
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.play_song = 0;
-      control_msg.reserved2[0] = 0;
       control_msg.kick_vel = motion_commands_[id].kick_speed;
-      control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
+      control_msg.dribbler_setpoint = motion_commands_[id].dribbler_setpoint;
+      control_msg.dribbler_mode = static_cast<DribblerCommand>(motion_commands_[id].dribbler_mode);
       FillBodyControl(control_msg, motion_commands_[id]);
 
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
@@ -405,6 +407,43 @@ private:
             static_cast<PivotDirection>(command.pivot_direction),
             static_cast<uint8_t>(command.pivot_compute_inset_angle),
             {0, 0}
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE:
+          control_msg.body_control_mode = BCM_HEADING_LINE;
+          control_msg.cmd.heading_line = {
+            static_cast<float>(command.line_start_x),
+            static_cast<float>(command.line_start_y),
+            static_cast<float>(command.line_dir_x),
+            static_cast<float>(command.line_dir_y),
+            static_cast<float>(command.line_velocity),
+            static_cast<float>(command.pivot_global_theta),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_angular),
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_angular),
+            static_cast<float>(command.line_colinear_start_thresh)
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE:
+          control_msg.body_control_mode = BCM_POINT_LINE;
+          control_msg.cmd.point_line = {
+            static_cast<float>(command.line_start_x),
+            static_cast<float>(command.line_start_y),
+            static_cast<float>(command.line_dir_x),
+            static_cast<float>(command.line_dir_y),
+            static_cast<float>(command.line_velocity),
+            static_cast<float>(command.line_target_x),
+            static_cast<float>(command.line_target_y),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_linear),
+            static_cast<float>(command.limit_vel_angular),
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_angular),
+            static_cast<float>(command.line_colinear_start_thresh)
           };
           break;
         default:
