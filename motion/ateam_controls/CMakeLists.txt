@@ -7,6 +7,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
+set(RUST_TARGET_DIR ${CMAKE_CURRENT_BINARY_DIR}/rs-target)
 add_subdirectory(controls)
 
 

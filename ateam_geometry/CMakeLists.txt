@@ -66,4 +66,4 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
-ament_package()
+ament_package(CONFIG_EXTRAS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ateam_geometry-extras.cmake")

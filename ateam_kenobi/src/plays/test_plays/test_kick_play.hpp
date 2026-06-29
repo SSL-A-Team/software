@@ -59,8 +59,11 @@ public:
     }
     const auto robot = robots.front();
 
-    // aim for center of opponent goal
-    const ateam_geometry::Point target(world.field.field_length / 2.0, 0.0);
+    // // aim for center of opponent goal
+    // const ateam_geometry::Point target(world.field.field_length / 2.0, 0.0);
+
+    // aim for center of our goal
+    const ateam_geometry::Point target(-world.field.field_length / 2.0, 0.0);
 
     line_kick_skill_.SetTargetPoint(target);
     pivot_kick_skill_.SetTargetPoint(target);

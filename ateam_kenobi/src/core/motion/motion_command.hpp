@@ -36,16 +36,21 @@ struct Twist2D
 enum class ControlMode
 {
   Off = 0,
-  GlobalPosition = 1,
-  GlobalVelocity = 2,
-  LocalVelocity = 3,
-  GlobalAccel = 4,
-  LocalAccel = 5
+  EStopBrake = 1,
+  GlobalPosition = 10,
+  GlobalVelocity = 11,
+  LocalVelocity = 12,
+  GlobalAccel = 13,
+  LocalAccel = 14,
+  HeadingPivot = 20,
+  PointPivot = 21,
+  HeadingLine = 30,
+  PointLine = 31
 };
 
 struct MotionCommand
 {
-  ControlMode control_mode;
+  ControlMode control_mode = ControlMode::Off;
   Twist2D pose;
   Twist2D velocity;
   Twist2D acceleration;
@@ -53,6 +58,15 @@ struct MotionCommand
   double limit_vel_angular = 0.0;
   double limit_acc_linear = 0.0;
   double limit_acc_angular = 0.0;
+
+  double pivot_target_x = 0.0;
+  double pivot_target_y = 0.0;
+  double pivot_global_theta = 0.0;
+  double pivot_orbit_radius = 0.0;
+  double pivot_inset_angle = 0.0;
+
+  uint8_t pivot_direction = 0;
+  bool pivot_commpute_inset_angle = false;
 };
 
 }  // namespace ateam_kenobi::motion

@@ -23,8 +23,8 @@
 #include <vector>
 #include <ateam_geometry/angles.hpp>
 #include <ateam_geometry/nearest_point.hpp>
-#include "core/path_planning/obstacles.hpp"
-#include "core/path_planning/escape_velocity.hpp"
+#include "path_planning/obstacles.hpp"
+#include "escape_velocity.hpp"
 #include "frame_conversions.hpp"
 #include "pivot_control.hpp"
 
@@ -59,88 +59,9 @@ std::array<std::optional<MotionCommand>,
     }, intent);
   }
 
-  ExecutePathPlanningTargets(commands, overlays, world);
+  planner_.Execute(commands, path_planning_targets_, world, overlays);
 
   return commands;
-}
-
-void MotionExecutor::ExecutePathPlanningTargets(
-  std::array<std::optional<MotionCommand>, 16> & commands,
-  visualization::Overlays & overlays, const World & world)
-{
-  for(const auto & target : path_planning_targets_) {
-    const auto & robot = world.our_robots[target.robot_id];
-    auto & planner = planners_[target.robot_id];
-    const auto path = planner.getPath(robot.pos, target.position, world, target.obstacles,
-        target.planner_options);
-    MotionCommand command;
-    if(path.empty()) {
-      command.control_mode = ControlMode::Off;
-    } else {
-      const auto [closest_index, closest_point] = ProjectRobotOnPath(path, robot);
-      const auto pose = path[closest_index];
-      command.control_mode = ControlMode::GlobalPosition;
-      command.pose.x = pose.x();
-      command.pose.y = pose.y();
-      command.pose.theta = target.heading;
-    }
-    command.limit_vel_linear = target.limits.linear_velocity;
-    command.limit_vel_angular = target.limits.angular_velocity;
-    command.limit_acc_linear = target.limits.linear_acceleration;
-    command.limit_acc_angular = target.limits.angular_acceleration;
-    commands[target.robot_id] = command;
-
-    const auto name_prefix = "motion/robot_" + std::to_string(robot.id) + "/";
-    if(path.empty()) {
-      overlays.drawLine(name_prefix + "path", {robot.pos, target.position}, "Red");
-    } else if(path.size() == 1) {
-      overlays.drawLine(name_prefix + "path", {robot.pos, target.position}, "Purple");
-    } else {
-      const auto [closest_index, closest_point] = ProjectRobotOnPath(path, robot);
-      std::vector<ateam_geometry::Point> path_done(path.begin(), path.begin() + (closest_index));
-      path_done.push_back(closest_point);
-      std::vector<ateam_geometry::Point> path_remaining(path.begin() + (closest_index),
-        path.end());
-      path_remaining.insert(path_remaining.begin(), closest_point);
-      const auto translucent_purple = "#8000805F";
-      overlays.drawLine(name_prefix + "path_done", path_done, translucent_purple);
-      overlays.drawLine(name_prefix + "path_remaining", path_remaining, "Purple");
-      const auto & planner = planners_[robot.id];
-      if (planner.didTimeOut()) {
-        overlays.drawLine(name_prefix + "afterpath", {path.back(), target.position},
-            "LightSkyBlue");
-      } else if (planner.isPathTruncated()) {
-        overlays.drawLine(name_prefix + "afterpath", {path.back(), target.position}, "LightPink");
-      }
-    }
-    overlays.merge(planner.getOverlays());
-  }
-}
-
-std::pair<size_t, ateam_geometry::Point> MotionExecutor::ProjectRobotOnPath(
-  const path_planning::Path & path, const Robot & robot)
-{
-  if (path.empty()) {
-    return {0, robot.pos};
-  }
-  if (path.size() == 1) {
-    return {0, path[0]};
-  }
-  auto closest_point = ateam_geometry::nearestPointOnSegment(ateam_geometry::Segment(path[0],
-      path[1]), robot.pos);
-  size_t closest_index = 1;
-  double min_distance = CGAL::squared_distance(closest_point, robot.pos);
-  for (size_t i = 1; i < path.size() - 1; ++i) {
-    const auto segment = ateam_geometry::Segment(path[i], path[i + 1]);
-    const auto point_on_segment = ateam_geometry::nearestPointOnSegment(segment, robot.pos);
-    const auto distance = CGAL::squared_distance(point_on_segment, robot.pos);
-    if (distance <= min_distance) {
-      min_distance = distance;
-      closest_point = point_on_segment;
-      closest_index = i + 1;
-    }
-  }
-  return {closest_index, closest_point};
 }
 
 std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
@@ -263,13 +184,12 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
 {
   (void)overlays;
   (void)world;
-  path_planning_targets_.push_back(PathPlanningTarget{
+  path_planning_targets_.push_back(path_planning::PathPlanningTarget{
       robot.id,
       intent.position,
       intent.heading,
       intent.planner_options,
       intent.obstacles,
-      intent.enable_escape_velocities,
       intent.limits
   });
   return std::nullopt;
@@ -284,13 +204,12 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   const auto heading = atan2(
           intent.face_target.y() - robot.pos.y(),
           intent.face_target.x() - robot.pos.x());
-  path_planning_targets_.push_back(PathPlanningTarget{
+  path_planning_targets_.push_back(path_planning::PathPlanningTarget{
       robot.id,
       intent.position,
       heading,
       intent.planner_options,
       intent.obstacles,
-      intent.enable_escape_velocities,
       intent.limits
   });
   return std::nullopt;
@@ -312,7 +231,41 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
 {
   (void)overlays;
   (void)world;
-  return PivotToHeading(intent, robot);
+  (void)robot;
+
+  MotionCommand command;
+  command.control_mode = ControlMode::HeadingPivot;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  command.pivot_global_theta = intent.target_heading;
+  command.pivot_orbit_radius = intent.radius;
+  command.pivot_inset_angle = intent.inset_angle;
+  command.pivot_direction = static_cast<uint8_t>(intent.direction);
+  command.pivot_commpute_inset_angle = intent.compute_inset_angle;
+
+  return command;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::PivotPoint & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)overlays;
+  (void)world;
+  (void)robot;
+
+  MotionCommand command;
+  command.control_mode = ControlMode::PointPivot;
+  command.limit_vel_angular = intent.limits.angular_velocity;
+  command.limit_acc_angular = intent.limits.angular_acceleration;
+  command.pivot_target_x = intent.target_x;
+  command.pivot_target_y = intent.target_y;
+  command.pivot_orbit_radius = intent.radius;
+  command.pivot_inset_angle = intent.inset_angle;
+  command.pivot_direction = static_cast<uint8_t>(intent.direction);
+  command.pivot_commpute_inset_angle = intent.compute_inset_angle;
+
+  return command;
 }
 
 }  // namespace ateam_kenobi::motion

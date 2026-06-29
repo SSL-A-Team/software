@@ -63,7 +63,9 @@ std::array<std::optional<RobotCommand>, 16> HaltPlay::runFrame(
     if (robot_halted_[i]) {
       command.motion_intent = motion::intents::None{};
     } else {
-      command.motion_intent = motion::intents::Stop{};
+      // TODO(barulicm): Revisit this if we figure out a safer way to stop the robot
+      // command.motion_intent = motion::intents::Stop{};
+      command.motion_intent = motion::intents::None{};
     }
 
     halt_motion_commands[i] = command;

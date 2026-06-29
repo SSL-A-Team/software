@@ -36,6 +36,7 @@
 #include "nearest_point.hpp"
 #include "normalize.hpp"
 #include "orientation.hpp"
+#include "printing.hpp"
 #include "types.hpp"
 
 #endif  // ATEAM_GEOMETRY__ATEAM_GEOMETRY_HPP_

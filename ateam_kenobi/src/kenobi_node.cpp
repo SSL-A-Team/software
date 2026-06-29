@@ -230,7 +230,8 @@ private:
         const auto & cmd = maybe_cmd.value();
         const auto & motion_cmd = maybe_motion_cmd.value();
         auto & ros_cmd = ros_commands[id].emplace();
-        ros_cmd.dribbler_speed = cmd.dribbler_speed;
+        ros_cmd.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_CURRENT;
+        ros_cmd.dribbler_setpoint = cmd.dribbler_setpoint;
         ros_cmd.kick_request = static_cast<uint8_t>(cmd.kick);
         ros_cmd.kick_speed = cmd.kick_speed;
         ros_cmd.body_control_mode = static_cast<uint8_t>(motion_cmd.control_mode);
@@ -247,6 +248,13 @@ private:
         ros_cmd.limit_vel_angular = motion_cmd.limit_vel_angular;
         ros_cmd.limit_acc_linear = motion_cmd.limit_acc_linear;
         ros_cmd.limit_acc_angular = motion_cmd.limit_acc_angular;
+        ros_cmd.pivot_target_x = motion_cmd.pivot_target_x;
+        ros_cmd.pivot_target_y = motion_cmd.pivot_target_y;
+        ros_cmd.pivot_global_theta = motion_cmd.pivot_global_theta;
+        ros_cmd.pivot_orbit_radius = motion_cmd.pivot_orbit_radius;
+        ros_cmd.pivot_inset_angle = motion_cmd.pivot_inset_angle;
+        ros_cmd.pivot_direction = motion_cmd.pivot_direction;
+        ros_cmd.pivot_compute_inset_angle = motion_cmd.pivot_commpute_inset_angle;
       }
     }
 

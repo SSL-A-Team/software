@@ -27,9 +27,8 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include "core/types/state_types.hpp"
-#include "core/path_planning/path.hpp"
-#include "core/path_planning/planner_options.hpp"
 #include "motion_options.hpp"
+#include "path_planning/planner_options.hpp"
 
 namespace ateam_kenobi::motion
 {
@@ -38,6 +37,11 @@ enum class Frame
 {
   World,
   Local
+};
+
+enum class PivotDirection {
+  Forward = 0,
+  Backward = 1
 };
 
 struct Limits
@@ -88,7 +92,6 @@ struct Position
   double heading;
   path_planning::PlannerOptions planner_options;
   std::vector<ateam_geometry::AnyShape> obstacles;
-  bool enable_escape_velocities = true;
   Limits limits;
 };
 
@@ -98,7 +101,6 @@ struct PositionFacing
   ateam_geometry::Point face_target;
   path_planning::PlannerOptions planner_options;
   std::vector<ateam_geometry::AnyShape> obstacles;
-  bool enable_escape_velocities = true;
   Limits limits;
 };
 
@@ -113,6 +115,20 @@ struct PivotHeading
 {
   double target_heading;
   double radius = 0.089;  // Estimated radius of bot holding ball
+  double inset_angle = 0.0;
+  PivotDirection direction = PivotDirection::Forward;
+  bool compute_inset_angle = false;
+  Limits limits;
+};
+
+struct PivotPoint
+{
+  double target_x;
+  double target_y;
+  double radius = 0.089;  // Estimated radius of bot holding ball
+  double inset_angle = 0.0;
+  PivotDirection direction = PivotDirection::Forward;
+  bool compute_inset_angle = false;
   Limits limits;
 };
 
@@ -127,7 +143,8 @@ using MotionIntent = std::variant<
   intents::Position,
   intents::PositionFacing,
   intents::PivotVelocity,
-  intents::PivotHeading>;
+  intents::PivotHeading,
+  intents::PivotPoint>;
 
 }  // namespace ateam_kenobi::motion
 

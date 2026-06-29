@@ -60,6 +60,7 @@ rclcpp_components_register_node(
 )
 
 ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(tf2 tf2_geometry_msgs)
 
 install(
   DIRECTORY include/

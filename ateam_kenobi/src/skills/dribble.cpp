@@ -188,14 +188,14 @@ RobotCommand Dribble::runMoveBehindBall(
   intent.face_target = target_;
   intent.planner_options.footprint_inflation = 0.06;
   intent.planner_options.draw_obstacles = true;
-  intent.planner_options.ignore_start_obstacle = false;
+  intent.planner_options.ignore_start_obstacles = false;
   intent.limits.linear_velocity = 1.5;
 
   RobotCommand command;
   command.motion_intent = intent;
 
   if (ateam_geometry::norm(robot.pos - world.ball.pos) < 0.5) {
-    command.dribbler_speed = 130;
+    command.dribbler_setpoint = 0.025;
   }
   return command;
 }
@@ -217,7 +217,7 @@ RobotCommand Dribble::runDribble(const Robot & robot)
 
   RobotCommand command;
   command.motion_intent = intent;
-  command.dribbler_speed = 130;
+  command.dribbler_setpoint = 0.025;
 
   return command;
 }

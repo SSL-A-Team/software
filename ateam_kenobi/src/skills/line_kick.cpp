@@ -221,11 +221,13 @@ RobotCommand LineKick::RunMoveBehindBall(
   return command;
 }
 
-RobotCommand LineKick::RunFaceBall(const World &, const Robot & robot)
+RobotCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
 {
+  (void) robot;
   motion::intents::PositionFacing intent;
   intent.face_target = target_point_;
-  intent.position = robot.pos;
+  // intent.position = robot.pos;
+  intent.position = GetPreKickPosition(world);
   RobotCommand command;
   command.motion_intent = intent;
   return command;
@@ -233,9 +235,14 @@ RobotCommand LineKick::RunFaceBall(const World &, const Robot & robot)
 
 RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
 {
-  motion::intents::PositionFacing intent;
+  const auto ball_to_target = target_point_ - world.ball.pos;
+  const auto ball_to_target_angle = std::atan2(ball_to_target.y(), ball_to_target.x());
+
+  // motion::intents::PositionFacing intent;
+  motion::intents::Position intent;
   intent.position = world.ball.pos;
-  intent.face_target = world.ball.pos;
+  intent.heading = ball_to_target_angle;
+  // intent.face_target = world.ball.pos;
   intent.limits.linear_velocity = kick_drive_velocity;
   intent.planner_options.avoid_ball = false;
   intent.planner_options.use_default_obstacles = false;

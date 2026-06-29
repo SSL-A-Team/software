@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,15 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef CORE__PATH_PLANNING__ESCAPE_VELOCITY_HPP_
-#define CORE__PATH_PLANNING__ESCAPE_VELOCITY_HPP_
+#ifndef CORE__MOTION__ESCAPE_VELOCITY_HPP_
+#define CORE__MOTION__ESCAPE_VELOCITY_HPP_
 
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include <ateam_geometry/any_shape.hpp>
 #include "core/types/state_types.hpp"
 
-namespace ateam_kenobi::path_planning
+namespace ateam_kenobi::motion
 {
 
 constexpr double kSafeEscapeVelocity = 0.3;  // m/s
@@ -63,6 +63,6 @@ std::optional<ateam_geometry::Vector> GenerateEscapeVelocity(
   const Robot & robot,
   const std::vector<ateam_geometry::AnyShape> & obstacles, double footprint_inflation = 0.06);
 
-}  // namespace ateam_kenobi::path_planning
+}  // namespace ateam_kenobi::motion
 
-#endif  // CORE__PATH_PLANNING__ESCAPE_VELOCITY_HPP_
+#endif  // CORE__MOTION__ESCAPE_VELOCITY_HPP_
