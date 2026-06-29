@@ -195,7 +195,7 @@ RobotCommand Dribble::runMoveBehindBall(
   command.motion_intent = intent;
 
   if (ateam_geometry::norm(robot.pos - world.ball.pos) < 0.5) {
-    command.dribbler_speed = 130;
+    command.dribbler_setpoint = 0.025;
   }
   return command;
 }
@@ -217,7 +217,7 @@ RobotCommand Dribble::runDribble(const Robot & robot)
 
   RobotCommand command;
   command.motion_intent = intent;
-  command.dribbler_speed = 130;
+  command.dribbler_setpoint = 0.025;
 
   return command;
 }
