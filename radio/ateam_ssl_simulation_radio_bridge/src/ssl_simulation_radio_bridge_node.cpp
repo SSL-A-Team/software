@@ -23,6 +23,7 @@
 #include <ssl_league_protobufs/ssl_simulation_control.pb.h>
 
 #include <array>
+#include <cmath>
 #include <string>
 #include <functional>
 #include <stdexcept>
@@ -39,6 +40,7 @@
 #include <ateam_radio_msgs/msg/connection_status.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/game_state_world.hpp>
+#include <ateam_msgs/msg/overlay_array.hpp>
 #include <ateam_msgs/srv/send_simulator_control_packet.hpp>
 
 #include "message_conversions.hpp"
@@ -91,6 +93,9 @@ public:
     world_subscription_ = create_subscription<ateam_msgs::msg::GameStateWorld>(
       std::string(Topics::kWorld), rclcpp::SystemDefaultsQoS(),
       std::bind(&SSLSimulationRadioBridgeNode::world_callback, this, std::placeholders::_1));
+
+    overlay_publisher_ = create_publisher<ateam_msgs::msg::OverlayArray>(
+      "/overlays", rclcpp::SystemDefaultsQoS());
 
     send_simulator_control_service_ =
       create_service<ateam_msgs::srv::SendSimulatorControlPacket>("~/send_simulator_control_packet",
@@ -169,7 +174,9 @@ public:
     world_ = msg;
   }
 
-  void send_command(const ateam_msgs::msg::RobotMotionCommand & msg, int robot_id)
+  void send_command(
+    const ateam_msgs::msg::RobotMotionCommand & msg, int robot_id,
+    ateam_msgs::msg::OverlayArray & overlays)
   {
     if (!udp_robot_control_) {
       return;
@@ -191,7 +198,68 @@ public:
       if (robots_control.SerializeToArray(buffer.data(), buffer.size())) {
         udp_robot_control_->send(static_cast<uint8_t *>(buffer.data()), buffer.size());
       }
+      append_trajectory_overlay(overlays, robot_id, maneuver_executor);
     }
+  }
+
+  void append_trajectory_overlay(
+    ateam_msgs::msg::OverlayArray & overlays, int robot_id,
+    const robot_maneuvers::ManeuverExecutor & maneuver_executor)
+  {
+    if (!maneuver_executor.is_initialized()) {
+      return;
+    }
+
+    const double x = maneuver_executor.reference_x();
+    const double y = maneuver_executor.reference_y();
+    const double theta = maneuver_executor.reference_theta();
+
+    constexpr double kMarkerRadius = 0.09;   // meters
+    constexpr double kHeadingLength = 0.12;  // meters
+    const std::string kNamespace = "ateam_ssl_simulation_radio_bridge";
+    const std::string kColor = "#00E5FFFF";  // cyan
+    constexpr uint32_t kLifetimeMs = 150;
+
+    // Circle marker at the trajectory position.
+    ateam_msgs::msg::Overlay marker;
+    marker.ns = kNamespace;
+    marker.name = "trajectory_pose_robot" + std::to_string(robot_id);
+    marker.visible = true;
+    marker.type = ateam_msgs::msg::Overlay::ELLIPSE;
+    marker.command = ateam_msgs::msg::Overlay::REPLACE;
+    marker.position.x = x;
+    marker.position.y = y;
+    marker.scale.x = 2.0 * kMarkerRadius;
+    marker.scale.y = 2.0 * kMarkerRadius;
+    marker.stroke_color = kColor;
+    marker.fill_color = "#00000000";
+    marker.stroke_width = 1;
+    marker.lifetime = kLifetimeMs;
+    marker.depth = 1;
+    overlays.overlays.push_back(marker);
+
+    // Heading indicator from the trajectory position along theta.
+    ateam_msgs::msg::Overlay heading;
+    heading.ns = kNamespace;
+    heading.name = "trajectory_heading_robot" + std::to_string(robot_id);
+    heading.visible = true;
+    heading.type = ateam_msgs::msg::Overlay::LINE;
+    heading.command = ateam_msgs::msg::Overlay::REPLACE;
+    heading.position.x = 0.0;
+    heading.position.y = 0.0;
+    heading.stroke_color = kColor;
+    heading.stroke_width = 1;
+    heading.lifetime = kLifetimeMs;
+    heading.depth = 1;
+    geometry_msgs::msg::Point start;
+    start.x = x;
+    start.y = y;
+    geometry_msgs::msg::Point end;
+    end.x = x + kHeadingLength * std::cos(theta);
+    end.y = y + kHeadingLength * std::sin(theta);
+    heading.points.push_back(start);
+    heading.points.push_back(end);
+    overlays.overlays.push_back(heading);
   }
 
   void message_callback(
@@ -230,6 +298,7 @@ public:
       get_parameter(
         "command_timeout_ms").as_int());
     const auto timeout_time = std::chrono::steady_clock::now() - timeout_duration;
+    ateam_msgs::msg::OverlayArray overlays;
     for (auto id = 0; id < 16; ++id) {
       if (command_timestamps_[id] < timeout_time) {
         ateam_msgs::msg::RobotMotionCommand zero_command = ateam_msgs::msg::RobotMotionCommand();
@@ -237,7 +306,10 @@ public:
         commands_[id] = zero_command;
       }
 
-      send_command(commands_[id], id);
+      send_command(commands_[id], id, overlays);
+    }
+    if (!overlays.overlays.empty()) {
+      overlay_publisher_->publish(overlays);
     }
   }
 
@@ -252,6 +324,7 @@ private:
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
     16> connection_publishers_;
   rclcpp::Subscription<ateam_msgs::msg::GameStateWorld>::SharedPtr world_subscription_;
+  rclcpp::Publisher<ateam_msgs::msg::OverlayArray>::SharedPtr overlay_publisher_;
   ateam_msgs::msg::GameStateWorld world_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> commands_;
   std::array<ateam_ssl_simulation_radio_bridge::robot_maneuvers::ManeuverExecutor,

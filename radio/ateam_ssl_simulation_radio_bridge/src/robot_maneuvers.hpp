@@ -53,6 +53,14 @@ public:
     RobotMoveCommand * robot_move_command,
     const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
 
+  // Whether the trajectory reference has been seeded yet.
+  bool is_initialized() const {return initialized_;}
+
+  // Current trajectory position reference in the global field frame.
+  double reference_x() const {return ref_state_.data[0];}
+  double reference_y() const {return ref_state_.data[1];}
+  double reference_theta() const {return ref_state_.data[2];}
+
 private:
   // Hold the current pose with zero velocity / acceleration.
   void hold_maneuver(ateam_msgs::msg::GameStateRobot robot);
