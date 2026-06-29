@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,18 @@ Vector3C_t Vector3FromPose(const Pose & pose)
   };
 }
 
+Vector6C_t Vector6FromPose(const Pose & pose)
+{
+  return Vector6C_t{
+    static_cast<float>(pose.position.x()),
+    static_cast<float>(pose.position.y()),
+    static_cast<float>(pose.heading),
+    0.0f,
+    0.0f,
+    0.0f
+  };
+}
+
 Pose PoseFromVector3(const Vector3C_t & vector)
 {
   return Pose{
@@ -63,9 +75,22 @@ Pose PoseFromVector6(const Vector6C_t & vector)
   };
 }
 
-double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory)
+double GetBangBangTrajectoryDuration(const BangBangTraj3D_t & trajectory)
 {
   return std::max(std::max(trajectory.x.t4, trajectory.y.t4), trajectory.z.t4);
+}
+
+
+Vector6C_t GetStateAtT(const BangBangTraj3D_t & trajectory, const double t)
+{
+  Vector6C_t state_at_t;
+  if(const auto err =
+    ateam_controls_traj_state_at(trajectory, t, &state_at_t);
+    err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  return state_at_t;
 }
 
 TrajectoryParams_t BuildTrajectoryParams(const Limits & limits)
@@ -84,6 +109,20 @@ TrajectoryParams_t BuildTrajectoryParams(const Limits & limits)
     params.max_vel_linear = limits.linear_velocity;
   }
   return params;
+}
+
+BangBangTraj3D_t GenerateTrajectory(
+  const Vector6C_t & init_state, const Vector3C_t & target_pose,
+  const TrajectoryParams_t params)
+{
+  BangBangTraj3D_t trajectory;
+  if(const auto err =
+    ateam_controls_traj_from_target_pose(init_state, target_pose, params,
+          &trajectory); err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  return trajectory;
 }
 
 const char * ControlsException::what() const noexcept

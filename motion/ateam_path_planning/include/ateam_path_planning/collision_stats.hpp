@@ -18,22 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_PATH_PLANNING__POSE_HPP_
-#define ATEAM_PATH_PLANNING__POSE_HPP_
+#ifndef ATEAM_PATH_PLANNING__COLLISION_STATS_HPP_
+#define ATEAM_PATH_PLANNING__COLLISION_STATS_HPP_
 
-#include <ateam_geometry/any_shape.hpp>
-#include <ateam_geometry/types.hpp>
+#include <optional>
 
 namespace ateam_path_planning
 {
 
-struct Pose
+struct CollisionStats
 {
-  ateam_geometry::Point position = ateam_geometry::Point(0, 0);
-  double heading = 0.0;
-};
+  std::optional<double> init_collision_end_time;
+  std::optional<double> new_collision_start_time;
 
+  bool HasCollision() const
+  {
+    return init_collision_end_time.has_value() || new_collision_start_time.has_value();
+  }
+};
 
 }  // namespace ateam_path_planning
 
-#endif  // ATEAM_PATH_PLANNING__POSE_HPP_
+#endif  // ATEAM_PATH_PLANNING__COLLISION_STATS_HPP_

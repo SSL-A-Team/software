@@ -66,6 +66,7 @@ struct PlannerOptions
   double inter_target_dist_max = 5.0;
   double inter_target_dist_step = 1.0;
   double inter_target_angle_step = 0.5;
+  bool ignore_start_obstacles = false;
   Limits limits;
   ReplanThresholds replan_thresholds;
 

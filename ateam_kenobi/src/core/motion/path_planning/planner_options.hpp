@@ -61,7 +61,7 @@ struct PlannerOptions
    *
    * Useful if you want to plan a path to escape a virtual obstacle like a keep out zone.
    */
-  bool ignore_start_obstacle = true;
+  bool ignore_start_obstacles = true;
 
   bool draw_obstacles = false;
 

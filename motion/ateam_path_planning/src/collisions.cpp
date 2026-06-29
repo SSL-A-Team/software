@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,10 +29,8 @@
 namespace ateam_path_planning::collisions
 {
 
-// TODO(barulicm): check state validity (in bounds)
-
-std::optional<double> TimeToCollision(
-  const BangBangTraj3D & trajectory,
+CollisionStats GetCollisionStats(
+  const BangBangTraj3D_t & trajectory,
   const double & start_t,
   const std::vector<Obstacle> & obstacles,
   const ateam_game_state::World & world,
@@ -42,26 +40,32 @@ std::optional<double> TimeToCollision(
 {
   const auto duration = std::min(GetBangBangTrajectoryDuration(trajectory),
       collision_check_horizon);
-  for (double t = 0.0; t < duration; t += collision_check_resolution) {
-    Vector6C_t state_at_t;
-    if(const auto err =
-      ateam_controls_traj_state_at(trajectory, t, &state_at_t);
-      err != ATEAM_CONTROLS_OK)
-    {
-      throw ControlsException(err);
+  const auto init_state = GetStateAtT(trajectory, 0.0);
+  bool was_in_collision = DoesStateCollideWithObstacles(init_state, start_t, obstacles,
+      footprint_inflation);
+  CollisionStats stats;
+  for (double t = collision_check_resolution; t < duration; t += collision_check_resolution) {
+    const auto state_at_t = GetStateAtT(trajectory, t);
+    const auto is_colliding = DoesStateCollideWithObstacles(state_at_t, t + start_t, obstacles,
+        footprint_inflation);
+    if(was_in_collision && !is_colliding) {
+      stats.init_collision_end_time = t + start_t;
     }
-    if(DoesStateCollideWithObstacles(state_at_t, t + start_t, obstacles, footprint_inflation)) {
-      return t;
+    if(!was_in_collision && is_colliding) {
+      stats.new_collision_start_time = t + start_t;
+      return stats;
     }
     if(!IsStateInBounds(state_at_t, world, footprint_inflation)) {
-      return t;
+      stats.new_collision_start_time = t + start_t;
+      return stats;
     }
+    was_in_collision = is_colliding;
   }
 
-  return std::nullopt;
+  return stats;
 }
 
-std::optional<double> TimeToCollision(
+CollisionStats GetCollisionStats(
   const TrajectorySpline & spline,
   const std::vector<Obstacle> & obstacles,
   const ateam_game_state::World & world,
@@ -69,30 +73,46 @@ std::optional<double> TimeToCollision(
   const double collision_check_horizon,
   const double footprint_inflation)
 {
+  CollisionStats stats;
+  if(spline.GetSegmentCount() == 0) {
+    return stats;
+  }
   double path_t = 0.0;
+  const auto init_state = Vector6FromPose(spline.GetStartPose());
+  bool was_in_collision = DoesStateCollideWithObstacles(init_state, 0.0, obstacles,
+      footprint_inflation);
   for(const auto & segment : spline.impl_->segments) {
     if(path_t >= collision_check_horizon) {
-      return std::nullopt;
+      return stats;
     }
     const auto horizon = std::min(collision_check_horizon - path_t, segment.duration);
-    const auto segment_collision_time = TimeToCollision(segment.trajectory, path_t, obstacles,
+    const auto segment_collision_stats = GetCollisionStats(segment.trajectory, path_t, obstacles,
         world, collision_check_resolution, horizon, footprint_inflation);
-    if(segment_collision_time.has_value()) {
-      return segment_collision_time;
+    if(segment_collision_stats.init_collision_end_time.has_value()) {
+      if(was_in_collision) {
+        stats.init_collision_end_time = segment_collision_stats.init_collision_end_time;
+        was_in_collision = false;
+      } else {
+        stats.new_collision_start_time = path_t;
+        return stats;
+      }
+    }
+    if(segment_collision_stats.new_collision_start_time.has_value()) {
+      stats.new_collision_start_time = segment_collision_stats.new_collision_start_time;
+      return stats;
     }
     path_t += segment.duration;
   }
-  return std::nullopt;
+  return stats;
 }
 
-bool DoesStateCollideWithObstacles(
-  const Vector6C_t & state,
+bool DoesPointCollideWithObstacles(
+  const ateam_geometry::Point & point,
   const double & t,
   const std::vector<Obstacle> & obstacles,
   const double footprint_inflation)
 {
-  const ateam_geometry::Point robot_pos(state.data[0], state.data[1]);
-  const auto robot_footprint = ateam_geometry::makeDisk(robot_pos,
+  const auto robot_footprint = ateam_geometry::makeDisk(point,
         kRobotRadius + footprint_inflation);
   for (const auto & obstacle : obstacles) {
     if(ateam_geometry::doIntersect(robot_footprint,
@@ -102,6 +122,31 @@ bool DoesStateCollideWithObstacles(
     }
   }
   return false;
+}
+
+bool IsPointInBounds(
+  const ateam_geometry::Point & point, const ateam_game_state::World & world,
+  const double footprint_inflation)
+{
+  const auto x = point.x();
+  const auto y = point.y();
+  if((std::fabs(x) + kRobotRadius + footprint_inflation) >= (world.field.field_length / 2.0)) {
+    return false;
+  }
+  if((std::fabs(y) + kRobotRadius + footprint_inflation) >= (world.field.field_width / 2.0)) {
+    return false;
+  }
+  return true;
+}
+
+bool DoesStateCollideWithObstacles(
+  const Vector6C_t & state,
+  const double & t,
+  const std::vector<Obstacle> & obstacles,
+  const double footprint_inflation)
+{
+  const ateam_geometry::Point robot_pos(state.data[0], state.data[1]);
+  return DoesPointCollideWithObstacles(robot_pos, t, obstacles, footprint_inflation);
 }
 
 bool IsStateInBounds(

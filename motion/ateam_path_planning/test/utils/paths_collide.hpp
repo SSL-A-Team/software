@@ -34,7 +34,7 @@
 
 class PathsCollideMatcher
   : public ::testing::MatcherInterface<
-    const std::array<std::optional<ateam_path_planning::TrajectorySpline>, 16> &>
+    const std::array<std::optional<ateam_path_planning::PathPlanResult>, 16> &>
 {
 public:
   explicit PathsCollideMatcher(const double resolution = 0.1, const double horizon = 3.0)
@@ -43,16 +43,16 @@ public:
   }
 
   bool MatchAndExplain(
-    const std::array<std::optional<ateam_path_planning::TrajectorySpline>, 16> & paths,
+    const std::array<std::optional<ateam_path_planning::PathPlanResult>, 16> & results,
     ::testing::MatchResultListener * listener) const override
   {
     std::vector<std::vector<ateam_geometry::Point>> path_points;
     size_t max_path_length = 0;
-    for (const auto & path_opt : paths) {
-      if (!path_opt.has_value()) {
+    for (const auto & result : results) {
+      if (!result.has_value()) {
         continue;
       }
-      path_points.push_back(path_opt->ToPoints(resolution_));
+      path_points.push_back(result->path.ToPoints(resolution_));
       max_path_length = std::max(max_path_length, path_points.back().size());
     }
     const auto horizon_path_length = static_cast<size_t>(horizon_ / resolution_);
@@ -103,7 +103,7 @@ private:
   const double horizon_;
 };
 
-inline ::testing::Matcher<const std::array<std::optional<ateam_path_planning::TrajectorySpline>,
+inline ::testing::Matcher<const std::array<std::optional<ateam_path_planning::PathPlanResult>,
   16> &> PathsCollide(
   double resolution = 0.1, double horizon = 3.0)
 {

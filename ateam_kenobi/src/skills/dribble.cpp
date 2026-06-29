@@ -188,7 +188,7 @@ RobotCommand Dribble::runMoveBehindBall(
   intent.face_target = target_;
   intent.planner_options.footprint_inflation = 0.06;
   intent.planner_options.draw_obstacles = true;
-  intent.planner_options.ignore_start_obstacle = false;
+  intent.planner_options.ignore_start_obstacles = false;
   intent.limits.linear_velocity = 1.5;
 
   RobotCommand command;

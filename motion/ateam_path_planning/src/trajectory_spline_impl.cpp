@@ -152,12 +152,25 @@ size_t TrajectorySplineImpl::GetSegmentCount() const
   return segments.size();
 }
 
+double TrajectorySplineImpl::GetTotalDuration() const
+{
+  return std::accumulate(segments.begin(), segments.end(), 0.0,
+           [](const double total, const TrajectorySplineSegment & seg){
+             return total + seg.duration;
+  });
+}
+
 std::chrono::steady_clock::time_point TrajectorySplineImpl::GetStartTime() const
 {
   return start_time;
 }
 
 TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl & impl)
+{
+  return TrajectorySpline(impl);
+}
+
+TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl impl)
 {
   return TrajectorySpline(impl);
 }

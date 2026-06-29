@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,12 +31,14 @@
 
 namespace ateam_path_planning
 {
+struct CollisionStats;
+struct Obstacle;
 class TrajectorySpline;
 struct TrajectorySplineImpl;
-struct Obstacle;
+
 namespace collisions
 {
-std::optional<double> TimeToCollision(
+CollisionStats GetCollisionStats(
   const TrajectorySpline & spline,
   const std::vector<Obstacle> & obstacles,
   const ateam_game_state::World & world,
@@ -74,6 +76,8 @@ public:
 
   size_t GetSegmentCount() const;
 
+  double GetTotalDuration() const;
+
   std::chrono::steady_clock::time_point GetStartTime() const;
 
 private:
@@ -82,11 +86,14 @@ private:
   std::unique_ptr<TrajectorySplineImpl> impl_;
 
   friend TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl &);
+  friend TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl);
 
-  friend std::optional<double> collisions::TimeToCollision(
+  friend CollisionStats collisions::GetCollisionStats(
     const TrajectorySpline & spline,
-    const std::vector<Obstacle> & obstacles, const ateam_game_state::World & world,
-    const double collision_check_resolution, const double collision_check_horizon,
+    const std::vector<Obstacle> & obstacles,
+    const ateam_game_state::World & world,
+    const double collision_check_resolution,
+    const double collision_check_horizon,
     const double footprint_inflation);
 };
 }  // namespace ateam_path_planning

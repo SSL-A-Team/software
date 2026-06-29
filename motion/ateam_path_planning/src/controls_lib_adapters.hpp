@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,13 +33,21 @@ Vector6C_t Vector6FromRobot(const ateam_game_state::Robot & robot);
 
 Vector3C_t Vector3FromPose(const Pose & pose);
 
+Vector6C_t Vector6FromPose(const Pose & pose);
+
 Pose PoseFromVector3(const Vector3C_t & vector);
 
 Pose PoseFromVector6(const Vector6C_t & vector);
 
-double GetBangBangTrajectoryDuration(const BangBangTraj3D & trajectory);
+double GetBangBangTrajectoryDuration(const BangBangTraj3D_t & trajectory);
+
+Vector6C_t GetStateAtT(const BangBangTraj3D_t & trajectory, const double t);
 
 TrajectoryParams_t BuildTrajectoryParams(const Limits & limits);
+
+BangBangTraj3D_t GenerateTrajectory(
+  const Vector6C_t & init_state, const Vector3C_t & target_pose,
+  const TrajectoryParams_t params);
 
 class ControlsException : public std::exception
 {

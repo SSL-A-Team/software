@@ -63,10 +63,13 @@ struct TrajectorySplineImpl
 
   size_t GetSegmentCount() const;
 
+  double GetTotalDuration() const;
+
   std::chrono::steady_clock::time_point GetStartTime() const;
 };
 
 TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl &);
+TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl);
 
 }  // namespace ateam_path_planning
 

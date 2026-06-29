@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@
 #include "pose.hpp"
 #include "trajectory_spline.hpp"
 #include "planner_options.hpp"
+#include "path_plan_result.hpp"
 
 namespace ateam_path_planning
 {
@@ -38,7 +39,7 @@ class Planner {
 public:
   Planner() = default;
 
-  std::array<std::optional<TrajectorySpline>, 16> PlanPathsForAllBots(
+  std::array<std::optional<PathPlanResult>, 16> PlanPathsForAllBots(
     const std::array<std::optional<Pose>, 16> & targets, const std::array<uint8_t, 16> & priorities,
     const ateam_game_state::World & world, const std::vector<Obstacle> & global_obstacles,
     const std::array<std::vector<Obstacle>, 16> & per_bot_obstacles,
@@ -54,7 +55,7 @@ private:
 
   std::array<std::optional<CacheEntry>, 16> cache_;
 
-  std::optional<TrajectorySpline> PlanPath(
+  std::optional<PathPlanResult> PlanPath(
     const ateam_game_state::Robot & robot, const Pose & target,
     const std::vector<Obstacle> & obstacles, const PlannerOptions & options,
     const ateam_game_state::World & world);
@@ -63,6 +64,24 @@ private:
     const ateam_game_state::Robot & robot, const Pose & target,
     const std::vector<Obstacle> & obstacles, const PlannerOptions & options,
     const ateam_game_state::World & world);
+
+  std::optional<Pose> GetTruncatedTarget(
+    const ateam_game_state::Robot & robot, const Pose & target,
+    const std::vector<Obstacle> & obstacles, const PlannerOptions & options,
+    const ateam_game_state::World & world);
+
+  void RemoveInitialCollidingObstacles(
+    std::vector<Obstacle> & obstacles,
+    const ateam_game_state::Robot & robot);
+
+  /**
+   * Compares candidate paths via multiple metrics.
+   * @returns @c std::strong_ordering::less if path_l is worse than path_r,
+   * @c std::strong_ordering::greater if path_l is better than path_r, and @c std::strong_ordering::equal otherwise
+   */
+  std::partial_ordering ComparePaths(
+    const TrajectorySpline & path_l, const CollisionStats & stats_l,
+    const TrajectorySpline & path_r, const CollisionStats & stats_r);
 };
 }  // namespace ateam_path_planning
 

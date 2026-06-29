@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@
 namespace ateam_path_planning
 {
 
-std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
+std::array<std::optional<PathPlanResult>, 16> Planner::PlanPathsForAllBots(
   const std::array<std::optional<Pose>, 16> & targets, const std::array<uint8_t, 16> & priorities,
   const ateam_game_state::World & world, const std::vector<Obstacle> & global_obstacles,
   const std::array<std::vector<Obstacle>, 16> & per_bot_obstacles,
@@ -46,7 +46,7 @@ std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
   std::vector<Obstacle> obstacles = global_obstacles;
   obstacles.insert(obstacles.end(), global_obstacles.begin(), global_obstacles.end());
 
-  std::array<std::optional<TrajectorySpline>, 16> paths;
+  std::array<std::optional<PathPlanResult>, 16> paths;
   for (int bot_index : bot_indices) {
     if (!targets[bot_index].has_value()) {
       continue;
@@ -57,22 +57,34 @@ std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
       bot_obstacles.end(), per_bot_obstacles[bot_index].begin(),
         per_bot_obstacles[bot_index].end());
 
+    if(options[bot_index].ignore_start_obstacles) {
+      RemoveInitialCollidingObstacles(bot_obstacles, bot);
+    }
+
     const auto should_replan = ShouldReplan(bot, targets[bot_index].value(), bot_obstacles,
         options[bot_index], world);
     if(should_replan) {
       paths[bot_index] = PlanPath(bot, targets[bot_index].value(), bot_obstacles,
           options[bot_index], world);
       cache_[bot_index] = CacheEntry{
-        .trajectory = paths[bot_index].value(),
+        .trajectory = paths[bot_index].value().path,
         .options = options[bot_index],
         .target = targets[bot_index].value()
       };
     } else {
-      paths[bot_index] = cache_[bot_index]->trajectory;
+      const auto & cached_trajectory = cache_[bot_index]->trajectory;
+      const auto collision_stats = collisions::GetCollisionStats(cached_trajectory, bot_obstacles,
+          world, options[bot_index].collision_check_resolution,
+          options[bot_index].collision_check_horizon, options[bot_index].footprint_inflation);
+      paths[bot_index] = PathPlanResult{
+        cached_trajectory,
+        collision_stats
+      };
     }
     if(paths[bot_index].has_value()) {
       const auto obstacle_trajectory_time_step = options[bot_index].collision_check_resolution;
-      const auto obstacle_trajectory = paths[bot_index]->ToPoints(obstacle_trajectory_time_step);
+      const auto obstacle_trajectory =
+        paths[bot_index]->path.ToPoints(obstacle_trajectory_time_step);
       obstacles.push_back(Obstacle::FromRobot(bot, obstacle_trajectory,
           obstacle_trajectory_time_step));
     } else {
@@ -82,41 +94,50 @@ std::array<std::optional<TrajectorySpline>, 16> Planner::PlanPathsForAllBots(
   return paths;
 }
 
-std::optional<TrajectorySpline> Planner::PlanPath(
+std::optional<PathPlanResult> Planner::PlanPath(
   const ateam_game_state::Robot & robot, const Pose & target,
   const std::vector<Obstacle> & obstacles, const PlannerOptions & options,
   const ateam_game_state::World & world)
 {
   const auto init_state = Vector6FromRobot(robot);
-  const auto target_state = Vector3FromPose(target);
+  const auto maybe_truncated_target = GetTruncatedTarget(robot, target, obstacles, options, world);
+  if(!maybe_truncated_target.has_value()) {
+    return std::nullopt;
+  }
+  const auto truncated_target = *maybe_truncated_target;
+  const auto target_state = Vector3FromPose(truncated_target);
   const auto start_time = std::chrono::steady_clock::now();
 
   const auto trajectory_params = BuildTrajectoryParams(options.limits);
 
-  BangBangTraj3D_t base_trajectory;
-  if(const auto err = ateam_controls_traj_from_target_pose(init_state, target_state,
-      trajectory_params, &base_trajectory); err != ATEAM_CONTROLS_OK)
-  {
-    throw ControlsException(err);
+  BangBangTraj3D_t direct_trajectory;
+  try {
+    direct_trajectory = GenerateTrajectory(init_state, target_state, trajectory_params);
+  } catch (const ControlsException &) {
+    return std::nullopt;
   }
 
-  const auto collision_time = collisions::TimeToCollision(base_trajectory, 0.0,
-      obstacles, world, options.collision_check_resolution, options.collision_check_horizon,
+  const auto direct_path = MakeTrajectorySpline({
+      .start_time = start_time,
+      .start_state = init_state,
+      .trajectory_params = trajectory_params,
+      .segments = {{GetBangBangTrajectoryDuration(direct_trajectory), truncated_target,
+        direct_trajectory}}
+  });
+
+  const auto direct_collision_stats = collisions::GetCollisionStats(direct_path, obstacles, world,
+      options.collision_check_resolution, options.collision_check_horizon,
       options.footprint_inflation);
 
-  if (!collision_time.has_value()) {
-    TrajectorySplineImpl result;
-    result.start_time = start_time;
-    result.start_state = init_state;
-    result.trajectory_params = trajectory_params;
-    result.segments.emplace_back(GetBangBangTrajectoryDuration(base_trajectory), target,
-        base_trajectory);
-    return std::make_optional(MakeTrajectorySpline(result));
+  if (!direct_collision_stats.HasCollision()) {
+    return PathPlanResult{
+      direct_path,
+      direct_collision_stats
+    };
   }
 
-  auto fastest_time = std::numeric_limits<double>::infinity();
-  std::optional<TrajectorySpline> fastest_trajectory = std::nullopt;
-  bool found_collision_free = false;
+  TrajectorySpline best_path = direct_path;
+  auto best_path_collision_stats = direct_collision_stats;
 
   for(auto inter_target_dist = options.inter_target_dist_min;
     inter_target_dist <= options.inter_target_dist_max;
@@ -124,74 +145,62 @@ std::optional<TrajectorySpline> Planner::PlanPath(
   {
     const auto inter_target_angle_offset_limit = M_PI_2 - std::fmod(M_PI_2,
         options.inter_target_angle_step);
-    const auto angle_to_target = ateam_geometry::ToHeading(target.position - robot.pos);
+    const auto angle_to_target = ateam_geometry::ToHeading(truncated_target.position - robot.pos);
     for(auto inter_target_angle_offset = -inter_target_angle_offset_limit;
       inter_target_angle_offset <= inter_target_angle_offset_limit;
       inter_target_angle_offset += options.inter_target_angle_step)
     {
-      const auto inter_target_angle = angle_to_target + inter_target_angle_offset;
-      const Pose inter_target {
-        robot.pos +
-        (ateam_geometry::directionFromAngle(inter_target_angle).vector() * inter_target_dist),
-        target.heading
-      };
-      const auto inter_target_state = Vector3FromPose(inter_target);
-      BangBangTraj3D_t inter_traj;
-      if(const auto err =
-        ateam_controls_traj_from_target_pose(init_state, inter_target_state, trajectory_params,
-          &inter_traj); err != ATEAM_CONTROLS_OK)
-      {
-        continue;
-      }
-      const auto inter_collision_time = collisions::TimeToCollision(inter_traj, 0.0,
-          obstacles, world, options.collision_check_resolution, options.collision_check_horizon,
-          options.footprint_inflation);
-      const auto max_time =
-        inter_collision_time.value_or(GetBangBangTrajectoryDuration(inter_traj));
+      try {
+        const auto inter_target_angle = angle_to_target + inter_target_angle_offset;
+        const Pose inter_target {
+          robot.pos +
+          (ateam_geometry::directionFromAngle(inter_target_angle).vector() * inter_target_dist),
+          truncated_target.heading
+        };
+        const auto inter_target_state = Vector3FromPose(inter_target);
+        const auto sub_path_1 = GenerateTrajectory(init_state, inter_target_state,
+            trajectory_params);
 
-      for(auto transition_time = 0.1; transition_time < max_time; transition_time += 0.1) {
-        Vector6C_t transition_state;
-        if (const auto err =
-          ateam_controls_traj_state_at(inter_traj, transition_time,
-            &transition_state); err != ATEAM_CONTROLS_OK)
+        const auto sub_path_1_duration = GetBangBangTrajectoryDuration(sub_path_1);
+        for(auto transition_time = 0.1; transition_time < sub_path_1_duration;
+          transition_time += 0.2)
         {
-          continue;
-        }
-        BangBangTraj3D_t second_traj;
-        if(const auto err =
-          ateam_controls_traj_from_target_pose(transition_state, target_state, trajectory_params,
-            &second_traj); err != ATEAM_CONTROLS_OK)
-        {
-          continue;
-        }
-        const auto second_collision_time = collisions::TimeToCollision(second_traj,
-            transition_time, obstacles, world, options.collision_check_resolution,
-            options.collision_check_horizon,
-            options.footprint_inflation);
-        if (!second_collision_time.has_value()) {
-          const auto second_traj_duration = GetBangBangTrajectoryDuration(second_traj);
-          const auto total_time = transition_time + second_traj_duration;
-          if (total_time < fastest_time) {
-            fastest_time = total_time;
-            TrajectorySplineImpl result;
-            result.start_time = start_time;
-            result.start_state = init_state;
-            result.trajectory_params = trajectory_params;
-            result.segments.emplace_back(transition_time, inter_target, inter_traj);
-            result.segments.emplace_back(second_traj_duration, target, second_traj);
-            fastest_trajectory = MakeTrajectorySpline(result);
-            found_collision_free = true;
+          const auto transition_state = GetStateAtT(sub_path_1, transition_time);
+          const auto sub_path_2 = GenerateTrajectory(transition_state, target_state,
+              trajectory_params);
+          const auto sub_path_2_duration = GetBangBangTrajectoryDuration(sub_path_2);
+
+          const auto candidate_path = MakeTrajectorySpline({
+              .start_time = start_time,
+              .start_state = init_state,
+              .trajectory_params = trajectory_params,
+              .segments = {
+                {transition_time, inter_target, sub_path_1},
+                {sub_path_2_duration, truncated_target, sub_path_2}
+              }
+          });
+
+          const auto candidate_collision_stats = collisions::GetCollisionStats(candidate_path,
+              obstacles, world, options.collision_check_resolution, options.collision_check_horizon,
+              options.footprint_inflation);
+
+          if(ComparePaths(candidate_path, candidate_collision_stats, best_path,
+              best_path_collision_stats) == std::partial_ordering::greater)
+          {
+            best_path = candidate_path;
+            best_path_collision_stats = candidate_collision_stats;
           }
         }
+      } catch (const ControlsException & e) {
+        continue;
       }
     }
   }
 
-  if(!found_collision_free) {
-    return std::nullopt;
-  }
-
-  return fastest_trajectory;
+  return PathPlanResult {
+    best_path,
+    best_path_collision_stats
+  };
 }
 
 bool Planner::ShouldReplan(
@@ -232,14 +241,87 @@ bool Planner::ShouldReplan(
     return true;
   }
 
-  const auto collision_time = collisions::TimeToCollision(cached_path, obstacles, world,
+  const auto collision_stats = collisions::GetCollisionStats(cached_path, obstacles, world,
       options.collision_check_resolution, options.collision_check_horizon,
       options.footprint_inflation);
-  if(collision_time.has_value()) {
+
+  if(collision_stats.HasCollision()) {
     return true;
   }
 
   return false;
+}
+
+std::optional<Pose> Planner::GetTruncatedTarget(
+  const ateam_game_state::Robot & robot, const Pose & target,
+  const std::vector<Obstacle> & obstacles, const PlannerOptions & options,
+  const ateam_game_state::World & world)
+{
+  const auto step_vector = ateam_geometry::normalize(robot.pos - target.position) *
+    options.collision_check_resolution;
+  const auto step_count = ateam_geometry::norm(robot.pos - target.position) /
+    options.collision_check_resolution;
+  auto candidate = target.position;
+  for(auto s = 0; s < step_count; ++s) {
+    if(!collisions::DoesPointCollideWithObstacles(candidate, 0.0, obstacles,
+        options.footprint_inflation) &&
+      collisions::IsPointInBounds(candidate, world, options.footprint_inflation))
+    {
+      return Pose{
+        .position = candidate,
+        .heading = target.heading
+      };
+    }
+    candidate += step_vector;
+  }
+  return std::nullopt;
+}
+
+void Planner::RemoveInitialCollidingObstacles(
+  std::vector<Obstacle> & obstacles,
+  const ateam_game_state::Robot & robot)
+{
+  const auto robot_footprint = ateam_geometry::makeDisk(robot.pos, kRobotRadius);
+  const auto new_end = std::remove_if(obstacles.begin(), obstacles.end(),
+      [&robot_footprint](const auto & obstacle){
+        return ateam_geometry::doIntersect(robot_footprint, obstacle.shape);
+  });
+  obstacles.erase(new_end, obstacles.end());
+}
+
+std::partial_ordering Planner::ComparePaths(
+  const TrajectorySpline & path_l, const CollisionStats & stats_l,
+  const TrajectorySpline & path_r, const CollisionStats & stats_r)
+{
+  const auto collision_free_time = [](const TrajectorySpline & path, const CollisionStats & stats){
+      const auto init_collision_end = stats.init_collision_end_time.value_or(0.0);
+      const auto new_collision_start =
+        stats.new_collision_start_time.value_or(path.GetTotalDuration());
+      return new_collision_start - init_collision_end;
+    };
+  if(stats_l.HasCollision()) {
+    if(stats_r.HasCollision()) {
+      if(auto cmp = collision_free_time(path_l, stats_l) <=> collision_free_time(path_r, stats_r);
+        cmp != std::partial_ordering::equivalent)
+      {
+        return cmp;
+      }
+      if(auto cmp = stats_l.init_collision_end_time.value_or(0.0) <=>
+        stats_r.init_collision_end_time.value_or(0.0); cmp != std::partial_ordering::equivalent)
+      {
+        return cmp;
+      }
+      return path_l.GetTotalDuration() <=> path_r.GetTotalDuration();
+    } else {
+      return std::partial_ordering::less;
+    }
+  } else {
+    if(stats_r.HasCollision()) {
+      return std::partial_ordering::greater;
+    } else {
+      return path_l.GetTotalDuration() <=> path_r.GetTotalDuration();
+    }
+  }
 }
 
 }  // namespace ateam_path_planning

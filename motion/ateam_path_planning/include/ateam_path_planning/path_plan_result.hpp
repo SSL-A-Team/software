@@ -18,22 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ATEAM_PATH_PLANNING__POSE_HPP_
-#define ATEAM_PATH_PLANNING__POSE_HPP_
+#ifndef ATEAM_PATH_PLANNING__PATH_PLAN_RESULT_HPP_
+#define ATEAM_PATH_PLANNING__PATH_PLAN_RESULT_HPP_
 
-#include <ateam_geometry/any_shape.hpp>
-#include <ateam_geometry/types.hpp>
+#include "trajectory_spline.hpp"
+#include "collision_stats.hpp"
 
 namespace ateam_path_planning
 {
 
-struct Pose
+struct PathPlanResult
 {
-  ateam_geometry::Point position = ateam_geometry::Point(0, 0);
-  double heading = 0.0;
+  TrajectorySpline path;
+  CollisionStats collision_stats;
 };
-
 
 }  // namespace ateam_path_planning
 
-#endif  // ATEAM_PATH_PLANNING__POSE_HPP_
+#endif  // ATEAM_PATH_PLANNING__PATH_PLAN_RESULT_HPP_

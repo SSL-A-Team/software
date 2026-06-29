@@ -35,13 +35,20 @@
 
 namespace ateam_path_planning
 {
-class Planner;
 class Obstacle;
+class PathPlanResult;
+class Planner;
+class Pose;
 class TrajectorySpline;
 }
 
 namespace ateam_kenobi::motion::path_planning
 {
+
+/* TODO:
+ * - path truncation (if running into obstacle, plan to nearest valid point instead)
+ * - obstacle escape (handle obstacles that collied with start pose)
+ */
 
 class PathPlanner
 {
@@ -58,13 +65,25 @@ public:
 private:
   std::unique_ptr<ateam_path_planning::Planner> planner_;
 
+  void UnpackTargets(
+    const std::vector<PathPlanningTarget> & targets, const World & world,
+    std::array<std::optional<ateam_path_planning::Pose>, 16> & target_poses,
+    std::array<std::vector<ateam_path_planning::Obstacle>, 16> & per_bot_obstacles,
+    std::array<ateam_path_planning::PlannerOptions, 16> & options,
+    visualization::Overlays & overlays);
+
+  void FillMotionCommands(
+    const std::array<std::optional<ateam_path_planning::PathPlanResult>, 16> & paths,
+    const World & world, const std::vector<PathPlanningTarget> & targets,
+    std::array<std::optional<MotionCommand>, 16> & commands, visualization::Overlays & overlays);
+
   void DrawObstacles(
     visualization::Overlays & overlays,
     const std::vector<ateam_path_planning::Obstacle> & obstacles);
 
   void DrawTrajectory(
     visualization::Overlays & overlays,
-    const std::optional<ateam_path_planning::TrajectorySpline> & maybe_path, const Robot & robot,
+    const std::optional<ateam_path_planning::PathPlanResult> & result, const Robot & robot,
     const ateam_geometry::Point & target, const PlannerOptions & options);
 };
 

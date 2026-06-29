@@ -44,6 +44,28 @@ void PathPlanner::Execute(
   std::array<std::vector<ateam_path_planning::Obstacle>, 16> per_bot_obstacles;
   std::array<ateam_path_planning::PlannerOptions, 16> options;
 
+  UnpackTargets(targets, world, target_poses, per_bot_obstacles, options, overlays);
+
+  std::vector<ateam_path_planning::Obstacle> global_obstacles;
+  for(const auto & robot : world.their_robots) {
+    global_obstacles.push_back(ateam_path_planning::Obstacle{
+        .shape = ateam_geometry::makeDisk(robot.pos, kRobotRadius),
+        .expected_motion = robot.vel
+    });
+  }
+
+  const auto paths = planner_->PlanPathsForAllBots(target_poses, {}, world, global_obstacles,
+      per_bot_obstacles, options);
+
+  FillMotionCommands(paths, world, targets, commands, overlays);
+}
+
+void PathPlanner::UnpackTargets(
+  const std::vector<PathPlanningTarget> & targets, const World & world,
+  std::array<std::optional<ateam_path_planning::Pose>, 16> & target_poses,
+  std::array<std::vector<ateam_path_planning::Obstacle>, 16> & per_bot_obstacles,
+  std::array<ateam_path_planning::PlannerOptions, 16> & options, visualization::Overlays & overlays)
+{
   ateam_path_planning::Obstacle ball_obstacle{
     .shape = ateam_geometry::makeDisk(world.ball.pos, kBallRadius),
     .expected_motion = world.ball.vel
@@ -90,6 +112,7 @@ void PathPlanner::Execute(
       .collision_check_resolution = target.planner_options.collision_check_resolution,
       .collision_check_horizon = target.planner_options.collision_check_horizon,
       .footprint_inflation = target.planner_options.footprint_inflation,
+      .ignore_start_obstacles = target.planner_options.ignore_start_obstacles,
       .limits = {
         .linear_velocity = target.limits.linear_velocity,
         .linear_acceleration = target.limits.linear_acceleration,
@@ -99,38 +122,70 @@ void PathPlanner::Execute(
       .replan_thresholds = target.planner_options.replan_thresholds
     };
   }
+}
 
-  std::vector<ateam_path_planning::Obstacle> global_obstacles;
-  for(const auto & robot : world.their_robots) {
-    global_obstacles.push_back(ateam_path_planning::Obstacle{
-        .shape = ateam_geometry::makeDisk(robot.pos, kRobotRadius),
-        .expected_motion = robot.vel
-    });
-  }
-
-  const auto paths = planner_->PlanPathsForAllBots(target_poses, {}, world, global_obstacles,
-      per_bot_obstacles, options);
-
-  for(auto i = 0ul; i < paths.size(); ++i) {
-    const auto & path = paths[i];
-    DrawTrajectory(overlays, path, world.our_robots[i], targets[i].position,
-        targets[i].planner_options);
-    if(!path.has_value()) {
+void PathPlanner::FillMotionCommands(
+  const std::array<std::optional<ateam_path_planning::PathPlanResult>, 16> & results,
+  const World & world, const std::vector<PathPlanningTarget> & targets,
+  std::array<std::optional<MotionCommand>, 16> & commands, visualization::Overlays & overlays)
+{
+  for(auto i = 0ul; i < results.size(); ++i) {
+    const auto & result = results[i];
+    const auto target_iter = std::find_if(targets.begin(), targets.end(),
+        [i](const auto & t) {return t.robot_id == static_cast<int>(i);});
+    if(target_iter == targets.end()) {
       continue;
     }
-    const auto target = path->GetTargetAtNow();
-    if(!target.has_value()) {
+    const auto & target = *target_iter;
+    DrawTrajectory(overlays, result, world.our_robots[i], target.position, target.planner_options);
+    if(!result.has_value()) {
+      continue;
+    }
+    if(result->collision_stats.new_collision_start_time.has_value()) {
+      const auto collision_time = *(result->collision_stats.new_collision_start_time);
+      const auto stopping_time = ateam_geometry::norm(world.our_robots[i].vel) /
+        target.limits.linear_acceleration;
+      if(stopping_time < collision_time) {
+        MotionCommand command;
+        command.control_mode = ControlMode::LocalVelocity;
+        command.velocity.x = 0.0;
+        command.velocity.y = 0.0;
+        command.velocity.theta = 0.0;
+        command.limit_acc_angular = target.limits.angular_acceleration;
+        command.limit_vel_angular = target.limits.angular_velocity;
+        command.limit_acc_linear = target.limits.linear_acceleration;
+        command.limit_vel_linear = target.limits.linear_velocity;
+        commands[i] = command;
+      } else {
+        // TODO(barulicm) use new e-stop mode
+        MotionCommand command;
+        command.control_mode = ControlMode::LocalVelocity;
+        command.velocity.x = 0.0;
+        command.velocity.y = 0.0;
+        command.velocity.theta = 0.0;
+        command.limit_acc_angular = target.limits.angular_acceleration;
+        command.limit_vel_angular = target.limits.angular_velocity;
+        command.limit_acc_linear = target.limits.linear_acceleration;
+        command.limit_vel_linear = target.limits.linear_velocity;
+        commands[i] = command;
+      }
+      continue;
+    }
+
+    const auto & path = result->path;
+    const auto current_target_pose = path.GetTargetAtNow();
+    if(!current_target_pose.has_value()) {
       continue;
     }
     MotionCommand command;
     command.control_mode = ControlMode::GlobalPosition;
-    command.pose.x = target->position.x();
-    command.pose.y = target->position.y();
-    command.pose.theta = target->heading;
-    command.limit_acc_angular = options[i].limits.angular_acceleration;
-    command.limit_vel_angular = options[i].limits.angular_velocity;
-    command.limit_acc_linear = options[i].limits.linear_acceleration;
-    command.limit_vel_linear = options[i].limits.linear_velocity;
+    command.pose.x = current_target_pose->position.x();
+    command.pose.y = current_target_pose->position.y();
+    command.pose.theta = current_target_pose->heading;
+    command.limit_acc_angular = target.limits.angular_acceleration;
+    command.limit_vel_angular = target.limits.angular_velocity;
+    command.limit_acc_linear = target.limits.linear_acceleration;
+    command.limit_vel_linear = target.limits.linear_velocity;
     commands[i] = command;
   }
 }
@@ -170,16 +225,16 @@ void PathPlanner::DrawObstacles(
 
 void PathPlanner::DrawTrajectory(
   visualization::Overlays & overlays,
-  const std::optional<ateam_path_planning::TrajectorySpline> & maybe_path, const Robot & robot,
+  const std::optional<ateam_path_planning::PathPlanResult> & result, const Robot & robot,
   const ateam_geometry::Point & target, const PlannerOptions & options)
 {
   constexpr double kTimeStep = 0.2;
   const auto name_prefix = "pathing/robot_" + std::to_string(robot.id) + "/";
-  if(!maybe_path.has_value()) {
-    overlays.drawLine(name_prefix + "path", {robot.pos, target}, "Ted");
+  if(!result.has_value()) {
+    overlays.drawLine(name_prefix + "path", {robot.pos, target}, "Red");
     return;
   }
-  const auto & path = *maybe_path;
+  const auto & path = result->path;
   const auto start_time = path.GetStartTime();
   const auto now = std::chrono::steady_clock::now();
   const auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now -
@@ -203,6 +258,10 @@ void PathPlanner::DrawTrajectory(
   std::copy(points.begin() + elapsed_point_count + collision_checked_point_count, points.end(),
       std::back_inserter(points_unchecked));
   overlays.drawLine(name_prefix + "unchecked", points_unchecked, "LightSkyBlue");
+
+  if(CGAL::squared_distance(points.back(), target) > 1e-4) {
+    overlays.drawLine(name_prefix + "truncated", {points.back(), target}, "LightPink");
+  }
 }
 
 }  // namespace ateam_kenobi::motion::path_planning

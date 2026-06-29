@@ -55,7 +55,7 @@ public:
         if(ateam_geometry::doIntersect(robot_footprint,
             obstacle.ShapeAtT(t)))
         {
-          *listener << "collides with obstacle: " << obstacle.ShapeAtT(t);
+          *listener << "collides with obstacle: " << obstacle.ShapeAtT(t) << " at time " << t;
           return false;
         }
       }

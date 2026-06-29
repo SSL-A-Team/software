@@ -95,6 +95,11 @@ size_t TrajectorySpline::GetSegmentCount() const
   return impl_->GetSegmentCount();
 }
 
+double TrajectorySpline::GetTotalDuration() const
+{
+  return impl_->GetTotalDuration();
+}
+
 std::chrono::steady_clock::time_point TrajectorySpline::GetStartTime() const
 {
   return impl_->GetStartTime();

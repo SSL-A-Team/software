@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,12 +26,13 @@
 #include <ateam_game_state/world.hpp>
 #include "obstacle.hpp"
 #include "trajectory_spline.hpp"
+#include "collision_stats.hpp"
 
 namespace ateam_path_planning::collisions
 {
 
-std::optional<double> TimeToCollision(
-  const BangBangTraj3D & trajectory,
+CollisionStats GetCollisionStats(
+  const BangBangTraj3D_t & trajectory,
   const double & start_t,
   const std::vector<Obstacle> & obstacles,
   const ateam_game_state::World & world,
@@ -39,12 +40,22 @@ std::optional<double> TimeToCollision(
   const double collision_check_horizon,
   const double footprint_inflation);
 
-std::optional<double> TimeToCollision(
+CollisionStats GetCollisionStats(
   const TrajectorySpline & spline,
   const std::vector<Obstacle> & obstacles,
   const ateam_game_state::World & world,
   const double collision_check_resolution,
   const double collision_check_horizon,
+  const double footprint_inflation);
+
+bool DoesPointCollideWithObstacles(
+  const ateam_geometry::Point & point,
+  const double & t,
+  const std::vector<Obstacle> & obstacles,
+  const double footprint_inflation);
+
+bool IsPointInBounds(
+  const ateam_geometry::Point & point, const ateam_game_state::World & world,
   const double footprint_inflation);
 
 bool DoesStateCollideWithObstacles(
