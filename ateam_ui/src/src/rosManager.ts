@@ -34,34 +34,32 @@ export class RosManager {
         // Set up topics, services, and params
 
         for (var i = 0; i < 16; i++) {
-            for (const team of appState.realtimeWorld.teams.keys()) {
-                let robotConnectionTopic = new ROSLIB.Topic({
-                    ros: this.ros,
-                    name: '/robot_feedback/connection/robot' + i,
-                    messageType: 'ateam_radio_msgs/msg/ConnectionStatus'
-                });
+            let robotConnectionTopic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/robot_feedback/connection/robot' + i,
+                messageType: 'ateam_radio_msgs/msg/ConnectionStatus'
+            });
 
-                robotConnectionTopic.subscribe(this.getRobotConnectionCallback(appState.realtimeWorld, i));
-                this.subscriptions.set("/robot_feedback/connection/robot" + i, robotConnectionTopic);
+            robotConnectionTopic.subscribe(this.getRobotConnectionCallback(appState.realtimeWorld, i));
+            this.subscriptions.set("/robot_feedback/connection/robot" + i, robotConnectionTopic);
 
-                let robotBasicTopic = new ROSLIB.Topic({
-                    ros: this.ros,
-                    name: '/robot_feedback/basic/robot' + i,
-                    messageType: 'ateam_radio_msgs/msg/BasicTelemetry'
-                });
+            let robotBasicTopic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/robot_feedback/basic/robot' + i,
+                messageType: 'ateam_radio_msgs/msg/BasicTelemetry'
+            });
 
-                robotBasicTopic.subscribe(this.getRobotBasicCallback(appState.realtimeWorld, i));
-                this.subscriptions.set("/robot_feedback/basic/robot" + i, robotBasicTopic);
+            robotBasicTopic.subscribe(this.getRobotBasicCallback(appState.realtimeWorld, i));
+            this.subscriptions.set("/robot_feedback/basic/robot" + i, robotBasicTopic);
 
-                let robotErrorTopic = new ROSLIB.Topic({
-                    ros: this.ros,
-                    name: '/robot_feedback/error/robot' + i,
-                    messageType: 'ateam_radio_msgs/msg/ErrorTelemetry'
-                });
+            let robotErrorTopic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/robot_feedback/error/robot' + i,
+                messageType: 'ateam_radio_msgs/msg/ErrorTelemetry'
+            });
 
-                robotErrorTopic.subscribe(this.getRobotErrorCallback(appState.realtimeWorld, i));
-                this.subscriptions.set("/robot_feedback/error/robot" + i, robotErrorTopic);
-            }
+            robotErrorTopic.subscribe(this.getRobotErrorCallback(appState.realtimeWorld, i));
+            this.subscriptions.set("/robot_feedback/error/robot" + i, robotErrorTopic);
         }
 
         let overlayTopic = new ROSLIB.Topic({
