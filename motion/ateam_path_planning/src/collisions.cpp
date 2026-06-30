@@ -37,6 +37,7 @@ CollisionStats GetCollisionStats(
   const double collision_check_resolution,
   const double collision_check_horizon,
   const double footprint_inflation,
+  const double boundary_footprint_inflation,
   const double search_start_t)
 {
   const auto duration = std::min(GetBangBangTrajectoryDuration(trajectory),
@@ -57,7 +58,7 @@ CollisionStats GetCollisionStats(
       stats.new_collision_start_time = t + traj_start_t;
       return stats;
     }
-    if(!IsStateInBounds(state_at_t, world, footprint_inflation)) {
+    if(!IsStateInBounds(state_at_t, world, boundary_footprint_inflation)) {
       stats.new_collision_start_time = t + traj_start_t;
       return stats;
     }
@@ -74,6 +75,7 @@ CollisionStats GetCollisionStats(
   const double collision_check_resolution,
   const double collision_check_horizon,
   const double footprint_inflation,
+  const double boundary_footprint_inflation,
   const double search_start_t)
 {
   CollisionStats stats;
@@ -95,7 +97,8 @@ CollisionStats GetCollisionStats(
     const auto horizon = std::min(collision_check_horizon - path_t, segment.duration);
     const auto segment_search_start_t = std::max(search_start_t - path_t, 0.0);
     const auto segment_collision_stats = GetCollisionStats(segment.trajectory, path_t, obstacles,
-        world, collision_check_resolution, horizon, footprint_inflation, segment_search_start_t);
+        world, collision_check_resolution, horizon, footprint_inflation,
+        boundary_footprint_inflation, segment_search_start_t);
     if(segment_collision_stats.init_collision_end_time.has_value()) {
       if(was_in_collision) {
         stats.init_collision_end_time = segment_collision_stats.init_collision_end_time;

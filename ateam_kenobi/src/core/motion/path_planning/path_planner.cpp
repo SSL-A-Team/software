@@ -114,6 +114,7 @@ void PathPlanner::UnpackTargets(
       .collision_check_resolution = target.planner_options.collision_check_resolution,
       .collision_check_horizon = target.planner_options.collision_check_horizon,
       .footprint_inflation = target.planner_options.footprint_inflation,
+      .boundary_footprint_inflation = target.planner_options.boundary_footprint_inflation,
       .ignore_start_obstacles = target.planner_options.ignore_start_obstacles,
       .limits = {
         .linear_velocity = target.limits.linear_velocity,

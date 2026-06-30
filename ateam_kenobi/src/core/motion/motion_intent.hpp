@@ -33,13 +33,24 @@
 namespace ateam_kenobi::motion
 {
 
+template<typename T>
+concept has_planner_options = requires(T intent) {
+  intent.planner_options;
+};
+
+template<typename T>
+concept has_limits = requires(T intent) {
+  intent.limits;
+};
+
 enum class Frame
 {
   World,
   Local
 };
 
-enum class PivotDirection {
+enum class PivotDirection
+{
   Forward = 0,
   Backward = 1
 };

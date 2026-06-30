@@ -47,6 +47,12 @@ struct PlannerOptions
   double footprint_inflation = 0.06;
 
   /**
+   * The size by which the radius of the robot will be augmented during field bounds checking
+   *
+   */
+  double boundary_footprint_inflation = 0.06;
+
+  /**
    * Time step, in seconds, used for collision checking
    */
   double collision_check_resolution = 0.1;

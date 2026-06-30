@@ -45,6 +45,7 @@ CollisionStats GetCollisionStats(
   const double collision_check_resolution,
   const double collision_check_horizon,
   const double footprint_inflation,
+  const double boundary_footprint_inflation,
   const double search_start_t);
 }  // namespace collisions
 
@@ -96,6 +97,7 @@ private:
     const double collision_check_resolution,
     const double collision_check_horizon,
     const double footprint_inflation,
+    const double boundary_footprint_inflation,
     const double search_start_t);
 };
 }  // namespace ateam_path_planning

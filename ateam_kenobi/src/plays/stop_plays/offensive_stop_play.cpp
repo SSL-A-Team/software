@@ -87,7 +87,7 @@ std::array<std::optional<RobotCommand>, 16> OffensiveStopPlay::runFrame(
     if(!maybe_cmd) {continue;}
     std::visit([](auto & intent){
         using IntentType = std::decay_t<decltype(intent)>;
-        if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+        if constexpr (motion::has_limits<IntentType>) {
           intent.limits.linear_velocity = 1.0;
         }
     }, maybe_cmd->motion_intent);

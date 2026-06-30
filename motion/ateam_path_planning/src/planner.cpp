@@ -53,24 +53,25 @@ std::array<std::optional<PathPlanResult>, 16> Planner::PlanPathsForAllBots(
       continue;
     }
     const auto & bot = world.our_robots.at(bot_index);
+    const auto & bot_options = options[bot_index];
     std::vector<Obstacle> bot_obstacles = obstacles;
     bot_obstacles.insert(
       bot_obstacles.end(), per_bot_obstacles[bot_index].begin(),
         per_bot_obstacles[bot_index].end());
 
-    if(options[bot_index].ignore_start_obstacles) {
+    if(bot_options.ignore_start_obstacles) {
       RemoveInitialCollidingObstacles(bot_obstacles, bot);
     }
 
     const auto should_replan = ShouldReplan(bot, targets[bot_index].value(), bot_obstacles,
-        options[bot_index], world);
+        bot_options, world);
     if(should_replan) {
-      paths[bot_index] = PlanPath(bot, targets[bot_index].value(), bot_obstacles,
-          options[bot_index], world);
+      paths[bot_index] = PlanPath(bot, targets[bot_index].value(), bot_obstacles, bot_options,
+          world);
       if(paths[bot_index].has_value()) {
         cache_[bot_index] = CacheEntry{
           .trajectory = paths[bot_index].value().path,
-          .options = options[bot_index],
+          .options = bot_options,
           .target = targets[bot_index].value()
         };
       } else {
@@ -82,16 +83,15 @@ std::array<std::optional<PathPlanResult>, 16> Planner::PlanPathsForAllBots(
         std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() -
           cached_trajectory.GetStartTime()).count();
       const auto collision_stats = collisions::GetCollisionStats(cached_trajectory, bot_obstacles,
-          world, options[bot_index].collision_check_resolution,
-          options[bot_index].collision_check_horizon, options[bot_index].footprint_inflation,
-          elapsed);
+          world, bot_options.collision_check_resolution, bot_options.collision_check_horizon,
+          bot_options.footprint_inflation, bot_options.boundary_footprint_inflation, elapsed);
       paths[bot_index] = PathPlanResult{
         cached_trajectory,
         collision_stats
       };
     }
     if(paths[bot_index].has_value()) {
-      const auto obstacle_trajectory_time_step = options[bot_index].collision_check_resolution;
+      const auto obstacle_trajectory_time_step = bot_options.collision_check_resolution;
       const auto obstacle_trajectory =
         paths[bot_index]->path.ToPoints(obstacle_trajectory_time_step);
       obstacles.push_back(Obstacle::FromRobot(bot, obstacle_trajectory,
@@ -136,7 +136,7 @@ std::optional<PathPlanResult> Planner::PlanPath(
 
   const auto direct_collision_stats = collisions::GetCollisionStats(direct_path, obstacles, world,
       options.collision_check_resolution, options.collision_check_horizon,
-      options.footprint_inflation, 0.0);
+      options.footprint_inflation, options.boundary_footprint_inflation, 0.0);
 
   if (!direct_collision_stats.HasCollision()) {
     return PathPlanResult{
@@ -191,7 +191,7 @@ std::optional<PathPlanResult> Planner::PlanPath(
 
           const auto candidate_collision_stats = collisions::GetCollisionStats(candidate_path,
               obstacles, world, options.collision_check_resolution, options.collision_check_horizon,
-              options.footprint_inflation, 0.0);
+              options.footprint_inflation, options.boundary_footprint_inflation, 0.0);
 
           if(ComparePaths(candidate_path, candidate_collision_stats, best_path,
               best_path_collision_stats) == std::partial_ordering::greater)
@@ -261,7 +261,7 @@ bool Planner::ShouldReplan(
           cached_path.GetStartTime()).count();
   const auto collision_stats = collisions::GetCollisionStats(cached_path, obstacles, world,
       options.collision_check_resolution, options.collision_check_horizon,
-      options.footprint_inflation, elapsed);
+      options.footprint_inflation, options.boundary_footprint_inflation, elapsed);
 
   if(collision_stats.HasCollision()) {
     return true;
@@ -318,7 +318,8 @@ std::partial_ordering Planner::ComparePaths(
     if(stats_r.HasCollision()) {
       if(stats_l.init_collision_end_time.has_value()) {
         if(stats_r.init_collision_end_time.has_value()) {
-          return stats_r.init_collision_end_time.value() <=> stats_l.init_collision_end_time.value();
+          return stats_r.init_collision_end_time.value() <=>
+                 stats_l.init_collision_end_time.value();
         } else {
           return std::partial_ordering::less;
         }
