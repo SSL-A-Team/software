@@ -11,6 +11,9 @@
             :color="historyWarningStyle"
         />
         <v-row class="nowrap justify-center mx-3 my-0 px-1 py-0" align="center">
+            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "setSpeed(1.0)">
+                1x
+            </v-btn>
             <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "rewind()">
                 <v-icon icon="mdi-rewind"/>
             </v-btn>
@@ -124,6 +127,9 @@ export default {
             }
 
             this.state.selectedHistoryFrame = intendedFrame;
+        },
+        setSpeed: function(speed: number) {
+            this.playbackSpeed = speed;
         },
         startSlider: function(sliderValue: number) {
             // This function moves out of realtime when you first interact with the slider but
