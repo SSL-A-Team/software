@@ -44,21 +44,87 @@ struct GlobalPosition
   float max_angular_acc;
 };
 
-struct GlobalVelocity{};
+struct GlobalVelocity{
+  float max_linear_vel;
+  float max_angular_vel;
+  float max_linear_acc;
+  float max_angular_acc;
+};
 
-struct LocalVelocity{};
+struct LocalVelocity{
+  float max_linear_vel;
+  float max_angular_vel;
+  float max_linear_acc;
+  float max_angular_acc;
+};
 
-struct GlobalAccel{};
+struct GlobalAccel{
+  float max_linear_vel;
+  float max_angular_vel;
+  float max_linear_acc;
+  float max_angular_acc;
+};
 
-struct LocalAccel{};
+struct LocalAccel{
+  float max_linear_vel;
+  float max_angular_vel;
+  float max_linear_acc;
+  float max_angular_acc;
+};
 
-struct HeadingPivot{};
+struct HeadingPivot{
+  float target_heading;
+  float max_vel_angular;
+  float max_accel_angular;
+  float orbit_radius;
+  float inset_angle;
+  bool compute_inset_angle;
+  int direction;
+};
 
-struct PointPivot{};
+struct PointPivot{
+  float target_x;
+  float target_y;
+  float max_vel_angular;
+  float max_accel_angular;
+  float orbit_radius;
+  float inset_angle;
+  bool compute_inset_angle;
+  int direction;
+};
 
-struct HeadingLine{};
+struct HeadingLine{
+    float target_heading;
+    float line_start_x;
+    float line_start_y;
+    float line_dir_x;
+    float line_dir_y;
+    float line_vel;
+    float max_vel_colinear;
+    float max_vel_perp;
+    float max_vel_angular;
+    float max_accel_perp;
+    float max_accel_colinear;
+    float max_accel_angular;
+    float colinear_start_thresh_linear;
+};
 
-struct PointLine{};
+struct PointLine{
+    float target_x;
+    float target_y;
+    float line_start_x;
+    float line_start_y;
+    float line_dir_x;
+    float line_dir_y;
+    float line_vel;
+    float max_vel_colinear;
+    float max_vel_perp;
+    float max_vel_angular;
+    float max_accel_perp;
+    float max_accel_colinear;
+    float max_accel_angular;
+    float colinear_start_thresh_linear;
+};
 }  // namespace modes
 
 using ateam_game_state::Robot;

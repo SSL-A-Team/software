@@ -117,36 +117,170 @@ ateam_geometry::Point PositionAtT(
   const Robot & robot, const modes::HeadingPivot & params,
   const double t)
 {
-  (void)params;
-  (void)t;
-  return robot.pos;
+  const auto default_c_params = ateam_controls_default_pivot_params();
+  PivotParams c_params{
+    .max_vel_angular = params.max_vel_angular != 0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
+    .max_accel_angular = params.max_accel_angular != 0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
+    .orbit_radius = params.orbit_radius,
+    .inset_angle = params.inset_angle,
+    .compute_inset_angle = params.compute_inset_angle,
+    .direction = static_cast<PivotDirection>(params.direction)
+  };
+  Vector6C c_start_state{
+    .data = {
+      static_cast<float>(robot.pos.x()),
+      static_cast<float>(robot.pos.y()),
+      static_cast<float>(robot.theta),
+      static_cast<float>(robot.vel.x()),
+      static_cast<float>(robot.vel.y()),
+      static_cast<float>(robot.omega)
+    }
+  };
+  PivotTrajectory_t trajectory;
+  if(const auto err = ateam_controls_pivot_traj_from_target_heading(c_start_state, params.target_heading, c_params,
+      &trajectory); err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  Vector6C state;
+  if(const auto err = ateam_controls_pivot_traj_state_at(trajectory, t, &state);
+    err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  return ateam_geometry::Point{state.data[0], state.data[1]};
 }
 
 ateam_geometry::Point PositionAtT(
   const Robot & robot, const modes::PointPivot & params,
   const double t)
 {
-  (void)params;
-  (void)t;
-  return robot.pos;
+  const auto default_c_params = ateam_controls_default_pivot_params();
+  PivotParams c_params{
+    .max_vel_angular = params.max_vel_angular != 0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
+    .max_accel_angular = params.max_accel_angular != 0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
+    .orbit_radius = params.orbit_radius,
+    .inset_angle = params.inset_angle,
+    .compute_inset_angle = params.compute_inset_angle,
+    .direction = static_cast<PivotDirection>(params.direction)
+  };
+  Vector6C c_start_state{
+    .data = {
+      static_cast<float>(robot.pos.x()),
+      static_cast<float>(robot.pos.y()),
+      static_cast<float>(robot.theta),
+      static_cast<float>(robot.vel.x()),
+      static_cast<float>(robot.vel.y()),
+      static_cast<float>(robot.omega)
+    }
+  };
+  PivotTrajectory_t trajectory;
+  if(const auto err = ateam_controls_pivot_traj_from_target_point(c_start_state, params.target_x, params.target_y, c_params,
+      &trajectory); err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  Vector6C state;
+  if(const auto err = ateam_controls_pivot_traj_state_at(trajectory, t, &state);
+    err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  return ateam_geometry::Point{state.data[0], state.data[1]};
 }
 
 ateam_geometry::Point PositionAtT(
   const Robot & robot, const modes::HeadingLine & params,
   const double t)
 {
-  (void)params;
-  (void)t;
-  return robot.pos;
+  const auto default_c_params = ateam_controls_default_linear_params();
+  LinearParams c_params{
+    .max_vel_colinear = params.max_vel_colinear != 0.0f ? params.max_vel_colinear : default_c_params.max_vel_colinear,
+    .max_vel_perp = params.max_vel_perp != 0.0f ? params.max_vel_perp : default_c_params.max_vel_perp,
+    .max_vel_angular = params.max_vel_angular != 0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
+    .max_accel_perp = params.max_accel_perp != 0.0f ? params.max_accel_perp : default_c_params.max_accel_perp,
+    .max_accel_colinear = params.max_accel_colinear != 0.0f ? params.max_accel_colinear : default_c_params.max_accel_colinear,
+    .max_accel_angular = params.max_accel_angular != 0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
+    .colinear_start_thresh_linear = params.colinear_start_thresh_linear
+  };
+  Vector6C c_start_state{
+    .data = {
+      static_cast<float>(robot.pos.x()),
+      static_cast<float>(robot.pos.y()),
+      static_cast<float>(robot.theta),
+      static_cast<float>(robot.vel.x()),
+      static_cast<float>(robot.vel.y()),
+      static_cast<float>(robot.omega)
+    }
+  };
+  Vector2C c_start_point{
+    .x = params.line_start_x,
+    .y = params.line_start_y
+  };
+  Vector2C c_line_dir{
+    .x = params.line_dir_x,
+    .y = params.line_dir_y
+  };
+  LinearTrajectory_t trajectory;
+  if(const auto err = ateam_controls_linear_traj_from_line(c_start_state, params.target_heading, c_start_point, c_line_dir, params.line_vel, c_params,
+      &trajectory); err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  Vector6C state;
+  if(const auto err = ateam_controls_linear_traj_state_at(trajectory, t, &state);
+    err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  return ateam_geometry::Point{state.data[0], state.data[1]};
 }
 
 ateam_geometry::Point PositionAtT(
   const Robot & robot, const modes::PointLine & params,
   const double t)
 {
-  (void)params;
-  (void)t;
-  return robot.pos;
+  const auto default_c_params = ateam_controls_default_linear_params();
+  LinearParams c_params{
+    .max_vel_colinear = params.max_vel_colinear != 0.0f ? params.max_vel_colinear : default_c_params.max_vel_colinear,
+    .max_vel_perp = params.max_vel_perp != 0.0f ? params.max_vel_perp : default_c_params.max_vel_perp,
+    .max_vel_angular = params.max_vel_angular != 0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
+    .max_accel_perp = params.max_accel_perp != 0.0f ? params.max_accel_perp : default_c_params.max_accel_perp,
+    .max_accel_colinear = params.max_accel_colinear != 0.0f ? params.max_accel_colinear : default_c_params.max_accel_colinear,
+    .max_accel_angular = params.max_accel_angular != 0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
+    .colinear_start_thresh_linear = params.colinear_start_thresh_linear
+  };
+  Vector6C c_start_state{
+    .data = {
+      static_cast<float>(robot.pos.x()),
+      static_cast<float>(robot.pos.y()),
+      static_cast<float>(robot.theta),
+      static_cast<float>(robot.vel.x()),
+      static_cast<float>(robot.vel.y()),
+      static_cast<float>(robot.omega)
+    }
+  };
+  Vector2C c_start_point{
+    .x = params.line_start_x,
+    .y = params.line_start_y
+  };
+  Vector2C c_line_dir{
+    .x = params.line_dir_x,
+    .y = params.line_dir_y
+  };
+  LinearTrajectory_t trajectory;
+  if(const auto err = ateam_controls_linear_traj_from_point(c_start_state, params.target_x, params.target_y, c_start_point, c_line_dir, params.line_vel, c_params,
+      &trajectory); err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  Vector6C state;
+  if(const auto err = ateam_controls_linear_traj_state_at(trajectory, t, &state);
+    err != ATEAM_CONTROLS_OK)
+  {
+    throw ControlsException(err);
+  }
+  return ateam_geometry::Point{state.data[0], state.data[1]};
 }
 
 }  // namespace ateam_controls_cpp::predict
