@@ -55,6 +55,13 @@ private:
   static constexpr double kPreemptHoldingScoreThreshold = 500.0;
   static constexpr double kFriendProximityPenalty = 1.0;
   static constexpr double kFriendProximityThreshold = 1.0;  // m
+  static constexpr double kMinIdealPassLength = 1.0;  // m
+  static constexpr double kMaxIdealPassLength = 3.5;  // m
+
+  struct CacheEntry {
+    ateam_geometry::Point target;
+    double score;
+  };
 
   tactics::StandardDefense defense_tactic_;
   tactics::Pass pass_tactic_;
@@ -68,7 +75,7 @@ private:
   std::optional<int> receiver_id_;
   std::vector<int> candidate_receiver_ids_;
   std::vector<int> defender_ids_;
-  std::vector<std::tuple<ateam_geometry::Point, double> > candidate_targets_;
+  std::array<std::optional<CacheEntry>, 16> target_cache_;
 
   std::tuple<ateam_geometry::Point, double> getBestPassTargetForCandidate(const World & world, const Robot & candidate);
 

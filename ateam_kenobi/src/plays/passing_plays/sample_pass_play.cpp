@@ -43,7 +43,8 @@ stp::PlayScore SamplePassPlay::getScore(const World & world)
 {
   if (!world.in_play &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::NormalStart)
+    world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
+    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs)
   {
     return stp::PlayScore::NaN();
   }
@@ -79,6 +80,7 @@ void SamplePassPlay::enter()
   receiver_id_.reset();
   candidate_receiver_ids_.clear();
   defender_ids_.clear();
+  std::fill(target_cache_.begin(), target_cache_.end(), std::nullopt);
 }
 
 std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World & world)
@@ -100,18 +102,19 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
 
     const auto assignments = play_helpers::assignGroups(available_robots, groups);
 
-    const auto get_id = [](const auto & r) { return r.id; };
+    const auto get_id = [](const auto & r) {return r.id;};
 
     kicker_id_ = [&assignments]() -> std::optional<int> {
-      const auto maybe_kicker = assignments.GetPositionAssignment("striker");
-      if (maybe_kicker) {
-        return std::make_optional(maybe_kicker.value().id);
-      }
-      return std::nullopt;
-    }();
+        const auto maybe_kicker = assignments.GetPositionAssignment("striker");
+        if (maybe_kicker) {
+          return std::make_optional(maybe_kicker.value().id);
+        }
+        return std::nullopt;
+      }();
 
     defender_ids_.clear();
-    std::ranges::transform(assignments.GetGroupFilledAssignments("defense"), std::back_inserter(defender_ids_), get_id);
+    std::ranges::transform(assignments.GetGroupFilledAssignments("defense"),
+        std::back_inserter(defender_ids_), get_id);
 
     play_helpers::removeAssignedRobots(available_robots, assignments);
 
@@ -120,7 +123,9 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
   }
 
   std::vector<Robot> defenders;
-  std::ranges::transform(defender_ids_, std::back_inserter(defenders), [&world](const int id){ return world.our_robots[id]; });
+  std::ranges::transform(defender_ids_, std::back_inserter(defenders), [&world](const int id){
+      return world.our_robots[id];
+                                                                                                                          });
   defense_tactic_.runFrame(world, defenders, commands);
   ForwardPlayInfo(defense_tactic_);
 
@@ -130,7 +135,19 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
   double best_receiver_score = -1.0;
   for ( const auto & candidate_id : candidate_receiver_ids_ ) {
     const auto candidate = world.our_robots[candidate_id];
-    const auto [target, score] = getBestPassTargetForCandidate(world, candidate);
+    auto [target, score] = getBestPassTargetForCandidate(world, candidate);
+    if(target_cache_[candidate_id].has_value()) {
+      auto & cache = target_cache_[candidate_id].value();
+      if(score > cache.score) {
+        cache.score = score;
+        cache.target = target;
+      } else {
+        target = cache.target;
+        score = cache.score;
+      }
+    } else {
+      target_cache_[candidate_id] = CacheEntry{target, score};
+    }
     RobotCommand command;
     motion::intents::PositionFacing intent;
     intent.position = target;
@@ -160,7 +177,8 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
     const auto kicker = world.our_robots[*kicker_id_];
 
     const auto dist_to_ball = ateam_geometry::norm(kicker.pos - world.ball.pos);
-    if (dist_to_ball < (kRobotRadius + kBallRadius + 0.01) || kicker.breakbeam_ball_detected_filtered) {
+    if (dist_to_ball < (kRobotRadius + kBallRadius + 0.01) ||
+      kicker.breakbeam_ball_detected_filtered) {
       if (!holding_start_time_) {
         holding_start_time_ = std::chrono::steady_clock::now();
       }
@@ -191,7 +209,9 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
   return commands;
 }
 
-std::tuple<ateam_geometry::Point, double> SamplePassPlay::getBestPassTargetForCandidate(const World & world, const Robot & candidate)
+std::tuple<ateam_geometry::Point,
+  double> SamplePassPlay::getBestPassTargetForCandidate(const World & world,
+  const Robot & candidate)
 {
   ateam_geometry::Point best_target;
   double best_score = -1.0;
@@ -204,7 +224,7 @@ std::tuple<ateam_geometry::Point, double> SamplePassPlay::getBestPassTargetForCa
     const auto y = candidate.pos.y() + dy;
     const ateam_geometry::Point target{x, y};
     const auto score = getTargetScore(target, world);
-    if ( score > best_score ) {
+    if (score > best_score) {
       best_target = target;
       best_score = score;
     }
@@ -215,30 +235,30 @@ std::tuple<ateam_geometry::Point, double> SamplePassPlay::getBestPassTargetForCa
 double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, const World & world)
 {
   const ateam_geometry::Rectangle field_rect{
-    *CGAL::top_vertex_2(world.field.field_corners.begin(), world.field.field_corners.end()),
-    *CGAL::bottom_vertex_2(world.field.field_corners.begin(), world.field.field_corners.end())
+    -((world.field.field_length / 2.0) - kRobotDiameter),
+    -((world.field.field_width / 2.0) - kRobotDiameter),
+    ((world.field.field_length / 2.0) - kRobotDiameter),
+    ((world.field.field_width / 2.0) - kRobotDiameter)
   };
   if (!ateam_geometry::doIntersect(field_rect, target)) {
-    return 0.0;
+    return std::numeric_limits<double>::lowest();
   }
 
   const ateam_geometry::Rectangle their_defense_area {
-    *CGAL::top_vertex_2(
-      world.field.theirs.defense_area_corners.begin(),
-      world.field.theirs.defense_area_corners.end()),
-    *CGAL::bottom_vertex_2(
-      world.field.theirs.defense_area_corners.begin(),
-      world.field.theirs.defense_area_corners.end())
+    (world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter,
+    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
+    world.field.field_length / 2.0,
+    (world.field.defense_area_width / 2.0) + kRobotDiameter
   };
   if (ateam_geometry::doIntersect(their_defense_area, target)) {
-    return 0.0;
+    return std::numeric_limits<double>::lowest();
   }
 
   double opponent_dist = std::numeric_limits<double>::max();
   const auto pass_segment = ateam_geometry::Segment(world.ball.pos, target);
   for ( const auto & opponent : world.their_robots ) {
     if (opponent.visible) {
-      const auto sq_dist =CGAL::squared_distance(pass_segment, opponent.pos);
+      const auto sq_dist = CGAL::squared_distance(pass_segment, opponent.pos);
       opponent_dist = std::min(opponent_dist, sq_dist);
     }
   }
@@ -246,13 +266,23 @@ double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, cons
   const auto shot_success_chance = play_helpers::GetShotSuccessChance(world, target);
 
   std::vector<Robot> friends;
-  std::ranges::transform(candidate_receiver_ids_, std::back_inserter(friends), [&world](const int id){ return world.our_robots[id]; });
+  std::ranges::transform(candidate_receiver_ids_, std::back_inserter(friends),
+    [&world](const int id){return world.our_robots[id];});
   const auto closest_friend = play_helpers::getClosestRobot(friends, target);
   const auto friend_dist = ateam_geometry::norm(closest_friend.pos - target);
 
-  const auto friend_proximity_penalty = std::min(kFriendProximityPenalty * (friend_dist / kFriendProximityThreshold), 1.0);
+  const auto friend_proximity_penalty = std::min(kFriendProximityPenalty *
+      (friend_dist / kFriendProximityThreshold), 1.0);
 
-  return shot_success_chance * opponent_dist * friend_proximity_penalty;
+  const auto pass_length = ateam_geometry::norm(target - world.ball.pos);
+  auto pass_length_factor = 1.0;
+  if(pass_length < kMinIdealPassLength) {
+    pass_length_factor = std::clamp(1.0 - ((kMinIdealPassLength - pass_length) / kMinIdealPassLength), 0.2, 1.0);
+  } else if (pass_length > kMaxIdealPassLength) {
+    pass_length_factor = std::clamp(1.0 - ((pass_length - kMaxIdealPassLength) / kMaxIdealPassLength), 0.2, 1.0);
+  }
+
+  return shot_success_chance * opponent_dist * friend_proximity_penalty * pass_length_factor;
 }
 
 void SamplePassPlay::lockPass(const Robot & candidate, const ateam_geometry::Point & target)
