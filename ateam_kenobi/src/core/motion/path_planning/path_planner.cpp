@@ -260,10 +260,12 @@ void PathPlanner::DrawTrajectory(
     points_iter += collision_point_count - 1;
 
     const auto remaining_checked_point_count = checked_point_count - collision_point_count;
-    overlays.drawLine(name_prefix + "checked",
+    if(remaining_checked_point_count > 0) {
+      overlays.drawLine(name_prefix + "checked",
         std::vector<ateam_geometry::Point>(points_iter,
         points_iter + remaining_checked_point_count), "Purple");
-    points_iter += remaining_checked_point_count - 1;
+      points_iter += remaining_checked_point_count - 1;
+    }
   } else {
     overlays.drawLine(name_prefix + "checked",
         std::vector<ateam_geometry::Point>(points_iter, points_iter + checked_point_count),
