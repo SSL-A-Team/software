@@ -8,18 +8,18 @@ find_package(ateam_geometry REQUIRED)
 set(RUST_TARGET_DIR ${CMAKE_CURRENT_BINARY_DIR}/rs-target)
 add_subdirectory(controls)
 
-
 add_library(
   ateam_controls_cpp SHARED
+  src/exceptions.cpp
   src/predict.cpp
 )
 target_compile_features(ateam_controls_cpp PUBLIC cxx_std_20)
 target_compile_options(ateam_controls_cpp PRIVATE -Werror -Wall -Wextra -Wpedantic)
-ament_target_dependencies(ateam_controls_cpp
-  ateam_game_state  
-  ateam_geometry
+target_link_libraries(ateam_controls_cpp PUBLIC
+  ateam_game_state::ateam_game_state
+  ateam_geometry::ateam_geometry
 )
-target_link_libraries(ateam_controls_cpp
+target_link_libraries(ateam_controls_cpp PRIVATE
   ateam_controls
 )
 target_include_directories(ateam_controls_cpp

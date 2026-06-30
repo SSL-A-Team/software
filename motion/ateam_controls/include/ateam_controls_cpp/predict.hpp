@@ -31,7 +31,7 @@ namespace modes
 {
 struct Off{};
 
-struct EstopBrake{};
+struct EStopBrake{};
 
 struct GlobalPosition
 {
@@ -64,7 +64,7 @@ struct PointLine{};
 using ateam_game_state::Robot;
 
 ateam_geometry::Point PositionAtT(const Robot & robot, const modes::Off & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::EstopBrake & params, const double t);
+ateam_geometry::Point PositionAtT(const Robot & robot, const modes::EStopBrake & params, const double t);
 ateam_geometry::Point PositionAtT(const Robot & robot, const modes::GlobalPosition & params, const double t);
 ateam_geometry::Point PositionAtT(const Robot & robot, const modes::GlobalVelocity & params, const double t);
 ateam_geometry::Point PositionAtT(const Robot & robot, const modes::LocalVelocity & params, const double t);

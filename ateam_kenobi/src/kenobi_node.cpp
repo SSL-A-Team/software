@@ -188,8 +188,6 @@ private:
 
     auto motion_commands = runPlayFrame(world);
 
-    defense_area_enforcement::EnforceDefenseAreaKeepout(world, motion_commands);
-
     joystick_enforcer_.RemoveCommandForJoystickBot(motion_commands);
 
     send_all_motion_commands(motion_commands);
@@ -218,7 +216,10 @@ private:
           return std::nullopt;
         }
       });
-    const auto motion_commands = motion_executor_.RunFrame(motion_intents, overlays_, world);
+    
+    auto motion_commands = motion_executor_.RunFrame(motion_intents, overlays_, world);
+
+    defense_area_enforcement::EnforceDefenseAreaKeepout(world, motion_commands);
 
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ros_commands;
     for(auto id = 0ul; id < commands.size(); ++id) {

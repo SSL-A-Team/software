@@ -31,7 +31,7 @@ ateam_geometry::Point PositionAtT(const Robot & robot, const modes::Off &, const
   return robot.pos;
 }
 
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::EstopBrake &, const double)
+ateam_geometry::Point PositionAtT(const Robot & robot, const modes::EStopBrake &, const double)
 {
   return robot.pos;
 }
@@ -40,11 +40,12 @@ ateam_geometry::Point PositionAtT(
   const Robot & robot, const modes::GlobalPosition & params,
   const double t)
 {
+  const auto default_c_params = ateam_controls_default_traj_params();
   TrajectoryParams c_params{
-    .max_vel_linear = params.max_linear_vel,
-    .max_vel_angular = params.max_angular_vel,
-    .max_accel_linear = params.max_linear_acc,
-    .max_accel_angular = params.max_angular_acc
+    .max_vel_linear = params.max_linear_vel != 0.0f ? params.max_linear_vel : default_c_params.max_vel_linear,
+    .max_vel_angular = params.max_angular_vel != 0.0f ? params.max_angular_vel : default_c_params.max_vel_angular,
+    .max_accel_linear = params.max_linear_acc != 0.0f ? params.max_linear_acc : default_c_params.max_accel_linear,
+    .max_accel_angular = params.max_angular_acc != 0.0f ? params.max_angular_acc : default_c_params.max_accel_angular
   };
   Vector6C c_start_state{
     .data = {

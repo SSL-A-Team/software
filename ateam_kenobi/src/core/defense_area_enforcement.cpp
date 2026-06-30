@@ -21,6 +21,8 @@
 #include "defense_area_enforcement.hpp"
 #include <ateam_geometry/ateam_geometry.hpp>
 #include <ateam_common/robot_constants.hpp>
+#include <ateam_controls_cpp/exceptions.hpp>
+#include <ateam_controls_cpp/predict.hpp>
 #include "core/motion/frame_conversions.hpp"
 
 namespace ateam_kenobi::defense_area_enforcement
@@ -28,31 +30,12 @@ namespace ateam_kenobi::defense_area_enforcement
 
 void EnforceDefenseAreaKeepout(
   const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> & motion_commands)
+  std::array<std::optional<motion::MotionCommand>, 16> & motion_commands)
 {
   if (IsDefenseAreaNavigationAllowed(world.referee_info.running_command)) {
     return;
   }
-  for (auto robot_id = 0ul; robot_id < motion_commands.size(); ++robot_id) {
-    if (robot_id == static_cast<std::size_t>(world.referee_info.our_goalie_id)) {
-      continue;
-    }
-    auto & maybe_command = motion_commands[robot_id];
-    if (!maybe_command) {
-      continue;
-    }
-    auto & command = *maybe_command;
-    if (WouldVelocityCauseCollision(world, robot_id, command)) {
-      command.velocity.x = 0.0;
-      command.velocity.y = 0.0;
-    }
-  }
-}
 
-bool WouldVelocityCauseCollision(
-  const World & world, const int robot_id,
-  const ateam_msgs::msg::RobotMotionCommand & motion_command)
-{
   const ateam_geometry::Rectangle our_defense_area{
     *CGAL::top_vertex_2(
       world.field.ours.defense_area_corners.begin(),
@@ -69,32 +52,98 @@ bool WouldVelocityCauseCollision(
       world.field.theirs.defense_area_corners.begin(),
       world.field.theirs.defense_area_corners.end())
   };
+  motion::MotionCommand stop_command;
+  stop_command.control_mode = motion::ControlMode::LocalVelocity;
+  stop_command.velocity = {
+    .x = 0.0,
+    .y = 0.0,
+    .theta = 0.0
+  };
 
-  const double delta_t = 0.01;
+  for (auto robot_id = 0ul; robot_id < motion_commands.size(); ++robot_id) {
+    if (robot_id == static_cast<std::size_t>(world.referee_info.our_goalie_id)) {
+      continue;
+    }
+    const auto & robot = world.our_robots[robot_id];
+    if(!robot.visible) {
+      continue;
+    }
+    auto & maybe_command = motion_commands[robot_id];
+    if (!maybe_command) {
+      continue;
+    }
+    auto & command = *maybe_command;
+    const auto new_pos = GetPredictedPosition(robot, command);
+    if(IsRobotEscapingDefenseArea(robot.pos, new_pos, our_defense_area) ||
+      IsRobotEscapingDefenseArea(robot.pos, new_pos, their_defense_area))
+    {
+      continue;
+    }
+    if(IsRobotGoingDeeperIntoDefenseArea(robot.pos, new_pos, our_defense_area) ||
+      IsRobotGoingDeeperIntoDefenseArea(robot.pos, new_pos,
+        their_defense_area))
+    {
+      command = stop_command;
+    }
+  }
+}
 
-  if (motion_command.body_control_mode != ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY) {
-    // TODO(barulicm): Non-local velocity motion commands not yet supported
+ateam_geometry::Point GetPredictedPosition(
+  const Robot & robot,
+  const motion::MotionCommand & command)
+{
+  try {
+    constexpr double lookahead = 0.5;
+    using namespace ateam_controls_cpp::predict;
+    switch(command.control_mode) {
+      case motion::ControlMode::Off:
+        return PositionAtT(robot, modes::Off{}, lookahead);
+      case motion::ControlMode::EStopBrake:
+        return PositionAtT(robot, modes::EStopBrake{}, lookahead);
+      case motion::ControlMode::GlobalPosition:
+        return PositionAtT(robot, modes::GlobalPosition{
+          .global_x = static_cast<float>(command.pose.x),
+          .global_y = static_cast<float>(command.pose.y),
+          .global_theta = static_cast<float>(command.pose.theta),
+          .max_linear_vel = static_cast<float>(command.limit_vel_linear),
+          .max_angular_vel = static_cast<float>(command.limit_vel_angular),
+          .max_linear_acc = static_cast<float>(command.limit_acc_linear),
+          .max_angular_acc = static_cast<float>(command.limit_acc_angular)
+        }, lookahead);
+      case motion::ControlMode::GlobalVelocity:
+        return PositionAtT(robot, modes::GlobalVelocity{}, lookahead);
+      case motion::ControlMode::LocalVelocity:
+        return PositionAtT(robot, modes::LocalVelocity{}, lookahead);
+      case motion::ControlMode::GlobalAccel:
+        return PositionAtT(robot, modes::GlobalAccel{}, lookahead);
+      case motion::ControlMode::LocalAccel:
+        return PositionAtT(robot, modes::LocalAccel{}, lookahead);
+      case motion::ControlMode::HeadingPivot:
+        return PositionAtT(robot, modes::HeadingPivot{}, lookahead);
+      case motion::ControlMode::PointPivot:
+        return PositionAtT(robot, modes::PointPivot{}, lookahead);
+      case motion::ControlMode::HeadingLine:
+        return PositionAtT(robot, modes::HeadingLine{}, lookahead);
+      case motion::ControlMode::PointLine:
+        return PositionAtT(robot, modes::PointLine{}, lookahead);
+      default:
+        return robot.pos;
+    }
+  } catch(const ateam_controls_cpp::ControlsException &) {
+    return robot.pos;
+  }
+}
+
+bool IsRobotGoingDeeperIntoDefenseArea(
+  const ateam_geometry::Point & position,
+  const ateam_geometry::Point & new_position,
+  const ateam_geometry::Rectangle & defense_area)
+{
+  if(!CGAL::do_intersect(new_position, defense_area)) {
     return false;
   }
-  ateam_geometry::Vector velocity{motion_command.velocity.x, motion_command.velocity.y};
-
-  const ateam_geometry::Vector displacement = velocity * delta_t;
-
-  const auto & robot = world.our_robots[robot_id];
-
-  const ateam_geometry::Point new_position = robot.pos + displacement;
-
-  const ateam_geometry::Disk robot_footprint = ateam_geometry::makeDisk(new_position, kRobotRadius);
-
-  if (ateam_geometry::doIntersect(robot_footprint, our_defense_area)) {
-    return !IsRobotEscapingDefenseArea(robot.pos, new_position, our_defense_area);
-  }
-
-  if (ateam_geometry::doIntersect(robot_footprint, their_defense_area)) {
-    return !IsRobotEscapingDefenseArea(robot.pos, new_position, their_defense_area);
-  }
-
-  return false;
+  const auto area_center = CGAL::midpoint(defense_area.min(), defense_area.max());
+  return CGAL::compare_distance_to_point(area_center, position, new_position) == CGAL::SMALLER;
 }
 
 bool IsRobotEscapingDefenseArea(
@@ -102,11 +151,12 @@ bool IsRobotEscapingDefenseArea(
   const ateam_geometry::Point & new_position,
   const ateam_geometry::Rectangle & defense_area)
 {
+  if(!CGAL::do_intersect(position, defense_area)) {
+    return false;
+  }
   const auto area_center = CGAL::midpoint(defense_area.min(), defense_area.max());
-
   return CGAL::compare_distance_to_point(area_center, position, new_position) == CGAL::SMALLER;
 }
-
 
 bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command)
 {
