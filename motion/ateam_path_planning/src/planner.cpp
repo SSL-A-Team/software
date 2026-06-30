@@ -233,6 +233,12 @@ bool Planner::ShouldReplan(
     return true;
   }
 
+  if(std::abs(angles::shortest_angular_distance(target.heading,
+      cache->target.heading) >= options.replan_thresholds.goal_heading_distance))
+  {
+    return true;
+  }
+
   const auto & cached_path = cache->trajectory;
 
   const auto check_time = std::chrono::steady_clock::now() -

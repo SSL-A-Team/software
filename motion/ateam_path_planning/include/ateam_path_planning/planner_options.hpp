@@ -44,6 +44,11 @@ struct ReplanThresholds
   double goal_distance = 0.01;
 
   /**
+   * Distance, in radians, that the goal heading must change to trigger a replan
+   */
+  double goal_heading_distance = 8e-3;
+
+  /**
    * Distance, in meters, that the robot must deviate from the expected state, based on time, to
    * trigger a replan.
    */
