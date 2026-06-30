@@ -11,6 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(ateam_controls REQUIRED)
 find_package(ateam_game_state REQUIRED)
 find_package(ateam_path_planning REQUIRED)
 find_package(tf2 REQUIRED)
@@ -125,6 +126,7 @@ ament_target_dependencies(
   "ateam_radio_msgs"
   "ateam_msgs"
   "ateam_common"
+  "ateam_controls"
   "ateam_game_state"
   "ateam_path_planning"
   "tf2"
