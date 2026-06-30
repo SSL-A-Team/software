@@ -30,7 +30,8 @@ namespace ateam_kenobi::defense_area_enforcement
 
 void EnforceDefenseAreaKeepout(
   const World & world,
-  std::array<std::optional<motion::MotionCommand>, 16> & motion_commands)
+  std::array<std::optional<motion::MotionCommand>, 16> & motion_commands,
+  visualization::Overlays & overlays)
 {
   if (IsDefenseAreaNavigationAllowed(world.referee_info.running_command)) {
     return;
@@ -84,6 +85,7 @@ void EnforceDefenseAreaKeepout(
         their_defense_area))
     {
       command = stop_command;
+      DrawStopSign(robot, overlays);
     }
   }
 }
@@ -139,11 +141,12 @@ bool IsRobotGoingDeeperIntoDefenseArea(
   const ateam_geometry::Point & new_position,
   const ateam_geometry::Rectangle & defense_area)
 {
-  if(!CGAL::do_intersect(new_position, defense_area)) {
+  const auto robot_footprint = ateam_geometry::makeDisk(new_position, kRobotRadius);
+  if(!CGAL::do_intersect(robot_footprint, defense_area)) {
     return false;
   }
   const auto area_center = CGAL::midpoint(defense_area.min(), defense_area.max());
-  return CGAL::compare_distance_to_point(area_center, position, new_position) == CGAL::SMALLER;
+  return CGAL::compare_distance_to_point(area_center, position, new_position) == CGAL::LARGER;
 }
 
 bool IsRobotEscapingDefenseArea(
@@ -151,7 +154,8 @@ bool IsRobotEscapingDefenseArea(
   const ateam_geometry::Point & new_position,
   const ateam_geometry::Rectangle & defense_area)
 {
-  if(!CGAL::do_intersect(position, defense_area)) {
+  const auto robot_footprint = ateam_geometry::makeDisk(position, kRobotRadius);
+  if(!CGAL::do_intersect(robot_footprint, defense_area)) {
     return false;
   }
   const auto area_center = CGAL::midpoint(defense_area.min(), defense_area.max());
@@ -162,6 +166,20 @@ bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command)
 {
   return command == ateam_common::GameCommand::BallPlacementOurs ||
          command == ateam_common::GameCommand::BallPlacementTheirs;
+}
+
+void DrawStopSign(const Robot & robot, visualization::Overlays & overlays)
+{
+  std::vector<ateam_geometry::Point> points;
+  const auto kStopSignRadius = kRobotRadius * 1.1;
+  std::generate_n(std::back_inserter(points), 8, [angle=M_PI/8,kStopSignRadius,&robot]()mutable{
+    ateam_geometry::Vector v{std::cos(angle) * kStopSignRadius, std::sin(angle) * kStopSignRadius};
+    const auto p = robot.pos + v;
+    angle += M_PI_4;
+    return p;
+  });
+  overlays.drawPolygon("defkeepout/robot" + std::to_string(robot.id),
+    {points.begin(), points.end()}, "Red", "#ff00002c");
 }
 
 }  // namespace ateam_kenobi::defense_area_enforcement

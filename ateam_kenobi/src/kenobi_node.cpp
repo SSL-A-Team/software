@@ -219,7 +219,7 @@ private:
     
     auto motion_commands = motion_executor_.RunFrame(motion_intents, overlays_, world);
 
-    defense_area_enforcement::EnforceDefenseAreaKeepout(world, motion_commands);
+    defense_area_enforcement::EnforceDefenseAreaKeepout(world, motion_commands, overlays_);
 
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ros_commands;
     for(auto id = 0ul; id < commands.size(); ++id) {

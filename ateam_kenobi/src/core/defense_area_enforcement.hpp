@@ -24,6 +24,7 @@
 #include <ateam_geometry/types.hpp>
 #include "core/types/state_types.hpp"
 #include "core/motion/motion_command.hpp"
+#include "core/visualization/overlays.hpp"
 
 namespace ateam_kenobi::defense_area_enforcement
 {
@@ -37,7 +38,8 @@ namespace ateam_kenobi::defense_area_enforcement
  */
 void EnforceDefenseAreaKeepout(
   const World & world,
-  std::array<std::optional<motion::MotionCommand>, 16> & motion_commands);
+  std::array<std::optional<motion::MotionCommand>, 16> & motion_commands,
+  visualization::Overlays & overlays);
 
 ateam_geometry::Point GetPredictedPosition(
   const Robot & robot,
@@ -54,6 +56,8 @@ bool IsRobotEscapingDefenseArea(
   const ateam_geometry::Rectangle & defense_area);
 
 bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command);
+
+void DrawStopSign(const Robot & robot, visualization::Overlays & overlays);
 
 }  // namespace ateam_kenobi::defense_area_enforcement
 
