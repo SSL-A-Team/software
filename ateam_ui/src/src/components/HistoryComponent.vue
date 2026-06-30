@@ -11,9 +11,24 @@
             :color="historyWarningStyle"
         />
         <v-row class="nowrap justify-center mx-3 my-0 px-1 py-0" align="center">
-            <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "setSpeed(1.0)">
-                1x
-            </v-btn>
+            <v-combobox
+            dense
+            density="compact"
+            hide-details
+            class="mx-1 mini-combobox"
+            style="max-width: 60px;"
+            :no-filter="true"
+            :auto-select-first="false"
+            :delimiters="[]"
+            :items="['0.1', '0.25', '0.5', '1.0', '2.0', '3.0', '4.0']"
+            v-model="speedModel"
+            v-model:search="speedSearch"
+            @update:model-value="setSpeed"
+            @focus="speedSearch = ''"
+            @keydown.enter="speedHandleEnter"
+            >
+
+            </v-combobox>
             <v-btn dense class="mx-1" style="max-width: 50;" @click.stop= "rewind()">
                 <v-icon icon="mdi-rewind"/>
             </v-btn>
@@ -47,6 +62,8 @@ export default {
     data() {
         return {
             historySlider: 0,
+            speedModel: "1.0",
+            speedSearch: "",
             playbackSpeed: 1.0,
             playbackTimer: null as NodeJS.Timer,
             state: inject('state') as AppState
@@ -94,8 +111,8 @@ export default {
             this.play();
         },
         fastforward: function() {
-            if (this.playbackSpeed <= 1.0) {
-                this.playbackSpeed = 1.5;
+            if (this.playbackSpeed < 1.0) {
+                this.playbackSpeed = 1.0;
             } else {
                 this.playbackSpeed += 0.5;
             }
@@ -128,8 +145,19 @@ export default {
 
             this.state.selectedHistoryFrame = intendedFrame;
         },
-        setSpeed: function(speed: number) {
-            this.playbackSpeed = speed;
+        setSpeed: function(speed: string) {
+            if (!speed || speed === '-') return;
+
+            const num = Number(speed);
+            if (Number.isNaN(num)) {
+                this.playbackSpeed = 1.0;
+            } else {
+                this.playbackSpeed = num;
+            }
+        },
+        speedHandleEnter: function(event: any) {
+            // this.setSpeed(this.speedSearch);
+            event.target.blur()
         },
         startSlider: function(sliderValue: number) {
             // This function moves out of realtime when you first interact with the slider but
@@ -191,6 +219,9 @@ export default {
             } else {
                 return "red"
             }
+        },
+        playbackSpeedString: function() {
+            return this.playbackSpeed.toString();
         }
     },
     watch: {
@@ -217,9 +248,43 @@ export default {
                 this.loadHistoryFrame();
             },
             deep: false
+        },
+        playbackSpeedString: {
+            handler() {
+                console.log("setting model to ", this.playbackSpeedString)
+                this.speedModel = this.playbackSpeedString;
+            },
+            deep: false
         }
     },
     components: {
     }
 }
 </script>
+
+<style scoped>
+.mini-combobox {
+  width: 52px !important;
+  font-size: 0.8rem;    
+}
+
+.mini-combobox :deep(.v-field) {
+  height: 36px !important;
+  min-height: 36px !important;
+  display: flex;
+  align-items: center;
+}
+
+.mini-combobox :deep(.v-field__input) {
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+  padding-inline-start: 4px !important;
+  padding-inline-end: 0px !important;
+  min-height: 36px !important;
+}
+
+.mini-combobox :deep(.v-field__append-inner .v-icon) {
+  font-size: 0.9rem !important;
+  width: 12px;
+}
+</style>
