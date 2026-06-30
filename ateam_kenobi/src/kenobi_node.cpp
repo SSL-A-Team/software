@@ -224,16 +224,22 @@ private:
     for(auto id = 0ul; id < commands.size(); ++id) {
       auto & maybe_cmd = commands[id];
       auto & maybe_motion_cmd = motion_commands[id];
-      if (!maybe_cmd || !maybe_motion_cmd) {
+      if (!maybe_cmd) {
         ros_commands[id] = std::nullopt;
       } else {
         const auto & cmd = maybe_cmd.value();
-        const auto & motion_cmd = maybe_motion_cmd.value();
         auto & ros_cmd = ros_commands[id].emplace();
+
         ros_cmd.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_CURRENT;
         ros_cmd.dribbler_setpoint = cmd.dribbler_setpoint;
         ros_cmd.kick_request = static_cast<uint8_t>(cmd.kick);
         ros_cmd.kick_speed = cmd.kick_speed;
+
+        if (!maybe_motion_cmd) {
+          continue;
+        }
+
+        const auto & motion_cmd = maybe_motion_cmd.value();
         ros_cmd.body_control_mode = static_cast<uint8_t>(motion_cmd.control_mode);
         ros_cmd.pose.x = motion_cmd.pose.x;
         ros_cmd.pose.y = motion_cmd.pose.y;
