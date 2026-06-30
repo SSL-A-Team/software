@@ -55,7 +55,7 @@ install(TARGETS ateam_controls_cpp
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include)
 
-ament_export_dependencies(ateam_geometry)
+ament_export_dependencies(ateam_game_state ateam_geometry)
 
 _ament_cmake_export_libraries_register_environment_hook()
 _ament_cmake_export_libraries_register_package_hook()
