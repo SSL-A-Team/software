@@ -13,7 +13,7 @@
           axis: 3
           scale: 4.0
       kick: "axis 5 < -0.8"
-      chip: "button 5"
+      pivot: "button 5"
       dribbler:
         increment: "button 3"
         decrement: "button 2"
