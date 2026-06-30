@@ -108,7 +108,8 @@ def generate_launch_description():
                 ('~/robot_motion_commands/robot', '/robot_motion_commands/robot'),
                 ('~/robot_feedback/basic/robot', '/robot_feedback/basic/robot'),
                 ('~/robot_feedback/extended/robot', '/robot_feedback/extended/robot'),
-                ('~/robot_feedback/connection/robot', '/robot_feedback/connection/robot')
+                ('~/robot_feedback/connection/robot', '/robot_feedback/connection/robot'),
+                ('~/robot_feedback/error/robot', '/robot_feedback/error/robot'),
             ]),
         ),
     ])
