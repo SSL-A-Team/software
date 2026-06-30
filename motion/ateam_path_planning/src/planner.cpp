@@ -314,28 +314,21 @@ std::partial_ordering Planner::ComparePaths(
   const TrajectorySpline & path_l, const CollisionStats & stats_l,
   const TrajectorySpline & path_r, const CollisionStats & stats_r)
 {
-  // const auto collision_free_time = [](const TrajectorySpline & path,
-  //    const CollisionStats & stats){
-  //     const auto init_collision_end = stats.init_collision_end_time.value_or(0.0);
-  //     const auto new_collision_start =
-  //       stats.new_collision_start_time.value_or(path.GetTotalDuration());
-  //     return new_collision_start - init_collision_end;
-  //   };
   if(stats_l.HasCollision()) {
     if(stats_r.HasCollision()) {
-      // if(auto cmp = collision_free_time(path_l, stats_l) <=> collision_free_time(path_r,
-      // stats_r);
-      //   cmp != std::partial_ordering::equivalent)
-      // {
-      //   return cmp;
-      // }
-      // if(auto cmp = stats_l.init_collision_end_time.value_or(0.0) <=>
-      //   stats_r.init_collision_end_time.value_or(0.0); cmp != std::partial_ordering::equivalent)
-      // {
-      //   return cmp;
-      // }
-      // Compare total durations with opposite l/r because lower durations are better
-      return path_r.GetTotalDuration() <=> path_l.GetTotalDuration();
+      if(stats_l.init_collision_end_time.has_value()) {
+        if(stats_r.init_collision_end_time.has_value()) {
+          return stats_r.init_collision_end_time.value() <=> stats_l.init_collision_end_time.value();
+        } else {
+          return std::partial_ordering::less;
+        }
+      } else {
+        if(stats_r.init_collision_end_time.has_value()) {
+          return std::partial_ordering::greater;
+        } else {
+          return path_r.GetTotalDuration() <=> path_l.GetTotalDuration();
+        }
+      }
     } else {
       return std::partial_ordering::less;
     }
