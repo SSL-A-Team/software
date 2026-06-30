@@ -175,7 +175,7 @@ public:
       return;
     }
 
-    if (robot_id >= world_.our_robots.size()) {
+    if (robot_id >= static_cast<int>(world_.our_robots.size())) {
       return;
     }
 

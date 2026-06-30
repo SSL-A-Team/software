@@ -16,7 +16,6 @@ find_package(ateam_path_planning REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ateam_geometry REQUIRED)
-find_package(control_toolbox REQUIRED)
 find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
 find_package(nlohmann_json REQUIRED)
@@ -131,7 +130,6 @@ ament_target_dependencies(
   "tf2"
   "tf2_geometry_msgs"
   "ateam_geometry"
-  "control_toolbox"
   "OMPL"
   "angles"
   nlohmann_json
