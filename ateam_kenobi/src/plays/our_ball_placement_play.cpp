@@ -51,13 +51,15 @@ void OurBallPlacementPlay::reset()
   state_ = State::Placing;
   pass_tactic_.reset();
   dribble_.reset();
+
+  spin_counter_ = 0;
+  extract_pivoting_ = false;
 }
 
 std::array<std::optional<RobotCommand>, 16> OurBallPlacementPlay::runFrame(
   const World & world)
 {
   std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
-
   auto available_robots = play_helpers::getAvailableRobots(world);
 
   placement_point_ = [this, &world]() {
@@ -72,87 +74,57 @@ std::array<std::optional<RobotCommand>, 16> OurBallPlacementPlay::runFrame(
     }();
 
   DrawKeepoutArea(world.ball.pos, placement_point_);
+  getOverlays().drawCircle(
+    "placement_pos", ateam_geometry::makeCircle(
+      placement_point_,
+      0.15), "green");
 
   const auto point_to_ball = world.ball.pos - placement_point_;
 
   const auto ball_dist = ateam_geometry::norm(point_to_ball);
   const auto ball_speed = ateam_geometry::norm(world.ball.vel);
 
-  getOverlays().drawCircle(
-    "placement_pos", ateam_geometry::makeCircle(
-      placement_point_,
-      0.15), "green");
-
   auto maybe_offset_vector = calculateObstacleOffset(world);
 
-  const bool use_extract = true;
-  const auto should_extract = use_extract && world.ball.visible && ball_dist > 0.2 &&
-    maybe_offset_vector.has_value();
-
-  if (state_ != State::Placing &&
-    world.ball.visible &&
-    ball_dist < 0.12 &&
+  if (world.ball.visible &&
+    ball_dist < ball_placement_good_dist_ &&
     ball_speed < 0.04)
   {
     state_ = State::Done;
 
   // detect ball near goal/walls
-  } else if (should_extract) {
-    approach_point_ = world.ball.pos + maybe_offset_vector.value();
+  } else if (maybe_offset_vector.has_value()) {
     state_ = State::Extracting;
+
+    // Should probably latch this point to return
+    approach_point_ = world.ball.pos + maybe_offset_vector.value();
     getOverlays().drawCircle("approach_point", ateam_geometry::makeCircle(approach_point_, 0.025),
         "#0000FFFF");
+  } else if (ball_dist > min_pass_distance_ && available_robots.size() > 2) {
+    state_ = State::Passing;
+  } else {
+    state_ = State::Placing;
   }
-
-  const bool see_ball_clear_of_obstacle = world.ball.visible && !maybe_offset_vector.has_value();
 
   switch (state_) {
     case State::Extracting:
-      // ball is clear of obstacles
-      if (see_ball_clear_of_obstacle) {
-        state_ = State::Placing;
-        break;
-      }
-
       getPlayInfo()["State"] = "Extracting";
       runExtracting(available_robots, world, maybe_motion_commands);
       break;
     case State::Passing:
-      if (pass_tactic_.isDone() ||
-        (ball_dist < 1.0 && ball_speed < 0.05) ||
-        available_robots.size() < 2)
-      {
-        state_ = State::Placing;
-        break;
-      }
       runPassing(available_robots, world, maybe_motion_commands);
       getPlayInfo()["State"] = "Passing";
       break;
     case State::Placing:
-      // Ball must be placed in a 0.15m radius
-      // if (ball_dist < 0.13 && ball_speed < 0.08) {
-      if (dribble_.isDone() ||
-        (false && ball_dist < 0.08 && ball_speed < 0.04))
-      {
-        state_ = State::Done;
-
-        // Can try to pass if the ball is far away and we have enough robots
-      } else if (ball_dist > 1.1 && available_robots.size() >= 2) {
-        pass_tactic_.reset();
-        state_ = State::Passing;
-      }
       runPlacing(available_robots, world, maybe_motion_commands);
       getPlayInfo()["State"] = "Placing";
       break;
     case State::Done:
-      if (ball_dist > 0.14) {
-        dribble_.reset();
-        state_ = State::Placing;
-      }
       runDone(available_robots, world, maybe_motion_commands);
       getPlayInfo()["State"] = "Done";
   }
 
+  // Handle all robots that haven't already been assigned a command
   available_robots.erase(
     std::remove_if(
       available_robots.begin(), available_robots.end(),
@@ -200,10 +172,13 @@ void OurBallPlacementPlay::runPassing(
     return;
   }
 
+  if (prev_state_ != State::Passing) {
+    pass_tactic_.reset();
+  }
+
   std::vector<Robot> candidate_robots{available_robots.begin(), available_robots.end()};
 
   const auto kicker_robot = play_helpers::getClosestRobot(candidate_robots, world.ball.pos);
-
   play_helpers::removeRobotWithId(candidate_robots, kicker_robot.id);
 
   const auto receiver_robot = play_helpers::getClosestRobot(candidate_robots, placement_point_);
@@ -233,32 +208,38 @@ void OurBallPlacementPlay::runExtracting(
   16> & motion_commands)
 {
   const auto approach_point = approach_point_;
-  auto byDistToApproachPoint = [&approach_point](const Robot & lhs, const Robot & rhs) {
-      return CGAL::compare_distance_to_point(approach_point, lhs.pos, rhs.pos) == CGAL::SMALLER;
-    };
-
-  const auto & extract_robot = *std::min_element(
-    available_robots.begin(),
-    available_robots.end(), byDistToApproachPoint);
+  const auto& extract_robot = play_helpers::getClosestRobot(available_robots, approach_point);
 
   getPlayInfo()["Assignments"]["Extractor"] = extract_robot.id;
 
   const auto robot_to_ball = (world.ball.pos - extract_robot.pos);
-  const auto ball_to_approach = approach_point_ - world.ball.pos;
+  const auto approach_to_ball = world.ball.pos - approach_point;
 
-  // const double ball_to_approach_angle = std::atan2(ball_to_approach.y(), ball_to_approach.x());
-  const double robot_approach_angle_offset = std::acos((-robot_to_ball * ball_to_approach) /
-      (ateam_geometry::norm(robot_to_ball) * ateam_geometry::norm(ball_to_approach))
-  );
-  const double robot_to_ball_angle = std::atan2(robot_to_ball.y(), robot_to_ball.x());
+  const double approach_heading = ateam_geometry::ToHeading(approach_to_ball);
+
+  const double robot_approach_angle_offset = ateam_geometry::ShortestAngleBetween(robot_to_ball, approach_to_ball);
 
   const bool robot_near_approach_point = ateam_geometry::norm(
-    extract_robot.pos - approach_point_
-    ) < 0.05;
-  const bool robot_facing_ball = abs(robot_to_ball_angle - extract_robot.theta) < 0.1;
+    extract_robot.pos - approach_point_) < 0.05;
+  const bool robot_vel_good = ateam_geometry::norm(extract_robot.vel) < 0.05;
+  const bool robot_ready_to_approach = robot_near_approach_point && robot_vel_good;
+
+  getPlayInfo()["ExtractInfo"]["robot_near_approach_point"] = robot_near_approach_point;
+  getPlayInfo()["ExtractInfo"]["robot_vel_good"] = robot_vel_good;
+  getPlayInfo()["ExtractInfo"]["robot_ready_to_approach"] = robot_ready_to_approach;
+
+  const bool robot_facing_ball = abs(angles::shortest_angular_distance(approach_heading, extract_robot.theta)) < 0.1;
   const bool robot_near_ball = ateam_geometry::norm(robot_to_ball) <= approach_radius_;
   const bool robot_already_in_position = robot_near_ball && robot_facing_ball &&
     abs(robot_approach_angle_offset) < 0.3;
+
+  getPlayInfo()["ExtractInfo"]["robot_facing_ball"] = robot_facing_ball;
+  getPlayInfo()["ExtractInfo"]["robot_near_ball"] = robot_near_ball;
+  getPlayInfo()["ExtractInfo"]["robot_approach_angle_offset"] = robot_approach_angle_offset;
+  getPlayInfo()["ExtractInfo"]["robot_already_in_position"] = robot_already_in_position;
+
+  getPlayInfo()["ExtractInfo"]["breakbeam"] = extract_robot.breakbeam_ball_detected;
+  getPlayInfo()["ExtractInfo"]["breakbeam_filtered"] = extract_robot.breakbeam_ball_detected_filtered;
 
   auto motion_command = RobotCommand();
   if (extract_robot.breakbeam_ball_detected_filtered) {
@@ -266,78 +247,66 @@ void OurBallPlacementPlay::runExtracting(
 
     getPlayInfo()["extract bot approach dist"] = ateam_geometry::norm(extract_robot.pos -
         approach_point_);
-    if (ateam_geometry::norm(extract_robot.pos - approach_point_) < 0.03) {
-      const bool use_pivot = true;
-      if (use_pivot && !world.ball.visible) {
+
+    const double pivot_distance_limit = (extract_pivoting_) ? 4 * kRobotRadius : kRobotRadius;
+    if (ateam_geometry::norm(extract_robot.pos - approach_point_) < pivot_distance_limit) {
+      if (abs(angles::shortest_angular_distance(extract_robot.theta,
+        ateam_geometry::ToHeading(placement_point_ - extract_robot.pos))) > 0.2) {
         getPlayInfo()["ExtractState"] = "pivoting";
+        extract_pivoting_ = true;
 
-        // This vector feels backwards but it works I guess
-        const double direction = angles::shortest_angular_distance(
-          ateam_geometry::ToHeading(extract_robot.pos - ateam_geometry::Point(0, 0)),
-          extract_robot.theta
-        );
-
-        motion::intents::Velocity intent;
-        intent.linear = ateam_geometry::Vector{0.0, 0.0};
-        intent.angular = std::copysign(0.8, direction);
+        motion::intents::PivotPoint intent;
+        // intent.planner_options.avoid_ball = false;
+        intent.radius = kRobotRadius + kBallRadius;
+        intent.target_x = placement_point_.x();
+        intent.target_y = placement_point_.y();
+        intent.inset_angle = M_PI/2.0;
+        intent.limits.angular_velocity = 1.0;
+        intent.limits.angular_acceleration = 1.0;
         motion_command.motion_intent = intent;
       } else {
+        // TODO(chachmu): is this really the best option?
+        extract_pivoting_ = false;
         state_ = State::Placing;
       }
     } else {
-      if (world.ball.visible) {
-        motion::intents::PositionFacing intent;
-        intent.position = approach_point_;
-        intent.face_target = world.ball.pos;
-        intent.planner_options.avoid_ball = false;
-        intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
-        intent.limits.linear_velocity = 0.2;
-        intent.limits.linear_acceleration = 1.0;
-        motion_command.motion_intent = intent;
-      } else {
-        // If the ball is occluded we sometimes drive past its previous position and try to turn
-        // around so its better to just keep facing the same direction if we lose track of it
-        motion::intents::Position intent;
-        intent.position = approach_point_;
-        intent.heading = extract_robot.theta;
-        intent.planner_options.avoid_ball = false;
-        intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
-        intent.limits.linear_velocity = 0.2;
-        intent.limits.linear_acceleration = 1.0;
-        motion_command.motion_intent = intent;
-      }
+      extract_pivoting_ = false;
+
+      motion::intents::Position intent;
+      intent.position = approach_point_;
+      intent.heading = approach_heading;
+      intent.planner_options.avoid_ball = false;
+      intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
+      intent.limits.linear_velocity = 0.5;
+      intent.limits.linear_acceleration = 1.0;
+      motion_command.motion_intent = intent;
     }
-  } else if (robot_already_in_position || robot_near_approach_point) {
+  } else if (robot_already_in_position || robot_ready_to_approach) {
     getPlayInfo()["ExtractState"] = "capturing ball";
-    if (world.ball.visible) {
-      motion::intents::LinearVelocityAngularFacing intent;
-      intent.linear = ateam_geometry::Vector(0.35, 0);
-      intent.limits.linear_velocity = 0.35;
-      intent.limits.linear_acceleration = 2.0;
-      intent.face_target = world.ball.pos;
-      motion_command.motion_intent = intent;
-    } else {
-      // If the ball is occluded we sometimes drive past its previous position and try to turn
-      // around so its better to just keep facing the same direction if we lose track of it
-      motion::intents::LinearVelocityAngularHeading intent;
-      intent.linear = ateam_geometry::Vector(0.35, 0);
-      intent.limits.linear_velocity = 0.35;
-      intent.limits.linear_acceleration = 2.0;
-      intent.heading = extract_robot.theta;
-      motion_command.motion_intent = intent;
-    }
+    extract_pivoting_ = false;
+
+    const auto point_to_ball = world.ball.pos - approach_point_;
+
+    motion::intents::Position intent;
+    intent.planner_options.avoid_ball = false;
+    intent.position = approach_point_ + (approach_radius_ + kBallDiameter) * ateam_geometry::normalize(point_to_ball);
+    intent.limits.linear_velocity = 0.5;
+    intent.limits.linear_acceleration = 0.5;
+    intent.heading = approach_heading;
+    motion_command.motion_intent = intent;
   } else {
     getPlayInfo()["ExtractState"] = "moving to approach point";
     motion::intents::Position intent;
+    intent.planner_options.avoid_ball = false;
     intent.position = approach_point_;
-    intent.heading = ateam_geometry::ToHeading(world.ball.pos - approach_point_);
-    intent.limits.linear_velocity = 1.5;
-    intent.limits.linear_acceleration = 2.0;
+    intent.heading = approach_heading;
+    // intent.limits.linear_velocity = 2.0;
+    // intent.limits.linear_acceleration = 2.0;
     motion_command.motion_intent = intent;
   }
 
   const bool should_dribble = extract_robot.breakbeam_ball_detected_filtered ||
-    ateam_geometry::norm(robot_to_ball) < 0.5;
+    robot_ready_to_approach || robot_already_in_position;
   if (should_dribble) {
     motion_command.dribbler_setpoint = 0.025;
   }
@@ -350,17 +319,15 @@ void OurBallPlacementPlay::runPlacing(
   std::array<std::optional<RobotCommand>,
   16> & motion_commands)
 {
-  auto byDistToBall = [&world](const Robot & lhs, const Robot & rhs) {
-      return CGAL::compare_distance_to_point(world.ball.pos, lhs.pos, rhs.pos) == CGAL::SMALLER;
-    };
 
-  const auto & place_robot = *std::min_element(
-    available_robots.begin(),
-    available_robots.end(), byDistToBall);
+  if (prev_state_ != State::Placing) {
+    dribble_.reset();
+  }
+  dribble_.setTarget(placement_point_);
 
+  const auto& place_robot = play_helpers::getClosestRobot(available_robots, dribble_.getAssignmentPoint(world));
   getPlayInfo()["Assignments"]["Placer"] = place_robot.id;
 
-  dribble_.setTarget(placement_point_);
   motion_commands[place_robot.id] = dribble_.runFrame(world, place_robot);
   ForwardPlayInfo(dribble_);
 }
@@ -384,13 +351,43 @@ void OurBallPlacementPlay::runDone(
 
   const auto ball_to_robot = place_robot.pos - world.ball.pos;
 
+  double rules_backoff_distance = 0.5;
+  if (world.referee_info.next_command.has_value()) {
+    switch(world.referee_info.next_command.value()) {
+      case ateam_common::GameCommand::DirectFreeOurs:
+        rules_backoff_distance = 0.05;
+        break;
+      case ateam_common::GameCommand::ForceStart:
+      default:
+        rules_backoff_distance = 0.5;
+    }
+  }
+
+  const auto final_position = world.ball.pos + ((rules_backoff_distance + 1.5 * kRobotDiameter) * ateam_geometry::normalize(ball_to_robot));
+
+  getPlayInfo()["requested_backoff_distance"] = rules_backoff_distance + 1.5 * kRobotDiameter;
+  getPlayInfo()["robot_backoff_distance"] = ateam_geometry::norm(final_position - place_robot.pos);
+
   RobotCommand command;
-  // TODO(chachmu): check next ref command to know if we need 0.5 for force start or
-  // 0.05 for our free kick
-  motion::intents::PositionFacing intent;
-  intent.position = world.ball.pos + (0.5 * ateam_geometry::normalize(ball_to_robot));
-  intent.face_target = world.ball.pos;
-  command.motion_intent = intent;
+  if (spin_counter_ >= 3 || ateam_geometry::norm(final_position - place_robot.pos) > kRobotRadius) {
+    motion::intents::PositionFacing intent;
+    intent.position = final_position;
+    intent.face_target = world.ball.pos;
+    command.motion_intent = intent;
+  } else {
+    const double to_ball = ateam_geometry::ToHeading(world.ball.pos - place_robot.pos);
+    const double target_heading = to_ball + (spin_counter_ + 1) * (2*M_PI/3.0);
+
+    motion::intents::Position intent;
+    intent.position = final_position;
+    intent.heading = target_heading;
+    command.motion_intent = intent;
+
+    if (abs(angles::shortest_angular_distance(target_heading, place_robot.theta)) < M_PI/4.0) {
+      spin_counter_++;
+    }
+  }
+
   motion_commands[place_robot.id] = command;
 }
 
