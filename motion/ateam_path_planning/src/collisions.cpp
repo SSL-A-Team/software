@@ -138,10 +138,14 @@ bool IsPointInBounds(
 {
   const auto x = point.x();
   const auto y = point.y();
-  if((std::fabs(x) + kRobotRadius + footprint_inflation) >= ((world.field.field_length / 2.0) + world.field.boundary_width)) {
+  if((std::fabs(x) + kRobotRadius + footprint_inflation) >=
+    ((world.field.field_length / 2.0) + world.field.boundary_width))
+  {
     return false;
   }
-  if((std::fabs(y) + kRobotRadius + footprint_inflation) >= ((world.field.field_width / 2.0) + world.field.boundary_width)) {
+  if((std::fabs(y) + kRobotRadius + footprint_inflation) >=
+    ((world.field.field_width / 2.0) + world.field.boundary_width))
+  {
     return false;
   }
   return true;
@@ -163,10 +167,14 @@ bool IsStateInBounds(
 {
   const auto x = state.data[0];
   const auto y = state.data[1];
-  if((std::fabs(x) + kRobotRadius + footprint_inflation) >= ((world.field.field_length / 2.0) + world.field.boundary_width)) {
+  if((std::fabs(x) + kRobotRadius + footprint_inflation) >=
+    ((world.field.field_length / 2.0) + world.field.boundary_width))
+  {
     return false;
   }
-  if((std::fabs(y) + kRobotRadius + footprint_inflation) >= ((world.field.field_width / 2.0) + world.field.boundary_width)) {
+  if((std::fabs(y) + kRobotRadius + footprint_inflation) >=
+    ((world.field.field_width / 2.0) + world.field.boundary_width))
+  {
     return false;
   }
   return true;

@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "ateam_path_planning/planner.hpp"
+#include <angles/angles.h>
 #include <ateam_controls/ateam_controls.h>
 #include <algorithm>
 #include <numeric>
@@ -82,7 +83,8 @@ std::array<std::optional<PathPlanResult>, 16> Planner::PlanPathsForAllBots(
           cached_trajectory.GetStartTime()).count();
       const auto collision_stats = collisions::GetCollisionStats(cached_trajectory, bot_obstacles,
           world, options[bot_index].collision_check_resolution,
-          options[bot_index].collision_check_horizon, options[bot_index].footprint_inflation, elapsed);
+          options[bot_index].collision_check_horizon, options[bot_index].footprint_inflation,
+          elapsed);
       paths[bot_index] = PathPlanResult{
         cached_trajectory,
         collision_stats
@@ -249,7 +251,7 @@ bool Planner::ShouldReplan(
   }
 
   const auto elapsed =
-        std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() -
+    std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() -
           cached_path.GetStartTime()).count();
   const auto collision_stats = collisions::GetCollisionStats(cached_path, obstacles, world,
       options.collision_check_resolution, options.collision_check_horizon,
@@ -271,6 +273,9 @@ std::optional<Pose> Planner::GetTruncatedTarget(
     options.collision_check_resolution;
   const auto step_count = ateam_geometry::norm(robot.pos - target.position) /
     options.collision_check_resolution;
+  if(step_count == 0) {
+    return target;
+  }
   auto candidate = target.position;
   for(auto s = 0; s < step_count; ++s) {
     if(!collisions::DoesPointCollideWithObstacles(candidate, 0.0, obstacles,
@@ -303,7 +308,8 @@ std::partial_ordering Planner::ComparePaths(
   const TrajectorySpline & path_l, const CollisionStats & stats_l,
   const TrajectorySpline & path_r, const CollisionStats & stats_r)
 {
-  // const auto collision_free_time = [](const TrajectorySpline & path, const CollisionStats & stats){
+  // const auto collision_free_time = [](const TrajectorySpline & path,
+  //    const CollisionStats & stats){
   //     const auto init_collision_end = stats.init_collision_end_time.value_or(0.0);
   //     const auto new_collision_start =
   //       stats.new_collision_start_time.value_or(path.GetTotalDuration());
@@ -311,7 +317,8 @@ std::partial_ordering Planner::ComparePaths(
   //   };
   if(stats_l.HasCollision()) {
     if(stats_r.HasCollision()) {
-      // if(auto cmp = collision_free_time(path_l, stats_l) <=> collision_free_time(path_r, stats_r);
+      // if(auto cmp = collision_free_time(path_l, stats_l) <=> collision_free_time(path_r,
+      // stats_r);
       //   cmp != std::partial_ordering::equivalent)
       // {
       //   return cmp;

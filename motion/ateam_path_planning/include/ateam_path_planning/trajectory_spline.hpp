@@ -46,7 +46,7 @@ CollisionStats GetCollisionStats(
   const double collision_check_horizon,
   const double footprint_inflation,
   const double search_start_t);
-}
+}  // namespace collisions
 
 class TrajectorySpline
 {
