@@ -91,6 +91,12 @@ public:
     const std::size_t resolution_height, const uint8_t alpha = 255,
     const uint32_t lifetime = kDefaultLifetime);
 
+  void drawOctagon(
+    const std::string & name, const ateam_geometry::Point & center,
+    const double width, const std::string & stroke_color = "white",
+    const std::string & fill_color = "#FFFFFF7F", const uint8_t stroke_width = 5,
+    const uint32_t lifetime = kDefaultLifetime);
+
 private:
   static const uint32_t kDefaultLifetime = 200;
   std::string ns_;

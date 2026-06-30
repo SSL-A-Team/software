@@ -85,7 +85,7 @@ void EnforceDefenseAreaKeepout(
         their_defense_area))
     {
       command = stop_command;
-      DrawStopSign(robot, overlays);
+      overlays.drawOctagon("defkeepout/robot" + std::to_string(robot.id), robot.pos, kRobotDiameter, "Red", "#ff00002c");
     }
   }
 }
@@ -166,20 +166,6 @@ bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command)
 {
   return command == ateam_common::GameCommand::BallPlacementOurs ||
          command == ateam_common::GameCommand::BallPlacementTheirs;
-}
-
-void DrawStopSign(const Robot & robot, visualization::Overlays & overlays)
-{
-  std::vector<ateam_geometry::Point> points;
-  const auto kStopSignRadius = kRobotRadius * 1.1;
-  std::generate_n(std::back_inserter(points), 8, [angle=M_PI/8,kStopSignRadius,&robot]()mutable{
-    ateam_geometry::Vector v{std::cos(angle) * kStopSignRadius, std::sin(angle) * kStopSignRadius};
-    const auto p = robot.pos + v;
-    angle += M_PI_4;
-    return p;
-  });
-  overlays.drawPolygon("defkeepout/robot" + std::to_string(robot.id),
-    {points.begin(), points.end()}, "Red", "#ff00002c");
 }
 
 }  // namespace ateam_kenobi::defense_area_enforcement

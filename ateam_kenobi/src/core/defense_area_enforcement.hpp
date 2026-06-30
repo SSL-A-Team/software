@@ -57,8 +57,6 @@ bool IsRobotEscapingDefenseArea(
 
 bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command);
 
-void DrawStopSign(const Robot & robot, visualization::Overlays & overlays);
-
 }  // namespace ateam_kenobi::defense_area_enforcement
 
 #endif  // CORE__DEFENSE_AREA_ENFORCEMENT_HPP_

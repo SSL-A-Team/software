@@ -43,7 +43,6 @@
 #include "core/types/state_types.hpp"
 #include "core/play_selector.hpp"
 #include "core/in_play_eval.hpp"
-#include "core/double_touch_eval.hpp"
 #include "core/ballsense_emulator.hpp"
 #include "core/motion/frame_conversions.hpp"
 #include "core/motion/motion_executor.hpp"
@@ -126,7 +125,6 @@ public:
 private:
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
-  DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
   std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
@@ -216,7 +214,7 @@ private:
           return std::nullopt;
         }
       });
-    
+
     auto motion_commands = motion_executor_.RunFrame(motion_intents, overlays_, world);
 
     defense_area_enforcement::EnforceDefenseAreaKeepout(world, motion_commands, overlays_);
@@ -263,6 +261,12 @@ private:
         ros_cmd.pivot_direction = motion_cmd.pivot_direction;
         ros_cmd.pivot_compute_inset_angle = motion_cmd.pivot_commpute_inset_angle;
       }
+    }
+
+    if(world.double_touch_forbidden_id_.has_value()) {
+      overlays_.drawOctagon("double_touch_marker",
+          world.our_robots[*world.double_touch_forbidden_id_].pos, kRobotDiameter, "DarkRed",
+          "#00000000");
     }
 
     overlays_.merge(play->getOverlays());

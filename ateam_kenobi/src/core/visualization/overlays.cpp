@@ -279,6 +279,23 @@ void Overlays::drawHeatmap(
   addOverlay(msg);
 }
 
+void Overlays::drawOctagon(
+  const std::string & name, const ateam_geometry::Point & center,
+  const double width, const std::string & stroke_color, const std::string & fill_color,
+  const uint8_t stroke_width, const uint32_t lifetime)
+{
+  std::vector<ateam_geometry::Point> points;
+  const auto radius = width / (2 * std::cos(M_PI / 8));
+  std::generate_n(std::back_inserter(points), 8, [angle = M_PI / 8, radius, &center]() mutable{
+      ateam_geometry::Vector v{std::cos(angle) * radius, std::sin(angle) * radius};
+      const auto p = center + v;
+      angle += M_PI_4;
+      return p;
+  });
+  drawPolygon(name, {points.begin(), points.end()}, stroke_color, fill_color, stroke_width,
+      lifetime);
+}
+
 void Overlays::addOverlay(ateam_msgs::msg::Overlay overlay)
 {
   if (overlay_array_) {
