@@ -169,7 +169,7 @@ void ManeuverExecutor::trajectory_maneuver(
           global_feedback.y = pid_y_target_.compute_command(global_target_err.y, dt);
         }
 
-        if (abs(global_target_err.theta) < angular_threshold) {
+        if (abs(global_target_err.theta) < angular_threshold || global_feedforward.theta < 0.01) {
           global_feedforward.theta = 0.0;
           global_feedback.theta = pid_y_target_.compute_command(global_target_err.theta, dt);
         }

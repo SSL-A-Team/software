@@ -52,7 +52,7 @@ public:
 
     pid_x_target_ = PID(4.0, 0.0, 0.001);
     pid_y_target_ = PID(4.0, 0.0, 0.001);
-    pid_theta_target_ = PID(3.0, 0.0, 0.0);
+    pid_theta_target_ = PID(8.0, 0.0, 0.0);
   }
 
   void set_command(ateam_msgs::msg::RobotMotionCommand command)
