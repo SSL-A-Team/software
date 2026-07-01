@@ -49,6 +49,12 @@ stp::PlayScore SamplePassPlay::getScore(const World & world)
     return stp::PlayScore::NaN();
   }
 
+  if(world.referee_info.running_command == ateam_common::GameCommand::DirectFreeOurs &&
+    world.ball.pos.x() < world.field.field_length / 4.0)
+  {
+    return stp::PlayScore::Min();
+  }
+
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
   if (available_robots.size() < 4) {
@@ -92,7 +98,9 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
-  if(kicker_id_ && world.double_touch_forbidden_id_ && *kicker_id_ == *world.double_touch_forbidden_id_) {
+  if(kicker_id_ && world.double_touch_forbidden_id_ &&
+    *kicker_id_ == *world.double_touch_forbidden_id_)
+  {
     kicker_id_.reset();
   }
   if(!kicker_id_) {
@@ -262,6 +270,9 @@ std::tuple<ateam_geometry::Point,
     const auto y = candidate.pos.y() + dy;
     const ateam_geometry::Point target{x, y};
     const auto score = getTargetScore(target, world);
+    if(std::isnan(score)) {
+      continue;
+    }
     if (score > best_score) {
       best_target = target;
       best_score = score;
@@ -289,7 +300,17 @@ double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, cons
     (world.field.defense_area_width / 2.0) + kRobotDiameter
   };
   if (ateam_geometry::doIntersect(their_defense_area, target)) {
-    return std::numeric_limits<double>::lowest();
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  const ateam_geometry::Rectangle our_defense_area {
+    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter),
+    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
+    -1 * (world.field.field_length / 2.0),
+    (world.field.defense_area_width / 2.0) + kRobotDiameter
+  };
+  if (ateam_geometry::doIntersect(our_defense_area, target)) {
+    return std::numeric_limits<double>::quiet_NaN();
   }
 
   double opponent_dist = std::numeric_limits<double>::max();
