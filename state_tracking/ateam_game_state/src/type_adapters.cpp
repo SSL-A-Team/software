@@ -149,6 +149,13 @@ void rclcpp::TypeAdapter<ateam_game_state::Robot,
   ros_msg.velocity.linear.y = robot.vel.y();
   ros_msg.velocity.angular.z = robot.omega;
 
+  ros_msg.firmware_pose.position.x = robot.firmware_pos.x();
+  ros_msg.firmware_pose.position.y = robot.firmware_pos.y();
+  ros_msg.firmware_pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), robot.firmware_theta));
+  ros_msg.firmware_velocity.linear.x = robot.firmware_vel.x();
+  ros_msg.firmware_velocity.linear.y = robot.firmware_vel.y();
+  ros_msg.firmware_velocity.angular.z = robot.firmware_omega;
+
   ros_msg.prev_command_velocity.linear.x = robot.prev_command_vel.x();
   ros_msg.prev_command_velocity.linear.y = robot.prev_command_vel.y();
   ros_msg.prev_command_velocity.angular.z = robot.prev_command_omega;
@@ -175,6 +182,11 @@ void rclcpp::TypeAdapter<ateam_game_state::Robot,
 
   robot.vel = ateam_geometry::Vector(ros_msg.velocity.linear.x, ros_msg.velocity.linear.y);
   robot.omega = ros_msg.velocity.angular.z;
+
+  robot.firmware_pos = ateam_geometry::Point(ros_msg.firmware_pose.position.x, ros_msg.firmware_pose.position.y);
+  tf2::Quaternion firm_quat;
+  tf2::fromMsg(ros_msg.firmware_pose.orientation, firm_quat);
+  robot.firmware_theta = tf2::getYaw(firm_quat);
 
   robot.prev_command_vel = ateam_geometry::Vector(ros_msg.prev_command_velocity.linear.x,
     ros_msg.prev_command_velocity.linear.y);

@@ -67,7 +67,7 @@ def publish_waypoint_command(index: int):
     command_msg.pivot_inset_angle = waypoint[4]
     command_msg.limit_acc_linear = 3.0
     command_msg.limit_vel_linear = 3.0
-    command_msg.limit_acc_angular = 8.0
+    command_msg.limit_acc_angular = 3.0
     command_msg.limit_vel_angular = 4.0
     command_pub.publish(command_msg)
 

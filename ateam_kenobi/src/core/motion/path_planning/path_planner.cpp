@@ -55,7 +55,8 @@ void PathPlanner::Execute(
     if(!position) {
       continue;
     }
-    overlays.drawCircle("pathing/expected/" + std::to_string(id), ateam_geometry::makeCircle(*position, kRobotRadius + 0.05), "Purple", "#00000000");
+    const auto & bot_options = options[id];
+    overlays.drawCircle("pathing/expected/" + std::to_string(id), ateam_geometry::makeCircle(*position, bot_options.replan_thresholds.deviation_distance), "Purple", "#00000000");
   }
 
   std::vector<ateam_path_planning::Obstacle> global_obstacles;

@@ -70,7 +70,7 @@ class RadioBridgeNode : public rclcpp::Node
 public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
-    sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 250)),
+    sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 500)),
     connect_timeout_threshold_(declare_parameter("connect_timeout_ms", 750)),
     vision_state_staleness_threshold_(declare_parameter("vision_state_staleness_ms", 100)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
@@ -340,6 +340,9 @@ private:
     switch(command.body_control_mode) {
         case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
           control_msg.body_control_mode = BCM_OFF;
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_ESTOP_BRAKE:
+          control_msg.body_control_mode = BCM_ESTOP_BRAKE;
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
           control_msg.body_control_mode = BCM_GLOBAL_POSITION;

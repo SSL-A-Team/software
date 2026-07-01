@@ -57,10 +57,10 @@ enum class PivotDirection
 
 struct Limits
 {
-  double linear_velocity = 0.0;
-  double linear_acceleration = 0.0;
-  double angular_velocity = 0.0;
-  double angular_acceleration = 0.0;
+  double linear_velocity = 2.0;
+  double linear_acceleration = 1.5;
+  double angular_velocity = 2.0;
+  double angular_acceleration = 2.0;
 };
 
 namespace intents

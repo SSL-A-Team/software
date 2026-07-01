@@ -210,8 +210,10 @@ private:
       dribbler_speed_, static_cast<float>(get_parameter("mapping.dribbler.min").as_double()),
       static_cast<float>(get_parameter("mapping.dribbler.max").as_double()));
     if (dribbler_spin_trigger_(*joy_message)) {
+      command_message.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_CURRENT;
       command_message.dribbler_setpoint = dribbler_speed_;
     } else {
+      command_message.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_DISABLE;
       command_message.dribbler_setpoint = 0.0;
     }
 

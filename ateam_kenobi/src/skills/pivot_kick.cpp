@@ -65,7 +65,7 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
 
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
-  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.1) {
+  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.05) {
     if (prev_state_ != State::Pivot) {
       prev_state_ = State::Pivot;
     }
@@ -105,24 +105,29 @@ RobotCommand PivotKick::Pivot(
   // const auto robot_to_target = target_point_ - robot.pos;
   // const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
 
-  const auto ball_to_target = target_point_ - world.ball.pos;
-  const auto ball_to_target_angle = std::atan2(ball_to_target.y(), ball_to_target.x());
+  // const auto ball_to_target = target_point_ - world.ball.pos;
+  // const auto ball_to_target_angle = std::atan2(ball_to_target.y(), ball_to_target.x());
 
-  motion::intents::PivotHeading intent;
-  // motion::intents::PivotPoint intent;
-  // intent.target_x = target_point_.x();
-  // intent.target_y = target_point_.y();
-  intent.radius = 0.095  * 0.9;
+  // motion::intents::PivotHeading intent;
+  motion::intents::PivotPoint intent;
+  intent.target_x = target_point_.x();
+  intent.target_y = target_point_.y();
+
+  // intent.radius = 0.9 * (kRobotRadius + kBallRadius);
+  intent.radius = 0.2;
+
+
   // intent.target_heading = robot_to_target_angle;
-  intent.target_heading = ball_to_target_angle;
-  intent.inset_angle = M_PI / 2.0;
+  // intent.target_heading = ball_to_target_angle;
+  // intent.inset_angle = M_PI / 2.0;
+  intent.inset_angle = 0.0;
 
-  intent.limits.angular_velocity = 4.0;
-  intent.limits.angular_acceleration = 1.8;
+  intent.limits.angular_velocity = 1.5;
+  intent.limits.angular_acceleration = 4.0;
 
   RobotCommand command;
   command.motion_intent = intent;
-  command.dribbler_setpoint = 0.3 * kDefaultDribblerSetpoint;
+  command.dribbler_setpoint = 2.0*kDefaultDribblerSetpoint;
 
   return command;
 }

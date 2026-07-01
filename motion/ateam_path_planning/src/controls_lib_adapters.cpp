@@ -31,9 +31,12 @@ Vector6C_t Vector6FromRobot(const ateam_game_state::Robot & robot)
     static_cast<float>(robot.pos.x()),
     static_cast<float>(robot.pos.y()),
     static_cast<float>(robot.theta),
-    static_cast<float>(robot.vel.x()),
-    static_cast<float>(robot.vel.y()),
-    static_cast<float>(robot.omega)
+    static_cast<float>(robot.firmware_vel.x()),
+    static_cast<float>(robot.firmware_vel.y()),
+    static_cast<float>(robot.firmware_omega)
+    // static_cast<float>(robot.vel.x()),
+    // static_cast<float>(robot.vel.y()),
+    // static_cast<float>(robot.omega)
   };
 }
 
