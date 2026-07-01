@@ -81,6 +81,8 @@ void SamplePassPlay::enter()
   candidate_receiver_ids_.clear();
   defender_ids_.clear();
   std::fill(target_cache_.begin(), target_cache_.end(), std::nullopt);
+  prev_best_score_ = std::numeric_limits<double>::lowest();
+  prev_score_change_time_ = std::chrono::steady_clock::now();
 }
 
 std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World & world)
@@ -161,15 +163,46 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
     }
   }
 
+  std::optional<double> closest_opponent_distance;
+  for ( const auto & opponent : world.their_robots ) {
+    if (opponent.visible) {
+      const auto sq_dist = CGAL::squared_distance(world.ball.pos, opponent.pos);
+      closest_opponent_distance =
+        std::min(closest_opponent_distance.value_or(std::numeric_limits<double>::max()), sq_dist);
+    }
+  }
+
   if (!pass_locked_) {
+    bool should_lock = false;
     if (best_receiver) {
       if (holding_start_time_) {
         if ((std::chrono::steady_clock::now() - *holding_start_time_) > kHoldingTimeout) {
-          lockPass(*best_receiver, *best_target);
+          should_lock = true;
         }
       }
 
+      if(std::abs(best_receiver_score - prev_best_score_) < 1e-2) {
+        const auto score_stall_time = std::chrono::steady_clock::now() - prev_score_change_time_;
+        if(score_stall_time > kPreemptHoldingScoreStallTime) {
+          should_lock = true;
+        }
+      } else {
+        prev_best_score_ = best_receiver_score;
+        prev_score_change_time_ = std::chrono::steady_clock::now();
+      }
+
       if (best_receiver_score > kPreemptHoldingScoreThreshold) {
+        should_lock = true;
+      }
+
+      if(closest_opponent_distance &&
+        CGAL::approximate_sqrt(*closest_opponent_distance) <=
+        kPreemptHoldingEnemyProximityThreshold)
+      {
+        should_lock = true;
+      }
+
+      if(should_lock) {
         lockPass(*best_receiver, *best_target);
       }
     }
@@ -178,7 +211,8 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
 
     const auto dist_to_ball = ateam_geometry::norm(kicker.pos - world.ball.pos);
     if (dist_to_ball < (kRobotRadius + kBallRadius + 0.01) ||
-      kicker.breakbeam_ball_detected_filtered) {
+      kicker.breakbeam_ball_detected_filtered)
+    {
       if (!holding_start_time_) {
         holding_start_time_ = std::chrono::steady_clock::now();
       }
@@ -210,7 +244,8 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
 }
 
 std::tuple<ateam_geometry::Point,
-  double> SamplePassPlay::getBestPassTargetForCandidate(const World & world,
+  double> SamplePassPlay::getBestPassTargetForCandidate(
+  const World & world,
   const Robot & candidate)
 {
   ateam_geometry::Point best_target;
@@ -277,9 +312,11 @@ double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, cons
   const auto pass_length = ateam_geometry::norm(target - world.ball.pos);
   auto pass_length_factor = 1.0;
   if(pass_length < kMinIdealPassLength) {
-    pass_length_factor = std::clamp(1.0 - ((kMinIdealPassLength - pass_length) / kMinIdealPassLength), 0.2, 1.0);
+    pass_length_factor = std::clamp(1.0 -
+        ((kMinIdealPassLength - pass_length) / kMinIdealPassLength), 0.2, 1.0);
   } else if (pass_length > kMaxIdealPassLength) {
-    pass_length_factor = std::clamp(1.0 - ((pass_length - kMaxIdealPassLength) / kMaxIdealPassLength), 0.2, 1.0);
+    pass_length_factor = std::clamp(1.0 -
+        ((pass_length - kMaxIdealPassLength) / kMaxIdealPassLength), 0.2, 1.0);
   }
 
   return shot_success_chance * opponent_dist * friend_proximity_penalty * pass_length_factor;
