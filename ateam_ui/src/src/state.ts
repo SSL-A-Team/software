@@ -267,7 +267,7 @@ export class AppState {
             const request = new ROSLIB.ServiceRequest({"playbook_definition": text});
             rosManager.services.get("importPlaybook")?.callService(request, function(result: any): void{
                 if(!result.success) {
-                    console.log("Failed to import playbook definition.");
+                    alert("Failed to import playbook definition.");
                 }
             });
         };
