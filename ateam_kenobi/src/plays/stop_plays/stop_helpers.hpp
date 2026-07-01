@@ -58,13 +58,15 @@ void moveBotsTooCloseToBall(
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
   std::array<std::optional<RobotCommand>, 16> & motion_commands,
   visualization::Overlays & overlays,
-  nlohmann::json & play_info);
+  nlohmann::json & play_info,
+  bool override_existing_motion_commands = false);
 
 void moveBotsInObstacles(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
   std::array<std::optional<RobotCommand>, 16> & motion_commands,
-  nlohmann::json & play_info);
+  nlohmann::json & play_info,
+  bool override_existing_motion_commands = false);
 
 }  // namespace ateam_kenobi::plays::stop_plays::stop_helpers
 

@@ -228,7 +228,8 @@ void moveBotsTooCloseToBall(
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
   std::array<std::optional<RobotCommand>, 16> & motion_commands,
   visualization::Overlays & overlays,
-  nlohmann::json & play_info)
+  nlohmann::json & play_info,
+  bool override_existing_motion_commands)
 {
   const auto spots = getOpenSpots(world, overlays);
 
@@ -255,7 +256,7 @@ void moveBotsTooCloseToBall(
       continue;
     }
     const auto & bot = *maybe_bot;
-    if(motion_commands[bot.id]) {
+    if(!override_existing_motion_commands && motion_commands[bot.id]) {
       continue;
     }
     motion::intents::PositionFacing intent;
@@ -276,7 +277,8 @@ void moveBotsInObstacles(
   const World & world,
   const std::vector<ateam_geometry::AnyShape> & added_obstacles,
   std::array<std::optional<RobotCommand>, 16> & motion_commands,
-  nlohmann::json & play_info)
+  nlohmann::json & play_info,
+  bool override_existing_motion_commands)
 {
   auto & play_info_bots = play_info["bots in obstacles"];
   play_info_bots = nlohmann::json::array();
@@ -285,7 +287,7 @@ void moveBotsInObstacles(
     if(!robot.IsAvailable()) {
       continue;
     }
-    if(motion_commands[i]) {
+    if(!override_existing_motion_commands && motion_commands[i]) {
       continue;
     }
     const auto opt_escape_vel = motion::GenerateEscapeVelocity(robot, added_obstacles);

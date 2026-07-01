@@ -51,10 +51,11 @@ stp::PlayScore DefensiveStopPlay::getScore(const World & world)
     return stp::PlayScore::Min();
   }
   switch (world.referee_info.next_command.value()) {
-    case ateam_common::GameCommand::PrepareKickoffTheirs:
     case ateam_common::GameCommand::PreparePenaltyTheirs:
     case ateam_common::GameCommand::DirectFreeTheirs:
       return stp::PlayScore::Max();
+    case ateam_common::GameCommand::PrepareKickoffTheirs:
+      return 50.0; // Give kickoff prep a chance to run
     default:
       return stp::PlayScore::Min();
   }

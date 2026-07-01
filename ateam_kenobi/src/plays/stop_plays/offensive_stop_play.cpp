@@ -52,10 +52,11 @@ stp::PlayScore OffensiveStopPlay::getScore(const World & world)
   }
   switch (world.referee_info.next_command.value()) {
     case ateam_common::GameCommand::ForceStart:
-    case ateam_common::GameCommand::PrepareKickoffOurs:
     case ateam_common::GameCommand::PreparePenaltyOurs:
     case ateam_common::GameCommand::DirectFreeOurs:
       return stp::PlayScore::Max();
+    case ateam_common::GameCommand::PrepareKickoffOurs:
+      return 50.0; // Give kickoff prep a chance to run
     default:
       return stp::PlayScore::Min();
   }
