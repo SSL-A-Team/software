@@ -19,9 +19,11 @@
 # THE SOFTWARE.
 
 
+from .interface_from_address_substitution import InterfaceFromAddressSubstitution
 from .package_launch_file_substitution import PackageLaunchFileSubstitution
 
 
 __all__ = [
+    'InterfaceFromAddressSubstitution',
     'PackageLaunchFileSubstitution'
 ]

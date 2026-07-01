@@ -18,9 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from ateam_bringup.substitutions import PackageLaunchFileSubstitution
+from ateam_bringup.substitutions import (
+    InterfaceFromAddressSubstitution,
+    PackageLaunchFileSubstitution
+)
 import launch
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo
 from launch.conditions import IfCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -33,7 +36,8 @@ def generate_launch_description():
         DeclareLaunchArgument('start_gc', default_value='True'),
         DeclareLaunchArgument('start_ui', default_value='True'),
         DeclareLaunchArgument('headless_sim', default_value='True'),
-        DeclareLaunchArgument('sim_radio_ip', default_value='127.0.0.1'),
+        DeclareLaunchArgument('sim_ip', default_value='127.0.0.1'),
+        DeclareLaunchArgument('gc_ip', default_value='172.17.0.2'),
         DeclareLaunchArgument('team_name', default_value='A-Team'),
 
         IncludeLaunchDescription(
@@ -58,9 +62,9 @@ def generate_launch_description():
                 PackageLaunchFileSubstitution('ateam_bringup',
                                               'league_bridges.launch.xml')),
             launch_arguments={
-                'gc_net_interface_address': '172.17.0.1',
-                'gc_ip_address': '172.17.0.2',
-                'vision_net_interface_address': '127.0.0.1',
+                'gc_net_interface_address': InterfaceFromAddressSubstitution(LaunchConfiguration('gc_ip')),
+                'gc_ip_address': LaunchConfiguration('gc_ip'),
+                'vision_net_interface_address': InterfaceFromAddressSubstitution(LaunchConfiguration('sim_ip')),
                 'vision_port': '10020',
                 'team_name': LaunchConfiguration('team_name')
             }.items()
@@ -85,7 +89,7 @@ def generate_launch_description():
             executable='ssl_simulation_radio_bridge_node',
             name='radio_bridge',
             parameters=[{
-                'ssl_sim_radio_ip': LaunchConfiguration('sim_radio_ip'),
+                'ssl_sim_radio_ip': LaunchConfiguration('sim_ip'),
                 'gc_team_name': LaunchConfiguration('team_name')
             }]
         ),
