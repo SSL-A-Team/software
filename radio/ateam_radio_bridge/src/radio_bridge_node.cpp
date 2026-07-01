@@ -341,6 +341,9 @@ private:
         case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
           control_msg.body_control_mode = BCM_OFF;
           break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_ESTOP_BRAKE:
+          control_msg.body_control_mode = BCM_ESTOP_BRAKE;
+          break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
           control_msg.body_control_mode = BCM_GLOBAL_POSITION;
           control_msg.cmd.global_pos = {
