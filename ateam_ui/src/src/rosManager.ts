@@ -334,7 +334,7 @@ export class RosManager {
         return function(msg: any): void {
             let robot = world.teams.get(world.team).robots[id];
 
-            robot.error_telem.error_message = String.fromCharCode(...msg.error_message);
+            robot.error_telem.error_message = atob(msg.error_message);
             robot.error_telem.received_time = world.timestamp;
         };
     }
