@@ -65,6 +65,7 @@ export default {
             speedModel: "1.0",
             speedSearch: "",
             playbackSpeed: 1.0,
+            playbackFrameAdvance: 2,
             playbackTimer: null as NodeJS.Timer,
             state: inject('state') as AppState
         }
@@ -80,7 +81,6 @@ export default {
                 this.pause();
                 this.state.selectedHistoryFrame = this.state.worldHistory.length - 1;
             } else if (this.state.historyReplayIsPaused) {
-                this.playbackSpeed = 1.0;
                 this.play();
             } else {
                 this.pause();
@@ -90,12 +90,25 @@ export default {
             clearInterval(this.playbackTimer);
             this.state.historyReplayIsPaused = false;
 
-            // Playback runs at half framerate
-            this.playbackTimer = setInterval(this.playbackUpdate, 20);
+            let update_period; // s
+
+            if (Math.abs(this.playbackSpeed) >= 0.5) {
+                // Playback runs at half framerate above 50 fps
+                update_period = 0.02;
+                this.playbackFrameAdvance = Math.round(2 * this.playbackSpeed);
+            } else {
+                this.playbackFrameAdvance = 1;
+                update_period = 1 / (100 * Math.abs(this.playbackSpeed));
+            }
+
+            if (Math.abs(this.playbackFrameAdvance) < 1) {
+                this.playbackFrameAdvance = Math.sign(this.playbackFrameAdvance);
+            }
+
+            this.playbackTimer = setInterval(this.playbackUpdate, 1000 * update_period);
         },
         pause: function() {
             this.state.historyReplayIsPaused = true;
-            this.playbackSpeed = 1.0;
             clearInterval(this.playbackTimer);
         },
         rewind: function() {
@@ -126,7 +139,6 @@ export default {
         stepButton: function(frames: number) {
             // Pause history replay when stepping by frame
             this.state.historyReplayIsPaused = true;
-            this.playbackSpeed = 1.0;
 
             // If you are in realtime just go to the latest frame
             if (this.state.selectedHistoryFrame == -1) {
@@ -178,7 +190,7 @@ export default {
                     this.state.historyReplayIsPaused = true;
                 } else {
                     // Rendering every other frame for standard playback rn since it can be kind of laggy
-                    this.stepFrames(2 * Math.round(this.playbackSpeed));
+                    this.stepFrames(this.playbackFrameAdvance);
                 }
             }
         },
