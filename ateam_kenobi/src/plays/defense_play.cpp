@@ -49,7 +49,7 @@ stp::PlayScore DefensePlay::getScore(const World & world)
   if (play_helpers::WhoHasPossession(world) == play_helpers::PossessionResult::Theirs) {
     return stp::PlayScore::Max();
   } else {
-    return stp::PlayScore::Min();
+    return stp::PlayScore::Discouraged();
   }
 }
 

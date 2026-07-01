@@ -86,12 +86,18 @@ public:
     return kMinAllowed;
   }
 
+  static PlayScore Discouraged()
+  {
+    return kDiscouraged;
+  }
+
   auto operator<=>(const PlayScore &) const = default;
 
 private:
   static constexpr double kMaxAllowed = 100.0;
   static constexpr double kMinAllowed = 0.0;
   static constexpr double kInfinity = std::numeric_limits<double>::infinity();
+  static constexpr double kDiscouraged = 10.0;
 
   double value_ = kInfinity;
 };
