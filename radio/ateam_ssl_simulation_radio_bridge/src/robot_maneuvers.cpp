@@ -87,7 +87,7 @@ void ManeuverExecutor::trajectory_maneuver(
   double current_dist = std::hypot(robot.pose.position.x - state.data[0],
       robot.pose.position.y - state.data[1]);
   bool current_pos_needs_replan = current_dist > 0.5 ||
-    angles::shortest_angular_distance(vision_yaw, state.data[2]) > 0.3;
+    abs(angles::shortest_angular_distance(vision_yaw, state.data[2])) > 0.2;
 
   bool maneuver_command_changed = (command_ != ros_msg);
   bool replanning = maneuver_command_changed || current_pos_needs_replan;
