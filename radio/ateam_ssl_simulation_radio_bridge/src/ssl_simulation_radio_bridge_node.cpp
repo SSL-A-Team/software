@@ -217,7 +217,25 @@ public:
 
     for (const auto & single_feedback : feedback_proto.feedback()) {
       int robot_id = single_feedback.id();
-      feedback_publishers_.at(robot_id)->publish(message_conversions::fromProto(single_feedback));
+      auto robot = world_.our_robots.at(robot_id);
+
+      robot_maneuvers::ManeuverExecutor maneuver_executor = manuever_executors_.at(robot_id);
+      const auto body_pos = maneuver_executor.get_body_pos(robot);
+      const auto body_vel = maneuver_executor.get_body_vel(robot);
+
+      ateam_radio_msgs::msg::BasicTelemetry telemetry_message = message_conversions::fromProto(single_feedback);
+      telemetry_message.kf_body_pos_estimate = std::vector<int16_t>{
+        static_cast<int16_t>(1000 * body_pos.x),
+        static_cast<int16_t>(1000 * body_pos.y),
+        static_cast<int16_t>(1000 * body_pos.theta)
+      };
+      telemetry_message.kf_body_vel_estimate = std::vector<int16_t>{
+        static_cast<int16_t>(1000 * body_vel.x),
+        static_cast<int16_t>(1000 * body_vel.y),
+        static_cast<int16_t>(1000 * body_vel.theta)
+      };
+
+      feedback_publishers_.at(robot_id)->publish(telemetry_message);
       ateam_radio_msgs::msg::ConnectionStatus connection_msg;
       connection_msg.radio_connected = true;
       connection_publishers_.at(robot_id)->publish(connection_msg);

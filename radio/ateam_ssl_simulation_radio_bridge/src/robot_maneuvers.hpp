@@ -64,6 +64,9 @@ public:
     RobotMoveCommand * robot_move_command,
     const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
 
+  ateam_msgs::msg::Twist2D get_body_pos(ateam_msgs::msg::GameStateRobot robot);
+  ateam_msgs::msg::Twist2D get_body_vel(ateam_msgs::msg::GameStateRobot robot);
+
 private:
   void bcm_off_maneuver();
 

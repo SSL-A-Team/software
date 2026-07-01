@@ -499,4 +499,31 @@ void ManeuverExecutor::tick_trajectory(float dt)
       break;
   }
 }
+
+ateam_msgs::msg::Twist2D ManeuverExecutor::get_body_pos(ateam_msgs::msg::GameStateRobot robot){
+  ateam_msgs::msg::Twist2D out;
+  if (command_uses_trajectory()) {
+    Vector6C_t state = get_trajectory_state();
+    out.x = state.data[0];
+    out.y = state.data[1];
+    out.theta = state.data[2];
+  } else {
+    ateam_msgs::msg::Twist2D out;
+    out.x = robot.pose.position.x;
+    out.y = robot.pose.position.y;
+    out.theta = get_yaw(robot.pose);
+  }
+  return out;
+}
+
+ateam_msgs::msg::Twist2D ManeuverExecutor::get_body_vel(ateam_msgs::msg::GameStateRobot robot) {
+  if (command_uses_trajectory()) {
+    Vector6C_t state = get_trajectory_state();
+    return rotate_frame(current_global_command_, state.data[2]);
+  } else {
+    return rotate_frame(current_global_command_, get_yaw(robot.pose));
+  }
+}
+
+
 }  // namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
