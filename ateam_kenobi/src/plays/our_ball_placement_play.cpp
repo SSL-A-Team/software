@@ -61,6 +61,9 @@ std::array<std::optional<RobotCommand>, 16> OurBallPlacementPlay::runFrame(
 {
   std::array<std::optional<RobotCommand>, 16> maybe_motion_commands;
   auto available_robots = play_helpers::getAvailableRobots(world);
+  if (available_robots.size() > 1) {
+    play_helpers::removeGoalie(available_robots, world);
+  }
 
   placement_point_ = [this, &world]() {
       if (world.referee_info.designated_position.has_value()) {
