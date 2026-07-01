@@ -92,6 +92,9 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
 
+  if(kicker_id_ && world.double_touch_forbidden_id_ && *kicker_id_ == *world.double_touch_forbidden_id_) {
+    kicker_id_.reset();
+  }
   if(!kicker_id_) {
     play_helpers::GroupAssignmentSet groups;
 
