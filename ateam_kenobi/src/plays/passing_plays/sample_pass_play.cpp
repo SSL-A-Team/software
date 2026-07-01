@@ -63,9 +63,9 @@ stp::PlayScore SamplePassPlay::getScore(const World & world)
   }
 
   const ateam_geometry::Rectangle our_defense_area {
-    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter),
-    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
     -1 * (world.field.field_length / 2.0),
+    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
+    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter),
     (world.field.defense_area_width / 2.0) + kRobotDiameter
   };
   const ateam_geometry::Rectangle their_defense_area {
@@ -102,9 +102,9 @@ stp::PlayCompletionState SamplePassPlay::getCompletionState(const World & world)
     return stp::PlayCompletionState::Done;
   }
   const ateam_geometry::Rectangle our_defense_area {
-    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter),
-    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
     -1 * (world.field.field_length / 2.0),
+    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
+    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter),
     (world.field.defense_area_width / 2.0) + kRobotDiameter
   };
   const ateam_geometry::Rectangle their_defense_area {
