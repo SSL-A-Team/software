@@ -62,6 +62,16 @@ stp::PlayScore SamplePassPlay::getScore(const World & world)
     return stp::PlayScore::NaN();
   }
 
+  const ateam_geometry::Rectangle our_defense_area {
+    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter),
+    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
+    -1 * (world.field.field_length / 2.0),
+    (world.field.defense_area_width / 2.0) + kRobotDiameter
+  };
+  if(ateam_geometry::doIntersect(world.ball.pos, our_defense_area)) {
+    return stp::PlayScore::Min();
+  }
+
   return stp::PlayScore(50);
 }
 
