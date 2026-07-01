@@ -103,6 +103,32 @@ std::array<std::optional<PathPlanResult>, 16> Planner::PlanPathsForAllBots(
   return paths;
 }
 
+std::array<std::optional<ateam_geometry::Point>, 16>
+Planner::GetExpectedLocations(const std::array<PlannerOptions, 16> & options)
+{
+  std::array<std::optional<ateam_geometry::Point>, 16> locations;
+  const auto now = std::chrono::steady_clock::now();
+  for(auto id = 0; id < 16; ++id) {
+    const auto & cache = cache_[id];
+    if(!cache.has_value()) {
+      continue;
+    }
+    const auto & bot_options = options[id];
+    const auto check_time = now -
+      std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(
+        bot_options.replan_thresholds.lag_estimate));
+    const auto expected_state = cache->trajectory.GetStateAt(check_time);
+    if(!expected_state) {
+      continue;
+    }
+    locations[id] = ateam_geometry::Point{
+      expected_state->position.x(),
+      expected_state->position.y()
+    };
+  }
+  return locations;
+}
+
 std::optional<PathPlanResult> Planner::PlanPath(
   const ateam_game_state::Robot & robot, const Pose & target,
   const std::vector<Obstacle> & obstacles, const PlannerOptions & options,

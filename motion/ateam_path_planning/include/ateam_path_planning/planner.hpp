@@ -45,6 +45,9 @@ public:
     const std::array<std::vector<Obstacle>, 16> & per_bot_obstacles,
     const std::array<PlannerOptions, 16> & options = {});
 
+  std::array<std::optional<ateam_geometry::Point>, 16>
+  GetExpectedLocations(const std::array<PlannerOptions, 16> & options = {});
+
 private:
   struct CacheEntry
   {
