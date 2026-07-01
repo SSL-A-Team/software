@@ -181,6 +181,9 @@ RobotCommand LineKick::RunMoveBehindBall(
   motion_intent.planner_options.draw_obstacles = true;
   motion_intent.planner_options.footprint_inflation = std::min(0.015, pre_kick_offset);
   motion_intent.limits.linear_acceleration = 1.5;
+  motion_intent.limits.linear_velocity = 2.0;
+  motion_intent.limits.angular_velocity = 2.0;
+  motion_intent.limits.angular_acceleration = 2.0;
 
   double obstacle_radius_multiplier = 1.8;
   const auto robot_to_prekick = prekick_position - robot.pos;
