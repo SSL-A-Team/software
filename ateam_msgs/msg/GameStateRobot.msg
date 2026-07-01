@@ -3,6 +3,8 @@ bool visible
 bool radio_connected
 geometry_msgs/Pose pose
 geometry_msgs/Twist velocity
+geometry_msgs/Pose firmware_pose
+geometry_msgs/Twist firmware_velocity
 geometry_msgs/Twist prev_command_velocity
 bool breakbeam_ball_detected
 bool breakbeam_ball_detected_filtered
