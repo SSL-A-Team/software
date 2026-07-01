@@ -196,7 +196,8 @@ void rclcpp::TypeAdapter<ateam_game_state::Field,
   ros_msg.goal_width = field.goal_width;
   ros_msg.goal_depth = field.goal_depth;
   ros_msg.boundary_width = field.boundary_width;
-  ros_msg.ignore_side = field.ignore_side;
+  ros_msg.ignore_side = static_cast<int>(field.ignore_side);
+  ros_msg.ignore_side_raw = field.ignore_side_raw;
   ros_msg.defense_area_width = field.defense_area_width;
   ros_msg.defense_area_depth = field.defense_area_depth;
   ros_msg.center_circle.x = field.center_circle_center.x();
@@ -228,7 +229,8 @@ void rclcpp::TypeAdapter<ateam_game_state::Field, ateam_msgs::msg::FieldInfo>::c
   field.goal_width = ros_msg.goal_width;
   field.goal_depth = ros_msg.goal_depth;
   field.boundary_width = ros_msg.boundary_width;
-  field.ignore_side = ros_msg.ignore_side;
+  field.ignore_side = static_cast<ateam_game_state::IgnoreSide>(ros_msg.ignore_side);
+  field.ignore_side_raw = ros_msg.ignore_side_raw;
   field.defense_area_width = ros_msg.defense_area_width;
   field.defense_area_depth = ros_msg.defense_area_depth;
   field.center_circle_center = ateam_geometry::Point(ros_msg.center_circle.x,

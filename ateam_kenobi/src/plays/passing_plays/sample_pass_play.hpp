@@ -53,12 +53,16 @@ private:
   static constexpr unsigned int kSampleCount = 20;
   static constexpr std::chrono::milliseconds kHoldingTimeout = std::chrono::seconds(3);
   static constexpr double kPreemptHoldingScoreThreshold = 500.0;
+  static constexpr double kPreemptHoldingEnemyProximityThreshold = kRobotDiameter * 2.0;
+  static constexpr std::chrono::milliseconds kPreemptHoldingScoreStallTime =
+    std::chrono::milliseconds(150);
   static constexpr double kFriendProximityPenalty = 1.0;
-  static constexpr double kFriendProximityThreshold = 1.0;  // m
+  static constexpr double kFriendProximityThreshold = 3.0;  // m
   static constexpr double kMinIdealPassLength = 1.0;  // m
   static constexpr double kMaxIdealPassLength = 3.5;  // m
 
-  struct CacheEntry {
+  struct CacheEntry
+  {
     ateam_geometry::Point target;
     double score;
   };
@@ -76,8 +80,12 @@ private:
   std::vector<int> candidate_receiver_ids_;
   std::vector<int> defender_ids_;
   std::array<std::optional<CacheEntry>, 16> target_cache_;
+  double prev_best_score_ = std::numeric_limits<double>::lowest();
+  std::chrono::steady_clock::time_point prev_score_change_time_;
 
-  std::tuple<ateam_geometry::Point, double> getBestPassTargetForCandidate(const World & world, const Robot & candidate);
+  std::tuple<ateam_geometry::Point, double> getBestPassTargetForCandidate(
+    const World & world,
+    const Robot & candidate);
 
   double getTargetScore(const ateam_geometry::Point & target, const World & world);
 
