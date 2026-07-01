@@ -246,6 +246,7 @@ RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
   intent.limits.linear_velocity = kick_drive_velocity;
   intent.planner_options.avoid_ball = false;
   intent.planner_options.use_default_obstacles = false;
+  intent.planner_options.footprint_inflation = 0.01 - kRobotRadius;
 
   RobotCommand command;
 
