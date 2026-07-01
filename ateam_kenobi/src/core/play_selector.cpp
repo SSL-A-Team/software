@@ -118,7 +118,7 @@ stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::Playbook
     selected_play = halt_play_.get();
   }
 
-  resetPlayIfNeeded(selected_play);
+  resetPlayIfNeeded(selected_play, world);
 
   fillStateMessage(state_msg, scores, selected_play);
 
@@ -229,7 +229,7 @@ stp::Play * PlaySelector::selectRankedPlay(
       if (play_address == prev_play_address_) {
         // 15% bonus to previous play as hysteresis
         score_multiplier = 1.15;
-        if (play->getCompletionState() == stp::PlayCompletionState::Busy) {
+        if (play->getCompletionState(world) == stp::PlayCompletionState::Busy) {
           // +90% if previous play should not be interrupted
           score_multiplier += 0.9;
         }
@@ -268,7 +268,7 @@ stp::Play * PlaySelector::selectRankedPlay(
   return max_score.first;
 }
 
-void PlaySelector::resetPlayIfNeeded(stp::Play * play)
+void PlaySelector::resetPlayIfNeeded(stp::Play * play, const World & world)
 {
   void * play_address = static_cast<void *>(play);
   if (play_address != prev_play_address_) {
@@ -280,7 +280,7 @@ void PlaySelector::resetPlayIfNeeded(stp::Play * play)
       play->enter();
     }
     prev_play_address_ = play_address;
-  } else if (play->getCompletionState() == stp::PlayCompletionState::Done) {
+  } else if (play->getCompletionState(world) == stp::PlayCompletionState::Done) {
     play->exit();
     play->reset();
     play->enter();

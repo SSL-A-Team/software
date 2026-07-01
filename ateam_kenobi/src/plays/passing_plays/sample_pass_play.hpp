@@ -42,7 +42,7 @@ public:
 
   stp::PlayScore getScore(const World & world) override;
 
-  stp::PlayCompletionState getCompletionState() override;
+  stp::PlayCompletionState getCompletionState(const World &) override;
 
   void enter() override;
 

@@ -69,7 +69,7 @@ public:
    *
    * Should only be used by plays when interrupting them would be bad (ie. passing)
    */
-  virtual PlayCompletionState getCompletionState()
+  virtual PlayCompletionState getCompletionState(const World &)
   {
     return PlayCompletionState::NotApplicable;
   }

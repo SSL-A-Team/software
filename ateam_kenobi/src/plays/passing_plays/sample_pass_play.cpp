@@ -68,20 +68,55 @@ stp::PlayScore SamplePassPlay::getScore(const World & world)
     -1 * (world.field.field_length / 2.0),
     (world.field.defense_area_width / 2.0) + kRobotDiameter
   };
-  if(ateam_geometry::doIntersect(world.ball.pos, our_defense_area)) {
-    return stp::PlayScore::Min();
+  const ateam_geometry::Rectangle their_defense_area {
+    (world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter,
+    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
+    world.field.field_length / 2.0,
+    (world.field.defense_area_width / 2.0) + kRobotDiameter
+  };
+  if(ateam_geometry::doIntersect(world.ball.pos,
+      our_defense_area) || ateam_geometry::doIntersect(world.ball.pos, their_defense_area))
+  {
+    return stp::PlayScore::NaN();
+  }
+
+  const ateam_geometry::Rectangle field_rect{
+    -((world.field.field_length / 2.0) - kRobotDiameter),
+    -((world.field.field_width / 2.0) - kRobotDiameter),
+    ((world.field.field_length / 2.0) - kRobotDiameter),
+    ((world.field.field_width / 2.0) - kRobotDiameter)
+  };
+  if (!ateam_geometry::doIntersect(field_rect, world.ball.pos)) {
+    return stp::PlayScore::NaN();
   }
 
   return stp::PlayScore(50);
 }
 
-stp::PlayCompletionState SamplePassPlay::getCompletionState()
+stp::PlayCompletionState SamplePassPlay::getCompletionState(const World & world)
 {
   if (!pass_locked_) {
     return stp::PlayCompletionState::NotApplicable;
   }
   if (pass_tactic_.isDone()) {
     return stp::PlayCompletionState::Done;
+  }
+  const ateam_geometry::Rectangle our_defense_area {
+    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter),
+    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
+    -1 * (world.field.field_length / 2.0),
+    (world.field.defense_area_width / 2.0) + kRobotDiameter
+  };
+  const ateam_geometry::Rectangle their_defense_area {
+    (world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter,
+    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
+    world.field.field_length / 2.0,
+    (world.field.defense_area_width / 2.0) + kRobotDiameter
+  };
+  if(ateam_geometry::doIntersect(world.ball.pos,
+      our_defense_area) || ateam_geometry::doIntersect(world.ball.pos, their_defense_area))
+  {
+    return stp::PlayCompletionState::NotApplicable;
   }
   return stp::PlayCompletionState::Busy;
 }

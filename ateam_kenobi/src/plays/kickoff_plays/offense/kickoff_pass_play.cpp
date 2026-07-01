@@ -92,7 +92,7 @@ stp::PlayScore KickoffPassPlay::getScore(const World & world)
   return score;
 }
 
-stp::PlayCompletionState KickoffPassPlay::getCompletionState()
+stp::PlayCompletionState KickoffPassPlay::getCompletionState(const World &)
 {
   if (pass_.isDone()) {
     return stp::PlayCompletionState::Done;
