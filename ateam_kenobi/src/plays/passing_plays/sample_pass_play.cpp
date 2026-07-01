@@ -349,9 +349,9 @@ double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, cons
   }
 
   const ateam_geometry::Rectangle our_defense_area {
-    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter),
-    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
     -1 * (world.field.field_length / 2.0),
+    -((world.field.defense_area_width / 2.0) + kRobotDiameter),
+    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotDiameter),
     (world.field.defense_area_width / 2.0) + kRobotDiameter
   };
   if (ateam_geometry::doIntersect(our_defense_area, target)) {
