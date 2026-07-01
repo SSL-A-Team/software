@@ -96,12 +96,15 @@ std::array<std::optional<RobotCommand>, 16> DefenseClearPlay::runFrame(
   auto clearer_assignment_point = defense_points[0];
   switch(shot_type_) {
     case ShotType::StraightLine:
+      getPlayInfo()["Shot Plan"] = "Straight Away";
       clearer_assignment_point = defense_points[0];
       break;
     case ShotType::DownfieldLine:
+      getPlayInfo()["Shot Plan"] = "Downfield";
       clearer_assignment_point = defense_points[0];
       break;
     case ShotType::NoShot:
+      getPlayInfo()["Shot Plan"] = "No Shot, Just Defend";
       clearer_assignment_point = defense_points[0];
       break;
   }
