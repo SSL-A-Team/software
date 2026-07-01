@@ -36,8 +36,13 @@ PossessionResult WhoHasPossession(const World & world)
   const auto weak_possession_threshold_sq = weak_possession_threshold * weak_possession_threshold;
   const auto & ball_pos = world.ball.pos;
 
+  const double possession_angle = 0.35;
+
   double closest_our_bot_sq_distance = std::numeric_limits<double>::infinity();
   double closest_their_bot_sq_distance = std::numeric_limits<double>::infinity();
+
+  bool we_have_control_of_ball = false;
+  bool they_have_control_of_ball = false;
 
   for (const auto & robot : world.our_robots) {
     if (!robot.visible) {
@@ -45,6 +50,12 @@ PossessionResult WhoHasPossession(const World & world)
     }
     const auto distance = CGAL::squared_distance(ball_pos, robot.pos);
     closest_our_bot_sq_distance = std::min(closest_our_bot_sq_distance, distance);
+
+    const double angle = ateam_geometry::ToHeading(ball_pos - robot.pos);
+    if (distance <= possession_threshold &&
+      abs(angles::shortest_angular_distance(angle, robot.theta)) < possession_angle) {
+      we_have_control_of_ball = true;
+    }
   }
 
   for (const auto & robot : world.their_robots) {
@@ -53,6 +64,12 @@ PossessionResult WhoHasPossession(const World & world)
     }
     const auto distance = CGAL::squared_distance(ball_pos, robot.pos);
     closest_their_bot_sq_distance = std::min(closest_their_bot_sq_distance, distance);
+
+    const double angle = ateam_geometry::ToHeading(ball_pos - robot.pos);
+    if (distance <= possession_threshold &&
+      abs(angles::shortest_angular_distance(angle, robot.theta)) < possession_angle) {
+      they_have_control_of_ball = true;
+    }
   }
 
   const auto we_are_closer = closest_our_bot_sq_distance < closest_their_bot_sq_distance;
@@ -64,7 +81,13 @@ PossessionResult WhoHasPossession(const World & world)
   const auto they_are_weakly_close_enough = closest_their_bot_sq_distance <
     weak_possession_threshold_sq;
 
-  if (we_are_closer && we_are_close_enough) {
+  if (we_have_control_of_ball && they_have_control_of_ball) {
+    return PossessionResult::Neither;
+  } else if (we_have_control_of_ball) {
+    return PossessionResult::Ours;
+  } else if (they_have_control_of_ball) {
+    return PossessionResult::Theirs;
+  } else if (we_are_closer && we_are_close_enough) {
     return PossessionResult::Ours;
   } else if (they_are_closer && they_are_close_enough) {
     return PossessionResult::Theirs;
