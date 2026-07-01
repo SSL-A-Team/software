@@ -23,11 +23,12 @@ from ateam_bringup.substitutions import (
     PackageLaunchFileSubstitution
 )
 import launch
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, GroupAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from ateam_bringup.actions import ChangeGameControllerTeamName, ChangeGameControllerConfig
 
 
 def generate_launch_description():
@@ -40,6 +41,8 @@ def generate_launch_description():
         DeclareLaunchArgument('gc_ip', default_value='172.17.0.2'),
         DeclareLaunchArgument('team_name', default_value='A-Team'),
         DeclareLaunchArgument('no_kenobi', default_value='False'),
+        DeclareLaunchArgument('blue_team', default_value='A-Team'),
+        DeclareLaunchArgument('yellow_team', default_value='RoboJackets'),
 
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
@@ -49,6 +52,25 @@ def generate_launch_description():
                 'headless': LaunchConfiguration('headless_sim')
             }.items(),
             condition=IfCondition(LaunchConfiguration('start_sim'))
+        ),
+
+        GroupAction(
+            actions=[
+                IncludeLaunchDescription(
+                    FrontendLaunchDescriptionSource(
+                        PackageLaunchFileSubstitution('ateam_bringup',
+                                                      'ssl_game_controller.launch.xml'))
+                ),
+                ChangeGameControllerConfig(gc_address='172.17.0.2', configs={
+                    'autoContinue': False
+                }),
+                ChangeGameControllerTeamName(
+                    gc_address='172.17.0.2', color='blue', name=LaunchConfiguration('blue_team')),
+                ChangeGameControllerTeamName(
+                    gc_address='172.17.0.2', color='yellow', name=LaunchConfiguration('yellow_team')),
+
+            ],
+            condition=IfCondition(LaunchConfiguration('start_gc'))
         ),
 
         IncludeLaunchDescription(
