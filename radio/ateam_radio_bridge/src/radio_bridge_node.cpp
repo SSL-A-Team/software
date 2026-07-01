@@ -70,7 +70,7 @@ class RadioBridgeNode : public rclcpp::Node
 public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
-    sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 250)),
+    sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 500)),
     connect_timeout_threshold_(declare_parameter("connect_timeout_ms", 750)),
     vision_state_staleness_threshold_(declare_parameter("vision_state_staleness_ms", 100)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
