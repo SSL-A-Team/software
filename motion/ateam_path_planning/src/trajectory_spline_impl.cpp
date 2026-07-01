@@ -147,6 +147,18 @@ std::chrono::steady_clock::time_point TrajectorySplineImpl::GetStartTime() const
   return start_time;
 }
 
+ateam_geometry::Point TrajectorySplineImpl::GetFirstTransitionPoint() const
+{
+  if(segments.size() < 2) {
+    return {};
+  }
+  const auto & segment = segments[1];
+  return ateam_geometry::Point{
+    segment.trajectory.state.data[0],
+    segment.trajectory.state.data[1]
+  };
+}
+
 TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl & impl)
 {
   return TrajectorySpline(impl);

@@ -105,6 +105,11 @@ std::chrono::steady_clock::time_point TrajectorySpline::GetStartTime() const
   return impl_->GetStartTime();
 }
 
+ateam_geometry::Point TrajectorySpline::GetFirstTransitionPoint() const
+{
+  return impl_->GetFirstTransitionPoint();
+}
+
 TrajectorySpline::TrajectorySpline(TrajectorySplineImpl & impl)
 : impl_(std::make_unique<TrajectorySplineImpl>(impl))
 {

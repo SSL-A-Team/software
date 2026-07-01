@@ -56,7 +56,9 @@ void PathPlanner::Execute(
       continue;
     }
     const auto & bot_options = options[id];
-    overlays.drawCircle("pathing/expected/" + std::to_string(id), ateam_geometry::makeCircle(*position, bot_options.replan_thresholds.deviation_distance), "Purple", "#00000000");
+    overlays.drawCircle("pathing/expected/" + std::to_string(id),
+        ateam_geometry::makeCircle(*position, bot_options.replan_thresholds.deviation_distance),
+        "Purple", "#00000000");
   }
 
   std::vector<ateam_path_planning::Obstacle> global_obstacles;
@@ -187,6 +189,8 @@ void PathPlanner::FillMotionCommands(
     if(!current_target_pose.has_value()) {
       continue;
     }
+    overlays.drawCircle("pathingTarget/" + std::to_string(i),
+        ateam_geometry::makeCircle(current_target_pose->position, 0.05), "#00000000", "DarkGreen");
     MotionCommand command;
     command.control_mode = ControlMode::GlobalPosition;
     command.pose.x = current_target_pose->position.x();
@@ -247,6 +251,12 @@ void PathPlanner::DrawTrajectory(
   const auto & path = result->path;
   const auto points = path.ToPoints(kTimeStep);
   auto points_iter = points.begin();
+
+  if(path.GetSegmentCount() > 1) {
+    const auto transition_point = path.GetFirstTransitionPoint();
+    overlays.drawCircle(name_prefix + "transition",
+        ateam_geometry::makeCircle(transition_point, 0.05), "#00000000", "Purple");
+  }
 
   const auto start_time = path.GetStartTime();
   const auto now = std::chrono::steady_clock::now();

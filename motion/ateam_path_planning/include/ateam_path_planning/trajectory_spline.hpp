@@ -82,6 +82,8 @@ public:
 
   std::chrono::steady_clock::time_point GetStartTime() const;
 
+  ateam_geometry::Point GetFirstTransitionPoint() const;
+
 private:
   explicit TrajectorySpline(TrajectorySplineImpl & impl);
 

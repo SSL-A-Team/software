@@ -66,6 +66,8 @@ struct TrajectorySplineImpl
   double GetTotalDuration() const;
 
   std::chrono::steady_clock::time_point GetStartTime() const;
+
+  ateam_geometry::Point GetFirstTransitionPoint() const;
 };
 
 TrajectorySpline MakeTrajectorySpline(TrajectorySplineImpl &);
