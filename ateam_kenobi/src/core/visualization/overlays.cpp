@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
+#include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::visualization
 {
@@ -294,6 +295,12 @@ void Overlays::drawOctagon(
   });
   drawPolygon(name, {points.begin(), points.end()}, stroke_color, fill_color, stroke_width,
       lifetime);
+}
+
+void Overlays::drawStopsign(const std::string & name, const Robot & bot, const std::string & color)
+{
+  drawOctagon(name, bot.pos, kRobotDiameter * 1.2, "#00000000", color);
+  overlay_array_->overlays.back().depth = 0;
 }
 
 void Overlays::addOverlay(ateam_msgs::msg::Overlay overlay)

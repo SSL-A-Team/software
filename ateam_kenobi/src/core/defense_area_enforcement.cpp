@@ -85,7 +85,7 @@ void EnforceDefenseAreaKeepout(
         their_defense_area))
     {
       command = stop_command;
-      overlays.drawOctagon("defkeepout/robot" + std::to_string(robot.id), robot.pos, kRobotDiameter, "Red", "#ff00002c");
+      overlays.drawStopsign("defkeepout/robot" + std::to_string(robot.id), robot, "Red");
     }
   }
 }

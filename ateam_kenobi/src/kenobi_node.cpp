@@ -264,9 +264,8 @@ private:
     }
 
     if(world.double_touch_forbidden_id_.has_value()) {
-      overlays_.drawOctagon("double_touch_marker",
-          world.our_robots[*world.double_touch_forbidden_id_].pos, kRobotDiameter, "DarkRed",
-          "#00000000");
+      overlays_.drawStopsign("double_touch_marker",
+          world.our_robots[*world.double_touch_forbidden_id_], "DarKRed");
     }
 
     overlays_.merge(play->getOverlays());

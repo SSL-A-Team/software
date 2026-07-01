@@ -148,7 +148,6 @@ void PathPlanner::FillMotionCommands(
       const auto collision_time = *(result->collision_stats.new_collision_start_time);
       const auto stopping_time = ateam_geometry::norm(world.our_robots[i].vel) /
         target.limits.linear_acceleration;
-      std::cerr << result->collision_stats.init_collision_end_time.value_or(-1.0) << "   " << collision_time << '\n';
       if(stopping_time < collision_time) {
         MotionCommand command;
         command.control_mode = ControlMode::LocalVelocity;
@@ -160,12 +159,12 @@ void PathPlanner::FillMotionCommands(
         command.limit_acc_linear = target.limits.linear_acceleration;
         command.limit_vel_linear = target.limits.linear_velocity;
         commands[i] = command;
-        overlays.drawOctagon("collisionStop/" + std::to_string(i), world.our_robots[i].pos, kRobotDiameter, "Orange", "#ff5e0057");
+        overlays.drawStopsign("collisionStop/" + std::to_string(i), world.our_robots[i], "Orange");
       } else {
         MotionCommand command;
         command.control_mode = ControlMode::EStopBrake;
         commands[i] = command;
-        overlays.drawOctagon("collisionStop/" + std::to_string(i), world.our_robots[i].pos, kRobotDiameter, "Pink", "#ff7ecd57");
+        overlays.drawStopsign("collisionStop/" + std::to_string(i), world.our_robots[i], "Pink");
       }
       continue;
     }
