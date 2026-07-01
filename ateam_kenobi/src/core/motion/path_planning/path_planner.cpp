@@ -48,6 +48,9 @@ void PathPlanner::Execute(
 
   const auto expected_positions = planner_->GetExpectedLocations(options);
   for(auto id = 0; id < 16; ++id) {
+    if(!target_poses[id]) {
+      continue;
+    }
     const auto & position = expected_positions[id];
     if(!position) {
       continue;
