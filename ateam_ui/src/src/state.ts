@@ -259,6 +259,41 @@ export class AppState {
             });
     }
 
+    sendImportPlaybookRequest(file: File): void {
+        const reader = new FileReader();
+        let rosManager = this.rosManager;
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const request = new ROSLIB.ServiceRequest({"playbook_definition": text});
+            rosManager.services.get("importPlaybook")?.callService(request, function(result: any): void{
+                if(!result.success) {
+                    console.log("Failed to import playbook definition.");
+                }
+            });
+        };
+        reader.readAsText(file);
+    }
+
+    sendExportPlaybookRequest(): void {
+        const request = new ROSLIB.ServiceRequest({});
+
+        this.rosManager.services.get("exportPlaybook")?.callService(request, function(result: any): void{
+            if(!result.success) {
+                console.log("Failed to export playbook definition.");
+            }
+            const blob = new Blob([result.playbook_definition], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = "playbook.json";
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+    }
+
     setUseKenobiTopic(enable: boolean) {
         if (enable != this.useKenobi) {
             if (enable) {

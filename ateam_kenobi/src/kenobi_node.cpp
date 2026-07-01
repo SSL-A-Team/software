@@ -31,6 +31,8 @@
 #include <ateam_msgs/msg/game_state_world.hpp>
 #include <ateam_msgs/srv/set_override_play.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
+#include <ateam_msgs/srv/import_playbook.hpp>
+#include <ateam_msgs/srv/export_playbook.hpp>
 #include <ateam_msgs/msg/playbook_state.hpp>
 #include <ateam_msgs/msg/kenobi_status.hpp>
 #include <ateam_common/cache_directory.hpp>
@@ -90,6 +92,14 @@ public:
         &KenobiNode::set_play_enabled_callback, this, std::placeholders::_1,
         std::placeholders::_2));
 
+    import_playbook_service_ = create_service<ateam_msgs::srv::ImportPlaybook>("~/import_playbook",
+        std::bind(&KenobiNode::import_playbook_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
+    export_playbook_service_ = create_service<ateam_msgs::srv::ExportPlaybook>("~/export_playbook",
+        std::bind(&KenobiNode::export_playbook_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
     playbook_state_publisher_ = create_publisher<ateam_msgs::msg::PlaybookState>(
       "~/playbook_state",
       rclcpp::SystemDefaultsQoS());
@@ -137,6 +147,8 @@ private:
     16> robot_commands_publishers_;
   rclcpp::Service<ateam_msgs::srv::SetOverridePlay>::SharedPtr override_service_;
   rclcpp::Service<ateam_msgs::srv::SetPlayEnabled>::SharedPtr play_enabled_service_;
+  rclcpp::Service<ateam_msgs::srv::ImportPlaybook>::SharedPtr import_playbook_service_;
+  rclcpp::Service<ateam_msgs::srv::ExportPlaybook>::SharedPtr export_playbook_service_;
   rclcpp::Publisher<ateam_msgs::msg::PlaybookState>::SharedPtr playbook_state_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::KenobiStatus>::SharedPtr status_publisher_;
   rclcpp::Subscription<World>::SharedPtr world_subscription_;
@@ -176,6 +188,30 @@ private:
 
     play->setEnabled(request->enabled);
     response->success = true;
+  }
+
+  void import_playbook_callback(
+    const ateam_msgs::srv::ImportPlaybook::Request::SharedPtr request,
+    ateam_msgs::srv::ImportPlaybook::Response::SharedPtr response)
+  {
+    try {
+      play_selector_.importDefinition(request->playbook_definition);
+      response->success = true;
+    } catch (const std::exception &) {
+      response->success = false;
+    }
+  }
+
+  void export_playbook_callback(
+    const ateam_msgs::srv::ExportPlaybook::Request::SharedPtr,
+    ateam_msgs::srv::ExportPlaybook::Response::SharedPtr response)
+  {
+    try {
+      response->playbook_definition = play_selector_.exportDefinition();
+      response->success = true;
+    } catch (const std::exception &) {
+      response->success = false;
+    }
   }
 
   void WorldCallback(const ateam_game_state::World & world)

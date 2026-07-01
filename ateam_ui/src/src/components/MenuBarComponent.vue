@@ -94,6 +94,13 @@
         </v-list>
     </v-menu>
 
+    <input
+      ref="loadPlaybookFileInput"
+      type="file"
+      accept=".json"
+      style="display: none"
+      @change="onLoadPlaybookFileSelected"
+    />
 </template>
 
 <script lang="ts">
@@ -129,10 +136,19 @@ export default {
     },
     methods: {
         savePlaybook() {
-            console.log("not implemented yet")
+            this.state.sendExportPlaybookRequest();
         },
         loadPlaybook() {
-            console.log("not implemented yet")
+            const input = this.$refs.loadPlaybookFileInput as HTMLInputElement | null;
+            input?.click();
+        },
+        onLoadPlaybookFileSelected(event) {
+            const files = event.target.files
+            if (files.length > 0) {
+                const selectedFile = files[0]
+                this.state.sendImportPlaybookRequest(selectedFile)
+                event.target.value = ''
+            }
         },
         setUseKenobiTopic() {
             console.log("set kenobi: ", this.useKenobiTopic)

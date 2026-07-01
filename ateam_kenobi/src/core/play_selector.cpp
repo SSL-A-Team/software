@@ -198,6 +198,51 @@ void PlaySelector::loadFromFile(const std::filesystem::path & path)
   }
 }
 
+
+std::string PlaySelector::exportDefinition() const {
+  nlohmann::json data;
+  auto plays_arr = nlohmann::json::array();
+
+  std::ranges::transform(plays_, std::back_inserter(plays_arr), [](const auto & play){
+      return nlohmann::json{
+      {"name", play->getName()},
+      {"enabled", play->isEnabled()}
+      };
+  });
+
+  data["plays"] = plays_arr;
+  return data.dump();
+}
+
+void PlaySelector::importDefinition(const std::string & definition) {
+  auto data = nlohmann::json::parse(definition);
+
+  const auto & json_plays = data["plays"];
+
+  if(!json_plays.is_array()) {
+    RCLCPP_ERROR(ros_logger_, "No 'plays' member found in playbook file.");
+    return;
+  }
+
+  for(const auto & play_settings : json_plays) {
+    const auto & name = play_settings["name"];
+    if(!name.is_string()) {
+      RCLCPP_WARN(ros_logger_, "Skipping play entry with no name.");
+      continue;
+    }
+    auto play = getPlayByName(name);
+    if(play == nullptr) {
+      RCLCPP_WARN(ros_logger_, "Could not find play with name %s. Skipping.",
+          name.get<std::string>().c_str());
+      continue;
+    }
+    const auto & enabled = play_settings["enabled"];
+    if(enabled.is_boolean()) {
+      play->setEnabled(enabled);
+    }
+  }
+}
+
 stp::Play * PlaySelector::selectOverridePlay()
 {
   if (override_play_name_.empty()) {

@@ -144,6 +144,20 @@ export class RosManager {
         })
         this.services.set("setOverridePlay", setOverridePlayService);
 
+        let importPlaybookService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/kenobi_node/import_playbook',
+            serviceType: 'ateam_msgs/srv/ImportPlaybook'
+        })
+        this.services.set('importPlaybook', importPlaybookService);
+
+        let exportPlaybookService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/kenobi_node/export_playbook',
+            serviceType: 'ateam_msgs/srv/ExportPlaybook'
+        })
+        this.services.set('exportPlaybook', exportPlaybookService);
+
         let teamNameParam = new ROSLIB.Param({
             ros: this.ros,
             name: "/team_client_node:team_name"
