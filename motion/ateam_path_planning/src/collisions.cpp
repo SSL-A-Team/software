@@ -164,11 +164,24 @@ bool IsStateInBounds(
   const Vector6C_t & state, const ateam_game_state::World & world,
   const double footprint_inflation)
 {
+  auto min_x = -world.field.field_length / 2.0;
+  auto max_x = world.field.field_length / 2.0;
+  switch(world.field.ignore_side) {
+    case ateam_game_state::IgnoreSide::None:
+      break;
+    case ateam_game_state::IgnoreSide::Ours:
+      min_x = 0.0;
+      break;
+    case ateam_game_state::IgnoreSide::Theirs:
+      max_x = 0.0;
+      break;
+  }
   const auto x = state.data[0];
   const auto y = state.data[1];
-  if((std::fabs(x) + kRobotRadius + footprint_inflation) >=
-    ((world.field.field_length / 2.0) + world.field.boundary_width))
-  {
+  if((x - kRobotRadius - footprint_inflation) <= min_x) {
+    return false;
+  }
+  if((x + kRobotRadius + footprint_inflation) >= max_x) {
     return false;
   }
   if((std::fabs(y) + kRobotRadius + footprint_inflation) >=
