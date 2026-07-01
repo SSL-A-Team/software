@@ -44,21 +44,17 @@ CollisionStats GetCollisionStats(
       collision_check_horizon);
   const auto init_state = GetStateAtT(trajectory, 0.0);
   bool was_in_collision = DoesStateCollideWithObstacles(init_state, traj_start_t, obstacles,
-      footprint_inflation);
+      footprint_inflation) || !IsStateInBounds(init_state, world, boundary_footprint_inflation);
   CollisionStats stats;
   const auto t0 = std::max(search_start_t, collision_check_resolution);
   for (double t = t0; t < duration; t += collision_check_resolution) {
     const auto state_at_t = GetStateAtT(trajectory, t);
     const auto is_colliding = DoesStateCollideWithObstacles(state_at_t, t + traj_start_t, obstacles,
-        footprint_inflation);
+        footprint_inflation) || !IsStateInBounds(state_at_t, world, boundary_footprint_inflation);
     if(was_in_collision && !is_colliding) {
       stats.init_collision_end_time = t + traj_start_t;
     }
     if(!was_in_collision && is_colliding) {
-      stats.new_collision_start_time = t + traj_start_t;
-      return stats;
-    }
-    if(!IsStateInBounds(state_at_t, world, boundary_footprint_inflation)) {
       stats.new_collision_start_time = t + traj_start_t;
       return stats;
     }
