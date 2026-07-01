@@ -10,6 +10,7 @@ import { Viewport } from "pixi-viewport";
 import { AppState } from "@/state";
 import { TeamColor } from "@/team";
 import { initializePixi, updateField, drawFieldBoundary, drawFieldLines, drawSideIgnoreOverlay, drawRobots } from "@/field";
+import ROSLIB from 'roslib';
 
 export default {
     inject: ['state'],
@@ -61,6 +62,7 @@ export default {
             drawSideIgnoreOverlay(this.state, this.fieldContainer.getChildByName("fieldUI"));
         },
         onRightDown: function(event: MouseEvent) {
+            const self = this;
             const stage = this.pixi.stage;
             const viewport = this.pixi.stage.getChildByName("viewport");
             const ballVelLine = this.pixi.stage.getChildByName("ballVelLine") as PIXI.Graphics;
@@ -69,7 +71,6 @@ export default {
             const sdPoint = this.startDragPoint; // so we have access inside the function
             const scale = this.state.renderConfig.scale;
             const state = this.state;
-            const defending = this.getDefending;
 
             this.pixi.stage.on("pointermove", this.rightClickDrag);
             this.pixi.stage.on("rightup", function(event){
@@ -105,18 +106,16 @@ export default {
                     (pos.x * Math.sin(-state.renderConfig.angle * Math.PI / 180) + pos.y * Math.cos(-state.renderConfig.angle * Math.PI / 180))
                 );
 
+                let vision_pose = self.convertToVisionCoords(pos, self.getDefending, scale);
+                let vision_vec_pose = self.convertToVisionCoords(vec, self.getDefending, scale);
+
                 const simulatorCommand = {
                     teleport_ball: [{
-                        pose: {
-                            position: {
-                                x: pos.x * -defending / scale,
-                                y: -pos.y / scale
-                            },
-                        },
+                        pose: vision_pose,
                         twist: {
                             linear:{
-                                x: 2 * vec.x * -defending / scale,
-                                y: -2 * vec.y / scale,
+                                x: 2 * vision_vec_pose.position.x,
+                                y: 2 * vision_vec_pose.position.y,
                             }
                         },
                         roll: true
@@ -134,12 +133,11 @@ export default {
                 (pos.x * Math.sin(-state.renderConfig.angle * Math.PI / 180) + pos.y * Math.cos(-state.renderConfig.angle * Math.PI / 180))
             );
 
-            this.state.world.ball.pose.position.x = pos.x * -this.getDefending / scale;
-            this.state.world.ball.pose.position.y = -pos.y / scale;
+            let vision_pose = this.convertToVisionCoords(pos, this.getDefending, scale);
 
             const simulatorCommand = {
                 teleport_ball: [{
-                    pose: this.state.world.ball.pose
+                    pose: vision_pose
                 }],
             };
 
@@ -189,10 +187,10 @@ export default {
 
         },
         prepareRobotDragging: function() {
+            const self = this;
             const state: AppState = this.state;
             const stage = this.pixi.stage;
             const viewport = this.pixi.stage.getChildAt(0);
-            var defending = this.getDefending;
 
             const robotArray = Array.from(state.world.teams.values()).map(i => { return i.robots }).flat()
             const robots = this.fieldContainer.getChildByName("robots").children;
@@ -221,8 +219,8 @@ export default {
 
                         const scale = state.renderConfig.scale;
 
-                        robotObj.pose.position.x = pos.x * -defending / scale;
-                        robotObj.pose.position.y = -pos.y / scale;
+                        let vision_pose = self.convertToVisionCoords(pos, self.getDefending, scale);
+                        vision_pose.orientation = self.orientationToVisionCoords(robotObj.pose.orientation, self.getDefending);
 
                         const simulatorCommand = {
                             teleport_robot: [{
@@ -232,7 +230,7 @@ export default {
                                         color: robotObj.team == TeamColor.Yellow ? 1 : 2
                                     }]
                                 },
-                                pose: robotObj.pose,
+                                pose: vision_pose,
                                 present: true
                             }],
                         };
@@ -250,6 +248,31 @@ export default {
                     });
                 });
             }
+        },
+        convertToVisionCoords: function(position: PIXI.Point, defending: number, scale: number): ROSLIB.Pose {
+            let pose = new ROSLIB.Pose();
+            pose.position.x = position.x * -defending / scale;
+            pose.position.y = -position.y * -defending / scale
+
+            return pose
+        },
+        orientationToVisionCoords: function(orientation: ROSLIB.Quaternion, defending: number): ROSLIB.Quaternion {
+            let quat = new ROSLIB.Quaternion();
+
+            if (defending < 0) {
+                quat.x = orientation.x;
+                quat.y = orientation.y;
+                quat.z = orientation.z;
+                quat.w = orientation.w;
+
+            } else {
+                quat.x = -orientation.y;
+                quat.y = orientation.x;
+                quat.z = orientation.w;
+                quat.w = -orientation.z;
+            }
+
+            return quat;
         }
     },
     computed: {
