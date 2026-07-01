@@ -89,6 +89,10 @@ public:
     declare_parameter<double>("kick_speed", 5.0);
     declare_parameter<double>("chip_speed", 5.0);
 
+    // When true, joystick axes fill the global-frame pose (x, y, theta) and commands are sent as
+    // BCM_GLOBAL_POSITION instead of BCM_LOCAL_VELOCITY.
+    declare_parameter<bool>("use_global_position", false);
+
     CreatePublisher(declare_parameter<int>("robot_id", -1));
     parameter_callback_handle_ =
       add_on_set_parameters_callback(
@@ -166,14 +170,23 @@ private:
 
       command_message.pivot_global_theta = M_PI *
         joy_message->axes[angular_z_axis_]; // This is truly cursed
+    } else if (get_parameter("use_global_position").as_bool()) {
+      command_message.body_control_mode =
+        ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION;
+      command_message.pose.x = get_parameter("mapping.linear.x.scale").as_double() *
+        joy_message->axes[linear_x_axis_];
+      command_message.pose.y = get_parameter("mapping.linear.y.scale").as_double() *
+        joy_message->axes[linear_y_axis_];
+      command_message.pose.theta = get_parameter("mapping.angular.z.scale").as_double() *
+        joy_message->axes[angular_z_axis_];
     } else {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
-      command_message.velocity.x = get_parameter("mapping.linear.x.scale").as_double() *
-        joy_message->axes[linear_x_axis_];
-      command_message.velocity.y = get_parameter("mapping.linear.y.scale").as_double() *
-        joy_message->axes[linear_y_axis_];
-      command_message.velocity.theta = get_parameter("mapping.angular.z.scale").as_double() *
-        joy_message->axes[angular_z_axis_];
+        command_message.velocity.x = get_parameter("mapping.linear.x.scale").as_double() *
+          joy_message->axes[linear_x_axis_];
+        command_message.velocity.y = get_parameter("mapping.linear.y.scale").as_double() *
+          joy_message->axes[linear_y_axis_];
+        command_message.velocity.theta = get_parameter("mapping.angular.z.scale").as_double() *
+          joy_message->axes[angular_z_axis_];
     }
 
     if (kick_trigger_(*joy_message)) {
