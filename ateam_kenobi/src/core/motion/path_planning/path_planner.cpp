@@ -46,6 +46,18 @@ void PathPlanner::Execute(
 
   UnpackTargets(targets, world, target_poses, per_bot_obstacles, options, overlays);
 
+  const auto expected_positions = planner_->GetExpectedLocations(options);
+  for(auto id = 0; id < 16; ++id) {
+    if(!target_poses[id]) {
+      continue;
+    }
+    const auto & position = expected_positions[id];
+    if(!position) {
+      continue;
+    }
+    overlays.drawCircle("pathing/expected/" + std::to_string(id), ateam_geometry::makeCircle(*position, kRobotRadius + 0.05), "Purple", "#00000000");
+  }
+
   std::vector<ateam_path_planning::Obstacle> global_obstacles;
   for(const auto & robot : world.their_robots) {
     if(robot.visible) {
