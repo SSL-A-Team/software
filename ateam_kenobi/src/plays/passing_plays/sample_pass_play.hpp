@@ -52,7 +52,7 @@ private:
   static constexpr double kSearchRadius = 1.0;  // m
   static constexpr unsigned int kSampleCount = 20;
   static constexpr std::chrono::milliseconds kHoldingTimeout = std::chrono::seconds(3);
-  static constexpr double kPreemptHoldingScoreThreshold = 500.0;
+  static constexpr double kPreemptHoldingScoreThreshold = 1000.0;
   static constexpr double kPreemptHoldingEnemyProximityThreshold = kRobotDiameter * 2.0;
   static constexpr std::chrono::milliseconds kPreemptHoldingScoreStallTime =
     std::chrono::milliseconds(150);

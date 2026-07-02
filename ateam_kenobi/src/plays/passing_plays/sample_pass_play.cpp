@@ -388,7 +388,11 @@ double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, cons
         ((pass_length - kMaxIdealPassLength) / kMaxIdealPassLength), 0.2, 1.0);
   }
 
-  return shot_success_chance * opponent_dist * friend_proximity_penalty * pass_length_factor;
+  // const auto downfield_factor = 1.2 -
+  //   (1 / ( ( (target.x() / (world.field.field_length / 2.0)) + 1 ) * 2.0 ));
+  const auto downfield_factor = 10.0 * (target.x() + (world.field.field_length / 2.0)) / world.field.field_length;
+
+  return shot_success_chance * opponent_dist * friend_proximity_penalty * pass_length_factor * downfield_factor;
 }
 
 void SamplePassPlay::lockPass(const Robot & candidate, const ateam_geometry::Point & target)
