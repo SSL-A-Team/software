@@ -41,6 +41,24 @@ using ::testing::SizeIs;
 
 #define Path(m) Field(&ateam_path_planning::PathPlanResult::path, m)
 
+const ateam_game_state::Field kDivisionBField{
+  .field_length = 9.0,
+  .field_width = 6.0,
+  .goal_width = 1.0,
+  .goal_depth = 0.16,
+  .boundary_width = 0.3,
+  .defense_area_width = 2.0,
+  .defense_area_depth = 1.0,
+  .center_circle_center = {0.0, 0.0},
+  .center_circle_radius = 0.5,
+  .field_corners = {
+    ateam_geometry::Point{-4.5, -3.0},
+    ateam_geometry::Point{4.5, -3.0},
+    ateam_geometry::Point{4.5, 3.0},
+    ateam_geometry::Point{-4.5, 3.0}
+  }
+};
+
 void PrintPathsOnFailure(
   const std::array<std::optional<ateam_path_planning::PathPlanResult>,
   16> & results)
@@ -81,8 +99,7 @@ TEST(Planner, OneBotNoObstacles) {
   priorities.fill(0);
 
   ateam_game_state::World world;
-  world.field.field_length = 9.0;
-  world.field.field_width = 6.0;
+  world.field = kDivisionBField;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
   world.our_robots[0].theta = 0.0;
@@ -114,8 +131,7 @@ TEST(Planner, OneBotOnGoal) {
   priorities.fill(0);
 
   ateam_game_state::World world;
-  world.field.field_length = 9.0;
-  world.field.field_width = 6.0;
+  world.field = kDivisionBField;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(1.0, 1.0);
   world.our_robots[0].theta = 0.0;
@@ -147,8 +163,7 @@ TEST(Planner, OneBotTurnOnly) {
   priorities.fill(0);
 
   ateam_game_state::World world;
-  world.field.field_length = 9.0;
-  world.field.field_width = 6.0;
+  world.field = kDivisionBField;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(1.0, 1.0);
   world.our_robots[0].theta = 0.0;
@@ -180,8 +195,7 @@ TEST(Planner, OneBotOneObstacle) {
   priorities.fill(0);
 
   ateam_game_state::World world;
-  world.field.field_length = 9.0;
-  world.field.field_width = 6.0;
+  world.field = kDivisionBField;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
   world.our_robots[0].theta = 0.0;
@@ -219,8 +233,7 @@ TEST(Planner, OneBotMovingObstacle) {
   priorities.fill(0);
 
   ateam_game_state::World world;
-  world.field.field_length = 9.0;
-  world.field.field_width = 6.0;
+  world.field = kDivisionBField;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
   world.our_robots[0].theta = 0.0;
@@ -305,8 +318,7 @@ TEST(Planner, PerformanceCheck) {
   priorities.fill(0);
 
   ateam_game_state::World world;
-  world.field.field_length = 9.0;
-  world.field.field_width = 6.0;
+  world.field = kDivisionBField;
   std::generate_n(world.our_robots.begin(), 6, [n = 0]() mutable {
       ateam_game_state::Robot robot;
       robot.id = n;
@@ -365,8 +377,7 @@ TEST(Planner, TwoBotOneObstacle) {
   priorities.fill(0);
 
   ateam_game_state::World world;
-  world.field.field_length = 9.0;
-  world.field.field_width = 6.0;
+  world.field = kDivisionBField;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(-1.0, 0.2);
   world.our_robots[0].theta = 0.0;
@@ -413,8 +424,7 @@ TEST(Planner, PathTruncationOnObstacle) {
   priorities.fill(0);
 
   ateam_game_state::World world;
-  world.field.field_length = 9.0;
-  world.field.field_width = 6.0;
+  world.field = kDivisionBField;
   world.our_robots[0].id = 0;
   world.our_robots[0].pos = ateam_geometry::Point(0.0, 0.0);
   world.our_robots[0].theta = 0.0;
@@ -441,3 +451,29 @@ TEST(Planner, PathTruncationOnObstacle) {
 
   PrintPathsOnFailure(paths);
 }
+
+// TEST(Planner, BotBehindDefenseArea)
+// {
+//   Planner planner;
+
+//   std::array<std::optional<ateam_path_planning::Pose>, 16> targets;
+//   targets.fill(std::nullopt);
+//   targets[0] = ateam_path_planning::Pose{ateam_geometry::Point{-3.0, 0.6}, 0.0};
+
+//   ateam_game_state::World world;
+//   world.field = kDivisionBField;
+//   world.our_robots[0].id = 0;
+//   world.our_robots[0].pos = ateam_geometry::Point(-4.41, 0.6);
+
+//   std::array<std::vector<ateam_path_planning::Obstacle>, 16> obstacles = {
+//     std::vector<ateam_path_planning::Obstacle>{
+//       ateam_path_planning::Obstacle(ateam_geometry::Rectangle{}, {})
+//     }
+//   };
+
+//   const auto paths = planner.PlanPathsForAllBots(targets, {}, world, {}, obstacles);
+
+//   EXPECT_TRUE(false);
+
+//   PrintPathsOnFailure(paths);
+// }
