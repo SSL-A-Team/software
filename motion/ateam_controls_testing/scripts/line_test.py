@@ -33,10 +33,19 @@ from transforms3d.euler import quat2euler
 linear_threshold = 1e-2
 angular_threshold = 0.0349
 
-# x, y, theta, start_x, start_y, velocity, hold time
+# theta, start_x, start_y, dir_x, dir_y, velocity, hold_time
 waypoints = [
-    (0.0, 0.0, math.pi / 2, 1.0, 0.0, 1.0, 10.0),
+    (math.pi / 2, 0.0, 0.0, 1.0, 0.0, 1.0, 10.0),
 ]
+
+line_params = {
+    "line_max_vel_perp": 3.0,
+    "line_max_vel_angular": 5.0,
+    "line_max_accel_colinear": 2.0,
+    "line_max_accel_perp": 2.0,
+    "line_max_accel_angular": 10.0,
+    "line_colinear_start_thresh": 0.1,
+}
 
 current_index = 0
 waypoint_hold_start_time = None
@@ -53,32 +62,39 @@ def publish_waypoint_command(index: int):
     waypoint = waypoints[index]
     command_msg = RobotMotionCommand()
     command_msg.body_control_mode = RobotMotionCommand.BCM_HEADING_LINE
-    command_msg.pose.x = waypoint[0]
-    command_msg.pose.y = waypoint[1]
-    command_msg.pose.theta = waypoint[2]
     command_msg.kick_request = RobotMotionCommand.KR_DISABLE
-    command_msg.line_start_x = waypoint[0]
-    command_msg.line_start_y = waypoint[1]
-    command_msg.line_dir_x = waypoint[2]
-    command_msg.line_dir_y = waypoint[3]
-    command_msg.line_velocity = waypoint[4]
-    # command_msg.limit_acc_linear = 3.0
-    # command_msg.limit_vel_linear = 3.0
-    # command_msg.limit_acc_angular = 8.0
-    # command_msg.limit_vel_angular = 4.0
+    command_msg.line_global_theta = waypoint[0]
+    command_msg.line_start_x = waypoint[1]
+    command_msg.line_start_y = waypoint[2]
+    command_msg.line_dir_x = waypoint[3]
+    command_msg.line_dir_y = waypoint[4]
+    command_msg.line_velocity = waypoint[5]
+    command_msg.line_max_vel_colinear = waypoint[5]
+    
+    for key, val in line_params.items():
+        setattr(command_msg, key, val)
+
     command_pub.publish(command_msg)
 
 
 def is_at_waypoint(index: int):
     waypoint = waypoints[index]
+    theta_target, start_x, start_y, dir_x, dir_y = waypoint[0:5]
     #  get yaw from quat
     q = vision_robot_state_msg.pose.orientation
     _, _, theta = quat2euler([q.w, q.x, q.y, q.z])
+
+    # perpendicular distance from the robot to the line defined by the start
+    # point and the (unit) direction vector: magnitude of the 2D cross product
+    # of (robot - start) with the direction.
+    rel_x = vision_robot_state_msg.pose.position.x - start_x
+    rel_y = vision_robot_state_msg.pose.position.y - start_y
+    perp_distance = abs(rel_x * dir_y - rel_y * dir_x)
+
     return (
         vision_robot_state_msg.visible
-        and abs(vision_robot_state_msg.pose.position.x - waypoint[0]) < linear_threshold
-        and abs(vision_robot_state_msg.pose.position.y - waypoint[1]) < linear_threshold
-        and abs(theta - waypoint[2]) < angular_threshold
+        and perp_distance < linear_threshold
+        and abs(theta - theta_target) < angular_threshold
     )
 
 
