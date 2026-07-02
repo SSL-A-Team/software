@@ -62,11 +62,29 @@ struct MotionCommand
   double pivot_target_x = 0.0;
   double pivot_target_y = 0.0;
   double pivot_global_theta = 0.0;
+  double pivot_max_angular_vel = 0.0;
+  double pivot_max_angular_acc = 0.0;
   double pivot_orbit_radius = 0.0;
   double pivot_inset_angle = 0.0;
 
   uint8_t pivot_direction = 0;
   bool pivot_commpute_inset_angle = false;
+
+  double line_global_theta = 0.0;
+  double line_target_x = 0.0;
+  double line_target_y = 0.0;
+  double line_start_x = 0.0;
+  double line_start_y = 0.0;
+  double line_dir_x = 0.0;
+  double line_dir_y = 0.0;
+  double line_velocity = 0.0;
+  double line_max_vel_colinear = 0.0;
+  double line_max_vel_perp = 0.0;
+  double line_max_vel_angular = 0.0;
+  double line_max_accel_colinear = 0.0;
+  double line_max_accel_perp = 0.0;
+  double line_max_accel_angular = 0.0;
+  double line_colinear_start_thresh = 0.0;
 };
 
 }  // namespace ateam_kenobi::motion

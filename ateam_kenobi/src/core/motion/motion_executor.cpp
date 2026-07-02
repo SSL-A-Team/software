@@ -235,8 +235,8 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
 
   MotionCommand command;
   command.control_mode = ControlMode::HeadingPivot;
-  command.limit_vel_angular = intent.limits.angular_velocity;
-  command.limit_acc_angular = intent.limits.angular_acceleration;
+  command.pivot_max_angular_vel = intent.limits.angular_velocity;
+  command.pivot_max_angular_acc = intent.limits.angular_acceleration;
   command.pivot_global_theta = intent.target_heading;
   command.pivot_orbit_radius = intent.radius;
   command.pivot_inset_angle = intent.inset_angle;
@@ -256,14 +256,69 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
 
   MotionCommand command;
   command.control_mode = ControlMode::PointPivot;
-  command.limit_vel_angular = intent.limits.angular_velocity;
-  command.limit_acc_angular = intent.limits.angular_acceleration;
+  command.pivot_max_angular_vel = intent.limits.angular_velocity;
+  command.pivot_max_angular_acc = intent.limits.angular_acceleration;
   command.pivot_target_x = intent.target_x;
   command.pivot_target_y = intent.target_y;
   command.pivot_orbit_radius = intent.radius;
   command.pivot_inset_angle = intent.inset_angle;
   command.pivot_direction = static_cast<uint8_t>(intent.direction);
   command.pivot_commpute_inset_angle = intent.compute_inset_angle;
+
+  return command;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::LineHeading & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)overlays;
+  (void)world;
+  (void)robot;
+
+  MotionCommand command;
+  command.control_mode = ControlMode::HeadingLine;
+  command.line_start_x = intent.line_start.x();
+  command.line_start_y = intent.line_start.y();
+  command.line_dir_x = intent.line_direction.x();
+  command.line_dir_y = intent.line_direction.y();
+  command.line_velocity = intent.line_velocity;
+  command.line_global_theta = intent.heading;
+  command.line_max_vel_colinear = intent.max_vel_colinear;
+  command.line_max_vel_perp = intent.max_vel_perp;
+  command.line_max_vel_angular = intent.max_vel_angular;
+  command.line_max_accel_colinear = intent.max_accel_colinear;
+  command.line_max_accel_perp = intent.max_accel_perp;
+  command.line_max_accel_angular = intent.max_accel_angular;
+  command.line_colinear_start_thresh = intent.colinear_start_thresh;
+
+  return command;
+}
+
+std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
+  const intents::LinePoint & intent, const Robot & robot, visualization::Overlays & overlays,
+  const World & world)
+{
+  (void)overlays;
+  (void)world;
+  (void)robot;
+
+  MotionCommand command;
+  command.control_mode = ControlMode::PointLine;
+  command.line_start_x = intent.line_start.x();
+  command.line_start_y = intent.line_start.y();
+  command.line_dir_x = intent.line_direction.x();
+  command.line_dir_y = intent.line_direction.y();
+  command.line_velocity = intent.line_velocity;
+  command.line_target_x = intent.face_target.x();
+  command.line_target_y = intent.face_target.y();
+  command.line_max_vel_colinear = intent.max_vel_colinear;
+  command.line_max_vel_perp = intent.max_vel_perp;
+  command.line_max_vel_angular = intent.max_vel_angular;
+  command.line_max_accel_colinear = intent.max_accel_colinear;
+  command.line_max_accel_perp = intent.max_accel_perp;
+  command.line_max_accel_angular = intent.max_accel_angular;
+  command.line_colinear_start_thresh = intent.colinear_start_thresh;
 
   return command;
 }

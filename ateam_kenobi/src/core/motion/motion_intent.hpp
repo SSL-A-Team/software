@@ -129,7 +129,7 @@ struct PivotHeading
   double inset_angle = 0.0;
   PivotDirection direction = PivotDirection::Forward;
   bool compute_inset_angle = false;
-  Limits limits;
+  Limits limits;  // NOTE: linear limits are NOT respected or used
 };
 
 struct PivotPoint
@@ -140,7 +140,37 @@ struct PivotPoint
   double inset_angle = 0.0;
   PivotDirection direction = PivotDirection::Forward;
   bool compute_inset_angle = false;
-  Limits limits;
+  Limits limits;  // NOTE: linear limits are NOT respected or used
+};
+
+struct LineHeading
+{
+  ateam_geometry::Point line_start;
+  ateam_geometry::Vector line_direction;  // normalized by firmware
+  double line_velocity = 0.0;
+  double heading = 0.0;  // maintained global heading
+  double max_vel_colinear = 0.0;  // accel/vel limits are broken out from Limits type so they can be tuned separately
+  double max_vel_perp = 0.0;
+  double max_vel_angular = 0.0;
+  double max_accel_colinear = 0.0;
+  double max_accel_perp = 0.0;
+  double max_accel_angular = 0.0;
+  double colinear_start_thresh = 0.0;
+};
+
+struct LinePoint
+{
+  ateam_geometry::Point line_start;
+  ateam_geometry::Vector line_direction;  // normalized by firmware
+  double line_velocity = 0.0;
+  ateam_geometry::Point face_target;
+  double max_vel_colinear = 0.0;  // accel/vel limits are broken out from Limits type so they can be tuned separately
+  double max_vel_perp = 0.0;
+  double max_vel_angular = 0.0;
+  double max_accel_colinear = 0.0;
+  double max_accel_perp = 0.0;
+  double max_accel_angular = 0.0;
+  double colinear_start_thresh = 0.0;
 };
 
 }  // namespace intents
@@ -155,7 +185,9 @@ using MotionIntent = std::variant<
   intents::PositionFacing,
   intents::PivotVelocity,
   intents::PivotHeading,
-  intents::PivotPoint>;
+  intents::PivotPoint,
+  intents::LineHeading,
+  intents::LinePoint>;
 
 }  // namespace ateam_kenobi::motion
 
