@@ -348,11 +348,11 @@ PivotParams_t ManeuverExecutor::generate_pivot_params(
   const ateam_msgs::msg::RobotMotionCommand & ros_msg)
 {
   PivotParams_t pivot_params = ateam_controls_default_pivot_params();
-  if (ros_msg.limit_vel_angular != 0.0) {
-    pivot_params.max_vel_angular = ros_msg.limit_vel_angular;
+  if (ros_msg.pivot_max_angular_vel != 0.0) {
+    pivot_params.max_vel_angular = ros_msg.pivot_max_angular_vel;
   }
-  if (ros_msg.limit_acc_angular != 0.0) {
-    pivot_params.max_accel_angular = ros_msg.limit_acc_angular;
+  if (ros_msg.pivot_max_angular_acc != 0.0) {
+    pivot_params.max_accel_angular = ros_msg.pivot_max_angular_acc;
   }
 
   pivot_params.orbit_radius = ros_msg.pivot_orbit_radius;
@@ -369,6 +369,24 @@ LinearParams_t ManeuverExecutor::generate_linear_params(
   LinearParams_t linear_params = ateam_controls_default_linear_params();
   if (ros_msg.line_velocity != 0.0) {
     linear_params.max_vel_colinear = ros_msg.line_velocity;
+  }
+  if (ros_msg.line_max_vel_colinear != 0.0) {
+    linear_params.max_vel_colinear = ros_msg.line_max_vel_colinear;
+  }
+  if (ros_msg.line_max_vel_perp != 0.0) {
+    linear_params.max_vel_perp = ros_msg.line_max_vel_perp;
+  }
+  if (ros_msg.line_max_vel_angular != 0.0) {
+    linear_params.max_vel_angular = ros_msg.line_max_vel_angular;
+  }
+  if (ros_msg.line_max_accel_colinear != 0.0) {
+    linear_params.max_accel_colinear = ros_msg.line_max_accel_colinear;
+  }
+  if (ros_msg.line_max_accel_perp != 0.0) {
+    linear_params.max_accel_perp = ros_msg.line_max_accel_perp;
+  }
+  if (ros_msg.line_max_accel_angular != 0.0) {
+    linear_params.max_accel_angular = ros_msg.line_max_accel_angular;
   }
 
   if (ros_msg.line_colinear_start_thresh != 0.0) {
@@ -456,7 +474,7 @@ void ManeuverExecutor::plan_trajectory(Vector6C_t starting_state)
         linear_params_ = generate_linear_params(command_);
         ateam_controls_linear_traj_from_line(
           starting_state,
-          command_.pose.theta, // This doesn't match the rest of the commands
+          command_.line_global_theta,
           Vector2C_t{float(command_.line_start_x), float(command_.line_start_y)},
           Vector2C_t{float(command_.line_dir_x), float(command_.line_dir_y)},
           command_.line_velocity,
