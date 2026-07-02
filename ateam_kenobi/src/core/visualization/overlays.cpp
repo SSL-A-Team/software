@@ -303,6 +303,16 @@ void Overlays::drawStopsign(const std::string & name, const Robot & bot, const s
   overlay_array_->overlays.back().depth = 0;
 }
 
+
+void Overlays::clearItem(const std::string & name)
+{
+  ateam_msgs::msg::Overlay msg;
+  msg.ns = ns_;
+  msg.name = name;
+  msg.command = ateam_msgs::msg::Overlay::REMOVE;
+  addOverlay(msg);
+}
+
 void Overlays::addOverlay(ateam_msgs::msg::Overlay overlay)
 {
   if (overlay_array_) {

@@ -48,15 +48,18 @@ void PathPlanner::Execute(
 
   const auto expected_positions = planner_->GetExpectedLocations(options);
   for(auto id = 0; id < 16; ++id) {
+    const auto overlay_name = "pathing/expected/" + std::to_string(id);
     if(!target_poses[id]) {
+      overlays.clearItem(overlay_name);
       continue;
     }
     const auto & position = expected_positions[id];
     if(!position) {
+      overlays.clearItem(overlay_name);
       continue;
     }
     const auto & bot_options = options[id];
-    overlays.drawCircle("pathing/expected/" + std::to_string(id),
+    overlays.drawCircle(overlay_name,
         ateam_geometry::makeCircle(*position, bot_options.replan_thresholds.deviation_distance),
         "Purple", "#00000000");
   }
@@ -152,11 +155,15 @@ void PathPlanner::FillMotionCommands(
     const auto target_iter = std::find_if(targets.begin(), targets.end(),
         [i](const auto & t) {return t.robot_id == static_cast<int>(i);});
     if(target_iter == targets.end()) {
+      overlays.clearItem("pathingTarget/" + std::to_string(i));
+      overlays.clearItem("collisionStop/" + std::to_string(i));
       continue;
     }
     const auto & target = *target_iter;
     DrawTrajectory(overlays, result, world.our_robots[i], target.position, target.planner_options);
     if(!result.has_value()) {
+      overlays.clearItem("pathingTarget/" + std::to_string(i));
+      overlays.clearItem("collisionStop/" + std::to_string(i));
       continue;
     }
     if(result->collision_stats.new_collision_start_time.has_value()) {
@@ -181,12 +188,16 @@ void PathPlanner::FillMotionCommands(
         commands[i] = command;
         overlays.drawStopsign("collisionStop/" + std::to_string(i), world.our_robots[i], "Pink");
       }
+      overlays.clearItem("pathingTarget/" + std::to_string(i));
       continue;
+    } else {
+      overlays.clearItem("collisionStop/" + std::to_string(i));
     }
 
     const auto & path = result->path;
     const auto current_target_pose = path.GetTargetAtNow();
     if(!current_target_pose.has_value()) {
+      overlays.clearItem("pathingTarget/" + std::to_string(i));
       continue;
     }
     overlays.drawCircle("pathingTarget/" + std::to_string(i),
@@ -245,8 +256,10 @@ void PathPlanner::DrawTrajectory(
   constexpr double kTimeStep = 0.2;
   const auto name_prefix = "pathing/robot_" + std::to_string(robot.id) + "/";
   if(!result.has_value()) {
-    overlays.drawLine(name_prefix + "path", {robot.pos, target}, "Red");
+    overlays.drawLine(name_prefix + "nopath", {robot.pos, target}, "Red");
     return;
+  } else {
+    overlays.clearItem(name_prefix + "nopath");
   }
   const auto & path = result->path;
   const auto points = path.ToPoints(kTimeStep);
@@ -256,6 +269,8 @@ void PathPlanner::DrawTrajectory(
     const auto transition_point = path.GetFirstTransitionPoint();
     overlays.drawCircle(name_prefix + "transition",
         ateam_geometry::makeCircle(transition_point, 0.05), "#00000000", "Purple");
+  } else {
+    overlays.clearItem(name_prefix + "transition");
   }
 
   const auto start_time = path.GetStartTime();
@@ -270,6 +285,8 @@ void PathPlanner::DrawTrajectory(
         std::vector<ateam_geometry::Point>(points_iter, points_iter + elapsed_point_count),
         translucent_purple);
     points_iter += elapsed_point_count - 1;
+  } else {
+    overlays.clearItem(name_prefix + "done");
   }
 
   const auto & collision_stats = result->collision_stats;
@@ -293,6 +310,7 @@ void PathPlanner::DrawTrajectory(
       points_iter += remaining_checked_point_count - 1;
     }
   } else {
+    overlays.clearItem(name_prefix + "colliding");
     overlays.drawLine(name_prefix + "checked",
         std::vector<ateam_geometry::Point>(points_iter, points_iter + checked_point_count),
         "Purple");
@@ -302,10 +320,14 @@ void PathPlanner::DrawTrajectory(
   if(points_iter != points.end()) {
     overlays.drawLine(name_prefix + "unchecked",
         std::vector<ateam_geometry::Point>(points_iter, points.end()), "LightSkyBlue");
+  } else {
+    overlays.clearItem(name_prefix + "unchecked");
   }
 
   if(CGAL::squared_distance(points.back(), target) > 1e-2) {
     overlays.drawLine(name_prefix + "truncated", {points.back(), target}, "LightPink");
+  } else {
+    overlays.clearItem(name_prefix + "truncated");
   }
 }
 

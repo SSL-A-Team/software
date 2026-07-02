@@ -102,6 +102,11 @@ public:
    */
   void drawStopsign(const std::string & name, const Robot & bot, const std::string & color);
 
+  /**
+   * Adds an overlay message to remove an existing overlay item from the UI.
+   */
+  void clearItem(const std::string & name);
+
 private:
   static const uint32_t kDefaultLifetime = 200;
   std::string ns_;
