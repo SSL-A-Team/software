@@ -160,15 +160,27 @@ void PathPlanner::FillMotionCommands(
       continue;
     }
     const auto & target = *target_iter;
-    DrawTrajectory(overlays, result, world.our_robots[i], target.position, target.planner_options);
+    const auto & robot = world.our_robots[i];
+    DrawTrajectory(overlays, result, robot, target.position, target.planner_options);
     if(!result.has_value()) {
       overlays.clearItem("pathingTarget/" + std::to_string(i));
       overlays.clearItem("collisionStop/" + std::to_string(i));
+      // If we couldn't plan a path, at least face the robot where it wanted to face
+      MotionCommand command;
+      command.control_mode = ControlMode::GlobalPosition;
+      command.pose.x = robot.pos.x();
+      command.pose.y = robot.pos.y();
+      command.pose.theta = target.heading;
+      command.limit_acc_angular = target.limits.angular_acceleration;
+      command.limit_vel_angular = target.limits.angular_velocity;
+      command.limit_acc_linear = target.limits.linear_acceleration;
+      command.limit_vel_linear = target.limits.linear_velocity;
+      commands[i] = command;
       continue;
     }
     if(result->collision_stats.new_collision_start_time.has_value()) {
       const auto collision_time = *(result->collision_stats.new_collision_start_time);
-      const auto stopping_time = ateam_geometry::norm(world.our_robots[i].vel) /
+      const auto stopping_time = ateam_geometry::norm(robot.vel) /
         target.limits.linear_acceleration;
       if(stopping_time < collision_time) {
         MotionCommand command;
@@ -181,12 +193,12 @@ void PathPlanner::FillMotionCommands(
         command.limit_acc_linear = target.limits.linear_acceleration;
         command.limit_vel_linear = target.limits.linear_velocity;
         commands[i] = command;
-        overlays.drawStopsign("collisionStop/" + std::to_string(i), world.our_robots[i], "Orange");
+        overlays.drawStopsign("collisionStop/" + std::to_string(i), robot, "Orange");
       } else {
         MotionCommand command;
         command.control_mode = ControlMode::EStopBrake;
         commands[i] = command;
-        overlays.drawStopsign("collisionStop/" + std::to_string(i), world.our_robots[i], "Pink");
+        overlays.drawStopsign("collisionStop/" + std::to_string(i), robot, "Pink");
       }
       overlays.clearItem("pathingTarget/" + std::to_string(i));
       continue;
