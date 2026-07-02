@@ -88,6 +88,7 @@ private:
   std::optional<MotionCommand> ExecuteIntent(
     const intents::LinePoint & intent, const Robot & robot,
     visualization::Overlays & overlays, const World & world);
+};
 
 }  // namespace ateam_kenobi::motion
 
