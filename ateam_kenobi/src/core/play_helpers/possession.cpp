@@ -30,6 +30,17 @@ namespace ateam_kenobi::play_helpers
 
 PossessionResult WhoHasPossession(const World & world)
 {
+
+  const ateam_geometry::Rectangle our_defense_area {
+    -1 * (world.field.field_length / 2.0),
+    -((world.field.defense_area_width / 2.0) + kRobotRadius / 2),
+    -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth - kRobotRadius / 2),
+    (world.field.defense_area_width / 2.0) - kRobotRadius / 2
+  };
+  if (ateam_geometry::doIntersect(our_defense_area, world.ball.pos)) {
+    return PossessionResult::Ours;
+  }
+
   const auto possession_threshold = 0.01 + kRobotRadius + kBallRadius;
   const auto weak_possession_threshold = 0.5 + kRobotRadius + kBallRadius;
   const auto possession_threhold_sq = possession_threshold * possession_threshold;

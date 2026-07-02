@@ -75,9 +75,6 @@ std::array<std::optional<PathPlanResult>, 16> Planner::PlanPathsForAllBots(
           .target = targets[bot_index].value()
         };
       } else {
-        if(bot_index == 0) {
-          std::cerr << "Cleared 0's cache\n";
-        }
         cache_[bot_index].reset();
       }
     } else {
