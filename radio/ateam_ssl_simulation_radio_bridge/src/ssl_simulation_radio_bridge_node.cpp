@@ -180,8 +180,6 @@ public:
     }
 
     const auto robot = world_.our_robots[robot_id];
-    // Somehow nonvisible robots have their id set to 0 in the world topic
-    // easier to just not interact with them
     if (robot.visible) {
       auto & maneuver_executor = manuever_executors_[robot_id];
       RobotControl robots_control = message_conversions::fromMsg(msg, robot, maneuver_executor,

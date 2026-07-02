@@ -50,7 +50,9 @@ void rclcpp::TypeAdapter<ateam_game_state::World,
     if (robot.visible || robot.radio_connected) {
       RobotTA::convert_to_ros_message(robot, ros_msg.our_robots.emplace_back());
     } else {
-      ros_msg.our_robots.push_back(ateam_msgs::msg::GameStateRobot());
+      auto default_bot = ateam_msgs::msg::GameStateRobot();
+      default_bot.id = robot.id;
+      ros_msg.our_robots.push_back(default_bot);
     }
   }
 
@@ -59,7 +61,9 @@ void rclcpp::TypeAdapter<ateam_game_state::World,
     if (robot.visible) {
       RobotTA::convert_to_ros_message(robot, ros_msg.their_robots.emplace_back());
     } else {
-      ros_msg.their_robots.push_back(ateam_msgs::msg::GameStateRobot());
+      auto default_bot = ateam_msgs::msg::GameStateRobot();
+      default_bot.id = robot.id;
+      ros_msg.our_robots.push_back(default_bot);
     }
   }
 
