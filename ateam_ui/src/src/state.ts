@@ -82,6 +82,8 @@ export class AppState {
     hoveredFieldIgnoreSide: number = 0;
     draggedRobot: number = null;
 
+    displayOverlays: boolean = true;
+
     goalieServiceStatus: [status: boolean, reason: string] = [true, ""] // False if the set goalie service fails
 
     constructor() {

@@ -94,6 +94,15 @@
         </v-list>
     </v-menu>
 
+    <v-checkbox 
+        label="Draw Overlays" 
+        v-model="displayOverlays"
+        @change="setDisplayOverlays()"
+        density="compact"
+        hide-details
+        class="px-2"
+    />
+
     <input
       ref="loadPlaybookFileInput"
       type="file"
@@ -118,6 +127,7 @@ export default {
             fieldBoundaryVisible: true,
             holdStartTime: null,
             timeoutId: null,
+            displayOverlays: true,
             globalTheme: useTheme()
         }
     },
@@ -191,6 +201,10 @@ export default {
                 clearTimeout(this.timeoutId);
             }
         },
+        setDisplayOverlays() {
+            this.state.graphicState.overlayContainer.visible = this.displayOverlays;
+            this.state.graphicState.underlayContainer.visible = this.displayOverlays;
+        }
     }
 }
 </script>
