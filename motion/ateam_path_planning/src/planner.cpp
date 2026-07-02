@@ -197,7 +197,7 @@ std::optional<PathPlanResult> Planner::PlanPath(
             trajectory_params);
 
         const auto sub_path_1_duration = GetBangBangTrajectoryDuration(sub_path_1);
-        for(auto transition_time = 0.1; transition_time < sub_path_1_duration;
+        for(auto transition_time = 0.1; transition_time < sub_path_1_duration - 0.2;
           transition_time += 0.2)
         {
           const auto transition_state = GetStateAtT(sub_path_1, transition_time);

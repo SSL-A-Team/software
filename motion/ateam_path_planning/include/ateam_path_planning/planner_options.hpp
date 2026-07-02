@@ -69,8 +69,8 @@ struct PlannerOptions
   double footprint_inflation = 0.06;
   double boundary_footprint_inflation = 0.02;
   double inter_target_dist_min = 1.0;
-  double inter_target_dist_max = 5.0;
-  double inter_target_dist_step = 1.0;
+  double inter_target_dist_max = 2.5;
+  double inter_target_dist_step = 0.5;
   double inter_target_angle_step = 0.5;
   bool ignore_start_obstacles = false;
   Limits limits;

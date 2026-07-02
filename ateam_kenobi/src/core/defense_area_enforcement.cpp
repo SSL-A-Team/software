@@ -38,20 +38,18 @@ void EnforceDefenseAreaKeepout(
   }
 
   const ateam_geometry::Rectangle our_defense_area{
-    *CGAL::top_vertex_2(
-      world.field.ours.defense_area_corners.begin(),
-      world.field.ours.defense_area_corners.end()),
-    *CGAL::bottom_vertex_2(
-      world.field.ours.defense_area_corners.begin(),
-      world.field.ours.defense_area_corners.end())
+    -((world.field.field_length / 2.0) + ( 2 * world.field.boundary_width ) +
+    world.field.defense_area_depth ),
+    -(world.field.defense_area_width / 2.0),
+    -((world.field.field_length / 2.0) - world.field.defense_area_depth),
+    world.field.defense_area_width / 2.0
   };
   const ateam_geometry::Rectangle their_defense_area {
-    *CGAL::top_vertex_2(
-      world.field.theirs.defense_area_corners.begin(),
-      world.field.theirs.defense_area_corners.end()),
-    *CGAL::bottom_vertex_2(
-      world.field.theirs.defense_area_corners.begin(),
-      world.field.theirs.defense_area_corners.end())
+    ((world.field.field_length / 2.0) + ( 2 * world.field.boundary_width ) +
+    world.field.defense_area_depth ),
+    -(world.field.defense_area_width / 2.0),
+    ((world.field.field_length / 2.0) - world.field.defense_area_depth),
+    world.field.defense_area_width / 2.0
   };
   motion::MotionCommand stop_command;
   stop_command.control_mode = motion::ControlMode::LocalVelocity;
@@ -76,7 +74,9 @@ void EnforceDefenseAreaKeepout(
     auto & command = *maybe_command;
     const auto new_pos = GetPredictedPosition(robot, command);
     if(IsRobotEscapingDefenseArea(robot.pos, new_pos, our_defense_area) ||
-      IsRobotEscapingDefenseArea(robot.pos, new_pos, their_defense_area))
+      IsRobotEscapingDefenseArea(robot.pos, new_pos, their_defense_area) ||
+      IsRobotDestinationOutsideDefenseArea(command, our_defense_area) ||
+      IsRobotDestinationOutsideDefenseArea(command, their_defense_area))
     {
       continue;
     }
@@ -160,6 +160,17 @@ bool IsRobotEscapingDefenseArea(
   }
   const auto area_center = CGAL::midpoint(defense_area.min(), defense_area.max());
   return CGAL::compare_distance_to_point(area_center, position, new_position) == CGAL::SMALLER;
+}
+
+bool IsRobotDestinationOutsideDefenseArea(const motion::MotionCommand & command,
+  const ateam_geometry::Rectangle & defense_area)
+{
+  if(command.control_mode == motion::ControlMode::GlobalPosition) {
+    const ateam_geometry::Point position{command.pose.x, command.pose.y};
+    const auto robot_footprint = ateam_geometry::makeDisk(position, kRobotRadius);
+    return CGAL::do_intersect(robot_footprint, defense_area);
+  }
+  return false;
 }
 
 bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command)
