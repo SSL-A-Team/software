@@ -36,7 +36,8 @@ namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;
 namespace ateam_kenobi::plays
 {
 DefaultStopPlay::DefaultStopPlay(stp::Options stp_options)
-: stp::Play(kPlayName, stp_options)
+: stp::Play(kPlayName, stp_options),
+  defense_tactic_(createChild<tactics::StandardDefense>("defense"))
 {
 }
 
@@ -53,14 +54,18 @@ stp::PlayScore DefaultStopPlay::getScore(const World & world)
 std::array<std::optional<RobotCommand>, 16> DefaultStopPlay::runFrame(
   const World & world)
 {
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
+
+  auto available_robots = play_helpers::getAvailableRobots(world);
+  play_helpers::removeGoalie(available_robots, world);
+  defense_tactic_.runFrame(world, available_robots, motion_commands);
+
   const auto added_obstacles = helpers::getAddedObstacles(world);
 
   helpers::drawObstacles(world, added_obstacles, getOverlays(), getLogger());
 
-  std::array<std::optional<RobotCommand>, 16> motion_commands;
-
   helpers::moveBotsTooCloseToBall(world, added_obstacles, motion_commands, getOverlays(),
-      getPlayInfo());
+      getPlayInfo(), true);
 
   helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo());
 
