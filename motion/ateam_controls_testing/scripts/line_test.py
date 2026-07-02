@@ -35,11 +35,11 @@ angular_threshold = 0.0349
 
 # theta, start_x, start_y, dir_x, dir_y, velocity, hold_time
 waypoints = [
-    (math.pi / 2, 0.0, 0.0, 1.0, 0.0, 1.0, 10.0),
+    (0.0, -2.0, 0.0, 0.0, 1.0, 0.4, 10.0),
 ]
 
 line_params = {
-    "line_max_vel_perp": 3.0,
+    "line_max_vel_perp": 2.0,
     "line_max_vel_angular": 5.0,
     "line_max_accel_colinear": 2.0,
     "line_max_accel_perp": 2.0,
@@ -61,11 +61,14 @@ def vision_callback(msg: VisionStateRobot):
 def publish_waypoint_command(index: int):
     waypoint = waypoints[index]
     command_msg = RobotMotionCommand()
-    command_msg.body_control_mode = RobotMotionCommand.BCM_HEADING_LINE
+    # command_msg.body_control_mode = RobotMotionCommand.BCM_HEADING_LINE
+    command_msg.body_control_mode = RobotMotionCommand.BCM_POINT_LINE
     command_msg.kick_request = RobotMotionCommand.KR_DISABLE
     command_msg.line_global_theta = waypoint[0]
     command_msg.line_start_x = waypoint[1]
     command_msg.line_start_y = waypoint[2]
+    command_msg.line_target_x = 0.0
+    command_msg.line_target_y = 0.0
     command_msg.line_dir_x = waypoint[3]
     command_msg.line_dir_y = waypoint[4]
     command_msg.line_velocity = waypoint[5]
@@ -91,11 +94,12 @@ def is_at_waypoint(index: int):
     rel_y = vision_robot_state_msg.pose.position.y - start_y
     perp_distance = abs(rel_x * dir_y - rel_y * dir_x)
 
-    return (
-        vision_robot_state_msg.visible
-        and perp_distance < linear_threshold
-        and abs(theta - theta_target) < angular_threshold
-    )
+    return False
+    # return (
+    #     vision_robot_state_msg.visible
+    #     and perp_distance < linear_threshold
+    #     and abs(theta - theta_target) < angular_threshold
+    # )
 
 
 if __name__ == '__main__':
