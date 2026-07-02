@@ -396,8 +396,8 @@ private:
           control_msg.body_control_mode = BCM_HEADING_PIVOT;
           control_msg.cmd.heading_pivot = {
             static_cast<float>(command.pivot_global_theta),
-            static_cast<float>(command.limit_vel_angular),
-            static_cast<float>(command.limit_acc_angular),
+            static_cast<float>(command.pivot_max_angular_vel),
+            static_cast<float>(command.pivot_max_angular_acc),
             static_cast<float>(command.pivot_orbit_radius),
             static_cast<float>(command.pivot_inset_angle),
             static_cast<PivotDirection>(command.pivot_direction),
@@ -410,8 +410,8 @@ private:
           control_msg.cmd.point_pivot = {
             static_cast<float>(command.pivot_target_x),
             static_cast<float>(command.pivot_target_y),
-            static_cast<float>(command.limit_vel_angular),
-            static_cast<float>(command.limit_acc_angular),
+            static_cast<float>(command.pivot_max_angular_vel),
+            static_cast<float>(command.pivot_max_angular_acc),
             static_cast<float>(command.pivot_orbit_radius),
             static_cast<float>(command.pivot_inset_angle),
             static_cast<PivotDirection>(command.pivot_direction),
@@ -427,13 +427,13 @@ private:
             static_cast<float>(command.line_dir_x),
             static_cast<float>(command.line_dir_y),
             static_cast<float>(command.line_velocity),
-            static_cast<float>(command.pivot_global_theta),
-            static_cast<float>(command.limit_vel_linear),
-            static_cast<float>(command.limit_vel_linear),
-            static_cast<float>(command.limit_vel_angular),
-            static_cast<float>(command.limit_acc_linear),
-            static_cast<float>(command.limit_acc_linear),
-            static_cast<float>(command.limit_acc_angular),
+            static_cast<float>(command.line_global_theta),
+            static_cast<float>(command.line_max_vel_colinear),
+            static_cast<float>(command.line_max_vel_perp),
+            static_cast<float>(command.line_max_vel_angular),
+            static_cast<float>(command.line_max_accel_colinear),
+            static_cast<float>(command.line_max_accel_perp),
+            static_cast<float>(command.line_max_accel_angular),
             static_cast<float>(command.line_colinear_start_thresh)
           };
           break;
@@ -447,12 +447,12 @@ private:
             static_cast<float>(command.line_velocity),
             static_cast<float>(command.line_target_x),
             static_cast<float>(command.line_target_y),
-            static_cast<float>(command.limit_vel_linear),
-            static_cast<float>(command.limit_vel_linear),
-            static_cast<float>(command.limit_vel_angular),
-            static_cast<float>(command.limit_acc_linear),
-            static_cast<float>(command.limit_acc_linear),
-            static_cast<float>(command.limit_acc_angular),
+            static_cast<float>(command.line_max_vel_colinear),
+            static_cast<float>(command.line_max_vel_perp),
+            static_cast<float>(command.line_max_vel_angular),
+            static_cast<float>(command.line_max_accel_colinear),
+            static_cast<float>(command.line_max_accel_perp),
+            static_cast<float>(command.line_max_accel_angular),
             static_cast<float>(command.line_colinear_start_thresh)
           };
           break;
