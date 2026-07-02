@@ -164,7 +164,7 @@ std::optional<PathPlanResult> Planner::PlanPath(
       options.collision_check_resolution, options.collision_check_horizon,
       options.footprint_inflation, options.boundary_footprint_inflation, 0.0);
 
-  if (!direct_collision_stats.HasCollision()) {
+  if (!direct_collision_stats.HasCollision() || ateam_geometry::norm(robot.pos - target.position) < kRobotRadius) {
     return PathPlanResult{
       direct_path,
       direct_collision_stats
