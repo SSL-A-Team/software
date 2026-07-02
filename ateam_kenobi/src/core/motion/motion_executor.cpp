@@ -284,12 +284,16 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   command.line_dir_y = intent.line_direction.y();
   command.line_velocity = intent.line_velocity;
   command.line_global_theta = intent.heading;
-  command.line_max_vel_colinear = intent.max_vel_colinear;
-  command.line_max_vel_perp = intent.max_vel_perp;
-  command.line_max_vel_angular = intent.max_vel_angular;
-  command.line_max_accel_colinear = intent.max_accel_colinear;
-  command.line_max_accel_perp = intent.max_accel_perp;
-  command.line_max_accel_angular = intent.max_accel_angular;
+  command.line_max_vel_colinear =
+    intent.max_vel_colinear != 0.0 ? intent.max_vel_colinear : intent.limits.linear_velocity;
+  command.line_max_vel_perp =
+    intent.max_vel_perp != 0.0 ? intent.max_vel_perp : intent.limits.linear_velocity;
+  command.line_max_vel_angular = intent.limits.angular_velocity;
+  command.line_max_accel_colinear =
+    intent.max_accel_colinear != 0.0 ? intent.max_accel_colinear : intent.limits.linear_acceleration;
+  command.line_max_accel_perp =
+    intent.max_accel_perp != 0.0 ? intent.max_accel_perp : intent.limits.linear_acceleration;
+  command.line_max_accel_angular = intent.limits.angular_acceleration;
   command.line_colinear_start_thresh = intent.colinear_start_thresh;
 
   return command;
@@ -312,12 +316,16 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   command.line_velocity = intent.line_velocity;
   command.line_target_x = intent.face_target.x();
   command.line_target_y = intent.face_target.y();
-  command.line_max_vel_colinear = intent.max_vel_colinear;
-  command.line_max_vel_perp = intent.max_vel_perp;
-  command.line_max_vel_angular = intent.max_vel_angular;
-  command.line_max_accel_colinear = intent.max_accel_colinear;
-  command.line_max_accel_perp = intent.max_accel_perp;
-  command.line_max_accel_angular = intent.max_accel_angular;
+  command.line_max_vel_colinear =
+    intent.max_vel_colinear != 0.0 ? intent.max_vel_colinear : intent.limits.linear_velocity;
+  command.line_max_vel_perp =
+    intent.max_vel_perp != 0.0 ? intent.max_vel_perp : intent.limits.linear_velocity;
+  command.line_max_vel_angular = intent.limits.angular_velocity;
+  command.line_max_accel_colinear =
+    intent.max_accel_colinear != 0.0 ? intent.max_accel_colinear : intent.limits.linear_acceleration;
+  command.line_max_accel_perp =
+    intent.max_accel_perp != 0.0 ? intent.max_accel_perp : intent.limits.linear_acceleration;
+  command.line_max_accel_angular = intent.limits.angular_acceleration;
   command.line_colinear_start_thresh = intent.colinear_start_thresh;
 
   return command;

@@ -149,13 +149,14 @@ struct LineHeading
   ateam_geometry::Vector line_direction;  // normalized by firmware
   double line_velocity = 0.0;
   double heading = 0.0;  // maintained global heading
-  double max_vel_colinear = 0.0;  // accel/vel limits are broken out from Limits type so they can be tuned separately
+  double colinear_start_thresh = 0.0;
+  // colinear and perpendicular limits default to the linear limits below,
+  // but can be tuned separately by the play (0 = use the linear limits)
+  double max_vel_colinear = 0.0;
   double max_vel_perp = 0.0;
-  double max_vel_angular = 0.0;
   double max_accel_colinear = 0.0;
   double max_accel_perp = 0.0;
-  double max_accel_angular = 0.0;
-  double colinear_start_thresh = 0.0;
+  Limits limits;
 };
 
 struct LinePoint
@@ -164,13 +165,14 @@ struct LinePoint
   ateam_geometry::Vector line_direction;  // normalized by firmware
   double line_velocity = 0.0;
   ateam_geometry::Point face_target;
-  double max_vel_colinear = 0.0;  // accel/vel limits are broken out from Limits type so they can be tuned separately
+  double colinear_start_thresh = 0.0;
+  // colinear and perpendicular limits default to the linear limits below,
+  // but can be tuned separately by the play (0 = use the linear limits)
+  double max_vel_colinear = 0.0;
   double max_vel_perp = 0.0;
-  double max_vel_angular = 0.0;
   double max_accel_colinear = 0.0;
   double max_accel_perp = 0.0;
-  double max_accel_angular = 0.0;
-  double colinear_start_thresh = 0.0;
+  Limits limits;
 };
 
 }  // namespace intents
