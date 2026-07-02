@@ -44,18 +44,18 @@ CollisionStats GetCollisionStats(
       collision_check_horizon);
   const auto init_state = GetStateAtT(trajectory, 0.0);
   auto boundary_inflation_effective = boundary_footprint_inflation;
-  if(std::hypot(init_state.data[3], init_state.data[4]) < 0.25) {
+  if(std::hypot(init_state.data[3], init_state.data[4]) < 1.0) {
     // If we are moving slowly, allow us to move near the wall
     boundary_inflation_effective = -0.05;
   }
   bool was_in_collision = DoesStateCollideWithObstacles(init_state, traj_start_t, obstacles,
-      footprint_inflation) || !IsStateInBounds(init_state, world, boundary_footprint_inflation);
+      footprint_inflation) || !IsStateInBounds(init_state, world, boundary_inflation_effective);
   CollisionStats stats;
   const auto t0 = std::max(search_start_t, collision_check_resolution);
   for (double t = t0; t < duration; t += collision_check_resolution) {
     const auto state_at_t = GetStateAtT(trajectory, t);
     boundary_inflation_effective = boundary_footprint_inflation;
-    if(std::hypot(state_at_t.data[3], state_at_t.data[4]) < 0.25) {
+    if(std::hypot(state_at_t.data[3], state_at_t.data[4]) < 1.0) {
       // If we are moving slowly, allow us to move near the wall
       boundary_inflation_effective = -0.05;
     }
