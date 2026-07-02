@@ -50,7 +50,7 @@ stp::PlayScore SamplePassPlay::getScore(const World & world)
   }
 
   if(world.referee_info.running_command == ateam_common::GameCommand::DirectFreeOurs &&
-    world.ball.pos.x() < world.field.field_length / 4.0)
+    world.ball.pos.x() < -1 * ( world.field.field_length / 4.0))
   {
     return stp::PlayScore::Min();
   }
