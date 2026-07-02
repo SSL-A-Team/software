@@ -16,9 +16,6 @@ add_library(vision_tracker_bridge_component
 )
 target_compile_features(vision_tracker_bridge_component PUBLIC c_std_99 cxx_std_20)
 target_compile_options(vision_tracker_bridge_component PRIVATE -Wall -Wextra -Wpedantic -Werror)
-target_include_directories(vision_tracker_bridge_component PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 ament_target_dependencies(
   vision_tracker_bridge_component
   "rclcpp"
@@ -36,10 +33,6 @@ rclcpp_components_register_node(
 )
 
 install(
-  DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
-)
-install(
   TARGETS vision_tracker_bridge_component
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
@@ -51,15 +44,5 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 endif()
-
-ament_export_include_directories(
-  "include/${PROJECT_NAME}"
-)
-ament_export_libraries(
-  vision_tracker_bridge_component
-)
-ament_export_targets(
-  export_${PROJECT_NAME}
-)
 
 ament_package()
