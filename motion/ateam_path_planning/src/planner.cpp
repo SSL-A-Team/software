@@ -178,7 +178,7 @@ std::optional<PathPlanResult> Planner::PlanPath(
     inter_target_dist <= options.inter_target_dist_max;
     inter_target_dist += options.inter_target_dist_step)
   {
-    const auto inter_target_angle_offset_limit = M_PI_2 - std::fmod(M_PI_2,
+    const auto inter_target_angle_offset_limit = M_PI - std::fmod(M_PI,
         options.inter_target_angle_step);
     const auto angle_to_target = ateam_geometry::ToHeading(truncated_target.position - robot.pos);
     for(auto inter_target_angle_offset = -inter_target_angle_offset_limit;
