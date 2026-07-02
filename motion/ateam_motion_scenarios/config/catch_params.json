@@ -1,0 +1,80 @@
+{
+    "robot_id": 2,
+    "team_color": "blue",
+
+    "mode": "simple",
+
+    "max_vel_linear": 1.0,
+    "max_vel_angular": 9.42477796076938,
+    "max_accel_linear": 2.0,
+    "max_accel_angular": 18.84955592153876,
+
+    "robot_radius": 0.09,
+    "ball_radius": 0.0215,
+    "robot_front_offset": 0.09,
+    "field_safety_margin": 0.05,
+
+    "min_ball_speed": 0.2,
+    "min_ball_speed_tracking": 0.05,
+    "min_ball_speed_detector": 0.0,
+    "require_negative_vx": true,
+    "latency_compensation_s": 0.0,
+
+    "single_intercept_calculation": false,
+    "intercept_calc_delay": 0.0,
+
+    "search_d_min": 0.05,
+    "search_d_max": 8.0,
+    "search_tolerance": 0.01,
+    "search_max_iter": 40,
+
+    "dribbler_speed": 300.0,
+    "pos_tol": 0.04,
+    "yaw_tol": 0.08,
+    "catch_dwell": 1.5,
+
+    "give_enabled": false,
+    "give_trigger_distance": 0.6,
+    "give_retreat_distance": 0.15,
+    "give_duration": 1.0,
+
+    "touch_pass_enabled": true,
+    "touch_pass_speed": 1.5,
+    "kick_back_enabled": true,
+    "kick_back_speed": 1.5,
+    "kick_back_aim_dwell": 0.3,
+    "kick_back_post_dwell": 0.2,
+    "kick_back_max_angular_vel": 0.0,
+
+    "collect_missed_enabled": false,
+    "collect_approach_offset": 0.15,
+    "collect_capture_overdrive": 0.04,
+    "collect_capture_vel_limit": 0.2,
+    "collect_capture_dwell": 0.5,
+    "collect_stationary_threshold": 0.1,
+
+    "capture_after_catch_enabled": true,
+    "capture_after_catch_radius": 0.5,
+    "breakbeam_topic": "",
+
+    "post_collision_arrival_timeout": 3.0,
+    "ball_lost_timeout": 0.5,
+    "wait_for_incoming_timeout": 3.0,
+
+    "collision_detection_enabled": false,
+    "intercept_velocity_retention_threshold": 0.4,
+    "dir_window_pre": 0.08,
+    "dir_window_post": 0.04,
+    "dir_window_total": 0.15,
+    "dir_min_samples": 3,
+    "reset_margin": 0.3,
+
+    "status_text_margin": 0.2,
+    "show_detected_collision_overlay": true,
+    "publish_rate_hz": 100.0,
+    "loop": true,
+    "one_shot": false,
+
+    "require_connection": true,
+    "connection_topic": ""
+}

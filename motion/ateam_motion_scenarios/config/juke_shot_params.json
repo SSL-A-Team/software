@@ -1,0 +1,49 @@
+{
+    "robot_id": 2,
+    "team_color": "blue",
+    "publish_rate_hz": 60.0,
+
+    "drive_to_start": true,
+    "start_pose_x": -0.4,
+    "start_pose_y": -0.4,
+    "start_pose_theta_deg": 0.0,
+    "start_dwell": 0.0,
+
+    "require_connection": true,
+    "connection_topic": "",
+
+    "stationary_ball_threshold": 0.005,
+    "stationary_dwell": 0.2,
+
+    "pos_tol": 0.02,
+    "yaw_tol": 0.1,
+
+    "dribbler_speed": 400.0,
+
+    "limit_vel_linear": 1.0,
+    "limit_vel_angular": 6.283185,
+    "limit_acc_linear": 1.0,
+    "limit_acc_angular": 6.283185,
+
+    "juke_type": "linear",
+    "juke_distance": 0.30,
+    "_juke_speed": 0.5,
+    "juke_speed": 0.25,
+    "juke_accel": 2.0,
+    "juke_inset_angle": 0.6,
+    "juke_target_field_edge": true,
+    "juke_field_edge_x": 4.5,
+    "juke_pre_pivot": true,
+
+    "goal_x": 0.0,
+    "goal_y_dynamic": true,
+    "goal_y": 4.5,
+    "final_pivot_dwell": 1.0,
+    "final_pivot_yaw_tol": 0.02,
+
+    "kick_speed": 2.0,
+    "kick_dwell": 0.0,
+
+    "loop": true,
+    "loop_dwell": 0.0
+}

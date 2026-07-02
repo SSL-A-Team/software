@@ -1,0 +1,12 @@
+{
+    "robot_front_offset": 0.09,
+    "approach_radius": 0.12,
+    "approach_pos_tol": 0.05,
+    "approach_yaw_tol_deg": 5.0,
+    "capture_speed": 0.1,
+    "capture_accel": 0.1,
+    "capture_filter_count": 30,
+    "use_breakbeam": true,
+    "breakbeam_topic": "",
+    "capture_dribbler_tol": 0.03
+}
