@@ -32,7 +32,6 @@
 #include <ateam_msgs/msg/game_state_robot.hpp>
 
 #include <ateam_geometry/ateam_geometry.hpp>
-#include "pid.hpp"
 #include "ateam_controls/ateam_controls.h"
 
 namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
@@ -42,17 +41,7 @@ public:
   ManeuverExecutor()
   {
     traj_params_ = ateam_controls_default_traj_params();
-    pivot_params_ = ateam_controls_default_pivot_params();
-    linear_params_ = ateam_controls_default_linear_params();
     prev_update_time_ = std::chrono::steady_clock::now();
-
-    pid_x_traj_ = PID(3.0, 0.0, 0.0);
-    pid_y_traj_ = PID(3.0, 0.0, 0.0);
-    pid_theta_traj_ = PID(0.3, 0.0, 0.0);
-
-    pid_x_target_ = PID(4.0, 0.0, 0.001);
-    pid_y_target_ = PID(4.0, 0.0, 0.001);
-    pid_theta_target_ = PID(8.0, 0.0, 0.0);
   }
 
   void set_command(ateam_msgs::msg::RobotMotionCommand command)
@@ -68,39 +57,23 @@ public:
   ateam_msgs::msg::Twist2D get_body_vel(ateam_msgs::msg::GameStateRobot robot);
 
 private:
-  void bcm_off_maneuver();
+  // Hold the current pose with zero velocity / acceleration.
+  void hold_maneuver(ateam_msgs::msg::GameStateRobot robot);
 
-    // Trajectory Maneuvers
-  void trajectory_maneuver(
-    const ateam_msgs::msg::RobotMotionCommand & ros_msg,
-    ateam_msgs::msg::GameStateRobot robot);
-
-    // Global Maneuvers
-  void global_velocity_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
-  void global_acceleration_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
-
-    // Local Maneuvers
-  void local_velocity_maneuver(
-    const ateam_msgs::msg::RobotMotionCommand & ros_msg,
-    ateam_msgs::msg::GameStateRobot robot);
-  void local_acceleration_maneuver(
-    const ateam_msgs::msg::RobotMotionCommand & ros_msg,
-    ateam_msgs::msg::GameStateRobot robot);
-
-  void finalize_command(
-    RobotMoveCommand * robot_move_command,
-    const ateam_msgs::msg::RobotMotionCommand & ros_msg, ateam_msgs::msg::GameStateRobot robot);
-
-  ateam_msgs::msg::Twist2D apply_xy_motion_limits(
-    ateam_msgs::msg::Twist2D prev,
-    ateam_msgs::msg::Twist2D command, double vel_limit, double acc_limit, double dt);
-  double apply_1d_motion_limits(
-    double prev, double commanded, double vel_limit, double acc_limit,
-    double dt);
+  // Generate the controls-repo trajectory for the current command, seeded from the
+  // previous reference state (open-loop; no vision feedback, no replan-on-error).
+  void plan_maneuver(const ateam_msgs::msg::RobotMotionCommand & ros_msg);
+  // Advance the active trajectory one frame and sample it into ref_state_/ref_accel_.
+  void tick_and_sample(float dt);
+  // Open-loop forward integration of the reference for acceleration modes.
+  void integrate_accel(const ateam_msgs::msg::Twist2D & global_acceleration, float dt);
+  // Serialize the global reference into the simulator move command.
+  void send_reference(RobotMoveCommand * robot_move_command);
 
   double get_dt();
   double get_yaw(geometry_msgs::msg::Pose pose);
   ateam_msgs::msg::Twist2D rotate_frame(ateam_msgs::msg::Twist2D input_frame, double angle);
+  Vector6C_t seed_from_vision(ateam_msgs::msg::GameStateRobot robot);
 
   TrajectoryParams_t generate_trajectory_params(
     const ateam_msgs::msg::RobotMotionCommand & ros_msg);
@@ -108,23 +81,16 @@ private:
     const ateam_msgs::msg::RobotMotionCommand & ros_msg);
   LinearParams_t generate_linear_params(
     const ateam_msgs::msg::RobotMotionCommand & ros_msg);
-
-  bool command_uses_trajectory();
-  Vector6C_t get_trajectory_state();
-  void plan_trajectory(Vector6C_t starting_state);
-  void tick_trajectory(float dt);
-
-  PID pid_x_traj_;
-  PID pid_y_traj_;
-  PID pid_theta_traj_;
-
-  PID pid_x_target_;
-  PID pid_y_target_;
-  PID pid_theta_target_;
+  bool command_uses_pivot();
+  bool command_uses_line();
 
   ateam_msgs::msg::RobotMotionCommand command_;   // Current ros command, updates every frame
-  ateam_msgs::msg::Twist2D current_global_command_;   // Velocity to be commanded this frame
-  ateam_msgs::msg::Twist2D prev_global_command_;   // Velocity commanded previous frame
+  bool initialized_ = false;
+
+  // Global field-frame reference handed to the simulator each frame.
+  Vector6C_t ref_state_{};   // [x, y, theta, vx, vy, vtheta]
+  Vector3C_t ref_accel_{};   // [ax, ay, atheta]
+
   std::chrono::steady_clock::time_point prev_update_time_;
 
   BangBangTraj3D_t position_trajectory_;
@@ -133,8 +99,8 @@ private:
   PivotTrajectory_t pivot_trajectory_;
   PivotParams_t pivot_params_;
 
-  LinearTrajectory_t linear_trajectory_;
-  LinearParams_t linear_params_;
+  LinearTrajectory_t line_trajectory_;
+  LinearParams_t line_params_;
 };
 
 }  // namespace ateam_ssl_simulation_radio_bridge::robot_maneuvers
