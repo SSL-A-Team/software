@@ -73,6 +73,11 @@ struct PlannerOptions
 
   bool force_replan = false;
 
+  /**
+   * If true, send final target directly to robot without intermediate pathing.
+   */
+  bool skip_planning = false;
+
   ateam_path_planning::ReplanThresholds replan_thresholds;
 };
 

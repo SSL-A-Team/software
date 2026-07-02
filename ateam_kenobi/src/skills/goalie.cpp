@@ -152,7 +152,7 @@ bool Goalie::isBallInDefenseArea(const World & world, const Ball & ball_state)
 
 RobotCommand Goalie::runDefaultBehavior(
   const World & world,
-  const Robot &, const Ball & ball_state)
+  const Robot & goalie, const Ball & ball_state)
 {
   auto goal_line_offset = 0.25;
   if (world.referee_info.running_command == ateam_common::GameCommand::PreparePenaltyTheirs ||
@@ -174,6 +174,10 @@ RobotCommand Goalie::runDefaultBehavior(
   intent.heading = M_PI_2;
   intent.obstacles = getCustomObstacles(world);
   intent.planner_options = default_planner_options_;
+
+  if(CGAL::squared_distance(goalie.pos, goalie_line) < kRobotRadius  * kRobotRadius) {
+    intent.planner_options.skip_planning = true;
+  }
 
   RobotCommand command;
   command.motion_intent = intent;
@@ -242,6 +246,10 @@ RobotCommand Goalie::runBlockShot(
   intent.planner_options = default_planner_options_;
   intent.obstacles = getCustomObstacles(world);
 
+  if(CGAL::squared_distance(goalie.pos, goalie_line) < kRobotRadius  * kRobotRadius) {
+    intent.planner_options.skip_planning = true;
+  }
+
   RobotCommand command;
   command.motion_intent = intent;
   return command;
@@ -279,6 +287,10 @@ RobotCommand Goalie::runBlockBall(
   intent.planner_options = default_planner_options_;
   intent.planner_options.footprint_inflation = -0.05;
   intent.obstacles = getCustomObstacles(world);
+
+  if(CGAL::squared_distance(goalie.pos, goalie_line) < kRobotRadius  * kRobotRadius) {
+    intent.planner_options.skip_planning = true;
+  }
 
   RobotCommand command;
   command.motion_intent = intent;

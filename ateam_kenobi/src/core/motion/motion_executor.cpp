@@ -182,37 +182,65 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   const intents::Position & intent, const Robot & robot, visualization::Overlays & overlays,
   const World & world)
 {
-  (void)overlays;
   (void)world;
-  path_planning_targets_.push_back(path_planning::PathPlanningTarget{
-      robot.id,
-      intent.position,
-      intent.heading,
-      intent.planner_options,
-      intent.obstacles,
-      intent.limits
-  });
-  return std::nullopt;
+  if(intent.planner_options.skip_planning) {
+    overlays.drawLine("pathing/skipped/" + std::to_string(robot.id), {robot.pos, intent.position},
+        "DarkSeaGreen");
+    MotionCommand command;
+    command.control_mode = ControlMode::GlobalPosition;
+    command.pose.x = intent.position.x();
+    command.pose.y = intent.position.y();
+    command.pose.theta = intent.heading;
+    command.limit_vel_linear = intent.limits.linear_velocity;
+    command.limit_vel_angular = intent.limits.angular_velocity;
+    command.limit_acc_linear = intent.limits.linear_acceleration;
+    command.limit_acc_angular = intent.limits.angular_acceleration;
+    return command;
+  } else {
+    path_planning_targets_.push_back(path_planning::PathPlanningTarget{
+        robot.id,
+        intent.position,
+        intent.heading,
+        intent.planner_options,
+        intent.obstacles,
+        intent.limits
+    });
+    return std::nullopt;
+  }
 }
 
 std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   const intents::PositionFacing & intent, const Robot & robot, visualization::Overlays & overlays,
   const World & world)
 {
-  (void)overlays;
   (void)world;
   const auto heading = atan2(
           intent.face_target.y() - robot.pos.y(),
           intent.face_target.x() - robot.pos.x());
-  path_planning_targets_.push_back(path_planning::PathPlanningTarget{
-      robot.id,
-      intent.position,
-      heading,
-      intent.planner_options,
-      intent.obstacles,
-      intent.limits
-  });
-  return std::nullopt;
+  if(intent.planner_options.skip_planning) {
+    overlays.drawLine("pathing/skipped/" + std::to_string(robot.id), {robot.pos, intent.position},
+        "DarkSeaGreen");
+    MotionCommand command;
+    command.control_mode = ControlMode::GlobalPosition;
+    command.pose.x = intent.position.x();
+    command.pose.y = intent.position.y();
+    command.pose.theta = heading;
+    command.limit_vel_linear = intent.limits.linear_velocity;
+    command.limit_vel_angular = intent.limits.angular_velocity;
+    command.limit_acc_linear = intent.limits.linear_acceleration;
+    command.limit_acc_angular = intent.limits.angular_acceleration;
+    return command;
+  } else {
+    path_planning_targets_.push_back(path_planning::PathPlanningTarget{
+        robot.id,
+        intent.position,
+        heading,
+        intent.planner_options,
+        intent.obstacles,
+        intent.limits
+    });
+    return std::nullopt;
+  }
 }
 
 std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
@@ -290,7 +318,8 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
     intent.max_vel_perp != 0.0 ? intent.max_vel_perp : intent.limits.linear_velocity;
   command.line_max_vel_angular = intent.limits.angular_velocity;
   command.line_max_accel_colinear =
-    intent.max_accel_colinear != 0.0 ? intent.max_accel_colinear : intent.limits.linear_acceleration;
+    intent.max_accel_colinear !=
+    0.0 ? intent.max_accel_colinear : intent.limits.linear_acceleration;
   command.line_max_accel_perp =
     intent.max_accel_perp != 0.0 ? intent.max_accel_perp : intent.limits.linear_acceleration;
   command.line_max_accel_angular = intent.limits.angular_acceleration;
@@ -322,7 +351,8 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
     intent.max_vel_perp != 0.0 ? intent.max_vel_perp : intent.limits.linear_velocity;
   command.line_max_vel_angular = intent.limits.angular_velocity;
   command.line_max_accel_colinear =
-    intent.max_accel_colinear != 0.0 ? intent.max_accel_colinear : intent.limits.linear_acceleration;
+    intent.max_accel_colinear !=
+    0.0 ? intent.max_accel_colinear : intent.limits.linear_acceleration;
   command.line_max_accel_perp =
     intent.max_accel_perp != 0.0 ? intent.max_accel_perp : intent.limits.linear_acceleration;
   command.line_max_accel_angular = intent.limits.angular_acceleration;
