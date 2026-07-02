@@ -238,25 +238,25 @@ RobotCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
 
 RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
 {
-  const auto ball_to_target = target_point_ - world.ball.pos;
+  // const auto ball_to_target = target_point_ - world.ball.pos;
   // const auto ball_to_target_angle = std::atan2(ball_to_target.y(), ball_to_target.x());
 
-  // motion::intents::PositionFacing intent;
+  motion::intents::PositionFacing intent;
   // motion::intents::Position intent;
-  // intent.position = world.ball.pos;
+  intent.position = world.ball.pos;
   // intent.heading = ball_to_target_angle;
-  // intent.face_target = world.ball.pos;
-  // intent.limits.linear_velocity = kick_drive_velocity;
-  // intent.planner_options.avoid_ball = false;
-  // intent.planner_options.use_default_obstacles = false;
-  // intent.planner_options.footprint_inflation = 0.01 - kRobotRadius;
-
-  motion::intents::LinePoint intent;
-  intent.colinear_start_thresh = robot_perp_dist_to_ball_threshold + 0.01;
   intent.face_target = world.ball.pos;
-  intent.line_direction = ball_to_target;
-  intent.line_start = target_point_;
-  intent.line_velocity = kick_drive_velocity;
+  intent.limits.linear_velocity = kick_drive_velocity;
+  intent.planner_options.avoid_ball = false;
+  intent.planner_options.use_default_obstacles = false;
+  intent.planner_options.footprint_inflation = 0.01 - kRobotRadius;
+
+  // motion::intents::LinePoint intent;
+  // intent.colinear_start_thresh = robot_perp_dist_to_ball_threshold + 0.01;
+  // intent.face_target = world.ball.pos;
+  // intent.line_direction = ball_to_target;
+  // intent.line_start = target_point_;
+  // intent.line_velocity = kick_drive_velocity;
 
   RobotCommand command;
 
