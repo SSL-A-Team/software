@@ -5,6 +5,7 @@
 #include <ateam_common/protobuf_logging.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
+#include <ateam_common/game_controller_listener.hpp>
 #include <ateam_msgs/msg/vision_state_ball.hpp>
 #include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_msgs/msg/field_info.hpp>
@@ -25,7 +26,8 @@ public:
       std::bind(&VisionTrackerBridgeNode::MulticastCallback, this, std::placeholders::_1, std::placeholders::_3,
       std::placeholders::_4),
       declare_parameter<std::string>("net_interface_address", "")
-    )
+    ),
+    gc_listener_(*this)
   {
     SET_ROS_PROTOBUF_LOG_HANDLER("vision_tracker_bridge.protobuf");
 
@@ -65,6 +67,7 @@ private:
   std::string last_seen_uuid = "";
   std::string last_seen_sender_address = "";
   ateam_common::MulticastReceiver receiver_;
+  ateam_common::GameControllerListener gc_listener_;
   rclcpp::Publisher<ateam_msgs::msg::VisionStateBall>::SharedPtr ball_publisher_;
   std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     16> blue_robots_publishers_;
@@ -115,6 +118,13 @@ private:
       return;
     }
 
+    auto side_multiplier = 1.0;
+    auto side_angle_offset = 0.0;
+    if(gc_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf) {
+      side_multiplier = -1.0;
+      side_angle_offset = M_PI;
+    }
+
     const auto & proto_balls = tracker_proto.tracked_frame().balls();
     for(const auto & proto_ball : proto_balls) {
       if(ignore_side_raw_ < 0 && proto_ball.pos().x() < 0.0) {
@@ -124,11 +134,11 @@ private:
         continue;
       }
       ateam_msgs::msg::VisionStateBall ball_msg;
-      ball_msg.pose.position.x = proto_ball.pos().x();
-      ball_msg.pose.position.y = proto_ball.pos().y();
+      ball_msg.pose.position.x = side_multiplier * proto_ball.pos().x();
+      ball_msg.pose.position.y = side_multiplier * proto_ball.pos().y();
       ball_msg.pose.position.z = proto_ball.pos().z();
-      ball_msg.twist.linear.x = proto_ball.vel().x();
-      ball_msg.twist.linear.y = proto_ball.vel().y();
+      ball_msg.twist.linear.x = side_multiplier * proto_ball.vel().x();
+      ball_msg.twist.linear.y = side_multiplier * proto_ball.vel().y();
       ball_msg.twist.linear.z = proto_ball.vel().z();
       ball_msg.visible = proto_ball.visibility();
       ball_publisher_->publish(ball_msg);
@@ -141,6 +151,12 @@ private:
     std::fill(yellow_seen_ids.begin(), yellow_seen_ids.end(), false);
     const auto & proto_bots = tracker_proto.tracked_frame().robots();
     for(const auto & proto_bot : proto_bots) {
+      if(ignore_side_raw_ < 0 && proto_bot.pos().x() < 0.0) {
+        continue;
+      }
+      if(ignore_side_raw_ > 0 && proto_bot.pos().x() > 0.0) {
+        continue;
+      }
       const auto & color = proto_bot.robot_id().team();
       const auto & id = proto_bot.robot_id().id();
       if(id > 15) {
@@ -157,12 +173,12 @@ private:
       }
 
       ateam_msgs::msg::VisionStateRobot bot_msg;
-      bot_msg.pose.position.x = proto_bot.pos().x();
-      bot_msg.pose.position.y = proto_bot.pos().y();
+      bot_msg.pose.position.x = side_multiplier * proto_bot.pos().x();
+      bot_msg.pose.position.y = side_multiplier * proto_bot.pos().y();
       bot_msg.pose.orientation =
-        tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), proto_bot.orientation()));
-      bot_msg.twist.linear.x = proto_bot.vel().x();
-      bot_msg.twist.linear.y = proto_bot.vel().y();
+        tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), proto_bot.orientation() + side_angle_offset));
+      bot_msg.twist.linear.x = side_multiplier * proto_bot.vel().x();
+      bot_msg.twist.linear.y = side_multiplier * proto_bot.vel().y();
       bot_msg.twist.angular.z = proto_bot.vel_angular();
       bot_msg.visible = proto_bot.visibility();
 
