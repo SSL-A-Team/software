@@ -2,29 +2,42 @@ uint8 body_control_mode
 Twist2D pose  # (m, rad)
 Twist2D velocity  # (m/s, rad/s)
 Twist2D acceleration  # (m/s/s, rad/s/s)
-float64 limit_vel_linear  # (m/s)
-float64 limit_vel_angular  # (rad/s)
-float64 limit_acc_linear  # (m/s/s)
-float64 limit_acc_angular  # (rad/s/s)
+float32 limit_vel_linear  # (m/s)
+float32 limit_vel_angular  # (rad/s)
+float32 limit_acc_linear  # (m/s/s)
+float32 limit_acc_angular  # (rad/s/s)
 
-# pivot parameters
-float64 pivot_target_x # (m)
-float64 pivot_target_y # (m)
-float64 pivot_global_theta # (rad)
-float64 pivot_orbit_radius  # (m)
-float64 pivot_inset_angle  # (rad)
+# (BCM_HEADING_PIVOT)
+float32 pivot_global_theta  # (rad)
+# (BCM_POINT_PIVOT)
+float32 pivot_target_x  # (m)
+float32 pivot_target_y  # (m)
+# (BCM_HEADING_PIVOT / BCM_POINT_PIVOT)
+float32 pivot_max_angular_vel  # (rad/s)
+float32 pivot_max_angular_acc  # (rad/s/s)
+float32 pivot_orbit_radius  # (m)
+float32 pivot_inset_angle  # (rad)
 uint8 pivot_direction  # orbit drive direction: PD_FORWARD=0, PD_BACKWARD=1
 bool pivot_compute_inset_angle  # if true, firmware derives inset_angle from peak angular vel
 
-# line parameters (BCM_HEADING_LINE / BCM_POINT_LINE)
-float64 line_start_x  # (m) a point the line passes through
-float64 line_start_y  # (m)
-float64 line_dir_x  # line direction (normalized by firmware)
-float64 line_dir_y
-float64 line_velocity  # target velocity along the line (m/s)
-float64 line_target_x  # (m) global point to face (BCM_POINT_LINE)
-float64 line_target_y  # (m)
-float64 line_colinear_start_thresh  # perp distance to begin colinear accel (m)
+# (BCM_HEADING_LINE)
+float32 line_global_theta  # (rad) maintained global heading
+# (BCM_HEADING_POINT)
+float32 line_target_x  # (m) face this point while dynamically moving along the line
+float32 line_target_y  # (m)
+# (BCM_HEADING_LINE / BCM_POINT_LINE)
+float32 line_start_x  # (m) a point the line passes through
+float32 line_start_y  # (m)
+float32 line_dir_x  # line direction (normalized by firmware)
+float32 line_dir_y
+float32 line_velocity  # target velocity along the line (m/s)
+float32 line_max_vel_colinear  # maximum velocity in the colinear direction (m/s) (NOTE: this should just be set to the requested line_velocity)
+float32 line_max_vel_perp  # maximum velocity in the perpendicular direction (m/s)
+float32 line_max_vel_angular  # (m/s)
+float32 line_max_accel_colinear  # maximum velocity in the colinear direction (m/s)
+float32 line_max_accel_perp  # maximum velocity in the perpendicular direction (m/s)
+float32 line_max_accel_angular  # (m/s)
+float32 line_colinear_start_thresh  # perp distance to begin colinear accel (m)
 
 uint8 kick_request
 float32 kick_speed  # (m/s)
