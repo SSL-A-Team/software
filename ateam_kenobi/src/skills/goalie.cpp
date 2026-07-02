@@ -89,13 +89,13 @@ void Goalie::runFrame(
   if (isBallHeadedTowardsGoal(world, ball_state)) {
     getPlayInfo()["State"] = "Block Ball";
     motion_command = runBlockBall(world, robot, ball_state);
-  } else if (doesOpponentHavePossesion(world)) {
-    getPlayInfo()["State"] = "Block Shot";
-    motion_command = runBlockShot(world, robot, ball_state);
   } else if (ball_in_def_area && time_in_def_area > 5.5) {
     getPlayInfo()["State"] = "Side Eject";
     motion_command = runSideEjectBall(world, robot);
-  } else if (ball_in_def_area) {
+  } else if (doesOpponentHavePossesion(world)) {
+    getPlayInfo()["State"] = "Block Shot";
+    motion_command = runBlockShot(world, robot, ball_state);
+  }  else if (ball_in_def_area) {
     getPlayInfo()["State"] = "Clear Ball";
     motion_command = runClearBall(world, robot, ball_state);
   } else {
