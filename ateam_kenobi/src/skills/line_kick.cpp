@@ -146,7 +146,7 @@ bool LineKick::IsRobotSettled(const World & world, const Robot & robot)
   const auto robot_vel_perp = robot.vel - robot_vel_proj;
   const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
 
-  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.4;
+  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.08;
   return robot_vel_is_good;
 }
 
@@ -185,12 +185,12 @@ RobotCommand LineKick::RunMoveBehindBall(
   motion_intent.limits.angular_velocity = 2.0;
   motion_intent.limits.angular_acceleration = 2.0;
 
-  double obstacle_radius_multiplier = 1.8;
+  double obstacle_radius_multiplier = 1.0;
   const auto robot_to_prekick = prekick_position - robot.pos;
   const auto ball_to_target = target_point_ - world.ball.pos;
   if (this->cowabunga && ateam_geometry::norm(robot_to_prekick) < 2.5 * kRobotDiameter) {
     motion_intent.planner_options.footprint_inflation = -0.1;
-    obstacle_radius_multiplier = 5.0;
+    obstacle_radius_multiplier = 2.5;
     getPlayInfo()["COWABUNGA MODE"] = "COWABUNGA";
   } else {
     getPlayInfo()["COWABUNGA MODE"] = "not cowabunga :(";
@@ -233,6 +233,10 @@ RobotCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
   intent.position = GetPreKickPosition(world);
   RobotCommand command;
   command.motion_intent = intent;
+  intent.limits.linear_acceleration = 3.0;
+  intent.limits.linear_velocity = 0.5;
+  intent.limits.angular_acceleration = 4.0;
+  intent.limits.angular_velocity = 4.0;
   return command;
 }
 
@@ -247,6 +251,10 @@ RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
   // intent.heading = ball_to_target_angle;
   intent.face_target = world.ball.pos;
   intent.limits.linear_velocity = kick_drive_velocity;
+  intent.limits.linear_acceleration = 1.5;
+  intent.limits.angular_acceleration = 3.0;
+  intent.limits.angular_velocity = 2.0;
+
   intent.planner_options.avoid_ball = false;
   intent.planner_options.use_default_obstacles = false;
   intent.planner_options.footprint_inflation = 0.01 - kRobotRadius;
