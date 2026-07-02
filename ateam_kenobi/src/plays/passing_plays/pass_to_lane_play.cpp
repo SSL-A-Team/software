@@ -41,6 +41,15 @@ PassToLanePlay::PassToLanePlay(
 
 stp::PlayScore PassToLanePlay::getScore(const World & world)
 {
+  if(!world.in_play &&
+    world.referee_info.running_command == ateam_common::GameCommand::DirectFreeOurs &&
+    world.ball.pos.x() < -1 * (world.field.field_length / 4.0))
+  {
+    return stp::PlayScore(75);
+  } else {
+    return stp::PlayScore::NaN();
+  }
+
   if (!world.in_play &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
     world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
@@ -48,6 +57,8 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
   {
     return stp::PlayScore::NaN();
   }
+
+  
 
   if (getCompletionState(world) == stp::PlayCompletionState::Busy) {
     return cached_score_;
