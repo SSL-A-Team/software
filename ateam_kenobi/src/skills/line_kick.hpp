@@ -77,9 +77,6 @@ public:
 
   ateam_geometry::Vector locked_shot_line_;
 
-  // Allow the robot to push up against obstacles / other robots
-  const bool cowabunga = true;
-
 /*
                                           #@%%%%%%%%%%%%%=
                                   *%%%%%%%@@@@@@@@@@@@@@@@%%%%%%#
