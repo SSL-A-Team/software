@@ -179,7 +179,7 @@ RobotCommand LineKick::RunMoveBehindBall(
   motion_intent.face_target = target_point_;
   motion_intent.position = prekick_position + (0.1 * world.ball.vel);
   motion_intent.planner_options.draw_obstacles = true;
-  motion_intent.planner_options.footprint_inflation = std::min(0.015, 0.5*pre_kick_offset);
+  motion_intent.planner_options.footprint_inflation = std::min(0.015, 0.5 * pre_kick_offset);
   motion_intent.limits.linear_acceleration = 1.5;
   motion_intent.limits.linear_velocity = 2.0;
   motion_intent.limits.angular_velocity = 2.0;
@@ -221,6 +221,9 @@ RobotCommand LineKick::RunMoveBehindBall(
 
   command.motion_intent = motion_intent;
 
+  locked_shot_line_ = target_point_ - world.ball.pos;
+
+
   return command;
 }
 
@@ -237,34 +240,44 @@ RobotCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
   intent.limits.linear_velocity = 0.5;
   intent.limits.angular_acceleration = 4.0;
   intent.limits.angular_velocity = 4.0;
+
+  locked_shot_line_ = target_point_ - world.ball.pos;
+
   return command;
 }
 
 RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
 {
+  (void) world;
   // const auto ball_to_target = target_point_ - world.ball.pos;
   // const auto ball_to_target_angle = std::atan2(ball_to_target.y(), ball_to_target.x());
 
-  motion::intents::PositionFacing intent;
+  // motion::intents::PositionFacing intent;
   // motion::intents::Position intent;
-  intent.position = world.ball.pos;
-  // intent.heading = ball_to_target_angle;
-  intent.face_target = world.ball.pos;
-  intent.limits.linear_velocity = kick_drive_velocity;
-  intent.limits.linear_acceleration = 1.5;
-  intent.limits.angular_acceleration = 3.0;
-  intent.limits.angular_velocity = 2.0;
-
-  intent.planner_options.avoid_ball = false;
-  intent.planner_options.use_default_obstacles = false;
-  intent.planner_options.footprint_inflation = 0.01 - kRobotRadius;
-
-  // motion::intents::LinePoint intent;
-  // intent.colinear_start_thresh = robot_perp_dist_to_ball_threshold + 0.01;
+  // intent.position = world.ball.pos;
+  // // intent.heading = ball_to_target_angle;
   // intent.face_target = world.ball.pos;
-  // intent.line_direction = ball_to_target;
-  // intent.line_start = target_point_;
-  // intent.line_velocity = kick_drive_velocity;
+  // intent.limits.linear_velocity = kick_drive_velocity;
+  // intent.limits.linear_acceleration = 1.5;
+  // intent.limits.angular_acceleration = 3.0;
+  // intent.limits.angular_velocity = 2.0;
+
+  // intent.planner_options.avoid_ball = false;
+  // intent.planner_options.use_default_obstacles = false;
+  // intent.planner_options.footprint_inflation = 0.01 - kRobotRadius;
+
+  motion::intents::LinePoint intent;
+  // intent.colinear_start_thresh = robot_perp_dist_to_ball_threshold + 0.01;
+  intent.colinear_start_thresh = 0.001;
+  intent.face_target = target_point_;
+  intent.line_direction = locked_shot_line_;
+  intent.line_start = target_point_;
+  intent.line_velocity = kick_drive_velocity;
+
+  intent.max_vel_colinear = kick_drive_velocity;
+  intent.max_vel_perp = 0.3;
+  intent.max_accel_colinear = 0.5;
+  intent.max_accel_perp = 0.5;
 
   RobotCommand command;
 
