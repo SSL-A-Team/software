@@ -76,13 +76,6 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
-                                              'ssl_game_controller.launch.xml')),
-            condition=IfCondition(LaunchConfiguration('start_gc'))
-        ),
-
-        IncludeLaunchDescription(
-            FrontendLaunchDescriptionSource(
-                PackageLaunchFileSubstitution('ateam_bringup',
                                               'league_bridges.launch.xml')),
             launch_arguments={
                 'gc_net_interface_address': InterfaceFromAddressSubstitution(LaunchConfiguration('gc_ip')),
