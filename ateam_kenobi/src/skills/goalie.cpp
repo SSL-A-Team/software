@@ -86,6 +86,8 @@ void Goalie::runFrame(
   const auto time_in_def_area = ateam_common::TimeDiffSeconds(world.current_time,
       ball_entered_def_area_time_);
 
+  const auto ball_stopped = ateam_geometry::norm(world.ball.vel) < 0.05;
+
   if (isBallHeadedTowardsGoal(world, ball_state)) {
     getPlayInfo()["State"] = "Block Ball";
     motion_command = runBlockBall(world, robot, ball_state);
@@ -95,7 +97,7 @@ void Goalie::runFrame(
   } else if (doesOpponentHavePossesion(world)) {
     getPlayInfo()["State"] = "Block Shot";
     motion_command = runBlockShot(world, robot, ball_state);
-  }  else if (ball_in_def_area) {
+  }  else if (ball_in_def_area && ball_stopped) {
     getPlayInfo()["State"] = "Clear Ball";
     motion_command = runClearBall(world, robot, ball_state);
   } else {
