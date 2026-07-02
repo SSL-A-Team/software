@@ -43,6 +43,7 @@ def generate_launch_description():
 
         DeclareLaunchArgument('team_name', default_value='A-Team'),
         DeclareLaunchArgument('use_local_gc', default_value='False'),
+        DeclareLaunchArgument('use_vision_tracker', default_value='True'),
 
         GroupAction(
             condition=IfCondition(LaunchConfiguration('use_local_gc')),
@@ -85,7 +86,8 @@ def generate_launch_description():
             launch_arguments={
                 'team_name': LaunchConfiguration('team_name'),
                 'vision_offset_robot_x': '0.0',
-                'vision_offset_robot_y': '0.0'
+                'vision_offset_robot_y': '0.0',
+                'use_vision_tracker': LaunchConfiguration('use_vision_tracker'),
             }.items()
         ),
 

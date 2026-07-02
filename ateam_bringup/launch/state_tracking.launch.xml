@@ -2,8 +2,9 @@
   <arg name="team_name" default="A-Team"/>
   <arg name="vision_offset_robot_x" default="0.0"/>
   <arg name="vision_offset_robot_y" default="0.0"/>
+  <arg name="use_vision_tracker" default="false"/>
 
-  <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True">
+  <node name="vision_filter" pkg="ateam_vision_filter" exec="ateam_vision_filter_node" respawn="True" unless="$(var use_vision_tracker)">
     <param name="gc_team_name" value="$(var team_name)"/>
     <param name="offsets.robots.x" value="$(var vision_offset_robot_x)"/>
     <param name="offsets.robots.y" value="$(var vision_offset_robot_y)"/>
@@ -13,5 +14,8 @@
   </node>
   <node name="game_state_tracker" pkg="ateam_game_state" exec="game_state_tracker_node" respawn="True">
     <param name="gc_team_name" value="$(var team_name)"/>
+  </node>
+  <node name="vision_tracker_bridge" pkg="ateam_vision_tracker_bridge" exec="vision_tracker_bridge_node" respawn="True" if="$(var use_vision_tracker)">
+
   </node>
 </launch>

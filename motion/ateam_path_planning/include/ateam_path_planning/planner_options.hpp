@@ -57,7 +57,7 @@ struct ReplanThresholds
   /**
    * Time, in seconds, to look behind now for the robot's expected state along the path
    */
-  double lag_estimate = 0.1;
+  double lag_estimate = 0.05;
 
   auto operator<=>(const ReplanThresholds &) const = default;
 };
