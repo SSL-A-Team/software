@@ -63,7 +63,7 @@ void rclcpp::TypeAdapter<ateam_game_state::World,
     } else {
       auto default_bot = ateam_msgs::msg::GameStateRobot();
       default_bot.id = robot.id;
-      ros_msg.our_robots.push_back(default_bot);
+      ros_msg.their_robots.push_back(default_bot);
     }
   }
 
