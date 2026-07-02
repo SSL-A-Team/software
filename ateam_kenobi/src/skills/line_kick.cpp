@@ -172,6 +172,7 @@ RobotCommand LineKick::RunMoveBehindBall(
   const World & world,
   const Robot & robot)
 {
+  (void) robot;
   RobotCommand command;
 
   const auto prekick_position = GetPreKickPosition(world);
@@ -187,7 +188,6 @@ RobotCommand LineKick::RunMoveBehindBall(
   motion_intent.limits.angular_acceleration = 2.0;
 
   double obstacle_radius_multiplier = 1.0;
-  const auto robot_to_prekick = prekick_position - robot.pos;
   const auto ball_to_target = target_point_ - world.ball.pos;
 
   // Add additional obstacles to better avoid ball
@@ -215,9 +215,6 @@ RobotCommand LineKick::RunMoveBehindBall(
 
   command.motion_intent = motion_intent;
 
-  locked_shot_line_ = target_point_ - world.ball.pos;
-
-
   return command;
 }
 
@@ -233,7 +230,6 @@ RobotCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
   intent.limits.linear_velocity = 0.5;
   intent.limits.angular_acceleration = 4.0;
   intent.limits.angular_velocity = 4.0;
-
 
   return command;
 }
