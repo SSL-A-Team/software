@@ -75,6 +75,10 @@ private:
     const World & world, const Robot & goalie,
     const Ball & ball_state);
 
+  RobotCommand runBlockWindow(
+    const World & world, const Robot & goalie,
+    const Ball & ball_state);
+
   /**
    * @brief Kick ball out of defense area
    * @return RobotCommand

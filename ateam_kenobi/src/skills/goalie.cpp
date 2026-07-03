@@ -97,8 +97,9 @@ void Goalie::runFrame(
     motion_command = runSideEjectBall(world, robot);
   } else if (doesOpponentHavePossesion(world)) {
     getPlayInfo()["State"] = "Block Shot";
-    motion_command = runBlockShot(world, robot, ball_state);
-  }  else if (!game_stopped && ball_in_def_area && ball_stopped) {
+    // motion_command = runBlockShot(world, robot, ball_state);
+    motion_command = runBlockWindow(world, robot, ball_state);
+  } else if (!game_stopped && ball_in_def_area && ball_stopped) {
     getPlayInfo()["State"] = "Clear Ball";
     motion_command = runClearBall(world, robot, ball_state);
   } else {
@@ -157,19 +158,22 @@ RobotCommand Goalie::runDefaultBehavior(
   const World & world,
   const Robot & goalie, const Ball & ball_state)
 {
-  // auto goal_line_offset = 0.25;
-  // if (world.referee_info.running_command == ateam_common::GameCommand::PreparePenaltyTheirs ||
-  //   (world.referee_info.running_command == ateam_common::GameCommand::NormalStart &&
-  //   world.referee_info.prev_command == ateam_common::GameCommand::PreparePenaltyTheirs))
-  // {
-  //   goal_line_offset = kRobotRadius - 0.03;
-  // }
+  auto goal_line_offset = 0.0;
+  if (world.referee_info.running_command == ateam_common::GameCommand::PreparePenaltyTheirs ||
+    (world.referee_info.running_command == ateam_common::GameCommand::NormalStart &&
+    world.referee_info.prev_command == ateam_common::GameCommand::PreparePenaltyTheirs))
+  {
+    goal_line_offset = -(kRobotRadius + 0.03);
+  }
+
+  double goalie_line_x = (-(world.field.field_length / 2) + kRobotRadius) + goal_line_offset;
+
   const ateam_geometry::Segment goalie_line(
     ateam_geometry::Point(
-      -(world.field.field_length / 2) + kRobotRadius,
+      goalie_line_x,
       world.field.goal_width / 2),
     ateam_geometry::Point(
-      -(world.field.field_length / 2) + kRobotRadius,
+      goalie_line_x,
       -world.field.goal_width / 2));
 
   motion::intents::Position intent;
@@ -178,7 +182,7 @@ RobotCommand Goalie::runDefaultBehavior(
   intent.obstacles = getCustomObstacles(world);
   intent.planner_options = default_planner_options_;
 
-  if(CGAL::squared_distance(goalie.pos, goalie_line) < kRobotRadius  * kRobotRadius) {
+  if(CGAL::squared_distance(goalie.pos, goalie_line) < kRobotRadius * kRobotRadius) {
     intent.planner_options.skip_planning = true;
   }
 
@@ -249,8 +253,58 @@ RobotCommand Goalie::runBlockShot(
   intent.planner_options = default_planner_options_;
   intent.obstacles = getCustomObstacles(world);
 
-  if(CGAL::squared_distance(goalie.pos, goalie_line) < kRobotRadius  * kRobotRadius) {
+  if(CGAL::squared_distance(goalie.pos, goalie_line) < kRobotRadius * kRobotRadius) {
     intent.planner_options.skip_planning = true;
+  }
+
+  RobotCommand command;
+  command.motion_intent = intent;
+  return command;
+}
+
+RobotCommand Goalie::runBlockWindow(
+  const World & world, const Robot & goalie,
+  const Ball & ball_state)
+{
+  const auto & ball_pos = ball_state.pos;
+
+  auto robots = play_helpers::getVisibleRobots(world.our_robots);
+  play_helpers::removeRobotWithId(robots, goalie.id);
+  std::ranges::copy(play_helpers::getVisibleRobots(world.their_robots), std::back_inserter(robots));
+
+  const ateam_geometry::Segment goal_seg{
+    ateam_geometry::Point(-world.field.field_length / 2.0, -world.field.goal_width / 2),
+    ateam_geometry::Point(-world.field.field_length / 2.0, world.field.goal_width / 2)
+  };
+
+  const auto windows = play_helpers::window_evaluation::getWindows(
+    goal_seg, ball_pos,
+    robots);
+  play_helpers::window_evaluation::drawWindows(
+    windows, ball_pos, getOverlays().getChild(
+      "windows"));
+  const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
+
+  motion::intents::Position intent;
+  intent.heading = M_PI_2;
+  intent.planner_options = default_planner_options_;
+  intent.obstacles = getCustomObstacles(world);
+  if(CGAL::squared_distance(goalie.pos, goal_seg) < kRobotRadius * kRobotRadius) {
+    intent.planner_options.skip_planning = true;
+  }
+
+  if(largest_window) {
+    const auto window_center = CGAL::midpoint(*largest_window);
+    const auto goalie_line_x = -(world.field.field_length / 2) + kRobotRadius;
+    intent.position = ateam_geometry::Point{
+      goalie_line_x,
+      window_center.y()
+    };
+  } else {
+    intent.position = ateam_geometry::Point{
+      -world.field.field_length/2.0,
+      0.0
+    };
   }
 
   RobotCommand command;
@@ -291,7 +345,7 @@ RobotCommand Goalie::runBlockBall(
   intent.planner_options.footprint_inflation = -0.05;
   intent.obstacles = getCustomObstacles(world);
 
-  if(CGAL::squared_distance(goalie.pos, goalie_line) < kRobotRadius  * kRobotRadius) {
+  if(CGAL::squared_distance(goalie.pos, goalie_line) < kRobotRadius * kRobotRadius) {
     intent.planner_options.skip_planning = true;
   }
 
