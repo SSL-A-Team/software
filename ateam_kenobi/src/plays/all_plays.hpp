@@ -40,5 +40,6 @@
 #include "stop_plays/all_stop_plays.hpp"
 #include "test_plays/all_test_plays.hpp"
 #include "util_plays/all_util_plays.hpp"
+#include "jr_collab_play.hpp"
 
 #endif  // PLAYS__ALL_PLAYS_HPP_

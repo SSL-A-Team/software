@@ -42,7 +42,9 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   stp_options.parameter_interface = stp::ParameterInterface(
     "stp_parameters",
     node.get_node_parameters_interface());
+  stp_options.node = & node;
   halt_play_ = addPlay<HaltPlay>(stp_options);
+  addPlay<JrCollabPlay>(stp_options);
   addPlay<TestPlay>(stp_options);
   addPlay<CornerLineupPlay>("TheirLeftLineup", stp_options, 1.0, 1.0);
   addPlay<CornerLineupPlay>("TheirRightLineup", stp_options, 1.0, -1.0);

@@ -230,7 +230,7 @@ RobotCommand Dribble::runBackAway(const World & world, const Robot & robot)
   // Wait for the dribbler to wind down before moving
   if ((std::chrono::steady_clock::now() - back_away_duration_.value()) > back_away_start_) {
     if (!world.ball.visible) {
-      const auto position_target = robot.pos + (0.2 * ateam_geometry::Vector(std::cos(robot.theta), std::sin(robot.theta)));
+      const auto position_target = robot.pos - (0.2 * ateam_geometry::Vector(std::cos(robot.theta), std::sin(robot.theta)));
       motion::intents::Position intent;
       intent.position = position_target;
       intent.heading = robot.theta;

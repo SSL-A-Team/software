@@ -26,6 +26,7 @@
 #include <utility>
 #include <nlohmann/json.hpp>
 #include <rclcpp/logger.hpp>
+#include <rclcpp/node.hpp>
 #include "core/visualization/overlays.hpp"
 #include "parameter_interface.hpp"
 
@@ -39,6 +40,7 @@ struct Options
   nlohmann::json play_info;
   rclcpp::Logger logger = rclcpp::get_logger("kenobi_stp_default");
   ParameterInterface parameter_interface;
+  rclcpp::Node * node;
 };
 
 class Base
@@ -55,7 +57,8 @@ public:
     overlays_(options.overlays),
     play_info_(options.play_info),
     logger_(options.logger),
-    parameter_interface_(options.parameter_interface)
+    parameter_interface_(options.parameter_interface),
+    node_(options.node)
   {
   }
 
@@ -64,7 +67,8 @@ public:
     overlays_(options.overlays),
     play_info_(options.play_info),
     logger_(options.logger),
-    parameter_interface_(options.parameter_interface)
+    parameter_interface_(options.parameter_interface),
+    node_(options.node)
   {
   }
 
@@ -78,7 +82,8 @@ public:
       overlays_.getChild(child_name),
       play_info_[child_name],
       logger_.get_child(child_name),
-      parameter_interface_.getChild(child_name)
+      parameter_interface_.getChild(child_name),
+      node_
     };
     return ChildType(options, std::forward<Args>(args)...);
   }
@@ -120,6 +125,11 @@ public:
     return parameter_interface_;
   }
 
+  rclcpp::Node * getNode()
+  {
+    return node_;
+  }
+
   template<typename T>
   void ForwardPlayInfo(T & child)
   {
@@ -132,6 +142,7 @@ private:
   nlohmann::json play_info_;
   rclcpp::Logger logger_;
   ParameterInterface parameter_interface_;
+  rclcpp::Node * node_ = nullptr;
 };
 
 }  // namespace ateam_kenobi::stp

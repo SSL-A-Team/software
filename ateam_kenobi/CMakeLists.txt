@@ -20,6 +20,7 @@ find_package(ateam_geometry REQUIRED)
 find_package(ompl REQUIRED)
 find_package(angles REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(std_srvs REQUIRED)
 
 add_library(kenobi_node_component SHARED
   src/kenobi_node.cpp
@@ -136,6 +137,7 @@ ament_target_dependencies(
   "OMPL"
   "angles"
   nlohmann_json
+  std_srvs
 )
 rclcpp_components_register_node(
   kenobi_node_component
