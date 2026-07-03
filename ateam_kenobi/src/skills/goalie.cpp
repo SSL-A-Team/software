@@ -157,19 +157,22 @@ RobotCommand Goalie::runDefaultBehavior(
   const World & world,
   const Robot & goalie, const Ball & ball_state)
 {
-  // auto goal_line_offset = 0.25;
-  // if (world.referee_info.running_command == ateam_common::GameCommand::PreparePenaltyTheirs ||
-  //   (world.referee_info.running_command == ateam_common::GameCommand::NormalStart &&
-  //   world.referee_info.prev_command == ateam_common::GameCommand::PreparePenaltyTheirs))
-  // {
-  //   goal_line_offset = kRobotRadius - 0.03;
-  // }
+  auto goal_line_offset = 0.0;
+  if (world.referee_info.running_command == ateam_common::GameCommand::PreparePenaltyTheirs ||
+    (world.referee_info.running_command == ateam_common::GameCommand::NormalStart &&
+    world.referee_info.prev_command == ateam_common::GameCommand::PreparePenaltyTheirs))
+  {
+    goal_line_offset = -(kRobotRadius + 0.03);
+  }
+
+  double goalie_line_x = (-(world.field.field_length / 2) + kRobotRadius) + goal_line_offset;
+
   const ateam_geometry::Segment goalie_line(
     ateam_geometry::Point(
-      -(world.field.field_length / 2) + kRobotRadius,
+      goalie_line_x,
       world.field.goal_width / 2),
     ateam_geometry::Point(
-      -(world.field.field_length / 2) + kRobotRadius,
+      goalie_line_x,
       -world.field.goal_width / 2));
 
   motion::intents::Position intent;
