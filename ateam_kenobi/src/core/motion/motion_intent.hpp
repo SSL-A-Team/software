@@ -125,10 +125,10 @@ struct PivotVelocity
 struct PivotHeading
 {
   double target_heading;
-  double radius = 0.089;  // Estimated radius of bot holding ball
-  double inset_angle = 0.0;
+  double radius = 0.0;  // Use firmware default
+  double inset_angle = 0.0;  // Uses firmware default through compute_inset_angle
   PivotDirection direction = PivotDirection::Forward;
-  bool compute_inset_angle = false;
+  bool compute_inset_angle = true;  // Use firmware default
   Limits limits;  // NOTE: linear limits are NOT respected or used
 };
 
@@ -136,10 +136,10 @@ struct PivotPoint
 {
   double target_x;
   double target_y;
-  double radius = 0.089;  // Estimated radius of bot holding ball
-  double inset_angle = 0.0;
+  double radius = 0.0;  // Use firmware default
+  double inset_angle = 0.0;  // Uses firmware default through compute_inset_angle
   PivotDirection direction = PivotDirection::Forward;
-  bool compute_inset_angle = false;
+  bool compute_inset_angle = true;
   Limits limits;  // NOTE: linear limits are NOT respected or used
 };
 
