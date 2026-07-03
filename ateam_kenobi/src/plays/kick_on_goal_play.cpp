@@ -52,7 +52,7 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
     return stp::PlayScore::Discouraged();
   }
 
-  return play_helpers::GetShotSuccessChance(world, world.ball.pos) + 50.0;
+  return play_helpers::GetShotSuccessChance(world, world.ball.pos) + 70.0;
 }
 
 void KickOnGoalPlay::reset()
