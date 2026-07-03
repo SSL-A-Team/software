@@ -127,7 +127,8 @@ protected:
 class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
 {
 private:
-  mutable std::chrono::time_point<std::chrono::steady_clock> last_update;
+  mutable std::chrono::time_point<std::chrono::steady_clock> last_update = std::chrono::steady_clock::now();
+  mutable double dt_s_ = 0.0;
 
 public:
         // For now, we don't add any control inputs to the vision system
@@ -151,18 +152,26 @@ public:
     PosState x_updated{};
     auto now = std::chrono::steady_clock::now();
     Seconds dt = now - last_update;
-    double dt_s = dt.count();
+    dt_s_ = dt.count();
 
             // B/c dt is in ms, we need to convert to s, since
             // our velocities are all in m/s
-    x_updated(x.PX) = x(x.PX) + x(x.VX) * dt_s;
+    x_updated(x.PX) = x(x.PX) + x(x.VX) * dt_s_;
             // We assume constant velocity in the system model
     x_updated(x.VX) = x(x.VX);
-    x_updated(x.PY) = x(x.PY) + x(x.VY) * dt_s;
+    x_updated(x.PY) = x(x.PY) + x(x.VY) * dt_s_;
     x_updated(x.VY) = x(x.VY);
 
     last_update = now;
     return x_updated;
+  }
+
+  void updateJacobians(const PosState &, const Control &) override
+  {
+      this->F.setIdentity();
+
+      this->F(PosState::PX, PosState::VX) = dt_s_;
+      this->F(PosState::PY, PosState::VY) = dt_s_;
   }
 
 };
@@ -233,7 +242,7 @@ public:
 class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>
 {
 private:
-  mutable std::chrono::time_point<std::chrono::steady_clock> last_update;
+  mutable std::chrono::time_point<std::chrono::steady_clock> last_update = std::chrono::steady_clock::now();
 
 public:
   using Control = Kalman::Vector<double, 0>;
@@ -263,6 +272,7 @@ public:
 
     x_updated(x.PW) = to_update;
 
+    last_update = now;
     return x_updated;
   }
 };
