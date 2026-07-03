@@ -66,9 +66,11 @@ private:
   bool done_ = false;
   int ball_detected_filter_ = 0;
   double approach_radius_ = 0.2;  // m
-  double capture_speed_ = 0.25;  // m/s
-  double max_speed_ = 2.0;  // m/s
+  double capture_speed_ = 0.35;  // m/s
+  double max_speed_ = 1.8;  // m/s
   double decel_limit_ = 1.8;  // m/s/s
+
+  ateam_geometry::Vector capture_line_;
 
   enum class State
   {

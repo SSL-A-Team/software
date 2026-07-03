@@ -56,9 +56,23 @@ RobotCommand Capture::runFrame(const World & world, const Robot & robot)
 
 void Capture::chooseState(const World & world, const Robot & robot)
 {
-  if(state_ == State::Capture && !world.ball.visible) {
+  done_ = robot.breakbeam_ball_detected_filtered;
+  if (done_) {
     state_ = State::Capture;
-  } else if (ateam_geometry::norm(world.ball.pos - robot.pos) < approach_radius_ + kRobotRadius) {
+    return;
+  }
+
+  const auto ball_dist = ateam_geometry::norm(world.ball.pos - robot.pos);
+  const bool near_ball = ball_dist < approach_radius_ + 0.01;
+  const bool facing_ball = angles::shortest_angular_distance(ateam_geometry::ToHeading(world.ball.pos - robot.pos), robot.theta) < 0.07;
+  const bool vel_good = (state_ == State::Capture) || ateam_geometry::norm(robot.vel) < 0.1;
+
+  const bool ready_to_capture = facing_ball && near_ball && vel_good;
+
+  // Don't push the ball too far, might have lost it entirely
+  if(state_ == State::Capture && !world.ball.visible && ball_dist < 0.5) {
+    state_ = State::Capture;
+  } else if (ready_to_capture) {
     state_ = State::Capture;
   } else {
     state_ = State::MoveToBall;
@@ -69,25 +83,19 @@ RobotCommand Capture::runMoveToBall(
   const World & world,
   const Robot & robot)
 {
+  (void) robot;
+  (void) world;
+
   const auto robot_to_ball_vector = world.ball.pos - robot.pos;
+  capture_line_ = robot_to_ball_vector;
 
   motion::intents::PositionFacing intent;
   intent.position = world.ball.pos - approach_radius_ * ateam_geometry::normalize(robot_to_ball_vector);
   intent.face_target = world.ball.pos;
   intent.planner_options.avoid_ball = false;
 
-  // const auto distance_to_ball = CGAL::approximate_sqrt(CGAL::squared_distance(robot.pos,
-  //     world.ball.pos));
-
-  // const auto decel_distance = distance_to_ball - approach_radius_;
-
-  // const auto max_decel_vel = std::sqrt((2.0 * decel_limit_ * decel_distance) +
-  //     (capture_speed_ * capture_speed_));
-
-  // intent.limits.linear_velocity = std::min(max_decel_vel, max_speed_);
-
   intent.limits.linear_velocity = max_speed_;
-  intent.limits.linear_acceleration = decel_limit_;
+  intent.limits.linear_acceleration = 2.0;
   RobotCommand command;
   command.motion_intent = intent;
 
@@ -96,26 +104,17 @@ RobotCommand Capture::runMoveToBall(
 
 RobotCommand Capture::runCapture(const World & world, const Robot & robot)
 {
-  // TODO(chachmu): Should we filter this over a few frames to make sure we have the ball settled?
-  if (robot.breakbeam_ball_detected) {
-    ball_detected_filter_ += 1;
-    if (ball_detected_filter_ >= 30) {
-      done_ = true;
-    }
-  } else {
-    ball_detected_filter_ -= 2;
-    if (ball_detected_filter_ < 0) {
-      ball_detected_filter_ = 0;
-    }
-  }
-
+  (void) robot;
+  (void) world;
   RobotCommand command;
 
+  const double heading = ateam_geometry::ToHeading(capture_line_);
   if(world.ball.visible) {
-    motion::intents::PositionFacing intent;
+    motion::intents::Position intent;
     intent.planner_options.avoid_ball = false;
     intent.position = world.ball.pos;
-    intent.face_target = world.ball.pos;
+    intent.heading = heading;
+    // intent.face_target = world.ball.pos;
     intent.limits.linear_velocity = capture_speed_;
     intent.limits.linear_acceleration = 1.5;
     command.motion_intent = intent;
@@ -123,13 +122,13 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
     motion::intents::Position intent;
     intent.planner_options.avoid_ball = false;
     intent.position = world.ball.pos;
-    intent.heading = robot.theta;
+    intent.heading = heading;
     intent.limits.linear_velocity = capture_speed_;
     intent.limits.linear_acceleration = 1.5;
     command.motion_intent = intent;
   }
 
-  command.dribbler_setpoint = 2 * kDefaultDribblerSetpoint;
+  command.dribbler_setpoint = 0.05;
 
   return command;
 }
