@@ -278,14 +278,15 @@ void OurBallPlacementPlay::runExtracting(
       }
     } else {
       extract_pivoting_ = false;
+      getPlayInfo()["ExtractState"] = "extracting ball";
 
       motion::intents::Position intent;
       intent.position = approach_point_;
       intent.heading = approach_heading;
       intent.planner_options.avoid_ball = false;
       intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
-      intent.limits.linear_velocity = 0.5;
-      intent.limits.linear_acceleration = 1.0;
+      intent.limits.linear_velocity = 0.3;
+      intent.limits.linear_acceleration = 0.5;
       motion_command.motion_intent = intent;
     }
   } else if (robot_already_in_position || robot_ready_to_approach) {
@@ -296,9 +297,10 @@ void OurBallPlacementPlay::runExtracting(
 
     motion::intents::Position intent;
     intent.planner_options.avoid_ball = false;
+    intent.planner_options.footprint_inflation = -0.9 * kRobotRadius;
     intent.position = approach_point_ + (approach_radius_ + kBallDiameter) *
       ateam_geometry::normalize(point_to_ball);
-    intent.limits.linear_velocity = 0.5;
+    intent.limits.linear_velocity = 0.3;
     intent.limits.linear_acceleration = 0.5;
     intent.heading = approach_heading;
     motion_command.motion_intent = intent;

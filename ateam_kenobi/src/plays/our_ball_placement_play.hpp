@@ -52,7 +52,7 @@ private:
   ateam_geometry::Point placement_point_;
   bool extract_pivoting_ = false;
 
-  double approach_radius_ = kRobotRadius + kBallRadius + 0.3;  // m
+  double approach_radius_ = kRobotDiameter + kBallRadius + 0.4;  // m
   ateam_geometry::Point approach_point_;
 
   int spin_counter_ = 0;
