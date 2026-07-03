@@ -126,6 +126,7 @@ private:
     }
 
     const auto & proto_balls = tracker_proto.tracked_frame().balls();
+    bool found_ball = false;
     for(const auto & proto_ball : proto_balls) {
       if(ignore_side_raw_ < 0 && proto_ball.pos().x() < 0.0) {
         continue;
@@ -142,7 +143,13 @@ private:
       ball_msg.twist.linear.z = proto_ball.vel().z();
       ball_msg.visible = proto_ball.visibility();
       ball_publisher_->publish(ball_msg);
+      found_ball = true;
       break;
+    }
+    if(!found_ball) {
+      ateam_msgs::msg::VisionStateBall ball_msg;
+      ball_msg.visible = false;
+      ball_publisher_->publish(ball_msg);
     }
 
     std::array<bool, 16> blue_seen_ids;
