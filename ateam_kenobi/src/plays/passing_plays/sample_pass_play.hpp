@@ -29,6 +29,7 @@
 #include "tactics/standard_defense.hpp"
 #include "tactics/pass.hpp"
 #include "skills/capture.hpp"
+#include "core/play_helpers/lanes.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -85,9 +86,12 @@ private:
 
   std::tuple<ateam_geometry::Point, double> getBestPassTargetForCandidate(
     const World & world,
-    const Robot & candidate);
+    const Robot & candidate,
+    const play_helpers::lanes::Lane & lane);
 
-  double getTargetScore(const ateam_geometry::Point & target, const World & world);
+  double getTargetScore(
+    const ateam_geometry::Point & target, const World & world,
+    const play_helpers::lanes::Lane & lane);
 
   void lockPass(const Robot & candidate, const ateam_geometry::Point & target);
 
