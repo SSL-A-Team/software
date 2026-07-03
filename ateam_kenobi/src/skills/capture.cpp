@@ -62,9 +62,12 @@ void Capture::chooseState(const World & world, const Robot & robot)
     return;
   }
 
+  const double heading_thresh = (state_ == State::Capture) ? 0.14 : 0.07;
+
   const auto ball_dist = ateam_geometry::norm(world.ball.pos - robot.pos);
   const bool near_ball = ball_dist < approach_radius_ + 0.01;
-  const bool facing_ball = angles::shortest_angular_distance(ateam_geometry::ToHeading(world.ball.pos - robot.pos), robot.theta) < 0.07;
+  const bool facing_ball = (state_ == State::Capture && !world.ball.visible) || 
+    (angles::shortest_angular_distance(ateam_geometry::ToHeading(world.ball.pos - robot.pos), robot.theta) < heading_thresh);
   const bool vel_good = (state_ == State::Capture) || ateam_geometry::norm(robot.vel) < 0.1;
 
   const bool ready_to_capture = facing_ball && near_ball && vel_good;
@@ -95,7 +98,7 @@ RobotCommand Capture::runMoveToBall(
   intent.planner_options.avoid_ball = false;
 
   intent.limits.linear_velocity = max_speed_;
-  intent.limits.linear_acceleration = 2.0;
+  intent.limits.linear_acceleration = decel_limit_;
   RobotCommand command;
   command.motion_intent = intent;
 
