@@ -45,14 +45,14 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
   }
 
   if (world.ball.pos.x() < 0.0) {
-    return stp::PlayScore::Min();
+    return stp::PlayScore::Discouraged();
   }
 
   if (world.ball.pos.x() > (world.field.field_length / 2.0) - world.field.defense_area_depth) {
-    return stp::PlayScore::Min();
+    return stp::PlayScore::Discouraged();
   }
 
-  return play_helpers::GetShotSuccessChance(world, world.ball.pos) + 35.0;
+  return play_helpers::GetShotSuccessChance(world, world.ball.pos) + 50.0;
 }
 
 void KickOnGoalPlay::reset()

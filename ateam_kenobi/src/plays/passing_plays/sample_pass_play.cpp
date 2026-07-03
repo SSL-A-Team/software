@@ -19,12 +19,15 @@
 // THE SOFTWARE.
 
 #include "sample_pass_play.hpp"
+#include <ateam_geometry/do_intersect.hpp>
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 #include "core/play_helpers/shot_evaluation.hpp"
 
 namespace ateam_kenobi::plays
 {
+
+using play_helpers::lanes::Lane;
 
 // const std::chrono::milliseconds SamplePassPlay::kHoldingTimeout = std::chrono::seconds(3);
 
@@ -183,28 +186,91 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
   std::vector<Robot> defenders;
   std::ranges::transform(defender_ids_, std::back_inserter(defenders), [&world](const int id){
       return world.our_robots[id];
-                                                                                                                          });
+  });
   defense_tactic_.runFrame(world, defenders, commands);
   ForwardPlayInfo(defense_tactic_);
+
+  std::vector<Robot> candidates;
+  std::transform(candidate_receiver_ids_.begin(), candidate_receiver_ids_.end(),
+      std::back_inserter(candidates), [&world](const auto & id){
+      return world.our_robots[id];
+  });
+
+  std::sort(candidates.begin(), candidates.end(), [](const auto & a, const auto & b){
+      return a.pos.y() > b.pos.y();
+  });
+
+  std::vector<std::tuple<Robot, Lane>> receivers;
+  if(candidates.empty()) {
+    // No receivers
+  } else if(candidates.size() == 1) {
+    receivers = {{candidates.front(), Lane::Center}};
+  } else if(candidates.size() == 2) {
+    if(ateam_geometry::doIntersect(play_helpers::lanes::GetLaneBounds(world, Lane::Left),
+        world.ball.pos))
+    {
+      receivers = {
+        {candidates.front(), Lane::Center},
+        {candidates.back(), Lane::Right}
+      };
+    } else if(ateam_geometry::doIntersect(play_helpers::lanes::GetLaneBounds(world, Lane::Center),
+        world.ball.pos))
+    {
+      receivers = {
+        {candidates.front(), Lane::Left},
+        {candidates.back(), Lane::Right}
+      };
+    } else if(ateam_geometry::doIntersect(play_helpers::lanes::GetLaneBounds(world, Lane::Right),
+        world.ball.pos))
+    {
+      receivers = {
+        {candidates.front(), Lane::Left},
+        {candidates.back(), Lane::Center}
+      };
+    }
+  } else {
+    receivers = {
+      {candidates.front(), Lane::Left},
+      {candidates[candidates.size() / 2], Lane::Center},
+      {candidates.back(), Lane::Right}
+    };
+  }
 
   // Move candidate receivers to best local target
   std::optional<Robot> best_receiver;
   std::optional<ateam_geometry::Point> best_target;
   double best_receiver_score = -1.0;
-  for ( const auto & candidate_id : candidate_receiver_ids_ ) {
-    const auto candidate = world.our_robots[candidate_id];
-    auto [target, score] = getBestPassTargetForCandidate(world, candidate);
-    if(target_cache_[candidate_id].has_value()) {
-      auto & cache = target_cache_[candidate_id].value();
-      if(score > cache.score) {
+  for ( const auto & [candidate, lane] : receivers) {
+    auto label_text = "";
+    switch(lane) {
+      case Lane::Center:
+        label_text = "C";
+        break;
+      case Lane::Left:
+        label_text = "L";
+        break;
+      case Lane::Right:
+        label_text = "R";
+        break;
+      default:
+        label_text = "?";
+        break;
+    }
+    const auto label_pos = candidate.pos + ateam_geometry::Vector{kRobotDiameter, 0.0};
+    getOverlays().drawText(std::string("lane/") + label_text, label_text, label_pos);
+    auto [target, score] = getBestPassTargetForCandidate(world, candidate, lane);
+    if(target_cache_[candidate.id].has_value()) {
+      auto & cache = target_cache_[candidate.id].value();
+      const auto cache_score = getTargetScore(cache.target, world, lane);
+      if(score > cache_score) {
         cache.score = score;
         cache.target = target;
       } else {
         target = cache.target;
-        score = cache.score;
+        score = cache_score;
       }
     } else {
-      target_cache_[candidate_id] = CacheEntry{target, score};
+      target_cache_[candidate.id] = CacheEntry{target, score};
     }
     RobotCommand command;
     motion::intents::PositionFacing intent;
@@ -226,6 +292,10 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
       closest_opponent_distance =
         std::min(closest_opponent_distance.value_or(std::numeric_limits<double>::max()), sq_dist);
     }
+  }
+
+  if(CGAL::squared_distance(ball_pos_at_lock_, world.ball.pos) > 0.25) {
+    pass_locked_ = false;
   }
 
   if (!pass_locked_) {
@@ -259,7 +329,7 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
       }
 
       if(should_lock) {
-        lockPass(*best_receiver, *best_target);
+        lockPass(*best_receiver, *best_target, world);
       }
     }
 
@@ -302,7 +372,8 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
 std::tuple<ateam_geometry::Point,
   double> SamplePassPlay::getBestPassTargetForCandidate(
   const World & world,
-  const Robot & candidate)
+  const Robot & candidate,
+  const Lane & lane)
 {
   ateam_geometry::Point best_target;
   double best_score = -1.0;
@@ -314,7 +385,7 @@ std::tuple<ateam_geometry::Point,
     const auto x = candidate.pos.x() + dx;
     const auto y = candidate.pos.y() + dy;
     const ateam_geometry::Point target{x, y};
-    const auto score = getTargetScore(target, world);
+    const auto score = getTargetScore(target, world, lane);
     if(std::isnan(score)) {
       continue;
     }
@@ -326,7 +397,9 @@ std::tuple<ateam_geometry::Point,
   return {best_target, best_score};
 }
 
-double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, const World & world)
+double SamplePassPlay::getTargetScore(
+  const ateam_geometry::Point & target, const World & world,
+  const Lane & lane)
 {
   const ateam_geometry::Rectangle field_rect{
     -((world.field.field_length / 2.0) - kRobotDiameter),
@@ -357,6 +430,10 @@ double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, cons
   if (ateam_geometry::doIntersect(our_defense_area, target)) {
     return std::numeric_limits<double>::quiet_NaN();
   }
+
+  const auto lane_segment = play_helpers::lanes::GetLaneLongitudinalMidSegment(world, lane);
+  const auto dist_from_lane = CGAL::approximate_sqrt(CGAL::squared_distance(lane_segment, target));
+  const auto lane_dist_factor = 1.0 / (dist_from_lane + 1.0);
 
   double opponent_dist = std::numeric_limits<double>::max();
   const auto pass_segment = ateam_geometry::Segment(world.ball.pos, target);
@@ -390,15 +467,23 @@ double SamplePassPlay::getTargetScore(const ateam_geometry::Point & target, cons
 
   // const auto downfield_factor = 1.2 -
   //   (1 / ( ( (target.x() / (world.field.field_length / 2.0)) + 1 ) * 2.0 ));
-  const auto downfield_factor = 10.0 * (target.x() + (world.field.field_length / 2.0)) / world.field.field_length;
+  auto downfield_factor = (target.x() + (world.field.field_length / 2.0)) /
+    world.field.field_length;
+  if(target.x() > ((world.field.field_length / 2.0) - world.field.defense_area_depth)) {
+    downfield_factor = 0.0;
+  }
 
-  return shot_success_chance * opponent_dist * friend_proximity_penalty * pass_length_factor * downfield_factor;
+  return shot_success_chance * opponent_dist * friend_proximity_penalty * pass_length_factor *
+         downfield_factor * lane_dist_factor;
 }
 
-void SamplePassPlay::lockPass(const Robot & candidate, const ateam_geometry::Point & target)
+void SamplePassPlay::lockPass(
+  const Robot & candidate, const ateam_geometry::Point & target,
+  const World & world)
 {
   receiver_id_ = candidate.id;
   pass_tactic_.setTarget(target);
+  ball_pos_at_lock_ = world.ball.pos;
   pass_locked_ = true;
 }
 
