@@ -85,8 +85,8 @@ private:
   ateam_geometry::Point target_point_;
   skills::Capture capture_;
   bool done_ = false;
-  double pivot_speed_ = 2.8;  // rad/s
-  double pivot_accel_ = 3.5;  // rad/s^2
+  double pivot_speed_ = 10.0;  // rad/s
+  double pivot_accel_ = 7.0;  // rad/s^2
 
   enum class State
   {
