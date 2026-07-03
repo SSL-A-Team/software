@@ -73,6 +73,7 @@ private:
   skills::Capture capture_skill_;
   bool pass_locked_ = false;
   std::optional<std::chrono::steady_clock::time_point> holding_start_time_;
+  ateam_geometry::Point ball_pos_at_lock_;
   std::default_random_engine rand_eng_;
   std::uniform_real_distribution<> rho_distribution_;
   std::uniform_real_distribution<> theta_distribution_;
@@ -93,7 +94,7 @@ private:
     const ateam_geometry::Point & target, const World & world,
     const play_helpers::lanes::Lane & lane);
 
-  void lockPass(const Robot & candidate, const ateam_geometry::Point & target);
+  void lockPass(const Robot & candidate, const ateam_geometry::Point & target, const World & world);
 
 };
 
