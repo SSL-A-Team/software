@@ -82,8 +82,12 @@ public:
     }
     const auto robot = available_bots.front();
     if(world.referee_info.running_command == ateam_common::GameCommand::Stop) {
+      // const ateam_geometry::Point prep_pos{
+      //   (-world.field.field_length / 2.0) + world.field.defense_area_depth + 1.0,
+      //   -world.field.defense_area_width / 2.0
+      // };
       const ateam_geometry::Point prep_pos{
-        (-world.field.field_length / 2.0) + world.field.defense_area_depth + 1.0,
+        kRobotDiameter + kRobotRadius,
         -world.field.defense_area_width / 2.0
       };
       RobotCommand command;
@@ -105,19 +109,17 @@ public:
       };
       dribble_skill_.setTarget(target_ball_pos);
       if(!dribble_skill_.isDone()) {
-        if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 2.0 &&
-          ateam_geometry::norm(world.ball.pos - robot.pos) < kRobotRadius + 0.05)
+        if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 2.0)
         {
           const auto dir = (target_ball_pos - world.ball.pos).direction();
           dribble_kick_skill_.SetKickSpeed(0.2);
-          dribble_kick_skill_.RunFrame(world, robot, dir);
+          commands[robot.id] = dribble_kick_skill_.RunFrame(world, robot, dir);
           ForwardPlayInfo(dribble_kick_skill_);
-        } else if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 1.0 &&
-          ateam_geometry::norm(world.ball.pos - robot.pos) < kRobotRadius + 0.05)
+        } else if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 1.0)
         {
           const auto dir = (target_ball_pos - world.ball.pos).direction();
           dribble_kick_skill_.SetKickSpeed(0.05);
-          dribble_kick_skill_.RunFrame(world, robot, dir);
+          commands[robot.id] = dribble_kick_skill_.RunFrame(world, robot, dir);
           ForwardPlayInfo(dribble_kick_skill_);
         } else {
           commands[robot.id] = dribble_skill_.runFrame(world, robot);
