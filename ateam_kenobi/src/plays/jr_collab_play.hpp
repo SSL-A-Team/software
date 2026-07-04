@@ -25,7 +25,6 @@
 #include <std_srvs/srv/trigger.hpp>
 #include "core/stp/play.hpp"
 #include "skills/dribble.hpp"
-#include "skills/dribble_kick.hpp"
 #include "core/play_helpers/available_robots.hpp"
 
 namespace ateam_kenobi::plays
@@ -38,8 +37,7 @@ public:
   explicit JrCollabPlay(stp::Options stp_options)
   : stp::Play(kPlayName, stp_options),
     jr_service_client_(getNode()->create_client<std_srvs::srv::Trigger>("/rcj_ble_node/play")),
-    dribble_skill_(createChild<skills::Dribble>("dribble")),
-    dribble_kick_skill_(createChild<skills::DribbleKick>("dribble_kick"))
+    dribble_skill_(createChild<skills::Dribble>("dribble"))
   {
   }
 
@@ -57,7 +55,6 @@ public:
   void enter() override
   {
     dribble_skill_.reset();
-    dribble_kick_skill_.Reset();
     have_sent_request_ = false;
   }
 
@@ -82,12 +79,8 @@ public:
     }
     const auto robot = available_bots.front();
     if(world.referee_info.running_command == ateam_common::GameCommand::Stop) {
-      // const ateam_geometry::Point prep_pos{
-      //   (-world.field.field_length / 2.0) + world.field.defense_area_depth + 1.0,
-      //   -world.field.defense_area_width / 2.0
-      // };
       const ateam_geometry::Point prep_pos{
-        kRobotDiameter + kRobotRadius,
+        (-world.field.field_length / 2.0) + world.field.defense_area_depth + 1.0,
         -world.field.defense_area_width / 2.0
       };
       RobotCommand command;
@@ -109,22 +102,18 @@ public:
       };
       dribble_skill_.setTarget(target_ball_pos);
       if(!dribble_skill_.isDone()) {
-        if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 2.0)
-        {
-          const auto dir = (target_ball_pos - world.ball.pos).direction();
-          dribble_kick_skill_.SetKickSpeed(0.2);
-          commands[robot.id] = dribble_kick_skill_.RunFrame(world, robot, dir);
-          ForwardPlayInfo(dribble_kick_skill_);
-        } else if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 1.0)
-        {
-          const auto dir = (target_ball_pos - world.ball.pos).direction();
-          dribble_kick_skill_.SetKickSpeed(0.05);
-          commands[robot.id] = dribble_kick_skill_.RunFrame(world, robot, dir);
-          ForwardPlayInfo(dribble_kick_skill_);
+        commands[robot.id] = dribble_skill_.runFrame(world, robot);
+        if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 2.0 && ateam_geometry::norm(world.ball.pos - robot.pos) < kRobotRadius + 0.05) {
+          commands[robot.id]->kick = KickState::KickOnTouch;
+          commands[robot.id]->kick_speed = 0.2;
+        } else if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 1.0 && ateam_geometry::norm(world.ball.pos - robot.pos) < kRobotRadius + 0.05) {
+          commands[robot.id]->kick = KickState::KickOnTouch;
+          commands[robot.id]->kick_speed = 0.05;
         } else {
-          commands[robot.id] = dribble_skill_.runFrame(world, robot);
-          ForwardPlayInfo(dribble_skill_);
+          commands[robot.id]->kick = KickState::Arm;
+          commands[robot.id]->kick_speed = 0.0;
         }
+        ForwardPlayInfo(dribble_skill_);
       } else {
         if(!have_sent_request_) {
           RCLCPP_INFO(getLogger(), "Calling JR play service.");
@@ -157,7 +146,6 @@ private:
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr jr_service_client_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture client_future_;
   skills::Dribble dribble_skill_;
-  skills::DribbleKick dribble_kick_skill_;
   bool have_sent_request_ = false;
 
 };
