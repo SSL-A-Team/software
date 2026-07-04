@@ -105,6 +105,7 @@ target_sources(kenobi_node_component PRIVATE
 target_sources(kenobi_node_component PRIVATE
   src/skills/capture.cpp
   src/skills/dribble.cpp
+  src/skills/dribble_kick.cpp
   src/skills/extract.cpp
   src/skills/goalie.cpp
   src/skills/kick_skill.cpp
