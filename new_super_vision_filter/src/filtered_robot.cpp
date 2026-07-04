@@ -49,10 +49,10 @@ FilteredRobot::FilteredRobot(
         // This is in m, so initial covariance is 100 mm.
         // We don't get a velocity input in the measurement itself,
         // so that has a large initial uncertainty.
-  xy_covariance << 1e-2, 0, 0, 0,
-    0, 1e-2, 0, 0,
-    0, 0, 1e3, 0,
-    0, 0, 0, 1e3;
+  xy_covariance << 1e-4, 0, 0, 0,
+    0, 1e-4, 0, 0,
+    0, 0, 1e-2, 0,
+    0, 0, 0, 1e-2;
   posFilterXY.setCovariance(xy_covariance);
 
         // Initialize angular KF
@@ -71,8 +71,8 @@ FilteredRobot::FilteredRobot(
             10 deg. for vel
         */
   Kalman::Matrix<double, 2, 2> w_covariance;
-  w_covariance << std::pow(2 * M_PI / 180.0, 2), 0,
-    0, std::pow(10 * M_PI / 180.0, 2);
+  w_covariance << M_PI / 180.0, 0,
+    0, M_PI / 180.0;
   posFilterW.setCovariance(w_covariance);
 }
 

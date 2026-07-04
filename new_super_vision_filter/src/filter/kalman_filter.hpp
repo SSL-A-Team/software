@@ -9,17 +9,19 @@ class KalmanFilter {
     public:
         KalmanFilter();
 
-        init(initial_state);
+        void init(Eigen::VectorXd &initial_state);
         
-        predict(control_input);
+        void predict(Eigen::VectorXd &control_input);
 
-        update(measurement);
+        void update(Eigen::VectorXd &measurement);
 
-        set_process_noise_covar(covar_mat);
+        void set_process_noise_covar(&covar_mat);
 
-        set_measurement_noise_covar(covar_mat);
+        void set_measurement_noise_covar(&covar_mat);
 
     private:
+        // P matrix
+        Eigen::MatrixXd error_covar;
         // Q matrix
         Eigen::MatrixXd process_noise_covar;
         // R matrix

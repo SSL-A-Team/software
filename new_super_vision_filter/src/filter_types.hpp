@@ -237,6 +237,14 @@ public:
     this->H.setZero();
     this->H(0, 0) = 1;     // dz_px / d_px
   }
+
+  AngleMeasurementModel() {
+    // Measurement error borrowed from previous vision filter
+    const double sigma_theta_squared = 0.01; // Position measurement error
+    this->V.setZero();
+    this->V(0, 0) = sigma_theta_squared;
+    this->V(1, 1) = sigma_theta_squared;
+  }
 };
 
 class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>

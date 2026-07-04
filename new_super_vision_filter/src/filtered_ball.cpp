@@ -13,10 +13,10 @@ FilteredBall::FilteredBall(const BallMeasurement & measurement)
     // This is in m, so initial covariance is 100 mm.
     // We don't get a velocity input in the measurement itself,
     // so that has a large initial uncertainty.
-  xy_covariance << 1e-2, 0, 0, 0,
-    0, 1e-2, 0, 0,
-    0, 0, 1e3, 0,
-    0, 0, 0, 1e3;
+  xy_covariance << 1e-3, 0, 0, 0,
+    0, 1e-3, 0, 0,
+    0, 0, 1e-3, 0,
+    0, 0, 0, 1e-3;
   posFilterXY.setCovariance(xy_covariance);
 }
 

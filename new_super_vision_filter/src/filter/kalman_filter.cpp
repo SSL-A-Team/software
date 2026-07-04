@@ -1,0 +1,39 @@
+#include "filter/kalman_filter.hpp"
+
+namespace ateam_super_vision {
+    KalmanFilter::KalmanFilter() {}
+
+    void KalmanFilter::init(Eigen::VectorXd & initial_state) {}
+
+    void KalmanFilter::predict(Eigen::VectorXd & control_input) {
+        state_estimate = state_transition_model * state_estimate + control_model * control_input;
+        error_covar = state_transition_model * error_covar * state_transition_model.transpose() + process_noise_covar;
+    }
+
+    void KalmanFilter::update(Eigen::VectorXd &measurement) {
+        // NOTE: This function expects you will normalize angles first outside of this function
+        // unlike in Joe's implementation.
+        Eigen::VectorXd predicted_measurement = state_transition_model * state_estimate;
+        Eigen::VectorXd measure_residual = measurement - predicted_measurement;
+
+        // S matrix
+        Eigen::MatrixXd innovation_covar = measurement_model * error_covar 
+            * measurement_model.transpose() + measurement_noise_covar;
+        // K matrix
+        Eigen::MatrixXd kalman_gain =  error_covar * measurement_model.transpose() * innovation_covar.inverse();
+        Eigen::MatrixXd I = Eigen::MatrixXd::Identity(P.rows(), P.cols());
+        // Also have to update the error covariance here
+        error_covar = (I - kalman_gain * measurement_model) * error_covar * 
+            (I - kalman_gain * measurement_model).transpose() + 
+            (kalman_gain * measurement_noise_covar * kalman_gain.transpose());
+    }
+
+    void KalmanFilter::set_process_noise_covar(Eigen::MatrixXd &covar_mat) {
+        this->process_noise_covar = covar_mat;
+    }
+
+    void KalmanFilter::set_measurement_noise_covar(Eigen::MatrixXd &covar_mat) {
+        this->measurement_noise_covar = covar_mat;
+    }
+}
+
