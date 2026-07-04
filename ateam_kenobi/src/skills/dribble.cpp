@@ -135,7 +135,7 @@ bool Dribble::isRobotBehindBall(const World & world, const Robot & robot, double
 
   const auto proj_dist_is_good = robot_proj_dist_to_ball > 0.1 / hysteresis &&
     robot_proj_dist_to_ball < 0.22;
-  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.007 * hysteresis;
+  const auto perp_dist_is_good = robot_perp_dist_to_ball < 0.01 * hysteresis;
 
   return proj_dist_is_good && perp_dist_is_good;
 }
@@ -189,6 +189,23 @@ RobotCommand Dribble::runMoveBehindBall(
   intent.planner_options.footprint_inflation = 0.06;
   intent.planner_options.draw_obstacles = true;
   intent.planner_options.ignore_start_obstacles = false;
+  intent.planner_options.use_default_obstacles = false;
+  intent.obstacles = {
+    // Our defense area
+    ateam_geometry::Rectangle {
+      -1 * (world.field.field_length / 2.0),
+      -((world.field.defense_area_width / 2.0)),
+      -1 * ((world.field.field_length / 2.0) - world.field.defense_area_depth),
+      (world.field.defense_area_width / 2.0)
+    },
+  // their defense area
+    ateam_geometry::Rectangle {
+      (world.field.field_length / 2.0) - world.field.defense_area_depth,
+      -((world.field.defense_area_width / 2.0)),
+      world.field.field_length / 2.0,
+      (world.field.defense_area_width / 2.0)
+    }
+  };
   intent.limits.linear_velocity = 1.5;
 
   RobotCommand command;
@@ -213,12 +230,14 @@ RobotCommand Dribble::runDribble(const Robot & robot)
   intent.planner_options.footprint_inflation = 0.0;
   intent.planner_options.use_default_obstacles = false;
   intent.planner_options.draw_obstacles = true;
-  intent.limits.linear_velocity = 0.35;
+  // intent.limits.linear_velocity = 0.35;
+  intent.limits.linear_velocity = 1.0;
   intent.limits.linear_acceleration = 0.5;
 
   RobotCommand command;
   command.motion_intent = intent;
-  command.dribbler_setpoint = 0.025;
+  const auto target_dist = ateam_geometry::norm(robot_to_target);
+  command.dribbler_setpoint = std::clamp(target_dist * 0.025, 0.005, 0.025);
 
   return command;
 }
@@ -230,7 +249,8 @@ RobotCommand Dribble::runBackAway(const World & world, const Robot & robot)
   // Wait for the dribbler to wind down before moving
   if ((std::chrono::steady_clock::now() - back_away_duration_.value()) > back_away_start_) {
     if (!world.ball.visible) {
-      const auto position_target = robot.pos - (0.2 * ateam_geometry::Vector(std::cos(robot.theta), std::sin(robot.theta)));
+      const auto position_target = robot.pos - (0.2 * ateam_geometry::Vector(std::cos(robot.theta),
+          std::sin(robot.theta)));
       motion::intents::Position intent;
       intent.position = position_target;
       intent.heading = robot.theta;
@@ -254,6 +274,8 @@ RobotCommand Dribble::runBackAway(const World & world, const Robot & robot)
       command.motion_intent = intent;
     }
   }
+
+  command.dribbler_setpoint = 0.0;
 
   return command;
 }

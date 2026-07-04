@@ -58,9 +58,20 @@ public:
     have_sent_request_ = false;
   }
 
+  void exit() override
+  {
+
+  }
+
   std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override
   {
+    if(world.referee_info.running_command == ateam_common::GameCommand::Stop &&
+      world.referee_info.prev_command != ateam_common::GameCommand::Stop)
+    {
+      exit();
+      enter();
+    }
     std::array<std::optional<RobotCommand>, 16> commands;
     const auto available_bots = play_helpers::getAvailableRobots(world);
     if(available_bots.empty()) {
@@ -92,6 +103,16 @@ public:
       dribble_skill_.setTarget(target_ball_pos);
       if(!dribble_skill_.isDone()) {
         commands[robot.id] = dribble_skill_.runFrame(world, robot);
+        if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 2.0 && ateam_geometry::norm(world.ball.pos - robot.pos) < kRobotRadius + 0.05) {
+          commands[robot.id]->kick = KickState::KickOnTouch;
+          commands[robot.id]->kick_speed = 0.2;
+        } else if(ateam_geometry::norm(world.ball.pos - target_ball_pos) > 1.0 && ateam_geometry::norm(world.ball.pos - robot.pos) < kRobotRadius + 0.05) {
+          commands[robot.id]->kick = KickState::KickOnTouch;
+          commands[robot.id]->kick_speed = 0.05;
+        } else {
+          commands[robot.id]->kick = KickState::Arm;
+          commands[robot.id]->kick_speed = 0.0;
+        }
         ForwardPlayInfo(dribble_skill_);
       } else {
         if(!have_sent_request_) {
