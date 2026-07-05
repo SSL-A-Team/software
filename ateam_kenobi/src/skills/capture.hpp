@@ -72,6 +72,8 @@ private:
 
   ateam_geometry::Vector capture_line_;
 
+  std::optional<ateam_geometry::Point> capture_start_point_;
+
   enum class State
   {
     MoveToBall,

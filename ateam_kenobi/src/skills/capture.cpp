@@ -37,6 +37,7 @@ void Capture::Reset()
 {
   done_ = false;
   ball_detected_filter_ = 0;
+  capture_start_point_.reset();
 }
 
 RobotCommand Capture::runFrame(const World & world, const Robot & robot)
@@ -62,7 +63,7 @@ void Capture::chooseState(const World & world, const Robot & robot)
     return;
   }
 
-  const double heading_thresh = (state_ == State::Capture) ? 0.14 : 0.07;
+  const double heading_thresh = (state_ == State::Capture) ? 0.14 : 0.035;
 
   const auto ball_dist = ateam_geometry::norm(world.ball.pos - robot.pos);
   const bool near_ball = ball_dist < approach_radius_ + 0.01;
@@ -72,13 +73,24 @@ void Capture::chooseState(const World & world, const Robot & robot)
 
   const bool ready_to_capture = facing_ball && near_ball && vel_good;
 
+  if(ready_to_capture && !capture_start_point_) {
+    capture_start_point_ = world.ball.pos;
+  }
+
+  const auto start_point = capture_start_point_.value_or(world.ball.pos);
+  const auto capture_move_distance = CGAL::approximate_sqrt(CGAL::squared_distance(start_point, world.ball.pos));
+
   // Don't push the ball too far, might have lost it entirely
   if(state_ == State::Capture && !world.ball.visible && ball_dist < 0.5) {
     state_ = State::Capture;
+  } else if(state_ == State::Capture && capture_move_distance > 0.5) {
+    state_ = State::MoveToBall;
+    capture_start_point_.reset();
   } else if (ready_to_capture) {
     state_ = State::Capture;
   } else {
     state_ = State::MoveToBall;
+    capture_start_point_.reset();
   }
 }
 
@@ -131,7 +143,7 @@ RobotCommand Capture::runCapture(const World & world, const Robot & robot)
     command.motion_intent = intent;
   }
 
-  command.dribbler_setpoint = 0.05;
+  command.dribbler_setpoint = 0.04;
 
   return command;
 }

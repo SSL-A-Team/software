@@ -70,7 +70,17 @@ std::array<std::optional<RobotCommand>, 16> OffensiveStopPlay::runFrame(
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
-  defense_tactic_.runFrame(world, available_robots, motion_commands);
+
+  play_helpers::GroupAssignmentSet groups;
+  std::vector<int> disallowed_strikers;
+  if (world.double_touch_forbidden_id_) {
+    disallowed_strikers.push_back(*world.double_touch_forbidden_id_);
+  }
+  groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
+  const auto assignments = play_helpers::assignGroups(available_robots, groups);
+
+  defense_tactic_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
+      motion_commands);
 
   const auto added_obstacles = helpers::getAddedObstacles(world);
 

@@ -40,6 +40,7 @@ SamplePassPlay::SamplePassPlay(stp::Options stp_options)
   rho_distribution_(0.0, kSearchRadius),
   theta_distribution_(0.0, 2.0 * M_PI)
 {
+  getParamInterface().declareParameter("use_pivot_kick", false);
 }
 
 stp::PlayScore SamplePassPlay::getScore(const World & world)
@@ -142,6 +143,10 @@ void SamplePassPlay::enter()
 std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World & world)
 {
   std::array<std::optional<RobotCommand>, 16> commands;
+
+  const auto use_pivot_kick = getParamInterface().getParameter<bool>("use_pivot_kick");
+  pass_tactic_.SetPreferredKickType(use_pivot_kick ? skills::UniversalKick::KickType::Pivot :
+      skills::UniversalKick::KickType::Line);
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);

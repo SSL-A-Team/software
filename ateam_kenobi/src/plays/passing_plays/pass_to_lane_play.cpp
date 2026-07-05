@@ -46,6 +46,8 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
     world.ball.pos.x() < -1 * (world.field.field_length / 4.0))
   {
     return stp::PlayScore(75);
+  } else {
+    return stp::PlayScore::Discouraged();
   }
 
   if (!world.in_play &&

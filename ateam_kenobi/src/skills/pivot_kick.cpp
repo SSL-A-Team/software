@@ -77,7 +77,7 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
     prev_state_ = State::KickBall;
   }
 
-  if (ateam_geometry::norm(world.ball.vel) > 0.1 * GetKickSpeed()) {
+  if (ateam_geometry::norm(world.ball.vel) > 0.5 * GetKickSpeed()) {
     done_ = true;
     getPlayInfo()["State"] = "Done";
     return RobotCommand{};
@@ -112,9 +112,12 @@ RobotCommand PivotKick::Pivot(
   motion::intents::PivotPoint intent;
   intent.target_x = target_point_.x();
   intent.target_y = target_point_.y();
+  intent.radius = 0.2;
+  intent.inset_angle = 0.6;
+  intent.compute_inset_angle = false;
 
-  intent.limits.angular_velocity = 10.0;
-  intent.limits.angular_acceleration = 7.0;
+  intent.limits.angular_velocity = 3.0;
+  intent.limits.angular_acceleration = 3.0;
 
   RobotCommand command;
   command.motion_intent = intent;

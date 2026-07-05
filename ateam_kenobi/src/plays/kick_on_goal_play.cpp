@@ -35,6 +35,7 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
   lane_idler_a_(createChild<skills::LaneIdler>("lane_idler_a")),
   lane_idler_b_(createChild<skills::LaneIdler>("lane_idler_b"))
 {
+  getParamInterface().declareParameter("use_pivot_kick", false);
 }
 
 stp::PlayScore KickOnGoalPlay::getScore(const World & world)
@@ -65,6 +66,10 @@ std::array<std::optional<RobotCommand>, 16> KickOnGoalPlay::runFrame(
   const World & world)
 {
   std::array<std::optional<RobotCommand>, 16> motion_commands;
+
+  const auto use_pivot_kick = getParamInterface().getParameter<bool>("use_pivot_kick");
+  striker_.SetPreferredKickType(use_pivot_kick ? skills::UniversalKick::KickType::Pivot :
+      skills::UniversalKick::KickType::Line);
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);
