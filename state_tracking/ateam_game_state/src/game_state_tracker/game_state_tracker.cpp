@@ -202,9 +202,20 @@ private:
 
   void RobotFeedbackCallback(const ateam_radio_msgs::msg::BasicTelemetry::SharedPtr msg, int id)
   {
-    world_.our_robots[id].breakbeam_ball_detected = msg->breakbeam_ball_detected;
-    world_.our_robots[id].kicker_available = msg->kicker_available;
-    world_.our_robots[id].chipper_available = msg->chipper_available;
+    auto & robot = world_.our_robots[id];
+    robot.breakbeam_ball_detected = msg->breakbeam_ball_detected;
+    robot.kicker_available = msg->kicker_available;
+    robot.chipper_available = msg->chipper_available;
+    robot.firmware_pos = ateam_geometry::Point{
+      msg->kf_body_pos_estimate[0] / 1e3,
+      msg->kf_body_pos_estimate[1] / 1e3
+    };
+    robot.firmware_theta = msg->kf_body_pos_estimate[2] / 1e3;
+    robot.firmware_vel = ateam_geometry::Vector{
+      msg->kf_body_vel_estimate[0] / 1e3,
+      msg->kf_body_vel_estimate[1] / 1e3
+    };
+    robot.firmware_omega = msg->kf_body_vel_estimate[2] / 1e3;
   }
 
   void RobotConnectionCallback(const ateam_radio_msgs::msg::ConnectionStatus::SharedPtr msg, int id)
