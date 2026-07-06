@@ -185,9 +185,9 @@ private:
       dribbler_speed_, static_cast<float>(get_parameter("mapping.dribbler.min").as_double()),
       static_cast<float>(get_parameter("mapping.dribbler.max").as_double()));
     if (dribbler_spin_trigger_(*joy_message)) {
-      command_message.dribbler_speed = dribbler_speed_;
+      command_message.dribbler_setpoint = dribbler_speed_;
     } else {
-      command_message.dribbler_speed = 0.0;
+      command_message.dribbler_setpoint = 0.0;
     }
 
     control_publisher_->publish(command_message);
