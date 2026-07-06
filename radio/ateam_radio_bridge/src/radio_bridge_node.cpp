@@ -38,6 +38,7 @@
 #include <ateam_radio_msgs/version.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/vision_state_robot.hpp>
+#include <ateam_msgs/msg/joystick_control_status.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
@@ -69,7 +70,7 @@ class RadioBridgeNode : public rclcpp::Node
 public:
   RadioBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("radio_bridge", options),
-    sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 250)),
+    sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 500)),
     connect_timeout_threshold_(declare_parameter("connect_timeout_ms", 750)),
     vision_state_staleness_threshold_(declare_parameter("vision_state_staleness_ms", 100)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
@@ -94,6 +95,11 @@ public:
         {"wheel_vel", true},
         {"wheel_torque", true}
     });
+
+    joy_status_sub_ = create_subscription<ateam_msgs::msg::JoystickControlStatus>(
+      std::string(Topics::kJoystickControlStatus),
+      rclcpp::QoS(1).transient_local(),
+      std::bind(&RadioBridgeNode::JoyStatusCallback, this, std::placeholders::_1));
 
     ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::RobotMotionCommand>(
       motion_command_subscriptions_,
@@ -165,7 +171,10 @@ private:
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
   std::chrono::steady_clock::time_point last_side_change_timestamp_;
+  ateam_msgs::msg::JoystickControlStatus joy_status_;
+
   ateam_common::GameControllerListener game_controller_listener_;
+  rclcpp::Subscription<ateam_msgs::msg::JoystickControlStatus>::SharedPtr joy_status_sub_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
@@ -206,6 +215,11 @@ private:
     vision_states_[robot_id] = *vision_msg;
     REPLACE_NAN_WITH_ZERO(vision_states_[robot_id]);
     vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
+  }
+
+  void JoyStatusCallback(const ateam_msgs::msg::JoystickControlStatus::SharedPtr msg)
+  {
+    joy_status_ = *msg;
   }
 
   void CloseConnection(const std::size_t & connection_index, bool send_goodbye = true)
@@ -285,25 +299,34 @@ private:
         motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
         motion_commands_[id].body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_OFF;
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
-        motion_commands_[id].dribbler_setpoint = 0.0;
+        motion_commands_[id].dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_DISABLE;
       }
       BasicControl control_msg{};
       control_msg.request_shutdown = shutdown_requested_[id];
       control_msg.reboot_robot = reboot_requested_[id];
-      control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
-        ateam_common::GameCommand::Stop;
+
+      if(joy_status_.is_active && joy_status_.active_id == id) {
+        control_msg.game_state_in_stop = false;
+        control_msg.game_state_in_halt = false;
+      } else {
+        control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
+          ateam_common::GameCommand::Stop;
+        control_msg.game_state_in_halt = game_controller_listener_.GetGameCommand() ==
+          ateam_common::GameCommand::Halt;
+      }
+
       control_msg.emergency_stop = false;
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
       control_msg.wheel_torque_control_enabled =
         get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.reset_controller = (last_side_change_timestamp_ + sustain_timeout_threshold_) >= now;
       control_msg.reserved1 = 0;
-      FillVisionUpdate(control_msg, vision_states_[id], vision_state_timestamps_[id]);
+      FillVisionUpdate(control_msg, id);
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.play_song = 0;
-      control_msg.dribbler_mode = static_cast<DribblerCommand>(motion_commands_[id].dribbler_mode);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
       control_msg.dribbler_setpoint = motion_commands_[id].dribbler_setpoint;
+      control_msg.dribbler_mode = static_cast<DribblerCommand>(motion_commands_[id].dribbler_mode);
       FillBodyControl(control_msg, motion_commands_[id]);
 
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
@@ -317,6 +340,9 @@ private:
     switch(command.body_control_mode) {
         case ateam_msgs::msg::RobotMotionCommand::BCM_OFF:
           control_msg.body_control_mode = BCM_OFF;
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_ESTOP_BRAKE:
+          control_msg.body_control_mode = BCM_ESTOP_BRAKE;
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION:
           control_msg.body_control_mode = BCM_GLOBAL_POSITION;
@@ -369,9 +395,9 @@ private:
         case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
           control_msg.body_control_mode = BCM_HEADING_PIVOT;
           control_msg.cmd.heading_pivot = {
-            static_cast<float>(command.pose.theta),
-            static_cast<float>(command.limit_vel_angular),
-            static_cast<float>(command.limit_acc_angular),
+            static_cast<float>(command.pivot_global_theta),
+            static_cast<float>(command.pivot_max_angular_vel),
+            static_cast<float>(command.pivot_max_angular_acc),
             static_cast<float>(command.pivot_orbit_radius),
             static_cast<float>(command.pivot_inset_angle),
             static_cast<PivotDirection>(command.pivot_direction),
@@ -382,15 +408,52 @@ private:
         case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
           control_msg.body_control_mode = BCM_POINT_PIVOT;
           control_msg.cmd.point_pivot = {
-            static_cast<float>(command.pose.x),
-            static_cast<float>(command.pose.y),
-            static_cast<float>(command.limit_vel_angular),
-            static_cast<float>(command.limit_acc_angular),
+            static_cast<float>(command.pivot_target_x),
+            static_cast<float>(command.pivot_target_y),
+            static_cast<float>(command.pivot_max_angular_vel),
+            static_cast<float>(command.pivot_max_angular_acc),
             static_cast<float>(command.pivot_orbit_radius),
             static_cast<float>(command.pivot_inset_angle),
             static_cast<PivotDirection>(command.pivot_direction),
             static_cast<uint8_t>(command.pivot_compute_inset_angle),
             {0, 0}
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE:
+          control_msg.body_control_mode = BCM_HEADING_LINE;
+          control_msg.cmd.heading_line = {
+            static_cast<float>(command.line_start_x),
+            static_cast<float>(command.line_start_y),
+            static_cast<float>(command.line_dir_x),
+            static_cast<float>(command.line_dir_y),
+            static_cast<float>(command.line_velocity),
+            static_cast<float>(command.line_global_theta),
+            static_cast<float>(command.line_max_vel_colinear),
+            static_cast<float>(command.line_max_vel_perp),
+            static_cast<float>(command.line_max_vel_angular),
+            static_cast<float>(command.line_max_accel_colinear),
+            static_cast<float>(command.line_max_accel_perp),
+            static_cast<float>(command.line_max_accel_angular),
+            static_cast<float>(command.line_colinear_start_thresh)
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE:
+          control_msg.body_control_mode = BCM_POINT_LINE;
+          control_msg.cmd.point_line = {
+            static_cast<float>(command.line_start_x),
+            static_cast<float>(command.line_start_y),
+            static_cast<float>(command.line_dir_x),
+            static_cast<float>(command.line_dir_y),
+            static_cast<float>(command.line_velocity),
+            static_cast<float>(command.line_target_x),
+            static_cast<float>(command.line_target_y),
+            static_cast<float>(command.line_max_vel_colinear),
+            static_cast<float>(command.line_max_vel_perp),
+            static_cast<float>(command.line_max_vel_angular),
+            static_cast<float>(command.line_max_accel_colinear),
+            static_cast<float>(command.line_max_accel_perp),
+            static_cast<float>(command.line_max_accel_angular),
+            static_cast<float>(command.line_colinear_start_thresh)
           };
           break;
         default:
@@ -400,9 +463,19 @@ private:
       }
   }
 
-  void FillVisionUpdate(BasicControl & control_msg, const ateam_msgs::msg::VisionStateRobot & vision_state, const std::chrono::steady_clock::time_point & timestamp) {
+  void FillVisionUpdate(BasicControl & control_msg, const int id) {
+    const auto & vision_state = vision_states_[id];
+    const auto timestamp = vision_state_timestamps_[id];
     const auto now = std::chrono::steady_clock::now();
     if (now - timestamp > vision_state_staleness_threshold_ || !vision_state.visible) {
+      control_msg.vision_update = 0;
+      control_msg.vision_position_update[0] = 0;
+      control_msg.vision_position_update[1] = 0;
+      control_msg.vision_position_update[2] = 0;
+      return;
+    }
+    if(joy_status_.is_active && joy_status_.active_id == id) {
+      // Do not send vision updates to robots under joystick control
       control_msg.vision_update = 0;
       control_msg.vision_position_update[0] = 0;
       control_msg.vision_position_update[1] = 0;
