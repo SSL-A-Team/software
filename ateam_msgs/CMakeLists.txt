@@ -36,7 +36,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/PlaybookState.msg
   msg/PlayInfo.msg
 
+  srv/ExportPlaybook.srv
   srv/GetFirmwareParameter.srv
+  srv/ImportPlaybook.srv
   srv/SetFirmwareParameter.srv
   srv/SetOverridePlay.srv
   srv/SetPlayEnabled.srv

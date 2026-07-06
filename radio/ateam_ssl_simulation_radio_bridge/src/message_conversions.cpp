@@ -59,7 +59,7 @@ RobotControl fromMsg(
   RobotCommand * proto_robot_command = robots_control.add_robot_commands();
 
   proto_robot_command->set_id(robot_id);
-  proto_robot_command->set_dribbler_speed(ReplaceNanWithZero(9.5492968 * ros_msg.dribbler_speed,
+  proto_robot_command->set_dribbler_speed(ReplaceNanWithZero(9.5492968 * ros_msg.dribbler_setpoint,
       logger));
 
   switch (ros_msg.kick_request) {

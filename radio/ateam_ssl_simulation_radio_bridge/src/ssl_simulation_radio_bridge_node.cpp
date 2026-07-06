@@ -206,7 +206,7 @@ public:
   void send_zero_command(const int id)
   {
     ateam_msgs::msg::RobotMotionCommand msg;
-    msg.dribbler_speed = 0.0;
+    msg.dribbler_setpoint = 0.0;
     msg.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
     msg.velocity.x = 0.0;
     msg.velocity.y = 0.0;

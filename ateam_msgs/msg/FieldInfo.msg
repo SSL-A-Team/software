@@ -9,6 +9,7 @@ geometry_msgs/Point32 center_circle
 float32 center_circle_radius
 geometry_msgs/Polygon field_corners
 int32 ignore_side
+int32 ignore_side_raw
 FieldSidedInfo ours
 FieldSidedInfo theirs
 

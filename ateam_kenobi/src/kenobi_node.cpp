@@ -230,7 +230,7 @@ private:
         const auto & cmd = maybe_cmd.value();
         const auto & motion_cmd = maybe_motion_cmd.value();
         auto & ros_cmd = ros_commands[id].emplace();
-        ros_cmd.dribbler_speed = cmd.dribbler_speed;
+        ros_cmd.dribbler_setpoint = cmd.dribbler_speed;
         ros_cmd.kick_request = static_cast<uint8_t>(cmd.kick);
         ros_cmd.kick_speed = cmd.kick_speed;
         ros_cmd.body_control_mode = static_cast<uint8_t>(motion_cmd.control_mode);

@@ -285,7 +285,7 @@ private:
         motion_commands_[id] = ateam_msgs::msg::RobotMotionCommand();
         motion_commands_[id].body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_OFF;
         motion_commands_[id].kick_request = ateam_msgs::msg::RobotMotionCommand::KR_DISABLE;
-        motion_commands_[id].dribbler_speed = 0.0;
+        motion_commands_[id].dribbler_setpoint = 0.0;
       }
       BasicControl control_msg{};
       control_msg.request_shutdown = shutdown_requested_[id];
@@ -303,7 +303,7 @@ private:
       control_msg.play_song = 0;
       control_msg.reserved2[0] = 0;
       control_msg.kick_vel = motion_commands_[id].kick_speed;
-      control_msg.dribbler_speed = motion_commands_[id].dribbler_speed;
+      control_msg.dribbler_speed = motion_commands_[id].dribbler_setpoint;
       FillBodyControl(control_msg, motion_commands_[id]);
 
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
