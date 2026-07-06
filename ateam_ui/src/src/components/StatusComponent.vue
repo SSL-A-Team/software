@@ -9,12 +9,20 @@
             <v-row>
                 {{robot.id}}
                 <canvas :ref="'canvas' + robot.id" height=100 width=100 style="width:90px; height:90px;"/>
-                <v-btn variant="plain" density="compact" style="min-width:0px; width:0px" :disabled="(batteryLevel(robot) === '')">
-                    <v-tooltip activator="parent" location="end">
-                        {{batteryLevel(robot)}}
-                    </v-tooltip>
-                    <v-icon :icon="batteryIcon(robot.status.battery_percent)" class="mx-0 pl-1 justify-center" size="small"/>
-                </v-btn>
+                <v-col class="mt-0 pt-0 mx-0 pl-1 mr-0 pr-0 justify-center">
+                    <v-btn variant="plain" density="compact" style="min-width:0px; width:0px" :disabled="(batteryLevel(robot) === '')">
+                        <v-tooltip activator="parent" location="end">
+                            {{batteryLevel(robot)}}
+                        </v-tooltip>
+                        <v-icon :icon="batteryIcon(robot.status.battery_percent)" class="mx-0 pl-1 justify-center" size="small"/>
+                    </v-btn>
+                    <v-btn v-show="!(errorTelemetry(robot) === '')" variant="plain" density="compact" style="min-width:0px; width:0px" :disabled="(errorTelemetry(robot) === '')">
+                        <v-tooltip activator="parent" location="end">
+                            {{errorTelemetry(robot)}}
+                        </v-tooltip>
+                        <v-icon icon="mdi-alert" class="mx-0 pl-1 justify-center" color="#FF0000" size="x-large"/>
+                    </v-btn>
+                </v-col>
             </v-row>
 
             <robot-detailed-menu-component
@@ -231,7 +239,13 @@ export default {
                 return String(robot.status.battery_percent.toFixed(0)) + "%";
             }
 
-            return ""
+            return "";
+        },
+        errorTelemetry: function(robot: Robot) {
+            if (robot.error_telem.received_time + 3000 > this.state.world.timestamp) {
+                return robot.error_telem.error_message;
+            }
+            return "";
         },
         changeDetailedStatusMenu: function(robot: Robot) {
             this.activeDetailedMenuId = (this.activeDetailedMenuId==robot.id) ? null : robot.id;

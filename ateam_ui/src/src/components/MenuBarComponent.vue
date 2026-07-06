@@ -94,6 +94,22 @@
         </v-list>
     </v-menu>
 
+    <v-checkbox 
+        label="Draw Overlays" 
+        v-model="displayOverlays"
+        @change="setDisplayOverlays()"
+        density="compact"
+        hide-details
+        class="px-2"
+    />
+
+    <input
+      ref="loadPlaybookFileInput"
+      type="file"
+      accept=".json"
+      style="display: none"
+      @change="onLoadPlaybookFileSelected"
+    />
 </template>
 
 <script lang="ts">
@@ -111,6 +127,7 @@ export default {
             fieldBoundaryVisible: true,
             holdStartTime: null,
             timeoutId: null,
+            displayOverlays: true,
             globalTheme: useTheme()
         }
     },
@@ -129,10 +146,19 @@ export default {
     },
     methods: {
         savePlaybook() {
-            console.log("not implemented yet")
+            this.state.sendExportPlaybookRequest();
         },
         loadPlaybook() {
-            console.log("not implemented yet")
+            const input = this.$refs.loadPlaybookFileInput as HTMLInputElement | null;
+            input?.click();
+        },
+        onLoadPlaybookFileSelected(event) {
+            const files = event.target.files
+            if (files.length > 0) {
+                const selectedFile = files[0]
+                this.state.sendImportPlaybookRequest(selectedFile)
+                event.target.value = ''
+            }
         },
         setUseKenobiTopic() {
             console.log("set kenobi: ", this.useKenobiTopic)
@@ -175,6 +201,10 @@ export default {
                 clearTimeout(this.timeoutId);
             }
         },
+        setDisplayOverlays() {
+            this.state.graphicState.overlayContainer.visible = this.displayOverlays;
+            this.state.graphicState.underlayContainer.visible = this.displayOverlays;
+        }
     }
 }
 </script>
