@@ -46,8 +46,8 @@ enum class GameStage
   ExtraTimeHalftime = 8,
   ExtraTimePreSecondHalf = 9,
   ExtraTimeSecondHalf = 10,
-  PenaltyBreak = 11,
-  Penalty = 12,
+  PenaltyShootoutBreak = 11,
+  PenaltyShootout = 12,
   PostGame = 13,
   Unknown = 14
 };

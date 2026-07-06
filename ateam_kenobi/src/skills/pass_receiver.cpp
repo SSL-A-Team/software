@@ -167,14 +167,14 @@ RobotCommand PassReceiver::runPass(const World & world, const Robot & robot)
   intent.planner_options.avoid_ball = false;
   RobotCommand command;
   command.motion_intent = intent;
-  command.dribbler_speed = kDefaultDribblerSpeed * 1.2;
+  command.dribbler_speed = kDefaultDribblerSetpoint * 1.2;
   return command;
 }
 
 RobotCommand PassReceiver::runPostPass()
 {
   RobotCommand command;
-  command.dribbler_speed = kDefaultDribblerSpeed;
+  command.dribbler_speed = kDefaultDribblerSetpoint;
   return command;
 }
 
