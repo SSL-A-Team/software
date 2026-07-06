@@ -101,7 +101,7 @@ private:
   using TriggerFunction = std::function<bool(const sensor_msgs::msg::Joy & )>;
 
   std::string command_topic_template_;
-  float dribbler_speed_ = kDefaultDribblerSpeed;
+  float dribbler_speed_ = kDefaultDribblerSetpoint;
   sensor_msgs::msg::Joy prev_joy_msg_;
 
   TriggerFunction kick_trigger_;

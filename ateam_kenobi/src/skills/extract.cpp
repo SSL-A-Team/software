@@ -74,7 +74,7 @@ RobotCommand Extract::RunFrame(const World & world, const Robot & robot)
   command.motion_intent = intent;
 
   if (robot.breakbeam_ball_detected) {
-    command.dribbler_speed = kDefaultDribblerSpeed;
+    command.dribbler_speed = kDefaultDribblerSetpoint;
   }
   return command;
 }
