@@ -301,9 +301,9 @@ private:
       FillVisionUpdate(control_msg, vision_states_[id], vision_state_timestamps_[id]);
       control_msg.kick_request = static_cast<KickRequest>(motion_commands_[id].kick_request);
       control_msg.play_song = 0;
-      control_msg.reserved2[0] = 0;
+      control_msg.dribbler_mode = static_cast<DribblerCommand>(motion_commands_[id].dribbler_mode);
       control_msg.kick_vel = motion_commands_[id].kick_speed;
-      control_msg.dribbler_speed = motion_commands_[id].dribbler_setpoint;
+      control_msg.dribbler_setpoint = motion_commands_[id].dribbler_setpoint;
       FillBodyControl(control_msg, motion_commands_[id]);
 
       const auto control_packet = CreatePacket(CC_CONTROL, control_msg);
