@@ -202,16 +202,15 @@ def generate_union_switch_copy_lines(field_node, param_name, struct_names, selec
         and m.type.spelling in struct_names
     ]
     enum_details = next(e for e in enums if e['type_name'] == selector_field.type.spelling)
-    # Convention: enum value 0 means "none/off" (no active union member).
-    # Remaining values sorted ascending map positionally to union members in
-    # declaration order, so BCM_GLOBAL_POSITION(1)->global_pos,
-    # BCM_GLOBAL_VELOCITY(2)->global_vel, etc.
-    non_zero_cases = sorted(
-        [(name, val) for name, val in enum_details['values'] if val != 0],
+    enum_values = sorted(
+        [(name, val) for name, val in enum_details['values']],
         key=lambda x: x[1],
     )
+    # TODO(barulicm): This is not sustainable long term
+    if field_name == 'control_telem' or 'maneuver':
+        del enum_values[:2]
     result = f'    switch ({param_name}.{selector_field.spelling}) {{\n'
-    for (case_name, _), member in zip(non_zero_cases, members):
+    for (case_name, _), member in zip(enum_values, members):
         msg_field = f'{field_name}_{member.spelling}'
         result += f'        case {case_name}:\n'
         result += (
