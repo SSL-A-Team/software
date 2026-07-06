@@ -60,7 +60,7 @@ inline std::ostream & operator<<(std::ostream & os, const ateam_geometry::Rectan
 inline std::ostream & operator<<(std::ostream & os, const ateam_geometry::Circle & c)
 {
   os << "Circle{center:" << c.center() << ", radius:" <<
-      CGAL::approximate_sqrt(c.squared_radius()) << '}';
+    CGAL::approximate_sqrt(c.squared_radius()) << '}';
   return os;
 }
 
@@ -93,13 +93,14 @@ inline std::ostream & operator<<(std::ostream & os, const ateam_geometry::Direct
 inline std::ostream & operator<<(std::ostream & os, const ateam_geometry::Arc & a)
 {
   os << "Arc{center:" << a.center() << ", radius:" << a.radius() << ", start:" << a.start() <<
-      ", end:" << a.end() << '}';
+    ", end:" << a.end() << '}';
   return os;
 }
 
 inline std::ostream & operator<<(std::ostream & os, const ateam_geometry::Disk & d)
 {
-  os << "Disk{center:" << d.center() << ", radius:" << CGAL::approximate_sqrt(d.squared_radius()) << '}';
+  os << "Disk{center:" << d.center() << ", radius:" << CGAL::approximate_sqrt(d.squared_radius()) <<
+    '}';
   return os;
 }
 
