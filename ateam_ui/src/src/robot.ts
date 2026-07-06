@@ -48,6 +48,11 @@ export class RobotStatus {
     kicker_charge_percent: number
 }
 
+export class RobotErrorTelemetry {
+    received_time: number
+    error_message: string
+}
+
 export class Robot {
     id: number;
     visible: boolean;
@@ -57,6 +62,7 @@ export class Robot {
     accel: Accel;
     radio_connected: boolean = false;
     status: RobotStatus;
+    error_telem: RobotErrorTelemetry;
 
     constructor(id: number, visible: boolean, team: TeamColor, pose: Pose) {
         this.id = id;
@@ -65,6 +71,7 @@ export class Robot {
         this.pose = pose;
 
         this.status = new RobotStatus();
+        this.error_telem = new RobotErrorTelemetry();
     }
 }
 

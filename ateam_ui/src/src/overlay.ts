@@ -93,6 +93,9 @@ export function isOverlayExpired(overlay: Overlay, timestamp: number): boolean {
 }
 
 export function deleteOverlayGraphic(overlay: Overlay, container: PIXI.Container) {
+    if(!overlay) {
+        return;
+    }
     let graphic = container.getChildByName(overlay.id) as PIXI.Graphics;
     if (!graphic) {
         return;

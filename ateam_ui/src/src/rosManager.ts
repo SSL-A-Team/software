@@ -34,25 +34,32 @@ export class RosManager {
         // Set up topics, services, and params
 
         for (var i = 0; i < 16; i++) {
-            for (const team of appState.realtimeWorld.teams.keys()) {
-                let robotConnectionTopic = new ROSLIB.Topic({
-                    ros: this.ros,
-                    name: '/robot_feedback/connection/robot' + i,
-                    messageType: 'ateam_radio_msgs/msg/ConnectionStatus'
-                });
+            let robotConnectionTopic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/robot_feedback/connection/robot' + i,
+                messageType: 'ateam_radio_msgs/msg/ConnectionStatus'
+            });
 
-                robotConnectionTopic.subscribe(this.getRobotConnectionCallback(appState.realtimeWorld, i));
-                this.subscriptions.set("/robot_feedback/connection/robot" + i, robotConnectionTopic);
+            robotConnectionTopic.subscribe(this.getRobotConnectionCallback(appState.realtimeWorld, i));
+            this.subscriptions.set("/robot_feedback/connection/robot" + i, robotConnectionTopic);
 
-                let robotBasicTopic = new ROSLIB.Topic({
-                    ros: this.ros,
-                    name: '/robot_feedback/basic/robot' + i,
-                    messageType: 'ateam_radio_msgs/msg/BasicTelemetry'
-                });
+            let robotBasicTopic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/robot_feedback/basic/robot' + i,
+                messageType: 'ateam_radio_msgs/msg/BasicTelemetry'
+            });
 
-                robotBasicTopic.subscribe(this.getRobotBasicCallback(appState.realtimeWorld, i));
-                this.subscriptions.set("/robot_feedback/basic/robot" + i, robotBasicTopic);
-            }
+            robotBasicTopic.subscribe(this.getRobotBasicCallback(appState.realtimeWorld, i));
+            this.subscriptions.set("/robot_feedback/basic/robot" + i, robotBasicTopic);
+
+            let robotErrorTopic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/robot_feedback/error/robot' + i,
+                messageType: 'ateam_radio_msgs/msg/ErrorTelemetry'
+            });
+
+            robotErrorTopic.subscribe(this.getRobotErrorCallback(appState.realtimeWorld, i));
+            this.subscriptions.set("/robot_feedback/error/robot" + i, robotErrorTopic);
         }
 
         let overlayTopic = new ROSLIB.Topic({
@@ -137,6 +144,20 @@ export class RosManager {
         })
         this.services.set("setOverridePlay", setOverridePlayService);
 
+        let importPlaybookService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/kenobi_node/import_playbook',
+            serviceType: 'ateam_msgs/srv/ImportPlaybook'
+        })
+        this.services.set('importPlaybook', importPlaybookService);
+
+        let exportPlaybookService = new ROSLIB.Service({
+            ros: this.ros,
+            name: '/kenobi_node/export_playbook',
+            serviceType: 'ateam_msgs/srv/ExportPlaybook'
+        })
+        this.services.set('exportPlaybook', exportPlaybookService);
+
         let teamNameParam = new ROSLIB.Param({
             ros: this.ros,
             name: "/team_client_node:team_name"
@@ -167,7 +188,7 @@ export class RosManager {
         let sendPowerRequestService = new ROSLIB.Service({
             ros: this.ros,
             name: '/radio_bridge/send_power_request',
-            serviceType: 'ateam_msgs/srv/SendRobotPowerRequest'
+            serviceType: 'ateam_radio_msgs/srv/SendRobotPowerRequest'
         })
         this.services.set("sendPowerRequest", sendPowerRequestService);
 
@@ -267,7 +288,6 @@ export class RosManager {
         return function(msg: any): void {
             // Convert timestamp to millis
             appState.realtimeWorld.timestamp = (msg.current_time.sec * 1e3) + (msg.current_time.nanosec / 1e6);
-            appState.lastTimeReceivedKenobi = Date.now();
 
             appState.realtimeWorld.ball.pose = msg.ball.pose;
             appState.realtimeWorld.ball.visible = msg.ball.visible;
@@ -321,6 +341,15 @@ export class RosManager {
             for (const member of Object.getOwnPropertyNames(msg)) {
                 robot.status[member] = msg[member];
             }
+        };
+    }
+
+    getRobotErrorCallback(world: WorldState, id: number): (msg: any) => void {
+        return function(msg: any): void {
+            let robot = world.teams.get(world.team).robots[id];
+
+            robot.error_telem.error_message = atob(msg.error_message);
+            robot.error_telem.received_time = world.timestamp;
         };
     }
 
@@ -402,7 +431,7 @@ export class RosManager {
             }
 
             world.field.fieldDimensions = newFieldDimensions;
-            world.ignoreSide = msg.ignore_side;
+            world.ignoreSide = msg.ignore_side_raw;
         }
     }
 
@@ -485,7 +514,7 @@ export class RosManager {
     getKenobiStatusCallback(appState: AppState): (msg: any) => void {
         return function(msg: any): void {
             appState.realtimeWorld.fps = msg.fps;
-
+            appState.lastTimeReceivedKenobi = Date.now();
         }
     }
 }

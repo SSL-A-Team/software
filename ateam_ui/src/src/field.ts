@@ -123,7 +123,6 @@ export function drawFieldLines(state: AppState, fieldLines: PIXI.Graphics) {
 
     // Team Goal Boxes
     for (const color of state.world.teams.keys()) {
-        const team = state.world.teams.get(color);
         const direction = (color == state.world.team ? -1 : 1); // always draw our goal on the left
         const goalX = direction * scale * field.fieldDimensions.length / 2
 
