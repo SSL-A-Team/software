@@ -206,6 +206,7 @@ def generate_union_switch_copy_lines(field_node, param_name, struct_names, selec
         [(name, val) for name, val in enum_details['values']],
         key=lambda x: x[1],
     )
+    # TODO(barulicm): This is not sustainable long term
     if field_name == 'control_telem' or 'maneuver':
         del enum_values[:2]
     result = f'    switch ({param_name}.{selector_field.spelling}) {{\n'

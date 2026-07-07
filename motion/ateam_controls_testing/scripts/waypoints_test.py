@@ -21,6 +21,11 @@
 # THE SOFTWARE.
 
 import argparse
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning, message="invalid escape sequence")
+from angles import shortest_angular_distance
+warnings.resetwarnings()
+from dataclasses import dataclass
 import math
 import time
 
@@ -33,12 +38,20 @@ from transforms3d.euler import quat2euler
 linear_threshold = 2.0e-2
 angular_threshold = 0.0349
 
-# x, y, theta, hold time
+
+@dataclass
+class Waypoint():
+    x: float
+    y: float
+    theta: float
+    hold_time: float
+
+
 waypoints = [
-    (-4.3, -2.5, math.pi/2, 4.0),
-    (-0.5, -2.5, math.pi/2, 4.0),
-    # (-3.2, 0.5, 0.0, 1.0),
-    # (-3.2, -0.5, 0.0, 1.0),
+    Waypoint(-4.3, -2.5, math.pi/2, 4.0),
+    Waypoint(-0.5, -2.5, math.pi/2, 4.0),
+    # Waypoint(-3.2, 0.5, 0.0, 1.0),
+    # Waypoint(-3.2, -0.5, 0.0, 1.0),
 ]
 
 current_index = 0
@@ -56,9 +69,9 @@ def publish_waypoint_command(index: int):
     waypoint = waypoints[index]
     command_msg = RobotMotionCommand()
     command_msg.body_control_mode = RobotMotionCommand.BCM_GLOBAL_POSITION
-    command_msg.pose.x = waypoint[0]
-    command_msg.pose.y = waypoint[1]
-    command_msg.pose.theta = waypoint[2]
+    command_msg.pose.x = waypoint.x
+    command_msg.pose.y = waypoint.y
+    command_msg.pose.theta = waypoint.theta
     command_msg.kick_request = RobotMotionCommand.KR_DISABLE
     command_msg.limit_acc_linear = 1.5
     command_msg.limit_vel_linear = 2.0
@@ -74,9 +87,9 @@ def is_at_waypoint(index: int):
     _, _, theta = quat2euler([q.w, q.x, q.y, q.z])
     return (
         vision_robot_state_msg.visible
-        and abs(vision_robot_state_msg.pose.position.x - waypoint[0]) < linear_threshold
-        and abs(vision_robot_state_msg.pose.position.y - waypoint[1]) < linear_threshold
-        and abs(theta - waypoint[2]) < angular_threshold
+        and abs(vision_robot_state_msg.pose.position.x - waypoint.x) < linear_threshold
+        and abs(vision_robot_state_msg.pose.position.y - waypoint.y) < linear_threshold
+        and abs(shortest_angular_distance(theta, waypoint.theta)) < angular_threshold
     )
 
 
@@ -117,7 +130,7 @@ if __name__ == '__main__':
         if is_at_waypoint(current_index):
             if waypoint_hold_start_time is None:
                 waypoint_hold_start_time = time.time()
-            elif (time.time() - waypoint_hold_start_time) > waypoints[current_index][3]:
+            elif (time.time() - waypoint_hold_start_time) > waypoints[current_index].hold_time:
                 current_index = (current_index + 1) % len(waypoints)
                 waypoint_hold_start_time = None
                 node.get_logger().info(f'Moving to waypoint {current_index}')

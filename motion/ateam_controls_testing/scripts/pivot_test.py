@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 import argparse
+from dataclasses import dataclass
 import math
 import time
 
@@ -29,18 +30,27 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 from transforms3d.euler import quat2euler
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning, message="invalid escape sequence")
+from angles import shortest_angular_distance
+warnings.resetwarnings()
 
-linear_threshold = 10
 angular_threshold = 0.1
 
-# theta, orbit_radius, inset angle, hold time
-waypoints = [
-    # ( 0.0,           0.5,     0.0,       1.0),
-    # ( math.pi,       0.5,     0.0,       1.0),
-    ( 0.0,           0.1, math.pi/2, 1.0),
-    ( math.pi / 2.0, 0.1, math.pi/2, 1.0),
-    ( math.pi,       0.1, math.pi/2, 1.0),
-    (-math.pi / 2.0, 0.1, math.pi/2, 1.0),
+
+@dataclass
+class Target():
+    theta: float
+    orbit_radius: float
+    inset_angle: float
+    hold_time: float
+
+
+targets = [
+    Target(0.0, 0.1, math.pi / 2, 1.0),
+    Target(math.pi/2, 0.1, math.pi / 2, 1.0),
+    Target(math.pi, 0.1, math.pi / 2, 1.0),
+    Target(-math.pi/2, 0.1, math.pi / 2, 1.0),
 ]
 
 current_index = 0
@@ -54,29 +64,27 @@ def vision_callback(msg: VisionStateRobot):
     vision_robot_state_msg = msg
 
 
-def publish_waypoint_command(index: int):
-    waypoint = waypoints[index]
+def publish_command(index: int):
+    target = targets[index]
     command_msg = RobotMotionCommand()
     command_msg.body_control_mode = RobotMotionCommand.BCM_HEADING_PIVOT
     command_msg.kick_request = RobotMotionCommand.KR_DISABLE
-    command_msg.pivot_global_theta = waypoint[0]
-    command_msg.pivot_orbit_radius = waypoint[1]
-    command_msg.pivot_inset_angle = waypoint[2]
+    command_msg.pivot_global_theta = target.theta
+    command_msg.pivot_orbit_radius = target.orbit_radius
+    command_msg.pivot_inset_angle = target.inset_angle
     command_msg.pivot_max_angular_acc = 8.0
     command_msg.pivot_max_angular_vel = 4.0
     command_pub.publish(command_msg)
 
 
-def is_at_waypoint(index: int):
-    waypoint = waypoints[index]
+def is_at_target(index: int):
+    target = targets[index]
     #  get yaw from quat
     q = vision_robot_state_msg.pose.orientation
     _, _, theta = quat2euler([q.w, q.x, q.y, q.z])
     return (
         vision_robot_state_msg.visible
-        and abs(vision_robot_state_msg.pose.position.x - waypoint[0]) < linear_threshold
-        and abs(vision_robot_state_msg.pose.position.y - waypoint[1]) < linear_threshold
-        and abs(theta - waypoint[2]) < angular_threshold
+        and abs(shortest_angular_distance(theta, target.theta)) < angular_threshold
     )
 
 
@@ -105,23 +113,23 @@ if __name__ == '__main__':
 
     while rclpy.ok():
         rclpy.spin_once(node)
-        publish_waypoint_command(0)
+        publish_command(0)
         if vision_robot_state_msg is None:
             continue
-        if is_at_waypoint(0):
+        if is_at_target(0):
             node.get_logger().info('Reached waypoint 0. Starting cycle.')
             break
 
     while rclpy.ok():
         rclpy.spin_once(node)
-        if is_at_waypoint(current_index):
+        if is_at_target(current_index):
             if waypoint_hold_start_time is None:
                 waypoint_hold_start_time = time.time()
-            elif (time.time() - waypoint_hold_start_time) > waypoints[current_index][3]:
-                current_index = (current_index + 1) % len(waypoints)
+            elif (time.time() - waypoint_hold_start_time) > targets[current_index].hold_time:
+                current_index = (current_index + 1) % len(targets)
                 waypoint_hold_start_time = None
                 node.get_logger().info(f'Moving to waypoint {current_index}')
-        publish_waypoint_command(current_index)
+        publish_command(current_index)
 
     node.destroy_node()
     rclpy.shutdown()
