@@ -172,11 +172,11 @@ bool IsPointInBounds(
   ateam_geometry::Rectangle pathable_region(ateam_geometry::Point(-x_bound, -y_bound),
     ateam_geometry::Point(x_bound, y_bound));
 
-  if (world.field.ignore_side == ateam_msgs::msg::FieldInfo::IGNORE_SIDE_THEIRS) {
+  if (world.field.ignore_side == ateam_game_state::IgnoreSide::Theirs) {
     pathable_region = ateam_geometry::Rectangle(
       ateam_geometry::Point(-x_bound, -y_bound),
       ateam_geometry::Point(0, y_bound));
-  } else if (world.field.ignore_side == ateam_msgs::msg::FieldInfo::IGNORE_SIDE_OURS) {
+  } else if (world.field.ignore_side == ateam_game_state::IgnoreSide::Ours) {
     pathable_region = ateam_geometry::Rectangle(
       ateam_geometry::Point(0, y_bound),
       ateam_geometry::Point(x_bound, -y_bound));

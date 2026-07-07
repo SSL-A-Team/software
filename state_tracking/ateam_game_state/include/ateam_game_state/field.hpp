@@ -31,6 +31,13 @@ struct FieldSidedInfo
   std::array<ateam_geometry::Point, 4> defense_area_corners;
   std::array<ateam_geometry::Point, 4> goal_corners;
 };
+
+enum class IgnoreSide
+{
+  None = 0,
+  Ours = 1,
+  Theirs = 2
+};
 struct Field
 {
   float field_length = 0.f;
@@ -43,7 +50,8 @@ struct Field
   ateam_geometry::Point center_circle_center;
   float center_circle_radius;
   std::array<ateam_geometry::Point, 4> field_corners;
-  int ignore_side = 0;
+  IgnoreSide ignore_side = IgnoreSide::None;
+  int ignore_side_raw = 0;
   FieldSidedInfo ours;
   FieldSidedInfo theirs;
 };

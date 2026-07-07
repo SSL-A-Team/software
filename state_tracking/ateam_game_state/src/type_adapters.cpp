@@ -50,7 +50,9 @@ void rclcpp::TypeAdapter<ateam_game_state::World,
     if (robot.visible || robot.radio_connected) {
       RobotTA::convert_to_ros_message(robot, ros_msg.our_robots.emplace_back());
     } else {
-      ros_msg.our_robots.push_back(ateam_msgs::msg::GameStateRobot());
+      auto default_bot = ateam_msgs::msg::GameStateRobot();
+      default_bot.id = robot.id;
+      ros_msg.our_robots.push_back(default_bot);
     }
   }
 
@@ -59,7 +61,9 @@ void rclcpp::TypeAdapter<ateam_game_state::World,
     if (robot.visible) {
       RobotTA::convert_to_ros_message(robot, ros_msg.their_robots.emplace_back());
     } else {
-      ros_msg.their_robots.push_back(ateam_msgs::msg::GameStateRobot());
+      auto default_bot = ateam_msgs::msg::GameStateRobot();
+      default_bot.id = robot.id;
+      ros_msg.their_robots.push_back(default_bot);
     }
   }
 
@@ -149,6 +153,14 @@ void rclcpp::TypeAdapter<ateam_game_state::Robot,
   ros_msg.velocity.linear.y = robot.vel.y();
   ros_msg.velocity.angular.z = robot.omega;
 
+  ros_msg.firmware_pose.position.x = robot.firmware_pos.x();
+  ros_msg.firmware_pose.position.y = robot.firmware_pos.y();
+  ros_msg.firmware_pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1),
+    robot.firmware_theta));
+  ros_msg.firmware_velocity.linear.x = robot.firmware_vel.x();
+  ros_msg.firmware_velocity.linear.y = robot.firmware_vel.y();
+  ros_msg.firmware_velocity.angular.z = robot.firmware_omega;
+
   ros_msg.prev_command_velocity.linear.x = robot.prev_command_vel.x();
   ros_msg.prev_command_velocity.linear.y = robot.prev_command_vel.y();
   ros_msg.prev_command_velocity.angular.z = robot.prev_command_omega;
@@ -176,6 +188,12 @@ void rclcpp::TypeAdapter<ateam_game_state::Robot,
   robot.vel = ateam_geometry::Vector(ros_msg.velocity.linear.x, ros_msg.velocity.linear.y);
   robot.omega = ros_msg.velocity.angular.z;
 
+  robot.firmware_pos = ateam_geometry::Point(ros_msg.firmware_pose.position.x,
+    ros_msg.firmware_pose.position.y);
+  tf2::Quaternion firm_quat;
+  tf2::fromMsg(ros_msg.firmware_pose.orientation, firm_quat);
+  robot.firmware_theta = tf2::getYaw(firm_quat);
+
   robot.prev_command_vel = ateam_geometry::Vector(ros_msg.prev_command_velocity.linear.x,
     ros_msg.prev_command_velocity.linear.y);
   robot.prev_command_omega = ros_msg.prev_command_velocity.angular.z;
@@ -196,7 +214,8 @@ void rclcpp::TypeAdapter<ateam_game_state::Field,
   ros_msg.goal_width = field.goal_width;
   ros_msg.goal_depth = field.goal_depth;
   ros_msg.boundary_width = field.boundary_width;
-  ros_msg.ignore_side = field.ignore_side;
+  ros_msg.ignore_side = static_cast<int>(field.ignore_side);
+  ros_msg.ignore_side_raw = field.ignore_side_raw;
   ros_msg.defense_area_width = field.defense_area_width;
   ros_msg.defense_area_depth = field.defense_area_depth;
   ros_msg.center_circle.x = field.center_circle_center.x();
@@ -228,7 +247,8 @@ void rclcpp::TypeAdapter<ateam_game_state::Field, ateam_msgs::msg::FieldInfo>::c
   field.goal_width = ros_msg.goal_width;
   field.goal_depth = ros_msg.goal_depth;
   field.boundary_width = ros_msg.boundary_width;
-  field.ignore_side = ros_msg.ignore_side;
+  field.ignore_side = static_cast<ateam_game_state::IgnoreSide>(ros_msg.ignore_side);
+  field.ignore_side_raw = ros_msg.ignore_side_raw;
   field.defense_area_width = ros_msg.defense_area_width;
   field.defense_area_depth = ros_msg.defense_area_depth;
   field.center_circle_center = ateam_geometry::Point(ros_msg.center_circle.x,
