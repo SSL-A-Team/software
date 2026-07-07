@@ -32,7 +32,8 @@ struct FieldSidedInfo
   std::array<ateam_geometry::Point, 4> goal_corners;
 };
 
-enum class IgnoreSide {
+enum class IgnoreSide
+{
   None = 0,
   Ours = 1,
   Theirs = 2
