@@ -37,6 +37,11 @@ struct Robot
   ateam_geometry::Vector vel;
   double omega = 0.0;
 
+  ateam_geometry::Point firmware_pos;
+  double firmware_theta = 0.0;
+  ateam_geometry::Vector firmware_vel;
+  double firmware_omega = 0.0;
+
   ateam_geometry::Vector prev_command_vel;
   double prev_command_omega = 0.0;
 

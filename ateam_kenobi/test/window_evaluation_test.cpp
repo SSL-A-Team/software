@@ -49,6 +49,7 @@ TEST(WindowEvaluationTest, OneRobot)
 {
   std::vector<Robot> robots = {
     {1, true, true, ateam_geometry::Point(4.2, 0.0), 0.0, ateam_geometry::Vector{}, 0.0,
+      ateam_geometry::Point{}, 0.0, ateam_geometry::Vector{}, 0.0,
       ateam_geometry::Vector{}, 0.0, false,
       true,
       false}
