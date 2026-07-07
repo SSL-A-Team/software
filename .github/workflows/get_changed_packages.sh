@@ -15,7 +15,7 @@ for file in $changed_files; do
   while read package_info; do
     package_path=$(echo "$package_info" | awk '{ print $2 }')
     package_name=$(echo "$package_info" | awk '{ print $1 }')
-    if [[ ${file} == ${package_path}* ]]; then
+    if [[ ${file} == "$package_path" || ${file} == "$package_path"/* ]]; then
       changed_packages+=( "$package_name" )
       break
     fi
