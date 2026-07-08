@@ -61,8 +61,6 @@ public:
 
     kick_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.kick",
         "axis 5 < -0.8"));
-    chip_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.chip",
-        ""));
     pivot_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mappign.pivot",
       "button 5"));
     dribbler_increment_trigger_ =
@@ -111,7 +109,6 @@ private:
   sensor_msgs::msg::Joy prev_joy_msg_;
 
   TriggerFunction kick_trigger_;
-  TriggerFunction chip_trigger_;
   TriggerFunction pivot_trigger_;
   TriggerFunction dribbler_increment_trigger_;
   TriggerFunction dribbler_decrement_trigger_;
@@ -192,9 +189,6 @@ private:
     if (kick_trigger_(*joy_message)) {
       command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
       command_message.kick_speed = get_parameter("kick_speed").as_double();
-    } else if (chip_trigger_(*joy_message)) {
-      command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_CHIP_TOUCH;
-      command_message.kick_speed = get_parameter("chip_speed").as_double();
     } else {
       command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_ARM;
     }
