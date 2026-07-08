@@ -29,9 +29,21 @@ target_include_directories(ateam_controls_cpp
 )
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-  # add_subdirectory(test)
+  file(GLOB_RECURSE AMENT_LINT_AUTO_FILE_EXCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/controls/*)
+  list(APPEND AMENT_LINT_AUTO_FILE_EXCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/controls)
+
+  find_package(ament_cmake_cpplint REQUIRED)
+  ament_cpplint(EXCLUDE ${AMENT_LINT_AUTO_FILE_EXCLUDE})
+
+  find_package(ament_cmake_uncrustify REQUIRED)
+  ament_uncrustify(EXCLUDE ${AMENT_LINT_AUTO_FILE_EXCLUDE})
+
+  # TODO(barulicm): Excludes not working right. Consider adding AMENT_IGNORE file to controls repo
+  # find_package(ament_cmake_copyright REQUIRED)
+  # ament_copyright(EXCLUDE ${AMENT_LINT_AUTO_FILE_EXCLUDE})
+
+  find_package(ament_cmake_lint_cmake REQUIRED)
+  ament_lint_cmake(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt)
 endif()
 
 install(
@@ -39,7 +51,7 @@ install(
   DESTINATION include
 )
 install(
-  FILES $<TARGET_FILE:ateam_controls> 
+  FILES $<TARGET_FILE:ateam_controls>
   DESTINATION lib
 )
 
