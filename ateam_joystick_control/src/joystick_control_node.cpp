@@ -61,7 +61,7 @@ public:
 
     kick_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.kick",
         "axis 5 < -0.8"));
-    pivot_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mappign.pivot",
+    pivot_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.pivot",
       "button 5"));
     dribbler_increment_trigger_ =
       ParseTriggerFunction(declare_parameter<std::string>("mapping.dribbler.increment",
