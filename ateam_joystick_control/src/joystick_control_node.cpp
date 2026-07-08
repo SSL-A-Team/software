@@ -163,10 +163,9 @@ private:
     if (pivot_trigger_(*joy_message)) {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT;
       command_message.pivot_orbit_radius = kRobotRadius + kBallRadius;
-      command_message.pivot_inset_angle = M_PI/2;
+      command_message.pivot_inset_angle = M_PI / 2;
 
-      command_message.pivot_global_theta = M_PI *
-        joy_message->axes[angular_z_axis_]; // This is truly cursed
+      command_message.pivot_global_theta = M_PI * joy_message->axes[angular_z_axis_];
     } else if (get_parameter("use_global_position").as_bool()) {
       command_message.body_control_mode =
         ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION;
@@ -178,12 +177,12 @@ private:
         joy_message->axes[angular_z_axis_];
     } else {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
-        command_message.velocity.x = get_parameter("mapping.linear.x.scale").as_double() *
-          joy_message->axes[linear_x_axis_];
-        command_message.velocity.y = get_parameter("mapping.linear.y.scale").as_double() *
-          joy_message->axes[linear_y_axis_];
-        command_message.velocity.theta = get_parameter("mapping.angular.z.scale").as_double() *
-          joy_message->axes[angular_z_axis_];
+      command_message.velocity.x = get_parameter("mapping.linear.x.scale").as_double() *
+        joy_message->axes[linear_x_axis_];
+      command_message.velocity.y = get_parameter("mapping.linear.y.scale").as_double() *
+        joy_message->axes[linear_y_axis_];
+      command_message.velocity.theta = get_parameter("mapping.angular.z.scale").as_double() *
+        joy_message->axes[angular_z_axis_];
     }
 
     if (kick_trigger_(*joy_message)) {
