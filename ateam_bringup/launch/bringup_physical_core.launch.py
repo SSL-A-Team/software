@@ -29,7 +29,7 @@ from launch.actions import (
 )
 from launch.conditions import IfCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, IfElseSubstitution
 from launch_ros.actions import Node
 
 
@@ -43,6 +43,8 @@ def generate_launch_description():
 
         DeclareLaunchArgument('team_name', default_value='A-Team'),
         DeclareLaunchArgument('use_local_gc', default_value='False'),
+
+        DeclareLaunchArgument('gc_use_multicast', default_value='False'),
 
         GroupAction(
             condition=IfCondition(LaunchConfiguration('use_local_gc')),
@@ -60,7 +62,11 @@ def generate_launch_description():
                 'gc_ip_address': LaunchConfiguration('gc_server_address'),
                 'gc_net_interface_address': LaunchConfiguration('gc_interface_address'),
                 'vision_net_interface_address': LaunchConfiguration('vision_interface_address'),
-                'team_name': LaunchConfiguration('team_name')
+                'team_name': LaunchConfiguration('team_name'),
+                'gc_receive_address': IfElseSubstitution(
+                    LaunchConfiguration('gc_use_multicast'),
+                    '224.5.23.1',
+                    '255.255.255.255')
             }.items()
         ),
 
@@ -85,7 +91,7 @@ def generate_launch_description():
             launch_arguments={
                 'team_name': LaunchConfiguration('team_name'),
                 'vision_offset_robot_x': '0.0',
-                'vision_offset_robot_y': '0.0'
+                'vision_offset_robot_y': '0.0',
             }.items()
         ),
 
@@ -107,8 +113,11 @@ def generate_launch_description():
             remappings=remap_indexed_topics([
                 ('~/robot_motion_commands/robot', '/robot_motion_commands/robot'),
                 ('~/robot_feedback/basic/robot', '/robot_feedback/basic/robot'),
-                ('~/robot_feedback/extended/robot', '/robot_feedback/extended/robot'),
-                ('~/robot_feedback/connection/robot', '/robot_feedback/connection/robot')
+                ('~/robot_feedback/extended/robot',
+                 '/robot_feedback/extended/robot'),
+                ('~/robot_feedback/connection/robot',
+                 '/robot_feedback/connection/robot'),
+                ('~/robot_feedback/error/robot', '/robot_feedback/error/robot'),
             ]),
         ),
     ])

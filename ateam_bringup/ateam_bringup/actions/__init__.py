@@ -1,4 +1,4 @@
-# Copyright 2021 A Team
+# Copyright 2026 A Team
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,11 +19,11 @@
 # THE SOFTWARE.
 
 
-from .interface_from_address_substitution import InterfaceFromAddressSubstitution
-from .package_launch_file_substitution import PackageLaunchFileSubstitution
+from .change_game_contoller_config import ChangeGameControllerConfig
+from .change_game_controller_team_name import ChangeGameControllerTeamName
 
 
 __all__ = [
-    'InterfaceFromAddressSubstitution',
-    'PackageLaunchFileSubstitution'
+    'ChangeGameControllerConfig',
+    'ChangeGameControllerTeamName'
 ]
