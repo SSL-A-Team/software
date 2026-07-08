@@ -46,6 +46,6 @@ private:
   int32_t raw_;
 };
 
-}  // ateam_controls_cpp
+}  // namespace ateam_controls_cpp
 
 #endif  // ATEAM_CONTROLS_CPP__EXCEPTIONS_HPP_

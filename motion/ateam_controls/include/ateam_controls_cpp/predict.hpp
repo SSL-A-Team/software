@@ -44,35 +44,40 @@ struct GlobalPosition
   float max_angular_acc;
 };
 
-struct GlobalVelocity{
+struct GlobalVelocity
+{
   float max_linear_vel;
   float max_angular_vel;
   float max_linear_acc;
   float max_angular_acc;
 };
 
-struct LocalVelocity{
+struct LocalVelocity
+{
   float max_linear_vel;
   float max_angular_vel;
   float max_linear_acc;
   float max_angular_acc;
 };
 
-struct GlobalAccel{
+struct GlobalAccel
+{
   float max_linear_vel;
   float max_angular_vel;
   float max_linear_acc;
   float max_angular_acc;
 };
 
-struct LocalAccel{
+struct LocalAccel
+{
   float max_linear_vel;
   float max_angular_vel;
   float max_linear_acc;
   float max_angular_acc;
 };
 
-struct HeadingPivot{
+struct HeadingPivot
+{
   float target_heading;
   float max_vel_angular;
   float max_accel_angular;
@@ -82,7 +87,8 @@ struct HeadingPivot{
   int direction;
 };
 
-struct PointPivot{
+struct PointPivot
+{
   float target_x;
   float target_y;
   float max_vel_angular;
@@ -93,54 +99,76 @@ struct PointPivot{
   int direction;
 };
 
-struct HeadingLine{
-    float target_heading;
-    float line_start_x;
-    float line_start_y;
-    float line_dir_x;
-    float line_dir_y;
-    float line_vel;
-    float max_vel_colinear;
-    float max_vel_perp;
-    float max_vel_angular;
-    float max_accel_perp;
-    float max_accel_colinear;
-    float max_accel_angular;
-    float colinear_start_thresh_linear;
+struct HeadingLine
+{
+  float target_heading;
+  float line_start_x;
+  float line_start_y;
+  float line_dir_x;
+  float line_dir_y;
+  float line_vel;
+  float max_vel_colinear;
+  float max_vel_perp;
+  float max_vel_angular;
+  float max_accel_perp;
+  float max_accel_colinear;
+  float max_accel_angular;
+  float colinear_start_thresh_linear;
 };
 
-struct PointLine{
-    float target_x;
-    float target_y;
-    float line_start_x;
-    float line_start_y;
-    float line_dir_x;
-    float line_dir_y;
-    float line_vel;
-    float max_vel_colinear;
-    float max_vel_perp;
-    float max_vel_angular;
-    float max_accel_perp;
-    float max_accel_colinear;
-    float max_accel_angular;
-    float colinear_start_thresh_linear;
+struct PointLine
+{
+  float target_x;
+  float target_y;
+  float line_start_x;
+  float line_start_y;
+  float line_dir_x;
+  float line_dir_y;
+  float line_vel;
+  float max_vel_colinear;
+  float max_vel_perp;
+  float max_vel_angular;
+  float max_accel_perp;
+  float max_accel_colinear;
+  float max_accel_angular;
+  float colinear_start_thresh_linear;
 };
 }  // namespace modes
 
 using ateam_game_state::Robot;
 
 ateam_geometry::Point PositionAtT(const Robot & robot, const modes::Off & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::EStopBrake & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::GlobalPosition & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::GlobalVelocity & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::LocalVelocity & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::GlobalAccel & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::LocalAccel & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::HeadingPivot & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::PointPivot & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::HeadingLine & params, const double t);
-ateam_geometry::Point PositionAtT(const Robot & robot, const modes::PointLine & params, const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::EStopBrake & params,
+  const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::GlobalPosition & params,
+  const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::GlobalVelocity & params,
+  const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::LocalVelocity & params,
+  const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::GlobalAccel & params,
+  const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::LocalAccel & params,
+  const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::HeadingPivot & params,
+  const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::PointPivot & params,
+  const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::HeadingLine & params,
+  const double t);
+ateam_geometry::Point PositionAtT(
+  const Robot & robot, const modes::PointLine & params,
+  const double t);
 
-}  // ateam_controls_cpp::predict
+}  // namespace ateam_controls_cpp::predict
 
 #endif  // ATEAM_CONTROLS_CPP__PREDICT_HPP_

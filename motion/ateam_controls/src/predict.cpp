@@ -42,10 +42,14 @@ ateam_geometry::Point PositionAtT(
 {
   const auto default_c_params = ateam_controls_default_traj_params();
   TrajectoryParams c_params{
-    .max_vel_linear = params.max_linear_vel != 0.0f ? params.max_linear_vel : default_c_params.max_vel_linear,
-    .max_vel_angular = params.max_angular_vel != 0.0f ? params.max_angular_vel : default_c_params.max_vel_angular,
-    .max_accel_linear = params.max_linear_acc != 0.0f ? params.max_linear_acc : default_c_params.max_accel_linear,
-    .max_accel_angular = params.max_angular_acc != 0.0f ? params.max_angular_acc : default_c_params.max_accel_angular
+    .max_vel_linear = params.max_linear_vel !=
+      0.0f ? params.max_linear_vel : default_c_params.max_vel_linear,
+    .max_vel_angular = params.max_angular_vel !=
+      0.0f ? params.max_angular_vel : default_c_params.max_vel_angular,
+    .max_accel_linear = params.max_linear_acc !=
+      0.0f ? params.max_linear_acc : default_c_params.max_accel_linear,
+    .max_accel_angular = params.max_angular_acc !=
+      0.0f ? params.max_angular_acc : default_c_params.max_accel_angular
   };
   Vector6C c_start_state{
     .data = {
@@ -119,8 +123,10 @@ ateam_geometry::Point PositionAtT(
 {
   const auto default_c_params = ateam_controls_default_pivot_params();
   PivotParams c_params{
-    .max_vel_angular = params.max_vel_angular != 0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
-    .max_accel_angular = params.max_accel_angular != 0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
+    .max_vel_angular = params.max_vel_angular !=
+      0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
+    .max_accel_angular = params.max_accel_angular !=
+      0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
     .orbit_radius = params.orbit_radius,
     .inset_angle = params.inset_angle,
     .compute_inset_angle = params.compute_inset_angle,
@@ -137,7 +143,8 @@ ateam_geometry::Point PositionAtT(
     }
   };
   PivotTrajectory_t trajectory;
-  if(const auto err = ateam_controls_pivot_traj_from_target_heading(c_start_state, params.target_heading, c_params,
+  if(const auto err = ateam_controls_pivot_traj_from_target_heading(c_start_state,
+      params.target_heading, c_params,
       &trajectory); err != ATEAM_CONTROLS_OK)
   {
     throw ControlsException(err);
@@ -157,8 +164,10 @@ ateam_geometry::Point PositionAtT(
 {
   const auto default_c_params = ateam_controls_default_pivot_params();
   PivotParams c_params{
-    .max_vel_angular = params.max_vel_angular != 0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
-    .max_accel_angular = params.max_accel_angular != 0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
+    .max_vel_angular = params.max_vel_angular !=
+      0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
+    .max_accel_angular = params.max_accel_angular !=
+      0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
     .orbit_radius = params.orbit_radius,
     .inset_angle = params.inset_angle,
     .compute_inset_angle = params.compute_inset_angle,
@@ -175,7 +184,8 @@ ateam_geometry::Point PositionAtT(
     }
   };
   PivotTrajectory_t trajectory;
-  if(const auto err = ateam_controls_pivot_traj_from_target_point(c_start_state, params.target_x, params.target_y, c_params,
+  if(const auto err = ateam_controls_pivot_traj_from_target_point(c_start_state, params.target_x,
+      params.target_y, c_params,
       &trajectory); err != ATEAM_CONTROLS_OK)
   {
     throw ControlsException(err);
@@ -195,12 +205,18 @@ ateam_geometry::Point PositionAtT(
 {
   const auto default_c_params = ateam_controls_default_linear_params();
   LinearParams c_params{
-    .max_vel_colinear = params.max_vel_colinear != 0.0f ? params.max_vel_colinear : default_c_params.max_vel_colinear,
-    .max_vel_perp = params.max_vel_perp != 0.0f ? params.max_vel_perp : default_c_params.max_vel_perp,
-    .max_vel_angular = params.max_vel_angular != 0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
-    .max_accel_perp = params.max_accel_perp != 0.0f ? params.max_accel_perp : default_c_params.max_accel_perp,
-    .max_accel_colinear = params.max_accel_colinear != 0.0f ? params.max_accel_colinear : default_c_params.max_accel_colinear,
-    .max_accel_angular = params.max_accel_angular != 0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
+    .max_vel_colinear = params.max_vel_colinear !=
+      0.0f ? params.max_vel_colinear : default_c_params.max_vel_colinear,
+    .max_vel_perp = params.max_vel_perp !=
+      0.0f ? params.max_vel_perp : default_c_params.max_vel_perp,
+    .max_vel_angular = params.max_vel_angular !=
+      0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
+    .max_accel_perp = params.max_accel_perp !=
+      0.0f ? params.max_accel_perp : default_c_params.max_accel_perp,
+    .max_accel_colinear = params.max_accel_colinear !=
+      0.0f ? params.max_accel_colinear : default_c_params.max_accel_colinear,
+    .max_accel_angular = params.max_accel_angular !=
+      0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
     .colinear_start_thresh_linear = params.colinear_start_thresh_linear
   };
   Vector6C c_start_state{
@@ -222,7 +238,8 @@ ateam_geometry::Point PositionAtT(
     .y = params.line_dir_y
   };
   LinearTrajectory_t trajectory;
-  if(const auto err = ateam_controls_linear_traj_from_line(c_start_state, params.target_heading, c_start_point, c_line_dir, params.line_vel, c_params,
+  if(const auto err = ateam_controls_linear_traj_from_line(c_start_state, params.target_heading,
+      c_start_point, c_line_dir, params.line_vel, c_params,
       &trajectory); err != ATEAM_CONTROLS_OK)
   {
     throw ControlsException(err);
@@ -242,12 +259,18 @@ ateam_geometry::Point PositionAtT(
 {
   const auto default_c_params = ateam_controls_default_linear_params();
   LinearParams c_params{
-    .max_vel_colinear = params.max_vel_colinear != 0.0f ? params.max_vel_colinear : default_c_params.max_vel_colinear,
-    .max_vel_perp = params.max_vel_perp != 0.0f ? params.max_vel_perp : default_c_params.max_vel_perp,
-    .max_vel_angular = params.max_vel_angular != 0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
-    .max_accel_perp = params.max_accel_perp != 0.0f ? params.max_accel_perp : default_c_params.max_accel_perp,
-    .max_accel_colinear = params.max_accel_colinear != 0.0f ? params.max_accel_colinear : default_c_params.max_accel_colinear,
-    .max_accel_angular = params.max_accel_angular != 0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
+    .max_vel_colinear = params.max_vel_colinear !=
+      0.0f ? params.max_vel_colinear : default_c_params.max_vel_colinear,
+    .max_vel_perp = params.max_vel_perp !=
+      0.0f ? params.max_vel_perp : default_c_params.max_vel_perp,
+    .max_vel_angular = params.max_vel_angular !=
+      0.0f ? params.max_vel_angular : default_c_params.max_vel_angular,
+    .max_accel_perp = params.max_accel_perp !=
+      0.0f ? params.max_accel_perp : default_c_params.max_accel_perp,
+    .max_accel_colinear = params.max_accel_colinear !=
+      0.0f ? params.max_accel_colinear : default_c_params.max_accel_colinear,
+    .max_accel_angular = params.max_accel_angular !=
+      0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
     .colinear_start_thresh_linear = params.colinear_start_thresh_linear
   };
   Vector6C c_start_state{
@@ -269,7 +292,8 @@ ateam_geometry::Point PositionAtT(
     .y = params.line_dir_y
   };
   LinearTrajectory_t trajectory;
-  if(const auto err = ateam_controls_linear_traj_from_point(c_start_state, params.target_x, params.target_y, c_start_point, c_line_dir, params.line_vel, c_params,
+  if(const auto err = ateam_controls_linear_traj_from_point(c_start_state, params.target_x,
+      params.target_y, c_start_point, c_line_dir, params.line_vel, c_params,
       &trajectory); err != ATEAM_CONTROLS_OK)
   {
     throw ControlsException(err);
