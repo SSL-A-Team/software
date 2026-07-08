@@ -18,17 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from ateam_bringup.actions import (
+    ChangeGameControllerConfig,
+    ChangeGameControllerTeamName
+)
 from ateam_bringup.substitutions import (
     InterfaceFromAddressSubstitution,
     PackageLaunchFileSubstitution
 )
+
 import launch
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
+from launch.actions import (
+    DeclareLaunchArgument,
+    GroupAction,
+    IncludeLaunchDescription
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+
 from launch_ros.actions import Node
-from ateam_bringup.actions import ChangeGameControllerTeamName, ChangeGameControllerConfig
 
 
 def generate_launch_description():
@@ -65,9 +74,11 @@ def generate_launch_description():
                     'autoContinue': False
                 }),
                 ChangeGameControllerTeamName(
-                    gc_address='172.17.0.2', color='blue', name=LaunchConfiguration('blue_team')),
+                    gc_address='172.17.0.2', color='blue',
+                    name=LaunchConfiguration('blue_team')),
                 ChangeGameControllerTeamName(
-                    gc_address='172.17.0.2', color='yellow', name=LaunchConfiguration('yellow_team')),
+                    gc_address='172.17.0.2', color='yellow',
+                    name=LaunchConfiguration('yellow_team')),
 
             ],
             condition=IfCondition(LaunchConfiguration('start_gc'))
@@ -78,9 +89,13 @@ def generate_launch_description():
                 PackageLaunchFileSubstitution('ateam_bringup',
                                               'league_bridges.launch.xml')),
             launch_arguments={
-                'gc_net_interface_address': InterfaceFromAddressSubstitution(LaunchConfiguration('gc_ip')),
+                'gc_net_interface_address':
+                    InterfaceFromAddressSubstitution(
+                        LaunchConfiguration('gc_ip')),
                 'gc_ip_address': LaunchConfiguration('gc_ip'),
-                'vision_net_interface_address': InterfaceFromAddressSubstitution(LaunchConfiguration('sim_ip')),
+                'vision_net_interface_address':
+                    InterfaceFromAddressSubstitution(
+                        LaunchConfiguration('sim_ip')),
                 'vision_port': '10020',
                 'team_name': LaunchConfiguration('team_name')
             }.items()

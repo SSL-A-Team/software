@@ -18,12 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import launch
-from launch.some_substitutions_type import SomeSubstitutionsType
-from launch import LaunchContext, Substitution
-from launch.utilities import normalize_to_list_of_substitutions
-from typing import Text
 import socket
+from typing import Text
+
+import launch
+from launch import LaunchContext, Substitution
+from launch.some_substitutions_type import SomeSubstitutionsType
+from launch.utilities import normalize_to_list_of_substitutions
 
 
 class InterfaceFromAddressSubstitution(Substitution):
@@ -52,7 +53,8 @@ class InterfaceFromAddressSubstitution(Substitution):
             s.connect((target_ip, target_port))
             local_ip = s.getsockname()[0]
         except Exception:
-            launch.logging.get_logger().exception(f'Could not determine interface for {target_ip}')
+            launch.logging.get_logger().exception(
+                f'Could not determine interface for {target_ip}')
             raise
         finally:
             s.close()

@@ -20,6 +20,7 @@
 
 from ateam_bringup.substitutions import PackageLaunchFileSubstitution
 from ateam_bringup.utils import remap_indexed_topics
+
 import launch
 from launch.actions import (
     DeclareLaunchArgument,
@@ -29,7 +30,8 @@ from launch.actions import (
 )
 from launch.conditions import IfCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, IfElseSubstitution
+from launch.substitutions import IfElseSubstitution, LaunchConfiguration
+
 from launch_ros.actions import Node
 
 
