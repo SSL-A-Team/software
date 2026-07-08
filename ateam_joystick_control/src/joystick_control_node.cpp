@@ -62,7 +62,9 @@ public:
     kick_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.kick",
         "axis 5 < -0.8"));
     chip_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.chip",
-        "button 5"));
+        ""));
+    pivot_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mappign.pivot",
+      "button 5"));
     dribbler_increment_trigger_ =
       ParseTriggerFunction(declare_parameter<std::string>("mapping.dribbler.increment",
         "button 3"));
@@ -77,15 +79,19 @@ public:
         {"linear.x.scale", 1.0},
         {"linear.y.scale", 1.0},
         {"angular.z.scale", 1.0},
-        {"dribbler.max", 1000.0},
+        {"dribbler.max", 1.0},
         {"dribbler.min", 0.0}
       });
 
     // controls the size of steps when changing dribbler speed
-    declare_parameter<double>("dribbler_speed_step", 10.0);
+    declare_parameter<double>("dribbler_speed_step", 0.01);
 
     declare_parameter<double>("kick_speed", 5.0);
     declare_parameter<double>("chip_speed", 5.0);
+
+    // When true, joystick axes fill the global-frame pose (x, y, theta) and commands are sent as
+    // BCM_GLOBAL_POSITION instead of BCM_LOCAL_VELOCITY.
+    declare_parameter<bool>("use_global_position", false);
 
     CreatePublisher(declare_parameter<int>("robot_id", -1));
     parameter_callback_handle_ =
@@ -106,6 +112,7 @@ private:
 
   TriggerFunction kick_trigger_;
   TriggerFunction chip_trigger_;
+  TriggerFunction pivot_trigger_;
   TriggerFunction dribbler_increment_trigger_;
   TriggerFunction dribbler_decrement_trigger_;
   TriggerFunction dribbler_spin_trigger_;
@@ -156,13 +163,31 @@ private:
 
     ateam_msgs::msg::RobotMotionCommand command_message;
 
-    command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
-    command_message.velocity.x = get_parameter("mapping.linear.x.scale").as_double() *
-      joy_message->axes[linear_x_axis_];
-    command_message.velocity.y = get_parameter("mapping.linear.y.scale").as_double() *
-      joy_message->axes[linear_y_axis_];
-    command_message.velocity.theta = get_parameter("mapping.angular.z.scale").as_double() *
-      joy_message->axes[angular_z_axis_];
+    if (pivot_trigger_(*joy_message)) {
+      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT;
+      command_message.pivot_orbit_radius = kRobotRadius + kBallRadius;
+      command_message.pivot_inset_angle = M_PI/2;
+
+      command_message.pivot_global_theta = M_PI *
+        joy_message->axes[angular_z_axis_]; // This is truly cursed
+    } else if (get_parameter("use_global_position").as_bool()) {
+      command_message.body_control_mode =
+        ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION;
+      command_message.pose.x = get_parameter("mapping.linear.x.scale").as_double() *
+        joy_message->axes[linear_x_axis_];
+      command_message.pose.y = get_parameter("mapping.linear.y.scale").as_double() *
+        joy_message->axes[linear_y_axis_];
+      command_message.pose.theta = get_parameter("mapping.angular.z.scale").as_double() *
+        joy_message->axes[angular_z_axis_];
+    } else {
+      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
+        command_message.velocity.x = get_parameter("mapping.linear.x.scale").as_double() *
+          joy_message->axes[linear_x_axis_];
+        command_message.velocity.y = get_parameter("mapping.linear.y.scale").as_double() *
+          joy_message->axes[linear_y_axis_];
+        command_message.velocity.theta = get_parameter("mapping.angular.z.scale").as_double() *
+          joy_message->axes[angular_z_axis_];
+    }
 
     if (kick_trigger_(*joy_message)) {
       command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
@@ -185,8 +210,10 @@ private:
       dribbler_speed_, static_cast<float>(get_parameter("mapping.dribbler.min").as_double()),
       static_cast<float>(get_parameter("mapping.dribbler.max").as_double()));
     if (dribbler_spin_trigger_(*joy_message)) {
+      command_message.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_CURRENT;
       command_message.dribbler_setpoint = dribbler_speed_;
     } else {
+      command_message.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_DISABLE;
       command_message.dribbler_setpoint = 0.0;
     }
 
