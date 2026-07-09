@@ -27,12 +27,21 @@
 #include <vector>
 #include <ateam_geometry/types.hpp>
 #include "core/types/state_types.hpp"
-#include "core/path_planning/path.hpp"
-#include "core/path_planning/planner_options.hpp"
 #include "motion_options.hpp"
+#include "path_planning/planner_options.hpp"
 
 namespace ateam_kenobi::motion
 {
+
+template<typename T>
+concept has_planner_options = requires(T intent) {
+  intent.planner_options;
+};
+
+template<typename T>
+concept has_limits = requires(T intent) {
+  intent.limits;
+};
 
 enum class Frame
 {
@@ -40,12 +49,18 @@ enum class Frame
   Local
 };
 
+enum class PivotDirection
+{
+  Forward = 0,
+  Backward = 1
+};
+
 struct Limits
 {
-  double linear_velocity = 0.0;
-  double linear_acceleration = 0.0;
-  double angular_velocity = 0.0;
-  double angular_acceleration = 0.0;
+  double linear_velocity = 2.0;
+  double linear_acceleration = 1.5;
+  double angular_velocity = 2.0;
+  double angular_acceleration = 2.0;
 };
 
 namespace intents
@@ -88,7 +103,6 @@ struct Position
   double heading;
   path_planning::PlannerOptions planner_options;
   std::vector<ateam_geometry::AnyShape> obstacles;
-  bool enable_escape_velocities = true;
   Limits limits;
 };
 
@@ -98,7 +112,6 @@ struct PositionFacing
   ateam_geometry::Point face_target;
   path_planning::PlannerOptions planner_options;
   std::vector<ateam_geometry::AnyShape> obstacles;
-  bool enable_escape_velocities = true;
   Limits limits;
 };
 
@@ -112,7 +125,53 @@ struct PivotVelocity
 struct PivotHeading
 {
   double target_heading;
-  double radius = 0.089;  // Estimated radius of bot holding ball
+  double radius = 0.0;  // Use firmware default
+  double inset_angle = 0.0;  // Uses firmware default through compute_inset_angle
+  PivotDirection direction = PivotDirection::Forward;
+  bool compute_inset_angle = true;  // Use firmware default
+  Limits limits;  // NOTE: linear limits are NOT respected or used
+};
+
+struct PivotPoint
+{
+  double target_x;
+  double target_y;
+  double radius = 0.0;  // Use firmware default
+  double inset_angle = 0.0;  // Uses firmware default through compute_inset_angle
+  PivotDirection direction = PivotDirection::Forward;
+  bool compute_inset_angle = true;
+  Limits limits;  // NOTE: linear limits are NOT respected or used
+};
+
+struct LineHeading
+{
+  ateam_geometry::Point line_start;
+  ateam_geometry::Vector line_direction;  // normalized by firmware
+  double line_velocity = 0.0;
+  double heading = 0.0;  // maintained global heading
+  double colinear_start_thresh = 0.0;
+  // colinear and perpendicular limits default to the linear limits below,
+  // but can be tuned separately by the play (0 = use the linear limits)
+  double max_vel_colinear = 0.0;
+  double max_vel_perp = 0.0;
+  double max_accel_colinear = 0.0;
+  double max_accel_perp = 0.0;
+  Limits limits;
+};
+
+struct LinePoint
+{
+  ateam_geometry::Point line_start;
+  ateam_geometry::Vector line_direction;  // normalized by firmware
+  double line_velocity = 0.0;
+  ateam_geometry::Point face_target;
+  double colinear_start_thresh = 0.0;
+  // colinear and perpendicular limits default to the linear limits below,
+  // but can be tuned separately by the play (0 = use the linear limits)
+  double max_vel_colinear = 0.0;
+  double max_vel_perp = 0.0;
+  double max_accel_colinear = 0.0;
+  double max_accel_perp = 0.0;
   Limits limits;
 };
 
@@ -127,7 +186,10 @@ using MotionIntent = std::variant<
   intents::Position,
   intents::PositionFacing,
   intents::PivotVelocity,
-  intents::PivotHeading>;
+  intents::PivotHeading,
+  intents::PivotPoint,
+  intents::LineHeading,
+  intents::LinePoint>;
 
 }  // namespace ateam_kenobi::motion
 

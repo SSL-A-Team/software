@@ -28,7 +28,7 @@
 #include <ateam_msgs/msg/overlay_array.hpp>
 #include <ateam_geometry/arc.hpp>
 #include <ateam_geometry/types.hpp>
-
+#include "core/types/state_types.hpp"
 namespace ateam_kenobi::visualization
 {
 
@@ -90,6 +90,22 @@ public:
     const std::vector<uint8_t> & data, const std::size_t resolution_width,
     const std::size_t resolution_height, const uint8_t alpha = 255,
     const uint32_t lifetime = kDefaultLifetime);
+
+  void drawOctagon(
+    const std::string & name, const ateam_geometry::Point & center,
+    const double width, const std::string & stroke_color = "white",
+    const std::string & fill_color = "#FFFFFF7F", const uint8_t stroke_width = 5,
+    const uint32_t lifetime = kDefaultLifetime);
+
+  /**
+   * Draws a standard stop sign under the given robot.
+   */
+  void drawStopsign(const std::string & name, const Robot & bot, const std::string & color);
+
+  /**
+   * Adds an overlay message to remove an existing overlay item from the UI.
+   */
+  void clearItem(const std::string & name);
 
 private:
   static const uint32_t kDefaultLifetime = 200;

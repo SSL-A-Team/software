@@ -23,6 +23,7 @@
 #include <ranges>
 #include <algorithm>
 #include <ateam_geometry/normalize.hpp>
+#include "robot_assignment.hpp"
 
 namespace ateam_kenobi::play_helpers
 {
@@ -59,6 +60,15 @@ void removeRobotWithId(std::vector<Robot> & robots, int id)
       robots.begin(), robots.end(), [&id](const Robot & robot) {
         return robot.id == id;
       }), robots.end());
+}
+
+void removeAssignedRobots(std::vector<Robot> & robots, const GroupAssignmentResult & assignments)
+{
+  for(const auto & assignment : assignments.GetAssignments()) {
+    if(assignment.has_value()) {
+      removeRobotWithId(robots, assignment->id);
+    }
+  }
 }
 
 Robot getClosestRobot(const std::vector<Robot> & robots, const ateam_geometry::Point & target)
