@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 #include "their_kickoff_play.hpp"
-#include "plays/stop_plays/stop_helpers.hpp"
 #include <ranges>
 #include <algorithm>
 #include <limits>

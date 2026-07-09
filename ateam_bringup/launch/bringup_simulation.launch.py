@@ -38,7 +38,6 @@ from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
-from ateam_bringup.actions import ChangeGameControllerTeamName, ChangeGameControllerConfig
 
 
 def generate_launch_description():

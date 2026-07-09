@@ -19,13 +19,10 @@
 // THE SOFTWARE.
 
 #include "our_kickoff_prep_play.hpp"
-#include "plays/stop_plays/stop_helpers.hpp"
 #include <vector>
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
 #include "plays/stop_plays/stop_helpers.hpp"
-
-namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;
 
 namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;
 
