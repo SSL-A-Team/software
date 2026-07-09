@@ -241,7 +241,7 @@ RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
   const double pp_mult = (GetPreparationPrecision() == PreparationPrecision::cowabunga) ? 2.0 : 1.0;
 
   motion::intents::LinePoint intent;
-  intent.colinear_start_thresh = pp_mult * 0.001; // This only effects the feedforward
+  intent.colinear_start_thresh = pp_mult * 0.001;  // This only effects the feedforward
   intent.face_target = target_point_;
   intent.line_direction = locked_shot_line_;
   intent.line_start = target_point_;

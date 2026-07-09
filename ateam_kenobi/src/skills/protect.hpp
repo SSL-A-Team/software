@@ -32,11 +32,11 @@ namespace ateam_kenobi::skills
 
 class Protect : public stp::Skill
 {
-
 public:
   explicit Protect(stp::Options stp_options);
 
-  void Reset() {
+  void Reset()
+  {
     capture_.Reset();
   }
 
@@ -55,7 +55,9 @@ private:
   skills::Capture capture_;
 
   RobotCommand Capture(const World & world, const Robot & robot);
-  RobotCommand Pivot(const World & world, const Robot & robot, const ateam_geometry::Point & block_point);
+  RobotCommand Pivot(
+    const World & world, const Robot & robot,
+    const ateam_geometry::Point & block_point);
 };
 
 }  // namespace ateam_kenobi::skills

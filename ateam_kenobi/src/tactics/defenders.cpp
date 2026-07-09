@@ -91,17 +91,19 @@ std::vector<ateam_geometry::Point> Defenders::getDefenderPoints(const World & wo
 
 ateam_geometry::Point Defenders::getBallBlockPoint(const World & world)
 {
-
-  const double projection_timestep = 0.3; // s
-  const double max_ball_proj_vel = 1.0; // m/s
-  const double clamped_ball_vel_mag = std::clamp(ateam_geometry::norm(world.ball.vel), 0.0, max_ball_proj_vel);
-  const ateam_geometry::Vector clamped_ball_vel = clamped_ball_vel_mag * ateam_geometry::normalize(world.ball.vel);
+  const double projection_timestep = 0.3;  // s
+  const double max_ball_proj_vel = 1.0;  // m/s
+  const double clamped_ball_vel_mag = std::clamp(ateam_geometry::norm(world.ball.vel), 0.0,
+      max_ball_proj_vel);
+  const ateam_geometry::Vector clamped_ball_vel = clamped_ball_vel_mag *
+    ateam_geometry::normalize(world.ball.vel);
   const auto projected_ball_pos = world.ball.pos + projection_timestep * clamped_ball_vel;
 
   const auto defense_segments = getDefenseSegments(world);
   std::vector<ateam_geometry::Point> closest_points;
   std::ranges::transform(
-    defense_segments, std::back_inserter(closest_points), [&projected_ball_pos](const auto & segment) {
+    defense_segments, std::back_inserter(closest_points),
+    [&projected_ball_pos](const auto & segment) {
       return ateam_geometry::nearestPointOnSegment(segment, projected_ball_pos);
     });
 

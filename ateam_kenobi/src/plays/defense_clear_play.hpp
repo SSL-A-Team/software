@@ -32,11 +32,14 @@ namespace ateam_kenobi::plays
 class DefenseClearPlay : public stp::Play
 {
 public:
-
-  enum class ShotType {
-    NoShot, // No clear shot, keep defending
-    StraightLine, // Kick straight away from goal for safety
-    DownfieldLine // Turn to shoot downfield on the sides
+  enum class ShotType
+  {
+    /// No clear shot, keep defending
+    NoShot,
+    /// Kick straight away from goal for safety
+    StraightLine,
+    /// Turn to shoot downfield on the sides
+    DownfieldLine
   };
 
   static constexpr const char * kPlayName = "DefenseClearPlay";
@@ -50,11 +53,14 @@ public:
   std::array<std::optional<RobotCommand>, 16> runFrame(
     const World & world) override;
 
-  RobotCommand runReceivingRobot(const World & world, const Robot & robot,
+  RobotCommand runReceivingRobot(
+    const World & world, const Robot & robot,
     const ateam_geometry::Point target_pos);
-  RobotCommand runPositionBasedRobot(const World & world, const Robot & robot,
+  RobotCommand runPositionBasedRobot(
+    const World & world, const Robot & robot,
     const ateam_geometry::Point target_pos);
-  RobotCommand runClearingRobot(const World & world, const Robot & robot,
+  RobotCommand runClearingRobot(
+    const World & world, const Robot & robot,
     const ateam_geometry::Point defense_point);
 
   bool shouldDefenseClearBall(const World & world);
@@ -62,7 +68,8 @@ public:
   ateam_geometry::Point getGuardPoint(const World & world);
 
   // Returns true if the incoming command tries to pass across the keepout zone
-  bool enforceKeepoutZone(const World & world,
+  bool enforceKeepoutZone(
+    const World & world,
     const Robot & robot, ateam_geometry::Point & target_point);
 
 private:

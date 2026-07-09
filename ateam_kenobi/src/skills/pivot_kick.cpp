@@ -48,19 +48,19 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
     return RobotCommand{};
   }
 
-  if (prev_state_ != State::Pivot){
+  if (prev_state_ != State::Pivot) {
     if (prev_state_ == State::Capture) {
-        if (!capture_.isDone()) {
-          getPlayInfo()["State"] = "Capture";
-          return Capture(world, robot);
-        }
-      }
-
-      if (!robot.breakbeam_ball_detected_filtered) {
-        prev_state_ = State::Capture;
+      if (!capture_.isDone()) {
         getPlayInfo()["State"] = "Capture";
         return Capture(world, robot);
       }
+    }
+
+    if (!robot.breakbeam_ball_detected_filtered) {
+      prev_state_ = State::Capture;
+      getPlayInfo()["State"] = "Capture";
+      return Capture(world, robot);
+    }
   }
 
   const auto robot_to_target = target_point_ - robot.pos;

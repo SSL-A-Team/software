@@ -187,7 +187,6 @@ RobotCommand PassReceiver::runPass(const World & world, const Robot & robot)
     command.motion_intent = intent;
   }
   return command;
-
 }
 
 RobotCommand PassReceiver::runPostPass()

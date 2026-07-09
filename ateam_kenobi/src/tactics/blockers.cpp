@@ -112,13 +112,13 @@ ateam_geometry::Point Blockers::getBlockingPosition(const World & world, const R
     });
 
   if (!visible_opponents.empty() && visible_opponents[0].id == blockee.id) {
-
-    const auto blockee_to_goal = ateam_geometry::Point{-world.field.field_length/2,0} - blockee.pos;
+    const auto blockee_to_goal = ateam_geometry::Point{-world.field.field_length / 2,
+      0} - blockee.pos;
     auto pos = blockee.pos + ((kRobotDiameter * 2) * ateam_geometry::normalize(blockee_to_goal));
 
     // Check if target point is in our defense area
-    if (pos.x() < kRobotRadius + (world.field.defense_area_depth - world.field.field_length/2)) {
-      if (abs(pos.y()) < kRobotRadius + world.field.defense_area_width / 2.0)  {
+    if (pos.x() < kRobotRadius + (world.field.defense_area_depth - world.field.field_length / 2)) {
+      if (abs(pos.y()) < kRobotRadius + world.field.defense_area_width / 2.0) {
         pos = blockee.pos + ((kRobotDiameter + 0.01) * ateam_geometry::normalize(blockee_to_goal));
       }
     }

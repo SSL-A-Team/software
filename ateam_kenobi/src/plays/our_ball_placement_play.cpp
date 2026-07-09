@@ -321,7 +321,9 @@ void OurBallPlacementPlay::runExtracting(
     motion_command.dribbler_setpoint = 0.025;
   }
 
-  // Check if motion intent has a planner options field and set the boundary footprint inflation very small
+  /* Check if motion intent has a planner options field and set the boundary footprint inflation
+   * very small
+   */
 
   std::visit([](auto & intent) {
       if constexpr (motion::has_planner_options<decltype(intent)>) {
@@ -337,7 +339,6 @@ void OurBallPlacementPlay::runPlacing(
   std::array<std::optional<RobotCommand>,
   16> & motion_commands)
 {
-
   if (prev_state_ != State::Placing) {
     dribble_.reset();
   }
