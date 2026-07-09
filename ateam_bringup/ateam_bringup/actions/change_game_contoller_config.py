@@ -18,22 +18,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import launch
-from launch.some_substitutions_type import SomeSubstitutionsType
+import json
+from typing import Any, Mapping, Union
+
 from launch import LaunchContext, Substitution
 from launch.actions import OpaqueCoroutine
+from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.utilities import normalize_to_list_of_substitutions
-from typing import Mapping, Union, Any
 
-import asyncio
-import json
 import websockets
 
 
 class ChangeGameControllerConfig(OpaqueCoroutine):
-    """Action that sends config delta commands to the GC API"""
+    """Action that sends config delta commands to the GC API."""
 
-    def __init__(self, configs: Mapping[Union[Substitution, str], Any], gc_address: SomeSubstitutionsType) -> None:
+    def __init__(self, configs: Mapping[Union[Substitution, str], Any],
+                 gc_address: SomeSubstitutionsType) -> None:
         """Initialize the action."""
         super().__init__(coroutine=self.my_coroutine)
         self.__configs = configs
@@ -63,7 +63,6 @@ class ChangeGameControllerConfig(OpaqueCoroutine):
             try:
                 async with websockets.connect(server_url) as ws:
                     await ws.send(json.dumps(payload))
-                    # await ws.recv()
                 break
             except ConnectionRefusedError:
                 continue

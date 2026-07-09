@@ -18,22 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import json
+from typing import Union
+
 import launch
-from launch.some_substitutions_type import SomeSubstitutionsType
 from launch import LaunchContext, Substitution
 from launch.actions import OpaqueCoroutine
+from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.utilities import normalize_to_list_of_substitutions
-from typing import Mapping, Union, Any
 
-import asyncio
-import json
 import websockets
 
 
 class ChangeGameControllerTeamName(OpaqueCoroutine):
-    """Action that sends config delta commands to the GC API"""
+    """Action that sends config delta commands to the GC API."""
 
-    def __init__(self, color: Union[Substitution, str], name: Union[Substitution, str], gc_address: SomeSubstitutionsType) -> None:
+    def __init__(self, color: Union[Substitution, str], name: Union[Substitution, str],
+                 gc_address: SomeSubstitutionsType) -> None:
         """Initialize the action."""
         super().__init__(coroutine=self.my_coroutine)
         self.__color = color
@@ -55,7 +56,7 @@ class ChangeGameControllerTeamName(OpaqueCoroutine):
             team_name = self.__team_name
 
         launch.logging.get_logger().info(f'Color: {color}   Name: {team_name}')
-        
+
         await self.send_json_payload(gc_address, color, team_name)
 
     async def send_json_payload(self, address: str, color: str, name: str):
@@ -75,7 +76,6 @@ class ChangeGameControllerTeamName(OpaqueCoroutine):
             try:
                 async with websockets.connect(server_url) as ws:
                     await ws.send(json.dumps(payload))
-                    # await ws.recv()
                 break
             except ConnectionRefusedError:
                 continue

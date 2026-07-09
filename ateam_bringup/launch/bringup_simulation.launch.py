@@ -18,15 +18,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from ateam_bringup.actions import (
+    ChangeGameControllerConfig,
+    ChangeGameControllerTeamName
+)
 from ateam_bringup.substitutions import (
     InterfaceFromAddressSubstitution,
     PackageLaunchFileSubstitution
 )
+
 import launch
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, GroupAction
-from launch.conditions import IfCondition, UnlessCondition
+from launch.actions import (
+    DeclareLaunchArgument,
+    GroupAction,
+    IncludeLaunchDescription
+)
+from launch.conditions import IfCondition
 from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+
 from launch_ros.actions import Node
 from ateam_bringup.actions import ChangeGameControllerTeamName, ChangeGameControllerConfig
 
@@ -36,11 +46,11 @@ def generate_launch_description():
         DeclareLaunchArgument('start_sim', default_value='True'),
         DeclareLaunchArgument('start_gc', default_value='True'),
         DeclareLaunchArgument('start_ui', default_value='True'),
+        DeclareLaunchArgument('start_kenobi', default_value='True'),
         DeclareLaunchArgument('headless_sim', default_value='True'),
         DeclareLaunchArgument('sim_ip', default_value='127.0.0.1'),
         DeclareLaunchArgument('gc_ip', default_value='172.17.0.2'),
         DeclareLaunchArgument('team_name', default_value='A-Team'),
-        DeclareLaunchArgument('no_kenobi', default_value='False'),
         DeclareLaunchArgument('blue_team', default_value='A-Team'),
         DeclareLaunchArgument('yellow_team', default_value='RoboJackets'),
 
@@ -65,9 +75,11 @@ def generate_launch_description():
                     'autoContinue': False
                 }),
                 ChangeGameControllerTeamName(
-                    gc_address='172.17.0.2', color='blue', name=LaunchConfiguration('blue_team')),
+                    gc_address='172.17.0.2', color='blue',
+                    name=LaunchConfiguration('blue_team')),
                 ChangeGameControllerTeamName(
-                    gc_address='172.17.0.2', color='yellow', name=LaunchConfiguration('yellow_team')),
+                    gc_address='172.17.0.2', color='yellow',
+                    name=LaunchConfiguration('yellow_team')),
 
             ],
             condition=IfCondition(LaunchConfiguration('start_gc'))
@@ -78,9 +90,13 @@ def generate_launch_description():
                 PackageLaunchFileSubstitution('ateam_bringup',
                                               'league_bridges.launch.xml')),
             launch_arguments={
-                'gc_net_interface_address': InterfaceFromAddressSubstitution(LaunchConfiguration('gc_ip')),
+                'gc_net_interface_address':
+                    InterfaceFromAddressSubstitution(
+                        LaunchConfiguration('gc_ip')),
                 'gc_ip_address': LaunchConfiguration('gc_ip'),
-                'vision_net_interface_address': InterfaceFromAddressSubstitution(LaunchConfiguration('sim_ip')),
+                'vision_net_interface_address':
+                    InterfaceFromAddressSubstitution(
+                        LaunchConfiguration('sim_ip')),
                 'vision_port': '10020',
                 'team_name': LaunchConfiguration('team_name')
             }.items()
@@ -126,6 +142,6 @@ def generate_launch_description():
                     'ateam_bringup', 'kenobi.launch.xml'
                 )
             ),
-            condition=UnlessCondition(LaunchConfiguration('no_kenobi'))
+            condition=IfCondition(LaunchConfiguration('start_kenobi'))
         ),
     ])
