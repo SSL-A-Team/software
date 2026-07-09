@@ -35,7 +35,7 @@ namespace ateam_path_planning
 struct ObstacleTrajectory
 {
   std::vector<ateam_geometry::Point> points;
-  double time_step;
+  double time_step = 0.1;
 };
 
 struct Obstacle

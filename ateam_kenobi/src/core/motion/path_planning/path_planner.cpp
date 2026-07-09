@@ -67,10 +67,10 @@ void PathPlanner::Execute(
   std::vector<ateam_path_planning::Obstacle> global_obstacles;
   for(const auto & robot : world.their_robots) {
     if(robot.visible) {
-      global_obstacles.push_back(ateam_path_planning::Obstacle{
-          .shape = ateam_geometry::makeDisk(robot.pos, kRobotRadius),
-          .expected_motion = robot.vel
-      });
+      ateam_path_planning::Obstacle obstacle{};
+      obstacle.shape = ateam_geometry::makeDisk(robot.pos, kRobotRadius);
+      obstacle.expected_motion = robot.vel;
+      global_obstacles.push_back(obstacle);
     }
   }
 
@@ -109,10 +109,9 @@ void PathPlanner::UnpackTargets(
 
     std::transform(target.obstacles.begin(), target.obstacles.end(),
         std::back_inserter(per_bot_obstacles[target.robot_id]), [](const auto & o){
-        return ateam_path_planning::Obstacle {
-        .shape = o,
-        .expected_motion = {}
-        };
+        ateam_path_planning::Obstacle obstacle{};
+        obstacle.shape = o;
+        return obstacle;
     });
 
     if(target.planner_options.avoid_ball) {

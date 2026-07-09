@@ -199,7 +199,8 @@ void PlaySelector::loadFromFile(const std::filesystem::path & path)
 }
 
 
-std::string PlaySelector::exportDefinition() const {
+std::string PlaySelector::exportDefinition() const
+{
   nlohmann::json data;
   auto plays_arr = nlohmann::json::array();
 
@@ -214,7 +215,8 @@ std::string PlaySelector::exportDefinition() const {
   return data.dump();
 }
 
-void PlaySelector::importDefinition(const std::string & definition) {
+void PlaySelector::importDefinition(const std::string & definition)
+{
   auto data = nlohmann::json::parse(definition);
 
   const auto & json_plays = data["plays"];

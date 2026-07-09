@@ -30,7 +30,7 @@ namespace ateam_kenobi::defense_area_enforcement
 {
 
 /**
- * @brief Prevents sending motion commands that would encroach on defense areaas.
+ * @brief Prevents sending motion commands that would encroach on defense areas.
  *
  * Any command that would cause encroachment is replaced with a 0,0 local velocity command.
  *
@@ -55,7 +55,8 @@ bool IsRobotEscapingDefenseArea(
   const ateam_geometry::Point & new_position,
   const ateam_geometry::Rectangle & defense_area);
 
-bool IsRobotDestinationOutsideDefenseArea(const motion::MotionCommand & command,
+bool IsRobotDestinationOutsideDefenseArea(
+  const motion::MotionCommand & command,
   const ateam_geometry::Rectangle & defense_area);
 
 bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command);

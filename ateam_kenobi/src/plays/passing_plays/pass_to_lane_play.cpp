@@ -58,8 +58,6 @@ stp::PlayScore PassToLanePlay::getScore(const World & world)
     return stp::PlayScore::NaN();
   }
 
-  
-
   if (getCompletionState(world) == stp::PlayCompletionState::Busy) {
     return cached_score_;
   }

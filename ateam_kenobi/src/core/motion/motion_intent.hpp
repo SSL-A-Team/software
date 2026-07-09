@@ -36,12 +36,12 @@ namespace ateam_kenobi::motion
 template<typename T>
 concept has_planner_options = requires(T intent) {
   intent.planner_options;
-};
+};  // NOLINT(readability/braces)
 
 template<typename T>
 concept has_limits = requires(T intent) {
   intent.limits;
-};
+};  // NOLINT(readability/braces)
 
 enum class Frame
 {
