@@ -29,8 +29,8 @@
 #include "core/play_helpers/window_evaluation.hpp"
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
-#include "core/path_planning/obstacles.hpp"
-#include "core/path_planning/escape_velocity.hpp"
+#include "core/motion/path_planning/obstacles.hpp"
+#include "core/motion/escape_velocity.hpp"
 #include "stop_helpers.hpp"
 
 namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;

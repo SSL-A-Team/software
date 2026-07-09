@@ -30,8 +30,8 @@
 #include "core/play_helpers/window_evaluation.hpp"
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
-#include "core/path_planning/obstacles.hpp"
-#include "core/path_planning/escape_velocity.hpp"
+#include "core/motion/path_planning/obstacles.hpp"
+#include "core/motion/escape_velocity.hpp"
 #include "stop_helpers.hpp"
 
 namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;
@@ -104,7 +104,7 @@ void DefensiveStopPlay::runPrepBot(
   const auto target_position = world.ball.pos +
     (kPrepBotDistFromBall * ateam_geometry::normalize(our_goal_center - world.ball.pos));
 
-  if (!path_planning::IsPointInBounds(target_position, world)) {
+  if (!motion::path_planning::IsPointInBounds(target_position, world)) {
     return;
   }
 

@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,14 +19,14 @@
 // THE SOFTWARE.
 
 
-#ifndef CORE__PATH_PLANNING__OBSTACLES_HPP_
-#define CORE__PATH_PLANNING__OBSTACLES_HPP_
+#ifndef CORE__MOTION__PATH_PLANNING__OBSTACLES_HPP_
+#define CORE__MOTION__PATH_PLANNING__OBSTACLES_HPP_
 
 #include <vector>
 #include <ateam_geometry/any_shape.hpp>
 #include "core/types/state_types.hpp"
 
-namespace ateam_kenobi::path_planning
+namespace ateam_kenobi::motion::path_planning
 {
 
 std::vector<ateam_geometry::AnyShape> GetDefaultObstacles(const World & world);
@@ -61,6 +61,6 @@ bool IsPointInBounds(
   const ateam_geometry::Point & state, const World & world,
   const double bounds_offset = 0.0);
 
-}  // namespace ateam_kenobi::path_planning
+}  // namespace ateam_kenobi::motion::path_planning
 
-#endif  // CORE__PATH_PLANNING__OBSTACLES_HPP_
+#endif  // CORE__MOTION__PATH_PLANNING__OBSTACLES_HPP_

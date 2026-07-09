@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
+#include <ateam_common/robot_constants.hpp>
 
 namespace ateam_kenobi::visualization
 {
@@ -276,6 +277,39 @@ void Overlays::drawHeatmap(
   msg.heatmap_resolution_height = resolution_height;
   msg.heatmap_alpha = {alpha};
   msg.heatmap_data = data;
+  addOverlay(msg);
+}
+
+void Overlays::drawOctagon(
+  const std::string & name, const ateam_geometry::Point & center,
+  const double width, const std::string & stroke_color, const std::string & fill_color,
+  const uint8_t stroke_width, const uint32_t lifetime)
+{
+  std::vector<ateam_geometry::Point> points;
+  const auto radius = width / (2 * std::cos(M_PI / 8));
+  std::generate_n(std::back_inserter(points), 8, [angle = M_PI / 8, radius, &center]() mutable{
+      ateam_geometry::Vector v{std::cos(angle) * radius, std::sin(angle) * radius};
+      const auto p = center + v;
+      angle += M_PI_4;
+      return p;
+  });
+  drawPolygon(name, {points.begin(), points.end()}, stroke_color, fill_color, stroke_width,
+      lifetime);
+}
+
+void Overlays::drawStopsign(const std::string & name, const Robot & bot, const std::string & color)
+{
+  drawOctagon(name, bot.pos, kRobotDiameter * 1.2, "#00000000", color);
+  overlay_array_->overlays.back().depth = 0;
+}
+
+
+void Overlays::clearItem(const std::string & name)
+{
+  ateam_msgs::msg::Overlay msg;
+  msg.ns = ns_;
+  msg.name = name;
+  msg.command = ateam_msgs::msg::Overlay::REMOVE;
   addOverlay(msg);
 }
 

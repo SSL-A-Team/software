@@ -45,7 +45,7 @@ struct RobotCommand
   KickState kick = KickState::Arm;
   double kick_speed = 0.0;
 
-  double dribbler_speed = 0.0;
+  double dribbler_setpoint = 0.0;
 };
 
 }  // namespace ateam_kenobi

@@ -339,7 +339,7 @@ void OurBallPlacementPlay::runExtracting(
   const bool should_dribble = extract_robot.breakbeam_ball_detected_filtered ||
     ateam_geometry::norm(robot_to_ball) < 0.5;
   if (should_dribble) {
-    motion_command.dribbler_speed = 300;
+    motion_command.dribbler_setpoint = 300;
   }
 
   motion_commands[extract_robot.id] = motion_command;

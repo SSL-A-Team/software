@@ -26,7 +26,8 @@
 #include <utility>
 #include <vector>
 #include <rclcpp/logger.hpp>
-#include "core/path_planning/path_planner.hpp"
+#include "path_planning/path_planner.hpp"
+#include "path_planning/path_planning_target.hpp"
 #include "core/visualization/overlays.hpp"
 #include "motion_intent.hpp"
 #include "motion_command.hpp"
@@ -46,29 +47,10 @@ public:
     visualization::Overlays & overlays, const World & world);
 
 private:
-  struct PathPlanningTarget
-  {
-    int robot_id;
-    ateam_geometry::Point position;
-    double heading;
-    path_planning::PlannerOptions planner_options;
-    std::vector<ateam_geometry::AnyShape> obstacles;
-    bool enable_escape_velocities = true;
-    Limits limits;
-  };
-
   rclcpp::Logger logger_;
-  std::array<path_planning::PathPlanner, 16> planners_;
+  path_planning::PathPlanner planner_;
   std::array<PID, 16> heading_controllers_;
-  std::vector<PathPlanningTarget> path_planning_targets_;
-
-  void ExecutePathPlanningTargets(
-    std::array<std::optional<MotionCommand>, 16> & commands,
-    visualization::Overlays & overlays, const World & world);
-
-  std::pair<size_t, ateam_geometry::Point> ProjectRobotOnPath(
-    const path_planning::Path & path,
-    const Robot & robot);
+  std::vector<path_planning::PathPlanningTarget> path_planning_targets_;
 
   std::optional<MotionCommand> ExecuteIntent(
     const intents::None & intent, const Robot & robot,
@@ -96,6 +78,15 @@ private:
     visualization::Overlays & overlays, const World & world);
   std::optional<MotionCommand> ExecuteIntent(
     const intents::PivotHeading & intent, const Robot & robot,
+    visualization::Overlays & overlays, const World & world);
+  std::optional<MotionCommand> ExecuteIntent(
+    const intents::PivotPoint & intent, const Robot & robot,
+    visualization::Overlays & overlays, const World & world);
+  std::optional<MotionCommand> ExecuteIntent(
+    const intents::LineHeading & intent, const Robot & robot,
+    visualization::Overlays & overlays, const World & world);
+  std::optional<MotionCommand> ExecuteIntent(
+    const intents::LinePoint & intent, const Robot & robot,
     visualization::Overlays & overlays, const World & world);
 };
 

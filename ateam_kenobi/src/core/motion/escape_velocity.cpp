@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2026 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,9 @@
 #include "escape_velocity.hpp"
 #include <algorithm>
 #include <ateam_common/robot_constants.hpp>
-#include "obstacles.hpp"
+#include "path_planning/obstacles.hpp"
 
-namespace ateam_kenobi::path_planning
+namespace ateam_kenobi::motion
 {
 
 ateam_geometry::Vector GenerateEscapeVelocity(
@@ -109,4 +109,4 @@ std::optional<ateam_geometry::Vector> GenerateEscapeVelocity(
   return GenerateEscapeVelocity(robot, *colliding_obstacle);
 }
 
-}  // namespace ateam_kenobi::path_planning
+}  // namespace ateam_kenobi::motion

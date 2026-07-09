@@ -54,6 +54,10 @@ public:
 
   void loadFromFile(const std::filesystem::path & path);
 
+  std::string exportDefinition() const;
+
+  void importDefinition(const std::string & definition);
+
 private:
   rclcpp::Logger ros_logger_;
   std::shared_ptr<stp::Play> halt_play_;
@@ -85,7 +89,7 @@ private:
 
   stp::Play * selectRankedPlay(const World & world, std::vector<double> & scores_out);
 
-  void resetPlayIfNeeded(stp::Play * play);
+  void resetPlayIfNeeded(stp::Play * play, const World & world);
 
   void fillStateMessage(
     ateam_msgs::msg::PlaybookState & msg, std::vector<double> & scores,

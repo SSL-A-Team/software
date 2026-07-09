@@ -21,36 +21,46 @@
 #ifndef CORE__DEFENSE_AREA_ENFORCEMENT_HPP_
 #define CORE__DEFENSE_AREA_ENFORCEMENT_HPP_
 
-#include <ateam_msgs/msg/robot_motion_command.hpp>
+#include <ateam_geometry/types.hpp>
 #include "core/types/state_types.hpp"
+#include "core/motion/motion_command.hpp"
+#include "core/visualization/overlays.hpp"
 
 namespace ateam_kenobi::defense_area_enforcement
 {
 
 /**
- * @brief Prevents sending motion commands that would encroach on defense areaas
+ * @brief Prevents sending motion commands that would encroach on defense areas.
  *
- * Any velocity command that would lead to a collision with a defense area will be set to zero.
+ * Any command that would cause encroachment is replaced with a 0,0 local velocity command.
  *
  * @note Goalie is ommitted from enforcement.
  */
 void EnforceDefenseAreaKeepout(
   const World & world,
-  std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>,
-  16> & motion_commands);
+  std::array<std::optional<motion::MotionCommand>, 16> & motion_commands,
+  visualization::Overlays & overlays);
 
-bool WouldVelocityCauseCollision(
-  const World & world, const int robot_id,
-  const ateam_msgs::msg::RobotMotionCommand & motion_command);
+ateam_geometry::Point GetPredictedPosition(
+  const Robot & robot,
+  const motion::MotionCommand & command);
+
+bool IsRobotGoingDeeperIntoDefenseArea(
+  const ateam_geometry::Point & position,
+  const ateam_geometry::Point & new_position,
+  const ateam_geometry::Rectangle & defense_area);
 
 bool IsRobotEscapingDefenseArea(
   const ateam_geometry::Point & position,
   const ateam_geometry::Point & new_position,
   const ateam_geometry::Rectangle & defense_area);
 
+bool IsRobotDestinationOutsideDefenseArea(
+  const motion::MotionCommand & command,
+  const ateam_geometry::Rectangle & defense_area);
+
 bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command);
 
 }  // namespace ateam_kenobi::defense_area_enforcement
-
 
 #endif  // CORE__DEFENSE_AREA_ENFORCEMENT_HPP_

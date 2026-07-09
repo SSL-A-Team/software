@@ -116,7 +116,7 @@ stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::Playbook
     selected_play = halt_play_.get();
   }
 
-  resetPlayIfNeeded(selected_play);
+  resetPlayIfNeeded(selected_play, world);
 
   fillStateMessage(state_msg, scores, selected_play);
 
@@ -196,6 +196,53 @@ void PlaySelector::loadFromFile(const std::filesystem::path & path)
   }
 }
 
+
+std::string PlaySelector::exportDefinition() const
+{
+  nlohmann::json data;
+  auto plays_arr = nlohmann::json::array();
+
+  std::ranges::transform(plays_, std::back_inserter(plays_arr), [](const auto & play){
+      return nlohmann::json{
+      {"name", play->getName()},
+      {"enabled", play->isEnabled()}
+      };
+  });
+
+  data["plays"] = plays_arr;
+  return data.dump();
+}
+
+void PlaySelector::importDefinition(const std::string & definition)
+{
+  auto data = nlohmann::json::parse(definition);
+
+  const auto & json_plays = data["plays"];
+
+  if(!json_plays.is_array()) {
+    RCLCPP_ERROR(ros_logger_, "No 'plays' member found in playbook file.");
+    return;
+  }
+
+  for(const auto & play_settings : json_plays) {
+    const auto & name = play_settings["name"];
+    if(!name.is_string()) {
+      RCLCPP_WARN(ros_logger_, "Skipping play entry with no name.");
+      continue;
+    }
+    auto play = getPlayByName(name);
+    if(play == nullptr) {
+      RCLCPP_WARN(ros_logger_, "Could not find play with name %s. Skipping.",
+          name.get<std::string>().c_str());
+      continue;
+    }
+    const auto & enabled = play_settings["enabled"];
+    if(enabled.is_boolean()) {
+      play->setEnabled(enabled);
+    }
+  }
+}
+
 stp::Play * PlaySelector::selectOverridePlay()
 {
   if (override_play_name_.empty()) {
@@ -227,7 +274,7 @@ stp::Play * PlaySelector::selectRankedPlay(
       if (play_address == prev_play_address_) {
         // 15% bonus to previous play as hysteresis
         score_multiplier = 1.15;
-        if (play->getCompletionState() == stp::PlayCompletionState::Busy) {
+        if (play->getCompletionState(world) == stp::PlayCompletionState::Busy) {
           // +90% if previous play should not be interrupted
           score_multiplier += 0.9;
         }
@@ -266,7 +313,7 @@ stp::Play * PlaySelector::selectRankedPlay(
   return max_score.first;
 }
 
-void PlaySelector::resetPlayIfNeeded(stp::Play * play)
+void PlaySelector::resetPlayIfNeeded(stp::Play * play, const World & world)
 {
   void * play_address = static_cast<void *>(play);
   if (play_address != prev_play_address_) {
@@ -278,7 +325,7 @@ void PlaySelector::resetPlayIfNeeded(stp::Play * play)
       play->enter();
     }
     prev_play_address_ = play_address;
-  } else if (play->getCompletionState() == stp::PlayCompletionState::Done) {
+  } else if (play->getCompletionState(world) == stp::PlayCompletionState::Done) {
     play->exit();
     play->reset();
     play->enter();
