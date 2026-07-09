@@ -89,7 +89,8 @@ public:
     std::vector<GroupRecord> records,
     std::vector<std::optional<Robot>> assignments);
 
-  const std::vector<std::optional<Robot>> & GetAssignments() const {
+  const std::vector<std::optional<Robot>> & GetAssignments() const
+  {
     return assignments_;
   }
 

@@ -30,7 +30,6 @@ namespace ateam_kenobi::play_helpers
 
 PossessionResult WhoHasPossession(const World & world)
 {
-
   const ateam_geometry::Rectangle our_defense_area {
     -1 * (world.field.field_length / 2.0),
     -((world.field.defense_area_width / 2.0) + kRobotRadius / 2),
@@ -64,7 +63,8 @@ PossessionResult WhoHasPossession(const World & world)
 
     const double angle = ateam_geometry::ToHeading(ball_pos - robot.pos);
     if (distance <= possession_threshold &&
-      abs(angles::shortest_angular_distance(angle, robot.theta)) < possession_angle) {
+      abs(angles::shortest_angular_distance(angle, robot.theta)) < possession_angle)
+    {
       we_have_control_of_ball = true;
     }
   }
@@ -78,7 +78,8 @@ PossessionResult WhoHasPossession(const World & world)
 
     const double angle = ateam_geometry::ToHeading(ball_pos - robot.pos);
     if (distance <= possession_threshold &&
-      abs(angles::shortest_angular_distance(angle, robot.theta)) < possession_angle) {
+      abs(angles::shortest_angular_distance(angle, robot.theta)) < possession_angle)
+    {
       they_have_control_of_ball = true;
     }
   }

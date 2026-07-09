@@ -75,7 +75,7 @@ stp::PlayScore PassToSegmentPlay::getScore(const World & world)
   return (pass_chance_multiplier * goal_chance_multiplier * stp::PlayScore::Max()) * FACTOR;
 }
 
-stp::PlayCompletionState PassToSegmentPlay::getCompletionState()
+stp::PlayCompletionState PassToSegmentPlay::getCompletionState(const World &)
 {
   if (!started_) {
     return stp::PlayCompletionState::NotApplicable;

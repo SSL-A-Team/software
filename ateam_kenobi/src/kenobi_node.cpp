@@ -31,6 +31,8 @@
 #include <ateam_msgs/msg/game_state_world.hpp>
 #include <ateam_msgs/srv/set_override_play.hpp>
 #include <ateam_msgs/srv/set_play_enabled.hpp>
+#include <ateam_msgs/srv/import_playbook.hpp>
+#include <ateam_msgs/srv/export_playbook.hpp>
 #include <ateam_msgs/msg/playbook_state.hpp>
 #include <ateam_msgs/msg/kenobi_status.hpp>
 #include <ateam_common/cache_directory.hpp>
@@ -43,7 +45,6 @@
 #include "core/types/state_types.hpp"
 #include "core/play_selector.hpp"
 #include "core/in_play_eval.hpp"
-#include "core/double_touch_eval.hpp"
 #include "core/ballsense_emulator.hpp"
 #include "core/motion/frame_conversions.hpp"
 #include "core/motion/motion_executor.hpp"
@@ -91,6 +92,14 @@ public:
         &KenobiNode::set_play_enabled_callback, this, std::placeholders::_1,
         std::placeholders::_2));
 
+    import_playbook_service_ = create_service<ateam_msgs::srv::ImportPlaybook>("~/import_playbook",
+        std::bind(&KenobiNode::import_playbook_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
+    export_playbook_service_ = create_service<ateam_msgs::srv::ExportPlaybook>("~/export_playbook",
+        std::bind(&KenobiNode::export_playbook_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
     playbook_state_publisher_ = create_publisher<ateam_msgs::msg::PlaybookState>(
       "~/playbook_state",
       rclcpp::SystemDefaultsQoS());
@@ -126,7 +135,6 @@ public:
 private:
   PlaySelector play_selector_;
   InPlayEval in_play_eval_;
-  DoubleTouchEval double_touch_eval_;
   BallSenseEmulator ballsense_emulator_;
   std::vector<uint8_t> heatmap_render_buffer_;
   JoystickEnforcer joystick_enforcer_;
@@ -139,6 +147,8 @@ private:
     16> robot_commands_publishers_;
   rclcpp::Service<ateam_msgs::srv::SetOverridePlay>::SharedPtr override_service_;
   rclcpp::Service<ateam_msgs::srv::SetPlayEnabled>::SharedPtr play_enabled_service_;
+  rclcpp::Service<ateam_msgs::srv::ImportPlaybook>::SharedPtr import_playbook_service_;
+  rclcpp::Service<ateam_msgs::srv::ExportPlaybook>::SharedPtr export_playbook_service_;
   rclcpp::Publisher<ateam_msgs::msg::PlaybookState>::SharedPtr playbook_state_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::KenobiStatus>::SharedPtr status_publisher_;
   rclcpp::Subscription<World>::SharedPtr world_subscription_;
@@ -180,6 +190,30 @@ private:
     response->success = true;
   }
 
+  void import_playbook_callback(
+    const ateam_msgs::srv::ImportPlaybook::Request::SharedPtr request,
+    ateam_msgs::srv::ImportPlaybook::Response::SharedPtr response)
+  {
+    try {
+      play_selector_.importDefinition(request->playbook_definition);
+      response->success = true;
+    } catch (const std::exception &) {
+      response->success = false;
+    }
+  }
+
+  void export_playbook_callback(
+    const ateam_msgs::srv::ExportPlaybook::Request::SharedPtr,
+    ateam_msgs::srv::ExportPlaybook::Response::SharedPtr response)
+  {
+    try {
+      response->playbook_definition = play_selector_.exportDefinition();
+      response->success = true;
+    } catch (const std::exception &) {
+      response->success = false;
+    }
+  }
+
   void WorldCallback(const ateam_game_state::World & world)
   {
     ateam_msgs::msg::KenobiStatus status_msg;
@@ -187,8 +221,6 @@ private:
     status_publisher_->publish(status_msg);
 
     auto motion_commands = runPlayFrame(world);
-
-    defense_area_enforcement::EnforceDefenseAreaKeepout(world, motion_commands);
 
     joystick_enforcer_.RemoveCommandForJoystickBot(motion_commands);
 
@@ -218,21 +250,31 @@ private:
           return std::nullopt;
         }
       });
-    const auto motion_commands = motion_executor_.RunFrame(motion_intents, overlays_, world);
+
+    auto motion_commands = motion_executor_.RunFrame(motion_intents, overlays_, world);
+
+    defense_area_enforcement::EnforceDefenseAreaKeepout(world, motion_commands, overlays_);
 
     std::array<std::optional<ateam_msgs::msg::RobotMotionCommand>, 16> ros_commands;
     for(auto id = 0ul; id < commands.size(); ++id) {
       auto & maybe_cmd = commands[id];
       auto & maybe_motion_cmd = motion_commands[id];
-      if (!maybe_cmd || !maybe_motion_cmd) {
+      if (!maybe_cmd) {
         ros_commands[id] = std::nullopt;
       } else {
         const auto & cmd = maybe_cmd.value();
-        const auto & motion_cmd = maybe_motion_cmd.value();
         auto & ros_cmd = ros_commands[id].emplace();
-        ros_cmd.dribbler_setpoint = cmd.dribbler_speed;
+
+        ros_cmd.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_CURRENT;
+        ros_cmd.dribbler_setpoint = cmd.dribbler_setpoint;
         ros_cmd.kick_request = static_cast<uint8_t>(cmd.kick);
         ros_cmd.kick_speed = cmd.kick_speed;
+
+        if (!maybe_motion_cmd) {
+          continue;
+        }
+
+        const auto & motion_cmd = maybe_motion_cmd.value();
         ros_cmd.body_control_mode = static_cast<uint8_t>(motion_cmd.control_mode);
         ros_cmd.pose.x = motion_cmd.pose.x;
         ros_cmd.pose.y = motion_cmd.pose.y;
@@ -247,7 +289,36 @@ private:
         ros_cmd.limit_vel_angular = motion_cmd.limit_vel_angular;
         ros_cmd.limit_acc_linear = motion_cmd.limit_acc_linear;
         ros_cmd.limit_acc_angular = motion_cmd.limit_acc_angular;
+        ros_cmd.pivot_target_x = motion_cmd.pivot_target_x;
+        ros_cmd.pivot_target_y = motion_cmd.pivot_target_y;
+        ros_cmd.pivot_global_theta = motion_cmd.pivot_global_theta;
+        ros_cmd.pivot_max_angular_vel = motion_cmd.pivot_max_angular_vel;
+        ros_cmd.pivot_max_angular_acc = motion_cmd.pivot_max_angular_acc;
+        ros_cmd.pivot_orbit_radius = motion_cmd.pivot_orbit_radius;
+        ros_cmd.pivot_inset_angle = motion_cmd.pivot_inset_angle;
+        ros_cmd.pivot_direction = motion_cmd.pivot_direction;
+        ros_cmd.pivot_compute_inset_angle = motion_cmd.pivot_commpute_inset_angle;
+        ros_cmd.line_global_theta = motion_cmd.line_global_theta;
+        ros_cmd.line_target_x = motion_cmd.line_target_x;
+        ros_cmd.line_target_y = motion_cmd.line_target_y;
+        ros_cmd.line_start_x = motion_cmd.line_start_x;
+        ros_cmd.line_start_y = motion_cmd.line_start_y;
+        ros_cmd.line_dir_x = motion_cmd.line_dir_x;
+        ros_cmd.line_dir_y = motion_cmd.line_dir_y;
+        ros_cmd.line_velocity = motion_cmd.line_velocity;
+        ros_cmd.line_max_vel_colinear = motion_cmd.line_max_vel_colinear;
+        ros_cmd.line_max_vel_perp = motion_cmd.line_max_vel_perp;
+        ros_cmd.line_max_vel_angular = motion_cmd.line_max_vel_angular;
+        ros_cmd.line_max_accel_colinear = motion_cmd.line_max_accel_colinear;
+        ros_cmd.line_max_accel_perp = motion_cmd.line_max_accel_perp;
+        ros_cmd.line_max_accel_angular = motion_cmd.line_max_accel_angular;
+        ros_cmd.line_colinear_start_thresh = motion_cmd.line_colinear_start_thresh;
       }
+    }
+
+    if(world.double_touch_forbidden_id_.has_value()) {
+      overlays_.drawStopsign("double_touch_marker",
+          world.our_robots[*world.double_touch_forbidden_id_], "DarKRed");
     }
 
     overlays_.merge(play->getOverlays());

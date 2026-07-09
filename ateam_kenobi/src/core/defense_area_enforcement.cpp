@@ -96,7 +96,7 @@ ateam_geometry::Point GetPredictedPosition(
 {
   try {
     constexpr double lookahead = 0.5;
-    using namespace ateam_controls_cpp::predict;
+    using namespace ateam_controls_cpp::predict;  // NOLINT(build/namespaces)
     switch(command.control_mode) {
       case motion::ControlMode::Off:
         return PositionAtT(robot, modes::Off{}, lookahead);
@@ -162,7 +162,8 @@ bool IsRobotEscapingDefenseArea(
   return CGAL::compare_distance_to_point(area_center, position, new_position) == CGAL::SMALLER;
 }
 
-bool IsRobotDestinationOutsideDefenseArea(const motion::MotionCommand & command,
+bool IsRobotDestinationOutsideDefenseArea(
+  const motion::MotionCommand & command,
   const ateam_geometry::Rectangle & defense_area)
 {
   if(command.control_mode == motion::ControlMode::GlobalPosition) {

@@ -105,7 +105,7 @@ RobotCommand PivotKick::Pivot(const Robot & robot)
 
   RobotCommand command;
   command.motion_intent = intent;
-  command.dribbler_speed = kDefaultDribblerSetpoint;
+  command.dribbler_setpoint = kDefaultDribblerSetpoint;
 
   return command;
 }
@@ -121,7 +121,7 @@ RobotCommand PivotKick::KickBall(const Robot & robot)
 
   command.motion_intent = intent;
 
-  command.dribbler_speed = kDefaultDribblerSetpoint;
+  command.dribbler_setpoint = kDefaultDribblerSetpoint;
 
   command.kick_speed = GetKickSpeed();
   if (IsAllowedToKick()) {

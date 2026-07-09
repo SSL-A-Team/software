@@ -55,7 +55,8 @@ bool IsRobotEscapingDefenseArea(
   const ateam_geometry::Point & new_position,
   const ateam_geometry::Rectangle & defense_area);
 
-bool IsRobotDestinationOutsideDefenseArea(const motion::MotionCommand & command,
+bool IsRobotDestinationOutsideDefenseArea(
+  const motion::MotionCommand & command,
   const ateam_geometry::Rectangle & defense_area);
 
 bool IsDefenseAreaNavigationAllowed(const ateam_common::GameCommand & command);
