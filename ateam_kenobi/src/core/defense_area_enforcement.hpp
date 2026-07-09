@@ -30,7 +30,7 @@ namespace ateam_kenobi::defense_area_enforcement
 {
 
 /**
- * @brief Prevents sending motion commands that would encroach on defense areaas.
+ * @brief Prevents sending motion commands that would encroach on defense areas.
  *
  * Any command that would cause encroachment is replaced with a 0,0 local velocity command.
  *
