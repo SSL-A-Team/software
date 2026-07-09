@@ -66,6 +66,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<TheirKickoffPlay>(stp_options);
   addPlay<TheirPenaltyPlay>(stp_options);
   addPlay<DefensePlay>(stp_options);
+  addPlay<DefenseClearPlay>(stp_options);
   addPlay<ExtractPlay>(stp_options);
   addPlay<TrianglePassPlay>(stp_options);
   addPlay<WaypointsPlay>(stp_options);
@@ -92,6 +93,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<TestPassPlay>(stp_options);
   addPlay<TestPivotPlay>(stp_options);
   addPlay<DefendersOnlyPlay>(stp_options);
+  addPlay<SamplePassPlay>(stp_options);
 }
 
 stp::Play * PlaySelector::getPlay(const World & world, ateam_msgs::msg::PlaybookState & state_msg)

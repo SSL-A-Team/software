@@ -102,18 +102,18 @@ std::array<std::optional<RobotCommand>, 16> OurPenaltyPlay::runFrame(
     motion_commands[kicking_robot.id] = kick_skill_.RunFrame(world, kicking_robot);
   }
 
-  ateam_geometry::Point pattern_point(kRobotDiameter - (world.field.field_length / 2.0),
+  ateam_geometry::Point pattern_point(-1 * ((world.field.field_length / 2.0) - kRobotDiameter),
     kRobotDiameter - (world.field.field_width / 2.0));
-  ateam_geometry::Vector pattern_step(kRobotDiameter + 0.2, 0.0);
+  ateam_geometry::Vector pattern_step((kRobotDiameter + 0.2), 0.0);
   std::vector<ateam_geometry::Point> target_points;
   std::generate_n(std::back_inserter(target_points), available_robots.size(),
-    [pos = pattern_point, step = pattern_step, &world]() mutable {
+    [pos = pattern_point, step = pattern_step, &world, &pattern_point]() mutable {
       auto current = pos;
       pos = pos + step;
       if (pos.x() > (world.field.field_length / 2.0) - kRobotDiameter) {
         pos = ateam_geometry::Point(
-          kRobotDiameter - (world.field.field_length / 2.0),
-          pos.y() + step.y());
+          pattern_point.x(),
+          pattern_point.y() + step.y());
       }
       return current;
     });
@@ -123,7 +123,7 @@ std::array<std::optional<RobotCommand>, 16> OurPenaltyPlay::runFrame(
     if(!maybe_cmd) {continue;}
     std::visit([](auto & intent){
         using IntentType = std::decay_t<decltype(intent)>;
-        if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+        if constexpr (motion::has_limits<IntentType>) {
           intent.limits.linear_velocity = 1.5;
         }
     }, maybe_cmd->motion_intent);

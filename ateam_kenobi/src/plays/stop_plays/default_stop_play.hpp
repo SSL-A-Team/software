@@ -22,6 +22,7 @@
 #define PLAYS__STOP_PLAYS__DEFAULT_STOP_PLAY_HPP_
 
 #include "core/stp/play.hpp"
+#include "tactics/standard_defense.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -36,6 +37,8 @@ public:
 
   std::array<std::optional<RobotCommand>,
     16> runFrame(const World & world) override;
+
+  tactics::StandardDefense defense_tactic_;
 };
 }  // namespace ateam_kenobi::plays
 

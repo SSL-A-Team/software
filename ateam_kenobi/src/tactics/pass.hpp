@@ -53,6 +53,8 @@ public:
   void setTarget(ateam_geometry::Point target)
   {
     target_ = target;
+    kick_.SetTargetPoint(target);
+    receiver_.setTarget(target);
   }
 
   void setKickSpeed(double speed)

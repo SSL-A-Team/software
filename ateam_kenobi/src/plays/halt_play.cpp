@@ -40,7 +40,7 @@ stp::PlayScore HaltPlay::getScore(const World & world)
     case ateam_common::GameCommand::GoalTheirs:
       return stp::PlayScore::Max();
     default:
-      return stp::PlayScore::Min();
+      return stp::PlayScore::NaN();
   }
 }
 

@@ -38,7 +38,8 @@ namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;
 namespace ateam_kenobi::plays
 {
 DefaultStopPlay::DefaultStopPlay(stp::Options stp_options)
-: stp::Play(kPlayName, stp_options)
+: stp::Play(kPlayName, stp_options),
+  defense_tactic_(createChild<tactics::StandardDefense>("defense"))
 {
 }
 
@@ -55,14 +56,28 @@ stp::PlayScore DefaultStopPlay::getScore(const World & world)
 std::array<std::optional<RobotCommand>, 16> DefaultStopPlay::runFrame(
   const World & world)
 {
+  std::array<std::optional<RobotCommand>, 16> motion_commands;
+
+  auto available_robots = play_helpers::getAvailableRobots(world);
+  play_helpers::removeGoalie(available_robots, world);
+
+  play_helpers::GroupAssignmentSet groups;
+  std::vector<int> disallowed_strikers;
+  if (world.double_touch_forbidden_id_) {
+    disallowed_strikers.push_back(*world.double_touch_forbidden_id_);
+  }
+  groups.AddGroup("defense", defense_tactic_.getAssignmentPoints(world));
+  const auto assignments = play_helpers::assignGroups(available_robots, groups);
+
+  defense_tactic_.runFrame(world, assignments.GetGroupFilledAssignmentsOrEmpty("defense"),
+      motion_commands);
+
   const auto added_obstacles = helpers::getAddedObstacles(world);
 
   helpers::drawObstacles(world, added_obstacles, getOverlays(), getLogger());
 
-  std::array<std::optional<RobotCommand>, 16> motion_commands;
-
   helpers::moveBotsTooCloseToBall(world, added_obstacles, motion_commands, getOverlays(),
-      getPlayInfo());
+      getPlayInfo(), true);
 
   helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo());
 
@@ -76,7 +91,7 @@ std::array<std::optional<RobotCommand>, 16> DefaultStopPlay::runFrame(
     if(!maybe_cmd) {continue;}
     std::visit([](auto & intent){
         using IntentType = std::decay_t<decltype(intent)>;
-        if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+        if constexpr (motion::has_limits<IntentType>) {
           intent.limits.linear_velocity = 1.0;
         }
     }, maybe_cmd->motion_intent);

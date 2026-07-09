@@ -35,6 +35,12 @@ public:
     Chip
   };
 
+  enum class PreparationPrecision
+  {
+    ol_reliable,
+    cowabunga
+  };
+
   /**
    * Controls whether the skill kicks automatically when it's ready or waits for
    * @c AllowKicking to be called.
@@ -68,6 +74,7 @@ public:
   double GetKickSpeed() const;
 
   void SetKickChip(KickChip kc);
+  void SetPreparationPrecision(PreparationPrecision pp);
 
   virtual bool IsReady() const = 0;
 
@@ -75,12 +82,14 @@ protected:
   bool IsAllowedToKick() const;
 
   KickChip KickOrChip() const;
+  PreparationPrecision GetPreparationPrecision() const;
 
 private:
   WaitType wait_type_ = WaitType::KickWhenReady;
   bool kicking_allowed_ = true;
   double kick_speed_ = 4.0;
   KickChip kick_chip_ = KickChip::Kick;
+  PreparationPrecision preparation_precision_ = PreparationPrecision::cowabunga;
 };
 
 }  // namespace ateam_kenobi::skills

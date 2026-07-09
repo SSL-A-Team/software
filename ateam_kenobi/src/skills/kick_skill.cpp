@@ -67,6 +67,11 @@ void KickSkill::SetKickChip(KickChip kc)
   kick_chip_ = kc;
 }
 
+void KickSkill::SetPreparationPrecision(PreparationPrecision pp)
+{
+  preparation_precision_ = pp;
+}
+
 bool KickSkill::IsAllowedToKick() const
 {
   return kicking_allowed_;
@@ -76,5 +81,11 @@ KickSkill::KickChip KickSkill::KickOrChip() const
 {
   return kick_chip_;
 }
+
+KickSkill::PreparationPrecision KickSkill::GetPreparationPrecision() const
+{
+  return preparation_precision_;
+}
+
 
 }  // namespace ateam_kenobi::skills

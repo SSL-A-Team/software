@@ -50,16 +50,20 @@ private:
   skills::Dribble dribble_;
   tactics::MultiMoveTo multi_move_to_;
   ateam_geometry::Point placement_point_;
+  bool extract_pivoting_ = false;
 
-  double approach_radius_ = kRobotRadius + kBallRadius + 0.3;  // m
+  double approach_radius_ = kRobotDiameter + kBallRadius + 0.4;  // m
   ateam_geometry::Point approach_point_;
+
+  int spin_counter_ = 0;
 
   // Ball should have enough room for the robot to fit between it and the obstacle with a bit of
   // extra space
-  double ball_distance_from_obstacle_ = kRobotDiameter + kBallRadius + 0.03;
+  static constexpr double ball_distance_from_obstacle_ = kRobotDiameter + kBallRadius + 0.03;
+  static constexpr double ball_placement_good_dist_ = 0.15 - 0.03;
+  static constexpr double min_pass_distance_ = 1.5;
 
   std::optional<ateam_geometry::Vector> calculateObstacleOffset(const World & world);
-
 
   enum class State
   {
@@ -68,6 +72,7 @@ private:
     Placing,
     Done
   } state_ = State::Passing;
+  State prev_state_ = State::Passing;
 
   void runExtracting(
     const std::vector<Robot> & available_robots, const World & world,
