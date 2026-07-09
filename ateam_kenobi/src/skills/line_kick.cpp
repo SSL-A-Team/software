@@ -238,23 +238,10 @@ RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
 {
   (void) world;
 
-  // // Backup position command
-  // motion::intents::PositionFacing intent;
-  // intent.position = world.ball.pos;
-  // intent.face_target = world.ball.pos;
-  // intent.limits.linear_velocity = kick_drive_velocity;
-  // intent.limits.linear_acceleration = 1.5;
-  // intent.limits.angular_acceleration = 3.0;
-  // intent.limits.angular_velocity = 2.0;
-
-  // intent.planner_options.avoid_ball = false;
-  // intent.planner_options.use_default_obstacles = false;
-  // intent.planner_options.footprint_inflation = 0.01 - kRobotRadius;
-
   const double pp_mult = (GetPreparationPrecision() == PreparationPrecision::cowabunga) ? 2.0 : 1.0;
 
   motion::intents::LinePoint intent;
-  intent.colinear_start_thresh = pp_mult * 0.001; // This only effects the feedforward
+  intent.colinear_start_thresh = pp_mult * 0.001;  // This only effects the feedforward
   intent.face_target = target_point_;
   intent.line_direction = locked_shot_line_;
   intent.line_start = target_point_;

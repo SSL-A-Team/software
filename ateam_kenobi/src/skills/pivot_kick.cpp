@@ -48,19 +48,19 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
     return RobotCommand{};
   }
 
-  if (prev_state_ != State::Pivot){
+  if (prev_state_ != State::Pivot) {
     if (prev_state_ == State::Capture) {
-        if (!capture_.isDone()) {
-          getPlayInfo()["State"] = "Capture";
-          return Capture(world, robot);
-        }
-      }
-
-      if (!robot.breakbeam_ball_detected_filtered) {
-        prev_state_ = State::Capture;
+      if (!capture_.isDone()) {
         getPlayInfo()["State"] = "Capture";
         return Capture(world, robot);
       }
+    }
+
+    if (!robot.breakbeam_ball_detected_filtered) {
+      prev_state_ = State::Capture;
+      getPlayInfo()["State"] = "Capture";
+      return Capture(world, robot);
+    }
   }
 
   const auto robot_to_target = target_point_ - robot.pos;
@@ -102,13 +102,7 @@ RobotCommand PivotKick::Pivot(
 {
   (void)robot;
   (void)world;
-  // const auto robot_to_target = target_point_ - robot.pos;
-  // const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
 
-  // const auto ball_to_target = target_point_ - world.ball.pos;
-  // const auto ball_to_target_angle = std::atan2(ball_to_target.y(), ball_to_target.x());
-
-  // motion::intents::PivotHeading intent;
   motion::intents::PivotPoint intent;
   intent.target_x = target_point_.x();
   intent.target_y = target_point_.y();

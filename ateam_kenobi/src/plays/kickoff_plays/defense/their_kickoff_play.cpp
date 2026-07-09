@@ -27,6 +27,7 @@
 #include <ateam_geometry/intersection.hpp>
 #include "core/play_helpers/robot_assignment.hpp"
 #include "core/play_helpers/available_robots.hpp"
+#include "plays/stop_plays/stop_helpers.hpp"
 
 namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;
 namespace ateam_kenobi::plays
@@ -46,9 +47,9 @@ stp::PlayScore TheirKickoffPlay::getScore(const World & world)
   }
 
   // Run to prep
-  if (world.referee_info.next_command == ateam_common::GameCommand::PrepareKickoffTheirs
-    && world.referee_info.running_command == ateam_common::GameCommand::Stop) {
-
+  if (world.referee_info.next_command == ateam_common::GameCommand::PrepareKickoffTheirs &&
+    world.referee_info.running_command == ateam_common::GameCommand::Stop)
+  {
     return stp::PlayScore::Max();
   }
 
@@ -91,12 +92,13 @@ std::array<std::optional<RobotCommand>,
   const auto offense_assignments = assignments.GetGroupAssignments("offense");
 
   if (world.referee_info.running_command == ateam_common::GameCommand::Stop) {
+    // TODO(barulicm): find out what problem this was trying to fix
 
     // This is super hacky. Need to allow the center robot to move if
     // it is stuck up against the ball safety radius. No robots should be
     // trying to go near the ball when it is in the center so we should avoid it
     const bool need_to_avoid_ball =
-      ateam_geometry::norm(ateam_geometry::Point{0,0} - world.ball.pos) > 0.1;
+      ateam_geometry::norm(ateam_geometry::Point{0, 0} - world.ball.pos) > 0.1;
 
     const auto added_obstacles = helpers::getAddedObstacles(world);
     helpers::drawObstacles(world, added_obstacles, getOverlays(), getLogger());
@@ -105,14 +107,16 @@ std::array<std::optional<RobotCommand>,
 
     helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo(), true);
 
-    for (auto& motion_command : motion_commands) {
+    for (auto & motion_command : motion_commands) {
       if (motion_command.has_value()) {
-        if(auto intent = std::get_if<motion::intents::Position>(&motion_command.value().motion_intent);
+        if(auto intent =
+          std::get_if<motion::intents::Position>(&motion_command.value().motion_intent);
           intent != nullptr)
         {
           intent->limits.linear_velocity = 1.0;
         }
-        if(auto intent = std::get_if<motion::intents::PositionFacing>(&motion_command.value().motion_intent);
+        if(auto intent =
+          std::get_if<motion::intents::PositionFacing>(&motion_command.value().motion_intent);
           intent != nullptr)
         {
           intent->limits.linear_velocity = 1.0;

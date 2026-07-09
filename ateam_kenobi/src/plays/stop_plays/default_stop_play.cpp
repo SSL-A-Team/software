@@ -22,6 +22,7 @@
 #include <ranges>
 #include <algorithm>
 #include <limits>
+#include <vector>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_geometry/normalize.hpp>

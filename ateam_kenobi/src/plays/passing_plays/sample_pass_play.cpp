@@ -19,6 +19,10 @@
 // THE SOFTWARE.
 
 #include "sample_pass_play.hpp"
+#include <algorithm>
+#include <limits>
+#include <string>
+#include <vector>
 #include <ateam_geometry/do_intersect.hpp>
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
@@ -211,23 +215,21 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
   } else if(candidates.size() == 1) {
     receivers = {{candidates.front(), Lane::Center}};
   } else if(candidates.size() == 2) {
-    if(ateam_geometry::doIntersect(play_helpers::lanes::GetLaneBounds(world, Lane::Left),
-        world.ball.pos))
-    {
+    auto ball_is_in_lane = [&world](const auto lane){
+        return ateam_geometry::doIntersect(play_helpers::lanes::GetLaneBounds(world, lane),
+          world.ball.pos);
+      };
+    if(ball_is_in_lane(Lane::Left)) {
       receivers = {
         {candidates.front(), Lane::Center},
         {candidates.back(), Lane::Right}
       };
-    } else if(ateam_geometry::doIntersect(play_helpers::lanes::GetLaneBounds(world, Lane::Center),
-        world.ball.pos))
-    {
+    } else if(ball_is_in_lane(Lane::Center)) {
       receivers = {
         {candidates.front(), Lane::Left},
         {candidates.back(), Lane::Right}
       };
-    } else if(ateam_geometry::doIntersect(play_helpers::lanes::GetLaneBounds(world, Lane::Right),
-        world.ball.pos))
-    {
+    } else if(ball_is_in_lane(Lane::Right)) {
       receivers = {
         {candidates.front(), Lane::Left},
         {candidates.back(), Lane::Center}
@@ -364,7 +366,9 @@ std::array<std::optional<RobotCommand>, 16> SamplePassPlay::runFrame(const World
   }
 
   getPlayInfo()["locked"] = pass_locked_;
-  getPlayInfo()["hold time"] = holding_start_time_ ? std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - *holding_start_time_).count() : -1;
+  getPlayInfo()["hold time"] = holding_start_time_ ?
+    std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now() - *holding_start_time_).count() : -1;
   getPlayInfo()["best score"] = best_receiver_score;
   getPlayInfo()["kicker"] = kicker_id_ ? *kicker_id_ : -1;
   getPlayInfo()["receiver"] = receiver_id_ ? *receiver_id_ : -1;

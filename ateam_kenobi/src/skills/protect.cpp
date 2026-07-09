@@ -43,9 +43,6 @@ ateam_geometry::Point Protect::GetAssignmentPoint(const World & world)
 
 RobotCommand Protect::RunFrame(const World & world, const Robot & robot)
 {
-
-  // const auto robot_to_ball = world.ball.pos - robot.pos;
-
   // Default to blocking the path to our goal
   auto block_point = ateam_geometry::Point(-world.field.field_length / 2.0, 0.0);
 
@@ -58,13 +55,15 @@ RobotCommand Protect::RunFrame(const World & world, const Robot & robot)
     });
 
   if (!visible_opponents.empty()) {
-    const auto& opponent = visible_opponents[0];
+    const auto & opponent = visible_opponents[0];
 
     // This should probably go in a helper somewhere
-    const double projection_timestep = 0.3; // s
-    const double max_bot_proj_vel = 1.0; // m/s
-    const double clamped_bot_vel_mag = std::clamp(ateam_geometry::norm(opponent.vel), 0.0, max_bot_proj_vel);
-    const ateam_geometry::Vector clamped_bot_vel = clamped_bot_vel_mag * ateam_geometry::normalize(opponent.vel);
+    const double projection_timestep = 0.3;  // s
+    const double max_bot_proj_vel = 1.0;  // m/s
+    const double clamped_bot_vel_mag = std::clamp(ateam_geometry::norm(opponent.vel), 0.0,
+        max_bot_proj_vel);
+    const ateam_geometry::Vector clamped_bot_vel = clamped_bot_vel_mag *
+      ateam_geometry::normalize(opponent.vel);
     const auto projected_bot_pos = opponent.pos + projection_timestep * clamped_bot_vel;
 
     block_point = projected_bot_pos;

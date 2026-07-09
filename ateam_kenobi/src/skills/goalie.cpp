@@ -302,7 +302,7 @@ RobotCommand Goalie::runBlockWindow(
     };
   } else {
     intent.position = ateam_geometry::Point{
-      -world.field.field_length/2.0,
+      -world.field.field_length / 2.0,
       0.0
     };
   }

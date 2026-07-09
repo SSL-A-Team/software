@@ -67,8 +67,9 @@ void Capture::chooseState(const World & world, const Robot & robot)
 
   const auto ball_dist = ateam_geometry::norm(world.ball.pos - robot.pos);
   const bool near_ball = ball_dist < approach_radius_ + 0.01;
-  const bool facing_ball = (state_ == State::Capture && !world.ball.visible) || 
-    (angles::shortest_angular_distance(ateam_geometry::ToHeading(world.ball.pos - robot.pos), robot.theta) < heading_thresh);
+  const bool facing_ball = (state_ == State::Capture && !world.ball.visible) ||
+    (angles::shortest_angular_distance(ateam_geometry::ToHeading(world.ball.pos - robot.pos),
+      robot.theta) < heading_thresh);
   const bool vel_good = (state_ == State::Capture) || ateam_geometry::norm(robot.vel) < 0.1;
 
   const bool ready_to_capture = facing_ball && near_ball && vel_good;
@@ -78,7 +79,8 @@ void Capture::chooseState(const World & world, const Robot & robot)
   }
 
   const auto start_point = capture_start_point_.value_or(world.ball.pos);
-  const auto capture_move_distance = CGAL::approximate_sqrt(CGAL::squared_distance(start_point, world.ball.pos));
+  const auto capture_move_distance = CGAL::approximate_sqrt(CGAL::squared_distance(start_point,
+      world.ball.pos));
 
   // Don't push the ball too far, might have lost it entirely
   if(state_ == State::Capture && !world.ball.visible && ball_dist < 0.5) {
@@ -105,7 +107,8 @@ RobotCommand Capture::runMoveToBall(
   capture_line_ = robot_to_ball_vector;
 
   motion::intents::PositionFacing intent;
-  intent.position = world.ball.pos - approach_radius_ * ateam_geometry::normalize(robot_to_ball_vector);
+  intent.position = world.ball.pos - approach_radius_ *
+    ateam_geometry::normalize(robot_to_ball_vector);
   intent.face_target = world.ball.pos;
   intent.planner_options.avoid_ball = false;
 

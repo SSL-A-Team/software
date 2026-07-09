@@ -22,8 +22,10 @@
 #define PLAYS__PASSING_PLAYS__SAMPLE_PASS_PLAY_HPP_
 
 #include <chrono>
+#include <limits>
 #include <random>
 #include <tuple>
+#include <vector>
 #include <ateam_geometry/types.hpp>
 #include "core/stp/play.hpp"
 #include "tactics/standard_defense.hpp"
@@ -39,7 +41,7 @@ class SamplePassPlay : public stp::Play
 public:
   static constexpr const char * kPlayName = "SamplePassPlay";
 
-  SamplePassPlay(stp::Options stp_options);
+  explicit SamplePassPlay(stp::Options stp_options);
 
   stp::PlayScore getScore(const World & world) override;
 
@@ -95,7 +97,6 @@ private:
     const play_helpers::lanes::Lane & lane);
 
   void lockPass(const Robot & candidate, const ateam_geometry::Point & target, const World & world);
-
 };
 
 }  // namespace ateam_kenobi::plays

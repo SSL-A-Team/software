@@ -23,6 +23,9 @@
 #include <vector>
 #include "core/play_helpers/available_robots.hpp"
 #include "core/play_helpers/robot_assignment.hpp"
+#include "plays/stop_plays/stop_helpers.hpp"
+
+namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;
 
 namespace helpers = ateam_kenobi::plays::stop_plays::stop_helpers;
 
@@ -37,14 +40,13 @@ OurKickoffPrepPlay::OurKickoffPrepPlay(stp::Options stp_options)
 
 stp::PlayScore OurKickoffPrepPlay::getScore(const World & world)
 {
+  const auto should_prep_during_stop = world.referee_info.next_command.has_value() &&
+    world.referee_info.next_command.value() == ateam_common::GameCommand::PrepareKickoffOurs &&
+    world.referee_info.running_command == ateam_common::GameCommand::Stop;
 
-  // Run to prep
   if (world.referee_info.running_command == ateam_common::GameCommand::PrepareKickoffOurs) {
     return stp::PlayScore::Max();
-  // Prep in advance during stop
-  } else if (world.referee_info.next_command.has_value() &&
-    world.referee_info.next_command.value() == ateam_common::GameCommand::PrepareKickoffOurs
-    && world.referee_info.running_command == ateam_common::GameCommand::Stop) {
+  } else if (should_prep_during_stop) {
     return stp::PlayScore::Max();
   } else {
     return stp::PlayScore::NaN();
@@ -97,12 +99,13 @@ std::array<std::optional<RobotCommand>, 16> OurKickoffPrepPlay::runFrame(
   multi_move_to_.RunFrame(assignments.GetGroupAssignments("movers"), motion_commands);
 
   if (world.referee_info.running_command == ateam_common::GameCommand::Stop) {
+    // TODO(barulicm): find out what problem this was trying to fix
 
     // This is super hacky. Need to allow the center robot to move if
     // it is stuck up against the ball safety radius. No robots should be
     // trying to go near the ball when it is in the center so we should avoid it
     const bool need_to_avoid_ball =
-      ateam_geometry::norm(ateam_geometry::Point{0,0} - world.ball.pos) > 0.1;
+      ateam_geometry::norm(ateam_geometry::Point{0, 0} - world.ball.pos) > 0.1;
 
     const auto added_obstacles = helpers::getAddedObstacles(world);
     helpers::drawObstacles(world, added_obstacles, getOverlays(), getLogger());
@@ -111,14 +114,16 @@ std::array<std::optional<RobotCommand>, 16> OurKickoffPrepPlay::runFrame(
 
     helpers::moveBotsInObstacles(world, added_obstacles, motion_commands, getPlayInfo(), true);
 
-    for (auto& motion_command : motion_commands) {
+    for (auto & motion_command : motion_commands) {
       if (motion_command.has_value()) {
-        if(auto intent = std::get_if<motion::intents::Position>(&motion_command.value().motion_intent);
+        if(auto intent =
+          std::get_if<motion::intents::Position>(&motion_command.value().motion_intent);
           intent != nullptr)
         {
           intent->limits.linear_velocity = 1.0;
         }
-        if(auto intent = std::get_if<motion::intents::PositionFacing>(&motion_command.value().motion_intent);
+        if(auto intent =
+          std::get_if<motion::intents::PositionFacing>(&motion_command.value().motion_intent);
           intent != nullptr)
         {
           intent->limits.linear_velocity = 1.0;

@@ -58,7 +58,7 @@ stp::PlayScore OffensiveStopPlay::getScore(const World & world)
     case ateam_common::GameCommand::DirectFreeOurs:
       return stp::PlayScore::Max();
     case ateam_common::GameCommand::PrepareKickoffOurs:
-      return 50.0; // Give kickoff prep a chance to run
+      return 50.0;  // Give kickoff prep a chance to run
     default:
       return stp::PlayScore::Min();
   }

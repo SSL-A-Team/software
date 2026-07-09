@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "defense_clear_play.hpp"
+#include <algorithm>
 #include <vector>
 #include "core/play_helpers/possession.hpp"
 #include "core/play_helpers/available_robots.hpp"
@@ -39,7 +40,6 @@ DefenseClearPlay::DefenseClearPlay(stp::Options stp_options)
 
 stp::PlayScore DefenseClearPlay::getScore(const World & world)
 {
-
   if (!world.in_play &&
     world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
     world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
@@ -71,6 +71,9 @@ void DefenseClearPlay::reset()
 std::array<std::optional<RobotCommand>, 16> DefenseClearPlay::runFrame(
   const World & world)
 {
+  // TODO(barulicm): This function needs some attention and would benefit from prioritized
+  // assignment
+
   std::array<std::optional<RobotCommand>, 16> motion_commands;
 
   // GOALIE
@@ -109,7 +112,7 @@ std::array<std::optional<RobotCommand>, 16> DefenseClearPlay::runFrame(
       break;
   }
 
-  const auto& clearer = play_helpers::getClosestRobot(available_robots, clearer_assignment_point);
+  const auto & clearer = play_helpers::getClosestRobot(available_robots, clearer_assignment_point);
   motion_commands[clearer.id] = runClearingRobot(world, clearer, defense_points[0]);
 
   play_helpers::removeRobotWithId(available_robots, clearer.id);
@@ -171,14 +174,16 @@ std::array<std::optional<RobotCommand>, 16> DefenseClearPlay::runFrame(
   if (added_receiver) {
     const auto maybe_receiver = assignments.GetPositionAssignment("receiver");
     if (maybe_receiver.has_value()) {
-      motion_commands[maybe_receiver.value().id] = runReceivingRobot(world, maybe_receiver.value(), clear_target_point);
+      motion_commands[maybe_receiver.value().id] = runReceivingRobot(world, maybe_receiver.value(),
+          clear_target_point);
     }
   }
 
   if (added_guard) {
     const auto maybe_guard = assignments.GetPositionAssignment("guard");
     if (maybe_guard.has_value()) {
-      motion_commands[maybe_guard.value().id] = runPositionBasedRobot(world, maybe_guard.value(), guard_point);
+      motion_commands[maybe_guard.value().id] = runPositionBasedRobot(world, maybe_guard.value(),
+          guard_point);
     }
   }
 
@@ -186,19 +191,21 @@ std::array<std::optional<RobotCommand>, 16> DefenseClearPlay::runFrame(
   const auto blocker_commands =
     blockers_.runFrame(world, blockers);
   for (auto robot_ind = 0ul; robot_ind < blockers.size(); ++robot_ind) {
-    auto& motion_command = motion_commands[blockers[robot_ind].id];
+    auto & motion_command = motion_commands[blockers[robot_ind].id];
     motion_command = blocker_commands[robot_ind];
 
-    auto* intent = std::get_if<motion::intents::PositionFacing>(&motion_command.value().motion_intent);
+    auto * intent =
+      std::get_if<motion::intents::PositionFacing>(&motion_command.value().motion_intent);
     enforceKeepoutZone(world, blockers[robot_ind], intent->position);
   }
 
   return motion_commands;
 }
 
-RobotCommand DefenseClearPlay::runClearingRobot(const World & world, const Robot & robot,
-  const ateam_geometry::Point defense_point) {
-
+RobotCommand DefenseClearPlay::runClearingRobot(
+  const World & world, const Robot & robot,
+  const ateam_geometry::Point defense_point)
+{
   if (shot_type_ != ShotType::NoShot) {
     const auto kick_target = getClearTargetPoint(world);
 
@@ -237,7 +244,8 @@ RobotCommand DefenseClearPlay::runClearingRobot(const World & world, const Robot
   return command;
 }
 
-RobotCommand DefenseClearPlay::runPositionBasedRobot(const World & world, const Robot & robot,
+RobotCommand DefenseClearPlay::runPositionBasedRobot(
+  const World & world, const Robot & robot,
   const ateam_geometry::Point target_pos)
 {
   motion::intents::PositionFacing intent;
@@ -253,7 +261,8 @@ RobotCommand DefenseClearPlay::runPositionBasedRobot(const World & world, const 
   return command;
 }
 
-RobotCommand DefenseClearPlay::runReceivingRobot(const World & world, const Robot & robot,
+RobotCommand DefenseClearPlay::runReceivingRobot(
+  const World & world, const Robot & robot,
   const ateam_geometry::Point target_pos)
 {
   // Could use the pass receiver skill here
@@ -269,13 +278,14 @@ RobotCommand DefenseClearPlay::runReceivingRobot(const World & world, const Robo
   return command;
 }
 
-ateam_geometry::Point DefenseClearPlay::getClearTargetPoint(const World & world) {
+ateam_geometry::Point DefenseClearPlay::getClearTargetPoint(const World & world)
+{
   if (kicked_to_target_.has_value()) {
-    shot_type_ = ShotType::NoShot; // already kicked, just maintain defense
+    shot_type_ = ShotType::NoShot;  // already kicked, just maintain defense
     return kicked_to_target_.value();
   }
 
-  double opponent_distance = 20.0; // This is fine I guess :/
+  double opponent_distance = 20.0;  // This is fine I guess :/
 
   auto visible_opponents = play_helpers::getVisibleRobots(world.their_robots);
   std::ranges::sort(
@@ -299,15 +309,16 @@ ateam_geometry::Point DefenseClearPlay::getClearTargetPoint(const World & world)
   } else {
     shot_type_ = ShotType::DownfieldLine;
     // Shot goes straight downfield of the ball;
-    shot_center_line = ateam_geometry::Point(world.field.field_length, world.ball.pos.y()) - world.ball.pos;
+    shot_center_line = ateam_geometry::Point(world.field.field_length,
+        world.ball.pos.y()) - world.ball.pos;
   }
 
   CGAL::Aff_transformation_2<ateam_geometry::Kernel> neg_rotate(CGAL::ROTATION,
-    sin(-clear_window_angular_width_/2.0), cos(-clear_window_angular_width_/2.0));
+    sin(-clear_window_angular_width_ / 2.0), cos(-clear_window_angular_width_ / 2.0));
   const auto negative_vector = shot_center_line.transform(neg_rotate);
 
   CGAL::Aff_transformation_2<ateam_geometry::Kernel> pos_rotate(CGAL::ROTATION,
-    sin(clear_window_angular_width_/2.0), cos(clear_window_angular_width_/2.0));
+    sin(clear_window_angular_width_ / 2.0), cos(clear_window_angular_width_ / 2.0));
   const auto positive_vector = shot_center_line.transform(pos_rotate);
 
   const ateam_geometry::Segment target_seg(
@@ -317,7 +328,7 @@ ateam_geometry::Point DefenseClearPlay::getClearTargetPoint(const World & world)
   clearing_keepout_zone_ = target_seg;
 
   auto robots = play_helpers::getVisibleRobots(world.our_robots);
-  for (Robot& our_robot : robots) {
+  for (Robot & our_robot : robots) {
     // ignore robots near the theoretical target distance when checking for open shot
     if (ateam_geometry::norm(our_robot.pos - world.ball.pos) > (clear_receiver_distance_ - 0.8)) {
       play_helpers::removeRobotWithId(robots, our_robot.id);
@@ -335,7 +346,9 @@ ateam_geometry::Point DefenseClearPlay::getClearTargetPoint(const World & world)
   const auto largest_window = play_helpers::window_evaluation::getLargestWindow(windows);
 
 
-  if (largest_window && largest_window.value().squared_length() > std::pow(clear_window_min_kick_width, 2)) {
+  if (largest_window &&
+    largest_window.value().squared_length() > std::pow(clear_window_min_kick_width, 2))
+  {
     clearing_target_segment_ = *largest_window;
     const auto kick_vector = CGAL::midpoint(*largest_window) - world.ball.pos;
     return world.ball.pos + clear_receiver_distance_ * ateam_geometry::normalize(kick_vector);
@@ -350,8 +363,8 @@ ateam_geometry::Point DefenseClearPlay::getClearTargetPoint(const World & world)
   }
 }
 
-ateam_geometry::Point DefenseClearPlay::getGuardPoint(const World & world) {
-
+ateam_geometry::Point DefenseClearPlay::getGuardPoint(const World & world)
+{
   auto visible_opponents = play_helpers::getVisibleRobots(world.their_robots);
   std::ranges::sort(
     visible_opponents, [&world](const Robot & r1, const Robot & r2) {
@@ -411,48 +424,53 @@ bool DefenseClearPlay::shouldDefenseClearBall(const World & world)
   return false;
 }
 
-bool DefenseClearPlay::enforceKeepoutZone(const World & world, const Robot & robot,
-  ateam_geometry::Point & target_point) {
+bool DefenseClearPlay::enforceKeepoutZone(
+  const World & world, const Robot & robot,
+  ateam_geometry::Point & target_point)
+{
+  if (!clearing_keepout_zone_.has_value()) {
+    return false;
+  }
 
-    if (!clearing_keepout_zone_.has_value()) {
-      return false;
-    }
+  bool crosses_over_keepout = false;
 
-    bool crosses_over_keepout = false;
+  const auto shot_line = ateam_geometry::Segment(CGAL::midpoint(clearing_keepout_zone_.value()),
+      world.ball.pos);
+  const auto nearest_point = ateam_geometry::nearestPointOnSegment(shot_line, target_point);
 
-    const auto shot_line = ateam_geometry::Segment(CGAL::midpoint(clearing_keepout_zone_.value()), world.ball.pos);
-    const auto nearest_point = ateam_geometry::nearestPointOnSegment(shot_line, target_point);
-
-    auto along_track_dist = ateam_geometry::norm(nearest_point - world.ball.pos);
-    if (along_track_dist > clear_receiver_distance_) {
+  auto along_track_dist = ateam_geometry::norm(nearest_point - world.ball.pos);
+  if (along_track_dist > clear_receiver_distance_) {
       // Past the end of the keepout zone
-      return false;
-    }
+    return false;
+  }
 
-    auto cross_track_vec = target_point - nearest_point;
-    const auto cross_track_dist = ateam_geometry::norm(cross_track_vec);
+  auto cross_track_vec = target_point - nearest_point;
+  const auto cross_track_dist = ateam_geometry::norm(cross_track_vec);
 
     // Don't let the robot cross over the keepout zone
     // This check works because the robots also shouldn't be allowed to go behind
     // The clearing bot into the defense zone so it would have to path through the zone
-    if (abs(ateam_geometry::ShortestAngleBetween(robot.pos - nearest_point, cross_track_vec)) > M_PI/2) {
-      crosses_over_keepout = true;
-      cross_track_vec *= -1; // Stay on the side of the robot
-    }
+  if (abs(ateam_geometry::ShortestAngleBetween(robot.pos - nearest_point,
+      cross_track_vec)) > M_PI / 2)
+  {
+    crosses_over_keepout = true;
+    cross_track_vec *= -1;   // Stay on the side of the robot
+  }
 
-    const double angle = std::atan2(cross_track_dist, along_track_dist);
+  const double angle = std::atan2(cross_track_dist, along_track_dist);
 
     // Inside the keepout zone or want to cross over
-    if (abs(angle) < clear_window_angular_width_ || crosses_over_keepout) {
-      if (along_track_dist < 1.5 * kRobotDiameter) {
+  if (abs(angle) < clear_window_angular_width_ || crosses_over_keepout) {
+    if (along_track_dist < 1.5 * kRobotDiameter) {
         // Keep the robot from getting so close it hits the ball
-        along_track_dist = 1.5 * kRobotDiameter;
-      }
-      const double correct_dist = (0.5 * along_track_dist * std::tan(clear_window_angular_width_)) + kRobotRadius;
-      target_point = nearest_point + correct_dist * ateam_geometry::normalize(cross_track_vec);
+      along_track_dist = 1.5 * kRobotDiameter;
     }
+    const double correct_dist = (0.5 * along_track_dist * std::tan(clear_window_angular_width_)) +
+      kRobotRadius;
+    target_point = nearest_point + correct_dist * ateam_geometry::normalize(cross_track_vec);
+  }
 
-    return crosses_over_keepout;
+  return crosses_over_keepout;
 }
 
 }  // namespace ateam_kenobi::plays
