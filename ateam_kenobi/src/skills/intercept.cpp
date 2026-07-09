@@ -123,7 +123,7 @@ ateam_msgs::msg::RobotMotionCommand Intercept::runMoveToBall(
   motion::MotionOptions motion_options;
   motion_options.completion_threshold = 0;
   easy_move_to_.setMotionOptions(motion_options);
-  path_planning::PlannerOptions planner_options;
+  motion::path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   planner_options.draw_obstacles = true;
 
@@ -146,7 +146,7 @@ ateam_msgs::msg::RobotMotionCommand Intercept::runIntercept(
   /* TODO(chachmu): If we disable default obstacles do we need to check if the target is off the
    * field?
    */
-  path_planning::PlannerOptions planner_options;
+  motion::path_planning::PlannerOptions planner_options;
   planner_options.avoid_ball = false;
   planner_options.draw_obstacles = true;
   easy_move_to_.setPlannerOptions(planner_options);
@@ -157,7 +157,7 @@ ateam_msgs::msg::RobotMotionCommand Intercept::runIntercept(
   easy_move_to_.setTargetPosition(world.ball.pos);
   auto command = easy_move_to_.runFrame(robot, world);
 
-  command.dribbler_speed = kDefaultDribblerSetpoint;
+  command.dribbler_setpoint = kDefaultDribblerSetpoint;
 
   return command;
 }

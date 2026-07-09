@@ -96,13 +96,36 @@ std::vector<Robot> Blockers::getRankedBlockableRobots(const World & world)
   if (visible_opponents.empty()) {
     return visible_opponents;
   }
-  // Pop first robot, assuming it's handling the ball
-  visible_opponents.erase(visible_opponents.begin());
   return visible_opponents;
 }
 
 ateam_geometry::Point Blockers::getBlockingPosition(const World & world, const Robot & blockee)
 {
+  // Treat robot with ball differently
+  auto visible_opponents = play_helpers::getVisibleRobots(world.their_robots);
+  play_helpers::removeRobotWithId(visible_opponents, world.referee_info.their_goalie_id);
+  std::ranges::sort(
+    visible_opponents, [&world](const Robot & r1, const Robot & r2) {
+      const auto r1_dist = ateam_geometry::norm(world.ball.pos, r1.pos);
+      const auto r2_dist = ateam_geometry::norm(world.ball.pos, r2.pos);
+      return r1_dist < r2_dist;
+    });
+
+  if (!visible_opponents.empty() && visible_opponents[0].id == blockee.id) {
+    const auto blockee_to_goal = ateam_geometry::Point{-world.field.field_length / 2,
+      0} - blockee.pos;
+    auto pos = blockee.pos + ((kRobotDiameter * 2) * ateam_geometry::normalize(blockee_to_goal));
+
+    // Check if target point is in our defense area
+    if (pos.x() < kRobotRadius + (world.field.defense_area_depth - world.field.field_length / 2)) {
+      if (abs(pos.y()) < kRobotRadius + world.field.defense_area_width / 2.0) {
+        pos = blockee.pos + ((kRobotDiameter + 0.01) * ateam_geometry::normalize(blockee_to_goal));
+      }
+    }
+
+    return pos;
+  }
+
   return blockee.pos +
          ((kRobotDiameter * 2.5) * ateam_geometry::normalize(world.ball.pos - blockee.pos));
 }

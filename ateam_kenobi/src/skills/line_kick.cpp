@@ -88,6 +88,7 @@ void LineKick::ChooseState(const World & world, const Robot & robot)
       if (!IsRobotBehindBall(world, robot, 3.8)) {
         state_ = State::MoveBehindBall;
       } else if (IsRobotFacingBall(robot) && IsAllowedToKick()) {
+        locked_shot_line_ = target_point_ - world.ball.pos;
         state_ = State::KickBall;
       }
       break;
@@ -146,7 +147,7 @@ bool LineKick::IsRobotSettled(const World & world, const Robot & robot)
   const auto robot_vel_perp = robot.vel - robot_vel_proj;
   const auto robot_vel_perp_mag = ateam_geometry::norm(robot_vel_perp);
 
-  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.4;
+  const auto robot_vel_is_good = std::abs(robot_vel_perp_mag) < 0.08;
   return robot_vel_is_good;
 }
 
@@ -171,6 +172,7 @@ RobotCommand LineKick::RunMoveBehindBall(
   const World & world,
   const Robot & robot)
 {
+  (void) robot;
   RobotCommand command;
 
   const auto prekick_position = GetPreKickPosition(world);
@@ -179,19 +181,14 @@ RobotCommand LineKick::RunMoveBehindBall(
   motion_intent.face_target = target_point_;
   motion_intent.position = prekick_position + (0.1 * world.ball.vel);
   motion_intent.planner_options.draw_obstacles = true;
-  motion_intent.planner_options.footprint_inflation = std::min(0.015, pre_kick_offset);
+  motion_intent.planner_options.footprint_inflation = std::min(0.015, 0.5 * pre_kick_offset);
   motion_intent.limits.linear_acceleration = 1.5;
+  motion_intent.limits.linear_velocity = 2.0;
+  motion_intent.limits.angular_velocity = 2.0;
+  motion_intent.limits.angular_acceleration = 2.0;
 
-  double obstacle_radius_multiplier = 1.8;
-  const auto robot_to_prekick = prekick_position - robot.pos;
+  double obstacle_radius_multiplier = 1.0;
   const auto ball_to_target = target_point_ - world.ball.pos;
-  if (this->cowabunga && ateam_geometry::norm(robot_to_prekick) < 2.5 * kRobotDiameter) {
-    motion_intent.planner_options.footprint_inflation = -0.1;
-    obstacle_radius_multiplier = 5.0;
-    getPlayInfo()["COWABUNGA MODE"] = "COWABUNGA";
-  } else {
-    getPlayInfo()["COWABUNGA MODE"] = "not cowabunga :(";
-  }
 
   // Add additional obstacles to better avoid ball
   const auto angle = std::atan2(ball_to_target.y(), ball_to_target.x());
@@ -221,24 +218,39 @@ RobotCommand LineKick::RunMoveBehindBall(
   return command;
 }
 
-RobotCommand LineKick::RunFaceBall(const World &, const Robot & robot)
+RobotCommand LineKick::RunFaceBall(const World & world, const Robot & robot)
 {
+  (void) robot;
   motion::intents::PositionFacing intent;
   intent.face_target = target_point_;
-  intent.position = robot.pos;
+  intent.position = GetPreKickPosition(world);
   RobotCommand command;
   command.motion_intent = intent;
+  intent.limits.linear_acceleration = 3.0;
+  intent.limits.linear_velocity = 0.5;
+  intent.limits.angular_acceleration = 4.0;
+  intent.limits.angular_velocity = 4.0;
+
   return command;
 }
 
 RobotCommand LineKick::RunKickBall(const World & world, const Robot &)
 {
-  motion::intents::PositionFacing intent;
-  intent.position = world.ball.pos;
-  intent.face_target = world.ball.pos;
-  intent.limits.linear_velocity = kick_drive_velocity;
-  intent.planner_options.avoid_ball = false;
-  intent.planner_options.use_default_obstacles = false;
+  (void) world;
+
+  const double pp_mult = (GetPreparationPrecision() == PreparationPrecision::cowabunga) ? 2.0 : 1.0;
+
+  motion::intents::LinePoint intent;
+  intent.colinear_start_thresh = pp_mult * 0.001;  // This only effects the feedforward
+  intent.face_target = target_point_;
+  intent.line_direction = locked_shot_line_;
+  intent.line_start = target_point_;
+  intent.line_velocity = pp_mult * kick_drive_velocity;
+
+  intent.max_vel_colinear = pp_mult * kick_drive_velocity;
+  intent.max_vel_perp = 0.3;
+  intent.max_accel_colinear = pp_mult * 0.5;
+  intent.max_accel_perp = 0.5;
 
   RobotCommand command;
 

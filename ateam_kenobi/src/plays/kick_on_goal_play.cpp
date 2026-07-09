@@ -35,6 +35,7 @@ KickOnGoalPlay::KickOnGoalPlay(stp::Options stp_options)
   lane_idler_a_(createChild<skills::LaneIdler>("lane_idler_a")),
   lane_idler_b_(createChild<skills::LaneIdler>("lane_idler_b"))
 {
+  getParamInterface().declareParameter("use_pivot_kick", false);
 }
 
 stp::PlayScore KickOnGoalPlay::getScore(const World & world)
@@ -44,24 +45,15 @@ stp::PlayScore KickOnGoalPlay::getScore(const World & world)
     return stp::PlayScore::NaN();
   }
 
-  if (world.referee_info.running_command != ateam_common::GameCommand::NormalStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::ForceStart &&
-    world.referee_info.running_command != ateam_common::GameCommand::DirectFreeOurs &&
-    !(world.in_play &&
-    world.referee_info.running_command == ateam_common::GameCommand::DirectFreeTheirs))
-  {
-    return stp::PlayScore::NegativeInfinity();
-  }
-
   if (world.ball.pos.x() < 0.0) {
-    return stp::PlayScore::Min();
+    return stp::PlayScore::Discouraged();
   }
 
   if (world.ball.pos.x() > (world.field.field_length / 2.0) - world.field.defense_area_depth) {
-    return stp::PlayScore::Min();
+    return stp::PlayScore::Discouraged();
   }
 
-  return play_helpers::GetShotSuccessChance(world, world.ball.pos) + 35.0;
+  return play_helpers::GetShotSuccessChance(world, world.ball.pos) + 70.0;
 }
 
 void KickOnGoalPlay::reset()
@@ -74,6 +66,10 @@ std::array<std::optional<RobotCommand>, 16> KickOnGoalPlay::runFrame(
   const World & world)
 {
   std::array<std::optional<RobotCommand>, 16> motion_commands;
+
+  const auto use_pivot_kick = getParamInterface().getParameter<bool>("use_pivot_kick");
+  striker_.SetPreferredKickType(use_pivot_kick ? skills::UniversalKick::KickType::Pivot :
+      skills::UniversalKick::KickType::Line);
 
   auto available_robots = play_helpers::getAvailableRobots(world);
   play_helpers::removeGoalie(available_robots, world);

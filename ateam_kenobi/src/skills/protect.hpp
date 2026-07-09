@@ -1,4 +1,4 @@
-// Copyright 2025 A Team
+// Copyright 2021 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,72 +18,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef SKILLS__UNIVERSAL_KICK_HPP_
-#define SKILLS__UNIVERSAL_KICK_HPP_
 
-#include "kick_skill.hpp"
-#include "pivot_kick.hpp"
-#include "line_kick.hpp"
+#ifndef SKILLS__PROTECT_HPP_
+#define SKILLS__PROTECT_HPP_
+
+#include <ateam_common/robot_constants.hpp>
+#include "core/types/state_types.hpp"
 #include "core/types/robot_command.hpp"
+#include "skills/capture.hpp"
 
 namespace ateam_kenobi::skills
 {
 
-class UniversalKick : public KickSkill
+class Protect : public stp::Skill
 {
 public:
-  enum class KickType
+  explicit Protect(stp::Options stp_options);
+
+  void Reset()
   {
-    Unset,
-    Pivot,
-    Line
-  };
-
-  explicit UniversalKick(stp::Options stp_options, WaitType wait_type = WaitType::KickWhenReady);
-
-  void Reset() override;
-
-  bool IsReady() const override;
-
-  void SetTargetPoint(ateam_geometry::Point point);
+    capture_.Reset();
+  }
 
   ateam_geometry::Point GetAssignmentPoint(const World & world);
 
-  bool IsDone() const;
-
-  void SetKickChip(KickSkill::KickChip kc);
-
-  void SetPreferredKickType(KickType type);
-
   RobotCommand RunFrame(const World & world, const Robot & robot);
 
-  /*
-   * Pivot-only functions
-   */
-
-
-  void SetCaptureSpeed(double speed);
-
-  void SetPivotSpeed(double speed);
-
-  /*
-   * Line-only functions
-   */
-
-  void SetPreKickOffset(double val);
-
 private:
-  static constexpr bool kPivotAllowed = true;
-  static constexpr bool kLineAllowed = true;
+  enum class State
+  {
+    Capture,
+    Pivot
+  };
 
-  PivotKick pivot_kick_;
-  LineKick line_kick_;
-  KickType preferred_type_ = KickType::Unset;
-  KickType last_used_ = KickType::Unset;
+  State state_ = State::Capture;
+  skills::Capture capture_;
 
-  KickType ChooseType() const;
+  RobotCommand Capture(const World & world, const Robot & robot);
+  RobotCommand Pivot(
+    const World & world, const Robot & robot,
+    const ateam_geometry::Point & block_point);
 };
 
 }  // namespace ateam_kenobi::skills
 
-#endif  // SKILLS__UNIVERSAL_KICK_HPP_
+#endif  // SKILLS__PROTECT_HPP_

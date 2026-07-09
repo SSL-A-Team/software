@@ -144,11 +144,11 @@ UniversalKick::KickType UniversalKick::ChooseType() const
   if(preferred_type_ == KickType::Line && kLineAllowed) {
     return KickType::Line;
   }
-  if(kPivotAllowed) {
-    return KickType::Pivot;
-  }
   if(kLineAllowed) {
     return KickType::Line;
+  }
+  if(kPivotAllowed) {
+    return KickType::Pivot;
   }
   return KickType::Unset;
 }

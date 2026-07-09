@@ -22,6 +22,7 @@
 #define PLAYS__STOP_PLAYS__OFFENSIVE_STOP_PLAY_HPP_
 
 #include "core/stp/play.hpp"
+#include "tactics/standard_defense.hpp"
 
 namespace ateam_kenobi::plays
 {
@@ -44,6 +45,8 @@ private:
   void runPrepBot(
     const World & world,
     std::array<std::optional<RobotCommand>, 16> & maybe_motion_commands);
+
+  tactics::StandardDefense defense_tactic_;
 };
 
 }  // namespace ateam_kenobi::plays

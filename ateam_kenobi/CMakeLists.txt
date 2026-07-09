@@ -61,6 +61,7 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/kickoff_plays/offense/our_kickoff_prep_play.cpp
   src/plays/passing_plays/pass_to_lane_play.cpp
   src/plays/passing_plays/pass_to_segment_play.cpp
+  src/plays/passing_plays/sample_pass_play.cpp
   src/plays/stop_plays/default_stop_play.cpp
   src/plays/stop_plays/defensive_stop_play.cpp
   src/plays/stop_plays/offensive_stop_play.cpp
@@ -81,6 +82,7 @@ target_sources(kenobi_node_component PRIVATE
   src/plays/our_penalty_play.cpp
   src/plays/their_penalty_play.cpp
   src/plays/defense_play.cpp
+  src/plays/defense_clear_play.cpp
   src/plays/extract_play.cpp
 )
 
@@ -109,6 +111,7 @@ target_sources(kenobi_node_component PRIVATE
   src/skills/line_kick.cpp
   src/skills/pass_receiver.cpp
   src/skills/pivot_kick.cpp
+  src/skills/protect.cpp
   src/skills/universal_kick.cpp
 )
 

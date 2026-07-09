@@ -79,7 +79,7 @@ RobotCommand PassReceiver::runFrame(const World & world, const Robot & robot)
 
   std::visit([](auto && intent){
       using IntentType = std::decay_t<decltype(intent)>;
-      if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+      if constexpr (motion::has_limits<IntentType>) {
         intent.limits.linear_velocity = 2.0;
       }
   }, command.motion_intent);
@@ -158,23 +158,41 @@ RobotCommand PassReceiver::runPrePass(
 
 RobotCommand PassReceiver::runPass(const World & world, const Robot & robot)
 {
-  const ateam_geometry::Ray ball_ray(world.ball.pos, world.ball.vel);
-  const auto destination = ball_ray.supporting_line().projection(robot.pos);
-  motion::intents::PositionFacing intent;
-  intent.position = destination;
-  intent.face_target = world.ball.pos;
-  intent.limits.linear_acceleration = 4.0;
-  intent.planner_options.avoid_ball = false;
   RobotCommand command;
-  command.motion_intent = intent;
-  command.dribbler_setpoint = kDefaultDribblerSetpoint * 1.2;
+  command.dribbler_setpoint = kDefaultDribblerSetpoint * 3.0;
+  const auto ball_dist = CGAL::approximate_sqrt(CGAL::squared_distance(world.ball.pos, robot.pos));
+  const auto ball_speed = ateam_geometry::norm(world.ball.vel);
+  const auto time_to_collide = ball_dist / ball_speed;
+  if(time_to_collide < 0.6) {
+    const auto vel = ball_speed * 0.4;
+    motion::intents::LinePoint intent;
+    intent.colinear_start_thresh = 0.001;
+    intent.face_target = world.ball.pos;
+    intent.line_direction = ateam_geometry::normalize(world.ball.vel);
+    intent.line_start = world.ball.pos;
+    intent.line_velocity = vel;
+    intent.max_vel_colinear = vel;
+    intent.max_vel_perp = 0.3;
+    intent.max_accel_colinear = 0.5;
+    intent.max_accel_perp = 0.5;
+    command.motion_intent = intent;
+  } else {
+    const ateam_geometry::Ray ball_ray(world.ball.pos, world.ball.vel);
+    const auto destination = ball_ray.supporting_line().projection(robot.pos);
+    motion::intents::PositionFacing intent;
+    intent.position = destination;
+    intent.face_target = world.ball.pos;
+    intent.limits.linear_acceleration = 4.0;
+    intent.planner_options.avoid_ball = false;
+    command.motion_intent = intent;
+  }
   return command;
 }
 
 RobotCommand PassReceiver::runPostPass()
 {
   RobotCommand command;
-  command.dribbler_setpoint = kDefaultDribblerSetpoint;
+  command.dribbler_setpoint = kDefaultDribblerSetpoint * 1.5;
   return command;
 }
 

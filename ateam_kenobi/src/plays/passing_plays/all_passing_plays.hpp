@@ -23,6 +23,7 @@
 
 #include "pass_to_lane_play.hpp"
 #include "pass_to_segment_play.hpp"
+#include "sample_pass_play.hpp"
 #include "segment_passing_target_funcs.hpp"
 
 #endif  // PLAYS__PASSING_PLAYS__ALL_PASSING_PLAYS_HPP_

@@ -49,6 +49,21 @@ void StandardDefense::runFrame(
   ForwardPlayInfo(goalie_);
   defenders_.runFrame(world, defender_bots, motion_commands);
   ForwardPlayInfo(defenders_);
+
+  if (world.referee_info.running_command == ateam_common::GameCommand::Stop) {
+    // Rules say <1.5m/s.
+    // Defenders/goalie do a lot of moving based on the ball
+    // so we will slow them down more for safety
+    for(auto & maybe_cmd : motion_commands) {
+      if(!maybe_cmd) {continue;}
+      std::visit([](auto & intent){
+          using IntentType = std::decay_t<decltype(intent)>;
+          if constexpr (motion::has_limits<IntentType>) {
+            intent.limits.linear_velocity = 0.8;
+          }
+      }, maybe_cmd->motion_intent);
+    }
+  }
 }
 
 }  // namespace ateam_kenobi::tactics

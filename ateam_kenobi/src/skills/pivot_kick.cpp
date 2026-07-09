@@ -48,34 +48,36 @@ RobotCommand PivotKick::RunFrame(const World & world, const Robot & robot)
     return RobotCommand{};
   }
 
-  if (prev_state_ == State::Capture) {
-    if (!capture_.isDone()) {
+  if (prev_state_ != State::Pivot) {
+    if (prev_state_ == State::Capture) {
+      if (!capture_.isDone()) {
+        getPlayInfo()["State"] = "Capture";
+        return Capture(world, robot);
+      }
+    }
+
+    if (!robot.breakbeam_ball_detected_filtered) {
+      prev_state_ = State::Capture;
       getPlayInfo()["State"] = "Capture";
       return Capture(world, robot);
     }
   }
 
-  if (!robot.breakbeam_ball_detected) {
-    prev_state_ = State::Capture;
-    getPlayInfo()["State"] = "Capture";
-    return Capture(world, robot);
-  }
-
   const auto robot_to_target = target_point_ - robot.pos;
   const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
-  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.1) {
+  if (abs(angles::shortest_angular_distance(robot.theta, robot_to_target_angle)) > 0.05) {
     if (prev_state_ != State::Pivot) {
       prev_state_ = State::Pivot;
     }
     getPlayInfo()["State"] = "Pivot";
-    return Pivot(robot);
+    return Pivot(world, robot);
   }
 
   if (prev_state_ != State::KickBall) {
     prev_state_ = State::KickBall;
   }
 
-  if (ateam_geometry::norm(world.ball.vel) > 0.1 * GetKickSpeed()) {
+  if (ateam_geometry::norm(world.ball.vel) > 0.5 * GetKickSpeed()) {
     done_ = true;
     getPlayInfo()["State"] = "Done";
     return RobotCommand{};
@@ -94,18 +96,26 @@ RobotCommand PivotKick::Capture(
   return capture_result;
 }
 
-RobotCommand PivotKick::Pivot(const Robot & robot)
+RobotCommand PivotKick::Pivot(
+  const World & world,
+  const Robot & robot)
 {
-  const auto robot_to_target = target_point_ - robot.pos;
-  const auto robot_to_target_angle = std::atan2(robot_to_target.y(), robot_to_target.x());
+  (void)robot;
+  (void)world;
 
-  motion::intents::PivotHeading intent;
-  intent.radius = 0.095 * 1.05;
-  intent.target_heading = robot_to_target_angle;
+  motion::intents::PivotPoint intent;
+  intent.target_x = target_point_.x();
+  intent.target_y = target_point_.y();
+  intent.radius = 0.2;
+  intent.inset_angle = 0.6;
+  intent.compute_inset_angle = false;
+
+  intent.limits.angular_velocity = 3.0;
+  intent.limits.angular_acceleration = 3.0;
 
   RobotCommand command;
   command.motion_intent = intent;
-  command.dribbler_setpoint = kDefaultDribblerSetpoint;
+  command.dribbler_setpoint = 0.02;
 
   return command;
 }
@@ -114,6 +124,7 @@ RobotCommand PivotKick::KickBall(const Robot & robot)
 {
   motion::intents::PositionFacing intent;
 
+  intent.planner_options.avoid_ball = false;
   intent.face_target = target_point_;
   intent.position = robot.pos;
 
@@ -121,7 +132,7 @@ RobotCommand PivotKick::KickBall(const Robot & robot)
 
   command.motion_intent = intent;
 
-  command.dribbler_setpoint = kDefaultDribblerSetpoint;
+  command.dribbler_setpoint = 0.02;
 
   command.kick_speed = GetKickSpeed();
   if (IsAllowedToKick()) {

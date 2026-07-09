@@ -37,7 +37,7 @@ TheirPenaltyPlay::TheirPenaltyPlay(stp::Options stp_options)
 
 stp::PlayScore TheirPenaltyPlay::getScore(const World & world)
 {
-  if (world.in_play) {
+  if (world.in_play && world.referee_info.game_stage != ateam_common::GameStage::PenaltyShootout) {
     return stp::PlayScore::NaN();
   }
   const auto & cmd = world.referee_info.running_command;
@@ -61,19 +61,19 @@ std::array<std::optional<RobotCommand>, 16> TheirPenaltyPlay::runFrame(
 
   goalie_skill_.runFrame(world, motion_commands);
 
-  ateam_geometry::Point pattern_start(kRobotDiameter - (world.field.field_length / 2.0),
+  ateam_geometry::Point pattern_start((world.field.field_length / 2.0) - kRobotDiameter,
     kRobotDiameter - (world.field.field_width / 2.0));
-  ateam_geometry::Vector pattern_step(kRobotDiameter + 0.2, 0.0);
+  ateam_geometry::Vector pattern_step(-1 * (kRobotDiameter + 0.2), 0.0);
 
   std::vector<ateam_geometry::Point> target_points;
   std::generate_n(std::back_inserter(target_points), available_robots.size(),
-    [pos = pattern_start, step = pattern_step, &world]() mutable {
+    [pos = pattern_start, step = pattern_step, &world, &pattern_start]() mutable {
       auto current = pos;
       pos = pos + step;
       if (pos.x() > (world.field.field_length / 2.0) - kRobotDiameter) {
         pos = ateam_geometry::Point(
-          kRobotDiameter - (world.field.field_length / 2.0),
-          pos.y() + step.y());
+          pattern_start.x(),
+          pattern_start.y() + step.y());
       }
       return current;
     });
@@ -84,7 +84,7 @@ std::array<std::optional<RobotCommand>, 16> TheirPenaltyPlay::runFrame(
     if(!maybe_cmd) {continue;}
     std::visit([](auto & intent){
         using IntentType = std::decay_t<decltype(intent)>;
-        if constexpr (!std::is_same_v<IntentType, motion::intents::None>) {
+        if constexpr (motion::has_limits<IntentType>) {
           intent.limits.linear_velocity = 1.5;
         }
     }, maybe_cmd->motion_intent);
