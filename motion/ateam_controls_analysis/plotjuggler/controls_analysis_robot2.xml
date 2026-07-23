@@ -18,6 +18,7 @@
        <curve name="/controls_analysis/robot2/x/pos_traj_point_line" color="#e377c2"/>
        <curve name="/controls_analysis/robot2/x/pos_vision" color="#7f7f7f"/>
        <curve name="/controls_analysis/robot2/x/pos_cmd" color="#000000"/>
+       <curve name="/controls_analysis/robot2/reboot_event" color="#ff1493"/>
       </plot>
      </DockArea>
      <DockArea name="X velocity">
@@ -33,6 +34,7 @@
        <curve name="/controls_analysis/robot2/x/vel_traj_heading_line" color="#8c564b"/>
        <curve name="/controls_analysis/robot2/x/vel_traj_point_line" color="#e377c2"/>
        <curve name="/controls_analysis/robot2/x/vel_cmd" color="#000000"/>
+       <curve name="/controls_analysis/robot2/reboot_event" color="#ff1493"/>
       </plot>
      </DockArea>
      <DockArea name="X acceleration">
@@ -43,6 +45,7 @@
        <curve name="/controls_analysis/robot2/x/accel_u_fric_comp" color="#d62728"/>
        <curve name="/controls_analysis/robot2/x/accel_imu" color="#8c564b"/>
        <curve name="/controls_analysis/robot2/x/accel_cmd" color="#000000"/>
+       <curve name="/controls_analysis/robot2/reboot_event" color="#ff1493"/>
       </plot>
      </DockArea>
     </DockSplitter>
@@ -65,6 +68,7 @@
        <curve name="/controls_analysis/robot2/y/pos_traj_point_line" color="#e377c2"/>
        <curve name="/controls_analysis/robot2/y/pos_vision" color="#7f7f7f"/>
        <curve name="/controls_analysis/robot2/y/pos_cmd" color="#000000"/>
+       <curve name="/controls_analysis/robot2/reboot_event" color="#ff1493"/>
       </plot>
      </DockArea>
      <DockArea name="Y velocity">
@@ -80,6 +84,7 @@
        <curve name="/controls_analysis/robot2/y/vel_traj_heading_line" color="#8c564b"/>
        <curve name="/controls_analysis/robot2/y/vel_traj_point_line" color="#e377c2"/>
        <curve name="/controls_analysis/robot2/y/vel_cmd" color="#000000"/>
+       <curve name="/controls_analysis/robot2/reboot_event" color="#ff1493"/>
       </plot>
      </DockArea>
      <DockArea name="Y acceleration">
@@ -90,6 +95,7 @@
        <curve name="/controls_analysis/robot2/y/accel_u_fric_comp" color="#d62728"/>
        <curve name="/controls_analysis/robot2/y/accel_imu" color="#8c564b"/>
        <curve name="/controls_analysis/robot2/y/accel_cmd" color="#000000"/>
+       <curve name="/controls_analysis/robot2/reboot_event" color="#ff1493"/>
       </plot>
      </DockArea>
     </DockSplitter>
@@ -112,6 +118,7 @@
        <curve name="/controls_analysis/robot2/theta/pos_traj_point_line" color="#e377c2"/>
        <curve name="/controls_analysis/robot2/theta/pos_vision" color="#7f7f7f"/>
        <curve name="/controls_analysis/robot2/theta/pos_cmd" color="#000000"/>
+       <curve name="/controls_analysis/robot2/reboot_event" color="#ff1493"/>
       </plot>
      </DockArea>
      <DockArea name="Theta velocity">
@@ -128,6 +135,7 @@
        <curve name="/controls_analysis/robot2/theta/vel_traj_point_line" color="#e377c2"/>
        <curve name="/controls_analysis/robot2/theta/vel_gyro" color="#bcbd22"/>
        <curve name="/controls_analysis/robot2/theta/vel_cmd" color="#000000"/>
+       <curve name="/controls_analysis/robot2/reboot_event" color="#ff1493"/>
       </plot>
      </DockArea>
      <DockArea name="Theta acceleration">
@@ -137,6 +145,7 @@
        <curve name="/controls_analysis/robot2/theta/accel_u" color="#2ca02c"/>
        <curve name="/controls_analysis/robot2/theta/accel_u_fric_comp" color="#d62728"/>
        <curve name="/controls_analysis/robot2/theta/accel_cmd" color="#000000"/>
+       <curve name="/controls_analysis/robot2/reboot_event" color="#ff1493"/>
       </plot>
      </DockArea>
     </DockSplitter>

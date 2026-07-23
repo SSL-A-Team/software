@@ -59,6 +59,7 @@ C_IMU = '#8c564b'
 C_CMD = '#000000'
 C_ACCEL_U = '#2ca02c'
 C_ACCEL_U_FC = '#d62728'
+C_REBOOT = '#ff1493'
 
 
 def _curves(topic, dim, entries):
@@ -98,6 +99,9 @@ def _make_plot(parent, topic, dim, deriv, title):
     ET.SubElement(plot, 'limitY')
     for name, color in _curves(topic, dim, _plot_curves(dim, deriv)):
         ET.SubElement(plot, 'curve', name=name, color=color)
+    # Reboot marker (pulses to 1.0 at each detected reboot) on every plot, so
+    # reboots are visible across all stacked views on the shared time axis.
+    ET.SubElement(plot, 'curve', name=f'{topic}/reboot_event', color=C_REBOOT)
 
 
 def build(robot_id):

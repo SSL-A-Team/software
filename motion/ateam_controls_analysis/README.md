@@ -107,6 +107,37 @@ ros2 bag play /path/to/bag --topics /robot_feedback/extended/robot0
 | `input_topic` | `""` | Override input topic (default `/robot_feedback/extended/robot{robot_id}`). |
 | `output_topic` | `""` | Override output topic (default `/controls_analysis/robot{robot_id}`). |
 | `reliability` | `reliable` | Telemetry subscription QoS: `reliable` or `best_effort`. |
+| `use_robot_time` | `true` | Stamp the output header with the reconstructed robot timeline (see below). When `false`, uses the ROS receive time. |
+| `reboot_reset_threshold_us` | `1000000` | Backward jump in the robot µs counter treated as a reboot. |
+
+## Time axis (reconstructed robot time)
+
+Each `ExtendedTelemetry` carries the robot's own 64-bit microsecond uptime
+counter (`timestamp_us_hi`/`lo`). With `use_robot_time:=true` (default) the node
+builds the plot time axis from it:
+
+- The first message is grounded at its ROS receive time.
+- Subsequent messages advance by the robot's own elapsed time, so the timeline
+  reflects **true robot time** — replaying a bag at `--rate 25` still shows the
+  real per-sample timing, not the compressed playback timing.
+- On a **reboot** the counter jumps backward (uptime restarts near zero). The
+  node detects this (drop > `reboot_reset_threshold_us`), re-grounds the axis at
+  that message's ROS time, and continues forward from there.
+
+The reconstructed time is written to `header.stamp`, so in PlotJuggler enable
+**"Use timestamp from field/header"** on the ROS2 streaming plugin to plot
+against it.
+
+### Reboot indicators
+
+- `reboot_event` (float32) pulses to `1.0` on the first sample after a detected
+  reboot (else `0.0`).
+- `reboot_count` (uint32) is a monotonically increasing staircase of reboots.
+
+The bundled layouts add `reboot_event` (deep-pink) to every plot, so each reboot
+shows as a spike at the same instant across all stacked views on the shared time
+axis. (PlotJuggler has no true data-driven full-height vertical line; the
+`reboot_event` pulse and the `reboot_count` staircase are the practical markers.)
 
 ## PlotJuggler layouts
 

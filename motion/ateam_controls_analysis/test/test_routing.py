@@ -32,6 +32,8 @@ from ateam_controls_analysis.routing import (
     BCM_OFF,
     compute_dimensions,
     dimension_field_names,
+    robot_timestamp_us,
+    RobotClock,
     TelemetrySample,
 )
 
@@ -148,3 +150,52 @@ def test_traj_split_only_for_active_mode():
     assert d['x']['pos_traj_global_pos'] == 1.1
     assert _isnan(d['x']['pos_traj_global_vel'])
     assert _isnan(d['x']['pos_traj_point_line'])
+
+
+def test_robot_timestamp_us_reconstruction():
+    assert robot_timestamp_us(0, 0) == 0
+    assert robot_timestamp_us(0, 1000) == 1000
+    assert robot_timestamp_us(1, 0) == (1 << 32)
+    assert robot_timestamp_us(2, 5) == (2 << 32) | 5
+
+
+def test_robot_clock_grounds_first_sample_at_ros_time():
+    c = RobotClock()
+    # first robot sample already at 3 s uptime; grounded at ros_ns=1000 (ns)
+    stamp, reboot = c.update(3_000_000, 1000)
+    assert stamp == 1000
+    assert reboot is False
+    assert c.reboot_count == 0
+
+
+def test_robot_clock_advances_by_robot_elapsed_time():
+    c = RobotClock()
+    c.update(1_000_000, 1_000_000_000)          # ground: robot=1s, ros=1s
+    # 0.5 s later in robot time; ros clock irrelevant to the axis
+    stamp, reboot = c.update(1_500_000, 9_999_999_999)
+    assert stamp == 1_000_000_000 + 500_000 * 1000
+    assert reboot is False
+
+
+def test_robot_clock_detects_reboot_and_regrounds():
+    c = RobotClock(reset_threshold_us=1_000_000)
+    c.update(10_000_000, 1_000_000_000)         # robot=10s
+    c.update(10_500_000, 1_100_000_000)         # robot=10.5s, no reboot
+    # counter jumps back to 0.2 s -> reboot; re-ground at this ros time
+    stamp, reboot = c.update(200_000, 5_000_000_000)
+    assert reboot is True
+    assert c.reboot_count == 1
+    assert stamp == 5_000_000_000
+    # continues forward from the new grounding
+    stamp2, reboot2 = c.update(300_000, 5_050_000_000)
+    assert reboot2 is False
+    assert stamp2 == 5_000_000_000 + 100_000 * 1000
+
+
+def test_robot_clock_ignores_small_backsteps():
+    c = RobotClock(reset_threshold_us=1_000_000)
+    c.update(10_000_000, 1_000_000_000)
+    # 10 ms out-of-order jitter is below threshold -> not a reboot
+    stamp, reboot = c.update(9_990_000, 1_010_000_000)
+    assert reboot is False
+    assert c.reboot_count == 0

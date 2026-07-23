@@ -111,6 +111,59 @@ class TelemetrySample:
     cmd_native: Optional[Tuple[float, float, float]]
 
 
+# Default backward jump (microseconds) in the robot clock that is treated as a
+# reboot. A reboot resets the counter to near zero, so the drop is many seconds;
+# 1 s comfortably exceeds any out-of-order/jitter on a ~60 Hz telemetry stream.
+DEFAULT_REBOOT_RESET_THRESHOLD_US = 1_000_000
+
+
+def robot_timestamp_us(hi: int, lo: int) -> int:
+    """Reconstruct the 64-bit robot microsecond counter from its hi/lo words."""
+    return (int(hi) << 32) | int(lo)
+
+
+class RobotClock:
+    """
+    Map a robot's monotonic microsecond counter onto a ROS-grounded timeline.
+
+    The first sample is grounded at its ROS receive time; subsequent samples
+    advance by the robot's own elapsed time, so the reconstructed timeline
+    reflects true robot time regardless of bag-playback rate. When the robot
+    reboots (counter jumps backward by more than ``reset_threshold_us``), the
+    timeline is re-grounded at that sample's ROS time and a reboot is reported.
+    """
+
+    def __init__(self, reset_threshold_us: int = DEFAULT_REBOOT_RESET_THRESHOLD_US):
+        self.reset_threshold_us = reset_threshold_us
+        self._first_ros_ns: Optional[int] = None
+        self._first_robot_us: Optional[int] = None
+        self._last_robot_us: Optional[int] = None
+        self.reboot_count = 0
+
+    def _ground(self, robot_us: int, ros_ns: int) -> None:
+        self._first_ros_ns = ros_ns
+        self._first_robot_us = robot_us
+
+    def update(self, robot_us: int, ros_ns: int) -> Tuple[int, bool]:
+        """
+        Advance the clock with one sample.
+
+        Returns ``(stamp_ns, reboot)`` where ``stamp_ns`` is the reconstructed
+        timeline timestamp (ns) and ``reboot`` is True only on the first sample
+        after a detected reboot.
+        """
+        reboot = False
+        if self._first_ros_ns is None:
+            self._ground(robot_us, ros_ns)
+        elif robot_us + self.reset_threshold_us < self._last_robot_us:
+            self.reboot_count += 1
+            reboot = True
+            self._ground(robot_us, ros_ns)
+        self._last_robot_us = robot_us
+        stamp_ns = self._first_ros_ns + (robot_us - self._first_robot_us) * 1000
+        return stamp_ns, reboot
+
+
 def dimension_field_names() -> Tuple[str, ...]:
     """Return every value field name in DimensionAnalysis.msg."""
     names = [

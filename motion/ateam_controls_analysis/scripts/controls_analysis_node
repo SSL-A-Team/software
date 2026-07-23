@@ -34,6 +34,13 @@ Parameters:
     ``/controls_analysis/robot{robot_id}`` is used.
   * ``reliability`` (str, default 'reliable'): 'reliable' or 'best_effort'
     for the telemetry subscription QoS.
+  * ``use_robot_time`` (bool, default True): stamp the output header with the
+    reconstructed robot timeline (grounded at the first message's ROS time and
+    advanced by robot-elapsed time, re-grounded on reboot). When False, the ROS
+    receive time is used. Enable 'use header timestamp' in PlotJuggler to plot
+    against this axis.
+  * ``reboot_reset_threshold_us`` (int, default 1000000): backward jump in the
+    robot microsecond counter treated as a reboot.
 """
 
 from ateam_controls_analysis.routing import (
@@ -44,6 +51,8 @@ from ateam_controls_analysis.routing import (
     BCM_LOCAL_VELOCITY,
     compute_dimensions,
     DIMS,
+    robot_timestamp_us,
+    RobotClock,
     TelemetrySample,
 )
 from ateam_controls_analysis_msgs.msg import ControlsAnalysis
@@ -51,6 +60,7 @@ from ateam_radio_msgs.msg import ExtendedTelemetry
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
+from rclpy.time import Time
 
 
 def _extract_cmd_native(bct):
@@ -87,6 +97,10 @@ class ControlsAnalysisNode(Node):
         input_topic = self.declare_parameter('input_topic', '').value
         output_topic = self.declare_parameter('output_topic', '').value
         reliability = self.declare_parameter('reliability', 'reliable').value
+        self._use_robot_time = self.declare_parameter(
+            'use_robot_time', True).value
+        reset_threshold_us = self.declare_parameter(
+            'reboot_reset_threshold_us', 1000000).value
 
         if not input_topic:
             input_topic = f'/robot_feedback/extended/robot{robot_id}'
@@ -100,6 +114,7 @@ class ControlsAnalysisNode(Node):
         sub_qos.reliability = rel
 
         self._prev_mode = None
+        self._robot_clock = RobotClock(reset_threshold_us=int(reset_threshold_us))
         self._pub = self.create_publisher(ControlsAnalysis, output_topic, 50)
         self._sub = self.create_subscription(
             ExtendedTelemetry, input_topic, self._on_telemetry, sub_qos)
@@ -107,9 +122,13 @@ class ControlsAnalysisNode(Node):
         self.get_logger().info(
             f"controls_analysis: robot_id={robot_id} "
             f"in='{input_topic}' out='{output_topic}' "
-            f'reliability={reliability}')
+            f'reliability={reliability} use_robot_time={self._use_robot_time}')
 
     def _on_telemetry(self, msg):
+        ros_now = self.get_clock().now()
+        robot_us = robot_timestamp_us(msg.timestamp_us_hi, msg.timestamp_us_lo)
+        stamp_ns, reboot = self._robot_clock.update(robot_us, ros_now.nanoseconds)
+
         bct = msg.body_control_telemetry
         sample = TelemetrySample(
             mode=bct.body_control_mode,
@@ -129,9 +148,14 @@ class ControlsAnalysisNode(Node):
         self._prev_mode = bct.body_control_mode
 
         out = ControlsAnalysis()
-        out.header.stamp = self.get_clock().now().to_msg()
+        if self._use_robot_time:
+            out.header.stamp = Time(nanoseconds=stamp_ns).to_msg()
+        else:
+            out.header.stamp = ros_now.to_msg()
         out.body_control_mode = int(bct.body_control_mode)
         out.theta_estimate = float(bct.kf_body_pos_estimate[2])
+        out.reboot_event = 1.0 if reboot else 0.0
+        out.reboot_count = int(self._robot_clock.reboot_count)
         for dim in DIMS:
             sub = getattr(out, dim)
             for name, value in dims[dim].items():
