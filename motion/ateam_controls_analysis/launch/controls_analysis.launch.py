@@ -31,7 +31,7 @@ Replay a bag through the node (robot 0)::
       robot_id:=0 bag:=/home/user/game_bag_friendly_greentea2
 
 Then open PlotJuggler, start the 'ROS2 Topic Subscriber', and select the
-/controls_analysis/robot{robot_id} topic (or load the bundled layout).
+/controls_analysis topic (or load the bundled layout).
 """
 
 from launch import LaunchDescription
@@ -46,11 +46,8 @@ def generate_launch_description():
     reliability = LaunchConfiguration('reliability')
     bag = LaunchConfiguration('bag')
     rate = LaunchConfiguration('rate')
-    loop = LaunchConfiguration('loop')
 
     has_bag = PythonExpression(["'", bag, "' != ''"])
-    loop_flag = PythonExpression(
-        ["['--loop'] if '", loop, "' == 'true' else []"])
 
     return LaunchDescription([
         DeclareLaunchArgument('robot_id', default_value='0'),
@@ -76,7 +73,7 @@ def generate_launch_description():
 
         ExecuteProcess(
             condition=IfCondition(has_bag),
-            cmd=['ros2', 'bag', 'play', bag, '--rate', rate, loop_flag],
+            cmd=['ros2', 'bag', 'play', bag, '--rate', rate],
             output='screen',
         ),
     ])

@@ -5,9 +5,9 @@ PlotJuggler-based controls analysis for a single robot, driven entirely by
 
 A small ROS 2 node (`controls_analysis_node`) subscribes to one robot's
 `/robot_feedback/extended/robot{id}` and republishes a flat, PlotJuggler-friendly
-`ateam_controls_analysis_msgs/ControlsAnalysis` message on
-`/controls_analysis/robot{id}`. The node performs the computations PlotJuggler
-can't do natively:
+`ateam_controls_analysis_msgs/ControlsAnalysis` message on `/controls_analysis`
+(one robot at a time, selected by the `robot_id` param). The node performs the
+computations PlotJuggler can't do natively:
 
 - routes the software command (`cmd_echo`) onto the correct time-derivative
   based on the active body control mode,
@@ -21,8 +21,8 @@ can't do natively:
 ## Packages
 
 - `ateam_controls_analysis_msgs` — the `ControlsAnalysis` message.
-- `ateam_controls_analysis` — the republisher node, PlotJuggler layouts, launch
-  file, and the layout generator.
+- `ateam_controls_analysis` — the republisher node, the PlotJuggler layout, and
+  the launch file.
 
 ## Views
 
@@ -74,9 +74,9 @@ ros2 launch ateam_controls_analysis controls_analysis.launch.py robot_id:=2
 ```
 
 Then open PlotJuggler (`ros2 run plotjuggler plotjuggler`), start the
-**ROS2 Topic Subscriber** streaming plugin, subscribe to
-`/controls_analysis/robot2`, and load a layout:
-`Layout → File → share/ateam_controls_analysis/plotjuggler/controls_analysis_robot2.xml`.
+**ROS2 Topic Subscriber** streaming plugin (tick **"Use header stamp"** to plot
+against robot time), subscribe to `/controls_analysis`, and load the layout:
+`Layout → File → share/ateam_controls_analysis/plotjuggler/controls_analysis.xml`.
 
 ### From a ROS bag
 
@@ -105,7 +105,7 @@ ros2 bag play /path/to/bag --topics /robot_feedback/extended/robot0
 |-----------|---------|-------------|
 | `robot_id` | `0` | Robot whose telemetry to analyze. |
 | `input_topic` | `""` | Override input topic (default `/robot_feedback/extended/robot{robot_id}`). |
-| `output_topic` | `""` | Override output topic (default `/controls_analysis/robot{robot_id}`). |
+| `output_topic` | `/controls_analysis` | Topic to publish the analysis message on. |
 | `reliability` | `reliable` | Telemetry subscription QoS: `reliable` or `best_effort`. |
 | `use_robot_time` | `true` | Stamp the output header with the reconstructed robot timeline (see below). When `false`, uses the ROS receive time. |
 | `reboot_reset_threshold_us` | `1000000` | Backward jump in the robot µs counter treated as a reboot. |
@@ -139,15 +139,11 @@ shows as a spike at the same instant across all stacked views on the shared time
 axis. (PlotJuggler has no true data-driven full-height vertical line; the
 `reboot_event` pulse and the `reboot_count` staircase are the practical markers.)
 
-## PlotJuggler layouts
+## PlotJuggler layout
 
-Prebuilt layouts for robots 0 and 2 live in `plotjuggler/`. Generate one for any
-robot id:
-
-```bash
-ros2 run ateam_controls_analysis generate_layout.py --robot 3 \
-    --output controls_analysis_robot3.xml
-```
+A single checked-in layout lives at `plotjuggler/controls_analysis.xml` and
+binds to the fixed `/controls_analysis` topic (independent of which robot the
+node is analyzing). Load it via `Layout → File`.
 
 Each body control mode has a consistent color across every plot/tab, so mode
 transitions (e.g. `BCM_POINT_PIVOT` → `BCM_HEADING_LINE`) are visible as a color

@@ -14,7 +14,6 @@ ament_python_install_package(${PROJECT_NAME})
 # Executable node / helper scripts.
 install(PROGRAMS
   scripts/controls_analysis_node
-  scripts/generate_layout.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
