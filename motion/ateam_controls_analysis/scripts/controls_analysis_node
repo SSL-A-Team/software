@@ -41,9 +41,16 @@ Parameters:
     against this axis.
   * ``reboot_reset_threshold_us`` (int, default 1000000): backward jump in the
     robot microsecond counter treated as a reboot.
+  * ``heartbeat_enabled`` (bool, default True): periodically publish
+    ``0.0`` on curves that go inactive by control mode (software command +
+    per-mode split curves) so PlotJuggler keeps trimming them while streaming
+    (prevents an idle curve's stale tail from stretching the time axis).
+  * ``heartbeat_period_sec`` (float, default 1.0): heartbeat interval, measured
+    on the (robot) plot timeline.
 """
 
 from ateam_controls_analysis.routing import (
+    apply_heartbeat,
     BCM_GLOBAL_ACCEL,
     BCM_GLOBAL_POSITION,
     BCM_GLOBAL_VELOCITY,
@@ -102,6 +109,10 @@ class ControlsAnalysisNode(Node):
             'use_robot_time', True).value
         reset_threshold_us = self.declare_parameter(
             'reboot_reset_threshold_us', 1000000).value
+        self._heartbeat_enabled = self.declare_parameter(
+            'heartbeat_enabled', True).value
+        heartbeat_period_sec = self.declare_parameter(
+            'heartbeat_period_sec', 1.0).value
 
         if not input_topic:
             input_topic = f'/robot_feedback/extended/robot{robot_id}'
@@ -114,6 +125,8 @@ class ControlsAnalysisNode(Node):
 
         self._prev_mode = None
         self._robot_clock = RobotClock(reset_threshold_us=int(reset_threshold_us))
+        self._heartbeat_period_ns = int(float(heartbeat_period_sec) * 1e9)
+        self._last_heartbeat_ns = None
         self._pub = self.create_publisher(ControlsAnalysis, output_topic, 50)
         self._sub = self.create_subscription(
             ExtendedTelemetry, input_topic, self._on_telemetry, sub_qos)
@@ -121,12 +134,14 @@ class ControlsAnalysisNode(Node):
         self.get_logger().info(
             f"controls_analysis: robot_id={robot_id} "
             f"in='{input_topic}' out='{output_topic}' "
-            f'reliability={reliability} use_robot_time={self._use_robot_time}')
+            f'reliability={reliability} use_robot_time={self._use_robot_time} '
+            f'heartbeat_enabled={self._heartbeat_enabled}')
 
     def _on_telemetry(self, msg):
         ros_now = self.get_clock().now()
         robot_us = robot_timestamp_us(msg.timestamp_us_hi, msg.timestamp_us_lo)
         stamp_ns, reboot = self._robot_clock.update(robot_us, ros_now.nanoseconds)
+        plot_stamp_ns = stamp_ns if self._use_robot_time else ros_now.nanoseconds
 
         bct = msg.body_control_telemetry
         sample = TelemetrySample(
@@ -145,6 +160,18 @@ class ControlsAnalysisNode(Node):
 
         dims = compute_dimensions(sample, self._prev_mode)
         self._prev_mode = bct.body_control_mode
+
+        # Heartbeat: periodically fill inactive (NaN) mode-dependent curves with
+        # 0.0 so PlotJuggler keeps trimming them and the time axis doesn't stretch.
+        # Re-sync on reboot so a re-grounded timeline can't stall the heartbeat.
+        if reboot:
+            self._last_heartbeat_ns = None
+        if self._heartbeat_enabled:
+            if (self._last_heartbeat_ns is None or
+                    plot_stamp_ns - self._last_heartbeat_ns >=
+                    self._heartbeat_period_ns):
+                apply_heartbeat(dims)
+                self._last_heartbeat_ns = plot_stamp_ns
 
         out = ControlsAnalysis()
         if self._use_robot_time:

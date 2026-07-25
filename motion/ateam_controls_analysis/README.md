@@ -109,6 +109,26 @@ ros2 bag play /path/to/bag --topics /robot_feedback/extended/robot0
 | `reliability` | `reliable` | Telemetry subscription QoS: `reliable` or `best_effort`. |
 | `use_robot_time` | `true` | Stamp the output header with the reconstructed robot timeline (see below). When `false`, uses the ROS receive time. |
 | `reboot_reset_threshold_us` | `1000000` | Backward jump in the robot µs counter treated as a reboot. |
+| `heartbeat_enabled` | `true` | Periodically publish `0.0` on mode-dependent curves so they keep trimming while streaming (see below). |
+| `heartbeat_period_sec` | `1.0` | Heartbeat interval, measured on the (robot) plot timeline. |
+
+## Heartbeat (streaming: keep idle curves from stretching the time axis)
+
+PlotJuggler **discards NaN/inf samples** and trims each series only relative to
+that series' own newest sample. A software-command or per-mode-split curve that
+goes idle (its mode is inactive) therefore stops receiving finite points, its
+stale tail never trims, and it anchors the left edge of the plot — stretching
+the streaming view so your live buffer shrinks to a sliver on the right.
+
+To avoid this, `heartbeat_enabled` (default `true`) publishes `0.0` on the
+mode-dependent curves (the `*_cmd` single-series, the per-mode `*_cmd_*` splits,
+and the per-mode `*_traj_*` splits) once per `heartbeat_period_sec` of plot time
+whenever they are inactive. This keeps those series advancing so PlotJuggler
+trims them and the trailing window stays put. Trade-off: idle curves show a
+`0.0` dot roughly once per second (visible in Dots mode) instead of a pure gap.
+Estimate, single-series trajectory, firmware-output, and measurement curves are
+never gapped and so are never heartbeated. Set `heartbeat_enabled:=false` to
+restore pure NaN gaps.
 
 ## Time axis (reconstructed robot time)
 

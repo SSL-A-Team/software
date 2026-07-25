@@ -23,6 +23,7 @@
 import math
 
 from ateam_controls_analysis.routing import (
+    apply_heartbeat,
     BCM_GLOBAL_ACCEL,
     BCM_GLOBAL_POSITION,
     BCM_GLOBAL_VELOCITY,
@@ -32,6 +33,8 @@ from ateam_controls_analysis.routing import (
     BCM_OFF,
     compute_dimensions,
     dimension_field_names,
+    heartbeat_field_names,
+    HEARTBEAT_VALUE,
     robot_timestamp_us,
     RobotClock,
     TelemetrySample,
@@ -199,3 +202,41 @@ def test_robot_clock_ignores_small_backsteps():
     stamp, reboot = c.update(9_990_000, 1_010_000_000)
     assert reboot is False
     assert c.reboot_count == 0
+
+
+def test_heartbeat_fields_are_subset_of_dimension_fields():
+    dim_fields = set(dimension_field_names())
+    for name in heartbeat_field_names():
+        assert name in dim_fields
+    # measurement N/A fields are excluded
+    assert 'vel_gyro' not in heartbeat_field_names()
+    assert 'accel_imu' not in heartbeat_field_names()
+    # estimate/traj/firmware-output are excluded (never gap)
+    assert 'pos_estimate' not in heartbeat_field_names()
+    assert 'vel_traj' not in heartbeat_field_names()
+    assert 'accel_u' not in heartbeat_field_names()
+
+
+def test_apply_heartbeat_fills_only_nan_heartbeat_fields():
+    # OFF -> all cmd/per-mode-split fields are NaN
+    d = compute_dimensions(_sample(BCM_OFF, None))
+    apply_heartbeat(d)
+    for name in heartbeat_field_names():
+        assert d['x'][name] == HEARTBEAT_VALUE
+    # non-heartbeat fields keep their real values / stay NaN as appropriate
+    assert d['x']['pos_estimate'] == 1.0          # untouched real value
+    assert _isnan(d['x']['vel_gyro'])             # N/A field not filled
+
+
+def test_apply_heartbeat_does_not_overwrite_active_values():
+    # GLOBAL_POSITION -> pos_cmd is a real value and must be preserved
+    d = compute_dimensions(_sample(BCM_GLOBAL_POSITION, (3.0, 4.0, 1.5)))
+    apply_heartbeat(d)
+    assert d['x']['pos_cmd'] == 3.0               # active, not heartbeat
+    assert d['x']['pos_cmd_global_pos'] == 3.0    # active split preserved
+    # inactive derivatives get the heartbeat
+    assert d['x']['vel_cmd'] == HEARTBEAT_VALUE
+    assert d['x']['accel_cmd'] == HEARTBEAT_VALUE
+    # active mode's traj split preserved; other modes heartbeat
+    assert d['x']['pos_traj_global_pos'] == 1.1
+    assert d['x']['pos_traj_global_vel'] == HEARTBEAT_VALUE

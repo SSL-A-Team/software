@@ -182,6 +182,48 @@ def dimension_field_names() -> Tuple[str, ...]:
     return tuple(names)
 
 
+# Value published as a periodic heartbeat on otherwise-inactive curves.
+HEARTBEAT_VALUE = 0.0
+
+
+def heartbeat_field_names() -> Tuple[str, ...]:
+    """
+    Return the DimensionAnalysis fields that can go inactive by control mode.
+
+    These are the software-command curves (single-series and per-mode splits)
+    and the per-mode reference-trajectory splits: they are NaN whenever their
+    mode is inactive, so in a streaming buffer they otherwise freeze (their
+    stale tail never trims). A periodic ``HEARTBEAT_VALUE`` keeps them alive.
+    Always-N/A measurement fields (e.g. x/y ``vel_gyro``, theta ``accel_imu``)
+    are intentionally excluded — they are structurally absent, not "inactive".
+    """
+    names = [
+        'pos_cmd', 'vel_cmd', 'accel_cmd',
+        'pos_cmd_global_pos',
+        'vel_cmd_global_vel', 'vel_cmd_local_vel',
+        'accel_cmd_global_acc', 'accel_cmd_local_acc',
+    ]
+    for deriv in ('pos', 'vel'):
+        for m in TRAJ_MODES:
+            names.append(f'{deriv}_traj_{MODE_SUFFIX[m]}')
+    return tuple(names)
+
+
+def apply_heartbeat(dims: Dict[str, Dict[str, float]]) -> None:
+    """
+    In-place: set NaN heartbeat-eligible fields to ``HEARTBEAT_VALUE``.
+
+    Only fields that are currently NaN (inactive this sample) are filled, so
+    active/real values are never overwritten.
+    """
+    for d in DIMS:
+        fd = dims[d]
+        for name in heartbeat_field_names():
+            v = fd[name]
+            if isinstance(v, float) and math.isnan(v):
+                fd[name] = HEARTBEAT_VALUE
+
+
 def _rotate_local_to_global(
     native: Tuple[float, float, float], theta: float
 ) -> Tuple[float, float, float]:
