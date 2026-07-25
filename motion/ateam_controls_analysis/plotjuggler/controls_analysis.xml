@@ -5,7 +5,7 @@
    <Container>
     <DockSplitter count="3" orientation="-" sizes="0.34;0.33;0.33">
      <DockArea name="X position">
-      <plot style="Lines" mode="TimeSeries" flip_y="false" flip_x="false">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
        <curve name="/controls_analysis/x/pos_cmd" color="#3300ff"/>
@@ -22,7 +22,7 @@
       </plot>
      </DockArea>
      <DockArea name="X velocity">
-      <plot style="Lines" mode="TimeSeries" flip_y="false" flip_x="false">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
        <curve name="/controls_analysis/x/vel_cmd" color="#3300ff"/>
@@ -38,7 +38,7 @@
       </plot>
      </DockArea>
      <DockArea name="X acceleration">
-      <plot style="Lines" mode="TimeSeries" flip_y="false" flip_x="false">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
        <curve name="/controls_analysis/x/accel_cmd" color="#3300ff"/>
@@ -54,7 +54,7 @@
    <Container>
     <DockSplitter count="3" orientation="-" sizes="0.34;0.33;0.33">
      <DockArea name="Y position">
-      <plot style="Lines" mode="TimeSeries" flip_y="false" flip_x="false">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
        <curve name="/controls_analysis/y/pos_cmd" color="#3300ff"/>
@@ -71,7 +71,7 @@
       </plot>
      </DockArea>
      <DockArea name="Y velocity">
-      <plot style="Lines" mode="TimeSeries" flip_y="false" flip_x="false">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
        <curve name="/controls_analysis/y/vel_cmd" color="#3300ff"/>
@@ -87,7 +87,7 @@
       </plot>
      </DockArea>
      <DockArea name="Y acceleration">
-      <plot style="Lines" mode="TimeSeries" flip_y="false" flip_x="false">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
        <curve name="/controls_analysis/y/accel_cmd" color="#3300ff"/>
@@ -103,7 +103,7 @@
    <Container>
     <DockSplitter count="3" orientation="-" sizes="0.34;0.33;0.33">
      <DockArea name="Theta position">
-      <plot style="Lines" mode="TimeSeries" flip_y="false" flip_x="false">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
        <curve name="/controls_analysis/theta/pos_cmd" color="#3300ff"/>
@@ -120,7 +120,7 @@
       </plot>
      </DockArea>
      <DockArea name="Theta velocity">
-      <plot style="Lines" mode="TimeSeries" flip_y="false" flip_x="false">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
        <curve name="/controls_analysis/theta/vel_cmd" color="#3300ff"/>
@@ -137,7 +137,7 @@
       </plot>
      </DockArea>
      <DockArea name="Theta acceleration">
-      <plot style="Lines" mode="TimeSeries" flip_y="false" flip_x="false">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
        <curve name="/controls_analysis/theta/accel_cmd" color="#3300ff"/>
