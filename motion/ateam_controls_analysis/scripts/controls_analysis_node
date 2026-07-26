@@ -49,6 +49,9 @@ Parameters:
     on the (robot) plot timeline.
 """
 
+import argparse
+import sys
+
 from ateam_controls_analysis.routing import (
     apply_heartbeat,
     BCM_GLOBAL_ACCEL,
@@ -66,6 +69,7 @@ from ateam_controls_analysis_msgs.msg import ControlsAnalysis
 from ateam_radio_msgs.msg import ExtendedTelemetry
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from rclpy.qos import QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 
@@ -97,8 +101,9 @@ def _extract_cmd_native(bct):
 class ControlsAnalysisNode(Node):
     """Republishes one robot's ExtendedTelemetry as ControlsAnalysis."""
 
-    def __init__(self):
-        super().__init__('controls_analysis_node')
+    def __init__(self, parameter_overrides=None):
+        super().__init__('controls_analysis_node',
+                         parameter_overrides=parameter_overrides or [])
 
         robot_id = self.declare_parameter('robot_id', 0).value
         input_topic = self.declare_parameter('input_topic', '').value
@@ -190,9 +195,57 @@ class ControlsAnalysisNode(Node):
         self._pub.publish(out)
 
 
-def main(args=None):
-    rclpy.init(args=args)
-    node = ControlsAnalysisNode()
+def _build_arg_parser():
+    p = argparse.ArgumentParser(
+        prog='controls_analysis_node',
+        description='Republish one robot\'s ExtendedTelemetry as '
+                    'PlotJuggler-friendly ControlsAnalysis. Convenience CLI '
+                    'flags below set the matching ROS parameters; any extra '
+                    'args (e.g. --ros-args ...) are forwarded to rclpy.')
+    p.add_argument('--robot_id', '--robot-id', type=int, dest='robot_id',
+                   help='Robot whose telemetry to analyze (default 0).')
+    p.add_argument('--input-topic', dest='input_topic',
+                   help='Override input topic.')
+    p.add_argument('--output-topic', dest='output_topic',
+                   help='Output topic (default /controls_analysis).')
+    p.add_argument('--reliability', choices=['reliable', 'best_effort'],
+                   help='Telemetry subscription QoS.')
+    p.add_argument('--use-robot-time', action=argparse.BooleanOptionalAction,
+                   default=None, dest='use_robot_time',
+                   help='Stamp header with reconstructed robot time.')
+    p.add_argument('--reboot-reset-threshold-us', type=int,
+                   dest='reboot_reset_threshold_us',
+                   help='Backward robot-clock jump (us) treated as a reboot.')
+    p.add_argument('--heartbeat', action=argparse.BooleanOptionalAction,
+                   default=None, dest='heartbeat_enabled',
+                   help='Periodically publish 0.0 on inactive mode curves.')
+    p.add_argument('--heartbeat-period-sec', type=float,
+                   dest='heartbeat_period_sec',
+                   help='Heartbeat interval in plot-time seconds.')
+    return p
+
+
+def _overrides_from_args(ns):
+    """Map provided (non-None) CLI values to ROS Parameter overrides."""
+    names = [
+        'robot_id', 'input_topic', 'output_topic', 'reliability',
+        'use_robot_time', 'reboot_reset_threshold_us',
+        'heartbeat_enabled', 'heartbeat_period_sec',
+    ]
+    overrides = []
+    for name in names:
+        value = getattr(ns, name)
+        if value is not None:
+            overrides.append(Parameter(name, value=value))
+    return overrides
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    ns, ros_argv = _build_arg_parser().parse_known_args(argv)
+
+    rclpy.init(args=[sys.argv[0], *ros_argv])
+    node = ControlsAnalysisNode(parameter_overrides=_overrides_from_args(ns))
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
