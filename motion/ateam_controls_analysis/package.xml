@@ -16,6 +16,7 @@
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <exec_depend>rclpy</exec_depend>
+  <exec_depend>rosbag2_py</exec_depend>
   <exec_depend>ateam_radio_msgs</exec_depend>
   <exec_depend>ateam_controls_analysis_msgs</exec_depend>
 

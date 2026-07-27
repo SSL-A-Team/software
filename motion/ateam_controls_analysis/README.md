@@ -18,11 +18,17 @@ computations PlotJuggler can't do natively:
 - splits the reference trajectory and command into **per-mode series** so each
   body control mode is drawn in its own color with natural gaps.
 
+The same computations are available offline as a **bag → bag converter**
+(`controls_analysis_bag_convert`): it reads a recorded `ExtendedTelemetry` bag
+and writes a new bag containing `/controls_analysis`, which PlotJuggler can open
+**directly** (native full-bag load) — no node, no replay-streaming. See
+[From a ROS bag](#from-a-ros-bag).
+
 ## Packages
 
 - `ateam_controls_analysis_msgs` — the `ControlsAnalysis` message.
-- `ateam_controls_analysis` — the republisher node, the PlotJuggler layout, and
-  the launch file.
+- `ateam_controls_analysis` — the republisher node, the offline bag converter,
+  the PlotJuggler layout, and the launch file.
 
 ## Views
 
@@ -80,8 +86,53 @@ against robot time), subscribe to `/controls_analysis`, and load the layout:
 
 ### From a ROS bag
 
-Play the bag through the node (native PlotJuggler bag loading would not run the
-node, so replay + stream instead):
+There are two ways to analyze a recorded bag.
+
+#### Native full-bag load (recommended)
+
+Convert the recorded `ExtendedTelemetry` bag into a new bag that contains the
+flat `/controls_analysis` signals, then open that bag **directly** in PlotJuggler
+(File → Open, no node, no streaming). This loads the entire timeline at once so
+you can scrub the whole run:
+
+```bash
+ros2 run ateam_controls_analysis controls_analysis_bag_convert \
+    /path/to/game_bag --robot-id 0
+# writes /path/to/game_bag_controls_analysis
+```
+
+Then in PlotJuggler open `game_bag_controls_analysis` and load the bundled
+layout (`Layout → File → share/ateam_controls_analysis/plotjuggler/controls_analysis.xml`).
+The layout binds to the same `/controls_analysis` topic, so it works identically
+for the converted bag and the live stream.
+
+The converter reconstructs the robot-time axis by default (same as the node's
+`use_robot_time=true`): output message timestamps advance by the robot's own
+elapsed microseconds and re-ground on reboot, independent of how the bag was
+recorded. Pass `--no-use-robot-time` to keep the original bag timestamps.
+
+Converter options:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `input_bag` (positional) | — | Path to the recorded bag. |
+| `-o`, `--output` | `<input>_controls_analysis` | Output bag path. |
+| `--robot-id` | `0` | Robot whose telemetry to convert. |
+| `--input-topic` | `/robot_feedback/extended/robot{id}` | Override input topic. |
+| `--output-topic` | `/controls_analysis` | Output topic. |
+| `--use-robot-time` / `--no-use-robot-time` | robot time | Output timeline. |
+| `--reboot-reset-threshold-us` | `1000000` | Backward µs jump treated as a reboot. |
+| `--input-storage-id` | auto | Input storage plugin (empty = auto-detect). |
+| `--output-storage-id` | input's | Output storage plugin (default: match input). |
+
+> Unlike the streaming node, the converter applies **no heartbeat** — for an
+> offline full-bag load pure NaN gaps are correct (there is no live buffer whose
+> time axis could stretch).
+
+#### Replay + stream
+
+Alternatively, play the bag through the node and stream into PlotJuggler (useful
+for watching a run unfold at a chosen rate):
 
 ```bash
 ros2 launch ateam_controls_analysis controls_analysis.launch.py \

@@ -14,6 +14,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Executable node / helper scripts.
 install(PROGRAMS
   scripts/controls_analysis_node
+  scripts/controls_analysis_bag_convert
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -28,6 +29,7 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(routing_test test/test_routing.py)
+  ament_add_pytest_test(bag_convert_test test/test_bag_convert.py)
 endif()
 
 ament_package()

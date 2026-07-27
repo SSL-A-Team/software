@@ -54,16 +54,13 @@ import sys
 
 from ateam_controls_analysis.routing import (
     apply_heartbeat,
-    BCM_GLOBAL_ACCEL,
-    BCM_GLOBAL_POSITION,
-    BCM_GLOBAL_VELOCITY,
-    BCM_LOCAL_ACCEL,
-    BCM_LOCAL_VELOCITY,
     compute_dimensions,
-    DIMS,
     robot_timestamp_us,
     RobotClock,
-    TelemetrySample,
+)
+from ateam_controls_analysis.telemetry import (
+    populate_analysis,
+    sample_from_extended,
 )
 from ateam_controls_analysis_msgs.msg import ControlsAnalysis
 from ateam_radio_msgs.msg import ExtendedTelemetry
@@ -72,30 +69,6 @@ from rclpy.node import Node
 from rclpy.parameter import Parameter
 from rclpy.qos import QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
-
-
-def _extract_cmd_native(bct):
-    """Pull the active maneuver's echoed command as an (a, b, c) tuple.
-
-    Returns None for modes without a direct x/y/theta command mapping.
-    """
-    mode = bct.body_control_mode
-    if mode == BCM_GLOBAL_POSITION:
-        e = bct.maneuver_global_pos.cmd_echo
-        return (e.global_x, e.global_y, e.global_theta)
-    if mode == BCM_GLOBAL_VELOCITY:
-        e = bct.maneuver_global_vel.cmd_echo
-        return (e.global_xd, e.global_yd, e.global_omega)
-    if mode == BCM_LOCAL_VELOCITY:
-        e = bct.maneuver_local_vel.cmd_echo
-        return (e.local_xd, e.local_yd, e.local_omega)
-    if mode == BCM_GLOBAL_ACCEL:
-        e = bct.maneuver_global_acc.cmd_echo
-        return (e.global_xdd, e.global_ydd, e.global_alpha)
-    if mode == BCM_LOCAL_ACCEL:
-        e = bct.maneuver_local_acc.cmd_echo
-        return (e.local_xdd, e.local_ydd, e.local_alpha)
-    return None
 
 
 class ControlsAnalysisNode(Node):
@@ -149,19 +122,7 @@ class ControlsAnalysisNode(Node):
         plot_stamp_ns = stamp_ns if self._use_robot_time else ros_now.nanoseconds
 
         bct = msg.body_control_telemetry
-        sample = TelemetrySample(
-            mode=bct.body_control_mode,
-            kf_pos_estimate=bct.kf_body_pos_estimate,
-            kf_vel_estimate=bct.kf_body_vel_estimate,
-            traj_pos=bct.body_traj_pos,
-            traj_vel=bct.body_traj_vel,
-            vision_pose=bct.vision_pose,
-            imu_gyro=bct.imu_gyro,
-            imu_accel=bct.imu_accel,
-            accel_u=bct.body_accel_u,
-            accel_u_fric_comp=bct.body_accel_u_fric_comp,
-            cmd_native=_extract_cmd_native(bct),
-        )
+        sample = sample_from_extended(msg)
 
         dims = compute_dimensions(sample, self._prev_mode)
         self._prev_mode = bct.body_control_mode
@@ -183,14 +144,8 @@ class ControlsAnalysisNode(Node):
             out.header.stamp = Time(nanoseconds=stamp_ns).to_msg()
         else:
             out.header.stamp = ros_now.to_msg()
-        out.body_control_mode = int(bct.body_control_mode)
-        out.theta_estimate = float(bct.kf_body_pos_estimate[2])
-        out.reboot_event = 1.0 if reboot else 0.0
-        out.reboot_count = int(self._robot_clock.reboot_count)
-        for dim in DIMS:
-            sub = getattr(out, dim)
-            for name, value in dims[dim].items():
-                setattr(sub, name, value)
+        populate_analysis(
+            out, sample, dims, reboot, self._robot_clock.reboot_count)
 
         self._pub.publish(out)
 
