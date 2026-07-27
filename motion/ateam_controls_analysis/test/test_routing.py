@@ -32,12 +32,16 @@ from ateam_controls_analysis.routing import (
     BCM_LOCAL_VELOCITY,
     BCM_OFF,
     compute_dimensions,
+    compute_wheels,
     dimension_field_names,
     heartbeat_field_names,
     HEARTBEAT_VALUE,
     robot_timestamp_us,
     RobotClock,
     TelemetrySample,
+    wheel_field_names,
+    WHEELS,
+    WheelSample,
 )
 
 
@@ -240,3 +244,35 @@ def test_apply_heartbeat_does_not_overwrite_active_values():
     # active mode's traj split preserved; other modes heartbeat
     assert d['x']['pos_traj_global_pos'] == 1.1
     assert d['x']['pos_traj_global_vel'] == HEARTBEAT_VALUE
+
+
+def test_wheel_field_names():
+    assert wheel_field_names() == ('vel', 'vel_setpoint', 'current',
+                                   'current_setpoint')
+
+
+def test_compute_wheels_passes_through_all_wheels():
+    wheels = {
+        'front_left': WheelSample(1.0, 1.1, 10.0, 11.0),
+        'back_left': WheelSample(2.0, 2.1, 20.0, 21.0),
+        'back_right': WheelSample(3.0, 3.1, 30.0, 31.0),
+        'front_right': WheelSample(4.0, 4.1, 40.0, 41.0),
+    }
+    sample = _sample(BCM_OFF, None)
+    sample.wheels = wheels
+    w = compute_wheels(sample)
+    assert set(w) == set(WHEELS)
+    for name in wheel_field_names():
+        assert name in w['front_left']
+    assert w['front_left']['vel'] == 1.0
+    assert w['front_left']['vel_setpoint'] == 1.1
+    assert w['back_right']['current'] == 30.0
+    assert w['front_right']['current_setpoint'] == 41.0
+
+
+def test_compute_wheels_default_sample_is_nan():
+    # A TelemetrySample built without wheels defaults every wheel field to NaN.
+    w = compute_wheels(_sample(BCM_OFF, None))
+    for wheel in WHEELS:
+        for name in wheel_field_names():
+            assert _isnan(w[wheel][name])

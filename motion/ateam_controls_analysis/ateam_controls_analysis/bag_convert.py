@@ -145,7 +145,7 @@ def convert_bag(input_uri, output_uri=None, robot_id=0, input_topic=None,
         msg = deserialize_message(data, ExtendedTelemetry)
 
         robot_us = robot_timestamp_us(msg.timestamp_us_hi, msg.timestamp_us_lo)
-        stamp_ns, reboot = clock.update(robot_us, bag_time_ns)
+        stamp_ns, _ = clock.update(robot_us, bag_time_ns)
         out_ns = stamp_ns if use_robot_time else bag_time_ns
 
         sample = sample_from_extended(msg)
@@ -154,7 +154,7 @@ def convert_bag(input_uri, output_uri=None, robot_id=0, input_topic=None,
 
         out = ControlsAnalysis()
         out.header.stamp = Time(nanoseconds=out_ns).to_msg()
-        populate_analysis(out, sample, dims, reboot, clock.reboot_count)
+        populate_analysis(out, sample, dims, clock.reboot_count)
 
         writer.write(output_topic, serialize_message(out), out_ns)
         written += 1

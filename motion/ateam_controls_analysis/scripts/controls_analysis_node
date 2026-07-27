@@ -145,7 +145,7 @@ class ControlsAnalysisNode(Node):
         else:
             out.header.stamp = ros_now.to_msg()
         populate_analysis(
-            out, sample, dims, reboot, self._robot_clock.reboot_count)
+            out, sample, dims, self._robot_clock.reboot_count)
 
         self._pub.publish(out)
 

@@ -148,6 +148,95 @@
     </DockSplitter>
    </Container>
   </Tab>
+  <Tab containers="1" tab_name="Velocity">
+   <Container>
+    <DockSplitter count="4" orientation="-" sizes="0.25;0.25;0.25;0.25">
+     <DockArea name="Front Left wheel velocity">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
+       <range bottom="-1" top="1" left="0" right="1"/>
+       <limitY/>
+       <curve name="/controls_analysis/front_left/vel" color="#6ffff3"/>
+       <curve name="/controls_analysis/front_left/vel_setpoint" color="#0000ff"/>
+      </plot>
+     </DockArea>
+     <DockArea name="Back Left wheel velocity">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
+       <range bottom="-1" top="1" left="0" right="1"/>
+       <limitY/>
+       <curve name="/controls_analysis/back_left/vel" color="#6ffff3"/>
+       <curve name="/controls_analysis/back_left/vel_setpoint" color="#0000ff"/>
+      </plot>
+     </DockArea>
+     <DockArea name="Back Right wheel velocity">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
+       <range bottom="-1" top="1" left="0" right="1"/>
+       <limitY/>
+       <curve name="/controls_analysis/back_right/vel" color="#6ffff3"/>
+       <curve name="/controls_analysis/back_right/vel_setpoint" color="#0000ff"/>
+      </plot>
+     </DockArea>
+     <DockArea name="Front Right wheel velocity">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
+       <range bottom="-1" top="1" left="0" right="1"/>
+       <limitY/>
+       <curve name="/controls_analysis/front_right/vel" color="#6ffff3"/>
+       <curve name="/controls_analysis/front_right/vel_setpoint" color="#0000ff"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="Current">
+   <Container>
+    <DockSplitter count="4" orientation="-" sizes="0.25;0.25;0.25;0.25">
+     <DockArea name="Front Left wheel current">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
+       <range bottom="-1" top="1" left="0" right="1"/>
+       <limitY/>
+       <curve name="/controls_analysis/front_left/current" color="#6ffff3"/>
+       <curve name="/controls_analysis/front_left/current_setpoint" color="#0000ff"/>
+      </plot>
+     </DockArea>
+     <DockArea name="Back Left wheel current">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
+       <range bottom="-1" top="1" left="0" right="1"/>
+       <limitY/>
+       <curve name="/controls_analysis/back_left/current" color="#6ffff3"/>
+       <curve name="/controls_analysis/back_left/current_setpoint" color="#0000ff"/>
+      </plot>
+     </DockArea>
+     <DockArea name="Back Right wheel current">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
+       <range bottom="-1" top="1" left="0" right="1"/>
+       <limitY/>
+       <curve name="/controls_analysis/back_right/current" color="#6ffff3"/>
+       <curve name="/controls_analysis/back_right/current_setpoint" color="#0000ff"/>
+      </plot>
+     </DockArea>
+     <DockArea name="Front Right wheel current">
+      <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
+       <range bottom="-1" top="1" left="0" right="1"/>
+       <limitY/>
+       <curve name="/controls_analysis/front_right/current" color="#6ffff3"/>
+       <curve name="/controls_analysis/front_right/current_setpoint" color="#0000ff"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab containers="1" tab_name="Boot">
+   <Container>
+    <DockSplitter count="1" orientation="-" sizes="1">
+     <DockArea name="Boot count">
+      <plot style="Steps" mode="TimeSeries" flip_y="false" flip_x="false">
+       <range bottom="-1" top="1" left="0" right="1"/>
+       <limitY/>
+       <curve name="/controls_analysis/reboot_count" color="#ff0000"/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
   <currentTabIndex index="0"/>
  </tabbed_widget>
  <use_relative_time_offset enabled="1"/>

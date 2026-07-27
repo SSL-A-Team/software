@@ -32,14 +32,27 @@ and writes a new bag containing `/controls_analysis`, which PlotJuggler can open
 
 ## Views
 
-Three views (X, Y, Theta). Each view is three vertically stacked plots sharing a
-time axis:
+Three body-frame views (X, Y, Theta). Each view is three vertically stacked
+plots sharing a time axis:
 
 | Plot | Derivative | Curves |
 |------|-----------|--------|
 | Position | 1st | state estimate, reference trajectory (per-mode colored), vision measurement, software cmd (`BCM_GLOBAL_POSITION`) |
 | Velocity | 2nd | state estimate, reference trajectory (per-mode colored), software cmd (`BCM_GLOBAL_VELOCITY`/`BCM_LOCAL_VELOCITY`), gyro (theta only) |
 | Acceleration | 3rd | firmware output accel + friction-compensated output accel, software cmd (`BCM_GLOBAL_ACCEL`/`BCM_LOCAL_ACCEL`), IMU accel (x/y only) |
+
+Three additional wheel/boot views, whose time axis is linked to the body-frame
+views (all plots are `TimeSeries`, so panning/zooming the time axis is shared):
+
+| View | Layout | Curves |
+|------|--------|--------|
+| Velocity | 4 stacked plots (front-left, back-left, back-right, front-right) | measured wheel velocity (`vel`, rad/s) vs. setpoint (`vel_setpoint`) per wheel |
+| Current | 4 stacked plots (same wheel order) | mean measured current (`current`, mA — mean of `current_samples_ma`, signed by the commanded `current_setpoint`) vs. setpoint (`current_setpoint`) per wheel |
+| Boot | 1 plot | boot count (`reboot_count`) as a step signal |
+
+Wheel telemetry is sourced from the four `CcmTelemetry` motors in
+`ExtendedTelemetry` and is always present (never gapped by control mode); a
+wheel's `current` is NaN only when its per-cycle current-sample buffer is empty.
 
 ## Body control mode → derivative mapping (software command)
 
@@ -199,16 +212,13 @@ The reconstructed time is written to `header.stamp`, so in PlotJuggler enable
 **"Use timestamp from field/header"** on the ROS2 streaming plugin to plot
 against it.
 
-### Reboot indicators
+### Reboot indicator
 
-- `reboot_event` (float32) pulses to `1.0` on the first sample after a detected
-  reboot (else `0.0`).
-- `reboot_count` (uint32) is a monotonically increasing staircase of reboots.
-
-The bundled layouts add `reboot_event` (deep-pink) to every plot, so each reboot
-shows as a spike at the same instant across all stacked views on the shared time
-axis. (PlotJuggler has no true data-driven full-height vertical line; the
-`reboot_event` pulse and the `reboot_count` staircase are the practical markers.)
+`reboot_count` (uint32) is a monotonically increasing staircase of reboots seen
+so far. The bundled layout plots it as a step signal in the **Boot** view, so
+each reboot shows as a step up on the shared time axis. (PlotJuggler has no true
+data-driven full-height vertical line; the `reboot_count` staircase is the
+practical marker.)
 
 ## PlotJuggler layout
 

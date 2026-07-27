@@ -65,6 +65,18 @@ def _make_extended(robot_us, mode, vel_cmd, theta=0.0):
     bct.imu_accel = [0.0, 0.0, 0.0]
     bct.body_accel_u = [0.0, 0.0, 0.0]
     bct.body_accel_u_fric_comp = [0.0, 0.0, 0.0]
+    # Per-wheel motor telemetry. Give each wheel a distinct signature so the
+    # Velocity/Current view extraction (incl. current = mean(current_samples))
+    # can be asserted. front_left carries a two-sample current buffer whose mean
+    # is 15.0 with a positive setpoint; back_right carries the same magnitude
+    # buffer but a negative setpoint, so its measured current must flip sign to
+    # -15.0. The remaining wheels are left with empty buffers (current -> NaN).
+    msg.front_left_motor.velocity_telemetry.wheel_vel_rads = 1.0
+    msg.front_left_motor.velocity_telemetry.vel_setpoint_rads = 1.5
+    msg.front_left_motor.current_telemetry.current_setpoint_ma = 200
+    msg.front_left_motor.current_telemetry.current_samples_ma = [10, 20]
+    msg.back_right_motor.current_telemetry.current_setpoint_ma = -200
+    msg.back_right_motor.current_telemetry.current_samples_ma = [10, 20]
     if mode == BCM_GLOBAL_VELOCITY:
         e = bct.maneuver_global_vel.cmd_echo
         e.global_xd, e.global_yd, e.global_omega = vel_cmd
@@ -144,6 +156,21 @@ def test_convert_bag_round_trip(tmp_path):
     # global vel cmd -> vel_cmd on x, no rotation.
     assert math.isclose(first_msg.x.vel_cmd, 1.0, rel_tol=1e-5)
 
+    # Wheel telemetry (Velocity / Current views): front_left carries a distinct
+    # signature; current is the mean of its current-sample buffer ([10, 20]).
+    assert math.isclose(first_msg.front_left.vel, 1.0, rel_tol=1e-5)
+    assert math.isclose(first_msg.front_left.vel_setpoint, 1.5, rel_tol=1e-5)
+    assert math.isclose(first_msg.front_left.current, 15.0, rel_tol=1e-5)
+    assert math.isclose(first_msg.front_left.current_setpoint, 200.0,
+                        rel_tol=1e-5)
+    # A negative commanded current setpoint flips the sign of the (magnitude)
+    # measured current: same |mean| of 15.0, reported as -15.0.
+    assert math.isclose(first_msg.back_right.current, -15.0, rel_tol=1e-5)
+    assert math.isclose(first_msg.back_right.current_setpoint, -200.0,
+                        rel_tol=1e-5)
+    # Wheels with an empty current-sample buffer gap the current curve (NaN).
+    assert math.isnan(first_msg.back_left.current)
+
     # Second sample advanced by 100 ms of robot time from the ground.
     assert msgs[1][0] == 1_000_000_000 + 100_000 * 1000
 
@@ -157,11 +184,11 @@ def test_convert_bag_round_trip(tmp_path):
     assert abs(third.x.vel_cmd_local_vel) < 1e-4
 
     # Reboot sample: robot_us dropped far below previous -> re-grounded at its
-    # own bag time, and reboot_event pulses. Mode unchanged from prev, so the
-    # single-series command is populated and shows the local->global rotation.
+    # own bag time, and reboot_count increments. Mode unchanged from prev, so
+    # the single-series command is populated and shows the local->global
+    # rotation.
     reboot_stamp, reboot_msg = msgs[3]
     assert reboot_stamp == 5_000_000_000
-    assert reboot_msg.reboot_event == 1.0
     assert reboot_msg.reboot_count == 1
     assert abs(reboot_msg.y.vel_cmd - 1.0) < 1e-4
     assert abs(reboot_msg.x.vel_cmd) < 1e-4

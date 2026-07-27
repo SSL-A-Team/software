@@ -32,12 +32,19 @@ uint8 BCM_POINT_LINE = 31
 # Robot heading estimate (rad); used for local->global rotation, also plottable.
 float32 theta_estimate
 
-# Reboot indicators (reconstructed robot-time axis). reboot_event pulses to 1.0
-# on the first sample after a detected robot reboot (else 0.0); reboot_count is
-# a monotonically increasing staircase of reboots seen so far.
-float32 reboot_event
+# Reboot indicator (reconstructed robot-time axis): reboot_count is a
+# monotonically increasing staircase of reboots seen so far (plottable as a
+# step signal).
 uint32 reboot_count
 
 DimensionAnalysis x
 DimensionAnalysis y
 DimensionAnalysis theta
+
+# Per-wheel motor telemetry (measured vs. setpoint), stacked in the Velocity and
+# Current PlotJuggler views. Ordered front-left, back-left, back-right,
+# front-right to match the CcmTelemetry motor fields in ExtendedTelemetry.
+WheelAnalysis front_left
+WheelAnalysis back_left
+WheelAnalysis back_right
+WheelAnalysis front_right

@@ -8,6 +8,7 @@ find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   msg/DimensionAnalysis.msg
+  msg/WheelAnalysis.msg
   msg/ControlsAnalysis.msg
   DEPENDENCIES builtin_interfaces std_msgs
   ADD_LINTER_TESTS

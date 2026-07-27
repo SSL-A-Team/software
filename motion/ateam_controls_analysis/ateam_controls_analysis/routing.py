@@ -34,7 +34,7 @@ Conventions:
     series (non-NaN only while that mode is active) for color-by-mode plots.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import math
 from typing import Dict, Optional, Sequence, Tuple
 
@@ -56,6 +56,10 @@ BCM_POINT_LINE = 31
 # Dimension index into the telemetry float arrays.
 DIMS = ('x', 'y', 'theta')
 DIM_INDEX = {'x': 0, 'y': 1, 'theta': 2}
+
+# Wheel motor identifiers, ordered front-left, back-left, back-right,
+# front-right to match the CcmTelemetry motor fields in ExtendedTelemetry.
+WHEELS = ('front_left', 'back_left', 'back_right', 'front_right')
 
 # Short mode names used to build per-mode split-series field names.
 MODE_SUFFIX = {
@@ -93,6 +97,21 @@ _CMD_ROUTE = {
 
 
 @dataclass
+class WheelSample:
+    """Per-wheel telemetry scalars pulled from one CcmTelemetry motor."""
+
+    vel: float                # measured wheel velocity (rad/s)
+    vel_setpoint: float       # commanded wheel velocity setpoint (rad/s)
+    current: float            # mean measured current magnitude (mA)
+    current_setpoint: float   # commanded current setpoint (mA)
+
+
+def _default_wheels() -> Dict[str, 'WheelSample']:
+    """Zeroed-out (NaN) wheel samples for every wheel (test/default convenience)."""
+    return {w: WheelSample(NAN, NAN, NAN, NAN) for w in WHEELS}
+
+
+@dataclass
 class TelemetrySample:
     """The subset of ExtendedTelemetry needed for analysis, as plain floats."""
 
@@ -109,6 +128,9 @@ class TelemetrySample:
     # Active maneuver's echoed command in its native frame, or None if the
     # active mode has no direct x/y/theta mapping (OFF, ESTOP, pivot, line).
     cmd_native: Optional[Tuple[float, float, float]]
+    # Per-wheel motor telemetry keyed by name in WHEELS. Defaulted so callers /
+    # tests that only exercise the body-frame routing need not build wheels.
+    wheels: Dict[str, WheelSample] = field(default_factory=_default_wheels)
 
 
 # Default backward jump (microseconds) in the robot clock that is treated as a
@@ -180,6 +202,32 @@ def dimension_field_names() -> Tuple[str, ...]:
         'accel_cmd_global_acc', 'accel_cmd_local_acc',
     ]
     return tuple(names)
+
+
+def wheel_field_names() -> Tuple[str, ...]:
+    """Return every value field name in WheelAnalysis.msg."""
+    return ('vel', 'vel_setpoint', 'current', 'current_setpoint')
+
+
+def compute_wheels(sample: TelemetrySample) -> Dict[str, Dict[str, float]]:
+    """
+    Compute per-wheel WheelAnalysis field values for one sample.
+
+    Returns ``{wheel: {field: value}}`` for each wheel in :data:`WHEELS`. Wheel
+    telemetry is always present (never gapped by control mode), so the values
+    are passed through directly (NaN only where the source telemetry was
+    missing, e.g. an empty current-sample buffer).
+    """
+    result: Dict[str, Dict[str, float]] = {}
+    for w in WHEELS:
+        ws = sample.wheels[w]
+        result[w] = {
+            'vel': float(ws.vel),
+            'vel_setpoint': float(ws.vel_setpoint),
+            'current': float(ws.current),
+            'current_setpoint': float(ws.current_setpoint),
+        }
+    return result
 
 
 # Value published as a periodic heartbeat on otherwise-inactive curves.
