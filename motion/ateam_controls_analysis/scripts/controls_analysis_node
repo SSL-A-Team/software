@@ -22,29 +22,34 @@
 
 """Controls analysis republisher node.
 
-Subscribes to a single robot's ``ateam_radio_msgs/ExtendedTelemetry`` and
-republishes flat, PlotJuggler-friendly ``ControlsAnalysis`` messages. Works for
-both live streaming and ROS-bag playback (run this node while playing a bag).
+Subscribes to every configured robot's ``ateam_radio_msgs/ExtendedTelemetry``
+and republishes flat, Foxglove-friendly ``ControlsAnalysis`` messages, one topic
+per robot on ``/controls_analysis/robot{id}``. Works for both live streaming and
+ROS-bag playback (run this node while playing a bag).
 
 Parameters:
-  * ``robot_id`` (int, default 0): robot whose telemetry to analyze.
-  * ``input_topic`` (str, default ''): override input topic; when empty,
-    ``/robot_feedback/extended/robot{robot_id}`` is used.
-  * ``output_topic`` (str, default '/controls_analysis'): topic to publish the
-    analysis message on (single robot at a time).
+  * ``robot_ids`` (int[], default 0..15): robots to analyze. Each robot ``id``
+    subscribes to ``/robot_feedback/extended/robot{id}`` and publishes to
+    ``/controls_analysis/robot{id}``.
+  * ``input_topic_template`` (str, default
+    '/robot_feedback/extended/robot{id}'): input topic template; ``{id}`` is
+    replaced with each robot id.
+  * ``output_topic_template`` (str, default '/controls_analysis/robot{id}'):
+    output topic template; ``{id}`` is replaced with each robot id.
   * ``reliability`` (str, default 'reliable'): 'reliable' or 'best_effort'
     for the telemetry subscription QoS.
   * ``use_robot_time`` (bool, default True): stamp the output header with the
     reconstructed robot timeline (grounded at the first message's ROS time and
     advanced by robot-elapsed time, re-grounded on reboot). When False, the ROS
-    receive time is used. Enable 'use header timestamp' in PlotJuggler to plot
-    against this axis.
+    receive time is used. In Foxglove select the message ``header.stamp`` to
+    plot against this axis.
   * ``reboot_reset_threshold_us`` (int, default 1000000): backward jump in the
     robot microsecond counter treated as a reboot.
-  * ``heartbeat_enabled`` (bool, default True): periodically publish
+  * ``heartbeat_enabled`` (bool, default False): periodically publish
     ``0.0`` on curves that go inactive by control mode (software command +
-    per-mode split curves) so PlotJuggler keeps trimming them while streaming
-    (prevents an idle curve's stale tail from stretching the time axis).
+    per-mode split curves). This is a streaming-viewer aid for tools that trim
+    each series relative to its own newest sample; Foxglove plots against a
+    fixed time range and does not need it, so it defaults off.
   * ``heartbeat_period_sec`` (float, default 1.0): heartbeat interval, measured
     on the (robot) plot timeline.
 """
@@ -71,29 +76,40 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 
 
+DEFAULT_ROBOT_IDS = list(range(16))
+
+
+class _RobotState:
+    """Per-robot streaming state (clock, previous mode, heartbeat timer)."""
+
+    def __init__(self, publisher, reset_threshold_us):
+        self.publisher = publisher
+        self.clock = RobotClock(reset_threshold_us=int(reset_threshold_us))
+        self.prev_mode = None
+        self.last_heartbeat_ns = None
+
+
 class ControlsAnalysisNode(Node):
-    """Republishes one robot's ExtendedTelemetry as ControlsAnalysis."""
+    """Republishes each robot's ExtendedTelemetry as ControlsAnalysis."""
 
     def __init__(self, parameter_overrides=None):
         super().__init__('controls_analysis_node',
                          parameter_overrides=parameter_overrides or [])
 
-        robot_id = self.declare_parameter('robot_id', 0).value
-        input_topic = self.declare_parameter('input_topic', '').value
-        output_topic = self.declare_parameter(
-            'output_topic', '/controls_analysis').value
+        robot_ids = self.declare_parameter('robot_ids', DEFAULT_ROBOT_IDS).value
+        input_template = self.declare_parameter(
+            'input_topic_template', '/robot_feedback/extended/robot{id}').value
+        output_template = self.declare_parameter(
+            'output_topic_template', '/controls_analysis/robot{id}').value
         reliability = self.declare_parameter('reliability', 'reliable').value
         self._use_robot_time = self.declare_parameter(
             'use_robot_time', True).value
-        reset_threshold_us = self.declare_parameter(
+        self._reset_threshold_us = self.declare_parameter(
             'reboot_reset_threshold_us', 1000000).value
         self._heartbeat_enabled = self.declare_parameter(
-            'heartbeat_enabled', True).value
+            'heartbeat_enabled', False).value
         heartbeat_period_sec = self.declare_parameter(
             'heartbeat_period_sec', 1.0).value
-
-        if not input_topic:
-            input_topic = f'/robot_feedback/extended/robot{robot_id}'
 
         rel = (ReliabilityPolicy.BEST_EFFORT
                if str(reliability).lower() == 'best_effort'
@@ -101,43 +117,53 @@ class ControlsAnalysisNode(Node):
         sub_qos = QoSProfile(depth=50)
         sub_qos.reliability = rel
 
-        self._prev_mode = None
-        self._robot_clock = RobotClock(reset_threshold_us=int(reset_threshold_us))
         self._heartbeat_period_ns = int(float(heartbeat_period_sec) * 1e9)
-        self._last_heartbeat_ns = None
-        self._pub = self.create_publisher(ControlsAnalysis, output_topic, 50)
-        self._sub = self.create_subscription(
-            ExtendedTelemetry, input_topic, self._on_telemetry, sub_qos)
+        self._states = {}
+        self._subs = []
+        for robot_id in robot_ids:
+            robot_id = int(robot_id)
+            in_topic = input_template.format(id=robot_id)
+            out_topic = output_template.format(id=robot_id)
+            pub = self.create_publisher(ControlsAnalysis, out_topic, 50)
+            self._states[robot_id] = _RobotState(
+                pub, self._reset_threshold_us)
+            self._subs.append(self.create_subscription(
+                ExtendedTelemetry, in_topic,
+                self._make_callback(robot_id), sub_qos))
 
         self.get_logger().info(
-            f"controls_analysis: robot_id={robot_id} "
-            f"in='{input_topic}' out='{output_topic}' "
+            f'controls_analysis: robots={list(self._states)} '
+            f"in='{input_template}' out='{output_template}' "
             f'reliability={reliability} use_robot_time={self._use_robot_time} '
             f'heartbeat_enabled={self._heartbeat_enabled}')
 
-    def _on_telemetry(self, msg):
+    def _make_callback(self, robot_id):
+        state = self._states[robot_id]
+        return lambda msg: self._on_telemetry(state, msg)
+
+    def _on_telemetry(self, state, msg):
         ros_now = self.get_clock().now()
         robot_us = robot_timestamp_us(msg.timestamp_us_hi, msg.timestamp_us_lo)
-        stamp_ns, reboot = self._robot_clock.update(robot_us, ros_now.nanoseconds)
+        stamp_ns, reboot = state.clock.update(robot_us, ros_now.nanoseconds)
         plot_stamp_ns = stamp_ns if self._use_robot_time else ros_now.nanoseconds
 
         bct = msg.body_control_telemetry
         sample = sample_from_extended(msg)
 
-        dims = compute_dimensions(sample, self._prev_mode)
-        self._prev_mode = bct.body_control_mode
+        dims = compute_dimensions(sample, state.prev_mode)
+        state.prev_mode = bct.body_control_mode
 
         # Heartbeat: periodically fill inactive (NaN) mode-dependent curves with
-        # 0.0 so PlotJuggler keeps trimming them and the time axis doesn't stretch.
-        # Re-sync on reboot so a re-grounded timeline can't stall the heartbeat.
+        # 0.0 for streaming viewers that trim each series to its own newest
+        # sample. Re-sync on reboot so a re-grounded timeline can't stall it.
         if reboot:
-            self._last_heartbeat_ns = None
+            state.last_heartbeat_ns = None
         if self._heartbeat_enabled:
-            if (self._last_heartbeat_ns is None or
-                    plot_stamp_ns - self._last_heartbeat_ns >=
+            if (state.last_heartbeat_ns is None or
+                    plot_stamp_ns - state.last_heartbeat_ns >=
                     self._heartbeat_period_ns):
                 apply_heartbeat(dims)
-                self._last_heartbeat_ns = plot_stamp_ns
+                state.last_heartbeat_ns = plot_stamp_ns
 
         out = ControlsAnalysis()
         if self._use_robot_time:
@@ -145,24 +171,27 @@ class ControlsAnalysisNode(Node):
         else:
             out.header.stamp = ros_now.to_msg()
         populate_analysis(
-            out, sample, dims, self._robot_clock.reboot_count)
+            out, sample, dims, state.clock.reboot_count)
 
-        self._pub.publish(out)
+        state.publisher.publish(out)
 
 
 def _build_arg_parser():
     p = argparse.ArgumentParser(
         prog='controls_analysis_node',
-        description='Republish one robot\'s ExtendedTelemetry as '
-                    'PlotJuggler-friendly ControlsAnalysis. Convenience CLI '
-                    'flags below set the matching ROS parameters; any extra '
-                    'args (e.g. --ros-args ...) are forwarded to rclpy.')
-    p.add_argument('--robot_id', '--robot-id', type=int, dest='robot_id',
-                   help='Robot whose telemetry to analyze (default 0).')
-    p.add_argument('--input-topic', dest='input_topic',
-                   help='Override input topic.')
-    p.add_argument('--output-topic', dest='output_topic',
-                   help='Output topic (default /controls_analysis).')
+        description="Republish every robot's ExtendedTelemetry as "
+                    'Foxglove-friendly ControlsAnalysis, one topic per robot '
+                    '(/controls_analysis/robot{id}). Convenience CLI flags '
+                    'below set the matching ROS parameters; any extra args '
+                    '(e.g. --ros-args ...) are forwarded to rclpy.')
+    p.add_argument('--robot-ids', type=int, nargs='+', dest='robot_ids',
+                   help='Robots to analyze (default 0..15).')
+    p.add_argument('--input-topic-template', dest='input_topic_template',
+                   help='Input topic template with {id} (default '
+                        '/robot_feedback/extended/robot{id}).')
+    p.add_argument('--output-topic-template', dest='output_topic_template',
+                   help='Output topic template with {id} (default '
+                        '/controls_analysis/robot{id}).')
     p.add_argument('--reliability', choices=['reliable', 'best_effort'],
                    help='Telemetry subscription QoS.')
     p.add_argument('--use-robot-time', action=argparse.BooleanOptionalAction,
@@ -183,8 +212,8 @@ def _build_arg_parser():
 def _overrides_from_args(ns):
     """Map provided (non-None) CLI values to ROS Parameter overrides."""
     names = [
-        'robot_id', 'input_topic', 'output_topic', 'reliability',
-        'use_robot_time', 'reboot_reset_threshold_us',
+        'robot_ids', 'input_topic_template', 'output_topic_template',
+        'reliability', 'use_robot_time', 'reboot_reset_threshold_us',
         'heartbeat_enabled', 'heartbeat_period_sec',
     ]
     overrides = []

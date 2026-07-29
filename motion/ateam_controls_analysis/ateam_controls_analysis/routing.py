@@ -27,7 +27,7 @@ per-dimension field values that populate ``ControlsAnalysis.msg`` (three nested
 any ROS/rclpy imports so it is trivially unit-testable.
 
 Conventions:
-  * NaN marks 'no data at this instant' (creates gaps in PlotJuggler).
+  * NaN marks 'no data at this instant' (creates gaps in the plot viewer).
   * The software command (``cmd_echo``) is routed onto the derivative implied
     by the active body control mode, and rotated local->global when needed.
   * Reference trajectory and command are additionally emitted as per-mode

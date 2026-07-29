@@ -21,17 +21,18 @@
 r"""
 Launch the controls analysis republisher, optionally playing a ROS bag.
 
-Example invocations (live streaming, robot 2)::
+Example invocations (live streaming, all robots)::
 
-  ros2 launch ateam_controls_analysis controls_analysis.launch.py robot_id:=2
+  ros2 launch ateam_controls_analysis controls_analysis.launch.py
 
-Replay a bag through the node (robot 0)::
+Replay a bag through the node::
 
   ros2 launch ateam_controls_analysis controls_analysis.launch.py \\
-      robot_id:=0 bag:=/home/user/game_bag_friendly_greentea2
+      bag:=/home/user/game_bag_friendly_greentea2
 
-Then open PlotJuggler, start the 'ROS2 Topic Subscriber', and select the
-/controls_analysis topic (or load the bundled layout).
+Then open Foxglove, connect to the ROS graph (foxglove_bridge), and import a
+bundled layout from share/ateam_controls_analysis/foxglove/. Each robot is
+published on /controls_analysis/robot{id}.
 """
 
 from launch import LaunchDescription
@@ -42,7 +43,6 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    robot_id = LaunchConfiguration('robot_id')
     reliability = LaunchConfiguration('reliability')
     bag = LaunchConfiguration('bag')
     rate = LaunchConfiguration('rate')
@@ -50,7 +50,6 @@ def generate_launch_description():
     has_bag = PythonExpression(["'", bag, "' != ''"])
 
     return LaunchDescription([
-        DeclareLaunchArgument('robot_id', default_value='0'),
         DeclareLaunchArgument(
             'reliability', default_value='reliable',
             description="'reliable' or 'best_effort' telemetry sub QoS"),
@@ -66,7 +65,6 @@ def generate_launch_description():
             name='controls_analysis_node',
             output='screen',
             parameters=[{
-                'robot_id': robot_id,
                 'reliability': reliability,
             }],
         ),

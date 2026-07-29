@@ -33,6 +33,7 @@ from ateam_controls_analysis.bag_convert import (
     CONTROLS_ANALYSIS_TYPE,
     convert_bag,
     default_input_topic,
+    default_output_topic,
     default_output_uri,
     main,
     robot_id_from_topic,
@@ -48,6 +49,7 @@ import rosbag2_py
 
 ROBOT_ID = 2
 INPUT_TOPIC = default_input_topic(ROBOT_ID)
+OUTPUT_TOPIC = default_output_topic(ROBOT_ID)
 STORAGE_ID = 'mcap'
 
 
@@ -144,12 +146,12 @@ def test_convert_bag_round_trip(tmp_path):
     samples = _write_input_bag(input_uri)
 
     count = convert_bag(
-        input_uri=input_uri, output_uri=output_uri, robot_id=ROBOT_ID,
+        input_uri=input_uri, output_uri=output_uri, robot_ids=[ROBOT_ID],
         use_robot_time=True, output_storage_id=STORAGE_ID)
-    assert count == len(samples)
+    assert count == {ROBOT_ID: len(samples)}
 
-    types, msgs = _read_output_bag(output_uri, '/controls_analysis')
-    assert types['/controls_analysis'] == CONTROLS_ANALYSIS_TYPE
+    types, msgs = _read_output_bag(output_uri, OUTPUT_TOPIC)
+    assert types[OUTPUT_TOPIC] == CONTROLS_ANALYSIS_TYPE
     assert len(msgs) == len(samples)
 
     # Robot-time axis: grounded at first bag time (1e9 ns), then advanced by
@@ -204,17 +206,18 @@ def test_convert_bag_receive_time(tmp_path):
     _write_input_bag(input_uri)
 
     convert_bag(
-        input_uri=input_uri, output_uri=output_uri, robot_id=ROBOT_ID,
+        input_uri=input_uri, output_uri=output_uri, robot_ids=[ROBOT_ID],
         use_robot_time=False, output_storage_id=STORAGE_ID)
 
-    _, msgs = _read_output_bag(output_uri, '/controls_analysis')
+    _, msgs = _read_output_bag(output_uri, OUTPUT_TOPIC)
     # With use_robot_time=False the original bag timestamps are preserved.
     stamps = [s for s, _ in msgs]
     assert stamps == [1_000_000_000, 1_100_000_000, 1_200_000_000, 5_000_000_000]
 
 
 def _write_multi_robot_bag(uri, robot_ids, empty_robot_ids=()):
-    """Write a bag with one ExtendedTelemetry sample per robot id.
+    """
+    Write a bag with one ExtendedTelemetry sample per robot id.
 
     ``empty_robot_ids`` create the extended-telemetry topic but write no
     messages on it, so they should not count as available robots.
@@ -255,20 +258,47 @@ def test_available_robot_ids(tmp_path):
 
 
 def test_default_output_uri():
-    assert default_output_uri('/path/to/bag', 4) == '/path/to/bag_robot4'
-    assert default_output_uri('/path/to/bag/', 4) == '/path/to/bag_robot4'
+    assert default_output_uri('/path/to/bag') == '/path/to/bag_controls_analysis'
+    assert default_output_uri('/path/to/bag/') == \
+        '/path/to/bag_controls_analysis'
 
 
-def test_main_converts_all_robots_by_default(tmp_path):
+def test_default_output_topic():
+    assert default_output_topic(0) == '/controls_analysis/robot0'
+    assert default_output_topic(13) == '/controls_analysis/robot13'
+
+
+def test_main_converts_all_robots_into_one_bag(tmp_path):
     input_uri = str(tmp_path / 'game_bag')
     _write_multi_robot_bag(input_uri, [1, 4])
 
-    # No --robot-id: every robot in the bag is converted to its own bag.
+    # No --robot-ids: every robot in the bag is converted into ONE combined bag.
     main([input_uri, '--output-storage-id', STORAGE_ID])
 
+    output_uri = default_output_uri(input_uri)
+    assert output_uri == f'{input_uri}_controls_analysis'
     for robot_id in (1, 4):
-        output_uri = default_output_uri(input_uri, robot_id)
-        assert output_uri == f'{input_uri}_robot{robot_id}'
-        types, msgs = _read_output_bag(output_uri, '/controls_analysis')
-        assert types['/controls_analysis'] == CONTROLS_ANALYSIS_TYPE
+        topic = default_output_topic(robot_id)
+        types, msgs = _read_output_bag(output_uri, topic)
+        assert types[topic] == CONTROLS_ANALYSIS_TYPE
         assert len(msgs) == 1
+
+
+def test_convert_bag_multi_robot_independent_state(tmp_path):
+    """Each robot's clock/mode state is tracked independently in one bag."""
+    input_uri = str(tmp_path / 'in')
+    output_uri = str(tmp_path / 'out')
+    _write_multi_robot_bag(input_uri, [0, 3])
+
+    written = convert_bag(
+        input_uri=input_uri, output_uri=output_uri,
+        use_robot_time=True, output_storage_id=STORAGE_ID)
+    assert written == {0: 1, 3: 1}
+
+    for robot_id in (0, 3):
+        types, msgs = _read_output_bag(
+            output_uri, default_output_topic(robot_id))
+        assert types[default_output_topic(robot_id)] == CONTROLS_ANALYSIS_TYPE
+        assert len(msgs) == 1
+        # Each robot's first sample re-grounds its own clock -> reboot_count 0.
+        assert msgs[0][1].reboot_count == 0

@@ -23,18 +23,18 @@
 r"""CLI entry point for the controls-analysis bag -> bag converter.
 
 Thin wrapper around :func:`ateam_controls_analysis.bag_convert.main`. Reads a
-recorded ExtendedTelemetry bag and writes a new bag of ControlsAnalysis messages
-for native (full-bag) PlotJuggler loading. By default every robot found in the
-input bag is converted to its own ``<input>_robot{id}`` bag.
+recorded ExtendedTelemetry bag and writes a single combined bag of
+ControlsAnalysis messages (one topic per robot,
+``/controls_analysis/robot{id}``) for full-bag loading in Foxglove.
 
 Example::
 
-  # Convert every robot present in the bag (writes <bag>_robot{id} per robot):
+  # Convert every robot present in the bag into one <bag>_controls_analysis bag:
   ros2 run ateam_controls_analysis controls_analysis_bag_convert /path/to/game_bag
 
-  # Convert a single robot:
+  # Convert a subset of robots:
   ros2 run ateam_controls_analysis controls_analysis_bag_convert \\
-      /path/to/game_bag --robot-id 2
+      /path/to/game_bag --robot-ids 0 2 3
 """
 
 from ateam_controls_analysis.bag_convert import main

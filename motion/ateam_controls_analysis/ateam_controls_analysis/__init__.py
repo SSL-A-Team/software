@@ -21,6 +21,6 @@
 """
 ateam_controls_analysis package.
 
-Turns a single robot's ``ateam_radio_msgs/ExtendedTelemetry`` into flat,
-PlotJuggler-friendly analysis signals (see ``ControlsAnalysis.msg``).
+Turns each robot's ``ateam_radio_msgs/ExtendedTelemetry`` into flat,
+Foxglove-friendly analysis signals (see ``ControlsAnalysis.msg``).
 """

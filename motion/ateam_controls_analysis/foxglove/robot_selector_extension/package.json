@@ -1,0 +1,26 @@
+{
+  "name": "ateam-controls-analysis-robot-selector",
+  "displayName": "A-Team Controls Analysis Robot Selector",
+  "description": "Aliases /controls_analysis/robot{id} onto /controls_analysis_selected, chosen by the `robot` global variable, so layouts can switch robots without reloading the bag.",
+  "publisher": "ateam",
+  "homepage": "https://github.com/SSL-A-Team/software",
+  "license": "MIT",
+  "version": "1.0.0",
+  "keywords": [
+    "foxglove",
+    "extension"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "foxglove-extension build",
+    "foxglove:prepublish": "foxglove-extension build --mode production",
+    "local-install": "foxglove-extension install",
+    "package": "foxglove-extension package",
+    "lint": "eslint --ext .ts ./src"
+  },
+  "devDependencies": {
+    "@foxglove/extension": "^2.0.0",
+    "create-foxglove-extension": "^1.0.0",
+    "typescript": "^5.3.3"
+  }
+}

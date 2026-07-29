@@ -18,8 +18,8 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# PlotJuggler layouts and launch files.
-install(DIRECTORY plotjuggler launch
+# Foxglove layouts and launch files.
+install(DIRECTORY foxglove launch
   DESTINATION share/${PROJECT_NAME}
 )
 

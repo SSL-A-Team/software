@@ -1,0 +1,915 @@
+{
+  "configById": {
+    "Plot!x_pos": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.x.pos_cmd",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.pos_estimate",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff0000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.pos_vision",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.pos_traj_global_pos",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00c000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.pos_traj_global_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.pos_traj_local_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.pos_traj_heading_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.pos_traj_point_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.pos_traj_heading_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.pos_traj_point_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!x_vel": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.x.vel_cmd",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.vel_estimate",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff0000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.vel_traj_global_pos",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00c000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.vel_traj_global_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.vel_traj_local_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.vel_traj_heading_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.vel_traj_point_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.vel_traj_heading_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.vel_traj_point_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!x_acc": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.x.accel_cmd",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.accel_u",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff9c56",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.accel_u_fric_comp",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff6a00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.x.accel_imu",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!y_pos": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.y.pos_cmd",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.pos_estimate",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff0000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.pos_vision",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.pos_traj_global_pos",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00c000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.pos_traj_global_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.pos_traj_local_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.pos_traj_heading_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.pos_traj_point_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.pos_traj_heading_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.pos_traj_point_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!y_vel": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.y.vel_cmd",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.vel_estimate",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff0000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.vel_traj_global_pos",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00c000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.vel_traj_global_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.vel_traj_local_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.vel_traj_heading_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.vel_traj_point_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.vel_traj_heading_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.vel_traj_point_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!y_acc": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.y.accel_cmd",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.accel_u",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff9c56",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.accel_u_fric_comp",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff6a00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.y.accel_imu",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!theta_pos": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.theta.pos_cmd",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.pos_estimate",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff0000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.pos_vision",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.pos_traj_global_pos",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00c000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.pos_traj_global_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.pos_traj_local_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.pos_traj_heading_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.pos_traj_point_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.pos_traj_heading_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.pos_traj_point_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!theta_vel": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.theta.vel_cmd",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.vel_estimate",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff0000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.vel_gyro",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.vel_traj_global_pos",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00c000",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.vel_traj_global_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.vel_traj_local_vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ffea00",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.vel_traj_heading_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.vel_traj_point_pivot",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#9900ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.vel_traj_heading_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.vel_traj_point_line",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#6100a1",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!theta_acc": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.theta.accel_cmd",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.accel_u",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff9c56",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.theta.accel_u_fric_comp",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff6a00",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!front_left_vel": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.front_left.vel_setpoint",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.front_left.vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!back_left_vel": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.back_left.vel_setpoint",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.back_left.vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!back_right_vel": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.back_right.vel_setpoint",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.back_right.vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!front_right_vel": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.front_right.vel_setpoint",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.front_right.vel",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!front_left_cur": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.front_left.current_setpoint",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.front_left.current",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!back_left_cur": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.back_left.current_setpoint",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.back_left.current",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!back_right_cur": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.back_right.current_setpoint",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.back_right.current",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!front_right_cur": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.front_right.current_setpoint",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#0000ff",
+          "showLine": false
+        },
+        {
+          "value": "/controls_analysis_selected.front_right.current",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#00dac7",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!boot": {
+      "paths": [
+        {
+          "value": "/controls_analysis_selected.reboot_count",
+          "enabled": true,
+          "timestampMethod": "headerStamp",
+          "color": "#ff0000",
+          "showLine": false
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    }
+  },
+  "globalVariables": {
+    "robot": 0
+  },
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1.0
+  },
+  "layout": {
+    "direction": "column",
+    "first": {
+      "direction": "row",
+      "first": {
+        "direction": "row",
+        "first": {
+          "direction": "column",
+          "first": "Plot!x_pos",
+          "second": {
+            "direction": "column",
+            "first": "Plot!x_vel",
+            "second": "Plot!x_acc",
+            "splitPercentage": 50.0
+          },
+          "splitPercentage": 33.333333333333336
+        },
+        "second": {
+          "direction": "row",
+          "first": {
+            "direction": "column",
+            "first": "Plot!y_pos",
+            "second": {
+              "direction": "column",
+              "first": "Plot!y_vel",
+              "second": "Plot!y_acc",
+              "splitPercentage": 50.0
+            },
+            "splitPercentage": 33.333333333333336
+          },
+          "second": {
+            "direction": "column",
+            "first": "Plot!theta_pos",
+            "second": {
+              "direction": "column",
+              "first": "Plot!theta_vel",
+              "second": "Plot!theta_acc",
+              "splitPercentage": 50.0
+            },
+            "splitPercentage": 33.333333333333336
+          },
+          "splitPercentage": 50.0
+        },
+        "splitPercentage": 33.333333333333336
+      },
+      "second": {
+        "direction": "row",
+        "first": {
+          "direction": "column",
+          "first": "Plot!front_left_vel",
+          "second": {
+            "direction": "column",
+            "first": "Plot!back_left_vel",
+            "second": {
+              "direction": "column",
+              "first": "Plot!back_right_vel",
+              "second": "Plot!front_right_vel",
+              "splitPercentage": 50.0
+            },
+            "splitPercentage": 33.333333333333336
+          },
+          "splitPercentage": 25.0
+        },
+        "second": {
+          "direction": "column",
+          "first": "Plot!front_left_cur",
+          "second": {
+            "direction": "column",
+            "first": "Plot!back_left_cur",
+            "second": {
+              "direction": "column",
+              "first": "Plot!back_right_cur",
+              "second": "Plot!front_right_cur",
+              "splitPercentage": 50.0
+            },
+            "splitPercentage": 33.333333333333336
+          },
+          "splitPercentage": 25.0
+        },
+        "splitPercentage": 50.0
+      },
+      "splitPercentage": 62.0
+    },
+    "second": "Plot!boot",
+    "splitPercentage": 92.0
+  }
+}

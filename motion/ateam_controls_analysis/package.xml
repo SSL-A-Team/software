@@ -4,10 +4,11 @@
   <name>ateam_controls_analysis</name>
   <version>0.0.0</version>
   <description>
-    Controls analysis infrastructure for PlotJuggler. Republishes a single
-    robot's ExtendedTelemetry as flat, PlotJuggler-friendly analysis signals
-    (state estimate, reference trajectory, measurements, firmware output, and
-    the mode-routed software command) for streaming or ROS-bag playback.
+    Controls analysis infrastructure for Foxglove. Republishes every robot's
+    ExtendedTelemetry as flat analysis signals (state estimate, reference
+    trajectory, measurements, firmware output, and the mode-routed software
+    command), one topic per robot on /controls_analysis/robot{id}, for
+    streaming or ROS-bag playback.
   </description>
   <maintainer email="nickwitten@users.noreply.github.com">Nick Witten</maintainer>
   <license>MIT</license>
