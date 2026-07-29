@@ -103,18 +103,27 @@ There are two ways to analyze a recorded bag.
 
 #### Native full-bag load (recommended)
 
-Convert the recorded `ExtendedTelemetry` bag into a new bag that contains the
-flat `/controls_analysis` signals, then open that bag **directly** in PlotJuggler
-(File → Open, no node, no streaming). This loads the entire timeline at once so
-you can scrub the whole run:
+Convert the recorded `ExtendedTelemetry` bag into new bags that contain the
+flat `/controls_analysis` signals, then open those bags **directly** in
+PlotJuggler (File → Open, no node, no streaming). This loads the entire timeline
+at once so you can scrub the whole run. By default **every robot** found in the
+input bag is converted to its own `<input>_robot{id}` bag:
+
+```bash
+ros2 run ateam_controls_analysis controls_analysis_bag_convert \
+    /path/to/game_bag
+# writes /path/to/game_bag_robot0, /path/to/game_bag_robot2, ... (one per robot)
+```
+
+To convert just a single robot, pass `--robot-id`:
 
 ```bash
 ros2 run ateam_controls_analysis controls_analysis_bag_convert \
     /path/to/game_bag --robot-id 0
-# writes /path/to/game_bag_controls_analysis
+# writes /path/to/game_bag_robot0
 ```
 
-Then in PlotJuggler open `game_bag_controls_analysis` and load the bundled
+Then in PlotJuggler open the desired `game_bag_robot{id}` bag and load the
 layout (`Layout → File → share/ateam_controls_analysis/plotjuggler/controls_analysis.xml`).
 The layout binds to the same `/controls_analysis` topic, so it works identically
 for the converted bag and the live stream.
@@ -129,8 +138,8 @@ Converter options:
 | Flag | Default | Description |
 |------|---------|-------------|
 | `input_bag` (positional) | — | Path to the recorded bag. |
-| `-o`, `--output` | `<input>_controls_analysis` | Output bag path. |
-| `--robot-id` | `0` | Robot whose telemetry to convert. |
+| `-o`, `--output` | `<input>_robot{id}` | Output bag path (single-robot only). |
+| `--robot-id` | all robots in bag | Robot whose telemetry to convert. |
 | `--input-topic` | `/robot_feedback/extended/robot{id}` | Override input topic. |
 | `--output-topic` | `/controls_analysis` | Output topic. |
 | `--use-robot-time` / `--no-use-robot-time` | robot time | Output timeline. |

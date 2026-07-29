@@ -21,17 +21,20 @@
 """
 Offline bag -> bag converter for native PlotJuggler loading.
 
-Reads one robot's ``ateam_radio_msgs/ExtendedTelemetry`` from a recorded bag,
-runs the same routing logic as the live republisher node, and writes a NEW bag
+Reads ``ateam_radio_msgs/ExtendedTelemetry`` from a recorded bag, runs the same
+routing logic as the live republisher node, and writes a NEW bag (per robot)
 containing the flat ``ateam_controls_analysis_msgs/ControlsAnalysis`` on
-``/controls_analysis``. That output bag can be opened directly in PlotJuggler
-(native full-bag load) — no node, no replay-streaming.
+``/controls_analysis``. By default every robot found in the input bag is
+converted to its own ``<input>_robot{id}`` bag; pass ``--robot-id`` to convert a
+single robot. That output bag can be opened directly in PlotJuggler (native
+full-bag load) — no node, no replay-streaming.
 
 Unlike the streaming node, no heartbeat is applied: for an offline full-bag load
 pure NaN gaps are correct (there is no live buffer whose axis could stretch).
 """
 
 import os
+import re
 
 from ateam_controls_analysis.routing import (
     compute_dimensions,
@@ -51,15 +54,52 @@ import rosbag2_py
 
 CONTROLS_ANALYSIS_TYPE = 'ateam_controls_analysis_msgs/msg/ControlsAnalysis'
 
+_EXTENDED_TOPIC_RE = re.compile(r'^/robot_feedback/extended/robot(\d+)$')
+
 
 def default_input_topic(robot_id):
     """Return the default extended-telemetry topic for ``robot_id``."""
     return f'/robot_feedback/extended/robot{robot_id}'
 
 
-def default_output_uri(input_uri):
-    """Return the default output bag path derived from the input path."""
-    return input_uri.rstrip('/') + '_controls_analysis'
+def robot_id_from_topic(topic):
+    """Return the robot id encoded in an extended-telemetry topic, or None."""
+    match = _EXTENDED_TOPIC_RE.match(topic)
+    return int(match.group(1)) if match else None
+
+
+def available_robot_ids(input_uri, input_storage_id=''):
+    """Return the sorted robot ids that have extended telemetry in the bag.
+
+    Scans the input bag's topics for
+    ``/robot_feedback/extended/robot{id}`` and returns the ids that carry at
+    least one recorded message (topics present in the bag but empty are
+    skipped).
+    """
+    reader = rosbag2_py.SequentialReader()
+    reader.open(
+        rosbag2_py.StorageOptions(uri=input_uri, storage_id=input_storage_id),
+        rosbag2_py.ConverterOptions(
+            input_serialization_format='cdr',
+            output_serialization_format='cdr'),
+    )
+    ids = set()
+    for info in reader.get_metadata().topics_with_message_count:
+        if info.message_count <= 0:
+            continue
+        robot_id = robot_id_from_topic(info.topic_metadata.name)
+        if robot_id is not None:
+            ids.add(robot_id)
+    reader.close()
+    return sorted(ids)
+
+
+def default_output_uri(input_uri, robot_id):
+    """Return the default output bag path for ``robot_id``.
+
+    Appends ``_robot{id}`` to the input bag name.
+    """
+    return input_uri.rstrip('/') + f'_robot{robot_id}'
 
 
 def _open_reader(input_uri, input_topic, storage_id):
@@ -97,7 +137,7 @@ def convert_bag(input_uri, output_uri=None, robot_id=0, input_topic=None,
 
     :param input_uri: path to the input bag (directory or single file).
     :param output_uri: output bag path; defaults to
-        ``<input>_controls_analysis``.
+        ``<input>_robot{robot_id}``.
     :param robot_id: robot whose telemetry to analyze (selects the default
         input topic).
     :param input_topic: override input topic; defaults to
@@ -119,7 +159,7 @@ def convert_bag(input_uri, output_uri=None, robot_id=0, input_topic=None,
     if input_topic is None:
         input_topic = default_input_topic(robot_id)
     if output_uri is None:
-        output_uri = default_output_uri(input_uri)
+        output_uri = default_output_uri(input_uri, robot_id)
 
     reader = _open_reader(input_uri, input_topic, input_storage_id)
 
@@ -168,14 +208,18 @@ def _build_arg_parser():
     import argparse
     p = argparse.ArgumentParser(
         prog='controls_analysis_bag_convert',
-        description="Convert one robot's ExtendedTelemetry bag into a bag of "
+        description="Convert robots' ExtendedTelemetry from a bag into bags of "
                     'PlotJuggler-friendly ControlsAnalysis messages that can be '
-                    'opened directly (natively) in PlotJuggler.')
+                    'opened directly (natively) in PlotJuggler. By default every '
+                    'robot found in the input bag is converted to its own '
+                    '<input>_robot{id} bag.')
     p.add_argument('input_bag', help='Path to the input ROS bag.')
     p.add_argument('-o', '--output', dest='output_uri', default=None,
-                   help='Output bag path (default <input>_controls_analysis).')
-    p.add_argument('--robot-id', type=int, default=0,
-                   help='Robot whose telemetry to analyze (default 0).')
+                   help='Output bag path (default <input>_robot{id}). Only '
+                        'valid when a single robot is selected.')
+    p.add_argument('--robot-id', type=int, default=None,
+                   help='Robot whose telemetry to analyze. Defaults to '
+                        'converting every robot found in the input bag.')
     p.add_argument('--input-topic', default=None,
                    help='Override input topic.')
     p.add_argument('--output-topic', default='/controls_analysis',
@@ -198,23 +242,45 @@ def _build_arg_parser():
 
 def main(argv=None):
     ns = _build_arg_parser().parse_args(argv)
-    output_uri = ns.output_uri or default_output_uri(ns.input_bag)
-    if os.path.exists(output_uri):
+
+    # Decide which robots to convert. An explicit --robot-id or --input-topic
+    # selects a single robot; otherwise convert every robot found in the bag.
+    if ns.robot_id is not None:
+        robot_ids = [ns.robot_id]
+    elif ns.input_topic is not None:
+        parsed_id = robot_id_from_topic(ns.input_topic)
+        robot_ids = [parsed_id if parsed_id is not None else 0]
+    else:
+        robot_ids = available_robot_ids(ns.input_bag, ns.input_storage_id)
+        if not robot_ids:
+            raise SystemExit(
+                'No robot extended-telemetry topics '
+                "('/robot_feedback/extended/robot{id}') found in bag "
+                f"'{ns.input_bag}'.")
+
+    if ns.output_uri is not None and len(robot_ids) > 1:
         raise SystemExit(
-            f"Output bag '{output_uri}' already exists; remove it or pass "
-            f'-o/--output.')
-    count = convert_bag(
-        input_uri=ns.input_bag,
-        output_uri=output_uri,
-        robot_id=ns.robot_id,
-        input_topic=ns.input_topic,
-        output_topic=ns.output_topic,
-        use_robot_time=ns.use_robot_time,
-        reboot_reset_threshold_us=ns.reboot_reset_threshold_us,
-        input_storage_id=ns.input_storage_id,
-        output_storage_id=ns.output_storage_id,
-    )
-    print(f"Wrote {count} '{ns.output_topic}' messages to '{output_uri}'.")
+            '-o/--output cannot be used when converting multiple robots; '
+            'select a single robot with --robot-id or --input-topic.')
+
+    for robot_id in robot_ids:
+        output_uri = ns.output_uri or default_output_uri(ns.input_bag, robot_id)
+        if os.path.exists(output_uri):
+            raise SystemExit(
+                f"Output bag '{output_uri}' already exists; remove it or pass "
+                f'-o/--output.')
+        count = convert_bag(
+            input_uri=ns.input_bag,
+            output_uri=output_uri,
+            robot_id=robot_id,
+            input_topic=ns.input_topic,
+            output_topic=ns.output_topic,
+            use_robot_time=ns.use_robot_time,
+            reboot_reset_threshold_us=ns.reboot_reset_threshold_us,
+            input_storage_id=ns.input_storage_id,
+            output_storage_id=ns.output_storage_id,
+        )
+        print(f"Wrote {count} '{ns.output_topic}' messages to '{output_uri}'.")
 
 
 if __name__ == '__main__':

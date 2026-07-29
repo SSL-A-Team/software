@@ -20,14 +20,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""CLI entry point for the controls-analysis bag -> bag converter.
+r"""CLI entry point for the controls-analysis bag -> bag converter.
 
 Thin wrapper around :func:`ateam_controls_analysis.bag_convert.main`. Reads a
 recorded ExtendedTelemetry bag and writes a new bag of ControlsAnalysis messages
-for native (full-bag) PlotJuggler loading.
+for native (full-bag) PlotJuggler loading. By default every robot found in the
+input bag is converted to its own ``<input>_robot{id}`` bag.
 
 Example::
 
+  # Convert every robot present in the bag (writes <bag>_robot{id} per robot):
+  ros2 run ateam_controls_analysis controls_analysis_bag_convert /path/to/game_bag
+
+  # Convert a single robot:
   ros2 run ateam_controls_analysis controls_analysis_bag_convert \\
       /path/to/game_bag --robot-id 2
 """

@@ -10,9 +10,9 @@
        <limitY/>
        <curve name="/controls_analysis/x/pos_cmd" color="#0000ff"/>
        <curve name="/controls_analysis/x/pos_estimate" color="#ff0000"/>
-       <curve name="/controls_analysis/x/pos_vision" color="#6ffff3"/>
+       <curve name="/controls_analysis/x/pos_vision" color="#00dac7"/>
        <!-- <curve name="/controls_analysis/x/pos_traj" color="#03a400"/> -->
-       <curve name="/controls_analysis/x/pos_traj_global_pos" color="#00ff00"/>
+       <curve name="/controls_analysis/x/pos_traj_global_pos" color="#00c000"/>
        <curve name="/controls_analysis/x/pos_traj_global_vel" color="#ffea00"/>
        <curve name="/controls_analysis/x/pos_traj_local_vel" color="#ffea00"/>
        <curve name="/controls_analysis/x/pos_traj_heading_pivot" color="#9900ff"/>
@@ -27,8 +27,8 @@
        <limitY/>
        <curve name="/controls_analysis/x/vel_cmd" color="#0000ff"/>
        <curve name="/controls_analysis/x/vel_estimate" color="#ff0000"/>
-       <!-- <curve name="/controls_analysis/x/vel_traj" color="#00ff00"/> -->
-       <curve name="/controls_analysis/x/vel_traj_global_pos" color="#00ff00"/>
+       <!-- <curve name="/controls_analysis/x/vel_traj" color="#00c000"/> -->
+       <curve name="/controls_analysis/x/vel_traj_global_pos" color="#00c000"/>
        <curve name="/controls_analysis/x/vel_traj_global_vel" color="#ffea00"/>
        <curve name="/controls_analysis/x/vel_traj_local_vel" color="#ffea00"/>
        <curve name="/controls_analysis/x/vel_traj_heading_pivot" color="#9900ff"/>
@@ -44,7 +44,7 @@
        <curve name="/controls_analysis/x/accel_cmd" color="#0000ff"/>
        <curve name="/controls_analysis/x/accel_u" color="#ff9c56"/>
        <curve name="/controls_analysis/x/accel_u_fric_comp" color="#ff6a00"/>
-       <curve name="/controls_analysis/x/accel_imu" color="#6ffff3"/>
+       <curve name="/controls_analysis/x/accel_imu" color="#00dac7"/>
       </plot>
      </DockArea>
     </DockSplitter>
@@ -59,9 +59,9 @@
        <limitY/>
        <curve name="/controls_analysis/y/pos_cmd" color="#0000ff"/>
        <curve name="/controls_analysis/y/pos_estimate" color="#ff0000"/>
-       <curve name="/controls_analysis/y/pos_vision" color="#6ffff3"/>
-       <!-- <curve name="/controls_analysis/y/pos_traj" color="#00ff00"/> -->
-       <curve name="/controls_analysis/y/pos_traj_global_pos" color="#00ff00"/>
+       <curve name="/controls_analysis/y/pos_vision" color="#00dac7"/>
+       <!-- <curve name="/controls_analysis/y/pos_traj" color="#00c000"/> -->
+       <curve name="/controls_analysis/y/pos_traj_global_pos" color="#00c000"/>
        <curve name="/controls_analysis/y/pos_traj_global_vel" color="#ffea00"/>
        <curve name="/controls_analysis/y/pos_traj_local_vel" color="#ffea00"/>
        <curve name="/controls_analysis/y/pos_traj_heading_pivot" color="#9900ff"/>
@@ -76,8 +76,8 @@
        <limitY/>
        <curve name="/controls_analysis/y/vel_cmd" color="#0000ff"/>
        <curve name="/controls_analysis/y/vel_estimate" color="#ff0000"/>
-       <!-- <curve name="/controls_analysis/y/vel_traj" color="#00ff00"/> -->
-       <curve name="/controls_analysis/y/vel_traj_global_pos" color="#00ff00"/>
+       <!-- <curve name="/controls_analysis/y/vel_traj" color="#00c000"/> -->
+       <curve name="/controls_analysis/y/vel_traj_global_pos" color="#00c000"/>
        <curve name="/controls_analysis/y/vel_traj_global_vel" color="#ffea00"/>
        <curve name="/controls_analysis/y/vel_traj_local_vel" color="#ffea00"/>
        <curve name="/controls_analysis/y/vel_traj_heading_pivot" color="#9900ff"/>
@@ -93,7 +93,7 @@
        <curve name="/controls_analysis/y/accel_cmd" color="#0000ff"/>
        <curve name="/controls_analysis/y/accel_u" color="#ff9c56"/>
        <curve name="/controls_analysis/y/accel_u_fric_comp" color="#ff6a00"/>
-       <curve name="/controls_analysis/y/accel_imu" color="#6ffff3"/>
+       <curve name="/controls_analysis/y/accel_imu" color="#00dac7"/>
       </plot>
      </DockArea>
     </DockSplitter>
@@ -108,9 +108,9 @@
        <limitY/>
        <curve name="/controls_analysis/theta/pos_cmd" color="#0000ff"/>
        <curve name="/controls_analysis/theta/pos_estimate" color="#ff0000"/>
-       <curve name="/controls_analysis/theta/pos_vision" color="#6ffff3"/>
-       <!-- <curve name="/controls_analysis/theta/pos_traj" color="#00ff00"/> -->
-       <curve name="/controls_analysis/theta/pos_traj_global_pos" color="#00ff00"/>
+       <curve name="/controls_analysis/theta/pos_vision" color="#00dac7"/>
+       <!-- <curve name="/controls_analysis/theta/pos_traj" color="#00c000"/> -->
+       <curve name="/controls_analysis/theta/pos_traj_global_pos" color="#00c000"/>
        <curve name="/controls_analysis/theta/pos_traj_global_vel" color="#ffea00"/>
        <curve name="/controls_analysis/theta/pos_traj_local_vel" color="#ffea00"/>
        <curve name="/controls_analysis/theta/pos_traj_heading_pivot" color="#9900ff"/>
@@ -125,9 +125,9 @@
        <limitY/>
        <curve name="/controls_analysis/theta/vel_cmd" color="#0000ff"/>
        <curve name="/controls_analysis/theta/vel_estimate" color="#ff0000"/>
-       <curve name="/controls_analysis/theta/vel_gyro" color="#6ffff3"/>
-       <!-- <curve name="/controls_analysis/theta/vel_traj" color="#00ff00"/> -->
-       <curve name="/controls_analysis/theta/vel_traj_global_pos" color="#00ff00"/>
+       <curve name="/controls_analysis/theta/vel_gyro" color="#00dac7"/>
+       <!-- <curve name="/controls_analysis/theta/vel_traj" color="#00c000"/> -->
+       <curve name="/controls_analysis/theta/vel_traj_global_pos" color="#00c000"/>
        <curve name="/controls_analysis/theta/vel_traj_global_vel" color="#ffea00"/>
        <curve name="/controls_analysis/theta/vel_traj_local_vel" color="#ffea00"/>
        <curve name="/controls_analysis/theta/vel_traj_heading_pivot" color="#9900ff"/>
@@ -155,32 +155,32 @@
       <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
-       <curve name="/controls_analysis/front_left/vel" color="#6ffff3"/>
        <curve name="/controls_analysis/front_left/vel_setpoint" color="#0000ff"/>
+       <curve name="/controls_analysis/front_left/vel" color="#00dac7"/>
       </plot>
      </DockArea>
      <DockArea name="Back Left wheel velocity">
       <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
-       <curve name="/controls_analysis/back_left/vel" color="#6ffff3"/>
        <curve name="/controls_analysis/back_left/vel_setpoint" color="#0000ff"/>
+       <curve name="/controls_analysis/back_left/vel" color="#00dac7"/>
       </plot>
      </DockArea>
      <DockArea name="Back Right wheel velocity">
       <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
-       <curve name="/controls_analysis/back_right/vel" color="#6ffff3"/>
        <curve name="/controls_analysis/back_right/vel_setpoint" color="#0000ff"/>
+       <curve name="/controls_analysis/back_right/vel" color="#00dac7"/>
       </plot>
      </DockArea>
      <DockArea name="Front Right wheel velocity">
       <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
-       <curve name="/controls_analysis/front_right/vel" color="#6ffff3"/>
        <curve name="/controls_analysis/front_right/vel_setpoint" color="#0000ff"/>
+       <curve name="/controls_analysis/front_right/vel" color="#00dac7"/>
       </plot>
      </DockArea>
     </DockSplitter>
@@ -193,32 +193,32 @@
       <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
-       <curve name="/controls_analysis/front_left/current" color="#6ffff3"/>
        <curve name="/controls_analysis/front_left/current_setpoint" color="#0000ff"/>
+       <curve name="/controls_analysis/front_left/current" color="#00dac7"/>
       </plot>
      </DockArea>
      <DockArea name="Back Left wheel current">
       <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
-       <curve name="/controls_analysis/back_left/current" color="#6ffff3"/>
        <curve name="/controls_analysis/back_left/current_setpoint" color="#0000ff"/>
+       <curve name="/controls_analysis/back_left/current" color="#00dac7"/>
       </plot>
      </DockArea>
      <DockArea name="Back Right wheel current">
       <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
-       <curve name="/controls_analysis/back_right/current" color="#6ffff3"/>
        <curve name="/controls_analysis/back_right/current_setpoint" color="#0000ff"/>
+       <curve name="/controls_analysis/back_right/current" color="#00dac7"/>
       </plot>
      </DockArea>
      <DockArea name="Front Right wheel current">
       <plot style="Dots" mode="TimeSeries" flip_y="false" flip_x="false">
        <range bottom="-1" top="1" left="0" right="1"/>
        <limitY/>
-       <curve name="/controls_analysis/front_right/current" color="#6ffff3"/>
        <curve name="/controls_analysis/front_right/current_setpoint" color="#0000ff"/>
+       <curve name="/controls_analysis/front_right/current" color="#00dac7"/>
       </plot>
      </DockArea>
     </DockSplitter>

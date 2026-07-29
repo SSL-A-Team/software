@@ -29,9 +29,13 @@ bag back and asserts the ``ControlsAnalysis`` timestamps and key fields.
 import math
 
 from ateam_controls_analysis.bag_convert import (
+    available_robot_ids,
     CONTROLS_ANALYSIS_TYPE,
     convert_bag,
     default_input_topic,
+    default_output_uri,
+    main,
+    robot_id_from_topic,
 )
 from ateam_controls_analysis.routing import (
     BCM_GLOBAL_VELOCITY,
@@ -207,3 +211,64 @@ def test_convert_bag_receive_time(tmp_path):
     # With use_robot_time=False the original bag timestamps are preserved.
     stamps = [s for s, _ in msgs]
     assert stamps == [1_000_000_000, 1_100_000_000, 1_200_000_000, 5_000_000_000]
+
+
+def _write_multi_robot_bag(uri, robot_ids, empty_robot_ids=()):
+    """Write a bag with one ExtendedTelemetry sample per robot id.
+
+    ``empty_robot_ids`` create the extended-telemetry topic but write no
+    messages on it, so they should not count as available robots.
+    """
+    writer = rosbag2_py.SequentialWriter()
+    writer.open(
+        rosbag2_py.StorageOptions(uri=uri, storage_id=STORAGE_ID),
+        rosbag2_py.ConverterOptions(
+            input_serialization_format='cdr',
+            output_serialization_format='cdr'),
+    )
+    all_ids = list(robot_ids) + list(empty_robot_ids)
+    for i, robot_id in enumerate(all_ids):
+        writer.create_topic(rosbag2_py.TopicMetadata(
+            id=i, name=default_input_topic(robot_id),
+            type='ateam_radio_msgs/msg/ExtendedTelemetry',
+            serialization_format='cdr'))
+    for robot_id in robot_ids:
+        msg = _make_extended(1_000_000, BCM_GLOBAL_VELOCITY, (1.0, 0.0, 0.0))
+        writer.write(
+            default_input_topic(robot_id), serialize_message(msg),
+            1_000_000_000)
+    del writer
+
+
+def test_robot_id_from_topic():
+    assert robot_id_from_topic('/robot_feedback/extended/robot0') == 0
+    assert robot_id_from_topic('/robot_feedback/extended/robot13') == 13
+    assert robot_id_from_topic('/robot_feedback/extended/robotX') is None
+    assert robot_id_from_topic('/some/other/topic') is None
+
+
+def test_available_robot_ids(tmp_path):
+    input_uri = str(tmp_path / 'in')
+    # Robot 5's topic exists but carries no messages -> excluded.
+    _write_multi_robot_bag(input_uri, [3, 0, 7], empty_robot_ids=[5])
+    assert available_robot_ids(input_uri) == [0, 3, 7]
+
+
+def test_default_output_uri():
+    assert default_output_uri('/path/to/bag', 4) == '/path/to/bag_robot4'
+    assert default_output_uri('/path/to/bag/', 4) == '/path/to/bag_robot4'
+
+
+def test_main_converts_all_robots_by_default(tmp_path):
+    input_uri = str(tmp_path / 'game_bag')
+    _write_multi_robot_bag(input_uri, [1, 4])
+
+    # No --robot-id: every robot in the bag is converted to its own bag.
+    main([input_uri, '--output-storage-id', STORAGE_ID])
+
+    for robot_id in (1, 4):
+        output_uri = default_output_uri(input_uri, robot_id)
+        assert output_uri == f'{input_uri}_robot{robot_id}'
+        types, msgs = _read_output_bag(output_uri, '/controls_analysis')
+        assert types['/controls_analysis'] == CONTROLS_ANALYSIS_TYPE
+        assert len(msgs) == 1
