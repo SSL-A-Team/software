@@ -23,16 +23,16 @@
 r"""CLI entry point for the controls-analysis bag -> bag converter.
 
 Thin wrapper around :func:`ateam_controls_analysis.bag_convert.main`. Reads a
-recorded ExtendedTelemetry bag and writes a single combined bag of
-ControlsAnalysis messages (one topic per robot,
-``/controls_analysis/robot{id}``) for full-bag loading in Foxglove.
+recorded ExtendedTelemetry bag and writes a new bag that is a copy of the input
+plus per-robot ControlsAnalysis topics (``/controls_analysis/robot{id}``) for
+full-bag loading in Foxglove.
 
 Example::
 
-  # Convert every robot present in the bag into one <bag>_controls_analysis bag:
+  # Copy the bag and add analysis topics for every robot present:
   ros2 run ateam_controls_analysis controls_analysis_bag_convert /path/to/game_bag
 
-  # Convert a subset of robots:
+  # Add analysis topics for a subset of robots:
   ros2 run ateam_controls_analysis controls_analysis_bag_convert \\
       /path/to/game_bag --robot-ids 0 2 3
 """

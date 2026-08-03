@@ -22,10 +22,11 @@
 Offline bag -> bag converter for Foxglove.
 
 Reads ``ateam_radio_msgs/ExtendedTelemetry`` from a recorded bag, runs the same
-routing logic as the live republisher node, and writes a single NEW bag
-containing the flat ``ateam_controls_analysis_msgs/ControlsAnalysis`` for every
-robot, one topic per robot on ``/controls_analysis/robot{id}``. That output bag
-can be opened directly in Foxglove (full-bag load) — no node, no
+routing logic as the live republisher node, and writes a NEW bag that is a copy
+of the input plus, for every robot, the flat
+``ateam_controls_analysis_msgs/ControlsAnalysis`` on its own
+``/controls_analysis/robot{id}`` topic. All original topics are preserved. That
+output bag can be opened directly in Foxglove (full-bag load) — no node, no
 replay-streaming — and the bundled topic-alias extension lets you switch which
 robot is displayed without reloading the bag.
 
@@ -104,13 +105,13 @@ def default_output_uri(input_uri):
     """
     Return the default combined output bag path.
 
-    Appends ``_controls_analysis`` to the input bag name; the single output bag
-    holds every robot on ``/controls_analysis/robot{id}``.
+    Appends ``_controls_analysis`` to the input bag name; the output bag is a
+    copy of the input plus every robot's ``/controls_analysis/robot{id}``.
     """
     return input_uri.rstrip('/') + '_controls_analysis'
 
 
-def _open_reader(input_uri, input_topics, storage_id):
+def _open_reader(input_uri, storage_id):
     reader = rosbag2_py.SequentialReader()
     reader.open(
         rosbag2_py.StorageOptions(uri=input_uri, storage_id=storage_id),
@@ -118,11 +119,10 @@ def _open_reader(input_uri, input_topics, storage_id):
             input_serialization_format='cdr',
             output_serialization_format='cdr'),
     )
-    reader.set_filter(rosbag2_py.StorageFilter(topics=list(input_topics)))
     return reader
 
 
-def _open_writer(output_uri, output_topics, storage_id):
+def _open_writer(output_uri, passthrough_topics, analysis_topics, storage_id):
     writer = rosbag2_py.SequentialWriter()
     writer.open(
         rosbag2_py.StorageOptions(uri=output_uri, storage_id=storage_id),
@@ -130,10 +130,18 @@ def _open_writer(output_uri, output_topics, storage_id):
             input_serialization_format='cdr',
             output_serialization_format='cdr'),
     )
-    for i, topic in enumerate(output_topics):
+    # Re-create every original topic (preserving type / serialization / QoS) so
+    # the output bag is a superset of the input, then add the analysis topics.
+    next_id = 0
+    for meta in passthrough_topics:
+        meta.id = next_id
+        writer.create_topic(meta)
+        next_id += 1
+    for topic in analysis_topics:
         writer.create_topic(rosbag2_py.TopicMetadata(
-            id=i, name=topic, type=CONTROLS_ANALYSIS_TYPE,
+            id=next_id, name=topic, type=CONTROLS_ANALYSIS_TYPE,
             serialization_format='cdr'))
+        next_id += 1
     return writer
 
 
@@ -142,27 +150,29 @@ def convert_bag(input_uri, output_uri=None, robot_ids=None,
                 reboot_reset_threshold_us=DEFAULT_REBOOT_RESET_THRESHOLD_US,
                 input_storage_id='', output_storage_id=None):
     """
-    Convert a bag's ExtendedTelemetry into one combined ControlsAnalysis bag.
+    Copy a bag and add per-robot ControlsAnalysis topics.
 
-    Every robot's extended telemetry is routed to its own
-    ``/controls_analysis/robot{id}`` topic inside a single output bag.
+    The output bag contains every topic/message from the input bag unchanged,
+    plus each selected robot's routed analysis on its own
+    ``/controls_analysis/robot{id}`` topic.
 
     :param input_uri: path to the input bag (directory or single file).
     :param output_uri: output bag path; defaults to
         ``<input>_controls_analysis``.
-    :param robot_ids: iterable of robot ids to convert; defaults to every robot
-        with extended telemetry in the input bag.
-    :param use_robot_time: when True (default) stamp output messages (both bag
-        timestamp and ``header.stamp``) with each robot's reconstructed robot
-        timeline (grounded at each input message's bag time, advanced by
-        robot-elapsed time, re-grounded on reboot). When False, the input bag's
-        original message timestamp is used.
+    :param robot_ids: iterable of robot ids to add analysis for; defaults to
+        every robot with extended telemetry in the input bag.
+    :param use_robot_time: when True (default) stamp the added analysis messages
+        (both bag timestamp and ``header.stamp``) with each robot's
+        reconstructed robot timeline (grounded at each input message's bag time,
+        advanced by robot-elapsed time, re-grounded on reboot). When False, the
+        input bag's original message timestamp is used. Passed-through messages
+        always keep their original bag timestamp.
     :param reboot_reset_threshold_us: backward jump in the robot microsecond
         counter treated as a reboot.
     :param input_storage_id: input storage plugin id (empty = auto-detect).
     :param output_storage_id: output storage plugin id; defaults to the input
         bag's storage id.
-    :returns: dict mapping robot_id -> number of messages written.
+    :returns: dict mapping robot_id -> number of analysis messages added.
     """
     if output_uri is None:
         output_uri = default_output_uri(input_uri)
@@ -173,13 +183,14 @@ def convert_bag(input_uri, output_uri=None, robot_ids=None,
         raise ValueError(
             f"No robot extended-telemetry topics found in bag '{input_uri}'.")
 
-    # Map input topic -> robot id, and set up a per-robot output topic + state.
+    # Map input telemetry topic -> robot id, and per-robot analysis output topic.
     input_topic_to_id = {default_input_topic(r): r for r in robot_ids}
     output_topics = {r: default_output_topic(r) for r in robot_ids}
 
-    reader = _open_reader(input_uri, input_topic_to_id.keys(), input_storage_id)
+    reader = _open_reader(input_uri, input_storage_id)
 
-    available = {t.name: t.type for t in reader.get_all_topics_and_types()}
+    passthrough_topics = list(reader.get_all_topics_and_types())
+    available = {t.name for t in passthrough_topics}
     missing = [t for t in input_topic_to_id if t not in available]
     if missing:
         raise ValueError(
@@ -190,7 +201,8 @@ def convert_bag(input_uri, output_uri=None, robot_ids=None,
         output_storage_id = reader.get_metadata().storage_identifier
 
     writer = _open_writer(
-        output_uri, [output_topics[r] for r in robot_ids], output_storage_id)
+        output_uri, passthrough_topics,
+        [output_topics[r] for r in robot_ids], output_storage_id)
 
     clocks = {r: RobotClock(reset_threshold_us=int(reboot_reset_threshold_us))
               for r in robot_ids}
@@ -199,9 +211,15 @@ def convert_bag(input_uri, output_uri=None, robot_ids=None,
 
     while reader.has_next():
         topic, data, bag_time_ns = reader.read_next()
+
+        # Pass every original message through unchanged.
+        writer.write(topic, data, bag_time_ns)
+
         robot_id = input_topic_to_id.get(topic)
         if robot_id is None:
             continue
+
+        # Additionally emit the routed analysis for selected robots.
         msg = deserialize_message(data, ExtendedTelemetry)
 
         clock = clocks[robot_id]
@@ -229,16 +247,18 @@ def _build_arg_parser():
     import argparse
     p = argparse.ArgumentParser(
         prog='controls_analysis_bag_convert',
-        description="Convert a bag's ExtendedTelemetry into a single combined "
-                    'bag of Foxglove-friendly ControlsAnalysis messages, one '
-                    'topic per robot (/controls_analysis/robot{id}). By default '
-                    'every robot found in the input bag is converted.')
+        description='Copy a bag and add Foxglove-friendly ControlsAnalysis '
+                    'topics, one per robot (/controls_analysis/robot{id}), '
+                    "derived from each robot's ExtendedTelemetry. All original "
+                    'topics are preserved. By default every robot found in the '
+                    'input bag is added.')
     p.add_argument('input_bag', help='Path to the input ROS bag.')
     p.add_argument('-o', '--output', dest='output_uri', default=None,
                    help='Output bag path (default <input>_controls_analysis).')
     p.add_argument('--robot-ids', type=int, nargs='+', default=None,
                    dest='robot_ids',
-                   help='Robots to convert (default: every robot in the bag).')
+                   help='Robots to add analysis for (default: every robot in '
+                        'the bag).')
     p.add_argument('--use-robot-time', action='store_true', default=True,
                    dest='use_robot_time',
                    help='Stamp output with reconstructed robot time (default).')
@@ -285,8 +305,8 @@ def main(argv=None):
     )
     total = sum(written.values())
     per_robot = ', '.join(f'robot{r}={n}' for r, n in sorted(written.items()))
-    print(f"Wrote {total} ControlsAnalysis messages to '{output_uri}' "
-          f'({per_robot}).')
+    print(f"Wrote '{output_uri}' (input topics + {total} added "
+          f'ControlsAnalysis messages: {per_robot}).')
 
 
 if __name__ == '__main__':

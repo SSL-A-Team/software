@@ -192,8 +192,26 @@ change with a gap on the reference-trajectory curves.
 
 The layouts plot every series against the message `header.stamp` (Foxglove path
 `timestampMethod: headerStamp`), matching the reconstructed robot-time axis
-(`use_robot_time`, the default). Foxglove renders NaN as a gap, so the
-per-mode-split curves break cleanly at mode transitions.
+(`use_robot_time`, the default) — this works for both a converted bag and a live
+stream. Foxglove renders NaN as a gap, so the per-mode-split curves break cleanly
+at mode transitions.
+
+The layouts also ship with a **following (sliding) window** of 10 s
+(`followingViewWidth`): during playback each plot shows only the trailing 10 s
+with the playhead pinned at the right edge, giving a streaming-style view even on
+a loaded bag. Adjust it per plot via the gear icon → **X Axis → Following window
+(seconds)**, or change `followingViewWidth` in the layout JSON. (Panning a plot
+temporarily disengages the following window until you resume/seek.)
+
+> **Playback cursor note.** Foxglove's playback cursor (the vertical current-time
+> line) tracks the source's log/receive time, not `header.stamp`. On a
+> **converted bag** the two are identical (the converter writes each message's
+> bag log-time and `header.stamp` to the same reconstructed robot time), so the
+> cursor lines up. On a **live** stream the bridge stamps log-time with wall
+> clock, so the cursor won't track the robot-time axis while scrubbing (the
+> plots still follow the live edge). If you specifically need the cursor to line
+> up on a live stream, switch a plot's timestamp method to receive time in
+> Foxglove (trading the robot-time axis for wall-clock).
 
 ## Selecting which robot is displayed
 

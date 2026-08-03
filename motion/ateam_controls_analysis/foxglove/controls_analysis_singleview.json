@@ -80,7 +80,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!x_vel": {
       "paths": [
@@ -155,7 +156,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!x_acc": {
       "paths": [
@@ -195,7 +197,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!y_pos": {
       "paths": [
@@ -277,7 +280,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!y_vel": {
       "paths": [
@@ -352,7 +356,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!y_acc": {
       "paths": [
@@ -392,7 +397,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!theta_pos": {
       "paths": [
@@ -474,7 +480,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!theta_vel": {
       "paths": [
@@ -556,7 +563,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!theta_acc": {
       "paths": [
@@ -589,7 +597,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!front_left_vel": {
       "paths": [
@@ -615,7 +624,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!back_left_vel": {
       "paths": [
@@ -641,7 +651,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!back_right_vel": {
       "paths": [
@@ -667,7 +678,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!front_right_vel": {
       "paths": [
@@ -693,7 +705,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!front_left_cur": {
       "paths": [
@@ -719,7 +732,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!back_left_cur": {
       "paths": [
@@ -745,7 +759,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!back_right_cur": {
       "paths": [
@@ -771,7 +786,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!front_right_cur": {
       "paths": [
@@ -797,7 +813,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     },
     "Plot!boot": {
       "paths": [
@@ -816,7 +833,8 @@
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     }
   },
   "globalVariables": {

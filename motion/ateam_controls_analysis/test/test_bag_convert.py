@@ -268,11 +268,29 @@ def test_default_output_topic():
     assert default_output_topic(13) == '/controls_analysis/robot13'
 
 
+def _read_bag_topic_counts(uri):
+    """Return (types, message-count-per-topic) without deserializing."""
+    reader = rosbag2_py.SequentialReader()
+    reader.open(
+        rosbag2_py.StorageOptions(uri=uri, storage_id=STORAGE_ID),
+        rosbag2_py.ConverterOptions(
+            input_serialization_format='cdr',
+            output_serialization_format='cdr'),
+    )
+    types = {t.name: t.type for t in reader.get_all_topics_and_types()}
+    counts = {}
+    while reader.has_next():
+        t, _data, _stamp = reader.read_next()
+        counts[t] = counts.get(t, 0) + 1
+    reader.close()
+    return types, counts
+
+
 def test_main_converts_all_robots_into_one_bag(tmp_path):
     input_uri = str(tmp_path / 'game_bag')
     _write_multi_robot_bag(input_uri, [1, 4])
 
-    # No --robot-ids: every robot in the bag is converted into ONE combined bag.
+    # No --robot-ids: every robot in the bag gets an analysis topic added.
     main([input_uri, '--output-storage-id', STORAGE_ID])
 
     output_uri = default_output_uri(input_uri)
@@ -282,6 +300,32 @@ def test_main_converts_all_robots_into_one_bag(tmp_path):
         types, msgs = _read_output_bag(output_uri, topic)
         assert types[topic] == CONTROLS_ANALYSIS_TYPE
         assert len(msgs) == 1
+
+
+def test_convert_bag_preserves_original_topics(tmp_path):
+    """Output is a superset of the input: original topics pass through."""
+    input_uri = str(tmp_path / 'in')
+    output_uri = str(tmp_path / 'out')
+    _write_multi_robot_bag(input_uri, [0, 3], empty_robot_ids=[5])
+
+    convert_bag(
+        input_uri=input_uri, output_uri=output_uri, robot_ids=[0, 3],
+        output_storage_id=STORAGE_ID)
+
+    types, counts = _read_bag_topic_counts(output_uri)
+    # Every original telemetry topic is preserved with its type and messages.
+    for robot_id in (0, 3):
+        in_topic = default_input_topic(robot_id)
+        assert types[in_topic] == 'ateam_radio_msgs/msg/ExtendedTelemetry'
+        assert counts[in_topic] == 1
+    # The empty original topic is still declared (0 messages, so absent from
+    # counts) but present in the topic list.
+    assert default_input_topic(5) in types
+    # Analysis topics are added alongside the originals.
+    for robot_id in (0, 3):
+        out_topic = default_output_topic(robot_id)
+        assert types[out_topic] == CONTROLS_ANALYSIS_TYPE
+        assert counts[out_topic] == 1
 
 
 def test_convert_bag_multi_robot_independent_state(tmp_path):

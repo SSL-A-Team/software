@@ -30,13 +30,31 @@ npm install
 npm run local-install   # builds and installs into your local Foxglove
 ```
 
-Restart Foxglove (or reload) to pick up the extension. To produce a shareable
-`.foxe` package instead, run `npm run package`.
+`local-install` targets the **Foxglove desktop app** only (it copies into
+`~/.foxglove-studio/extensions/`); it does **not** work for the browser app at
+app.foxglove.dev. For the web app, run `npm run package` to produce a `.foxe`
+and drag it onto the window, or install the desktop app.
+
+Restart Foxglove (or reload with the app menu → View → Reload) after installing
+to pick up the extension.
 
 ## Usage
 
 1. Open a combined converted bag (`<bag>_controls_analysis`) or connect live.
 2. Import a layout from `../` (`controls_analysis.json` or
    `controls_analysis_singleview.json`) — both bind `/controls_analysis_selected`.
-3. In the **Variables** tab, set `robot` to the id you want (e.g. `2`).
-   All panels switch to that robot with no reload.
+3. Open the **Variables** tab (right sidebar in current Foxglove — toggle with
+   the `]` key) and set `robot` to the id you want (e.g. `2`). All panels switch
+   to that robot with no reload.
+
+## Verifying / troubleshooting
+
+- After installing, confirm Foxglove lists it under **Settings → Extensions**
+  (or the Extensions sidebar) as "A-Team Controls Analysis Robot Selector".
+- If plots are empty, check the **Topics** list for `/controls_analysis/robot{id}`
+  entries in your data source. The alias only works if those source topics
+  exist. `/controls_analysis_selected` is a virtual alias — it won't appear in
+  the raw topic list, but message paths referencing it will resolve.
+- The extension only takes effect after a reload; a freshly installed extension
+  won't apply to an already-open session until you reload.
+
