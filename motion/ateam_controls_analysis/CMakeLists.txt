@@ -1,35 +1,18 @@
 cmake_minimum_required(VERSION 3.8)
 project(ateam_controls_analysis)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
 find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
 
-# Pure-Python analysis package (importable library + routing logic).
-ament_python_install_package(${PROJECT_NAME})
-
-# Executable node / helper scripts.
-install(PROGRAMS
-  scripts/controls_analysis_node
-  scripts/controls_analysis_bag_convert
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-# Foxglove layouts and launch files.
-install(DIRECTORY foxglove launch
+# This package ships only Foxglove assets: the controls-analysis layouts and the
+# Foxglove extension source (which performs the ExtendedTelemetry analysis inside
+# Foxglove -- there is no ROS node or derived message type).
+install(DIRECTORY foxglove
   DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
-
-  find_package(ament_cmake_pytest REQUIRED)
-  ament_add_pytest_test(routing_test test/test_routing.py)
-  ament_add_pytest_test(bag_convert_test test/test_bag_convert.py)
 endif()
 
 ament_package()

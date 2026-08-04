@@ -1,11 +1,11 @@
 {
-  "name": "ateam-controls-analysis-robot-selector",
-  "displayName": "A-Team Controls Analysis Robot Selector",
-  "description": "Aliases /controls_analysis/robot{id} onto /controls_analysis_selected, chosen by the `robot` global variable, so layouts can switch robots without reloading the bag.",
+  "name": "ateam-controls-analysis",
+  "displayName": "A-Team Controls Analysis",
+  "description": "Converts ateam_radio_msgs/ExtendedTelemetry into flat, per-mode-colored controls-analysis plot series inside Foxglove, and aliases the selected robot's telemetry topic onto /controls_analysis_selected (chosen by the `robot` global variable) so layouts switch robots without reloading the bag.",
   "publisher": "ateam",
   "homepage": "https://github.com/SSL-A-Team/software",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "keywords": [
     "foxglove",
     "extension"

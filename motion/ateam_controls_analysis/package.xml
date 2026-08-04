@@ -4,29 +4,18 @@
   <name>ateam_controls_analysis</name>
   <version>0.0.0</version>
   <description>
-    Controls analysis infrastructure for Foxglove. Republishes every robot's
-    ExtendedTelemetry as flat analysis signals (state estimate, reference
-    trajectory, measurements, firmware output, and the mode-routed software
-    command), one topic per robot on /controls_analysis/robot{id}, for
-    streaming or ROS-bag playback.
+    Controls analysis for Foxglove. Ships the controls-analysis layouts and a
+    Foxglove extension that converts each robot's ateam_radio_msgs/ExtendedTelemetry
+    into flat, per-mode-colored plot series directly inside Foxglove -- no ROS
+    republisher node and no derived message type.
   </description>
   <maintainer email="nickwitten@users.noreply.github.com">Nick Witten</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>ament_cmake_python</buildtool_depend>
-
-  <exec_depend>rclpy</exec_depend>
-  <exec_depend>rosbag2_py</exec_depend>
-  <exec_depend>ateam_radio_msgs</exec_depend>
-  <exec_depend>ateam_controls_analysis_msgs</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>python3-pytest</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

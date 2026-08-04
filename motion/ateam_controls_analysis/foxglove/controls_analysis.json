@@ -5,70 +5,70 @@
         {
           "value": "/controls_analysis_selected.x.pos_cmd",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.pos_estimate",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff0000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.pos_vision",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_point_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         }
@@ -88,63 +88,63 @@
         {
           "value": "/controls_analysis_selected.x.vel_cmd",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.vel_estimate",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff0000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_point_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         }
@@ -164,28 +164,28 @@
         {
           "value": "/controls_analysis_selected.x.accel_cmd",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.accel_u",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff9c56",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.accel_u_fric_comp",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff6a00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.x.accel_imu",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         }
@@ -205,70 +205,70 @@
         {
           "value": "/controls_analysis_selected.y.pos_cmd",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.pos_estimate",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff0000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.pos_vision",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_point_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         }
@@ -288,63 +288,63 @@
         {
           "value": "/controls_analysis_selected.y.vel_cmd",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.vel_estimate",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff0000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_point_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         }
@@ -364,28 +364,28 @@
         {
           "value": "/controls_analysis_selected.y.accel_cmd",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.accel_u",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff9c56",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.accel_u_fric_comp",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff6a00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.y.accel_imu",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         }
@@ -405,70 +405,70 @@
         {
           "value": "/controls_analysis_selected.theta.pos_cmd",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.pos_estimate",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff0000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.pos_vision",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_point_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         }
@@ -488,70 +488,70 @@
         {
           "value": "/controls_analysis_selected.theta.vel_cmd",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.vel_estimate",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff0000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.vel_gyro",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_point_line",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": false
         }
@@ -571,21 +571,21 @@
         {
           "value": "/controls_analysis_selected.theta.accel_cmd",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.accel_u",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff9c56",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.theta.accel_u_fric_comp",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#ff6a00",
           "showLine": false
         }
@@ -605,14 +605,14 @@
         {
           "value": "/controls_analysis_selected.front_left.vel_setpoint",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.front_left.vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         }
@@ -632,14 +632,14 @@
         {
           "value": "/controls_analysis_selected.back_left.vel_setpoint",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.back_left.vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         }
@@ -659,14 +659,14 @@
         {
           "value": "/controls_analysis_selected.back_right.vel_setpoint",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.back_right.vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         }
@@ -686,14 +686,14 @@
         {
           "value": "/controls_analysis_selected.front_right.vel_setpoint",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.front_right.vel",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         }
@@ -713,14 +713,14 @@
         {
           "value": "/controls_analysis_selected.front_left.current_setpoint",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.front_left.current",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         }
@@ -740,14 +740,14 @@
         {
           "value": "/controls_analysis_selected.back_left.current_setpoint",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.back_left.current",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         }
@@ -767,14 +767,14 @@
         {
           "value": "/controls_analysis_selected.back_right.current_setpoint",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.back_right.current",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false
         }
@@ -794,35 +794,15 @@
         {
           "value": "/controls_analysis_selected.front_right.current_setpoint",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
           "value": "/controls_analysis_selected.front_right.current",
           "enabled": true,
-          "timestampMethod": "headerStamp",
+          "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
-        }
-      ],
-      "showXAxisLabels": true,
-      "showYAxisLabels": true,
-      "showLegend": true,
-      "legendDisplay": "floating",
-      "showPlotValuesInLegend": true,
-      "isSynced": true,
-      "xAxisVal": "timestamp",
-      "sidebarDimension": 240,
-      "followingViewWidth": 10.0
-    },
-    "Plot!boot": {
-      "paths": [
-        {
-          "value": "/controls_analysis_selected.reboot_count",
-          "enabled": true,
-          "timestampMethod": "headerStamp",
-          "color": "#ff0000",
           "showLine": false
         }
       ],
@@ -918,10 +898,6 @@
             },
             "splitPercentage": 25.0
           }
-        },
-        {
-          "title": "Boot",
-          "layout": "Plot!boot"
         }
       ]
     }
