@@ -15,7 +15,20 @@ find_package(rosidl_default_generators REQUIRED)
 
 set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/ateam_generated)
 
-set(RADIO_PACKETS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/generated/include)
+set(ATEAM_COMMON_PACKETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets)
+set(RADIO_PACKETS_INCLUDE_DIR ${ATEAM_COMMON_PACKETS_DIR}/generated/include)
+
+# Run the Rust codegen tool to (re)generate C headers from the Rust packet definitions.
+find_program(CARGO_EXECUTABLE cargo REQUIRED)
+execute_process(
+  COMMAND ${CARGO_EXECUTABLE} run --manifest-path ${ATEAM_COMMON_PACKETS_DIR}/tools/codegen/Cargo.toml
+  WORKING_DIRECTORY ${ATEAM_COMMON_PACKETS_DIR}
+  RESULT_VARIABLE _codegen_result
+  ERROR_VARIABLE _codegen_error
+)
+if(_codegen_result)
+  message(FATAL_ERROR "Packet codegen failed:\n${_codegen_error}")
+endif()
 
 set(RADIO_STRUCTS_TO_GENERATE
     GlobalPositionCommand
