@@ -9,15 +9,21 @@ class KalmanFilter {
     public:
         KalmanFilter();
 
-        void init(Eigen::VectorXd &initial_state);
-        
+        void init(Eigen::VectorXd &initial_state, Eigen::MatrixXd &initial_error_covar);
+
         void predict(Eigen::VectorXd &control_input);
 
         void update(Eigen::VectorXd &measurement);
 
-        void set_process_noise_covar(&covar_mat);
+        void set_process_noise_covar(Eigen::MatrixXd &covar_mat);
 
-        void set_measurement_noise_covar(&covar_mat);
+        void set_measurement_noise_covar(Eigen::MatrixXd &covar_mat);
+
+        void set_state_transition_model(Eigen::MatrixXd &model_mat);
+
+        void set_control_model(Eigen::MatrixXd &model_mat);
+
+        void set_measurement_model(Eigen::MatrixXd &model_mat);
 
     private:
         // P matrix
@@ -34,8 +40,8 @@ class KalmanFilter {
         Eigen::MatrixXd measurement_model;
 
         // x_hat
-        Eigen::MatrixXd state_estimate;
-}
+        Eigen::VectorXd state_estimate;
+};
 
 } // namespace ateam_super_vision
 
