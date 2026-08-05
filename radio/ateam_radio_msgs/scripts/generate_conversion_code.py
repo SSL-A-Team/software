@@ -192,25 +192,37 @@ def generate_conversion_function_implementation(struct_node, enums, struct_names
     return impl_text
 
 
+def _tag_to_member_name(enum_type_name, case_name):
+    """Derive the expected union member name from a tag enum case name.
+
+    Strips the enum type prefix then converts CamelCase to snake_case.
+    E.g. BodyControlTelemetryTag_GlobalPosition -> global_position
+         ParameterDataTag_Vec3F32             -> vec3_f32
+    """
+    prefix = enum_type_name + '_'
+    variant = case_name[len(prefix):] if case_name.startswith(prefix) else case_name
+    # Insert underscore before a capital letter that follows a lowercase letter or digit.
+    return re.sub(r'(?<=[a-z0-9])(?=[A-Z])', '_', variant).lower()
+
+
 def generate_union_switch_copy_lines(field_node, param_name, struct_names, selector_field, enums):
     """Generate a switch on selector_field to convert only the active union member."""
     field_name = field_node.spelling
     union_decl = field_node.type.get_canonical().get_declaration()
-    members = [
-        m for m in union_decl.get_children()
+    member_by_name = {
+        m.spelling: m
+        for m in union_decl.get_children()
         if m.kind == clang.cindex.CursorKind.FIELD_DECL
         and m.type.spelling in struct_names
-    ]
+    }
     enum_details = next(e for e in enums if e['type_name'] == selector_field.type.spelling)
-    enum_values = sorted(
-        [(name, val) for name, val in enum_details['values']],
-        key=lambda x: x[1],
-    )
-    # TODO(barulicm): This is not sustainable long term
-    if field_name == 'control_telem' or 'maneuver':
-        del enum_values[:2]
+    enum_values = sorted(enum_details['values'], key=lambda x: x[1])
     result = f'    switch ({param_name}.{selector_field.spelling}) {{\n'
-    for (case_name, _), member in zip(enum_values, members):
+    for case_name, _ in enum_values:
+        member_name = _tag_to_member_name(enum_details['type_name'], case_name)
+        member = member_by_name.get(member_name)
+        if member is None:
+            continue
         msg_field = f'{field_name}_{member.spelling}'
         result += f'        case {case_name}:\n'
         result += (
@@ -268,6 +280,14 @@ def generate_field_copy_line(field_node, param_name, enums, struct_names, select
                 f'    msg.{field_name} = Convert({param_name}.{field_node.spelling});\n'
             )
         else:
+            # Typedef to a primitive (e.g. `typedef uint32_t BasicTelemetryErrors`):
+            # the canonical type is a primitive, so a plain assignment suffices.
+            canonical = field_node.type.get_canonical()
+            if canonical.kind not in (
+                clang.cindex.TypeKind.ELABORATED,
+                clang.cindex.TypeKind.RECORD,
+            ):
+                return f'    msg.{field_name} = {param_name}.{field_node.spelling};\n'
             return ''
     else:
         return f'    msg.{field_name} = {param_name}.{field_node.spelling};\n'
@@ -328,6 +348,14 @@ def get_ros2_basic_type(field_type):
                 case 'int64_t':
                     return 'int64'
                 case _:
+                    # Typedef to a primitive (e.g. `typedef uint32_t BasicTelemetryErrors`):
+                    # resolve through the canonical type so we get the right ROS primitive.
+                    canonical = field_type.get_canonical()
+                    if canonical.kind not in (
+                        clang.cindex.TypeKind.ELABORATED,
+                        clang.cindex.TypeKind.RECORD,
+                    ):
+                        return get_ros2_basic_type(canonical)
                     return 'ateam_radio_msgs/' + field_type.spelling
         case _:
             raise ValueError(f'Unsupported basic type: {field_type.spelling}')

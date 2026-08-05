@@ -242,6 +242,14 @@ def get_ros2_basic_type(field_type):
                 case 'int64_t':
                     return 'int64'
                 case _:
+                    # Typedef to a primitive (e.g. `typedef uint32_t BasicTelemetryErrors`):
+                    # resolve through the canonical type so we get the right ROS primitive.
+                    canonical = field_type.get_canonical()
+                    if canonical.kind not in (
+                        clang.cindex.TypeKind.ELABORATED,
+                        clang.cindex.TypeKind.RECORD,
+                    ):
+                        return get_ros2_basic_type(canonical)
                     return 'ateam_radio_msgs/' + field_type.spelling
         case _:
             raise ValueError(f'Unsupported basic type: {field_type.spelling}')

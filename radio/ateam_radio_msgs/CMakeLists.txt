@@ -15,7 +15,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/ateam_generated)
 
-set(RADIO_PACKETS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/include)
+set(RADIO_PACKETS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/generated/include)
 
 set(RADIO_STRUCTS_TO_GENERATE
     GlobalPositionCommand
@@ -31,9 +31,9 @@ set(RADIO_STRUCTS_TO_GENERATE
     ErrorTelemetry
     ExtendedTelemetry
     BodyControlTelemetry
+    BodyControlManeuverExtendedTelemetry
     BodyControlExtendedTelemetry
     KickerTelemetry
-    MotorTelemetry
     CcmTelemetry
     CcmVelocityTelemetry
     CcmCurrentTelemetry
@@ -42,13 +42,13 @@ set(RADIO_STRUCTS_TO_GENERATE
 )
 
 generate_msgs(
-  SOURCE ${RADIO_PACKETS_INCLUDE_DIR}/radio.h
+  SOURCE ${RADIO_PACKETS_INCLUDE_DIR}/ateam_packets.h
   DESTINATION ${GENERATED_DIR}
   STRUCTS ${RADIO_STRUCTS_TO_GENERATE}
 )
 
 generate_conversion_code(
-  SOURCE ${RADIO_PACKETS_INCLUDE_DIR}/radio.h
+  SOURCE ${RADIO_PACKETS_INCLUDE_DIR}/ateam_packets.h
   DESTINATION ${GENERATED_DIR}
   STRUCTS ${RADIO_STRUCTS_TO_GENERATE}
 )
