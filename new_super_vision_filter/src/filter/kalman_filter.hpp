@@ -25,6 +25,8 @@ class KalmanFilter {
 
         void set_measurement_model(Eigen::MatrixXd &model_mat);
 
+        const Eigen::VectorXd & get_state_estimate() const;
+
     private:
         // P matrix
         Eigen::MatrixXd error_covar;

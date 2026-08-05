@@ -1,5 +1,7 @@
 #include "filter/kalman_filter.hpp"
 
+#include <Eigen/LU>
+
 namespace ateam_super_vision {
     KalmanFilter::KalmanFilter() {}
 
@@ -52,6 +54,10 @@ namespace ateam_super_vision {
 
     void KalmanFilter::set_measurement_model(Eigen::MatrixXd &model_mat) {
         this->measurement_model = model_mat;
+    }
+
+    const Eigen::VectorXd & KalmanFilter::get_state_estimate() const {
+        return state_estimate;
     }
 }
 

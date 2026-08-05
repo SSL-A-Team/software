@@ -1,23 +1,33 @@
 #include "filtered_ball.hpp"
 
+namespace ateam_super_vision {
 FilteredBall::FilteredBall(const BallMeasurement & measurement)
 {
-  PosState initial_state_xy;
+  Eigen::VectorXd initial_state_xy(4);
+    // We don't get a velocity input in the measurement itself,
+    // so that starts at 0.
   initial_state_xy <<
     measurement.pos.x(),
     measurement.pos.y(),
     0,
     0;
-  posFilterXY.init(initial_state_xy);
-  Kalman::Matrix<double, 4, 4> xy_covariance;
     // This is in m, so initial covariance is 100 mm.
-    // We don't get a velocity input in the measurement itself,
-    // so that has a large initial uncertainty.
-  xy_covariance << 1e-3, 0, 0, 0,
-    0, 1e-3, 0, 0,
-    0, 0, 1e-3, 0,
-    0, 0, 0, 1e-3;
-  posFilterXY.setCovariance(xy_covariance);
+  Eigen::MatrixXd initial_error_covar = Eigen::MatrixXd::Identity(4, 4) * 1e-3;
+
+    // We don't add any control inputs to the vision system, so the
+    // control model maps a zero-length control vector onto the state.
+  Eigen::MatrixXd control_model = Eigen::MatrixXd::Zero(4, 0);
+  Eigen::MatrixXd measurement_model = PosMeasurementModel::measurementMatrix();
+  Eigen::MatrixXd measurement_noise_covar = PosMeasurementModel::measurementNoiseCovar();
+  Eigen::MatrixXd process_noise_covar = PosSystemModel::processNoiseCovar();
+
+  posFilterXY.set_control_model(control_model);
+  posFilterXY.set_measurement_model(measurement_model);
+  posFilterXY.set_measurement_noise_covar(measurement_noise_covar);
+  posFilterXY.set_process_noise_covar(process_noise_covar);
+
+  posFilterXY.init(initial_state_xy, initial_error_covar);
+  posXYEstimate = initial_state_xy;
 }
 
 void FilteredBall::update(const BallMeasurement & measurement)
@@ -38,16 +48,26 @@ void FilteredBall::update(const BallMeasurement & measurement)
   if (now - measurement.timestamp > update_threshold || is_new) {
     return;
   }
+    // The state transition matrix (F) depends on the elapsed time, so it's
+    // rebuilt every update with the latest dt.
+  Eigen::MatrixXd state_transition_model = PosSystemModel::stateTransition(systemModelXY.stepDt());
+  posFilterXY.set_state_transition_model(state_transition_model);
+
     // Predict state forward
     // Predict covariance forward
     // (All encompassed by the .predict() function)
-  (void) posFilterXY.predict(systemModelXY);
-    // Update the Jacobian matrix (contained in filter)
+  Eigen::VectorXd control_input(0);
+  posFilterXY.predict(control_input);
+
     // Compute Kalman gain (contained in filter)
-    // Update state estimate (returned)
+    // Update state estimate (contained in filter)
     // Update covariance estimate (contained in filter)
     // All encompassed by the .update() function
-  posXYEstimate = posFilterXY.update(measurementModelXY, measurement.pos);
+  Eigen::VectorXd z(2);
+  z << measurement.pos.x(), measurement.pos.y();
+  posFilterXY.update(z);
+
+  posXYEstimate = posFilterXY.get_state_estimate();
 }
 
 ateam_msgs::msg::VisionStateBall FilteredBall::toMsg()
@@ -71,3 +91,4 @@ bool FilteredBall::isHealthy() const
 {
   return health > 0;
 }
+} // namespace ateam_super_vision

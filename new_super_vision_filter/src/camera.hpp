@@ -29,6 +29,7 @@
 #include "filtered_ball.hpp"
 #include "filtered_robot.hpp"
 
+namespace ateam_super_vision {
 class Camera {
 public:
         // Need to process an individual frame
@@ -47,5 +48,6 @@ private:
   int camera_id;
   std::chrono::time_point<std::chrono::steady_clock> last_updated;
 };
+} // namespace ateam_super_vision
 
 #endif // CAMERA_HPP_

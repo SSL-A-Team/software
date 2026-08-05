@@ -22,6 +22,7 @@ add_library(${PROJECT_NAME} SHARED
   src/camera.cpp
   src/filtered_robot.cpp
   src/filtered_ball.cpp
+  src/filter/kalman_filter.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

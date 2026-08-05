@@ -20,7 +20,7 @@
 #ifndef FILTERED_ROBOT_HPP_
 #define FILTERED_ROBOT_HPP_
 
-#include "kalman/ExtendedKalmanFilter.hpp"
+#include "filter/kalman_filter.hpp"
 #include "filter_types.hpp"
 #include "measurements/robot_measurement.hpp"
 
@@ -30,6 +30,7 @@
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_msgs/msg/vision_state_robot.hpp>
 
+namespace ateam_super_vision {
 class FilteredRobot {
 public:
   FilteredRobot(const RobotMeasurement & measurement, ateam_common::TeamColor & team_color);
@@ -43,8 +44,8 @@ public:
   bool isHealthy() const;
 
 private:
-  Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
-  Kalman::ExtendedKalmanFilter<AngleState> posFilterW;
+  ateam_super_vision::KalmanFilter posFilterXY;
+  ateam_super_vision::KalmanFilter posFilterW;
   int age = 0;
   int oldEnough = 3;
   int health = 2;
@@ -59,13 +60,11 @@ private:
         // X, Y
   PosSystemModel systemModelXY;
   PosState posXYEstimate{};
-  PosMeasurementModel measurementModelXY;
         // Theta
   AngleSystemModel systemModelW;
   AngleState posWEstimate{};
-  AngleMeasurementModel measurementModelW;
   int bot_id;
   ateam_common::TeamColor team;
 };
-
+} // namespace ateam_super_vision
 #endif  // FILTERED_ROBOT_HPP_

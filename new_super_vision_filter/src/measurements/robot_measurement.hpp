@@ -31,6 +31,7 @@
 
 #include "filter_types.hpp"
 
+namespace ateam_super_vision {
 /**
  * @brief Robot position and angle measurement from a single camera detection,
  * used to provide updates to the Kalman filter.
@@ -85,5 +86,6 @@ private:
   int robot_id;
 
 };
+} // namespace ateam_super_vision
 
 #endif // ROBOT_MEASUREMENT_HPP_

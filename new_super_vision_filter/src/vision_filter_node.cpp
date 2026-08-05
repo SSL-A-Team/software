@@ -36,7 +36,7 @@
 
 using namespace std::chrono_literals;
 
-namespace new_super_vision
+namespace ateam_super_vision
 {
 
 class VisionFilterNode : public rclcpp::Node
@@ -276,6 +276,6 @@ private:
   }
 };
 
-} // namespace new_super_vision
+} // namespace ateam_super_vision
 
-RCLCPP_COMPONENTS_REGISTER_NODE(new_super_vision::VisionFilterNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(ateam_super_vision::VisionFilterNode)

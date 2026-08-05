@@ -32,28 +32,40 @@
 // or https://thekalmanfilter.com/kalman-filter-explained-simply/
 // OR https://github.com/mherb/kalman/blob/master/examples/Robot1/main.cpp
 
+namespace ateam_super_vision {
 FilteredRobot::FilteredRobot(
   const RobotMeasurement & measurement,
   ateam_common::TeamColor & team_color)
 : posFilterXY(), posFilterW(), bot_id(measurement.getId()), team(team_color)
 {
         // Initialize XY KF
-  PosState initial_state_xy;
+  Eigen::VectorXd initial_state_xy(4);
   initial_state_xy <<
     measurement.pos.x(),
     measurement.pos.y(),
     0,
     0;
-  posFilterXY.init(initial_state_xy);
-  Kalman::Matrix<double, 4, 4> xy_covariance;
         // This is in m, so initial covariance is 100 mm.
         // We don't get a velocity input in the measurement itself,
         // so that has a large initial uncertainty.
+  Eigen::MatrixXd xy_covariance(4, 4);
   xy_covariance << 1e-4, 0, 0, 0,
     0, 1e-4, 0, 0,
     0, 0, 1e-2, 0,
     0, 0, 0, 1e-2;
-  posFilterXY.setCovariance(xy_covariance);
+
+  Eigen::MatrixXd control_model_xy = Eigen::MatrixXd::Zero(4, 0);
+  Eigen::MatrixXd measurement_model_xy = PosMeasurementModel::measurementMatrix();
+  Eigen::MatrixXd measurement_noise_covar_xy = PosMeasurementModel::measurementNoiseCovar();
+  Eigen::MatrixXd process_noise_covar_xy = PosSystemModel::processNoiseCovar();
+
+  posFilterXY.set_control_model(control_model_xy);
+  posFilterXY.set_measurement_model(measurement_model_xy);
+  posFilterXY.set_measurement_noise_covar(measurement_noise_covar_xy);
+  posFilterXY.set_process_noise_covar(process_noise_covar_xy);
+
+  posFilterXY.init(initial_state_xy, xy_covariance);
+  posXYEstimate = initial_state_xy;
 
         // Initialize angular KF
         /*
@@ -61,19 +73,30 @@ FilteredRobot::FilteredRobot(
             w_pos,
             w_vel
         */
-  AngleState initial_state_w;
+  Eigen::VectorXd initial_state_w(2);
   initial_state_w <<
     measurement.angle.w(),
     0;
-  posFilterW.init(initial_state_w);
         /*
             Initial covariance is approx 2 deg. for pos,
             10 deg. for vel
         */
-  Kalman::Matrix<double, 2, 2> w_covariance;
+  Eigen::MatrixXd w_covariance(2, 2);
   w_covariance << M_PI / 180.0, 0,
     0, M_PI / 180.0;
-  posFilterW.setCovariance(w_covariance);
+
+  Eigen::MatrixXd control_model_w = Eigen::MatrixXd::Zero(2, 0);
+  Eigen::MatrixXd measurement_model_w = AngleMeasurementModel::measurementMatrix();
+  Eigen::MatrixXd measurement_noise_covar_w = AngleMeasurementModel::measurementNoiseCovar();
+  Eigen::MatrixXd process_noise_covar_w = AngleSystemModel::processNoiseCovar();
+
+  posFilterW.set_control_model(control_model_w);
+  posFilterW.set_measurement_model(measurement_model_w);
+  posFilterW.set_measurement_noise_covar(measurement_noise_covar_w);
+  posFilterW.set_process_noise_covar(process_noise_covar_w);
+
+  posFilterW.init(initial_state_w, w_covariance);
+  posWEstimate = initial_state_w;
 }
 
 void FilteredRobot::update(const RobotMeasurement & measurement)
@@ -97,18 +120,35 @@ void FilteredRobot::update(const RobotMeasurement & measurement)
   if (is_new) {
     return;
   }
+    // The state transition matrices (F) depend on elapsed time, so they're
+    // rebuilt every update with the latest dt.
+  Eigen::MatrixXd state_transition_xy = PosSystemModel::stateTransition(systemModelXY.stepDt());
+  posFilterXY.set_state_transition_model(state_transition_xy);
+  Eigen::MatrixXd state_transition_w = AngleSystemModel::stateTransition(systemModelW.stepDt());
+  posFilterW.set_state_transition_model(state_transition_w);
+
     // Predict state forward
     // Predict covariance forward
     // (All encompassed by the .predict() function)
-  (void) posFilterXY.predict(systemModelXY);
-  (void) posFilterW.predict(systemModelW);
-    // Update the Jacobian matrix (contained in filter)
+  Eigen::VectorXd control_input_xy(0);
+  posFilterXY.predict(control_input_xy);
+  Eigen::VectorXd control_input_w(0);
+  posFilterW.predict(control_input_w);
+
     // Compute Kalman gain (contained in filter)
-    // Update state estimate (returned)
+    // Update state estimate (contained in filter)
     // Update covariance estimate (contained in filter)
     // All encompassed by the .update() function
-  posXYEstimate = posFilterXY.update(measurementModelXY, measurement.pos);
-  posWEstimate = posFilterW.update(measurementModelW, measurement.angle);
+  Eigen::VectorXd z_xy(2);
+  z_xy << measurement.pos.x(), measurement.pos.y();
+  posFilterXY.update(z_xy);
+  posXYEstimate = posFilterXY.get_state_estimate();
+
+  Eigen::VectorXd z_w(1);
+  z_w << measurement.angle.w();
+  posFilterW.update(z_w);
+  posWEstimate = posFilterW.get_state_estimate();
+  posWEstimate[AngleState::PW] = AngleSystemModel::wrapAngle(posWEstimate[AngleState::PW]);
 }
 
 ateam_msgs::msg::VisionStateRobot FilteredRobot::toMsg()
@@ -149,3 +189,4 @@ bool FilteredRobot::isHealthy() const
 {
   return health > 0;
 }
+} // namespace ateam_super_vision

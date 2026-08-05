@@ -25,6 +25,7 @@
 
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
 
+namespace ateam_super_vision {
 class BallMeasurement {
 public:
   BallMeasurement(const ssl_league_msgs::msg::VisionDetectionBall & ball_detection, int & camera_id)
@@ -44,5 +45,6 @@ public:
   std::chrono::time_point<std::chrono::steady_clock> timestamp;
   int camera_id;
 };
+} // namespace ateam_super_vision
 
 #endif // BALL_MEASUREMENT_HPP_

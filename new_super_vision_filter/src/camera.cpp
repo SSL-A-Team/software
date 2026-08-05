@@ -24,6 +24,8 @@
 #include "filtered_ball.hpp"
 #include "filtered_robot.hpp"
 
+namespace ateam_super_vision
+{
 Camera::Camera(int camera_id)
 : camera_id(camera_id) {}
 
@@ -36,3 +38,5 @@ void Camera::process_detection_frame(
 // void Camera::process_camera_geometry(const ssl_league_msgs::msg::VisionGeometryData & geometry) {}
 
 void Camera::clear_old_messages() {}
+
+} // namespace ateam_super_vision

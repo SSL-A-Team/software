@@ -52,13 +52,13 @@ protected:
   ateam_common::TeamColor team = ateam_common::TeamColor::Blue;
   int oldEnoughAge = 2;
   ssl_league_msgs::msg::VisionDetectionRobot robot_msg{};
-  std::unique_ptr<FilteredRobot> bot;
+  std::unique_ptr<ateam_super_vision::FilteredRobot> bot;
 
   void SetUp() override
   {
     int camera = 0;
-    auto measurement = RobotMeasurement(robot_msg, camera, team);
-    bot = std::make_unique<FilteredRobot>(measurement, team);
+    auto measurement = ateam_super_vision::RobotMeasurement(robot_msg, camera, team);
+    bot = std::make_unique<ateam_super_vision::FilteredRobot>(measurement, team);
   }
 };
 
@@ -73,7 +73,7 @@ TEST_F(FilteredRobotTest, WaitUntilOldEnough)
     fake_vision_data.pose.position.x = 1;
     fake_vision_data.pose.position.y = 1;
     if (i < oldEnoughAge) {
-      auto fake_measurement = RobotMeasurement(fake_vision_data, camera, team);
+      auto fake_measurement = ateam_super_vision::RobotMeasurement(fake_vision_data, camera, team);
       bot->update(fake_measurement);
       auto msg = bot->toMsg();
         // We shouldn't update if our filter is too new
@@ -81,7 +81,7 @@ TEST_F(FilteredRobotTest, WaitUntilOldEnough)
     } else {
         // Sorry, adding a short sleep was easier than mocking the timestamp...
       std::this_thread::sleep_for(std::chrono::milliseconds(60));
-      auto fake_measurement = RobotMeasurement(fake_vision_data, camera, team);
+      auto fake_measurement = ateam_super_vision::RobotMeasurement(fake_vision_data, camera, team);
       bot->update(fake_measurement);
       auto msg = bot->toMsg();
         // We should update if our filter is old enough

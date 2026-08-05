@@ -25,10 +25,10 @@
 #include <Eigen/Core>
 #include <ssl_league_msgs/msg/vision_detection_ball.hpp>
 #include <ateam_msgs/msg/vision_state_ball.hpp>
-#include "kalman/ExtendedKalmanFilter.hpp"
-#include "filter_types.hpp"
 #include "measurements/ball_measurement.hpp"
+#include "filter/kalman_filter.hpp"
 
+namespace ateam_super_vision {
 enum KickState
 {
   ROLLING,
@@ -57,10 +57,10 @@ private:
   std::chrono::steady_clock::time_point timestamp;
   std::chrono::steady_clock::time_point last_visible_timestamp;
         // Filter
-  Kalman::ExtendedKalmanFilter<PosState> posFilterXY;
+  ateam_super_vision::KalmanFilter posFilterXY;
   PosState posXYEstimate;
   PosSystemModel systemModelXY;
-  PosMeasurementModel measurementModelXY;
 };
+} // namespace ateam_super_vision
 
 #endif // FILTERED_BALL_HPP_

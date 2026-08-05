@@ -22,14 +22,11 @@
 #define FILTER_TYPES_HPP_
 
 #include <chrono>
-#include <iostream>
-#include <angles/angles.h>
 #include <cmath>
+#include <Eigen/Core>
 
-#include "kalman/Types.hpp"
-#include "kalman/LinearizedMeasurementModel.hpp"
-#include "kalman/LinearizedSystemModel.hpp"
-
+namespace ateam_super_vision
+{
 /*
     Position measurement for robot or balls
 
@@ -40,10 +37,12 @@
 
     Measurements are in m
 */
-class PosMeasurement : public Kalman::Vector<double, 2>
+class PosMeasurement : public Eigen::Vector2d
 {
 public:
-  KALMAN_VECTOR(PosMeasurement, double, 2)
+  using Base = Eigen::Vector2d;
+  using Base::Base;
+  using Base::operator=;
 
   static constexpr size_t X = 0;
   static constexpr size_t Y = 1;
@@ -70,119 +69,104 @@ public:
 
     Measurements are in m
 */
-class PosState : public Kalman::Vector<double, 4>
+class PosState : public Eigen::Vector4d
 {
 public:
-  KALMAN_VECTOR(PosState, double, 4)
+  using Base = Eigen::Vector4d;
+  using Base::Base;
+  using Base::operator=;
 
   static constexpr size_t PX = 0;
   static constexpr size_t PY = 1;
   static constexpr size_t VX = 2;
   static constexpr size_t VY = 3;
 
-  double px() {return (*this)[PX];}
-  double py() {return (*this)[PY];}
-  double vx() {return (*this)[VX];}
-  double vy() {return (*this)[VY];}
-
+  double px() const {return (*this)[PX];}
+  double py() const {return (*this)[PY];}
+  double vx() const {return (*this)[VX];}
+  double vy() const {return (*this)[VY];}
 };
 
 /*
-    Measurement model for robots/balls' X and Y pos + velocity from
-    position measurements
+    Measurement model for robots/balls' X and Y pos from position
+    measurements.
 
-    Curently assumes no measurement noise
+    Curently assumes no measurement noise.
 */
 class PosMeasurementModel
-  : public Kalman::LinearizedMeasurementModel<PosState, PosMeasurement, Kalman::StandardBase>
 {
 public:
-    // h(x) = predicted measurement
-  PosMeasurement h(const PosState & x) const
+  // H matrix: maps a PosState to the position-only PosMeasurement it predicts.
+  static Eigen::MatrixXd measurementMatrix()
   {
-    PosMeasurement z;
-    z[0] = x(x.PX);     // px
-    z[1] = x(x.PY);     // py
-    return z;
+    Eigen::MatrixXd H = Eigen::MatrixXd::Zero(2, 4);
+    H(PosMeasurement::X, PosState::PX) = 1;     // dz_px / d_px
+    H(PosMeasurement::Y, PosState::PY) = 1;     // dz_py / d_py
+    return H;
   }
 
-    // Jacobian H = ∂h/∂x
-
-protected:
-  void updateJacobians(const PosState & x)
+  // R matrix. Currently assumes no measurement noise.
+  static Eigen::MatrixXd measurementNoiseCovar()
   {
-    (void)x;
-    this->H.setZero();
-
-    this->H(0, 0) = 1;     // dz_px / d_px
-    this->H(1, 1) = 1;     // dz_py / d_py
+    return Eigen::MatrixXd::Zero(2, 2);
   }
 };
 
 /*
     System (measurement to state) transition model for X/Y position
     that assumes a constant velocity and no control inputs.
-
 */
-class PosSystemModel : public Kalman::LinearizedSystemModel<PosState>
+class PosSystemModel
 {
-private:
-  mutable std::chrono::time_point<std::chrono::steady_clock> last_update = std::chrono::steady_clock::now();
-  mutable double dt_s_ = 0.0;
-
 public:
-        // For now, we don't add any control inputs to the vision system
-        // TODO (Christian): We might need this for the robots, even if we
-        // don't use it for the ball
-  using Control = Kalman::Vector<double, 0>;
-  using Seconds = std::chrono::duration<double>;
+  PosSystemModel()
+  : last_update(std::chrono::steady_clock::now()) {}
 
-        /*
-            The f() function applies what would be the A (state transition)
-            matrix but lazily skips doing a matmul.
-
-            We assume the velocity stays constant and add v * dt to the
-            current position.
-
-            pos_t = pos_{t-1} + vel_{t-1} * dt
-            vel_t = vel_{t-1}
-        */
-  PosState f(const PosState & x, const Control & /*u*/) const override
+  // Seconds elapsed since the previous call, resetting the internal clock.
+  double stepDt()
   {
-    PosState x_updated{};
-    auto now = std::chrono::steady_clock::now();
-    Seconds dt = now - last_update;
-    dt_s_ = dt.count();
-
-            // B/c dt is in ms, we need to convert to s, since
-            // our velocities are all in m/s
-    x_updated(x.PX) = x(x.PX) + x(x.VX) * dt_s_;
-            // We assume constant velocity in the system model
-    x_updated(x.VX) = x(x.VX);
-    x_updated(x.PY) = x(x.PY) + x(x.VY) * dt_s_;
-    x_updated(x.VY) = x(x.VY);
-
+    const auto now = std::chrono::steady_clock::now();
+    const std::chrono::duration<double> dt = now - last_update;
     last_update = now;
-    return x_updated;
+    return dt.count();
   }
 
-  void updateJacobians(const PosState &, const Control &) override
+  /*
+      F matrix for the given elapsed time.
+
+      We assume the velocity stays constant and add v * dt to the
+      current position.
+
+      pos_t = pos_{t-1} + vel_{t-1} * dt
+      vel_t = vel_{t-1}
+  */
+  static Eigen::MatrixXd stateTransition(double dt_s)
   {
-      this->F.setIdentity();
-
-      this->F(PosState::PX, PosState::VX) = dt_s_;
-      this->F(PosState::PY, PosState::VY) = dt_s_;
+    Eigen::MatrixXd F = Eigen::MatrixXd::Identity(4, 4);
+    F(PosState::PX, PosState::VX) = dt_s;
+    F(PosState::PY, PosState::VY) = dt_s;
+    return F;
   }
 
+  // Q matrix. Values borrowed from the previous vision filter.
+  static Eigen::MatrixXd processNoiseCovar()
+  {
+    return Eigen::MatrixXd::Identity(4, 4) * 1e-3;
+  }
+
+private:
+  std::chrono::time_point<std::chrono::steady_clock> last_update;
 };
 
 /*
     Angular position measurement (in rad)
 */
-class AngleMeasurement : public Kalman::Vector<double, 1>
+class AngleMeasurement : public Eigen::Matrix<double, 1, 1>
 {
 public:
-  KALMAN_VECTOR(AngleMeasurement, double, 1)
+  using Base = Eigen::Matrix<double, 1, 1>;
+  using Base::Base;
+  using Base::operator=;
 
   static constexpr size_t W = 0;
 
@@ -201,88 +185,98 @@ public:
         w_vel
     }
 */
-class AngleState : public Kalman::Vector<double, 2>
+class AngleState : public Eigen::Vector2d
 {
 public:
-  KALMAN_VECTOR(AngleState, double, 2)
+  using Base = Eigen::Vector2d;
+  using Base::Base;
+  using Base::operator=;
 
   static constexpr size_t PW = 0;
   static constexpr size_t VW = 1;
 
-  double pw() {return (*this)[PW];}
-  double vw() {return (*this)[VW];}
+  double pw() const {return (*this)[PW];}
+  double vw() const {return (*this)[VW];}
 };
 
 /*
-    Linearized angle measurement model
+    Angle measurement model.
 
-    Currently assumes no measurement noise
+    Currently assumes no measurement noise.
 */
 class AngleMeasurementModel
-  : public Kalman::LinearizedMeasurementModel<AngleState, AngleMeasurement, Kalman::StandardBase>
 {
 public:
-    // h(x) = predicted measurement
-  AngleMeasurement h(const AngleState & x) const override
+  // H matrix: maps an AngleState to the angle-only AngleMeasurement it predicts.
+  static Eigen::MatrixXd measurementMatrix()
   {
-    AngleMeasurement z{};
-    z[0] = x[0];     // pw
-    return z;
+    Eigen::MatrixXd H = Eigen::MatrixXd::Zero(1, 2);
+    H(AngleMeasurement::W, AngleState::PW) = 1;     // dz_pw / d_pw
+    return H;
   }
 
-    // Jacobian H = ∂h/∂x
-  void updateJacobians(const AngleState & x) override
+  // R matrix. Measurement error borrowed from previous vision filter.
+  static Eigen::MatrixXd measurementNoiseCovar()
   {
-    (void)x;
-    this->H.setZero();
-    this->H(0, 0) = 1;     // dz_px / d_px
-  }
-
-  AngleMeasurementModel() {
-    // Measurement error borrowed from previous vision filter
-    const double sigma_theta_squared = 0.01; // Position measurement error
-    this->V.setZero();
-    this->V(0, 0) = sigma_theta_squared;
-    this->V(1, 1) = sigma_theta_squared;
+    const double sigma_theta_squared = 0.01;     // Position measurement error
+    Eigen::MatrixXd R = Eigen::MatrixXd::Zero(1, 1);
+    R(0, 0) = sigma_theta_squared;
+    return R;
   }
 };
 
-class AngleSystemModel : public Kalman::LinearizedSystemModel<AngleState>
+/*
+    System (measurement to state) transition model for angular position
+    that assumes a constant angular velocity and no control inputs.
+*/
+class AngleSystemModel
 {
-private:
-  mutable std::chrono::time_point<std::chrono::steady_clock> last_update = std::chrono::steady_clock::now();
-
 public:
-  using Control = Kalman::Vector<double, 0>;
-  using Seconds = std::chrono::duration<double>;
-        /*
-            This is the system's state transition function (applies
-            the A matrix)
+  AngleSystemModel()
+  : last_update(std::chrono::steady_clock::now()) {}
 
-            We assume the velocity stays constant and add v * dt to the
-            current position.
-
-            pos_t = pos_{t-1} + vel_{t-1} * dt
-            vel_t = vel_{t-1}
-        */
-  AngleState f(const AngleState & x, const Control &) const
+  // Seconds elapsed since the previous call, resetting the internal clock.
+  double stepDt()
   {
-    AngleState x_updated{};
-
     const auto now = std::chrono::steady_clock::now();
-    Seconds dt = now - last_update;
-    double dt_s = dt.count();
-
-    // Do angle wrapping
-    double to_update = x(x.PW) + x(x.VW) * dt_s;
-
-    to_update = std::fmod((to_update + M_PI), 2 * M_PI) - M_PI;
-
-    x_updated(x.PW) = to_update;
-
+    const std::chrono::duration<double> dt = now - last_update;
     last_update = now;
-    return x_updated;
+    return dt.count();
   }
+
+  /*
+      F matrix for the given elapsed time.
+
+      We assume the angular velocity stays constant and add w * dt to the
+      current angle. Callers are responsible for wrapping the resulting
+      angle to (-pi, pi], since that's a nonlinear operation the F matrix
+      can't express.
+
+      pos_t = pos_{t-1} + vel_{t-1} * dt
+      vel_t = vel_{t-1}
+  */
+  static Eigen::MatrixXd stateTransition(double dt_s)
+  {
+    Eigen::MatrixXd F = Eigen::MatrixXd::Identity(2, 2);
+    F(AngleState::PW, AngleState::VW) = dt_s;
+    return F;
+  }
+
+  static double wrapAngle(double angle)
+  {
+    return std::fmod(angle + M_PI, 2 * M_PI) - M_PI;
+  }
+
+  // Q matrix. No equivalent value was defined in the previous vision
+  // filter; this magnitude matches the position filter's process noise.
+  static Eigen::MatrixXd processNoiseCovar()
+  {
+    return Eigen::MatrixXd::Identity(2, 2) * 1e-3;
+  }
+
+private:
+  std::chrono::time_point<std::chrono::steady_clock> last_update;
 };
+} // namespace ateam_super_vision
 
 #endif // FILTER_TYPES_HPP
