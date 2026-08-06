@@ -139,17 +139,36 @@ In Foxglove: **Open connection → Foxglove WebSocket → `ws://localhost:8765`*
 
 ## Foxglove layouts
 
-Two layouts are checked in under `foxglove/`; both bind to the single converter
+Four layouts are checked in under `foxglove/`; all bind to the single converter
 output topic `/controls_analysis_selected` (see [Selecting which robot is
-displayed](#selecting-which-robot-is-displayed)) and default all curves to
-points-only (`showLine: false`).
+displayed](#selecting-which-robot-is-displayed)).
 
 - **`controls_analysis.json`** — tabbed: five tabs (X / Y / Theta / Velocity /
   Current), one view at a time.
 - **`controls_analysis_singleview.json`** — every plot on one always-mounted
   grid, legends off to save space.
 
-Load either via **Layout → Import from file…** →
+Both default all curves to **points-only** (`showLine: false`). Each also has a
+**lines** variant that is identical except every curve draws a connecting line
+(`showLine: true`):
+
+- **`controls_analysis_lines.json`** — tabbed, lines.
+- **`controls_analysis_singleview_lines.json`** — single-view, lines.
+
+Foxglove has no live "toggle lines on all plots" control (`showLine` is a
+per-series setting), so switching styles is done by importing the other variant.
+The lines variants are generated from the points-only layouts by setting every
+`showLine` to `true`; regenerate them after editing a base layout with:
+
+```bash
+cd foxglove
+jq '(.. | objects | select(has("showLine"))).showLine = true' \
+   controls_analysis_singleview.json > controls_analysis_singleview_lines.json
+jq '(.. | objects | select(has("showLine"))).showLine = true' \
+   controls_analysis.json > controls_analysis_lines.json
+```
+
+Load any of them via **Layout → Import from file…** →
 `share/ateam_controls_analysis/foxglove/<layout>.json` (or straight from this
 source tree).
 

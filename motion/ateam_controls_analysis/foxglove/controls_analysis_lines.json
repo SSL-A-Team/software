@@ -7,49 +7,49 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_cmd",
@@ -63,19 +63,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -90,68 +90,68 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.vel_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.vel_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -166,33 +166,33 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.accel_u",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff9c56",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.accel_u_fric_comp",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff6a00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.accel_imu",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -207,49 +207,49 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_cmd",
@@ -263,19 +263,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -290,68 +290,68 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.vel_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.vel_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -366,33 +366,33 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.accel_u",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff9c56",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.accel_u_fric_comp",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff6a00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.accel_imu",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -407,49 +407,49 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_cmd",
@@ -463,19 +463,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -490,75 +490,75 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_gyro",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -573,26 +573,26 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.accel_u",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff9c56",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.accel_u_fric_comp",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff6a00",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -607,19 +607,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.front_left.vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -634,19 +634,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.back_left.vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -661,19 +661,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.back_right.vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -688,19 +688,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.front_right.vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -715,19 +715,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.front_left.current",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -742,19 +742,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.back_left.current",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -769,19 +769,19 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.back_right.current",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
@@ -796,25 +796,110 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.front_right.current",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
-          "showLine": false
+          "showLine": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
       "sidebarDimension": 240,
       "followingViewWidth": 10.0
+    },
+    "Tab!controls_analysis": {
+      "activeTabIdx": 0,
+      "tabs": [
+        {
+          "title": "X",
+          "layout": {
+            "direction": "column",
+            "first": "Plot!x_pos",
+            "second": {
+              "direction": "column",
+              "first": "Plot!x_vel",
+              "second": "Plot!x_acc",
+              "splitPercentage": 50.0
+            },
+            "splitPercentage": 33.34
+          }
+        },
+        {
+          "title": "Y",
+          "layout": {
+            "direction": "column",
+            "first": "Plot!y_pos",
+            "second": {
+              "direction": "column",
+              "first": "Plot!y_vel",
+              "second": "Plot!y_acc",
+              "splitPercentage": 50.0
+            },
+            "splitPercentage": 33.34
+          }
+        },
+        {
+          "title": "Theta",
+          "layout": {
+            "direction": "column",
+            "first": "Plot!theta_pos",
+            "second": {
+              "direction": "column",
+              "first": "Plot!theta_vel",
+              "second": "Plot!theta_acc",
+              "splitPercentage": 50.0
+            },
+            "splitPercentage": 33.34
+          }
+        },
+        {
+          "title": "Velocity",
+          "layout": {
+            "direction": "column",
+            "first": "Plot!front_left_vel",
+            "second": {
+              "direction": "column",
+              "first": "Plot!back_left_vel",
+              "second": {
+                "direction": "column",
+                "first": "Plot!back_right_vel",
+                "second": "Plot!front_right_vel",
+                "splitPercentage": 50.0
+              },
+              "splitPercentage": 33.34
+            },
+            "splitPercentage": 25.0
+          }
+        },
+        {
+          "title": "Current",
+          "layout": {
+            "direction": "column",
+            "first": "Plot!front_left_cur",
+            "second": {
+              "direction": "column",
+              "first": "Plot!back_left_cur",
+              "second": {
+                "direction": "column",
+                "first": "Plot!back_right_cur",
+                "second": "Plot!front_right_cur",
+                "splitPercentage": 50.0
+              },
+              "splitPercentage": 33.34
+            },
+            "splitPercentage": 25.0
+          }
+        }
+      ]
     }
   },
   "globalVariables": {
@@ -824,85 +909,5 @@
   "playbackConfig": {
     "speed": 1.0
   },
-  "layout": {
-    "direction": "row",
-    "first": {
-      "direction": "row",
-      "first": {
-        "direction": "column",
-        "first": "Plot!x_pos",
-        "second": {
-          "direction": "column",
-          "first": "Plot!x_vel",
-          "second": "Plot!x_acc",
-          "splitPercentage": 50.0
-        },
-        "splitPercentage": 33.333333333333336
-      },
-      "second": {
-        "direction": "row",
-        "first": {
-          "direction": "column",
-          "first": "Plot!y_pos",
-          "second": {
-            "direction": "column",
-            "first": "Plot!y_vel",
-            "second": "Plot!y_acc",
-            "splitPercentage": 50.0
-          },
-          "splitPercentage": 33.333333333333336
-        },
-        "second": {
-          "direction": "column",
-          "first": "Plot!theta_pos",
-          "second": {
-            "direction": "column",
-            "first": "Plot!theta_vel",
-            "second": "Plot!theta_acc",
-            "splitPercentage": 50.0
-          },
-          "splitPercentage": 33.333333333333336
-        },
-        "splitPercentage": 50.0
-      },
-      "splitPercentage": 33.333333333333336
-    },
-    "second": {
-      "direction": "row",
-      "first": {
-        "direction": "column",
-        "first": "Plot!front_left_vel",
-        "second": {
-          "direction": "column",
-          "first": "Plot!back_left_vel",
-          "second": {
-            "direction": "column",
-            "first": "Plot!back_right_vel",
-            "second": "Plot!front_right_vel",
-            "splitPercentage": 50.0
-          },
-          "splitPercentage": 33.333333333333336
-        },
-        "splitPercentage": 25.0
-      },
-      "second": {
-        "direction": "column",
-        "first": "Plot!front_left_cur",
-        "second": {
-          "direction": "column",
-          "first": "Plot!back_left_cur",
-          "second": {
-            "direction": "column",
-            "first": "Plot!back_right_cur",
-            "second": "Plot!front_right_cur",
-            "splitPercentage": 50.0
-          },
-          "splitPercentage": 33.333333333333336
-        },
-        "splitPercentage": 25.0
-      },
-      "splitPercentage": 50.0
-    },
-    "splitPercentage": 62.0
-  }
+  "layout": "Tab!controls_analysis"
 }

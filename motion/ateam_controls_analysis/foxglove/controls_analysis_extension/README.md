@@ -72,8 +72,10 @@ after installing to pick up the extension either way.
 
 1. Open a recorded `ExtendedTelemetry` bag (Open local file) or connect live via
    [`foxglove_bridge`](https://github.com/foxglove/ros-foxglove-bridge).
-2. Import a layout from `../` (`controls_analysis.json` or
-   `controls_analysis_singleview.json`) — both bind `/controls_analysis_selected`.
+2. Import a layout from `../` — `controls_analysis.json` (tabbed) or
+   `controls_analysis_singleview.json` (grid), or their `*_lines.json` variants
+   that draw connecting lines instead of points-only. All bind
+   `/controls_analysis_selected`.
 3. Open the **Variables** tab (right sidebar in current Foxglove — toggle with
    the `]` key) and set `robot` to the id you want (e.g. `2`). All panels switch
    to that robot with no reload.
