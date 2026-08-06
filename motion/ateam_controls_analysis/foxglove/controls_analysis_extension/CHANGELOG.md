@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.0
+
+- Added a second topic converter for the **fresh vision estimate**: the friendly
+  team's `/{color}_team/robot{id}` (`ateam_msgs/VisionStateRobot`) →
+  `/vision_state_selected` (`{x, y, theta, visible}`), selected by the same
+  `robot` global variable. The friendly color is auto-detected from
+  `/referee_messages` (team-name match), overridable via the `friendly_team`
+  (`auto`/`blue`/`yellow`) and `team_name` variables. `theta` is the yaw of the
+  pose quaternion, computed in the converter. The position plots overlay it in
+  mint (off by default) against the delayed cyan `pos_vision` curve to read the
+  round-trip delay to the robot.
+
 ## 2.0.0
 
 - Moved the controls analysis entirely into this extension. It registers a

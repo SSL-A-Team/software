@@ -33,11 +33,13 @@ message's receive (log) time as the x-axis.
 
 ## Contents
 
-- `foxglove/controls_analysis_extension/` — the Foxglove extension (the
-  ExtendedTelemetry → ControlsAnalysis topic converter with `robot`-variable
-  robot selection).
+- `foxglove/controls_analysis_extension/` — the Foxglove extension. Two topic
+  converters, both selecting the robot via the `robot` global variable:
+  - `ExtendedTelemetry` → `/controls_analysis_selected` (the main analysis), and
+  - the friendly team's `/{color}_team/robot{id}` → `/vision_state_selected` (the
+    fresh vision estimate overlay; friendly color auto-detected from the referee).
 - `foxglove/controls_analysis.json`, `foxglove/controls_analysis_singleview.json`
-  — the two bundled layouts.
+  — the two bundled layouts (plus `*_lines.json` variants; see [layouts](#foxglove-layouts)).
 
 ## Views
 
@@ -46,9 +48,21 @@ plots sharing a time axis:
 
 | Plot | Derivative | Curves |
 |------|-----------|--------|
-| Position | 1st | state estimate, reference trajectory (per-mode colored), vision measurement, software cmd (`BCM_GLOBAL_POSITION`) |
+| Position | 1st | state estimate, reference trajectory (per-mode colored), vision measurement, software cmd (`BCM_GLOBAL_POSITION`), **fresh vision estimate (off by default; see below)** |
 | Velocity | 2nd | state estimate, reference trajectory (per-mode colored), software cmd (`BCM_GLOBAL_VELOCITY`/`BCM_LOCAL_VELOCITY`), gyro (theta only) |
 | Acceleration | 3rd | firmware output accel + friction-compensated output accel, software cmd (`BCM_GLOBAL_ACCEL`/`BCM_LOCAL_ACCEL`), IMU accel (x/y only) |
+
+### Fresh vision estimate overlay (round-trip delay)
+
+Each position plot (x / y / theta) carries an extra **mint**-colored curve, **off
+by default**, sourced from `/vision_state_selected` (see [the extension](foxglove/controls_analysis_extension)).
+This is the *fresh* software-side vision estimate (`ateam_msgs/VisionStateRobot`
+on the friendly team's `/{color}_team/robot{id}`) — the pose the software actually
+uses to make decisions. The cyan `pos_vision` curve on the same plot is the *same*
+measurement after it has round-tripped to the robot and returned in
+`ExtendedTelemetry` (delayed, with jitter). Toggle the mint curve on to compare
+the two and read off the round-trip delay. theta is the yaw of the vision pose
+quaternion, computed by the extension.
 
 Two additional wheel views share the same time axis:
 
@@ -211,6 +225,18 @@ that the layouts subscribe to. Change the `robot` variable in Foxglove's
 Because the converter runs at Foxglove's data-source layer, it works identically
 for a **loaded bag** (full backfill — the newly selected robot's plots
 immediately show the whole timeline, no reload) and a live connection.
+
+The same `robot` variable also drives the fresh-vision-estimate overlay: a second
+converter emits the selected robot's `/vision_state_selected`. It picks the
+**friendly** team's `/{color}_team/robot{id}` automatically by matching our team
+name against `/referee_messages` (the same logic the stack uses at runtime).
+Overrides via Foxglove **Variables**:
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `robot` | `0` | Robot id shown by every panel. |
+| `friendly_team` | `auto` | `auto` detects our color from the referee; set `blue`/`yellow` to force it (e.g. bags without `/referee_messages`). |
+| `team_name` | `A-Team` | Our team name, matched against the referee teams when `friendly_team` is `auto`. |
 
 ## Relationship to the legacy workflow
 

@@ -56,7 +56,14 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
+        },
+        {
+          "value": "/vision_state_selected.x",
+          "enabled": false,
+          "timestampMethod": "receiveTime",
+          "color": "#3eb489",
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_vision",
@@ -256,7 +263,14 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
+        },
+        {
+          "value": "/vision_state_selected.y",
+          "enabled": false,
+          "timestampMethod": "receiveTime",
+          "color": "#3eb489",
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_vision",
@@ -456,7 +470,14 @@
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
+          "showLine": true
+        },
+        {
+          "value": "/vision_state_selected.theta",
+          "enabled": false,
+          "timestampMethod": "receiveTime",
+          "color": "#3eb489",
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_vision",

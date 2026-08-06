@@ -8,10 +8,15 @@ connection) and the layouts just work.
 
 ## What it does
 
-It registers a single **topic converter**, operating at Foxglove's data-source
-layer (so it behaves identically for a loaded bag with full backfill and a live
-connection). The converter reads the fleet's recorded
-`ateam_radio_msgs/msg/ExtendedTelemetry` topics
+It registers two **topic converters**, both operating at Foxglove's data-source
+layer (so they behave identically for a loaded bag with full backfill and a live
+connection), and both selecting the robot via the `robot` global variable
+(default `0`, `watchVariables: ["robot"]`) — change `robot` in the **Variables**
+tab and every panel re-points instantly, no bag reload.
+
+### 1. Controls analysis — `/controls_analysis_selected`
+
+Reads the fleet's recorded `ateam_radio_msgs/msg/ExtendedTelemetry` topics
 (`/robot_feedback/extended/robot0..15`) and produces one new in-app topic,
 **`/controls_analysis_selected`**, carrying the flat
 `ateam_controls_analysis/ControlsAnalysis` schema the layouts bind to.
@@ -27,16 +32,38 @@ message is ever compared against a previous one (no robot-time reconstruction, n
 reboot tracking, no mode-transition gaps, no heartbeat). See
 [`src/controlsAnalysis.ts`](src/controlsAnalysis.ts).
 
-**Robot selection** is driven by the `robot` global variable (default `0`). The
-converter (registered with `watchVariables: ["robot"]`) only emits for the
-selected robot's telemetry topic and drops the rest, so changing `robot` in
-Foxglove's **Variables** tab instantly re-points every panel — no bag reload.
+### 2. Fresh vision estimate — `/vision_state_selected`
 
-> A *topic* converter is used (rather than a schema converter plus a topic alias)
-> precisely so the output is a genuine dedicated topic whose **only** schema is
-> `ControlsAnalysis`. The layout paths (e.g. `.x.pos_cmd`) then resolve
-> unambiguously, instead of competing with the raw `ExtendedTelemetry` schema on
-> an aliased telemetry topic.
+Reads the friendly team's per-robot vision-state topics
+(`/{color}_team/robot{id}`, `ateam_msgs/VisionStateRobot`) and produces one new
+in-app topic, **`/vision_state_selected`**, with a flat `{x, y, theta, visible}`
+schema. This is the *fresh* software-side vision estimate — the pose the software
+uses to make decisions. The position plots overlay it (mint, off by default)
+against the cyan `pos_vision` curve, which is the *same* measurement after it has
+round-tripped to the robot and returned in `ExtendedTelemetry`; the offset
+between them is the round-trip delay. `theta` is the yaw of the pose quaternion,
+computed here because message paths can't derive it. See
+[`src/visionState.ts`](src/visionState.ts).
+
+The **friendly** color is auto-detected from `/referee_messages` by matching our
+team name against the two teams (the same logic the stack uses at runtime), so
+the correct `/{color}_team/robot{id}` is chosen without picking a color. Two
+optional variables tune this:
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `friendly_team` | `auto` | `auto` detects from the referee; `blue`/`yellow` forces it (e.g. bags without `/referee_messages`). |
+| `team_name` | `A-Team` | Our team name, matched against the referee teams when `friendly_team` is `auto`. |
+
+This converter's only state is the last-seen friendly color across referee
+messages; no vision sample interacts with another. When the robot is not
+`visible`, its `x/y/theta` are NaN so the curve gaps.
+
+> *Topic* converters are used (rather than schema converters plus topic aliases)
+> so each output is a genuine dedicated topic whose **only** schema is the
+> converted one. The layout paths (e.g. `.x.pos_cmd`) then resolve unambiguously,
+> instead of competing with the raw input schema on an aliased topic. (A topic
+> alias also can't target a converter output or expose the computed `theta`.)
 
 Plots use each message's **receive (log) time** as the x-axis; there is no robot
 time axis.
