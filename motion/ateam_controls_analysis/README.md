@@ -9,28 +9,27 @@ node, no derived message type, and no bag conversion step. Open a recorded bag
 [`foxglove_bridge`](https://github.com/foxglove/ros-foxglove-bridge)), load a
 layout, and pick a robot/team.
 
-The extension **selects** the robot/team you're viewing with topic aliases
-(driven by the `robot` and `team` global variables), then **converts** the three
-selected topics into the flat schemas the layouts plot:
+The extension registers three **topic converters** that read every robot's raw
+topics and emit only the selected robot's converted message (driven by the `robot`
+global variable, plus `team` for vision) onto the flat topics the layouts plot:
 
-| Alias (converter input) | Raw source | → Output topic (layouts plot) | Computation |
-|---|---|---|---|
-| `/analysis_telem_src` | `/robot_feedback/extended/robot{robot}` | `/analysis_telem` | `ControlsAnalysis`: per-dim pos/vel/accel, per-mode-colored trajectory splits, `cmd_echo` command, per-wheel velocity + signed-mean current |
-| `/analysis_control_src` | `/robot_motion_commands/robot{robot}` | `/analysis_control` | `MotionCommand`: pre-send software command, routed per body control mode |
-| `/analysis_vision_src` | `/{team}_team/robot{robot}` | `/analysis_vision` | `VisionState` `{x,y,theta,visible}`, `theta` = quaternion yaw |
+| Reads (all robots) | → Output topic (layouts plot) | Computation |
+|---|---|---|
+| `/robot_feedback/extended/robot0..15` | `/analysis_telem` | `ControlsAnalysis`: per-dim pos/vel/accel, per-mode-colored trajectory splits, `cmd_echo` command, per-wheel velocity + signed-mean current |
+| `/robot_motion_commands/robot0..15` | `/analysis_control` | `MotionCommand`: pre-send software command, routed per body control mode |
+| `/{blue,yellow}_team/robot0..15` | `/analysis_vision` | `VisionState` `{x,y,theta,visible}`, `theta` = quaternion yaw |
 
-Each converter reads a **single** aliased input, so Foxglove loads only the three
-selected topics (no converter fan-in) — load time scales with one robot, not the
-fleet. Only global-frame command modes are plotted (no local→global rotation);
-the per-mode-colored trajectory curves indicate the active mode. The conversion is
-**stateless** — one message in, one out; plots use each message's receive (log)
-time as the x-axis.
+Each converter uses `watchVariables` and filters its inputs to the selected robot
+(and team). Only global-frame command modes are plotted (no local→global
+rotation); the per-mode-colored trajectory curves indicate the active mode. The
+conversion is **stateless** — one message in, one out; plots use each message's
+receive (log) time as the x-axis.
 
 ## Contents
 
 - `foxglove/controls_analysis_extension/` — the Foxglove extension: 3 topic
-  aliases for `robot`/`team` selection + 3 single-input topic converters
-  (`/analysis_telem`, `/analysis_control`, `/analysis_vision`).
+  converters selecting the robot/`team` and emitting `/analysis_telem`,
+  `/analysis_control`, `/analysis_vision`.
 - `foxglove/controls_analysis.json`, `foxglove/controls_analysis_singleview.json`
   — the two bundled layouts (plus `*_lines.json` variants; see [layouts](#foxglove-layouts)).
 
@@ -209,21 +208,23 @@ Each robot has its own raw per-robot topics (`/robot_feedback/extended/robot{id}
 paths can use a `$variable` in field/index/filter positions but **not** in the
 topic-name position, so a variable alone can't retarget a per-robot topic.
 
-The extension solves this with **topic aliases**: it maps each selected raw topic
-onto a stable `/analysis_*_src` name, and a topic converter turns each into the
-`/analysis_telem`, `/analysis_control`, `/analysis_vision` topics the layouts bind
-to. Change these variables in Foxglove's **Variables** tab and every panel
-re-points instantly:
+The extension solves this in its **topic converters**: each reads every robot's
+raw topics and, using `watchVariables`, emits only the selected robot's converted
+message onto `/analysis_telem`, `/analysis_control`, `/analysis_vision`. Change
+these variables in Foxglove's **Variables** tab and every panel re-points:
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
 | `robot` | `0` | Robot id shown by every panel. |
 | `team` | `blue` | Our team color, selecting `/{team}_team/robot{id}` for the vision overlay (`blue` / `yellow`). |
 
-Because an alias resolves to **one real source topic**, only the selected robot's
-data is loaded — load time scales with one robot, not the fleet — and it works
-identically for a **loaded bag** (full backfill) and a live connection. (Team is a
-manual variable; no referee introspection.)
+This works identically for a **loaded bag** (full backfill) and a live connection.
+Team is a manual variable — no referee introspection.
+
+> Because a topic converter's `inputTopics` is a static list, Foxglove preloads
+> all of a converter's declared inputs (all 16 robots per stream) even though only
+> the selected one is emitted. If bag load time becomes a problem, crop the bag to
+> the robots/time range you need before opening it.
 
 ## Relationship to the legacy workflow
 

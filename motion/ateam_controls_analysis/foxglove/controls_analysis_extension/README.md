@@ -8,39 +8,31 @@ connection) and the layouts just work.
 
 ## What it does
 
-It **selects** the robot/team you're viewing with topic aliases, then **converts**
-the three selected topics into the flat schemas the layouts plot. All of it runs
-at Foxglove's data-source layer, so it behaves identically for a loaded bag (full
-backfill) and a live connection.
+It registers three **topic converters** that read every robot's raw topics and
+emit, per stream, **only the selected robot's** converted message onto one stable
+output topic the layouts bind to. It runs at Foxglove's data-source layer, so it
+behaves identically for a loaded bag (full backfill) and a live connection.
 
-### Selection — topic aliases (`robot` + `team` variables)
-
-`registerTopicAliases` maps each selected raw per-robot topic onto a stable
-"source" name:
-
-| Alias | Raw source | Driven by |
+| Output topic (layouts bind here) | Reads (all robots) | Schema / computation |
 |---|---|---|
-| `/analysis_telem_src` | `/robot_feedback/extended/robot{robot}` | `robot` |
-| `/analysis_control_src` | `/robot_motion_commands/robot{robot}` | `robot` |
-| `/analysis_vision_src` | `/{team}_team/robot{robot}` | `robot`, `team` |
+| `/analysis_telem` | `/robot_feedback/extended/robot0..15` (`ExtendedTelemetry`) | `ControlsAnalysis`: per-dim pos/vel/accel, per-mode-colored trajectory splits, `cmd_echo` command (global modes only), per-wheel velocity + signed-mean current. See [`src/controlsAnalysis.ts`](src/controlsAnalysis.ts). |
+| `/analysis_control` | `/robot_motion_commands/robot0..15` (`RobotMotionCommand`) | `MotionCommand`: the pre-send software command routed per body control mode (global modes only). See [`src/motionCommand.ts`](src/motionCommand.ts). |
+| `/analysis_vision` | `/{blue,yellow}_team/robot0..15` (`VisionStateRobot`) | `VisionState` `{x, y, theta, visible}`, `theta` = yaw of the pose quaternion. See [`src/visionState.ts`](src/visionState.ts). |
 
-Change `robot` (id, default `0`) or `team` (`blue`/`yellow`, default `blue`) in
-the **Variables** tab and every panel re-points instantly, no bag reload. `team`
-is a manual variable — no referee introspection.
+### Selection (`robot` + `team` variables)
 
-### Conversion — one topic converter per stream (single aliased input)
+Each converter is registered with `watchVariables`, so it is recreated when the
+selection changes; the recreated converter closes over the selected source topic
+name and drops every message whose topic doesn't match. Change `robot` (id,
+default `0`) or, for vision, `team` (`blue`/`yellow`, default `blue`) in the
+**Variables** tab and every panel re-points, no bag reload. `team` is a manual
+variable — no referee introspection.
 
-Each converter's **only** `inputTopic` is one of the aliases above, so Foxglove
-loads just the three selected topics — there is **no converter fan-in**, and load
-time scales with one robot, not the fleet. Because the alias already carries the
-selection, the converters need no `watchVariables` and no per-topic filtering;
-they just convert each message (stateless — one in, one out):
-
-| Output topic (layouts bind here) | From | Schema / computation |
-|---|---|---|
-| `/analysis_telem` | `/analysis_telem_src` (`ExtendedTelemetry`) | `ControlsAnalysis`: per-dim pos/vel/accel, per-mode-colored trajectory splits, `cmd_echo` command (global modes only), per-wheel velocity + signed-mean current. See [`src/controlsAnalysis.ts`](src/controlsAnalysis.ts). |
-| `/analysis_control` | `/analysis_control_src` (`RobotMotionCommand`) | `MotionCommand`: the pre-send software command routed per body control mode (global modes only). See [`src/motionCommand.ts`](src/motionCommand.ts). |
-| `/analysis_vision` | `/analysis_vision_src` (`VisionStateRobot`) | `VisionState` `{x, y, theta, visible}`, `theta` = yaw of the pose quaternion. See [`src/visionState.ts`](src/visionState.ts). |
+> Because `inputTopics` is a static list, Foxglove preloads all of a converter's
+> declared inputs; the per-robot filtering happens inside the converter. (An
+> earlier variant narrowed each converter to a single topic alias to avoid this,
+> but alias re-pointing didn't reliably re-target the converters, so selection is
+> done inside the converter instead.)
 
 Only **global-frame** command modes are plotted; local-frame commands
 (`BCM_LOCAL_*`) are intentionally not plotted (no local→global rotation). The
@@ -49,8 +41,7 @@ per-mode-colored trajectory curves still show the active mode. When a robot is n
 
 > *Topic* converters are used (not `type: "schema"` converters) because a schema
 > converter's output fields don't resolve in the Plot panel here; a topic
-> converter produces a genuine dedicated output topic the layout binds to. Feeding
-> it the selection alias as its lone input keeps the fan-in at one topic.
+> converter produces a genuine dedicated output topic the layout binds to.
 
 Plots use each message's **receive (log) time** as the x-axis; there is no robot
 time axis.

@@ -2,13 +2,14 @@
 
 ## 3.0.0
 
-- **Selection via topic aliases; converters take a single aliased input.** Three
-  `registerTopicAliases` entries (driven by the `robot` and `team` variables) map
-  the selected raw per-robot topics onto `/analysis_telem_src`,
-  `/analysis_control_src`, `/analysis_vision_src`. Each of the three topic
-  converters reads exactly one alias, so Foxglove loads only the three selected
-  topics — the earlier all-robots/all-teams converter fan-in (slow bag loads) is
-  gone. Converters no longer use `watchVariables` or per-topic filtering.
+- **Selection inside the converters (no aliases).** Three topic converters read
+  every robot's raw topics and emit only the selected robot's converted message
+  onto `/analysis_telem`, `/analysis_control`, `/analysis_vision`. Selection is by
+  the `robot` global variable (plus `team` for vision); each converter uses
+  `watchVariables` and filters `inputTopics` to the selected source topic.
+  (An interim variant used topic aliases as single converter inputs to avoid the
+  input fan-in, but alias re-pointing didn't reliably re-target the converters, so
+  selection was moved back inside the converters.)
 - **Renamed the layout-facing output topics** to `/analysis_telem`,
   `/analysis_control`, `/analysis_vision`.
 - **Re-added the pre-send software command** stream (`/analysis_control`,
