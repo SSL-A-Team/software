@@ -8,9 +8,9 @@ connection) and the layouts just work.
 
 ## What it does
 
-It registers three **topic converters**, all operating at Foxglove's data-source
+It registers two **topic converters**, both operating at Foxglove's data-source
 layer (so they behave identically for a loaded bag with full backfill and a live
-connection), and all selecting the robot via the `robot` global variable
+connection), and both selecting the robot via the `robot` global variable
 (default `0`, `watchVariables: ["robot"]`) — change `robot` in the **Variables**
 tab and every panel re-points instantly, no bag reload.
 
@@ -58,23 +58,6 @@ optional variables tune this:
 This converter's only state is the last-seen friendly color across referee
 messages; no vision sample interacts with another. When the robot is not
 `visible`, its `x/y/theta` are NaN so the curve gaps.
-
-### 3. Pre-send software command — `/robot_motion_command_selected`
-
-Reads the fleet's `/robot_motion_commands/robot{id}` topics
-(`ateam_msgs/RobotMotionCommand`) and produces one new in-app topic,
-**`/robot_motion_command_selected`**, with the same nested
-`{x,y,theta}.{pos_cmd,vel_cmd,accel_cmd}` shape as the ControlsAnalysis command
-fields. This is the command **before it is sent to the robot**; the position /
-velocity / acceleration plots overlay it (dark blue `#0000ff`) against the
-lighter-blue (`#6666ff`) round-tripped `cmd_echo` curves from ControlsAnalysis to
-show the round-trip delay. The command is routed onto the derivative implied by
-its body control mode, exactly like `cmd_echo` — and, like `cmd_echo`, only
-**global-frame** modes are plotted. Local-frame commands (`BCM_LOCAL_*`) are
-intentionally not plotted on either side, avoiding a brittle local→global
-rotation (the message carries no heading and the conversion is stateless); the
-per-mode-colored trajectory curves still show the active mode. See
-[`src/motionCommand.ts`](src/motionCommand.ts).
 
 > *Topic* converters are used (rather than schema converters plus topic aliases)
 > so each output is a genuine dedicated topic whose **only** schema is the

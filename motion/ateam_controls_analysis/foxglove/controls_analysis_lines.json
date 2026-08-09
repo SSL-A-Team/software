@@ -52,29 +52,22 @@
           "showLine": true
         },
         {
-          "value": "/robot_motion_command_selected.x.pos_cmd",
+          "value": "/controls_analysis_selected.x.pos_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
-        },
-        {
-          "value": "/controls_analysis_selected.x.pos_cmd",
-          "enabled": false,
-          "timestampMethod": "receiveTime",
-          "color": "#6666ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/vision_state_selected.x",
-          "enabled": true,
+          "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#3eb489",
           "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.pos_vision",
-          "enabled": false,
+          "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": true
@@ -149,18 +142,11 @@
           "showLine": true
         },
         {
-          "value": "/robot_motion_command_selected.x.vel_cmd",
+          "value": "/controls_analysis_selected.x.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
-        },
-        {
-          "value": "/controls_analysis_selected.x.vel_cmd",
-          "enabled": false,
-          "timestampMethod": "receiveTime",
-          "color": "#6666ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.vel_estimate",
@@ -183,18 +169,11 @@
     "Plot!x_acc": {
       "paths": [
         {
-          "value": "/robot_motion_command_selected.x.accel_cmd",
+          "value": "/controls_analysis_selected.x.accel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
-        },
-        {
-          "value": "/controls_analysis_selected.x.accel_cmd",
-          "enabled": false,
-          "timestampMethod": "receiveTime",
-          "color": "#6666ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.x.accel_u",
@@ -280,29 +259,22 @@
           "showLine": true
         },
         {
-          "value": "/robot_motion_command_selected.y.pos_cmd",
+          "value": "/controls_analysis_selected.y.pos_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
-        },
-        {
-          "value": "/controls_analysis_selected.y.pos_cmd",
-          "enabled": false,
-          "timestampMethod": "receiveTime",
-          "color": "#6666ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/vision_state_selected.y",
-          "enabled": true,
+          "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#3eb489",
           "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.pos_vision",
-          "enabled": false,
+          "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": true
@@ -377,18 +349,11 @@
           "showLine": true
         },
         {
-          "value": "/robot_motion_command_selected.y.vel_cmd",
+          "value": "/controls_analysis_selected.y.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
-        },
-        {
-          "value": "/controls_analysis_selected.y.vel_cmd",
-          "enabled": false,
-          "timestampMethod": "receiveTime",
-          "color": "#6666ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.vel_estimate",
@@ -411,18 +376,11 @@
     "Plot!y_acc": {
       "paths": [
         {
-          "value": "/robot_motion_command_selected.y.accel_cmd",
+          "value": "/controls_analysis_selected.y.accel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
-        },
-        {
-          "value": "/controls_analysis_selected.y.accel_cmd",
-          "enabled": false,
-          "timestampMethod": "receiveTime",
-          "color": "#6666ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.y.accel_u",
@@ -508,29 +466,22 @@
           "showLine": true
         },
         {
-          "value": "/robot_motion_command_selected.theta.pos_cmd",
+          "value": "/controls_analysis_selected.theta.pos_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
-        },
-        {
-          "value": "/controls_analysis_selected.theta.pos_cmd",
-          "enabled": false,
-          "timestampMethod": "receiveTime",
-          "color": "#6666ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/vision_state_selected.theta",
-          "enabled": true,
+          "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#3eb489",
           "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.pos_vision",
-          "enabled": false,
+          "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": true
@@ -605,18 +556,11 @@
           "showLine": true
         },
         {
-          "value": "/robot_motion_command_selected.theta.vel_cmd",
+          "value": "/controls_analysis_selected.theta.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
-        },
-        {
-          "value": "/controls_analysis_selected.theta.vel_cmd",
-          "enabled": false,
-          "timestampMethod": "receiveTime",
-          "color": "#6666ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.vel_gyro",
@@ -646,18 +590,11 @@
     "Plot!theta_acc": {
       "paths": [
         {
-          "value": "/robot_motion_command_selected.theta.accel_cmd",
+          "value": "/controls_analysis_selected.theta.accel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
-          "showLine": false
-        },
-        {
-          "value": "/controls_analysis_selected.theta.accel_cmd",
-          "enabled": false,
-          "timestampMethod": "receiveTime",
-          "color": "#6666ff",
-          "showLine": false
+          "showLine": true
         },
         {
           "value": "/controls_analysis_selected.theta.accel_u",
