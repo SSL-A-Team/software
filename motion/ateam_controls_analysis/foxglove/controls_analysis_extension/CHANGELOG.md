@@ -25,6 +25,9 @@
   round-tripped `#00dac7`). Software-side shown, robot-side hidden by default.
 - **Added a label to every layout curve** (`_telem` suffix = from `/analysis_telem`;
   no suffix = software side).
+- **`vision_telem` (round-tripped vision) is gated on the telemetry `vision_update`
+  bit** — a point is emitted only on cycles where the firmware applied a vision
+  update; otherwise `pos_vision` is NaN (gap), so stale echoes aren't drawn.
 
 ## 2.1.0
 

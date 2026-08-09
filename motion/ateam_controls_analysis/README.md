@@ -55,7 +55,7 @@ one is hidden; toggle the latter on to read the round-trip delay. Colors follow
 | Signal | Software-side (shown) | Round-tripped (hidden) |
 |--------|-----------------------|------------------------|
 | Command (pos/vel/accel plots) | `cmd`, dark blue `#0000ff`, from `/analysis_control` | `cmd_telem`, light blue `#6666ff`, from `/analysis_telem` (`cmd_echo`) |
-| Vision (position plots) | `vision`, mint `#3eb489`, from `/analysis_vision` (`theta` = quaternion yaw) | `vision_telem`, cyan `#00dac7`, from `/analysis_telem` (`vision_pose`) |
+| Vision (position plots) | `vision`, mint `#3eb489`, from `/analysis_vision` (`theta` = quaternion yaw) | `vision_telem`, cyan `#00dac7`, from `/analysis_telem` (`vision_pose`, emitted only when the telemetry `vision_update` bit is set) |
 
 Two additional wheel views share the same time axis:
 
@@ -163,15 +163,18 @@ Both default all curves to **points-only** (`showLine: false`). Each also has a
 
 Foxglove has no live "toggle lines on all plots" control (`showLine` is a
 per-series setting), so switching styles is done by importing the other variant.
-The lines variants are generated from the points-only layouts by setting every
-`showLine` to `true`; regenerate them after editing a base layout with:
+The lines variants turn `showLine` on for every curve **except command curves
+(`*_cmd`) and the round-tripped `vision_telem` curve (`*.pos_vision`)**, which
+stay points-only (they're stepped/sparse). Regenerate them after editing a base
+layout with:
 
 ```bash
 cd foxglove
-jq '(.. | objects | select(has("showLine"))).showLine = true' \
-   controls_analysis_singleview.json > controls_analysis_singleview_lines.json
-jq '(.. | objects | select(has("showLine"))).showLine = true' \
-   controls_analysis.json > controls_analysis_lines.json
+for base in controls_analysis_singleview controls_analysis; do
+  jq 'walk(if type=="object" and has("showLine")
+          then .showLine = (((.value|test("_cmd$")) or (.value|test("\\.pos_vision$"))) | not)
+          else . end)' "$base.json" > "${base}_lines.json"
+done
 ```
 
 Load any of them via **Layout → Import from file…** →

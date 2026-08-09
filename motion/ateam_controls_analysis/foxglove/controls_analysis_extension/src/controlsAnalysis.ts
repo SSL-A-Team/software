@@ -205,6 +205,10 @@ export function buildControlsAnalysis(msg: any): Record<string, unknown> {
   const trajActive = TRAJ_MODES.includes(mode);
   const suffix = MODE_SUFFIX[mode];
 
+  // `vision_pose` only carries a fresh measurement on cycles where the firmware
+  // applied a vision update; otherwise it's stale, so gate the curve on the bit.
+  const visionUpdated = Boolean(bct.vision_update);
+
   const out: Record<string, unknown> = {
     body_control_mode: mode,
     theta_estimate: thetaEst,
@@ -218,7 +222,7 @@ export function buildControlsAnalysis(msg: any): Record<string, unknown> {
 
     f["pos_estimate"] = at(bct.kf_body_pos_estimate, i);
     f["pos_traj"] = at(bct.body_traj_pos, i);
-    f["pos_vision"] = at(bct.vision_pose, i);
+    f["pos_vision"] = visionUpdated ? at(bct.vision_pose, i) : NAN;
     f["vel_estimate"] = at(bct.kf_body_vel_estimate, i);
     f["vel_traj"] = at(bct.body_traj_vel, i);
     f["accel_u"] = at(bct.body_accel_u, i);

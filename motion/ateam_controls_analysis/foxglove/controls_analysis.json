@@ -84,7 +84,7 @@
         },
         {
           "value": "/analysis_telem.x.pos_vision",
-          "enabled": false,
+          "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false,
@@ -339,7 +339,7 @@
         },
         {
           "value": "/analysis_telem.y.pos_vision",
-          "enabled": false,
+          "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false,
@@ -594,7 +594,7 @@
         },
         {
           "value": "/analysis_telem.theta.pos_vision",
-          "enabled": false,
+          "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": false,
