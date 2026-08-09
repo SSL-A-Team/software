@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.0.0
+
+- **Selection via topic aliases; converters take a single aliased input.** Three
+  `registerTopicAliases` entries (driven by the `robot` and `team` variables) map
+  the selected raw per-robot topics onto `/analysis_telem_src`,
+  `/analysis_control_src`, `/analysis_vision_src`. Each of the three topic
+  converters reads exactly one alias, so Foxglove loads only the three selected
+  topics — the earlier all-robots/all-teams converter fan-in (slow bag loads) is
+  gone. Converters no longer use `watchVariables` or per-topic filtering.
+- **Renamed the layout-facing output topics** to `/analysis_telem`,
+  `/analysis_control`, `/analysis_vision`.
+- **Re-added the pre-send software command** stream (`/analysis_control`,
+  `RobotMotionCommand`), plotted against the round-tripped `cmd_echo`.
+- **Removed the local→global command rotation** and the dead
+  `vel_cmd_local_vel` / `accel_cmd_local_acc` split fields. Only global-frame
+  command modes are plotted; local modes show via the trajectory color only.
+- **Removed friendly-team auto-detection** (no more `/referee_messages`
+  introspection, no `friendly_team` / `team_name` variables). Team is now a manual
+  `team` variable (`blue`/`yellow`, default `blue`).
+- **Color convention** made explicit: dark = software-side, light = robot-side
+  (software cmd `#0000ff` / round-tripped `#6666ff`; fresh vision `#3eb489` /
+  round-tripped `#00dac7`). Software-side shown, robot-side hidden by default.
+- **Added a label to every layout curve** (`_telem` suffix = from `/analysis_telem`;
+  no suffix = software side).
+
 ## 2.1.0
 
 - Added a second topic converter for the **fresh vision estimate**: the friendly

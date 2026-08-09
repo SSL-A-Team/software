@@ -1,7 +1,7 @@
 // Copyright 2026 A Team
 //
-// Pure, stateless helpers to convert an `ateam_msgs/VisionStateRobot` (the
-// software-side vision estimate published on `/{color}_team/robot{id}`) into the
+// Pure, stateless helper to convert an `ateam_msgs/VisionStateRobot` (the
+// software-side vision estimate published on `/{team}_team/robot{id}`) into the
 // flat `{x, y, theta, visible}` shape the position plots overlay.
 //
 // This is the *fresh* vision estimate the software uses to make decisions. The
@@ -10,27 +10,13 @@
 // with jitter); overlaying the two shows the round-trip delay.
 //
 // theta is derived here (yaw from the pose quaternion) because Foxglove message
-// paths can't compute it, so a plain topic alias wouldn't expose a theta series.
+// paths can't compute it. The converter takes a single input (the vision
+// selection alias, driven by the `robot`/`team` variables), so it neither parses
+// the topic name nor introspects the referee -- it just converts each message.
 
 import { MessageSchemaDescription } from "@foxglove/extension";
 
 const NAN = Number.NaN;
-
-// The two team colors and the per-robot vision-state topic prefixes they map to
-// (see ateam_common/topic_names.hpp: kYellowTeamRobotPrefix / kBlueTeamRobotPrefix).
-export const TEAM_COLORS = ["blue", "yellow"] as const;
-export type TeamColor = (typeof TEAM_COLORS)[number];
-
-const TEAM_ROBOT_RE = /^\/(blue|yellow)_team\/robot(\d+)$/;
-
-// Parse a per-robot vision-state topic name into its color and robot id, or
-// undefined if it doesn't match the expected pattern.
-export function parseTeamRobotTopic(
-  topic: string,
-): { color: TeamColor; id: number } | undefined {
-  const m = TEAM_ROBOT_RE.exec(topic);
-  return m ? { color: m[1] as TeamColor, id: Number.parseInt(m[2], 10) } : undefined;
-}
 
 // Yaw (rad) from a geometry_msgs/Quaternion, for the planar theta series.
 function quaternionToYaw(q: any): number {
@@ -68,20 +54,4 @@ export function buildVisionState(msg: any): Record<string, unknown> {
     theta: quaternionToYaw(msg.pose?.orientation),
     visible,
   };
-}
-
-// Determine our (friendly) team color from a referee message by matching the
-// configured team name against the two teams' names. Returns the matching color,
-// or undefined if neither matches (leave the previously-detected color in place).
-export function friendlyColorFromReferee(
-  refereeMsg: any,
-  teamName: string,
-): TeamColor | undefined {
-  if (refereeMsg?.blue?.name === teamName) {
-    return "blue";
-  }
-  if (refereeMsg?.yellow?.name === teamName) {
-    return "yellow";
-  }
-  return undefined;
 }

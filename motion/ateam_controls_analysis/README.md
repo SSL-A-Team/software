@@ -1,43 +1,36 @@
 # ateam_controls_analysis
 
-Foxglove-based controls analysis for the robot fleet, driven entirely by
-`ateam_radio_msgs/ExtendedTelemetry`.
+Foxglove-based controls analysis for the robot fleet.
 
 All analysis happens **inside Foxglove** via a bundled
 [extension](foxglove/controls_analysis_extension): there is no ROS republisher
-node, no derived message type, and no bag conversion step. Open a recorded
-`ExtendedTelemetry` bag (or connect to a live ROS graph through
+node, no derived message type, and no bag conversion step. Open a recorded bag
+(or connect to a live ROS graph through
 [`foxglove_bridge`](https://github.com/foxglove/ros-foxglove-bridge)), load a
-layout, and pick a robot.
+layout, and pick a robot/team.
 
-The extension registers a **stateless topic converter** that reads the fleet's
-`ateam_radio_msgs/msg/ExtendedTelemetry` topics and produces one dedicated in-app
-topic, `/controls_analysis_selected` (schema
-`ateam_controls_analysis/ControlsAnalysis`), that the layouts bind to. Per
-telemetry message it:
+The extension **selects** the robot/team you're viewing with topic aliases
+(driven by the `robot` and `team` global variables), then **converts** the three
+selected topics into the flat schemas the layouts plot:
 
-- flattens the sample into per-dimension (x / y / theta) position / velocity /
-  acceleration series and per-wheel velocity / current series,
-- routes the software command (`cmd_echo`) onto the derivative implied by the
-  active body control mode, rotating local-frame commands (`BCM_LOCAL_*`) into
-  the global frame using the robot's theta estimate,
-- splits the reference trajectory and command into **per-mode series** so each
-  body control mode is drawn in its own color and the reference/command curves
-  **change color as the active control mode changes**,
-- inserts gaps (NaN) for modes/measurements that don't apply.
+| Alias (converter input) | Raw source | → Output topic (layouts plot) | Computation |
+|---|---|---|---|
+| `/analysis_telem_src` | `/robot_feedback/extended/robot{robot}` | `/analysis_telem` | `ControlsAnalysis`: per-dim pos/vel/accel, per-mode-colored trajectory splits, `cmd_echo` command, per-wheel velocity + signed-mean current |
+| `/analysis_control_src` | `/robot_motion_commands/robot{robot}` | `/analysis_control` | `MotionCommand`: pre-send software command, routed per body control mode |
+| `/analysis_vision_src` | `/{team}_team/robot{robot}` | `/analysis_vision` | `VisionState` `{x,y,theta,visible}`, `theta` = quaternion yaw |
 
-The conversion is **stateless** — one telemetry message maps to exactly one
-output message, never comparing against a previous message. There is no
-robot-time reconstruction, no reboot tracking, and no heartbeat; plots use each
-message's receive (log) time as the x-axis.
+Each converter reads a **single** aliased input, so Foxglove loads only the three
+selected topics (no converter fan-in) — load time scales with one robot, not the
+fleet. Only global-frame command modes are plotted (no local→global rotation);
+the per-mode-colored trajectory curves indicate the active mode. The conversion is
+**stateless** — one message in, one out; plots use each message's receive (log)
+time as the x-axis.
 
 ## Contents
 
-- `foxglove/controls_analysis_extension/` — the Foxglove extension. Two topic
-  converters, both selecting the robot via the `robot` global variable:
-  - `ExtendedTelemetry` → `/controls_analysis_selected` (the main analysis), and
-  - the friendly team's `/{color}_team/robot{id}` → `/vision_state_selected` (the
-    fresh vision estimate overlay; friendly color auto-detected from the referee).
+- `foxglove/controls_analysis_extension/` — the Foxglove extension: 3 topic
+  aliases for `robot`/`team` selection + 3 single-input topic converters
+  (`/analysis_telem`, `/analysis_control`, `/analysis_vision`).
 - `foxglove/controls_analysis.json`, `foxglove/controls_analysis_singleview.json`
   — the two bundled layouts (plus `*_lines.json` variants; see [layouts](#foxglove-layouts)).
 
@@ -46,60 +39,60 @@ message's receive (log) time as the x-axis.
 Three body-frame views (X, Y, Theta). Each view is three vertically stacked
 plots sharing a time axis:
 
-| Plot | Derivative | Curves |
+| Plot | Derivative | Curves (labels) |
 |------|-----------|--------|
-| Position | 1st | state estimate, reference trajectory (per-mode colored), vision measurement, software cmd (`BCM_GLOBAL_POSITION`), **fresh vision estimate (off by default; see below)** |
-| Velocity | 2nd | state estimate, reference trajectory (per-mode colored), software cmd (`BCM_GLOBAL_VELOCITY`/`BCM_LOCAL_VELOCITY`), gyro (theta only) |
-| Acceleration | 3rd | firmware output accel + friction-compensated output accel, software cmd (`BCM_GLOBAL_ACCEL`/`BCM_LOCAL_ACCEL`), IMU accel (x/y only) |
+| Position | 1st | per-mode trajectory `traj_*_telem`, software cmd `cmd` + round-tripped `cmd_telem`, fresh vision `vision` + round-tripped `vision_telem`, estimate `est_telem` |
+| Velocity | 2nd | per-mode trajectory `traj_*_telem`, software cmd `cmd` + round-tripped `cmd_telem`, gyro `gyro_telem` (theta only), estimate `est_telem` |
+| Acceleration | 3rd | software cmd `cmd` + round-tripped `cmd_telem`, firmware output `accel_u_telem` + friction-compensated `accel_u_fric_comp_telem`, IMU `imu_telem` (x/y only) |
 
-### Fresh vision estimate overlay (round-trip delay)
+### Software-side vs. round-tripped overlays (round-trip delay)
 
-Each position plot (x / y / theta) carries an extra **mint**-colored curve, **off
-by default**, sourced from `/vision_state_selected` (see [the extension](foxglove/controls_analysis_extension)).
-This is the *fresh* software-side vision estimate (`ateam_msgs/VisionStateRobot`
-on the friendly team's `/{color}_team/robot{id}`) — the pose the software actually
-uses to make decisions. The cyan `pos_vision` curve on the same plot is the *same*
-measurement after it has round-tripped to the robot and returned in
-`ExtendedTelemetry` (delayed, with jitter). Toggle the mint curve on to compare
-the two and read off the round-trip delay. theta is the yaw of the vision pose
-quaternion, computed by the extension.
+Two signals are plotted as a **pair** — the software-side value and the same value
+after a round trip to the robot and back through `ExtendedTelemetry` (delayed,
+with jitter). By default the software-side curve is shown and the round-tripped
+one is hidden; toggle the latter on to read the round-trip delay. Colors follow
+**dark = software / light = robot**:
+
+| Signal | Software-side (shown) | Round-tripped (hidden) |
+|--------|-----------------------|------------------------|
+| Command (pos/vel/accel plots) | `cmd`, dark blue `#0000ff`, from `/analysis_control` | `cmd_telem`, light blue `#6666ff`, from `/analysis_telem` (`cmd_echo`) |
+| Vision (position plots) | `vision`, mint `#3eb489`, from `/analysis_vision` (`theta` = quaternion yaw) | `vision_telem`, cyan `#00dac7`, from `/analysis_telem` (`vision_pose`) |
 
 Two additional wheel views share the same time axis:
 
-| View | Layout | Curves |
+| View | Layout | Curves (labels) |
 |------|--------|--------|
-| Velocity | 4 stacked plots (front-left, back-left, back-right, front-right) | measured wheel velocity (`vel`, rad/s) vs. setpoint (`vel_setpoint`) per wheel |
-| Current | 4 stacked plots (same wheel order) | mean measured current (`current`, mA — mean of `current_samples_ma`, signed by the commanded `current_setpoint`) vs. setpoint (`current_setpoint`) per wheel |
+| Velocity | 4 stacked plots (front-left, back-left, back-right, front-right) | setpoint `vel_setpoint_telem` vs. measured `vel_telem` (rad/s) per wheel |
+| Current | 4 stacked plots (same wheel order) | setpoint `current_setpoint_telem` vs. measured `current_telem` (mA — signed mean of `current_samples_ma`) per wheel |
 
 Wheel telemetry is sourced from the four `CcmTelemetry` motors in
-`ExtendedTelemetry` and is always present (never gapped by control mode); a
-wheel's `current` is NaN only when its per-cycle current-sample buffer is empty.
+`ExtendedTelemetry`; a wheel's `current` is NaN only when its per-cycle
+current-sample buffer is empty.
 
-## Body control mode → derivative mapping (software command)
+## Body control mode → command mapping
 
-| Mode | Value | Command routed to | Frame |
-|------|-------|-------------------|-------|
-| `BCM_OFF` | 0 | — (gap) | — |
-| `BCM_ESTOP_BRAKE` | 1 | — (gap) | — |
-| `BCM_GLOBAL_POSITION` | 10 | position | global |
-| `BCM_GLOBAL_VELOCITY` | 11 | velocity | global |
-| `BCM_LOCAL_VELOCITY` | 12 | velocity | local → rotated to global |
-| `BCM_GLOBAL_ACCEL` | 13 | acceleration | global |
-| `BCM_LOCAL_ACCEL` | 14 | acceleration | local → rotated to global |
-| `BCM_HEADING_PIVOT` | 20 | — (gap) | — |
-| `BCM_POINT_PIVOT` | 21 | — (gap) | — |
-| `BCM_HEADING_LINE` | 30 | — (gap) | — |
-| `BCM_POINT_LINE` | 31 | — (gap) | — |
+Only **global-frame** modes plot a command curve; local-frame commands
+(`BCM_LOCAL_*`) are not plotted (no local→global rotation). This applies to both
+the software command (`/analysis_control`) and the round-tripped `cmd_echo`
+(`/analysis_telem`).
 
-The reference trajectory is split per mode for **all** modes that produce a
-trajectory setpoint (global position/velocity, local velocity, and the
-pivot/line modes), so those curves also color-by-mode even where the software
-command has no direct x/y/theta mapping.
+| Mode | Value | Command curve |
+|------|-------|---------------|
+| `BCM_GLOBAL_POSITION` | 10 | position plots |
+| `BCM_GLOBAL_VELOCITY` | 11 | velocity plots |
+| `BCM_GLOBAL_ACCEL` | 13 | acceleration plots |
+| `BCM_LOCAL_VELOCITY` (12), `BCM_LOCAL_ACCEL` (14) | | not plotted |
+| all others (OFF, ESTOP, pivot, line) | | no command curve |
 
-Measurements are always placed on their physically correct derivative:
-vision → position, gyro → theta velocity, IMU → x/y acceleration. The state
-estimate is always available on position and velocity; the firmware output
-acceleration (raw and friction-compensated) is always available on acceleration.
+The reference trajectory is drawn as one per-mode-colored copy for **every** mode
+that produces a trajectory setpoint (global position/velocity, local velocity, and
+the pivot/line modes), so the trajectory curve indicates the active mode even for
+modes whose command isn't plotted.
+
+Measurements are placed on their physically correct derivative: vision →
+position, gyro → theta velocity, IMU → x/y acceleration. The state estimate is on
+position and velocity; the firmware output acceleration (raw and
+friction-compensated) is on acceleration.
 
 ## Install the extension
 
@@ -153,9 +146,9 @@ In Foxglove: **Open connection → Foxglove WebSocket → `ws://localhost:8765`*
 
 ## Foxglove layouts
 
-Four layouts are checked in under `foxglove/`; all bind to the single converter
-output topic `/controls_analysis_selected` (see [Selecting which robot is
-displayed](#selecting-which-robot-is-displayed)).
+Four layouts are checked in under `foxglove/`; all bind to the converter output
+topics `/analysis_telem`, `/analysis_control`, `/analysis_vision` (see
+[Selecting which robot is displayed](#selecting-which-robot-is-displayed)).
 
 - **`controls_analysis.json`** — tabbed: five tabs (X / Y / Theta / Velocity /
   Current), one view at a time.
@@ -211,32 +204,26 @@ you resume/seek.)
 
 ## Selecting which robot is displayed
 
-Each robot has its own `/robot_feedback/extended/robot{id}` telemetry topic.
-Foxglove message paths can use a `$variable` in field/index/filter positions but
-**not** in the topic-name position, so a variable alone can't retarget a
-per-robot topic.
+Each robot has its own raw per-robot topics (`/robot_feedback/extended/robot{id}`,
+`/robot_motion_commands/robot{id}`, `/{team}_team/robot{id}`). Foxglove message
+paths can use a `$variable` in field/index/filter positions but **not** in the
+topic-name position, so a variable alone can't retarget a per-robot topic.
 
-The bundled extension solves this in its **topic converter**: it listens to every
-robot's telemetry topic but emits only the one selected by the `robot` global
-variable (default `0`) onto the single output topic `/controls_analysis_selected`
-that the layouts subscribe to. Change the `robot` variable in Foxglove's
-**Variables** tab and every panel re-points instantly.
-
-Because the converter runs at Foxglove's data-source layer, it works identically
-for a **loaded bag** (full backfill — the newly selected robot's plots
-immediately show the whole timeline, no reload) and a live connection.
-
-The same `robot` variable also drives the fresh-vision-estimate overlay: a second
-converter emits the selected robot's `/vision_state_selected`. It picks the
-**friendly** team's `/{color}_team/robot{id}` automatically by matching our team
-name against `/referee_messages` (the same logic the stack uses at runtime).
-Overrides via Foxglove **Variables**:
+The extension solves this with **topic aliases**: it maps each selected raw topic
+onto a stable `/analysis_*_src` name, and a topic converter turns each into the
+`/analysis_telem`, `/analysis_control`, `/analysis_vision` topics the layouts bind
+to. Change these variables in Foxglove's **Variables** tab and every panel
+re-points instantly:
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
 | `robot` | `0` | Robot id shown by every panel. |
-| `friendly_team` | `auto` | `auto` detects our color from the referee; set `blue`/`yellow` to force it (e.g. bags without `/referee_messages`). |
-| `team_name` | `A-Team` | Our team name, matched against the referee teams when `friendly_team` is `auto`. |
+| `team` | `blue` | Our team color, selecting `/{team}_team/robot{id}` for the vision overlay (`blue` / `yellow`). |
+
+Because an alias resolves to **one real source topic**, only the selected robot's
+data is loaded — load time scales with one robot, not the fleet — and it works
+identically for a **loaded bag** (full backfill) and a live connection. (Team is a
+manual variable; no referee introspection.)
 
 ## Relationship to the legacy workflow
 

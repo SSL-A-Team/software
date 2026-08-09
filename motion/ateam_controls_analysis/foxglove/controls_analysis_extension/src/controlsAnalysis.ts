@@ -13,7 +13,11 @@
 //     reboot tracking, no mode-transition gap logic, no heartbeat).
 //   * NaN marks "no data at this instant", which Foxglove renders as a gap.
 //   * The software command (`cmd_echo`) is routed onto the derivative implied by
-//     the active body control mode, and rotated local->global when needed.
+//   * The software command (`cmd_echo`) is routed onto the derivative implied by
+//     the active body control mode. Only global-frame modes route a command;
+//     local-frame commands (`BCM_LOCAL_*`) are intentionally NOT plotted (this
+//     avoids a brittle local->global rotation). The per-mode-colored trajectory
+//     curves still indicate the active mode.
 //   * The reference trajectory and the software command are additionally emitted
 //     as per-mode split series (non-NaN only while that mode is active) so each
 //     body control mode is drawn in its own color, changing color as the active
@@ -70,13 +74,14 @@ const TRAJ_MODES = [
   BCM_POINT_LINE,
 ];
 
-// mode -> [derivative name, is_local_frame] for the software command.
-const CMD_ROUTE: Record<number, [string, boolean]> = {
-  [BCM_GLOBAL_POSITION]: ["pos", false],
-  [BCM_GLOBAL_VELOCITY]: ["vel", false],
-  [BCM_LOCAL_VELOCITY]: ["vel", true],
-  [BCM_GLOBAL_ACCEL]: ["accel", false],
-  [BCM_LOCAL_ACCEL]: ["accel", true],
+// mode -> derivative name for the software command. Only global-frame modes are
+// listed: local-frame commands (`BCM_LOCAL_*`) are intentionally not plotted, so
+// there is no local->global rotation. The per-mode-colored trajectory curves
+// still show the active mode.
+const CMD_ROUTE: Record<number, string> = {
+  [BCM_GLOBAL_POSITION]: "pos",
+  [BCM_GLOBAL_VELOCITY]: "vel",
+  [BCM_GLOBAL_ACCEL]: "accel",
 };
 
 type Vec = ArrayLike<number> | undefined;
@@ -100,8 +105,8 @@ function dimensionFieldNames(): string[] {
   }
   names.push(
     "pos_cmd_global_pos",
-    "vel_cmd_global_vel", "vel_cmd_local_vel",
-    "accel_cmd_global_acc", "accel_cmd_local_acc",
+    "vel_cmd_global_vel",
+    "accel_cmd_global_acc",
   );
   return names;
 }
@@ -109,7 +114,8 @@ function dimensionFieldNames(): string[] {
 const DIM_FIELDS = dimensionFieldNames();
 
 // Pull the active maneuver's echoed command as [a, b, c], or undefined for modes
-// without a direct x/y/theta mapping (OFF, ESTOP, pivot, line).
+// that are not plotted (OFF, ESTOP, the local-frame modes, pivot and line). Only
+// global-frame modes have a command routed onto a derivative.
 function extractCmdNative(bct: any): [number, number, number] | undefined {
   switch (bct.body_control_mode) {
     case BCM_GLOBAL_POSITION: {
@@ -120,31 +126,13 @@ function extractCmdNative(bct: any): [number, number, number] | undefined {
       const e = bct.maneuver_global_vel.cmd_echo;
       return [e.global_xd, e.global_yd, e.global_omega];
     }
-    case BCM_LOCAL_VELOCITY: {
-      const e = bct.maneuver_local_vel.cmd_echo;
-      return [e.local_xd, e.local_yd, e.local_omega];
-    }
     case BCM_GLOBAL_ACCEL: {
       const e = bct.maneuver_global_acc.cmd_echo;
       return [e.global_xdd, e.global_ydd, e.global_alpha];
     }
-    case BCM_LOCAL_ACCEL: {
-      const e = bct.maneuver_local_acc.cmd_echo;
-      return [e.local_xdd, e.local_ydd, e.local_alpha];
-    }
     default:
       return undefined;
   }
-}
-
-function rotateLocalToGlobal(
-  native: [number, number, number],
-  theta: number,
-): [number, number, number] {
-  const [lx, ly, ang] = native;
-  const c = Math.cos(theta);
-  const s = Math.sin(theta);
-  return [c * lx - s * ly, s * lx + c * ly, ang];
 }
 
 // Build one WheelAnalysis from a CcmTelemetry motor. The measured current is the
@@ -207,18 +195,12 @@ export function buildControlsAnalysis(msg: any): Record<string, unknown> {
   const mode: number = bct.body_control_mode;
   const thetaEst = at(bct.kf_body_pos_estimate, 2);
 
-  // Resolve the global-frame software command (shared across dims).
-  const route = CMD_ROUTE[mode];
+  // Resolve the software command (global-frame modes only; shared across dims).
+  const cmdDeriv = CMD_ROUTE[mode];
   const cmdNative = extractCmdNative(bct);
-  let cmdDeriv: string | undefined;
-  let cmdGlobal: [number, number, number] | undefined;
-  if (route != undefined && cmdNative != undefined) {
-    const [deriv, isLocal] = route;
-    cmdDeriv = deriv;
-    const cmd: [number, number, number] = [
-      Number(cmdNative[0]), Number(cmdNative[1]), Number(cmdNative[2]),
-    ];
-    cmdGlobal = isLocal ? rotateLocalToGlobal(cmd, thetaEst) : cmd;
+  let cmd: [number, number, number] | undefined;
+  if (cmdDeriv != undefined && cmdNative != undefined) {
+    cmd = [Number(cmdNative[0]), Number(cmdNative[1]), Number(cmdNative[2])];
   }
   const trajActive = TRAJ_MODES.includes(mode);
   const suffix = MODE_SUFFIX[mode];
@@ -255,10 +237,10 @@ export function buildControlsAnalysis(msg: any): Record<string, unknown> {
       f[`vel_traj_${suffix}`] = at(bct.body_traj_vel, i);
     }
 
-    // Software command: single-series + per-mode split series.
-    if (cmdGlobal != undefined && cmdDeriv != undefined && suffix != undefined) {
-      f[`${cmdDeriv}_cmd`] = cmdGlobal[i];
-      f[`${cmdDeriv}_cmd_${suffix}`] = cmdGlobal[i];
+    // Software command: single-series + per-mode split series (global modes only).
+    if (cmd != undefined && cmdDeriv != undefined && suffix != undefined) {
+      f[`${cmdDeriv}_cmd`] = cmd[i];
+      f[`${cmdDeriv}_cmd_${suffix}`] = cmd[i];
     }
 
     out[d] = f;

@@ -8,65 +8,63 @@ connection) and the layouts just work.
 
 ## What it does
 
-It registers two **topic converters**, both operating at Foxglove's data-source
-layer (so they behave identically for a loaded bag with full backfill and a live
-connection), and both selecting the robot via the `robot` global variable
-(default `0`, `watchVariables: ["robot"]`) — change `robot` in the **Variables**
-tab and every panel re-points instantly, no bag reload.
+It **selects** the robot/team you're viewing with topic aliases, then **converts**
+the three selected topics into the flat schemas the layouts plot. All of it runs
+at Foxglove's data-source layer, so it behaves identically for a loaded bag (full
+backfill) and a live connection.
 
-### 1. Controls analysis — `/controls_analysis_selected`
+### Selection — topic aliases (`robot` + `team` variables)
 
-Reads the fleet's recorded `ateam_radio_msgs/msg/ExtendedTelemetry` topics
-(`/robot_feedback/extended/robot0..15`) and produces one new in-app topic,
-**`/controls_analysis_selected`**, carrying the flat
-`ateam_controls_analysis/ControlsAnalysis` schema the layouts bind to.
+`registerTopicAliases` maps each selected raw per-robot topic onto a stable
+"source" name:
 
-For each telemetry message it flattens the sample into per-dimension (x / y /
-theta) position / velocity / acceleration series and per-wheel velocity / current
-series. The reference trajectory and the software command are additionally
-emitted as **per-mode split series** (each non-NaN only while its body control
-mode is active), so each mode is drawn in its own color and the reference/command
-curves **change color as the active control mode changes**. The conversion is
-**stateless**: one telemetry message maps to exactly one output message — no
-message is ever compared against a previous one (no robot-time reconstruction, no
-reboot tracking, no mode-transition gaps, no heartbeat). See
-[`src/controlsAnalysis.ts`](src/controlsAnalysis.ts).
+| Alias | Raw source | Driven by |
+|---|---|---|
+| `/analysis_telem_src` | `/robot_feedback/extended/robot{robot}` | `robot` |
+| `/analysis_control_src` | `/robot_motion_commands/robot{robot}` | `robot` |
+| `/analysis_vision_src` | `/{team}_team/robot{robot}` | `robot`, `team` |
 
-### 2. Fresh vision estimate — `/vision_state_selected`
+Change `robot` (id, default `0`) or `team` (`blue`/`yellow`, default `blue`) in
+the **Variables** tab and every panel re-points instantly, no bag reload. `team`
+is a manual variable — no referee introspection.
 
-Reads the friendly team's per-robot vision-state topics
-(`/{color}_team/robot{id}`, `ateam_msgs/VisionStateRobot`) and produces one new
-in-app topic, **`/vision_state_selected`**, with a flat `{x, y, theta, visible}`
-schema. This is the *fresh* software-side vision estimate — the pose the software
-uses to make decisions. The position plots overlay it (mint, off by default)
-against the cyan `pos_vision` curve, which is the *same* measurement after it has
-round-tripped to the robot and returned in `ExtendedTelemetry`; the offset
-between them is the round-trip delay. `theta` is the yaw of the pose quaternion,
-computed here because message paths can't derive it. See
-[`src/visionState.ts`](src/visionState.ts).
+### Conversion — one topic converter per stream (single aliased input)
 
-The **friendly** color is auto-detected from `/referee_messages` by matching our
-team name against the two teams (the same logic the stack uses at runtime), so
-the correct `/{color}_team/robot{id}` is chosen without picking a color. Two
-optional variables tune this:
+Each converter's **only** `inputTopic` is one of the aliases above, so Foxglove
+loads just the three selected topics — there is **no converter fan-in**, and load
+time scales with one robot, not the fleet. Because the alias already carries the
+selection, the converters need no `watchVariables` and no per-topic filtering;
+they just convert each message (stateless — one in, one out):
 
-| Variable | Default | Meaning |
-|----------|---------|---------|
-| `friendly_team` | `auto` | `auto` detects from the referee; `blue`/`yellow` forces it (e.g. bags without `/referee_messages`). |
-| `team_name` | `A-Team` | Our team name, matched against the referee teams when `friendly_team` is `auto`. |
+| Output topic (layouts bind here) | From | Schema / computation |
+|---|---|---|
+| `/analysis_telem` | `/analysis_telem_src` (`ExtendedTelemetry`) | `ControlsAnalysis`: per-dim pos/vel/accel, per-mode-colored trajectory splits, `cmd_echo` command (global modes only), per-wheel velocity + signed-mean current. See [`src/controlsAnalysis.ts`](src/controlsAnalysis.ts). |
+| `/analysis_control` | `/analysis_control_src` (`RobotMotionCommand`) | `MotionCommand`: the pre-send software command routed per body control mode (global modes only). See [`src/motionCommand.ts`](src/motionCommand.ts). |
+| `/analysis_vision` | `/analysis_vision_src` (`VisionStateRobot`) | `VisionState` `{x, y, theta, visible}`, `theta` = yaw of the pose quaternion. See [`src/visionState.ts`](src/visionState.ts). |
 
-This converter's only state is the last-seen friendly color across referee
-messages; no vision sample interacts with another. When the robot is not
-`visible`, its `x/y/theta` are NaN so the curve gaps.
+Only **global-frame** command modes are plotted; local-frame commands
+(`BCM_LOCAL_*`) are intentionally not plotted (no local→global rotation). The
+per-mode-colored trajectory curves still show the active mode. When a robot is not
+`visible`, its vision `x/y/theta` are NaN so the curve gaps.
 
-> *Topic* converters are used (rather than schema converters plus topic aliases)
-> so each output is a genuine dedicated topic whose **only** schema is the
-> converted one. The layout paths (e.g. `.x.pos_cmd`) then resolve unambiguously,
-> instead of competing with the raw input schema on an aliased topic. (A topic
-> alias also can't target a converter output or expose the computed `theta`.)
+> *Topic* converters are used (not `type: "schema"` converters) because a schema
+> converter's output fields don't resolve in the Plot panel here; a topic
+> converter produces a genuine dedicated output topic the layout binds to. Feeding
+> it the selection alias as its lone input keeps the fan-in at one topic.
 
 Plots use each message's **receive (log) time** as the x-axis; there is no robot
 time axis.
+
+### Curve labels & colors
+
+Every layout curve has a **label**. Convention: a `_telem` suffix means the curve
+is sourced from `/analysis_telem` (the robot-side / round-tripped signal, or a
+telemetry-only signal); no suffix means the software-side source
+(`/analysis_control` for `cmd`, `/analysis_vision` for `vision`). Colors follow
+**dark = software-side, light = robot-side**: software command `#0000ff` vs
+round-tripped `#6666ff`; fresh vision mint `#3eb489` vs round-tripped cyan
+`#00dac7`. By default the software-side curve of each pair is shown and the
+round-tripped one is hidden.
 
 ## Build & install
 
@@ -97,25 +95,27 @@ after installing to pick up the extension either way.
 
 ## Usage
 
-1. Open a recorded `ExtendedTelemetry` bag (Open local file) or connect live via
+1. Open a recorded bag containing `/robot_feedback/extended/robot{id}`,
+   `/robot_motion_commands/robot{id}`, and `/{blue,yellow}_team/robot{id}` (Open
+   local file) or connect live via
    [`foxglove_bridge`](https://github.com/foxglove/ros-foxglove-bridge).
 2. Import a layout from `../` — `controls_analysis.json` (tabbed) or
    `controls_analysis_singleview.json` (grid), or their `*_lines.json` variants
-   that draw connecting lines instead of points-only. All bind
-   `/controls_analysis_selected`.
+   that draw connecting lines instead of points-only. All bind the
+   `/analysis_telem`, `/analysis_control`, and `/analysis_vision` topics.
 3. Open the **Variables** tab (right sidebar in current Foxglove — toggle with
-   the `]` key) and set `robot` to the id you want (e.g. `2`). All panels switch
-   to that robot with no reload.
+   the `]` key) and set `robot` to the id you want (e.g. `2`) and `team` to your
+   color. All panels switch with no reload.
 
 ## Verifying / troubleshooting
 
 - After installing, confirm Foxglove lists it under **Settings → Extensions**
   (or the Extensions sidebar) as "A-Team Controls Analysis".
-- If plots are empty, check the **Topics** list for
-  `/robot_feedback/extended/robot{id}` entries in your data source. The converter
-  only works if those source telemetry topics exist.
-  `/controls_analysis_selected` is a converter output topic — it won't appear in
-  the raw source-topic list, but message paths referencing it will resolve, and
-  it appears once a panel subscribes.
+- If plots are empty, check the **Topics** list for the raw source topics
+  (`/robot_feedback/extended/robot{id}`, `/robot_motion_commands/robot{id}`,
+  `/{team}_team/robot{id}`). The aliases and converters only work if those exist.
+  `/analysis_telem` / `/analysis_control` / `/analysis_vision` are converter
+  outputs — they won't appear in the raw source-topic list, but message paths
+  referencing them resolve, and they appear once a panel subscribes.
 - The extension only takes effect after a reload; a freshly installed extension
   won't apply to an already-open session until you reload.
