@@ -1,5 +1,32 @@
 # Changelog
 
+## 3.0.0
+
+- **Rearchitected to aliases + layout filters.** Replaced the three stateful
+  topic converters (which forced Foxglove to preload every robot's telemetry,
+  both teams' vision, and every command topic — the cause of slow bag loads) with
+  lightweight **topic aliases**:
+  `/robot_feedback/extended/robot{robot}` → `/analysis_telem_selected`,
+  `/robot_motion_commands/robot{robot}` → `/analysis_command_selected`,
+  `/{team}_team/robot{robot}` → `/analysis_vision_selected`, driven by the `robot`
+  and `team` global variables. Only the selected robot's topics load, so load time
+  scales with one robot, not the fleet.
+- All per-mode trajectory coloring and command gating now live in the **layouts**
+  as `{body_control_mode==N}` message-path filters over raw fields — no converter.
+- Kept only the two values a message path can't compute, as **topic converters**
+  whose single input is the selection alias (so no fan-in): vision heading
+  (`/analysis_vision_selected` → `/analysis_vision_theta_selected`, `theta` =
+  quaternion yaw) and per-wheel signed current mean (`/analysis_telem_selected` →
+  `/analysis_wheelcurrent_selected`). Topic converters are used rather than
+  `type: "schema"` converters because schema-converter output fields don't resolve
+  in the Plot panel (verified empty even on the un-aliased source topic); a topic
+  converter produces a real output topic the layout binds to. Vision x/y and wheel
+  current setpoint stay **raw** fields off the aliases (no converter needed).
+- Removed the `ControlsAnalysis`, `VisionState`, and `MotionCommand` topic
+  outputs and their `controlsAnalysis.ts` / `motionCommand.ts` modules.
+- Team is now a manual `team` variable (`blue`/`yellow`); no more referee-message
+  introspection.
+
 ## 2.3.0
 
 - Removed the local→global rotation for commands (brittle w.r.t. future changes).

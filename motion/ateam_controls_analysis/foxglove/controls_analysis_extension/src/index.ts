@@ -2,98 +2,70 @@
 //
 // Foxglove extension: controls analysis.
 //
-// This extension does all controls analysis inside Foxglove -- there is no ROS
-// republisher node and no derived message type. It registers three stateless
-// *topic converters*:
+// This extension does the *minimum* work in Foxglove: it selects the robot (and
+// team) you're viewing and computes only the two values a plot message path
+// cannot. Everything else -- per-mode trajectory coloring, command gating,
+// software-vs-robot overlays -- is done directly in the layouts with raw message
+// fields and `{body_control_mode==N}` path filters.
 //
-//   1. the fleet's `ateam_radio_msgs/ExtendedTelemetry` topics -> one in-app
-//      topic `/controls_analysis_selected`, the flat, per-mode-colored
-//      `ControlsAnalysis` schema the bundled layouts plot against;
-//   2. the friendly team's `/{color}_team/robot{id}` vision-state topics -> one
-//      in-app topic `/vision_state_selected`, the fresh software-side vision
-//      estimate the position plots overlay; and
-//   3. the fleet's `/robot_motion_commands/robot{id}` topics ->
-//      `/robot_motion_command_selected`, the pre-send software command the plots
-//      overlay against the round-tripped `cmd_echo` curves (round-trip delay).
+// It registers:
 //
-// Robot selection is driven by the `robot` global variable: each converter only
-// emits for the currently selected robot's topic and drops the rest, so changing
-// `robot` in Foxglove's Variables tab re-points every panel with no bag reload.
-// A topic converter (rather than a schema converter + topic alias) is used so
-// each output is a genuine dedicated topic whose *only* schema is the converted
-// one -- the layout paths resolve unambiguously instead of competing with the raw
-// input schema on an aliased topic.
+//   1. Topic aliases (driven by the `robot` and `team` global variables) that map
+//      each raw per-robot source topic onto a stable "selected" topic the layouts
+//      bind to:
+//        /robot_feedback/extended/robot{robot}  -> /analysis_telem_selected
+//        /robot_motion_commands/robot{robot}    -> /analysis_command_selected
+//        /{team}_team/robot{robot}              -> /analysis_vision_selected
+//      Because an alias maps a stable name onto ONE real source topic, only the
+//      selected robot's data is ever loaded -- there is no converter fan-in, so
+//      load time scales with one robot, not the whole fleet.
 //
-// It operates at Foxglove's data-source layer, so it behaves identically for a
+//   2. Two *topic* converters for the only values a message path can't express,
+//      each fed by the selection alias as its single input (so no fan-in):
+//        /analysis_vision_selected  -> /analysis_vision_theta_selected
+//            (heading = yaw of the pose quaternion, plus x/y/visible)
+//        /analysis_telem_selected   -> /analysis_wheelcurrent_selected
+//            (per-wheel signed mean of the current-sample buffer)
+//      A topic converter (not a schema converter) is used because schema-
+//      converter output fields do not resolve in the Plot panel here, whereas a
+//      topic converter produces a genuine dedicated output topic the layout binds
+//      to. Its single input is the alias, which resolves to one real source
+//      topic, so it adds no fan-in.
+//
+// Both operate at Foxglove's data-source layer, so they behave identically for a
 // loaded bag (full backfill) and a live connection.
 
-import { ExtensionContext, MessageSchemaDescription } from "@foxglove/extension";
+import { ExtensionContext } from "@foxglove/extension";
 
 import {
-  buildControlsAnalysis,
-  controlsAnalysisSchemaDescription,
-} from "./controlsAnalysis";
-import {
-  buildMotionCommand,
-  motionCommandSchemaDescription,
-} from "./motionCommand";
-import {
-  buildVisionState,
-  friendlyColorFromReferee,
-  parseTeamRobotTopic,
-  TeamColor,
-  TEAM_COLORS,
-  visionStateSchemaDescription,
+  VISION_TO_SCHEMA,
+  visionConverter,
+  visionSchemaDescription,
 } from "./visionState";
+import {
+  WHEEL_CURRENT_TO_SCHEMA,
+  wheelCurrentConverter,
+  wheelCurrentSchemaDescription,
+} from "./wheelCurrent";
 
-// The stable topic every layout subscribes to (the converter's output).
-export const SELECTED_TOPIC = "/controls_analysis_selected";
-// Schema name of the flat converted message the layouts plot against.
-export const CONTROLS_ANALYSIS_SCHEMA = "ateam_controls_analysis/ControlsAnalysis";
-// Template for the per-robot extended-telemetry topics (converter inputs).
+// Global variables that select what is displayed.
+export const ROBOT_VARIABLE = "robot"; // robot id, default 0
+export const TEAM_VARIABLE = "team"; // "blue" | "yellow", default "blue"
+export const DEFAULT_TEAM = "blue";
+
+// Stable "selected" topics the layouts bind to. The three *_selected topics are
+// aliases onto raw source topics; the two computed topics are topic-converter
+// outputs fed by those aliases.
+export const TELEM_SELECTED_TOPIC = "/analysis_telem_selected";
+export const COMMAND_SELECTED_TOPIC = "/analysis_command_selected";
+export const VISION_SELECTED_TOPIC = "/analysis_vision_selected";
+export const VISION_THETA_TOPIC = "/analysis_vision_theta_selected";
+export const WHEEL_CURRENT_TOPIC = "/analysis_wheelcurrent_selected";
+
+// Raw per-robot source topic templates.
 export const EXTENDED_TOPIC_TEMPLATE = "/robot_feedback/extended/robot{robot}";
-// Foxglove global variable that selects the robot id (defaults to 0).
-export const ROBOT_VARIABLE = "robot";
-// Robot ids the converter listens to. The fleet is 0..15; input topics that a
-// given data source doesn't contain are simply never delivered.
-export const ROBOT_IDS = Array.from({ length: 16 }, (_, i) => i);
-
-// --- Vision-state overlay (fresh software-side vision estimate) ---------------
-// The stable topic the position plots overlay for the fresh vision estimate.
-export const VISION_STATE_SELECTED_TOPIC = "/vision_state_selected";
-// Schema name of the flat vision-state message.
-export const VISION_STATE_SCHEMA = "ateam_controls_analysis/VisionState";
-// Referee topic used to auto-detect which team color is friendly (ours).
-export const REFEREE_TOPIC = "/referee_messages";
-// Per-team per-robot vision-state topic templates (converter inputs).
-export const TEAM_TOPIC_TEMPLATE = "/{color}_team/robot{robot}";
-// Global variable holding our team name, matched against the referee teams to
-// auto-detect the friendly color. Defaults to the codebase default "A-Team".
-export const TEAM_NAME_VARIABLE = "team_name";
-export const DEFAULT_TEAM_NAME = "A-Team";
-// Global variable overriding the friendly color: "auto" (default, detect from
-// the referee message) or an explicit "blue" / "yellow".
-export const FRIENDLY_TEAM_VARIABLE = "friendly_team";
-
-// --- Motion-command overlay (pre-send software command) -----------------------
-// The stable topic the plots overlay for the pre-send software command.
-export const MOTION_COMMAND_SELECTED_TOPIC = "/robot_motion_command_selected";
-// Schema name of the flat motion-command message.
-export const MOTION_COMMAND_SCHEMA = "ateam_controls_analysis/MotionCommand";
-// Template for the per-robot motion-command topics (converter inputs).
-export const MOTION_COMMAND_TOPIC_TEMPLATE = "/robot_motion_commands/robot{robot}";
-
-function extendedTopic(robot: number): string {
-  return EXTENDED_TOPIC_TEMPLATE.replace("{robot}", String(robot));
-}
-
-function teamTopic(color: TeamColor, robot: number): string {
-  return TEAM_TOPIC_TEMPLATE.replace("{color}", color).replace("{robot}", String(robot));
-}
-
-function motionCommandTopic(robot: number): string {
-  return MOTION_COMMAND_TOPIC_TEMPLATE.replace("{robot}", String(robot));
-}
+export const COMMAND_TOPIC_TEMPLATE = "/robot_motion_commands/robot{robot}";
+export const TEAM_TOPIC_TEMPLATE = "/{team}_team/robot{robot}";
 
 function robotIdFrom(value: unknown): number {
   const n =
@@ -105,102 +77,52 @@ function robotIdFrom(value: unknown): number {
   return Number.isFinite(n) && n >= 0 ? Math.trunc(n) : 0;
 }
 
+function teamFrom(value: unknown): string {
+  return value === "yellow" || value === "blue" ? value : DEFAULT_TEAM;
+}
+
 export function activate(extensionContext: ExtensionContext): void {
-  extensionContext.registerMessageConverter({
-    type: "topic",
-    inputTopics: ROBOT_IDS.map(extendedTopic),
-    outputTopic: SELECTED_TOPIC,
-    outputSchemaName: CONTROLS_ANALYSIS_SCHEMA,
-    outputSchemaDescription: controlsAnalysisSchemaDescription(),
-    // Recreate the converter when the selected robot changes so the closure
-    // below filters to the new robot's telemetry topic.
-    watchVariables: [ROBOT_VARIABLE],
-    create: (globalVariables) => {
-      const selected = extendedTopic(robotIdFrom(globalVariables[ROBOT_VARIABLE]));
-      return (messageEvent) => {
-        // Stateless per-message conversion; emit only the selected robot.
-        if (messageEvent.topic !== selected) {
-          return undefined;
-        }
-        return buildControlsAnalysis(messageEvent.message);
-      };
-    },
+  // Robot/team selection via topic aliases. The alias function re-runs whenever
+  // the data-source topics or global variables change, so changing `robot`/`team`
+  // in the Variables tab re-points every panel with no bag reload.
+  extensionContext.registerTopicAliases((args) => {
+    const robot = String(robotIdFrom(args.globalVariables[ROBOT_VARIABLE]));
+    const team = teamFrom(args.globalVariables[TEAM_VARIABLE]);
+    return [
+      {
+        name: TELEM_SELECTED_TOPIC,
+        sourceTopicName: EXTENDED_TOPIC_TEMPLATE.replace("{robot}", robot),
+      },
+      {
+        name: COMMAND_SELECTED_TOPIC,
+        sourceTopicName: COMMAND_TOPIC_TEMPLATE.replace("{robot}", robot),
+      },
+      {
+        name: VISION_SELECTED_TOPIC,
+        sourceTopicName: TEAM_TOPIC_TEMPLATE.replace("{team}", team).replace("{robot}", robot),
+      },
+    ];
   });
 
-  // Fresh software-side vision estimate for the selected robot, routed onto its
-  // own topic (kept separate from ControlsAnalysis on purpose). The friendly team
-  // color is auto-detected from the referee message (matching our team name), so
-  // the correct `/{color}_team/robot{id}` is selected without the user picking a
-  // color. theta is computed here (yaw from the pose quaternion) because message
-  // paths can't derive it. This converter is stateful only in the minimal sense
-  // that it remembers the last-seen friendly color across referee messages -- no
-  // vision sample interacts with another.
+  // Vision heading (yaw) + x/y/visible for the fresh-vision overlay. Topic
+  // converter fed by the vision alias (one input -> no fan-in).
   extensionContext.registerMessageConverter({
     type: "topic",
-    inputTopics: [
-      REFEREE_TOPIC,
-      ...TEAM_COLORS.flatMap((color) => ROBOT_IDS.map((id) => teamTopic(color, id))),
-    ],
-    outputTopic: VISION_STATE_SELECTED_TOPIC,
-    outputSchemaName: VISION_STATE_SCHEMA,
-    outputSchemaDescription: visionStateSchemaDescription(),
-    watchVariables: [ROBOT_VARIABLE, TEAM_NAME_VARIABLE, FRIENDLY_TEAM_VARIABLE],
-    create: (globalVariables) => {
-      const selectedId = robotIdFrom(globalVariables[ROBOT_VARIABLE]);
-      const teamName =
-        typeof globalVariables[TEAM_NAME_VARIABLE] === "string"
-          ? (globalVariables[TEAM_NAME_VARIABLE] as string)
-          : DEFAULT_TEAM_NAME;
-      const override = globalVariables[FRIENDLY_TEAM_VARIABLE];
-      // "auto" (or unset) detects from the referee; an explicit color forces it.
-      let friendly: TeamColor | undefined =
-        override === "blue" || override === "yellow" ? override : undefined;
-      const autoDetect = friendly == undefined;
-
-      return (messageEvent) => {
-        if (messageEvent.topic === REFEREE_TOPIC) {
-          if (autoDetect) {
-            const detected = friendlyColorFromReferee(messageEvent.message, teamName);
-            if (detected != undefined) {
-              friendly = detected;
-            }
-          }
-          return undefined;
-        }
-        const parsed = parseTeamRobotTopic(messageEvent.topic);
-        if (
-          parsed == undefined ||
-          parsed.id !== selectedId ||
-          friendly == undefined ||
-          parsed.color !== friendly
-        ) {
-          return undefined;
-        }
-        return buildVisionState(messageEvent.message);
-      };
-    },
+    inputTopics: [VISION_SELECTED_TOPIC],
+    outputTopic: VISION_THETA_TOPIC,
+    outputSchemaName: VISION_TO_SCHEMA,
+    outputSchemaDescription: visionSchemaDescription(),
+    create: () => visionConverter,
   });
 
-  // Pre-send software command for the selected robot, routed onto its own topic.
-  // This is the RobotMotionCommand before it is sent to the robot; the layouts
-  // overlay it (dark blue) against the lighter-blue ControlsAnalysis cmd curves
-  // (the same command after a full round trip through telemetry) to show the
-  // round-trip delay. Stateless: one command message maps to one output message.
+  // Per-wheel signed mean current for the current plots. Topic converter fed by
+  // the telemetry alias (one input -> no fan-in).
   extensionContext.registerMessageConverter({
     type: "topic",
-    inputTopics: ROBOT_IDS.map(motionCommandTopic),
-    outputTopic: MOTION_COMMAND_SELECTED_TOPIC,
-    outputSchemaName: MOTION_COMMAND_SCHEMA,
-    outputSchemaDescription: motionCommandSchemaDescription(),
-    watchVariables: [ROBOT_VARIABLE],
-    create: (globalVariables) => {
-      const selected = motionCommandTopic(robotIdFrom(globalVariables[ROBOT_VARIABLE]));
-      return (messageEvent) => {
-        if (messageEvent.topic !== selected) {
-          return undefined;
-        }
-        return buildMotionCommand(messageEvent.message);
-      };
-    },
+    inputTopics: [TELEM_SELECTED_TOPIC],
+    outputTopic: WHEEL_CURRENT_TOPIC,
+    outputSchemaName: WHEEL_CURRENT_TO_SCHEMA,
+    outputSchemaDescription: wheelCurrentSchemaDescription(),
+    create: () => wheelCurrentConverter,
   });
 }
