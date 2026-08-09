@@ -3,84 +3,84 @@
     "Plot!x_pos": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==10}.body_traj_pos[0]",
+          "value": "/controls_analysis_selected.x.pos_traj_global_pos",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==11}.body_traj_pos[0]",
+          "value": "/controls_analysis_selected.x.pos_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==12}.body_traj_pos[0]",
+          "value": "/controls_analysis_selected.x.pos_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==20}.body_traj_pos[0]",
+          "value": "/controls_analysis_selected.x.pos_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==21}.body_traj_pos[0]",
+          "value": "/controls_analysis_selected.x.pos_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==30}.body_traj_pos[0]",
+          "value": "/controls_analysis_selected.x.pos_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==31}.body_traj_pos[0]",
+          "value": "/controls_analysis_selected.x.pos_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_command_selected{body_control_mode==10}.pose.x",
+          "value": "/robot_motion_command_selected.x.pos_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==10}.maneuver_global_pos.cmd_echo.global_x",
+          "value": "/controls_analysis_selected.x.pos_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false
         },
         {
-          "value": "/analysis_vision_selected.pose.position.x",
+          "value": "/vision_state_selected.x",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#3eb489",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.vision_pose[0]",
+          "value": "/controls_analysis_selected.x.pos_vision",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.kf_body_pos_estimate[0]",
+          "value": "/controls_analysis_selected.x.pos_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
@@ -100,70 +100,70 @@
     "Plot!x_vel": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==10}.body_traj_vel[0]",
+          "value": "/controls_analysis_selected.x.vel_traj_global_pos",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==11}.body_traj_vel[0]",
+          "value": "/controls_analysis_selected.x.vel_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==12}.body_traj_vel[0]",
+          "value": "/controls_analysis_selected.x.vel_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==20}.body_traj_vel[0]",
+          "value": "/controls_analysis_selected.x.vel_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==21}.body_traj_vel[0]",
+          "value": "/controls_analysis_selected.x.vel_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==30}.body_traj_vel[0]",
+          "value": "/controls_analysis_selected.x.vel_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==31}.body_traj_vel[0]",
+          "value": "/controls_analysis_selected.x.vel_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_command_selected{body_control_mode==11}.velocity.x",
+          "value": "/robot_motion_command_selected.x.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==11}.maneuver_global_vel.cmd_echo.global_xd",
+          "value": "/controls_analysis_selected.x.vel_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.kf_body_vel_estimate[0]",
+          "value": "/controls_analysis_selected.x.vel_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
@@ -183,35 +183,35 @@
     "Plot!x_acc": {
       "paths": [
         {
-          "value": "/analysis_command_selected{body_control_mode==13}.acceleration.x",
+          "value": "/robot_motion_command_selected.x.accel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==13}.maneuver_global_acc.cmd_echo.global_xdd",
+          "value": "/controls_analysis_selected.x.accel_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.body_accel_u[0]",
+          "value": "/controls_analysis_selected.x.accel_u",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff9c56",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.body_accel_u_fric_comp[0]",
+          "value": "/controls_analysis_selected.x.accel_u_fric_comp",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff6a00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.imu_accel[0]",
+          "value": "/controls_analysis_selected.x.accel_imu",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -231,84 +231,84 @@
     "Plot!y_pos": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==10}.body_traj_pos[1]",
+          "value": "/controls_analysis_selected.y.pos_traj_global_pos",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==11}.body_traj_pos[1]",
+          "value": "/controls_analysis_selected.y.pos_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==12}.body_traj_pos[1]",
+          "value": "/controls_analysis_selected.y.pos_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==20}.body_traj_pos[1]",
+          "value": "/controls_analysis_selected.y.pos_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==21}.body_traj_pos[1]",
+          "value": "/controls_analysis_selected.y.pos_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==30}.body_traj_pos[1]",
+          "value": "/controls_analysis_selected.y.pos_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==31}.body_traj_pos[1]",
+          "value": "/controls_analysis_selected.y.pos_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_command_selected{body_control_mode==10}.pose.y",
+          "value": "/robot_motion_command_selected.y.pos_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==10}.maneuver_global_pos.cmd_echo.global_y",
+          "value": "/controls_analysis_selected.y.pos_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false
         },
         {
-          "value": "/analysis_vision_selected.pose.position.y",
+          "value": "/vision_state_selected.y",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#3eb489",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.vision_pose[1]",
+          "value": "/controls_analysis_selected.y.pos_vision",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.kf_body_pos_estimate[1]",
+          "value": "/controls_analysis_selected.y.pos_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
@@ -328,70 +328,70 @@
     "Plot!y_vel": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==10}.body_traj_vel[1]",
+          "value": "/controls_analysis_selected.y.vel_traj_global_pos",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==11}.body_traj_vel[1]",
+          "value": "/controls_analysis_selected.y.vel_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==12}.body_traj_vel[1]",
+          "value": "/controls_analysis_selected.y.vel_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==20}.body_traj_vel[1]",
+          "value": "/controls_analysis_selected.y.vel_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==21}.body_traj_vel[1]",
+          "value": "/controls_analysis_selected.y.vel_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==30}.body_traj_vel[1]",
+          "value": "/controls_analysis_selected.y.vel_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==31}.body_traj_vel[1]",
+          "value": "/controls_analysis_selected.y.vel_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_command_selected{body_control_mode==11}.velocity.y",
+          "value": "/robot_motion_command_selected.y.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==11}.maneuver_global_vel.cmd_echo.global_yd",
+          "value": "/controls_analysis_selected.y.vel_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.kf_body_vel_estimate[1]",
+          "value": "/controls_analysis_selected.y.vel_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
@@ -411,35 +411,35 @@
     "Plot!y_acc": {
       "paths": [
         {
-          "value": "/analysis_command_selected{body_control_mode==13}.acceleration.y",
+          "value": "/robot_motion_command_selected.y.accel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==13}.maneuver_global_acc.cmd_echo.global_ydd",
+          "value": "/controls_analysis_selected.y.accel_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.body_accel_u[1]",
+          "value": "/controls_analysis_selected.y.accel_u",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff9c56",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.body_accel_u_fric_comp[1]",
+          "value": "/controls_analysis_selected.y.accel_u_fric_comp",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff6a00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.imu_accel[1]",
+          "value": "/controls_analysis_selected.y.accel_imu",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -459,84 +459,84 @@
     "Plot!theta_pos": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==10}.body_traj_pos[2]",
+          "value": "/controls_analysis_selected.theta.pos_traj_global_pos",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==11}.body_traj_pos[2]",
+          "value": "/controls_analysis_selected.theta.pos_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==12}.body_traj_pos[2]",
+          "value": "/controls_analysis_selected.theta.pos_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==20}.body_traj_pos[2]",
+          "value": "/controls_analysis_selected.theta.pos_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==21}.body_traj_pos[2]",
+          "value": "/controls_analysis_selected.theta.pos_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==30}.body_traj_pos[2]",
+          "value": "/controls_analysis_selected.theta.pos_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==31}.body_traj_pos[2]",
+          "value": "/controls_analysis_selected.theta.pos_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_command_selected{body_control_mode==10}.pose.theta",
+          "value": "/robot_motion_command_selected.theta.pos_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==10}.maneuver_global_pos.cmd_echo.global_theta",
+          "value": "/controls_analysis_selected.theta.pos_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false
         },
         {
-          "value": "/analysis_vision_theta_selected.theta",
+          "value": "/vision_state_selected.theta",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#3eb489",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.vision_pose[2]",
+          "value": "/controls_analysis_selected.theta.pos_vision",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.kf_body_pos_estimate[2]",
+          "value": "/controls_analysis_selected.theta.pos_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
@@ -556,77 +556,77 @@
     "Plot!theta_vel": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==10}.body_traj_vel[2]",
+          "value": "/controls_analysis_selected.theta.vel_traj_global_pos",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00c000",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==11}.body_traj_vel[2]",
+          "value": "/controls_analysis_selected.theta.vel_traj_global_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==12}.body_traj_vel[2]",
+          "value": "/controls_analysis_selected.theta.vel_traj_local_vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ffea00",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==20}.body_traj_vel[2]",
+          "value": "/controls_analysis_selected.theta.vel_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==21}.body_traj_vel[2]",
+          "value": "/controls_analysis_selected.theta.vel_traj_point_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#9900ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==30}.body_traj_vel[2]",
+          "value": "/controls_analysis_selected.theta.vel_traj_heading_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==31}.body_traj_vel[2]",
+          "value": "/controls_analysis_selected.theta.vel_traj_point_line",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#6100a1",
           "showLine": true
         },
         {
-          "value": "/analysis_command_selected{body_control_mode==11}.velocity.theta",
+          "value": "/robot_motion_command_selected.theta.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==11}.maneuver_global_vel.cmd_echo.global_omega",
+          "value": "/controls_analysis_selected.theta.vel_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.imu_gyro[2]",
+          "value": "/controls_analysis_selected.theta.vel_gyro",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.kf_body_vel_estimate[2]",
+          "value": "/controls_analysis_selected.theta.vel_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff0000",
@@ -646,28 +646,28 @@
     "Plot!theta_acc": {
       "paths": [
         {
-          "value": "/analysis_command_selected{body_control_mode==13}.acceleration.theta",
+          "value": "/robot_motion_command_selected.theta.accel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry{body_control_mode==13}.maneuver_global_acc.cmd_echo.global_alpha",
+          "value": "/controls_analysis_selected.theta.accel_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.body_accel_u[2]",
+          "value": "/controls_analysis_selected.theta.accel_u",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff9c56",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.body_control_telemetry.body_accel_u_fric_comp[2]",
+          "value": "/controls_analysis_selected.theta.accel_u_fric_comp",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#ff6a00",
@@ -687,14 +687,14 @@
     "Plot!front_left_vel": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.front_left_motor.velocity_telemetry.vel_setpoint_rads",
+          "value": "/controls_analysis_selected.front_left.vel_setpoint",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.front_left_motor.velocity_telemetry.wheel_vel_rads",
+          "value": "/controls_analysis_selected.front_left.vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -714,14 +714,14 @@
     "Plot!back_left_vel": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.back_left_motor.velocity_telemetry.vel_setpoint_rads",
+          "value": "/controls_analysis_selected.back_left.vel_setpoint",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.back_left_motor.velocity_telemetry.wheel_vel_rads",
+          "value": "/controls_analysis_selected.back_left.vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -741,14 +741,14 @@
     "Plot!back_right_vel": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.back_right_motor.velocity_telemetry.vel_setpoint_rads",
+          "value": "/controls_analysis_selected.back_right.vel_setpoint",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.back_right_motor.velocity_telemetry.wheel_vel_rads",
+          "value": "/controls_analysis_selected.back_right.vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -768,14 +768,14 @@
     "Plot!front_right_vel": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.front_right_motor.velocity_telemetry.vel_setpoint_rads",
+          "value": "/controls_analysis_selected.front_right.vel_setpoint",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": true
         },
         {
-          "value": "/analysis_telem_selected.front_right_motor.velocity_telemetry.wheel_vel_rads",
+          "value": "/controls_analysis_selected.front_right.vel",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -795,14 +795,14 @@
     "Plot!front_left_cur": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.front_left_motor.current_telemetry.current_setpoint_ma",
+          "value": "/controls_analysis_selected.front_left.current_setpoint",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": true
         },
         {
-          "value": "/analysis_wheelcurrent_selected.front_left.current",
+          "value": "/controls_analysis_selected.front_left.current",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -822,14 +822,14 @@
     "Plot!back_left_cur": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.back_left_motor.current_telemetry.current_setpoint_ma",
+          "value": "/controls_analysis_selected.back_left.current_setpoint",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": true
         },
         {
-          "value": "/analysis_wheelcurrent_selected.back_left.current",
+          "value": "/controls_analysis_selected.back_left.current",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -849,14 +849,14 @@
     "Plot!back_right_cur": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.back_right_motor.current_telemetry.current_setpoint_ma",
+          "value": "/controls_analysis_selected.back_right.current_setpoint",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": true
         },
         {
-          "value": "/analysis_wheelcurrent_selected.back_right.current",
+          "value": "/controls_analysis_selected.back_right.current",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -876,14 +876,14 @@
     "Plot!front_right_cur": {
       "paths": [
         {
-          "value": "/analysis_telem_selected.front_right_motor.current_telemetry.current_setpoint_ma",
+          "value": "/controls_analysis_selected.front_right.current_setpoint",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#0000ff",
           "showLine": true
         },
         {
-          "value": "/analysis_wheelcurrent_selected.front_right.current",
+          "value": "/controls_analysis_selected.front_right.current",
           "enabled": true,
           "timestampMethod": "receiveTime",
           "color": "#00dac7",
@@ -902,8 +902,7 @@
     }
   },
   "globalVariables": {
-    "robot": 0,
-    "team": "blue"
+    "robot": 0
   },
   "userNodes": {},
   "playbackConfig": {
