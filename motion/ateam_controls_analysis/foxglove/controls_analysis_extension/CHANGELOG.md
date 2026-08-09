@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.3.0
+
+- Removed the local→global rotation for commands (brittle w.r.t. future changes).
+  Both the round-tripped `cmd_echo` (ControlsAnalysis) and the pre-send command
+  now plot **global-frame modes only**; local-frame commands (`BCM_LOCAL_*`) are
+  not plotted. The per-mode-colored reference-trajectory curves (which still
+  include local velocity) indicate the active mode.
+
+## 2.2.0
+
+- Added a third topic converter for the **pre-send software command**: the
+  fleet's `/robot_motion_commands/robot{id}` (`ateam_msgs/RobotMotionCommand`) →
+  `/robot_motion_command_selected` (nested `{x,y,theta}.{pos_cmd,vel_cmd,accel_cmd}`),
+  selected by the `robot` global variable. Routed onto the derivative implied by
+  the body control mode (global-frame modes only; see 2.3.0).
+- Position / velocity / acceleration plots now overlay each command **twice**:
+  the pre-send software command (dark blue `#0000ff`) and the round-tripped
+  `cmd_echo` (light blue `#6666ff`), to show the round-trip delay — mirroring the
+  vision pair (mint `#3eb489` fresh vs. cyan `#00dac7` round-tripped).
+- Layout default changes: the pre-send/software-side curve of each duplicate pair
+  (mint vision, dark-blue command) is shown, and the round-tripped/robot-side
+  curve (cyan vision, light-blue command) is hidden. Command curves draw as
+  points only in every layout, including the `*_lines` variants.
+
 ## 2.1.0
 
 - Added a second topic converter for the **fresh vision estimate**: the friendly

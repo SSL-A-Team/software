@@ -33,11 +33,13 @@ message's receive (log) time as the x-axis.
 
 ## Contents
 
-- `foxglove/controls_analysis_extension/` — the Foxglove extension. Two topic
-  converters, both selecting the robot via the `robot` global variable:
-  - `ExtendedTelemetry` → `/controls_analysis_selected` (the main analysis), and
+- `foxglove/controls_analysis_extension/` — the Foxglove extension. Three topic
+  converters, all selecting the robot via the `robot` global variable:
+  - `ExtendedTelemetry` → `/controls_analysis_selected` (the main analysis),
   - the friendly team's `/{color}_team/robot{id}` → `/vision_state_selected` (the
-    fresh vision estimate overlay; friendly color auto-detected from the referee).
+    fresh vision estimate overlay; friendly color auto-detected from the referee), and
+  - `/robot_motion_commands/robot{id}` → `/robot_motion_command_selected` (the
+    pre-send software command overlay).
 - `foxglove/controls_analysis.json`, `foxglove/controls_analysis_singleview.json`
   — the two bundled layouts (plus `*_lines.json` variants; see [layouts](#foxglove-layouts)).
 
@@ -48,21 +50,34 @@ plots sharing a time axis:
 
 | Plot | Derivative | Curves |
 |------|-----------|--------|
-| Position | 1st | state estimate, reference trajectory (per-mode colored), vision measurement, software cmd (`BCM_GLOBAL_POSITION`), **fresh vision estimate (off by default; see below)** |
-| Velocity | 2nd | state estimate, reference trajectory (per-mode colored), software cmd (`BCM_GLOBAL_VELOCITY`/`BCM_LOCAL_VELOCITY`), gyro (theta only) |
-| Acceleration | 3rd | firmware output accel + friction-compensated output accel, software cmd (`BCM_GLOBAL_ACCEL`/`BCM_LOCAL_ACCEL`), IMU accel (x/y only) |
+| Position | 1st | state estimate, reference trajectory (per-mode colored), fresh vision estimate + round-tripped vision, pre-send + round-tripped software cmd (`BCM_GLOBAL_POSITION`) |
+| Velocity | 2nd | state estimate, reference trajectory (per-mode colored), pre-send + round-tripped software cmd (`BCM_GLOBAL_VELOCITY`/`BCM_LOCAL_VELOCITY`), gyro (theta only) |
+| Acceleration | 3rd | firmware output accel + friction-compensated output accel, pre-send + round-tripped software cmd (`BCM_GLOBAL_ACCEL`/`BCM_LOCAL_ACCEL`), IMU accel (x/y only) |
 
-### Fresh vision estimate overlay (round-trip delay)
+### Pre-send vs. round-tripped overlays (round-trip delay)
 
-Each position plot (x / y / theta) carries an extra **mint**-colored curve, **off
-by default**, sourced from `/vision_state_selected` (see [the extension](foxglove/controls_analysis_extension)).
-This is the *fresh* software-side vision estimate (`ateam_msgs/VisionStateRobot`
-on the friendly team's `/{color}_team/robot{id}`) — the pose the software actually
-uses to make decisions. The cyan `pos_vision` curve on the same plot is the *same*
-measurement after it has round-tripped to the robot and returned in
-`ExtendedTelemetry` (delayed, with jitter). Toggle the mint curve on to compare
-the two and read off the round-trip delay. theta is the yaw of the vision pose
-quaternion, computed by the extension.
+Several signals appear **twice**: once as the value the software produced
+(before it was sent to the robot) and once after a full round trip to the robot
+and back through telemetry (delayed, with jitter). Overlaying the two shows the
+round-trip delay. By **default the pre-send (software-side) curve is shown and
+the round-tripped (robot-side) curve is hidden** — toggle the robot-side one on
+to compare. The pre-send curve uses a **darker** shade of the round-tripped
+curve's color:
+
+| Signal | Pre-send (software-side, shown) | Round-tripped (robot-side, hidden) |
+|--------|--------------------------------|------------------------------------|
+| Vision (position plots) | mint `#3eb489`, from `/vision_state_selected` (`ateam_msgs/VisionStateRobot` on the friendly `/{color}_team/robot{id}`) | cyan `#00dac7`, `pos_vision` (vision echoed back in `ExtendedTelemetry`) |
+| Command (pos / vel / accel plots) | blue `#0000ff`, from `/robot_motion_command_selected` (`ateam_msgs/RobotMotionCommand`) | light blue `#6666ff`, `*_cmd` (`cmd_echo` in `ExtendedTelemetry`) |
+
+The pre-send **command** is routed onto the derivative implied by its body
+control mode, exactly like the round-tripped `cmd_echo`. Only **global-frame**
+modes are plotted; **local-frame** commands (`BCM_LOCAL_*`) are intentionally not
+plotted on either side (this avoids a brittle local→global rotation — the command
+message carries no heading and the conversion is stateless). The per-mode-colored
+reference-trajectory curves still indicate the active mode, including for local
+modes. Vision `theta` is the yaw of the pose quaternion, computed by the
+extension. Command curves draw as **points only** in every layout (including the
+`*_lines` variants), since they are stepped/sparse.
 
 Two additional wheel views share the same time axis:
 
@@ -83,9 +98,9 @@ wheel's `current` is NaN only when its per-cycle current-sample buffer is empty.
 | `BCM_ESTOP_BRAKE` | 1 | — (gap) | — |
 | `BCM_GLOBAL_POSITION` | 10 | position | global |
 | `BCM_GLOBAL_VELOCITY` | 11 | velocity | global |
-| `BCM_LOCAL_VELOCITY` | 12 | velocity | local → rotated to global |
+| `BCM_LOCAL_VELOCITY` | 12 | — (not plotted) | local |
 | `BCM_GLOBAL_ACCEL` | 13 | acceleration | global |
-| `BCM_LOCAL_ACCEL` | 14 | acceleration | local → rotated to global |
+| `BCM_LOCAL_ACCEL` | 14 | — (not plotted) | local |
 | `BCM_HEADING_PIVOT` | 20 | — (gap) | — |
 | `BCM_POINT_PIVOT` | 21 | — (gap) | — |
 | `BCM_HEADING_LINE` | 30 | — (gap) | — |

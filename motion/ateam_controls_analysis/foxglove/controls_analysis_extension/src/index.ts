@@ -3,15 +3,18 @@
 // Foxglove extension: controls analysis.
 //
 // This extension does all controls analysis inside Foxglove -- there is no ROS
-// republisher node and no derived message type. It registers two stateless
+// republisher node and no derived message type. It registers three stateless
 // *topic converters*:
 //
 //   1. the fleet's `ateam_radio_msgs/ExtendedTelemetry` topics -> one in-app
 //      topic `/controls_analysis_selected`, the flat, per-mode-colored
-//      `ControlsAnalysis` schema the bundled layouts plot against; and
+//      `ControlsAnalysis` schema the bundled layouts plot against;
 //   2. the friendly team's `/{color}_team/robot{id}` vision-state topics -> one
 //      in-app topic `/vision_state_selected`, the fresh software-side vision
-//      estimate the position plots overlay (see below).
+//      estimate the position plots overlay; and
+//   3. the fleet's `/robot_motion_commands/robot{id}` topics ->
+//      `/robot_motion_command_selected`, the pre-send software command the plots
+//      overlay against the round-tripped `cmd_echo` curves (round-trip delay).
 //
 // Robot selection is driven by the `robot` global variable: each converter only
 // emits for the currently selected robot's topic and drops the rest, so changing
@@ -30,6 +33,10 @@ import {
   buildControlsAnalysis,
   controlsAnalysisSchemaDescription,
 } from "./controlsAnalysis";
+import {
+  buildMotionCommand,
+  motionCommandSchemaDescription,
+} from "./motionCommand";
 import {
   buildVisionState,
   friendlyColorFromReferee,
@@ -68,12 +75,24 @@ export const DEFAULT_TEAM_NAME = "A-Team";
 // the referee message) or an explicit "blue" / "yellow".
 export const FRIENDLY_TEAM_VARIABLE = "friendly_team";
 
+// --- Motion-command overlay (pre-send software command) -----------------------
+// The stable topic the plots overlay for the pre-send software command.
+export const MOTION_COMMAND_SELECTED_TOPIC = "/robot_motion_command_selected";
+// Schema name of the flat motion-command message.
+export const MOTION_COMMAND_SCHEMA = "ateam_controls_analysis/MotionCommand";
+// Template for the per-robot motion-command topics (converter inputs).
+export const MOTION_COMMAND_TOPIC_TEMPLATE = "/robot_motion_commands/robot{robot}";
+
 function extendedTopic(robot: number): string {
   return EXTENDED_TOPIC_TEMPLATE.replace("{robot}", String(robot));
 }
 
 function teamTopic(color: TeamColor, robot: number): string {
   return TEAM_TOPIC_TEMPLATE.replace("{color}", color).replace("{robot}", String(robot));
+}
+
+function motionCommandTopic(robot: number): string {
+  return MOTION_COMMAND_TOPIC_TEMPLATE.replace("{robot}", String(robot));
 }
 
 function robotIdFrom(value: unknown): number {
@@ -158,6 +177,29 @@ export function activate(extensionContext: ExtensionContext): void {
           return undefined;
         }
         return buildVisionState(messageEvent.message);
+      };
+    },
+  });
+
+  // Pre-send software command for the selected robot, routed onto its own topic.
+  // This is the RobotMotionCommand before it is sent to the robot; the layouts
+  // overlay it (dark blue) against the lighter-blue ControlsAnalysis cmd curves
+  // (the same command after a full round trip through telemetry) to show the
+  // round-trip delay. Stateless: one command message maps to one output message.
+  extensionContext.registerMessageConverter({
+    type: "topic",
+    inputTopics: ROBOT_IDS.map(motionCommandTopic),
+    outputTopic: MOTION_COMMAND_SELECTED_TOPIC,
+    outputSchemaName: MOTION_COMMAND_SCHEMA,
+    outputSchemaDescription: motionCommandSchemaDescription(),
+    watchVariables: [ROBOT_VARIABLE],
+    create: (globalVariables) => {
+      const selected = motionCommandTopic(robotIdFrom(globalVariables[ROBOT_VARIABLE]));
+      return (messageEvent) => {
+        if (messageEvent.topic !== selected) {
+          return undefined;
+        }
+        return buildMotionCommand(messageEvent.message);
       };
     },
   });
