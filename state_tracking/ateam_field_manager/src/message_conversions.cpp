@@ -30,11 +30,11 @@ namespace ateam_field_manager::message_conversions
 {
 
 ateam_msgs::msg::FieldInfo fromMsg(
-  const ssl_league_msgs::msg::VisionGeometryData & vision_wrapper_msg,
+  const ssl_league_msgs::msg::GeometryData & vision_wrapper_msg,
   const ateam_common::TeamSide & team_side,
   const int ignore_side)
 {
-  const ssl_league_msgs::msg::VisionGeometryFieldSize & ros_msg =
+  const ssl_league_msgs::msg::GeometryFieldSize & ros_msg =
     vision_wrapper_msg.field;
 
   ateam_msgs::msg::FieldInfo field_info;
@@ -44,8 +44,10 @@ ateam_msgs::msg::FieldInfo fromMsg(
   field_info.goal_width = ros_msg.goal_width;
   field_info.goal_depth = ros_msg.goal_depth;
   field_info.boundary_width = ros_msg.boundary_width;
-  field_info.defense_area_width = ros_msg.penalty_area_width;
-  field_info.defense_area_depth = ros_msg.penalty_area_depth;
+  field_info.defense_area_width =
+    ros_msg.penalty_area_width.empty() ? 0.0f : ros_msg.penalty_area_width.front();
+  field_info.defense_area_depth =
+    ros_msg.penalty_area_depth.empty() ? 0.0f : ros_msg.penalty_area_depth.front();
 
   field_info.field_corners.points = getPointsFromLines(
     ros_msg.field_lines,
@@ -130,7 +132,8 @@ ateam_msgs::msg::FieldInfo fromMsg(
     });
 
   if (circle_iter != ros_msg.field_arcs.end()) {
-    field_info.center_circle = circle_iter->center;
+    field_info.center_circle.x = circle_iter->center.x;
+    field_info.center_circle.y = circle_iter->center.y;
     field_info.center_circle_radius = circle_iter->radius;
   }
 
@@ -195,7 +198,7 @@ int32_t mapIgnoredSide(const ateam_common::TeamSide & team_side, const int ignor
 }
 
 std::vector<geometry_msgs::msg::Point32> getPointsFromLines(
-  const std::vector<ssl_league_msgs::msg::VisionFieldLineSegment> & lines,
+  const std::vector<ssl_league_msgs::msg::FieldLineSegment> & lines,
   const std::vector<std::string> & line_names)
 {
   std::vector<geometry_msgs::msg::Point32> points;

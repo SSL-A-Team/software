@@ -58,7 +58,7 @@ public:
       qos);
 
     ssl_vision_subscription_ =
-      create_subscription<ssl_league_msgs::msg::VisionWrapper>(
+      create_subscription<ssl_league_msgs::msg::WrapperPacket>(
       std::string(Topics::kVisionMessages),
       10,
       std::bind(&FieldManagerNode::vision_callback, this, std::placeholders::_1));
@@ -75,7 +75,7 @@ public:
   }
 
   void vision_callback(
-    const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
+    const ssl_league_msgs::msg::WrapperPacket::SharedPtr vision_wrapper_msg)
   {
     const auto team_side = game_controller_listener_.GetTeamSide();
 
@@ -106,8 +106,8 @@ private:
   const char * ignore_side_cache_filename_ = "ignore_side.txt";
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<ateam_msgs::msg::FieldInfo>::SharedPtr field_publisher_;
-  rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
-  rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
+  rclcpp::Subscription<ssl_league_msgs::msg::WrapperPacket>::SharedPtr ssl_vision_subscription_;
+  rclcpp::Subscription<ssl_league_msgs::msg::WrapperPacket>::SharedPtr ssl_vision_subs_;
   rclcpp::Service<ateam_msgs::srv::SetIgnoreFieldSide>::SharedPtr set_ignore_field_side_service_;
   ateam_common::GameControllerListener game_controller_listener_;
 

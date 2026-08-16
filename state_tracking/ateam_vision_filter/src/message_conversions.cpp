@@ -83,7 +83,7 @@ ateam_msgs::msg::VisionStateRobot toMsg(const std::optional<Robot> & maybe_robot
 }
 
 CameraMeasurement fromMsg(
-  const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg,
+  const ssl_league_msgs::msg::DetectionFrame & ros_msg,
   const ateam_common::TeamSide & team_side)
 {
   CameraMeasurement cameraFrame;
@@ -92,12 +92,18 @@ CameraMeasurement fromMsg(
   }
 
   for (const auto & yellow_robot_detection : ros_msg.robots_yellow) {
-    std::size_t robot_id = yellow_robot_detection.robot_id;
+    if (yellow_robot_detection.robot_id.empty()) {
+      continue;
+    }
+    std::size_t robot_id = yellow_robot_detection.robot_id.front();
     cameraFrame.yellow_robots.at(robot_id).push_back(fromMsg(yellow_robot_detection));
   }
 
   for (const auto & blue_robot_detection : ros_msg.robots_blue) {
-    std::size_t robot_id = blue_robot_detection.robot_id;
+    if (blue_robot_detection.robot_id.empty()) {
+      continue;
+    }
+    std::size_t robot_id = blue_robot_detection.robot_id.front();
     cameraFrame.blue_robots.at(robot_id).push_back(fromMsg(blue_robot_detection));
   }
 
@@ -108,18 +114,19 @@ CameraMeasurement fromMsg(
   return cameraFrame;
 }
 
-RobotMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionRobot & ros_msg)
+RobotMeasurement fromMsg(const ssl_league_msgs::msg::DetectionRobot & ros_msg)
 {
-  tf2::Quaternion tf2_quat;
   RobotMeasurement robotDetection;
-  robotDetection.position.x() = ros_msg.pose.position.x;
-  robotDetection.position.y() = ros_msg.pose.position.y;
-  tf2::fromMsg(ros_msg.pose.orientation, tf2_quat);
-  robotDetection.theta = tf2::getYaw(tf2_quat);
+  robotDetection.position.x() = ros_msg.pos.x;
+  robotDetection.position.y() = ros_msg.pos.y;
+  // orientation is yaw in radians directly (no quaternion round trip needed)
+  if (!ros_msg.orientation.empty()) {
+    robotDetection.theta = ros_msg.orientation.front();
+  }
   return robotDetection;
 }
 
-BallMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionBall & ros_msg)
+BallMeasurement fromMsg(const ssl_league_msgs::msg::DetectionBall & ros_msg)
 {
   BallMeasurement ballDetection;
   ballDetection.position.x() = ros_msg.pos.x;
@@ -128,10 +135,10 @@ BallMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionBall & ros_ms
 }
 
 ateam_msgs::msg::FieldInfo fromMsg(
-  const ssl_league_msgs::msg::VisionGeometryData & vision_wrapper_msg,
+  const ssl_league_msgs::msg::GeometryData & vision_wrapper_msg,
   const ateam_common::TeamSide & team_side)
 {
-  const ssl_league_msgs::msg::VisionGeometryFieldSize & ros_msg =
+  const ssl_league_msgs::msg::GeometryFieldSize & ros_msg =
     vision_wrapper_msg.field;
 
   ateam_msgs::msg::FieldInfo field_info;
@@ -141,8 +148,10 @@ ateam_msgs::msg::FieldInfo fromMsg(
   field_info.goal_width = ros_msg.goal_width;
   field_info.goal_depth = ros_msg.goal_depth;
   field_info.boundary_width = ros_msg.boundary_width;
-  field_info.defense_area_width = ros_msg.penalty_area_width;
-  field_info.defense_area_depth = ros_msg.penalty_area_depth;
+  field_info.defense_area_width =
+    ros_msg.penalty_area_width.empty() ? 0.0f : ros_msg.penalty_area_width.front();
+  field_info.defense_area_depth =
+    ros_msg.penalty_area_depth.empty() ? 0.0f : ros_msg.penalty_area_depth.front();
 
   field_info.field_corners.points = getPointsFromLines(
     ros_msg.field_lines,
@@ -227,7 +236,8 @@ ateam_msgs::msg::FieldInfo fromMsg(
     });
 
   if (circle_iter != ros_msg.field_arcs.end()) {
-    field_info.center_circle = circle_iter->center;
+    field_info.center_circle.x = circle_iter->center.x;
+    field_info.center_circle.y = circle_iter->center.y;
     field_info.center_circle_radius = circle_iter->radius;
   }
 
@@ -265,7 +275,7 @@ void invertFieldInfo(ateam_msgs::msg::FieldInfo & info)
 }
 
 std::vector<geometry_msgs::msg::Point32> getPointsFromLines(
-  const std::vector<ssl_league_msgs::msg::VisionFieldLineSegment> & lines,
+  const std::vector<ssl_league_msgs::msg::FieldLineSegment> & lines,
   const std::vector<std::string> & line_names)
 {
   std::vector<geometry_msgs::msg::Point32> points;

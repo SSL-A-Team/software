@@ -29,10 +29,10 @@
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/field_sided_info.hpp>
 #include <ateam_common/game_controller_listener.hpp>
-#include <ssl_league_msgs/msg/vision_detection_ball.hpp>
-#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
-#include <ssl_league_msgs/msg/vision_detection_frame.hpp>
-#include <ssl_league_msgs/msg/vision_wrapper.hpp>
+#include <ssl_league_msgs/msg/detection_ball.hpp>
+#include <ssl_league_msgs/msg/detection_robot.hpp>
+#include <ssl_league_msgs/msg/detection_frame.hpp>
+#include <ssl_league_msgs/msg/wrapper_packet.hpp>
 
 #include "types/ball.hpp"
 #include "types/ball_measurement.hpp"
@@ -47,17 +47,17 @@ ateam_msgs::msg::VisionStateBall toMsg(const std::optional<Ball> & maybe_ball);
 ateam_msgs::msg::VisionStateRobot toMsg(const std::optional<Robot> & maybe_robot);
 
 CameraMeasurement fromMsg(
-  const ssl_league_msgs::msg::VisionDetectionFrame & ros_msg,
+  const ssl_league_msgs::msg::DetectionFrame & ros_msg,
   const ateam_common::TeamSide & team_side);
-RobotMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionRobot & ros_msg);
-BallMeasurement fromMsg(const ssl_league_msgs::msg::VisionDetectionBall & ros_msg);
+RobotMeasurement fromMsg(const ssl_league_msgs::msg::DetectionRobot & ros_msg);
+BallMeasurement fromMsg(const ssl_league_msgs::msg::DetectionBall & ros_msg);
 
 ateam_msgs::msg::FieldInfo fromMsg(
-  const ssl_league_msgs::msg::VisionGeometryData & ros_msg,
+  const ssl_league_msgs::msg::GeometryData & ros_msg,
   const ateam_common::TeamSide & team_side);
 void invertFieldInfo(ateam_msgs::msg::FieldInfo & info);
 std::vector<geometry_msgs::msg::Point32> getPointsFromLines(
-  const std::vector<ssl_league_msgs::msg::VisionFieldLineSegment> & lines,
+  const std::vector<ssl_league_msgs::msg::FieldLineSegment> & lines,
   const std::vector<std::string> & line_names);
 
 }  // namespace ateam_vision_filter::message_conversions
