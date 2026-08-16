@@ -309,10 +309,8 @@ private:
         control_msg.game_state_in_stop = false;
         control_msg.game_state_in_halt = false;
       } else {
-        control_msg.game_state_in_stop = game_controller_listener_.GetGameCommand() ==
-          ateam_common::GameCommand::Stop;
-        control_msg.game_state_in_halt = game_controller_listener_.GetGameCommand() ==
-          ateam_common::GameCommand::Halt;
+        control_msg.game_state_in_stop = false;
+        control_msg.game_state_in_halt = false;
       }
 
       control_msg.emergency_stop = false;
@@ -474,14 +472,14 @@ private:
       control_msg.vision_position_update[2] = 0;
       return;
     }
-    if(joy_status_.is_active && joy_status_.active_id == id) {
-      // Do not send vision updates to robots under joystick control
-      control_msg.vision_update = 0;
-      control_msg.vision_position_update[0] = 0;
-      control_msg.vision_position_update[1] = 0;
-      control_msg.vision_position_update[2] = 0;
-      return;
-    }
+    // if(joy_status_.is_active && joy_status_.active_id == id) {
+    //   // Do not send vision updates to robots under joystick control
+    //   control_msg.vision_update = 0;
+    //   control_msg.vision_position_update[0] = 0;
+    //   control_msg.vision_position_update[1] = 0;
+    //   control_msg.vision_position_update[2] = 0;
+    //   return;
+    // }
     control_msg.vision_update = 1;
     control_msg.vision_position_update[0] = static_cast<float>(vision_state.pose.position.x);
     control_msg.vision_position_update[1] = static_cast<float>(vision_state.pose.position.y);

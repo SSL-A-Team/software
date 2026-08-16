@@ -48,10 +48,10 @@ class Waypoint():
 
 
 waypoints = [
-    Waypoint(-4.3, -2.5, math.pi/2, 4.0),
-    Waypoint(-0.5, -2.5, math.pi/2, 4.0),
-    # Waypoint(-3.2, 0.5, 0.0, 1.0),
-    # Waypoint(-3.2, -0.5, 0.0, 1.0),
+    Waypoint(-0.25, -0.25, 0.0,     4.0),
+    Waypoint(0.25,  -0.25, math.pi, 4.0),
+    Waypoint(0.25,  0.25,  0.0,     4.0),
+    Waypoint(-0.25, 0.25,  math.pi, 4.0),
 ]
 
 current_index = 0
@@ -75,8 +75,8 @@ def publish_waypoint_command(index: int):
     command_msg.kick_request = RobotMotionCommand.KR_DISABLE
     command_msg.limit_acc_linear = 1.5
     command_msg.limit_vel_linear = 2.0
-    command_msg.limit_acc_angular = 2.0
-    command_msg.limit_vel_angular = 2.0
+    command_msg.limit_acc_angular = 10.0
+    command_msg.limit_vel_angular = 5.0
     command_pub.publish(command_msg)
 
 
