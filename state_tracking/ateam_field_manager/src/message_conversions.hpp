@@ -27,16 +27,16 @@
 #include <ateam_msgs/msg/field_info.hpp>
 #include <ateam_msgs/msg/field_sided_info.hpp>
 #include <ateam_common/game_controller_listener.hpp>
-#include <ssl_league_msgs/msg/vision_detection_ball.hpp>
-#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
-#include <ssl_league_msgs/msg/vision_detection_frame.hpp>
-#include <ssl_league_msgs/msg/vision_wrapper.hpp>
+#include <ssl_league_msgs/msg/detection_ball.hpp>
+#include <ssl_league_msgs/msg/detection_robot.hpp>
+#include <ssl_league_msgs/msg/detection_frame.hpp>
+#include <ssl_league_msgs/msg/wrapper_packet.hpp>
 
 namespace ateam_field_manager::message_conversions
 {
 
 ateam_msgs::msg::FieldInfo fromMsg(
-  const ssl_league_msgs::msg::VisionGeometryData & ros_msg,
+  const ssl_league_msgs::msg::GeometryData & ros_msg,
   const ateam_common::TeamSide & team_side,
   const int ignore_side);
 
@@ -45,7 +45,7 @@ void invertFieldInfo(ateam_msgs::msg::FieldInfo & info);
 int32_t mapIgnoredSide(const ateam_common::TeamSide & team_side, const int ignore_side_raw);
 
 std::vector<geometry_msgs::msg::Point32> getPointsFromLines(
-  const std::vector<ssl_league_msgs::msg::VisionFieldLineSegment> & lines,
+  const std::vector<ssl_league_msgs::msg::FieldLineSegment> & lines,
   const std::vector<std::string> & line_names);
 
 }  // namespace ateam_field_manager::message_conversions

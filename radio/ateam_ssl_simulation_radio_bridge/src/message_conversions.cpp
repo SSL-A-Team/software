@@ -19,11 +19,10 @@
 // THE SOFTWARE.
 
 #include "message_conversions.hpp"
-#include <tf2/convert.h>
-#include <tf2/utils.h>
-#include <tf2/LinearMath/Quaternion.h>
+#include <cmath>
 #include <stdexcept>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
+#include <rclcpp/logging.hpp>
 
 namespace ateam_ssl_simulation_radio_bridge::message_conversions
 {
@@ -96,17 +95,23 @@ SimulatorControl fromMsg(const ssl_league_msgs::msg::SimulatorControl & ros_msg)
     auto ball_msg = ros_msg.teleport_ball[0];
     TeleportBall * proto_teleport_ball = sim_control.mutable_teleport_ball();
 
-    proto_teleport_ball->set_x(ball_msg.pose.position.x);
-    proto_teleport_ball->set_y(ball_msg.pose.position.y);
-    proto_teleport_ball->set_z(ball_msg.pose.position.z);
+    proto_teleport_ball->set_x(ball_msg.pos.x);
+    proto_teleport_ball->set_y(ball_msg.pos.y);
+    proto_teleport_ball->set_z(ball_msg.pos.z);
 
-    proto_teleport_ball->set_vx(ball_msg.twist.linear.x);
-    proto_teleport_ball->set_vy(ball_msg.twist.linear.y);
-    proto_teleport_ball->set_vz(ball_msg.twist.linear.z);
+    proto_teleport_ball->set_vx(ball_msg.velocity.x);
+    proto_teleport_ball->set_vy(ball_msg.velocity.y);
+    proto_teleport_ball->set_vz(ball_msg.velocity.z);
 
-    proto_teleport_ball->set_teleport_safely(ball_msg.teleport_safely);
-    proto_teleport_ball->set_roll(ball_msg.roll);
-    proto_teleport_ball->set_by_force(ball_msg.by_force);
+    if (!ball_msg.teleport_safely.empty()) {
+      proto_teleport_ball->set_teleport_safely(ball_msg.teleport_safely.front());
+    }
+    if (!ball_msg.roll.empty()) {
+      proto_teleport_ball->set_roll(ball_msg.roll.front());
+    }
+    if (!ball_msg.by_force.empty()) {
+      proto_teleport_ball->set_by_force(ball_msg.by_force.front());
+    }
   }
 
   if (ros_msg.teleport_robot.size() != 0) {
@@ -121,31 +126,39 @@ SimulatorControl fromMsg(const ssl_league_msgs::msg::SimulatorControl & ros_msg)
       }
 
       if (robot_msg.id.team.size() != 0) {
-        proto_robot_id->set_team(static_cast<Team>(robot_msg.id.team[0].color));
+        proto_robot_id->set_team(static_cast<Team>(robot_msg.id.team[0]));
       } else {
         throw std::invalid_argument("No robot team specified");
       }
 
-      proto_teleport_robot->set_x(robot_msg.pose.position.x);
-      proto_teleport_robot->set_y(robot_msg.pose.position.y);
+      proto_teleport_robot->set_x(robot_msg.pos.x);
+      proto_teleport_robot->set_y(robot_msg.pos.y);
 
-      // Orientation
-      tf2::Quaternion tf2_quat;
-      tf2::fromMsg(robot_msg.pose.orientation, tf2_quat);
-      proto_teleport_robot->set_orientation(tf2::getYaw(tf2_quat));
+      // orientation is yaw in radians directly (no quaternion round trip needed)
+      if (!robot_msg.orientation.empty()) {
+        proto_teleport_robot->set_orientation(robot_msg.orientation.front());
+      }
 
-      proto_teleport_robot->set_v_x(robot_msg.twist.linear.x);
-      proto_teleport_robot->set_v_y(robot_msg.twist.linear.y);
+      proto_teleport_robot->set_v_x(robot_msg.velocity.x);
+      proto_teleport_robot->set_v_y(robot_msg.velocity.y);
 
-      proto_teleport_robot->set_v_angular(robot_msg.twist.angular.z);
+      if (!robot_msg.v_angular.empty()) {
+        proto_teleport_robot->set_v_angular(robot_msg.v_angular.front());
+      }
 
-      proto_teleport_robot->set_present(robot_msg.present);
+      if (!robot_msg.present.empty()) {
+        proto_teleport_robot->set_present(robot_msg.present.front());
+      }
 
-      proto_teleport_robot->set_by_force(robot_msg.by_force);
+      if (!robot_msg.by_force.empty()) {
+        proto_teleport_robot->set_by_force(robot_msg.by_force.front());
+      }
     }
   }
 
-  sim_control.set_simulation_speed(ros_msg.simulation_speed);
+  if (!ros_msg.simulation_speed.empty()) {
+    sim_control.set_simulation_speed(ros_msg.simulation_speed.front());
+  }
 
   return sim_control;
 }

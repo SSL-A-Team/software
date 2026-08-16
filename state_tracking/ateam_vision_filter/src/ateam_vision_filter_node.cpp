@@ -77,7 +77,7 @@ public:
       rclcpp::SystemDefaultsQoS());
 
     ssl_vision_subscription_ =
-      create_subscription<ssl_league_msgs::msg::VisionWrapper>(
+      create_subscription<ssl_league_msgs::msg::WrapperPacket>(
       std::string(Topics::kVisionMessages),
       10,
       std::bind(&VisionFilterNode::vision_callback, this, std::placeholders::_1));
@@ -90,7 +90,7 @@ public:
   }
 
   void vision_callback(
-    const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_wrapper_msg)
+    const ssl_league_msgs::msg::WrapperPacket::SharedPtr vision_wrapper_msg)
   {
     const auto team_side = game_controller_listener_.GetTeamSide();
     if (!vision_wrapper_msg->detection.empty()) {
@@ -141,8 +141,8 @@ private:
   std::array<rclcpp::Publisher<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
     16> yellow_robots_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::VisionStateCameraArray>::SharedPtr vision_state_publisher_;
-  rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subscription_;
-  rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr ssl_vision_subs_;
+  rclcpp::Subscription<ssl_league_msgs::msg::WrapperPacket>::SharedPtr ssl_vision_subscription_;
+  rclcpp::Subscription<ssl_league_msgs::msg::WrapperPacket>::SharedPtr ssl_vision_subs_;
   rclcpp::Subscription<ateam_msgs::msg::FieldInfo>::SharedPtr field_subscription_;
 
   // We might be able to get rid of this since the field manager is handling some of it now

@@ -40,7 +40,7 @@ from rclpy.serialization import deserialize_message
 
 import rosbag2_py
 
-from ssl_league_msgs.msg import VisionWrapper
+from ssl_league_msgs.msg import WrapperPacket
 
 
 @dataclass
@@ -125,7 +125,7 @@ def _main():
         if topic.startswith('/yellow_team'):
             yellow_robots_pub[topic].publish(msg_ser)
         if topic == '/vision_messages':
-            msg = deserialize_message(msg_ser, VisionWrapper)
+            msg = deserialize_message(msg_ser, WrapperPacket)
             if len(msg.detection) > 0:
                 detections = msg.detection[0]
                 for i in range(len(detections.balls)):
@@ -138,12 +138,14 @@ def _main():
                 robot_detections = (
                     detections.robots_blue
                     if color == 'blue'
-                    else detections.robots_yello
+                    else detections.robots_yellow
                 )
                 for detect_robot in robot_detections:
-                    robot = robots[detect_robot.robot_id]
-                    robot.xs.append(detect_robot.pose.position.x)
-                    robot.ys.append(detect_robot.pose.position.y)
+                    if not detect_robot.robot_id:
+                        continue
+                    robot = robots[detect_robot.robot_id[0]]
+                    robot.xs.append(detect_robot.pos.x)
+                    robot.ys.append(detect_robot.pos.y)
             if len(msg.geometry) > 0:
                 field_geometry = msg.geometry[0].field
 
@@ -153,7 +155,13 @@ def _main():
 
     half_field_len = field_geometry.field_length / 2
     half_field_wid = field_geometry.field_width / 2
-    def_area_front_abs = half_field_len - field_geometry.penalty_area_depth
+    penalty_area_depth = (
+        field_geometry.penalty_area_depth[0] if field_geometry.penalty_area_depth else 0.0
+    )
+    penalty_area_width = (
+        field_geometry.penalty_area_width[0] if field_geometry.penalty_area_width else 0.0
+    )
+    def_area_front_abs = half_field_len - penalty_area_depth
 
     field_points = [
         FieldPoint('Center', 0.0, 0.0),
@@ -170,22 +178,22 @@ def _main():
         FieldPoint(
             'NegDefAreaNegCorner',
             -def_area_front_abs,
-            -field_geometry.penalty_area_width / 2,
+            -penalty_area_width / 2,
         ),
         FieldPoint(
             'NegDefAreaPosCorner',
             -def_area_front_abs,
-            field_geometry.penalty_area_width / 2,
+            penalty_area_width / 2,
         ),
         FieldPoint(
             'PosDefAreaNegCorner',
             def_area_front_abs,
-            -field_geometry.penalty_area_width / 2,
+            -penalty_area_width / 2,
         ),
         FieldPoint(
             'PosDefAreaPosCorner',
             def_area_front_abs,
-            field_geometry.penalty_area_width / 2,
+            penalty_area_width / 2,
         ),
     ]
 
