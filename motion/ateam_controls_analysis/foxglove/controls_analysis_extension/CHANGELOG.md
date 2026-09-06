@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **Robot-time X axis.** The `ControlsAnalysis` converter now emits
+  `robot_time_s` (float seconds, reconstructed from
+  `ExtendedTelemetry.timestamp_us_lo/hi`) so a Plot panel can use
+  **X-Axis = "message path" → `/analysis_telem.robot_time_s`** to plot telem
+  curves against the robot's own clock instead of PC receive time. Added the
+  `controls_analysis_robottime.json` layout, which sets that X axis on every plot
+  and keeps only the robot-sourced `/analysis_telem` curves (software-side
+  `/analysis_control` / `/analysis_vision` curves are dropped — they carry no
+  robot clock). Receive-time layouts are unchanged.
+
 ## 3.0.0
 
 - **Selection inside the converters (no aliases).** Three topic converters read

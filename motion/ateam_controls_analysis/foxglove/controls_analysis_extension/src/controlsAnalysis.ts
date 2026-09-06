@@ -90,6 +90,22 @@ function at(a: Vec, i: number): number {
   return a != undefined && i < a.length ? Number(a[i]) : NAN;
 }
 
+// Reconstruct the robot's own microsecond clock -- split across two uint32s in
+// the telemetry (`timestamp_us_lo` / `timestamp_us_hi`) -- as float seconds.
+// This lets a Plot panel use robot time as its X axis (X-Axis = "message path"
+// -> `/analysis_telem.robot_time_s`) instead of PC receive time, so samples land
+// on the robot's own timeline regardless of radio latency/jitter. The value is
+// monotonic within a boot and resets to ~0 on reboot. `hi * 2^32 + lo` is exact
+// in float64 far beyond any match runtime.
+function robotTimeSeconds(msg: any): number {
+  const lo = Number(msg.timestamp_us_lo);
+  const hi = Number(msg.timestamp_us_hi);
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
+    return NAN;
+  }
+  return (hi * 4294967296 + lo) / 1e6;
+}
+
 // Every value field in a DimensionAnalysis, so paths always resolve (to NaN
 // when inactive) rather than reading `undefined`.
 function dimensionFieldNames(): string[] {
@@ -179,6 +195,7 @@ export function controlsAnalysisSchemaDescription(): MessageSchemaDescription {
   const desc: MessageSchemaDescription = {
     body_control_mode: "number",
     theta_estimate: "number",
+    robot_time_s: "number",
   };
   for (const d of DIMS) {
     desc[d] = dim;
@@ -212,6 +229,7 @@ export function buildControlsAnalysis(msg: any): Record<string, unknown> {
   const out: Record<string, unknown> = {
     body_control_mode: mode,
     theta_estimate: thetaEst,
+    robot_time_s: robotTimeSeconds(msg),
   };
 
   DIMS.forEach((d, i) => {

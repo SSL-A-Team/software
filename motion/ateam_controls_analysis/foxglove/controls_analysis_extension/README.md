@@ -43,8 +43,12 @@ per-mode-colored trajectory curves still show the active mode. When a robot is n
 > converter's output fields don't resolve in the Plot panel here; a topic
 > converter produces a genuine dedicated output topic the layout binds to.
 
-Plots use each message's **receive (log) time** as the x-axis; there is no robot
-time axis.
+Plots default to each message's **receive (log) time** as the x-axis. The
+converter also emits the robot's own clock as `/analysis_telem.robot_time_s`
+(reconstructed from `ExtendedTelemetry.timestamp_us_lo/hi`, in seconds), so a
+Plot panel can instead use **X-Axis = "message path" → `/analysis_telem.robot_time_s`**
+to plot telem curves against robot time (see the `controls_analysis_robottime`
+layout). Robot time exists only on the robot-sourced `/analysis_telem` stream.
 
 ### Curve labels & colors
 

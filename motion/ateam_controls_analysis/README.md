@@ -197,6 +197,46 @@ The layouts plot every series against message **receive time**
 log-time axis for both a loaded bag and a live stream. Foxglove renders NaN as a
 gap, so the per-mode-split curves break cleanly at mode transitions.
 
+### Robot-time layout (`controls_analysis_robottime.json`)
+
+A variant that plots against the **robot's own clock** instead of PC receive
+time. The converter exposes the robot timestamp as `/analysis_telem.robot_time_s`
+(reconstructed from `ExtendedTelemetry.timestamp_us_lo/hi`), and this layout sets
+every plot's **X-Axis to that message path** (`xAxisVal: custom`,
+`xAxisPath: /analysis_telem.robot_time_s`). Samples then land on the robot's
+timeline regardless of radio latency/jitter, which is what you want when
+inspecting the 1 kHz control loop / delayed-EKF timing.
+
+Because robot time only exists on the robot-sourced stream, this layout plots
+**only `/analysis_telem` (telem) curves** — the software-side `/analysis_control`
+command and `/analysis_vision` curves are dropped (they carry no robot clock to
+share the axis). Import it exactly like the others (**Layout → Import from
+file…**), and switch back to any receive-time layout to see the software-side
+curves again. `robot_time_s` is monotonic within a boot and resets to ~0 on
+reboot, so a reboot shows as a jump back on the X axis.
+
+Regenerate it after editing the base tabbed layout with:
+
+```bash
+cd foxglove
+python3 - <<'PY'
+import json, copy
+d = copy.deepcopy(json.load(open('controls_analysis.json')))
+xpath = {"value": "/analysis_telem.robot_time_s", "enabled": True, "timestampMethod": "receiveTime"}
+def conv(o):
+    if isinstance(o, dict):
+        if 'paths' in o and 'xAxisVal' in o:
+            o['paths'] = [p for p in o['paths'] if str(p.get('value','')).startswith('/analysis_telem')]
+            o['xAxisVal'] = 'custom'; o['xAxisPath'] = dict(xpath)
+            return
+        for v in o.values(): conv(v)
+    elif isinstance(o, list):
+        for v in o: conv(v)
+conv(d)
+json.dump(d, open('controls_analysis_robottime.json','w'), indent=2); open('controls_analysis_robottime.json','a').write('\n')
+PY
+```
+
 The layouts also ship with a **following (sliding) window** of 10 s
 (`followingViewWidth`): during playback each plot shows only the trailing 10 s
 with the playhead pinned at the right edge. Adjust it per plot via the gear icon
