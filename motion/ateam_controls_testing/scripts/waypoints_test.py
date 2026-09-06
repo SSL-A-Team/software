@@ -48,10 +48,14 @@ class Waypoint():
 
 
 waypoints = [
-    Waypoint(-0.25, -0.25, 0.0,     4.0),
-    Waypoint(0.25,  -0.25, math.pi, 4.0),
-    Waypoint(0.25,  0.25,  0.0,     4.0),
-    Waypoint(-0.25, 0.25,  math.pi, 4.0),
+    # Waypoint(-0.25, -0.25, 0.0,     4.0),
+    # Waypoint(0.25,  -0.25, math.pi, 4.0),
+    # Waypoint(0.25,  0.25,  0.0,     4.0),
+    # Waypoint(-0.25, 0.25,  math.pi, 4.0),
+    Waypoint(-0.25, -0.25, 0.0, 4.0),
+    Waypoint(0.25,  -0.25, 0.0, 4.0),
+    Waypoint(0.25,  0.25,  0.0, 4.0),
+    Waypoint(-0.25, 0.25,  0.0, 4.0),
 ]
 
 current_index = 0
