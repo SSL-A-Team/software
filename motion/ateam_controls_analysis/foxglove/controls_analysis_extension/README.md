@@ -43,12 +43,13 @@ per-mode-colored trajectory curves still show the active mode. When a robot is n
 > converter's output fields don't resolve in the Plot panel here; a topic
 > converter produces a genuine dedicated output topic the layout binds to.
 
-Plots default to each message's **receive (log) time** as the x-axis. The
-converter also emits the robot's own clock as `/analysis_telem.robot_time_s`
-(reconstructed from `ExtendedTelemetry.timestamp_us_lo/hi`, in seconds), so a
-Plot panel can instead use **X-Axis = "message path" → `/analysis_telem.robot_time_s`**
-to plot telem curves against robot time (see the `controls_analysis_robottime`
-layout). Robot time exists only on the robot-sourced `/analysis_telem` stream.
+Plots default to each message's **receive (log) time** as the x-axis (the
+`controls_analysis_coach_time` layout). The converter also emits the robot's own
+clock — as a PC-anchored `header.stamp` (used by `controls_analysis_robot_time`
+via `timestampMethod: headerStamp`) and as the raw `/analysis_telem.robot_time_s`
+(seconds since boot, for a custom message-path X axis) — so plots can be drawn
+against robot time. Robot time exists only on the robot-sourced `/analysis_telem`
+stream.
 
 ### Curve labels & colors
 
@@ -94,10 +95,11 @@ after installing to pick up the extension either way.
    `/robot_motion_commands/robot{id}`, and `/{blue,yellow}_team/robot{id}` (Open
    local file) or connect live via
    [`foxglove_bridge`](https://github.com/foxglove/ros-foxglove-bridge).
-2. Import a layout from `../` — `controls_analysis.json` (tabbed) or
-   `controls_analysis_singleview.json` (grid), or their `*_lines.json` variants
-   that draw connecting lines instead of points-only. All bind the
-   `/analysis_telem`, `/analysis_control`, and `/analysis_vision` topics.
+2. Import a layout from `../` — `controls_analysis_coach_time.json` (X axis =
+   coach/PC receive time) or `controls_analysis_robot_time.json` (X axis = robot
+   time). Both are tabbed and draw connecting lines; the coach-time layout binds
+   the `/analysis_telem`, `/analysis_control`, and `/analysis_vision` topics,
+   while the robot-time layout is telem-only.
 3. Open the **Variables** tab (right sidebar in current Foxglove — toggle with
    the `]` key) and set `robot` to the id you want (e.g. `2`) and `team` to your
    color. All panels switch with no reload.

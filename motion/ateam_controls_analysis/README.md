@@ -30,8 +30,9 @@ receive (log) time as the x-axis.
 - `foxglove/controls_analysis_extension/` — the Foxglove extension: 3 topic
   converters selecting the robot/`team` and emitting `/analysis_telem`,
   `/analysis_control`, `/analysis_vision`.
-- `foxglove/controls_analysis.json`, `foxglove/controls_analysis_singleview.json`
-  — the two bundled layouts (plus `*_lines.json` variants; see [layouts](#foxglove-layouts)).
+- `foxglove/controls_analysis_coach_time.json`,
+  `foxglove/controls_analysis_robot_time.json` — the two bundled layouts
+  (coach/PC time vs. robot time; see [layouts](#foxglove-layouts)).
 
 ## Views
 
@@ -40,8 +41,8 @@ plots sharing a time axis:
 
 | Plot | Derivative | Curves (labels) |
 |------|-----------|--------|
-| Position | 1st | per-mode trajectory `traj_*_telem`, software cmd `cmd` + round-tripped `cmd_telem`, fresh vision `vision` + round-tripped `vision_telem`, estimate `est_telem` |
-| Velocity | 2nd | per-mode trajectory `traj_*_telem`, software cmd `cmd` + round-tripped `cmd_telem`, gyro `gyro_telem` (theta only), estimate `est_telem` |
+| Position | 1st | per-mode trajectory `traj_*_telem`, software cmd `cmd` + round-tripped `cmd_telem`, fresh vision `vision` + round-tripped `vision_telem`, estimate `est_telem`, EKF state `ekf_telem` (hidden by default) |
+| Velocity | 2nd | per-mode trajectory `traj_*_telem`, software cmd `cmd` + round-tripped `cmd_telem`, gyro `gyro_telem` (theta only), estimate `est_telem`, EKF state `ekf_telem` (hidden by default) |
 | Acceleration | 3rd | software cmd `cmd` + round-tripped `cmd_telem`, firmware output `accel_u_telem` + friction-compensated `accel_u_fric_comp_telem`, IMU `imu_telem` (x/y only) |
 
 ### Software-side vs. round-tripped overlays (round-trip delay)
@@ -145,96 +146,82 @@ In Foxglove: **Open connection → Foxglove WebSocket → `ws://localhost:8765`*
 
 ## Foxglove layouts
 
-Four layouts are checked in under `foxglove/`; all bind to the converter output
-topics `/analysis_telem`, `/analysis_control`, `/analysis_vision` (see
-[Selecting which robot is displayed](#selecting-which-robot-is-displayed)).
+Two tabbed layouts are checked in under `foxglove/` (five tabs each: X / Y /
+Theta / Velocity / Current), binding to the converter output topics
+`/analysis_telem`, `/analysis_control`, `/analysis_vision` (see
+[Selecting which robot is displayed](#selecting-which-robot-is-displayed)). Both
+draw lines (`showLine: true`) and carry the same curves; they differ only in the
+**time basis** of the X axis:
 
-- **`controls_analysis.json`** — tabbed: five tabs (X / Y / Theta / Velocity /
-  Current), one view at a time.
-- **`controls_analysis_singleview.json`** — every plot on one always-mounted
-  grid, legends off to save space.
+- **`controls_analysis_coach_time.json`** — X axis is **coach/PC time** (message
+  receive time, `timestampMethod: receiveTime`). Shows every curve, including the
+  software-side `/analysis_control` command and `/analysis_vision` curves.
+- **`controls_analysis_robot_time.json`** — X axis is **robot time** (see
+  [Robot time](#robot-time)). Telem-only.
 
-Both default all curves to **points-only** (`showLine: false`). Each also has a
-**lines** variant that is identical except every curve draws a connecting line
-(`showLine: true`):
-
-- **`controls_analysis_lines.json`** — tabbed, lines.
-- **`controls_analysis_singleview_lines.json`** — single-view, lines.
-
-Foxglove has no live "toggle lines on all plots" control (`showLine` is a
-per-series setting), so switching styles is done by importing the other variant.
-The lines variants turn `showLine` on for every curve **except command curves
-(`*_cmd`) and the round-tripped `vision_telem` curve (`*.pos_vision`)**, which
-stay points-only (they're stepped/sparse). Regenerate them after editing a base
-layout with:
-
-```bash
-cd foxglove
-for base in controls_analysis_singleview controls_analysis; do
-  jq 'walk(if type=="object" and has("showLine")
-          then .showLine = (((.value|test("_cmd$")) or (.value|test("\\.pos_vision$"))) | not)
-          else . end)' "$base.json" > "${base}_lines.json"
-done
-```
-
-Load any of them via **Layout → Import from file…** →
+Load either via **Layout → Import from file…** →
 `share/ateam_controls_analysis/foxglove/<layout>.json` (or straight from this
 source tree).
 
 Each body control mode has a consistent color across every plot, so mode
 transitions (e.g. `BCM_POINT_PIVOT` → `BCM_HEADING_LINE`) are visible as a color
-change with a gap on the reference-trajectory curves.
-
-> **Tabbed vs. single-view when live streaming.** Foxglove **unmounts inactive
-> tabs**, and a live WebSocket source has no historical backfill, so switching
-> tabs mid-stream starts that view empty and only fills going forward. For live
-> streaming prefer the single-view layout (all plots stay mounted and keep
-> collecting). The tabbed layout is ideal for a loaded bag file, where the whole
-> timeline is present so tabs backfill instantly on switch.
-
-The layouts plot every series against message **receive time**
-(`timestampMethod: receiveTime`), so a converted per-message sample lands on the
-log-time axis for both a loaded bag and a live stream. Foxglove renders NaN as a
+change with a gap on the reference-trajectory curves. Foxglove renders NaN as a
 gap, so the per-mode-split curves break cleanly at mode transitions.
 
-### Robot-time layout (`controls_analysis_robottime.json`)
+> **Tabs when live streaming.** Both layouts are tabbed, and Foxglove **unmounts
+> inactive tabs**; a live WebSocket source has no historical backfill, so
+> switching tabs mid-stream starts that view empty and only fills going forward.
+> A loaded bag backfills instantly on switch since the whole timeline is present.
 
-A variant that plots against the **robot's own clock** instead of PC receive
-time. The converter exposes the robot timestamp as `/analysis_telem.robot_time_s`
-(reconstructed from `ExtendedTelemetry.timestamp_us_lo/hi`), and this layout sets
-every plot's **X-Axis to that message path** (`xAxisVal: custom`,
-`xAxisPath: /analysis_telem.robot_time_s`). Samples then land on the robot's
-timeline regardless of radio latency/jitter, which is what you want when
-inspecting the 1 kHz control loop / delayed-EKF timing.
+### Robot time
 
-Because robot time only exists on the robot-sourced stream, this layout plots
-**only `/analysis_telem` (telem) curves** — the software-side `/analysis_control`
-command and `/analysis_vision` curves are dropped (they carry no robot clock to
-share the axis). Import it exactly like the others (**Layout → Import from
-file…**), and switch back to any receive-time layout to see the software-side
-curves again. `robot_time_s` is monotonic within a boot and resets to ~0 on
-reboot, so a reboot shows as a jump back on the X axis.
+`controls_analysis_robot_time.json` plots against the **robot's own clock**
+instead of coach/PC receive time, which is what you want when inspecting the
+1 kHz control loop / delayed-EKF timing. The converter emits a synthetic
+`header.stamp` derived from the robot clock
+(`ExtendedTelemetry.timestamp_us_lo/hi`) but **anchored onto the PC/Unix
+timeline**: it captures the robot→PC offset (`pc_receive_time − robot_time`) from
+the first packet of the selected robot and holds it, so the stamp sits on the
+same absolute timescale as Foxglove's timeline (rather than ~10⁹ s away at
+seconds-since-boot) while still advancing on the robot's own jitter-free clock.
+The layout stays in **Timestamp** X-axis mode but sets every series'
+`timestampMethod` to **`headerStamp`**, so it plots against that anchored robot
+time while remaining in the mode where `isSynced` works: cross-panel X sync, the
+shared hover cursor, and the "hold **h**" horizontal cursor all function, and
+because every panel reads the same `/analysis_telem` header clock, hovering one
+panel at robot-time *T* lines up with every other panel at *T* — while still live
+streaming.
 
-Regenerate it after editing the base tabbed layout with:
+The anchor is captured per selected robot (it re-anchors when you change the
+`robot` variable) and bakes one packet's radio latency into a constant offset;
+later packets are placed by robot elapsed time, so radio jitter doesn't move the
+X axis. Telem-only because `/analysis_control` / `/analysis_vision` have no
+robot-time header. The global playback scrubber still reflects PC receive time
+(playback order is unchanged). Reboots (robot clock jumps back to ~0) show as a
+jump on the X axis. The converter also exposes the raw robot seconds-since-boot as
+`/analysis_telem.robot_time_s` if you prefer a custom message-path X axis instead.
+
+Regenerate `controls_analysis_robot_time.json` after editing the coach-time
+layout with:
 
 ```bash
 cd foxglove
-python3 - <<'PY'
+python3 - <<'EOF'
 import json, copy
-d = copy.deepcopy(json.load(open('controls_analysis.json')))
-xpath = {"value": "/analysis_telem.robot_time_s", "enabled": True, "timestampMethod": "receiveTime"}
+d = copy.deepcopy(json.load(open('controls_analysis_coach_time.json')))
 def conv(o):
     if isinstance(o, dict):
         if 'paths' in o and 'xAxisVal' in o:
             o['paths'] = [p for p in o['paths'] if str(p.get('value','')).startswith('/analysis_telem')]
-            o['xAxisVal'] = 'custom'; o['xAxisPath'] = dict(xpath)
+            o['xAxisVal'] = 'timestamp'; o['isSynced'] = True
+            for p in o['paths']: p['timestampMethod'] = 'headerStamp'
             return
         for v in o.values(): conv(v)
     elif isinstance(o, list):
         for v in o: conv(v)
 conv(d)
-json.dump(d, open('controls_analysis_robottime.json','w'), indent=2); open('controls_analysis_robottime.json','a').write('\n')
-PY
+json.dump(d, open('controls_analysis_robot_time.json','w'), indent=2); open('controls_analysis_robot_time.json','a').write('\n')
+EOF
 ```
 
 The layouts also ship with a **following (sliding) window** of 10 s

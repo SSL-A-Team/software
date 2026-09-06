@@ -2,15 +2,23 @@
 
 ## Unreleased
 
-- **Robot-time X axis.** The `ControlsAnalysis` converter now emits
-  `robot_time_s` (float seconds, reconstructed from
-  `ExtendedTelemetry.timestamp_us_lo/hi`) so a Plot panel can use
-  **X-Axis = "message path" → `/analysis_telem.robot_time_s`** to plot telem
-  curves against the robot's own clock instead of PC receive time. Added the
-  `controls_analysis_robottime.json` layout, which sets that X axis on every plot
-  and keeps only the robot-sourced `/analysis_telem` curves (software-side
-  `/analysis_control` / `/analysis_vision` curves are dropped — they carry no
-  robot clock). Receive-time layouts are unchanged.
+- **EKF state curves.** Added `pos_ekf` and `vel_ekf` to the converter, plotted on
+  each position and velocity axis (x / y / theta) as `ekf_telem` — hidden by
+  default, lines style. Present in all layouts.
+- **Robot-time layout.** The `ControlsAnalysis` converter now emits
+  `robot_time_s` (float seconds since robot boot) and a synthetic `header.stamp`,
+  both derived from `ExtendedTelemetry.timestamp_us_lo/hi`, so plots can be drawn
+  against the robot's own clock instead of coach/PC receive time. The
+  `header.stamp` is **anchored to the PC/Unix timeline** via a one-time robot→PC
+  offset captured from the first packet of the selected robot (then advancing on
+  the robot clock), so it shares the timeline's absolute timescale while rejecting
+  radio jitter. Added `controls_analysis_robot_time.json` — stays in **Timestamp**
+  mode with `timestampMethod: headerStamp` (+ `isSynced`), so plots are on robot
+  time **and** keep cross-panel X sync + the shared hover cursor for correlating
+  events across panels at the same robot time. It is telem-only (software-side
+  `/analysis_control` / `/analysis_vision` carry no robot clock). The receive-time
+  layout is `controls_analysis_coach_time.json`. Also enabled the `accel_imu`
+  (IMU accel) telem curves by default.
 
 ## 3.0.0
 

@@ -106,12 +106,62 @@ function robotTimeSeconds(msg: any): number {
   return (hi * 4294967296 + lo) / 1e6;
 }
 
+// Same robot clock as `robotTimeSeconds`, split into a ROS-style `{sec, nanosec}`
+// stamp (with a `nsec` alias for ROS1-style readers) so the converted message
+// carries a `header.stamp`. A Plot panel can then stay in the normal Timestamp
+// X-axis mode with `timestampMethod: "headerStamp"` -- which keeps `isSynced`
+// (cross-panel X sync + shared hover cursor) working -- while plotting against
+// robot time. Missing/invalid timestamps map to 0. Resets to ~0 on reboot.
+function secNanosFromSeconds(t: number): { sec: number; nanosec: number; nsec: number } {
+  if (!Number.isFinite(t)) {
+    return { sec: 0, nanosec: 0, nsec: 0 };
+  }
+  const sec = Math.floor(t);
+  const nsec = Math.round((t - sec) * 1e9);
+  return { sec, nanosec: nsec, nsec };
+}
+
+// Raw robot-boot-relative header stamp (seconds since boot). Used as a fallback
+// when no PC receive time / clock anchor is available.
+function robotHeaderStamp(msg: any): { sec: number; nanosec: number; nsec: number } {
+  return secNanosFromSeconds(robotTimeSeconds(msg));
+}
+
+// Anchor that maps the robot's boot-relative clock onto the PC (Unix) timeline.
+// The offset (pc_time - robot_time) is captured once from the first valid packet
+// and then held, so the emitted `header.stamp` lands on the same absolute
+// timescale as the data source's timeline. That is what lets a Timestamp-mode
+// Plot with `timestampMethod: headerStamp` line its X axis (and the synced hover
+// cursor) up with the global timeline, instead of sitting ~10^9 s away at
+// seconds-since-boot. After the one-time anchor the stamp advances on the robot's
+// own (jitter-free) clock, not PC receive time, so radio latency jitter on later
+// packets doesn't move the X axis. One converter instance owns one anchor and
+// re-anchors when recreated (e.g. the selected robot changes). A reboot (robot
+// clock jumps back to ~0) shows as a jump on the X axis.
+export type RobotClockAnchor = { offsetSec?: number };
+
+function syncedHeaderStamp(
+  msg: any,
+  receiveTime: { sec: number; nsec: number },
+  anchor: RobotClockAnchor,
+): { sec: number; nanosec: number; nsec: number } {
+  const robotSec = robotTimeSeconds(msg);
+  if (!Number.isFinite(robotSec)) {
+    return { sec: 0, nanosec: 0, nsec: 0 };
+  }
+  const pcSec = receiveTime.sec + receiveTime.nsec * 1e-9;
+  if (anchor.offsetSec == undefined) {
+    anchor.offsetSec = pcSec - robotSec;
+  }
+  return secNanosFromSeconds(robotSec + anchor.offsetSec);
+}
+
 // Every value field in a DimensionAnalysis, so paths always resolve (to NaN
 // when inactive) rather than reading `undefined`.
 function dimensionFieldNames(): string[] {
   const names = [
-    "pos_estimate", "pos_traj", "pos_vision", "pos_cmd",
-    "vel_estimate", "vel_traj", "vel_cmd", "vel_gyro",
+    "pos_estimate", "pos_ekf", "pos_traj", "pos_vision", "pos_cmd",
+    "vel_estimate", "vel_ekf", "vel_traj", "vel_cmd", "vel_gyro",
     "accel_u", "accel_u_fric_comp", "accel_imu", "accel_cmd",
   ];
   for (const deriv of ["pos", "vel"]) {
@@ -196,6 +246,7 @@ export function controlsAnalysisSchemaDescription(): MessageSchemaDescription {
     body_control_mode: "number",
     theta_estimate: "number",
     robot_time_s: "number",
+    header: { stamp: { sec: "number", nanosec: "number", nsec: "number" } },
   };
   for (const d of DIMS) {
     desc[d] = dim;
@@ -207,7 +258,14 @@ export function controlsAnalysisSchemaDescription(): MessageSchemaDescription {
 }
 
 // Convert one ExtendedTelemetry message into the flat ControlsAnalysis object.
-export function buildControlsAnalysis(msg: any): Record<string, unknown> {
+// `receiveTime` + `anchor` (from the converter) enable the PC-anchored robot-time
+// `header.stamp` (see `syncedHeaderStamp`); when omitted, the header falls back to
+// the raw robot-boot-relative stamp.
+export function buildControlsAnalysis(
+  msg: any,
+  receiveTime?: { sec: number; nsec: number },
+  anchor?: RobotClockAnchor,
+): Record<string, unknown> {
   const bct = msg.body_control_telemetry;
   const mode: number = bct.body_control_mode;
   const thetaEst = at(bct.kf_body_pos_estimate, 2);
@@ -226,10 +284,16 @@ export function buildControlsAnalysis(msg: any): Record<string, unknown> {
   // applied a vision update; otherwise it's stale, so gate the curve on the bit.
   const visionUpdated = Boolean(bct.vision_update);
 
+  const stamp =
+    receiveTime != undefined && anchor != undefined
+      ? syncedHeaderStamp(msg, receiveTime, anchor)
+      : robotHeaderStamp(msg);
+
   const out: Record<string, unknown> = {
     body_control_mode: mode,
     theta_estimate: thetaEst,
     robot_time_s: robotTimeSeconds(msg),
+    header: { stamp },
   };
 
   DIMS.forEach((d, i) => {
@@ -239,9 +303,13 @@ export function buildControlsAnalysis(msg: any): Record<string, unknown> {
     }
 
     f["pos_estimate"] = at(bct.kf_body_pos_estimate, i);
+    // EKF body position state (delivered on the `kf_body_pos_prediction` field).
+    f["pos_ekf"] = at(bct.kf_body_pos_prediction, i);
     f["pos_traj"] = at(bct.body_traj_pos, i);
     f["pos_vision"] = visionUpdated ? at(bct.vision_pose, i) : NAN;
     f["vel_estimate"] = at(bct.kf_body_vel_estimate, i);
+    // EKF body velocity state (delivered on the `kf_body_vel_prediction` field).
+    f["vel_ekf"] = at(bct.kf_body_vel_prediction, i);
     f["vel_traj"] = at(bct.body_traj_vel, i);
     f["accel_u"] = at(bct.body_accel_u, i);
     f["accel_u_fric_comp"] = at(bct.body_accel_u_fric_comp, i);

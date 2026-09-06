@@ -59,12 +59,28 @@
           "label": "traj_point_line_telem"
         },
         {
+          "value": "/analysis_control.x.pos_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#0000ff",
+          "showLine": false,
+          "label": "cmd"
+        },
+        {
           "value": "/analysis_telem.x.pos_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
+        },
+        {
+          "value": "/analysis_vision.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#3eb489",
+          "showLine": true,
+          "label": "vision"
         },
         {
           "value": "/analysis_telem.x.pos_vision",
@@ -81,6 +97,14 @@
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.x.pos_ekf",
+          "enabled": false,
+          "timestampMethod": "receiveTime",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -89,14 +113,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!x_vel": {
       "paths": [
@@ -157,6 +176,14 @@
           "label": "traj_point_line_telem"
         },
         {
+          "value": "/analysis_control.x.vel_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#0000ff",
+          "showLine": false,
+          "label": "cmd"
+        },
+        {
           "value": "/analysis_telem.x.vel_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
@@ -171,6 +198,14 @@
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.x.vel_ekf",
+          "enabled": false,
+          "timestampMethod": "receiveTime",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -179,17 +214,20 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!x_acc": {
       "paths": [
+        {
+          "value": "/analysis_control.x.accel_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#0000ff",
+          "showLine": false,
+          "label": "cmd"
+        },
         {
           "value": "/analysis_telem.x.accel_cmd",
           "enabled": false,
@@ -229,14 +267,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!y_pos": {
       "paths": [
@@ -297,12 +330,28 @@
           "label": "traj_point_line_telem"
         },
         {
+          "value": "/analysis_control.y.pos_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#0000ff",
+          "showLine": false,
+          "label": "cmd"
+        },
+        {
           "value": "/analysis_telem.y.pos_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
+        },
+        {
+          "value": "/analysis_vision.y",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#3eb489",
+          "showLine": true,
+          "label": "vision"
         },
         {
           "value": "/analysis_telem.y.pos_vision",
@@ -319,6 +368,14 @@
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.y.pos_ekf",
+          "enabled": false,
+          "timestampMethod": "receiveTime",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -327,14 +384,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!y_vel": {
       "paths": [
@@ -395,6 +447,14 @@
           "label": "traj_point_line_telem"
         },
         {
+          "value": "/analysis_control.y.vel_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#0000ff",
+          "showLine": false,
+          "label": "cmd"
+        },
+        {
           "value": "/analysis_telem.y.vel_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
@@ -409,6 +469,14 @@
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.y.vel_ekf",
+          "enabled": false,
+          "timestampMethod": "receiveTime",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -417,17 +485,20 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!y_acc": {
       "paths": [
+        {
+          "value": "/analysis_control.y.accel_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#0000ff",
+          "showLine": false,
+          "label": "cmd"
+        },
         {
           "value": "/analysis_telem.y.accel_cmd",
           "enabled": false,
@@ -467,14 +538,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!theta_pos": {
       "paths": [
@@ -535,12 +601,28 @@
           "label": "traj_point_line_telem"
         },
         {
+          "value": "/analysis_control.theta.pos_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#0000ff",
+          "showLine": false,
+          "label": "cmd"
+        },
+        {
           "value": "/analysis_telem.theta.pos_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
+        },
+        {
+          "value": "/analysis_vision.theta",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#3eb489",
+          "showLine": true,
+          "label": "vision"
         },
         {
           "value": "/analysis_telem.theta.pos_vision",
@@ -557,6 +639,14 @@
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.pos_ekf",
+          "enabled": false,
+          "timestampMethod": "receiveTime",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -565,14 +655,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!theta_vel": {
       "paths": [
@@ -633,6 +718,14 @@
           "label": "traj_point_line_telem"
         },
         {
+          "value": "/analysis_control.theta.vel_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#0000ff",
+          "showLine": false,
+          "label": "cmd"
+        },
+        {
           "value": "/analysis_telem.theta.vel_cmd",
           "enabled": false,
           "timestampMethod": "receiveTime",
@@ -655,6 +748,14 @@
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.vel_ekf",
+          "enabled": false,
+          "timestampMethod": "receiveTime",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -663,17 +764,20 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!theta_acc": {
       "paths": [
+        {
+          "value": "/analysis_control.theta.accel_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#0000ff",
+          "showLine": false,
+          "label": "cmd"
+        },
         {
           "value": "/analysis_telem.theta.accel_cmd",
           "enabled": false,
@@ -705,14 +809,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!front_left_vel": {
       "paths": [
@@ -739,14 +838,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!back_left_vel": {
       "paths": [
@@ -773,14 +867,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!back_right_vel": {
       "paths": [
@@ -807,14 +896,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!front_right_vel": {
       "paths": [
@@ -841,14 +925,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!front_left_cur": {
       "paths": [
@@ -875,14 +954,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!back_left_cur": {
       "paths": [
@@ -909,14 +983,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!back_right_cur": {
       "paths": [
@@ -943,14 +1012,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     },
     "Plot!front_right_cur": {
       "paths": [
@@ -977,14 +1041,9 @@
       "legendDisplay": "floating",
       "showPlotValuesInLegend": true,
       "isSynced": true,
-      "xAxisVal": "custom",
+      "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "followingViewWidth": 10.0,
-      "xAxisPath": {
-        "value": "/analysis_telem.robot_time_s",
-        "enabled": true,
-        "timestampMethod": "receiveTime"
-      }
+      "followingViewWidth": 10.0
     }
   },
   "globalVariables": {

@@ -26,6 +26,7 @@ import { ExtensionContext } from "@foxglove/extension";
 import {
   buildControlsAnalysis,
   controlsAnalysisSchemaDescription,
+  RobotClockAnchor,
 } from "./controlsAnalysis";
 import {
   buildMotionCommand,
@@ -96,9 +97,13 @@ export function activate(extensionContext: ExtensionContext): void {
     watchVariables: [ROBOT_VARIABLE],
     create: (globalVariables) => {
       const selected = extendedTopic(robotIdFrom(globalVariables[ROBOT_VARIABLE]));
+      // Per-converter clock anchor: captures the robot->PC time offset from the
+      // first packet so the synced `header.stamp` sits on the PC timeline. Reset
+      // on recreation (robot selection change) so we re-anchor for the new robot.
+      const clock: RobotClockAnchor = {};
       return (messageEvent) =>
         messageEvent.topic === selected
-          ? buildControlsAnalysis(messageEvent.message)
+          ? buildControlsAnalysis(messageEvent.message, messageEvent.receiveTime, clock)
           : undefined;
     },
   });

@@ -5,7 +5,7 @@
         {
           "value": "/analysis_telem.x.pos_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00c000",
           "showLine": true,
           "label": "traj_global_pos_telem"
@@ -13,7 +13,7 @@
         {
           "value": "/analysis_telem.x.pos_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_global_vel_telem"
@@ -21,7 +21,7 @@
         {
           "value": "/analysis_telem.x.pos_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_local_vel_telem"
@@ -29,7 +29,7 @@
         {
           "value": "/analysis_telem.x.pos_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_heading_pivot_telem"
@@ -37,7 +37,7 @@
         {
           "value": "/analysis_telem.x.pos_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_point_pivot_telem"
@@ -45,7 +45,7 @@
         {
           "value": "/analysis_telem.x.pos_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_heading_line_telem"
@@ -53,39 +53,23 @@
         {
           "value": "/analysis_telem.x.pos_traj_point_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_point_line_telem"
         },
         {
-          "value": "/analysis_control.x.pos_cmd",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#0000ff",
-          "showLine": false,
-          "label": "cmd"
-        },
-        {
           "value": "/analysis_telem.x.pos_cmd",
           "enabled": false,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
         },
         {
-          "value": "/analysis_vision.x",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#3eb489",
-          "showLine": true,
-          "label": "vision"
-        },
-        {
           "value": "/analysis_telem.x.pos_vision",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": false,
           "label": "vision_telem"
@@ -93,10 +77,18 @@
         {
           "value": "/analysis_telem.x.pos_estimate",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.x.pos_ekf",
+          "enabled": false,
+          "timestampMethod": "headerStamp",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -114,7 +106,7 @@
         {
           "value": "/analysis_telem.x.vel_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00c000",
           "showLine": true,
           "label": "traj_global_pos_telem"
@@ -122,7 +114,7 @@
         {
           "value": "/analysis_telem.x.vel_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_global_vel_telem"
@@ -130,7 +122,7 @@
         {
           "value": "/analysis_telem.x.vel_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_local_vel_telem"
@@ -138,7 +130,7 @@
         {
           "value": "/analysis_telem.x.vel_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_heading_pivot_telem"
@@ -146,7 +138,7 @@
         {
           "value": "/analysis_telem.x.vel_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_point_pivot_telem"
@@ -154,7 +146,7 @@
         {
           "value": "/analysis_telem.x.vel_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_heading_line_telem"
@@ -162,23 +154,15 @@
         {
           "value": "/analysis_telem.x.vel_traj_point_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_point_line_telem"
         },
         {
-          "value": "/analysis_control.x.vel_cmd",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#0000ff",
-          "showLine": false,
-          "label": "cmd"
-        },
-        {
           "value": "/analysis_telem.x.vel_cmd",
           "enabled": false,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
@@ -186,10 +170,18 @@
         {
           "value": "/analysis_telem.x.vel_estimate",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.x.vel_ekf",
+          "enabled": false,
+          "timestampMethod": "headerStamp",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -205,17 +197,9 @@
     "Plot!x_acc": {
       "paths": [
         {
-          "value": "/analysis_control.x.accel_cmd",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#0000ff",
-          "showLine": false,
-          "label": "cmd"
-        },
-        {
           "value": "/analysis_telem.x.accel_cmd",
           "enabled": false,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
@@ -223,7 +207,7 @@
         {
           "value": "/analysis_telem.x.accel_u",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff9c56",
           "showLine": true,
           "label": "accel_u_telem"
@@ -231,7 +215,7 @@
         {
           "value": "/analysis_telem.x.accel_u_fric_comp",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff6a00",
           "showLine": true,
           "label": "accel_u_fric_comp_telem"
@@ -239,7 +223,7 @@
         {
           "value": "/analysis_telem.x.accel_imu",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "imu_telem"
@@ -260,7 +244,7 @@
         {
           "value": "/analysis_telem.y.pos_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00c000",
           "showLine": true,
           "label": "traj_global_pos_telem"
@@ -268,7 +252,7 @@
         {
           "value": "/analysis_telem.y.pos_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_global_vel_telem"
@@ -276,7 +260,7 @@
         {
           "value": "/analysis_telem.y.pos_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_local_vel_telem"
@@ -284,7 +268,7 @@
         {
           "value": "/analysis_telem.y.pos_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_heading_pivot_telem"
@@ -292,7 +276,7 @@
         {
           "value": "/analysis_telem.y.pos_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_point_pivot_telem"
@@ -300,7 +284,7 @@
         {
           "value": "/analysis_telem.y.pos_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_heading_line_telem"
@@ -308,39 +292,23 @@
         {
           "value": "/analysis_telem.y.pos_traj_point_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_point_line_telem"
         },
         {
-          "value": "/analysis_control.y.pos_cmd",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#0000ff",
-          "showLine": false,
-          "label": "cmd"
-        },
-        {
           "value": "/analysis_telem.y.pos_cmd",
           "enabled": false,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
         },
         {
-          "value": "/analysis_vision.y",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#3eb489",
-          "showLine": true,
-          "label": "vision"
-        },
-        {
           "value": "/analysis_telem.y.pos_vision",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": false,
           "label": "vision_telem"
@@ -348,10 +316,18 @@
         {
           "value": "/analysis_telem.y.pos_estimate",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.y.pos_ekf",
+          "enabled": false,
+          "timestampMethod": "headerStamp",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -369,7 +345,7 @@
         {
           "value": "/analysis_telem.y.vel_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00c000",
           "showLine": true,
           "label": "traj_global_pos_telem"
@@ -377,7 +353,7 @@
         {
           "value": "/analysis_telem.y.vel_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_global_vel_telem"
@@ -385,7 +361,7 @@
         {
           "value": "/analysis_telem.y.vel_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_local_vel_telem"
@@ -393,7 +369,7 @@
         {
           "value": "/analysis_telem.y.vel_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_heading_pivot_telem"
@@ -401,7 +377,7 @@
         {
           "value": "/analysis_telem.y.vel_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_point_pivot_telem"
@@ -409,7 +385,7 @@
         {
           "value": "/analysis_telem.y.vel_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_heading_line_telem"
@@ -417,23 +393,15 @@
         {
           "value": "/analysis_telem.y.vel_traj_point_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_point_line_telem"
         },
         {
-          "value": "/analysis_control.y.vel_cmd",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#0000ff",
-          "showLine": false,
-          "label": "cmd"
-        },
-        {
           "value": "/analysis_telem.y.vel_cmd",
           "enabled": false,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
@@ -441,10 +409,18 @@
         {
           "value": "/analysis_telem.y.vel_estimate",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.y.vel_ekf",
+          "enabled": false,
+          "timestampMethod": "headerStamp",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -460,17 +436,9 @@
     "Plot!y_acc": {
       "paths": [
         {
-          "value": "/analysis_control.y.accel_cmd",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#0000ff",
-          "showLine": false,
-          "label": "cmd"
-        },
-        {
           "value": "/analysis_telem.y.accel_cmd",
           "enabled": false,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
@@ -478,7 +446,7 @@
         {
           "value": "/analysis_telem.y.accel_u",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff9c56",
           "showLine": true,
           "label": "accel_u_telem"
@@ -486,7 +454,7 @@
         {
           "value": "/analysis_telem.y.accel_u_fric_comp",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff6a00",
           "showLine": true,
           "label": "accel_u_fric_comp_telem"
@@ -494,7 +462,7 @@
         {
           "value": "/analysis_telem.y.accel_imu",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "imu_telem"
@@ -515,7 +483,7 @@
         {
           "value": "/analysis_telem.theta.pos_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00c000",
           "showLine": true,
           "label": "traj_global_pos_telem"
@@ -523,7 +491,7 @@
         {
           "value": "/analysis_telem.theta.pos_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_global_vel_telem"
@@ -531,7 +499,7 @@
         {
           "value": "/analysis_telem.theta.pos_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_local_vel_telem"
@@ -539,7 +507,7 @@
         {
           "value": "/analysis_telem.theta.pos_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_heading_pivot_telem"
@@ -547,7 +515,7 @@
         {
           "value": "/analysis_telem.theta.pos_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_point_pivot_telem"
@@ -555,7 +523,7 @@
         {
           "value": "/analysis_telem.theta.pos_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_heading_line_telem"
@@ -563,39 +531,23 @@
         {
           "value": "/analysis_telem.theta.pos_traj_point_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_point_line_telem"
         },
         {
-          "value": "/analysis_control.theta.pos_cmd",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#0000ff",
-          "showLine": false,
-          "label": "cmd"
-        },
-        {
           "value": "/analysis_telem.theta.pos_cmd",
           "enabled": false,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
         },
         {
-          "value": "/analysis_vision.theta",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#3eb489",
-          "showLine": true,
-          "label": "vision"
-        },
-        {
           "value": "/analysis_telem.theta.pos_vision",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": false,
           "label": "vision_telem"
@@ -603,10 +555,18 @@
         {
           "value": "/analysis_telem.theta.pos_estimate",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.pos_ekf",
+          "enabled": false,
+          "timestampMethod": "headerStamp",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -624,7 +584,7 @@
         {
           "value": "/analysis_telem.theta.vel_traj_global_pos",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00c000",
           "showLine": true,
           "label": "traj_global_pos_telem"
@@ -632,7 +592,7 @@
         {
           "value": "/analysis_telem.theta.vel_traj_global_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_global_vel_telem"
@@ -640,7 +600,7 @@
         {
           "value": "/analysis_telem.theta.vel_traj_local_vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_local_vel_telem"
@@ -648,7 +608,7 @@
         {
           "value": "/analysis_telem.theta.vel_traj_heading_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_heading_pivot_telem"
@@ -656,7 +616,7 @@
         {
           "value": "/analysis_telem.theta.vel_traj_point_pivot",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#9900ff",
           "showLine": true,
           "label": "traj_point_pivot_telem"
@@ -664,7 +624,7 @@
         {
           "value": "/analysis_telem.theta.vel_traj_heading_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_heading_line_telem"
@@ -672,23 +632,15 @@
         {
           "value": "/analysis_telem.theta.vel_traj_point_line",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_point_line_telem"
         },
         {
-          "value": "/analysis_control.theta.vel_cmd",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#0000ff",
-          "showLine": false,
-          "label": "cmd"
-        },
-        {
           "value": "/analysis_telem.theta.vel_cmd",
           "enabled": false,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
@@ -696,7 +648,7 @@
         {
           "value": "/analysis_telem.theta.vel_gyro",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "gyro_telem"
@@ -704,10 +656,18 @@
         {
           "value": "/analysis_telem.theta.vel_estimate",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff0000",
           "showLine": true,
           "label": "est_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.vel_ekf",
+          "enabled": false,
+          "timestampMethod": "headerStamp",
+          "color": "#ff8c00",
+          "showLine": true,
+          "label": "ekf_telem"
         }
       ],
       "showXAxisLabels": true,
@@ -723,17 +683,9 @@
     "Plot!theta_acc": {
       "paths": [
         {
-          "value": "/analysis_control.theta.accel_cmd",
-          "enabled": true,
-          "timestampMethod": "receiveTime",
-          "color": "#0000ff",
-          "showLine": false,
-          "label": "cmd"
-        },
-        {
           "value": "/analysis_telem.theta.accel_cmd",
           "enabled": false,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#6666ff",
           "showLine": false,
           "label": "cmd_telem"
@@ -741,7 +693,7 @@
         {
           "value": "/analysis_telem.theta.accel_u",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff9c56",
           "showLine": true,
           "label": "accel_u_telem"
@@ -749,7 +701,7 @@
         {
           "value": "/analysis_telem.theta.accel_u_fric_comp",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#ff6a00",
           "showLine": true,
           "label": "accel_u_fric_comp_telem"
@@ -770,7 +722,7 @@
         {
           "value": "/analysis_telem.front_left.vel_setpoint",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#0000ff",
           "showLine": true,
           "label": "vel_setpoint_telem"
@@ -778,7 +730,7 @@
         {
           "value": "/analysis_telem.front_left.vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "vel_telem"
@@ -799,7 +751,7 @@
         {
           "value": "/analysis_telem.back_left.vel_setpoint",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#0000ff",
           "showLine": true,
           "label": "vel_setpoint_telem"
@@ -807,7 +759,7 @@
         {
           "value": "/analysis_telem.back_left.vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "vel_telem"
@@ -828,7 +780,7 @@
         {
           "value": "/analysis_telem.back_right.vel_setpoint",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#0000ff",
           "showLine": true,
           "label": "vel_setpoint_telem"
@@ -836,7 +788,7 @@
         {
           "value": "/analysis_telem.back_right.vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "vel_telem"
@@ -857,7 +809,7 @@
         {
           "value": "/analysis_telem.front_right.vel_setpoint",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#0000ff",
           "showLine": true,
           "label": "vel_setpoint_telem"
@@ -865,7 +817,7 @@
         {
           "value": "/analysis_telem.front_right.vel",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "vel_telem"
@@ -886,7 +838,7 @@
         {
           "value": "/analysis_telem.front_left.current_setpoint",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#0000ff",
           "showLine": true,
           "label": "current_setpoint_telem"
@@ -894,7 +846,7 @@
         {
           "value": "/analysis_telem.front_left.current",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "current_telem"
@@ -915,7 +867,7 @@
         {
           "value": "/analysis_telem.back_left.current_setpoint",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#0000ff",
           "showLine": true,
           "label": "current_setpoint_telem"
@@ -923,7 +875,7 @@
         {
           "value": "/analysis_telem.back_left.current",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "current_telem"
@@ -944,7 +896,7 @@
         {
           "value": "/analysis_telem.back_right.current_setpoint",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#0000ff",
           "showLine": true,
           "label": "current_setpoint_telem"
@@ -952,7 +904,7 @@
         {
           "value": "/analysis_telem.back_right.current",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "current_telem"
@@ -973,7 +925,7 @@
         {
           "value": "/analysis_telem.front_right.current_setpoint",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#0000ff",
           "showLine": true,
           "label": "current_setpoint_telem"
@@ -981,7 +933,7 @@
         {
           "value": "/analysis_telem.front_right.current",
           "enabled": true,
-          "timestampMethod": "receiveTime",
+          "timestampMethod": "headerStamp",
           "color": "#00dac7",
           "showLine": true,
           "label": "current_telem"
