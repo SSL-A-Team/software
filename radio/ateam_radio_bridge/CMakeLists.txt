@@ -11,6 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(ssl_league_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
@@ -29,6 +30,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ateam_radio_msgs
   ateam_msgs
   ateam_common
+  ssl_league_msgs
   tf2_geometry_msgs
 )
 rclcpp_components_register_node(
