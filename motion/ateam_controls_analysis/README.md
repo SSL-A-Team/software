@@ -41,7 +41,7 @@ plots sharing a time axis:
 
 | Plot | Derivative | Curves (labels) |
 |------|-----------|--------|
-| Position | 1st | per-mode trajectory `traj_*_telem`, software cmd `cmd` + round-tripped `cmd_telem`, fresh vision `vision` + round-tripped `vision_telem`, estimate `est_telem`, EKF state `ekf_telem` (hidden by default) |
+| Position | 1st | per-mode trajectory `traj_*_telem`, software cmd `cmd` + round-tripped `cmd_telem`, fresh vision `vision` + round-tripped `vision_telem`, too-old vision `vision_old_telem`, estimate `est_telem`, EKF state `ekf_telem` (hidden by default) |
 | Velocity | 2nd | per-mode trajectory `traj_*_telem`, software cmd `cmd` + round-tripped `cmd_telem`, gyro `gyro_telem` (theta only), estimate `est_telem`, EKF state `ekf_telem` (hidden by default) |
 | Acceleration | 3rd | software cmd `cmd` + round-tripped `cmd_telem`, firmware output `accel_u_telem` + friction-compensated `accel_u_fric_comp_telem`, IMU `imu_telem` (x/y only) |
 
@@ -58,6 +58,15 @@ one is hidden; toggle the latter on to read the round-trip delay. Colors follow
 | Command (pos/vel/accel plots) | `cmd`, dark blue `#0000ff`, from `/analysis_control` | `cmd_telem`, light blue `#6666ff`, from `/analysis_telem` (`cmd_echo`) |
 | Vision (position plots) | `vision`, mint `#3eb489`, from `/analysis_vision` (`theta` = quaternion yaw) | `vision_telem`, cyan `#00dac7`, from `/analysis_telem` (`vision_pose`, emitted only when the telemetry `vision_update` bit is set) |
 
+The position plots additionally carry a **`vision_old_telem`** curve (brown
+`#8b4513`, points only) drawn from `/analysis_telem` (`vision_pose`, emitted only
+when the telemetry `vision_old` bit is set). These are vision measurements the
+firmware received but rejected as too old to fuse (present at the EKF horizon
+with `z_insert_age >= ekf_delay_us`); plotting them in a distinct brown color
+distinguishes them from the applied `vision_telem` points. (Foxglove's Plot panel
+renders only circular point markers, so color — not an `X` marker shape — is the
+distinguishing cue.)
+
 Two additional wheel views share the same time axis:
 
 | View | Layout | Curves (labels) |
@@ -68,6 +77,20 @@ Two additional wheel views share the same time axis:
 Wheel telemetry is sourced from the four `CcmTelemetry` motors in
 `ExtendedTelemetry`; a wheel's `current` is NaN only when its per-cycle
 current-sample buffer is empty.
+
+A **Vision Age** panel sits to the right of the wheel views, spanning the full
+window height. It plots the age (ms) of the vision measurement present at the EKF
+horizon each tick, from `ExtendedTelemetry.vision_insert_age_us`, split into two
+line curves by outcome:
+
+| Curve (label) | Color | Populated when |
+|---------------|-------|----------------|
+| `vision_age_accepted_ms` | cyan `#00ffff` | `vision_update` set (fused) |
+| `vision_age_rejected_ms` | red `#ff0000` | `vision_old` set (present but too old to fuse, `z_insert_age >= ekf_delay_us`) |
+
+Each curve is NaN (gaps) when its condition isn't met, and both are NaN on ticks
+with no vision measurement — so the accepted curve stays under the EKF horizon
+while the rejected curve rides above it.
 
 ## Body control mode → command mapping
 

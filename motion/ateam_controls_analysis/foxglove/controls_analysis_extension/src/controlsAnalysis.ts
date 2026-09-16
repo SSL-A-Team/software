@@ -160,7 +160,7 @@ function syncedHeaderStamp(
 // when inactive) rather than reading `undefined`.
 function dimensionFieldNames(): string[] {
   const names = [
-    "pos_estimate", "pos_ekf", "pos_traj", "pos_vision", "pos_cmd",
+    "pos_estimate", "pos_ekf", "pos_traj", "pos_vision", "pos_vision_old", "pos_cmd",
     "vel_estimate", "vel_ekf", "vel_traj", "vel_cmd", "vel_gyro",
     "accel_u", "accel_u_fric_comp", "accel_imu", "accel_cmd",
   ];
@@ -246,6 +246,8 @@ export function controlsAnalysisSchemaDescription(): MessageSchemaDescription {
     body_control_mode: "number",
     theta_estimate: "number",
     robot_time_s: "number",
+    vision_age_accepted_ms: "number",
+    vision_age_rejected_ms: "number",
     header: { stamp: { sec: "number", nanosec: "number", nsec: "number" } },
   };
   for (const d of DIMS) {
@@ -283,6 +285,18 @@ export function buildControlsAnalysis(
   // `vision_pose` only carries a fresh measurement on cycles where the firmware
   // applied a vision update; otherwise it's stale, so gate the curve on the bit.
   const visionUpdated = Boolean(bct.vision_update);
+  // `vision_old` marks a cycle where a vision measurement was present at the EKF
+  // horizon but too old to fuse; `vision_pose` still carries that (rejected)
+  // measurement, plotted on its own curve to distinguish it from applied vision.
+  const visionOld = Boolean(bct.vision_old);
+
+  // Age (ms) of the vision measurement present at the EKF horizon this tick,
+  // split by outcome so each plots on its own curve: accepted/fused
+  // (`vision_update`) vs rejected as too-old (`vision_old`). NaN on the other
+  // curve (and both when no vision measurement was reported) so they gap.
+  const ageMs = Number(bct.vision_insert_age_us) / 1000;
+  const visionAgeAcceptedMs = visionUpdated ? ageMs : NAN;
+  const visionAgeRejectedMs = visionOld ? ageMs : NAN;
 
   const stamp =
     receiveTime != undefined && anchor != undefined
@@ -293,6 +307,8 @@ export function buildControlsAnalysis(
     body_control_mode: mode,
     theta_estimate: thetaEst,
     robot_time_s: robotTimeSeconds(msg),
+    vision_age_accepted_ms: visionAgeAcceptedMs,
+    vision_age_rejected_ms: visionAgeRejectedMs,
     header: { stamp },
   };
 
@@ -307,6 +323,7 @@ export function buildControlsAnalysis(
     f["pos_ekf"] = at(bct.kf_body_pos_prediction, i);
     f["pos_traj"] = at(bct.body_traj_pos, i);
     f["pos_vision"] = visionUpdated ? at(bct.vision_pose, i) : NAN;
+    f["pos_vision_old"] = visionOld ? at(bct.vision_pose, i) : NAN;
     f["vel_estimate"] = at(bct.kf_body_vel_estimate, i);
     // EKF body velocity state (delivered on the `kf_body_vel_prediction` field).
     f["vel_ekf"] = at(bct.kf_body_vel_prediction, i);

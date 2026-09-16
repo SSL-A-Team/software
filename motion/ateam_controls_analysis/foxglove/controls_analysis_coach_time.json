@@ -91,6 +91,14 @@
           "label": "vision_telem"
         },
         {
+          "value": "/analysis_telem.x.pos_vision_old",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#8b4513",
+          "showLine": false,
+          "label": "vision_old_telem"
+        },
+        {
           "value": "/analysis_telem.x.pos_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
@@ -362,6 +370,14 @@
           "label": "vision_telem"
         },
         {
+          "value": "/analysis_telem.y.pos_vision_old",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#8b4513",
+          "showLine": false,
+          "label": "vision_old_telem"
+        },
+        {
           "value": "/analysis_telem.y.pos_estimate",
           "enabled": true,
           "timestampMethod": "receiveTime",
@@ -631,6 +647,14 @@
           "color": "#00dac7",
           "showLine": false,
           "label": "vision_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.pos_vision_old",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#8b4513",
+          "showLine": false,
+          "label": "vision_old_telem"
         },
         {
           "value": "/analysis_telem.theta.pos_estimate",
@@ -1044,6 +1068,35 @@
       "xAxisVal": "timestamp",
       "sidebarDimension": 240,
       "followingViewWidth": 10.0
+    },
+    "Plot!vision_age": {
+      "paths": [
+        {
+          "value": "/analysis_telem.vision_age_accepted_ms",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#00ffff",
+          "showLine": true,
+          "label": "vision_age_accepted_ms"
+        },
+        {
+          "value": "/analysis_telem.vision_age_rejected_ms",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff0000",
+          "showLine": true,
+          "label": "vision_age_rejected_ms"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": false,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "followingViewWidth": 10.0
     }
   },
   "globalVariables": {
@@ -1100,38 +1153,43 @@
     "second": {
       "direction": "row",
       "first": {
-        "direction": "column",
-        "first": "Plot!front_left_vel",
-        "second": {
+        "direction": "row",
+        "first": {
           "direction": "column",
-          "first": "Plot!back_left_vel",
+          "first": "Plot!front_left_vel",
           "second": {
             "direction": "column",
-            "first": "Plot!back_right_vel",
-            "second": "Plot!front_right_vel",
-            "splitPercentage": 50.0
+            "first": "Plot!back_left_vel",
+            "second": {
+              "direction": "column",
+              "first": "Plot!back_right_vel",
+              "second": "Plot!front_right_vel",
+              "splitPercentage": 50.0
+            },
+            "splitPercentage": 33.333333333333336
           },
-          "splitPercentage": 33.333333333333336
+          "splitPercentage": 25.0
         },
-        "splitPercentage": 25.0
-      },
-      "second": {
-        "direction": "column",
-        "first": "Plot!front_left_cur",
         "second": {
           "direction": "column",
-          "first": "Plot!back_left_cur",
+          "first": "Plot!front_left_cur",
           "second": {
             "direction": "column",
-            "first": "Plot!back_right_cur",
-            "second": "Plot!front_right_cur",
-            "splitPercentage": 50.0
+            "first": "Plot!back_left_cur",
+            "second": {
+              "direction": "column",
+              "first": "Plot!back_right_cur",
+              "second": "Plot!front_right_cur",
+              "splitPercentage": 50.0
+            },
+            "splitPercentage": 33.333333333333336
           },
-          "splitPercentage": 33.333333333333336
+          "splitPercentage": 25.0
         },
-        "splitPercentage": 25.0
+        "splitPercentage": 50.0
       },
-      "splitPercentage": 50.0
+      "second": "Plot!vision_age",
+      "splitPercentage": 78.0
     },
     "splitPercentage": 62.0
   }
