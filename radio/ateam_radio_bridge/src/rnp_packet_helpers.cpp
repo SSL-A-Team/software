@@ -309,6 +309,8 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return VEC5_F32;
     case TWIST_FB_PIDII_ANGULAR:
       return VEC5_F32;
+    case VISION_SEED_SAMPLES:
+      return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
