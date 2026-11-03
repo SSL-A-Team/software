@@ -40,6 +40,7 @@ def generate_launch_description():
         # IP Overrides
         DeclareLaunchArgument('vision_interface_address', default_value=''),
         DeclareLaunchArgument('radio_interface_address', default_value=''),
+        DeclareLaunchArgument('controls_enabled_wheel_vel', default_value='False'),
         DeclareLaunchArgument('gc_interface_address', default_value=''),
         DeclareLaunchArgument('gc_server_address', default_value=''),
 
@@ -109,7 +110,8 @@ def generate_launch_description():
             name='radio_bridge',
             parameters=[{
                 'net_interface_address': LaunchConfiguration('radio_interface_address'),
-                'gc_team_name': LaunchConfiguration('team_name')
+                'gc_team_name': LaunchConfiguration('team_name'),
+                'controls_enabled.wheel_vel': LaunchConfiguration('controls_enabled_wheel_vel'),
             }],
             respawn=True,
             remappings=remap_indexed_topics([
