@@ -315,6 +315,12 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return VEC4_F32;
     case TRACKING_FF_ACCEL_CUTOFF_HZ:
       return VEC2_F32;
+    case FRICTION_COMP_HOLD_ERR_THRESHOLD:
+      return VEC2_F32;
+    case TRACKING_VEL_LOOKAHEAD_S:
+      return F32;
+    case TRACKING_WHEEL_VEL_FB:
+      return VEC3_F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
