@@ -297,7 +297,7 @@
           "enabled": true,
           "timestampMethod": "headerStamp",
           "color": "#00dac7",
-          "showLine": true,
+          "showLine": false,
           "label": "imu_telem"
         }
       ],
@@ -608,7 +608,7 @@
           "enabled": true,
           "timestampMethod": "headerStamp",
           "color": "#00dac7",
-          "showLine": true,
+          "showLine": false,
           "label": "imu_telem"
         }
       ],
@@ -1172,7 +1172,7 @@
           "enabled": true,
           "timestampMethod": "headerStamp",
           "color": "#00ffff",
-          "showLine": true,
+          "showLine": false,
           "label": "vision_age_accepted_ms"
         },
         {
@@ -1180,7 +1180,7 @@
           "enabled": true,
           "timestampMethod": "headerStamp",
           "color": "#ff0000",
-          "showLine": true,
+          "showLine": false,
           "label": "vision_age_rejected_ms"
         }
       ],
