@@ -161,8 +161,7 @@ Connection status is published on `~/robot_feedback/connection/robot{id}` as `at
 ### Controls Enable Flags
 
 The radio bridge has parameters that control which firmware control loops are active:
-- `controls_enabled.body_vel` (default `true`) — enable body velocity control
-- `controls_enabled.wheel_vel` (default `true`) — run the wheel velocity loop on the trajectory velocity
+- `controls_enabled.wheel_vel` (default `false`) — run the wheel velocity loop on the trajectory velocity
 
 `wheel_vel` maps to the `wheel_vel_control_enabled` bit in the `BasicControl` packet. Wheel torque (current) control is always on in firmware.
 
