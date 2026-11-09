@@ -310,6 +310,7 @@ The radio bridge provides ROS services for reading and writing firmware paramete
 | 12 | `TWIST_FB_PIDII_LINEAR` | vec5 | `[P, I, D, I_min, I_max]` |
 | 13 | `TWIST_FB_PIDII_ANGULAR` | vec5 | `[P, I, D, I_min, I_max]` |
 | 14 | `VISION_SEED_SAMPLES` | f32 | `[seed_samples]` |
+| 15 | `PHYS_STRIBECK_MODEL` | vec4 | `[static_linear, static_angular, stribeck_vel_linear, stribeck_vel_angular]` |
 
 ### Protocol Details
 

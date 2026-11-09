@@ -311,6 +311,8 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return VEC5_F32;
     case VISION_SEED_SAMPLES:
       return F32;
+    case PHYS_STRIBECK_MODEL:
+      return VEC4_F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
