@@ -294,7 +294,7 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
     case PHYS_MOTOR_MODEL:
       return VEC2_F32;
     case PHYS_FRICTION_MODEL:
-      return VEC6_F32;
+      return VEC4_F32;
     case FRICTION_COMP_VEL_THRESHOLD:
       return VEC2_F32;
     case TRACKING_ACCEL_GAIN:
