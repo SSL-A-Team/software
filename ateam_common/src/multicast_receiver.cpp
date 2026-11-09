@@ -43,42 +43,25 @@ MulticastReceiver::MulticastReceiver(
   ReceiveCallback receive_callback,
   std::string interface_address)
 : receive_callback_(receive_callback),
-  multicast_socket_(io_service_)
+  multicast_socket_(io_service_),
+  multicast_address_(boost::asio::ip::make_address(multicast_address_string).to_v4()),
+  interface_address_(interface_address),
+  rejoin_timer_(io_service_)
 {
-  const auto multicast_address = boost::asio::ip::make_address(multicast_address_string).to_v4();
-  const boost::asio::ip::udp::endpoint multicast_endpoint(multicast_address, multicast_port);
+  const boost::asio::ip::udp::endpoint multicast_endpoint(multicast_address_, multicast_port);
   multicast_socket_.open(multicast_endpoint.protocol());
   multicast_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
   multicast_socket_.bind(multicast_endpoint);
-  if (interface_address.empty()) {
-    // If no interface specified, join on all interfaces
-    const auto available_interface_addresses = GetIpAdresses(false);
-    for(const auto & address : available_interface_addresses) {
-      try {
-        multicast_socket_.set_option(
-        boost::asio::ip::multicast::join_group(
-          multicast_address,
-          boost::asio::ip::make_address_v4(address)));
-      } catch (const boost::system::system_error & e) {
-        /* Ignore "address already in use" exceptions. This just indicates multiple addresses
-         * assigned to the same interface.
-         */
-        if(e.code().value() != EADDRINUSE) {
-          boost::rethrow_exception(boost::current_exception());
-        }
-      }
-    }
-  } else {
-    multicast_socket_.set_option(
-      boost::asio::ip::multicast::join_group(
-        multicast_address,
-        boost::asio::ip::make_address_v4(interface_address)));
-  }
+
+  JoinMulticastGroup();
+
   multicast_socket_.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,
     boost::bind(
       &MulticastReceiver::HandleMulticastReceiveFrom, this,
       boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+
+  ScheduleRejoin();
 
   io_service_thread_ = std::thread(
     [this]() {
@@ -145,6 +128,74 @@ void MulticastReceiver::HandleUDPSendTo(const boost::system::error_code & error,
   if (error) {
     std::cerr << "Error sending UDP data: " << error.message() << std::endl;
   }
+}
+
+void MulticastReceiver::JoinMulticastGroup()
+{
+  auto join_one = [this](const std::string & address) {
+    boost::system::error_code ec;
+    multicast_socket_.set_option(
+      boost::asio::ip::multicast::join_group(
+        multicast_address_,
+        boost::asio::ip::make_address_v4(address)),
+      ec);
+    if (ec && ec.value() != EADDRINUSE) {
+      std::cerr << "Failed to join multicast group on interface " << address
+                << ": " << ec.message() << std::endl;
+    }
+  };
+
+  if (interface_address_.empty()) {
+    const auto available_interface_addresses = GetIpAdresses(false);
+    for (const auto & address : available_interface_addresses) {
+      join_one(address);
+    }
+  } else {
+    join_one(interface_address_);
+  }
+}
+
+void MulticastReceiver::LeaveMulticastGroup()
+{
+  auto leave_one = [this](const std::string & address) {
+    boost::system::error_code ec;
+    multicast_socket_.set_option(
+      boost::asio::ip::multicast::leave_group(
+        multicast_address_,
+        boost::asio::ip::make_address_v4(address)),
+      ec);
+    // Ignore errors from leaving groups we aren't in.
+  };
+
+  if (interface_address_.empty()) {
+    const auto available_interface_addresses = GetIpAdresses(false);
+    for (const auto & address : available_interface_addresses) {
+      leave_one(address);
+    }
+  } else {
+    leave_one(interface_address_);
+  }
+}
+
+void MulticastReceiver::ScheduleRejoin()
+{
+  rejoin_timer_.expires_after(std::chrono::seconds(30));
+  rejoin_timer_.async_wait([this](const boost::system::error_code & ec) {
+    if (ec == boost::asio::error::operation_aborted) {
+      return;
+    }
+    try {
+      LeaveMulticastGroup();
+      JoinMulticastGroup();
+      ScheduleRejoin();
+    } catch (const std::exception & e) {
+      // Defensive: Leave/Join now use the non-throwing error_code variant of
+      // set_option, but in case something else (timer scheduling, etc.) throws
+      // we don't want to let the exception escape the async handler and tear
+      // down the io_service thread.
+      std::cerr << "Exception in multicast rejoin handler: " << e.what() << std::endl;
+    }
+  });
 }
 
 }  // namespace ateam_common
