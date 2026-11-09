@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Local-frame telemetry rotated to global.** The firmware now reports
+  `kf_body_vel_estimate`, `kf_body_vel_prediction` and `imu_accel` in the robot's
+  local frame. The converter rotates their X/Y into the global frame using the
+  current state-estimate heading (`kf_body_pos_estimate[2]`), so `vel_estimate`,
+  `vel_ekf` and `accel_imu` stay global like every other plotted signal.
 - **Acceleration maneuvers.** Added the open-loop acceleration modes
   (`BCM_GLOBAL_ACCEL_OPEN_LOOP = 15`, `BCM_LOCAL_ACCEL_OPEN_LOOP = 16`). The global
   open-loop command is routed onto `accel_cmd` (telemetry echo from

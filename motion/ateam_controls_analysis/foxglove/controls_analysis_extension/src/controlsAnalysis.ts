@@ -99,6 +99,18 @@ function at(a: Vec, i: number): number {
   return a != undefined && i < a.length ? Number(a[i]) : NAN;
 }
 
+// Rotate a robot-local [x, y, theta] vector into the global frame by heading
+// `theta` (theta component passes through). The firmware reports the KF
+// velocities and IMU accel in the robot's local frame; everything plotted is
+// global.
+function localToGlobal(a: Vec, theta: number): [number, number, number] {
+  const x = at(a, 0);
+  const y = at(a, 1);
+  const c = Math.cos(theta);
+  const s = Math.sin(theta);
+  return [c * x - s * y, s * x + c * y, at(a, 2)];
+}
+
 // Reconstruct the robot's own microsecond clock -- split across two uint32s in
 // the telemetry (`timestamp_us_lo` / `timestamp_us_hi`) -- as float seconds.
 // This lets a Plot panel use robot time as its X axis (X-Axis = "message path"
@@ -286,6 +298,11 @@ export function buildControlsAnalysis(
   const mode: number = bct.body_control_mode;
   const thetaEst = at(bct.kf_body_pos_estimate, 2);
 
+  // Local-frame telemetry rotated to global by the current estimate heading.
+  const velEstimate = localToGlobal(bct.kf_body_vel_estimate, thetaEst);
+  const velEkf = localToGlobal(bct.kf_body_vel_prediction, thetaEst);
+  const accelImu = localToGlobal(bct.imu_accel, thetaEst);
+
   // Resolve the software command (global-frame modes only; shared across dims).
   const cmdDeriv = CMD_ROUTE[mode];
   const cmdNative = extractCmdNative(bct);
@@ -338,9 +355,9 @@ export function buildControlsAnalysis(
     f["pos_traj"] = at(bct.body_traj_pos, i);
     f["pos_vision"] = visionUpdated ? at(bct.vision_pose, i) : NAN;
     f["pos_vision_old"] = visionOld ? at(bct.vision_pose, i) : NAN;
-    f["vel_estimate"] = at(bct.kf_body_vel_estimate, i);
+    f["vel_estimate"] = velEstimate[i];
     // EKF body velocity state (delivered on the `kf_body_vel_prediction` field).
-    f["vel_ekf"] = at(bct.kf_body_vel_prediction, i);
+    f["vel_ekf"] = velEkf[i];
     f["vel_traj"] = at(bct.body_traj_vel, i);
     f["accel_u"] = at(bct.body_accel_u, i);
     f["accel_u_fric_comp"] = at(bct.body_accel_u_fric_comp, i);
@@ -349,7 +366,7 @@ export function buildControlsAnalysis(
     if (d === "theta") {
       f["vel_gyro"] = at(bct.imu_gyro, 2);
     } else {
-      f["accel_imu"] = at(bct.imu_accel, i);
+      f["accel_imu"] = accelImu[i];
     }
 
     // Per-mode reference-trajectory split series (color-by-mode).

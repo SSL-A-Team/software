@@ -41,6 +41,10 @@ firmware). Only **global-frame** command modes are plotted; local-frame commands
 per-mode-colored trajectory curves still show the active mode. When a robot is not
 `visible`, its vision `x/y/theta` are NaN so the curve gaps.
 
+All plotted signals are in the global frame: the firmware's local-frame KF
+velocities and IMU accel are rotated to global by the current state-estimate
+heading.
+
 > *Topic* converters are used (not `type: "schema"` converters) because a schema
 > converter's output fields don't resolve in the Plot panel here; a topic
 > converter produces a genuine dedicated output topic the layout binds to.
