@@ -162,10 +162,9 @@ Connection status is published on `~/robot_feedback/connection/robot{id}` as `at
 
 The radio bridge has parameters that control which firmware control loops are active:
 - `controls_enabled.body_vel` (default `true`) — enable body velocity control
-- `controls_enabled.wheel_vel` (default `true`) — enable wheel velocity feedforward
-- `controls_enabled.wheel_torque` (default `true`) — enable wheel torque (current) control
+- `controls_enabled.wheel_vel` (default `true`) — run the wheel velocity loop on the trajectory velocity
 
-These map to bit flags in the `BasicControl` packet: `wheel_vel_control_enabled` and `wheel_torque_control_enabled`.
+`wheel_vel` maps to the `wheel_vel_control_enabled` bit in the `BasicControl` packet. Wheel torque (current) control is always on in firmware.
 
 ---
 
@@ -305,14 +304,13 @@ The radio bridge provides ROS services for reading and writing firmware paramete
 | 5 | `PHYS_MOTOR_MODEL` | vec2 | `[torque_constant, efficiency_factor]` |
 | 6 | `PHYS_FRICTION_MODEL` | vec4 | `[coulomb_linear, coulomb_angular, viscous_linear, viscous_angular]` |
 | 7 | `FRICTION_COMP_VEL_THRESHOLD` | vec2 | `[linear_vel_threshold, angular_vel_threshold]` |
-| 8 | `TRACKING_ACCEL_GAIN` | vec2 | `[feedforward_gain, feedback_gain]` (tracking accel path) |
+| 8 | `TRACKING_ACCEL_GAIN` | vec2 | `[feedforward_gain, feedback_gain]` (tracking accel / wheel torque path) |
 | 9 | `TRACKING_DIVERGENCE_THRESHOLD` | vec4 | `[error_pos_linear, error_pos_angular, error_vel_linear, error_vel_angular]` |
 | 10 | `POSE_FB_PIDII_LINEAR` | vec5 | `[P, I, D, I_min, I_max]` |
 | 11 | `POSE_FB_PIDII_ANGULAR` | vec5 | `[P, I, D, I_min, I_max]` |
 | 12 | `TWIST_FB_PIDII_LINEAR` | vec5 | `[P, I, D, I_min, I_max]` |
 | 13 | `TWIST_FB_PIDII_ANGULAR` | vec5 | `[P, I, D, I_min, I_max]` |
 | 14 | `VISION_SEED_SAMPLES` | f32 | `[seed_samples]` |
-| 15 | `TRACKING_VEL_GAIN` | vec2 | `[feedforward_gain, feedback_gain]` (tracking velocity path) |
 
 ### Protocol Details
 
@@ -567,8 +565,8 @@ breakbeam_ball_detected, breakbeam_ball_detected_filtered, kicker_available, chi
 
 ### `BasicControl` (C struct sent over radio)
 ```
-Bit flags: request_shutdown, reboot_robot, game_state_in_stop, emergency_stop,
-           wheel_vel_control_enabled, wheel_torque_control_enabled, vision_update, reset_controller
+Bit flags: request_shutdown, reboot_robot, game_state_in_stop, game_state_in_halt,
+           emergency_stop, wheel_vel_control_enabled, vision_update, reset_controller
 Vision: vision_position_update[3] (x, y, θ)
 Mode: body_control_mode (BodyControlMode enum)
 Kicker: kick_request (KickRequest enum), kick_vel (m/s), dribbler_speed (RPM)
