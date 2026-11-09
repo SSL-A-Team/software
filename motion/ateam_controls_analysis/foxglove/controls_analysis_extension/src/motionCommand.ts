@@ -30,6 +30,7 @@ const NAN = Number.NaN;
 const BCM_GLOBAL_POSITION = 10;
 const BCM_GLOBAL_VELOCITY = 11;
 const BCM_GLOBAL_ACCEL = 13;
+const BCM_GLOBAL_ACCEL_OPEN_LOOP = 15;
 
 const DIMS = ["x", "y", "theta"] as const;
 const CMD_FIELDS = ["pos_cmd", "vel_cmd", "accel_cmd"] as const;
@@ -41,6 +42,7 @@ const MODE_ROUTE: Record<number, [string, string]> = {
   [BCM_GLOBAL_POSITION]: ["pose", "pos_cmd"],
   [BCM_GLOBAL_VELOCITY]: ["velocity", "vel_cmd"],
   [BCM_GLOBAL_ACCEL]: ["acceleration", "accel_cmd"],
+  [BCM_GLOBAL_ACCEL_OPEN_LOOP]: ["acceleration", "accel_cmd"],
 };
 
 // Structure of the converted message, for message-path autocomplete. Mirrors the

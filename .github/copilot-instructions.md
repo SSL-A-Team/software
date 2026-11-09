@@ -304,13 +304,15 @@ The radio bridge provides ROS services for reading and writing firmware paramete
 | 4 | `PHYS_INERTIA` | vec2 | `[mass, moment_z]` |
 | 5 | `PHYS_MOTOR_MODEL` | vec2 | `[torque_constant, efficiency_factor]` |
 | 6 | `PHYS_FRICTION_MODEL` | vec4 | `[coulomb_linear, coulomb_angular, viscous_linear, viscous_angular]` |
-| 7 | `COULOMB_COMP_ACCEL_DEADZONE` | f32 | `[deadzone_threshold]` |
-| 8 | `POSE_CONTROL_GAIN` | vec2 | `[feedforward_gain, feedback_gain]` |
-| 9 | `TRAJ_RECOMPUTE_ERROR` | vec4 | `[error_pos_linear, error_pos_angular, error_vel_linear, error_vel_angular]` |
+| 7 | `FRICTION_COMP_VEL_THRESHOLD` | vec2 | `[linear_vel_threshold, angular_vel_threshold]` |
+| 8 | `TRACKING_ACCEL_GAIN` | vec2 | `[feedforward_gain, feedback_gain]` (tracking accel path) |
+| 9 | `TRACKING_DIVERGENCE_THRESHOLD` | vec4 | `[error_pos_linear, error_pos_angular, error_vel_linear, error_vel_angular]` |
 | 10 | `POSE_FB_PIDII_LINEAR` | vec5 | `[P, I, D, I_min, I_max]` |
 | 11 | `POSE_FB_PIDII_ANGULAR` | vec5 | `[P, I, D, I_min, I_max]` |
 | 12 | `TWIST_FB_PIDII_LINEAR` | vec5 | `[P, I, D, I_min, I_max]` |
 | 13 | `TWIST_FB_PIDII_ANGULAR` | vec5 | `[P, I, D, I_min, I_max]` |
+| 14 | `VISION_SEED_SAMPLES` | f32 | `[seed_samples]` |
+| 15 | `TRACKING_VEL_GAIN` | vec2 | `[feedforward_gain, feedback_gain]` (tracking velocity path) |
 
 ### Protocol Details
 

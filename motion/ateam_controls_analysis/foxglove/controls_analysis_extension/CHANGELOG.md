@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Acceleration maneuvers.** Added the open-loop acceleration modes
+  (`BCM_GLOBAL_ACCEL_OPEN_LOOP = 15`, `BCM_LOCAL_ACCEL_OPEN_LOOP = 16`). The global
+  open-loop command is routed onto `accel_cmd` (telemetry echo from
+  `maneuver_global_acc_open_loop`, plus `accel_cmd_global_acc_ol`) and on
+  `/analysis_control`. All four acceleration modes now run a firmware trajectory,
+  so they get per-mode `pos_traj_*` / `vel_traj_*` split series
+  (`global_acc`, `local_acc` in pink; `global_acc_ol`, `local_acc_ol` in olive),
+  added to every position and velocity plot in both layouts.
 - **EKF state curves.** Added `pos_ekf` and `vel_ekf` to the converter, plotted on
   each position and velocity axis (x / y / theta) as `ekf_telem` — hidden by
   default, lines style. Present in all layouts.

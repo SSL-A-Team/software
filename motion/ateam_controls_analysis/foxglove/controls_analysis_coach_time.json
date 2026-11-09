@@ -27,6 +27,38 @@
           "label": "traj_local_vel_telem"
         },
         {
+          "value": "/analysis_telem.x.pos_traj_global_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_global_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.x.pos_traj_local_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_local_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.x.pos_traj_global_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_global_acc_ol_telem"
+        },
+        {
+          "value": "/analysis_telem.x.pos_traj_local_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_local_acc_ol_telem"
+        },
+        {
           "value": "/analysis_telem.x.pos_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
@@ -150,6 +182,38 @@
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_local_vel_telem"
+        },
+        {
+          "value": "/analysis_telem.x.vel_traj_global_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_global_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.x.vel_traj_local_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_local_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.x.vel_traj_global_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_global_acc_ol_telem"
+        },
+        {
+          "value": "/analysis_telem.x.vel_traj_local_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_local_acc_ol_telem"
         },
         {
           "value": "/analysis_telem.x.vel_traj_heading_pivot",
@@ -306,6 +370,38 @@
           "label": "traj_local_vel_telem"
         },
         {
+          "value": "/analysis_telem.y.pos_traj_global_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_global_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.y.pos_traj_local_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_local_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.y.pos_traj_global_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_global_acc_ol_telem"
+        },
+        {
+          "value": "/analysis_telem.y.pos_traj_local_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_local_acc_ol_telem"
+        },
+        {
           "value": "/analysis_telem.y.pos_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
@@ -429,6 +525,38 @@
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_local_vel_telem"
+        },
+        {
+          "value": "/analysis_telem.y.vel_traj_global_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_global_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.y.vel_traj_local_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_local_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.y.vel_traj_global_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_global_acc_ol_telem"
+        },
+        {
+          "value": "/analysis_telem.y.vel_traj_local_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_local_acc_ol_telem"
         },
         {
           "value": "/analysis_telem.y.vel_traj_heading_pivot",
@@ -585,6 +713,38 @@
           "label": "traj_local_vel_telem"
         },
         {
+          "value": "/analysis_telem.theta.pos_traj_global_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_global_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.pos_traj_local_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_local_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.pos_traj_global_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_global_acc_ol_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.pos_traj_local_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_local_acc_ol_telem"
+        },
+        {
           "value": "/analysis_telem.theta.pos_traj_heading_pivot",
           "enabled": true,
           "timestampMethod": "receiveTime",
@@ -708,6 +868,38 @@
           "color": "#ffea00",
           "showLine": true,
           "label": "traj_local_vel_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.vel_traj_global_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_global_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.vel_traj_local_acc",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#ff69b4",
+          "showLine": true,
+          "label": "traj_local_acc_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.vel_traj_global_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_global_acc_ol_telem"
+        },
+        {
+          "value": "/analysis_telem.theta.vel_traj_local_acc_ol",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#808000",
+          "showLine": true,
+          "label": "traj_local_acc_ol_telem"
         },
         {
           "value": "/analysis_telem.theta.vel_traj_heading_pivot",

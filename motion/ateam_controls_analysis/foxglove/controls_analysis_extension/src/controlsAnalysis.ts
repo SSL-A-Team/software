@@ -13,7 +13,6 @@
 //     reboot tracking, no mode-transition gap logic, no heartbeat).
 //   * NaN marks "no data at this instant", which Foxglove renders as a gap.
 //   * The software command (`cmd_echo`) is routed onto the derivative implied by
-//   * The software command (`cmd_echo`) is routed onto the derivative implied by
 //     the active body control mode. Only global-frame modes route a command;
 //     local-frame commands (`BCM_LOCAL_*`) are intentionally NOT plotted (this
 //     avoids a brittle local->global rotation). The per-mode-colored trajectory
@@ -33,6 +32,8 @@ export const BCM_GLOBAL_VELOCITY = 11;
 export const BCM_LOCAL_VELOCITY = 12;
 export const BCM_GLOBAL_ACCEL = 13;
 export const BCM_LOCAL_ACCEL = 14;
+export const BCM_GLOBAL_ACCEL_OPEN_LOOP = 15;
+export const BCM_LOCAL_ACCEL_OPEN_LOOP = 16;
 export const BCM_HEADING_PIVOT = 20;
 export const BCM_POINT_PIVOT = 21;
 export const BCM_HEADING_LINE = 30;
@@ -56,18 +57,25 @@ const MODE_SUFFIX: Record<number, string> = {
   [BCM_LOCAL_VELOCITY]: "local_vel",
   [BCM_GLOBAL_ACCEL]: "global_acc",
   [BCM_LOCAL_ACCEL]: "local_acc",
+  [BCM_GLOBAL_ACCEL_OPEN_LOOP]: "global_acc_ol",
+  [BCM_LOCAL_ACCEL_OPEN_LOOP]: "local_acc_ol",
   [BCM_HEADING_PIVOT]: "heading_pivot",
   [BCM_POINT_PIVOT]: "point_pivot",
   [BCM_HEADING_LINE]: "heading_line",
   [BCM_POINT_LINE]: "point_line",
 };
 
-// Modes for which the firmware computes trajectory setpoints (bang-bang); used
-// to color the reference-trajectory curves on the position/velocity plots.
+// Modes for which the firmware runs a trajectory (bang-bang, pivot, line, or
+// integrated accel for the acceleration modes); used to color the
+// reference-trajectory curves on the position/velocity plots.
 const TRAJ_MODES = [
   BCM_GLOBAL_POSITION,
   BCM_GLOBAL_VELOCITY,
   BCM_LOCAL_VELOCITY,
+  BCM_GLOBAL_ACCEL,
+  BCM_LOCAL_ACCEL,
+  BCM_GLOBAL_ACCEL_OPEN_LOOP,
+  BCM_LOCAL_ACCEL_OPEN_LOOP,
   BCM_HEADING_PIVOT,
   BCM_POINT_PIVOT,
   BCM_HEADING_LINE,
@@ -82,6 +90,7 @@ const CMD_ROUTE: Record<number, string> = {
   [BCM_GLOBAL_POSITION]: "pos",
   [BCM_GLOBAL_VELOCITY]: "vel",
   [BCM_GLOBAL_ACCEL]: "accel",
+  [BCM_GLOBAL_ACCEL_OPEN_LOOP]: "accel",
 };
 
 type Vec = ArrayLike<number> | undefined;
@@ -173,6 +182,7 @@ function dimensionFieldNames(): string[] {
     "pos_cmd_global_pos",
     "vel_cmd_global_vel",
     "accel_cmd_global_acc",
+    "accel_cmd_global_acc_ol",
   );
   return names;
 }
@@ -194,6 +204,10 @@ function extractCmdNative(bct: any): [number, number, number] | undefined {
     }
     case BCM_GLOBAL_ACCEL: {
       const e = bct.maneuver_global_acc.cmd_echo;
+      return [e.global_xdd, e.global_ydd, e.global_alpha];
+    }
+    case BCM_GLOBAL_ACCEL_OPEN_LOOP: {
+      const e = bct.maneuver_global_acc_open_loop.cmd_echo;
       return [e.global_xdd, e.global_ydd, e.global_alpha];
     }
     default:

@@ -34,7 +34,9 @@ variable — no referee introspection.
 > but alias re-pointing didn't reliably re-target the converters, so selection is
 > done inside the converter instead.)
 
-Only **global-frame** command modes are plotted; local-frame commands
+The per-mode trajectory curves cover position, velocity, pivot, line and all four
+acceleration modes (closed- and open-loop accel run an integrated trajectory in
+firmware). Only **global-frame** command modes are plotted; local-frame commands
 (`BCM_LOCAL_*`) are intentionally not plotted (no local→global rotation). The
 per-mode-colored trajectory curves still show the active mode. When a robot is not
 `visible`, its vision `x/y/theta` are NaN so the curve gaps.

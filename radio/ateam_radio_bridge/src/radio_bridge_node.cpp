@@ -441,6 +441,22 @@ private:
             static_cast<float>(command.acceleration.theta),
           };
           break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_ACCEL_OPEN_LOOP:
+          control_msg.body_control_mode = BCM_GLOBAL_ACCEL_OPEN_LOOP;
+          control_msg.cmd.global_acc_open_loop = {
+            static_cast<float>(command.acceleration.x),
+            static_cast<float>(command.acceleration.y),
+            static_cast<float>(command.acceleration.theta),
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_ACCEL_OPEN_LOOP:
+          control_msg.body_control_mode = BCM_LOCAL_ACCEL_OPEN_LOOP;
+          control_msg.cmd.local_acc_open_loop = {
+            static_cast<float>(command.acceleration.x),
+            static_cast<float>(command.acceleration.y),
+            static_cast<float>(command.acceleration.theta),
+          };
+          break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT:
           control_msg.body_control_mode = BCM_HEADING_PIVOT;
           control_msg.cmd.heading_pivot = {
