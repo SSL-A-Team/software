@@ -295,19 +295,17 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return F32;
     case PHYS_FRICTION_MODEL:
       return VEC6_F32;
-    case TRACKING_ACCEL_GAIN:
-      return VEC2_F32;
     case TRACKING_DIVERGENCE_THRESHOLD:
       return VEC4_F32;
-    case POSE_FB_PIDII_LINEAR:
-      return VEC5_F32;
-    case POSE_FB_PIDII_ANGULAR:
-      return VEC5_F32;
-    case TWIST_FB_PIDII_LINEAR:
-      return VEC5_F32;
-    case TWIST_FB_PIDII_ANGULAR:
-      return VEC5_F32;
     case VISION_SEED_SAMPLES:
+      return F32;
+    case POSE_FB_XY:
+      return VEC3_F32;
+    case POSE_FB_W:
+      return VEC4_F32;
+    case WHEEL_VEL_FB:
+      return VEC4_F32;
+    case WHEEL_FF_CURRENT_LIMIT:
       return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
