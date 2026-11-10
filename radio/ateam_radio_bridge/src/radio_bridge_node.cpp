@@ -635,8 +635,14 @@ private:
       return;
     }
 
+    // Reuse an existing connection to the same robot address: a robot re-sending hellos
+    // (e.g. several queued during a link outage) must keep getting the same port. This
+    // also avoids destroying a connection while holding mutex_ (its receive thread may be
+    // waiting on it).
+    const bool reuse_connection = connections_[robot_id] != nullptr;
     RCLCPP_INFO(
-      get_logger(), "Creating connection for robot %d (%s:%d)", robot_id,
+      get_logger(), "%s connection for robot %d (%s:%d)",
+      reuse_connection ? "Reusing" : "Creating", robot_id,
       sender_address.c_str(), sender_port);
 
     motion_command_timestamps_[robot_id] = {};
@@ -647,11 +653,13 @@ private:
     // reliably. Compatible with ODIN (which also uses this port as its source port).
     const uint16_t robot_listen_port =
       static_cast<uint16_t>(get_parameter("discovery_port").as_int());
-    connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
-      sender_address, robot_listen_port,
-      std::bind(
-        &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_data.robot_id,
-        std::placeholders::_1, std::placeholders::_2));
+    if (!reuse_connection) {
+      connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
+        sender_address, robot_listen_port,
+        std::bind(
+          &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_data.robot_id,
+          std::placeholders::_1, std::placeholders::_2));
+    }
 
     HelloResponse response;
     response.port = connections_[hello_data.robot_id]->GetLocalPort();
