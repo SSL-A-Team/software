@@ -98,6 +98,11 @@ public:
     // anchor is captured the robot is held with a zero local-velocity command. The anchor is
     // re-captured whenever position mode is turned on or the controlled robot changes.
     declare_parameter<bool>("position_mode", false);
+
+    // Trajectory acceleration limits sent with every command (m/s^2, rad/s^2);
+    // 0 leaves the firmware default.
+    declare_parameter<double>("max_accel_linear", 3.0);
+    declare_parameter<double>("max_accel_angular", 0.0);
     declare_parameter<double>("position_mode.linear_range", 0.25);
     declare_parameter<double>("position_mode.angular_range", M_PI / 2);
 
@@ -237,6 +242,9 @@ private:
       command_message.velocity.theta = get_parameter("mapping.angular.z.scale").as_double() *
         joy_message->axes[angular_z_axis_];
     }
+
+    command_message.limit_acc_linear = get_parameter("max_accel_linear").as_double();
+    command_message.limit_acc_angular = get_parameter("max_accel_angular").as_double();
 
     if (kick_trigger_(*joy_message)) {
       command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
