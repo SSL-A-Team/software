@@ -1,5 +1,15 @@
 <template>
     <v-col style="max-width: 11vw; min-width: 11vw">
+        <v-switch
+            :model-value="state.joystickPositionMode"
+            @update:model-value="(v) => state.setJoystickPositionMode(!!v)"
+            label="Joystick position"
+            color="primary" density="compact" hide-details class="mb-2"
+        >
+            <v-tooltip activator="parent" location="end">
+                Joystick drives position targets around the robot's start pose (captured when enabled, with vision) instead of velocities
+            </v-tooltip>
+        </v-switch>
         <v-card variant="outlined" class="mb-4 pl-4 pt-3 pb-1 justify-space-around"
             v-for="robot of state.world.teams.get(state.world.team).robots.filter((obj)=> isValid(obj))" :ref="'robotCard' + robot.id" style="outline-offset:-1px" 
             @click.left.stop="state.setJoystickRobot(robot.id)"

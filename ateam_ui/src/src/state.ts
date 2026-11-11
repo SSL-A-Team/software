@@ -74,6 +74,8 @@ export class AppState {
     useKenobi: boolean = true; // Specifies whether to use the Kenobi world topic or ros robot/ball state topics for world data
 
     controlledRobot: number = null;
+    // Joystick sends position targets around the robot's start pose instead of velocities.
+    joystickPositionMode: boolean = false;
 
     plays: Map<string, Play> = new Map<string, Play>;
     selectedPlayName: string = null;
@@ -162,6 +164,13 @@ export class AppState {
             this.controlledRobot = id;
         }
         this.rosManager.params.get("joystick_param").set(this.controlledRobot,
+            function(result: any): void {}
+        );
+    }
+
+    setJoystickPositionMode(enabled: boolean): void {
+        this.joystickPositionMode = enabled;
+        this.rosManager.params.get("joystick_position_mode_param").set(enabled,
             function(result: any): void {}
         );
     }

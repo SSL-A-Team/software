@@ -171,6 +171,15 @@ export class RosManager {
         });
         this.params.set("joystick_param", joystickParam);
 
+        const joystickPositionModeParam = new ROSLIB.Param({
+            ros: this.ros,
+            name: "/joystick_control_node:position_mode"
+        });
+        joystickPositionModeParam.get(function(value: any): void {
+            appState.joystickPositionMode = value === true;
+        });
+        this.params.set("joystick_position_mode_param", joystickPositionModeParam);
+
         let setIgnoreFieldSideService = new ROSLIB.Service({
             ros: this.ros,
             name: '/field_manager/set_ignore_field_side',
