@@ -13,6 +13,7 @@
   <depend>rclcpp_components</depend>
   <depend>ateam_common</depend>
   <depend>ateam_msgs</depend>
+  <depend>ateam_radio_msgs</depend>
   <depend>sensor_msgs</depend>
 
   <exec_depend>joy</exec_depend>

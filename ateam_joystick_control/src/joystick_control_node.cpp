@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <array>
 #include <string>
 #include <vector>
 #include <functional>
@@ -27,7 +28,10 @@
 #include <ateam_common/robot_constants.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/joystick_control_status.hpp>
+#include <ateam_radio_msgs/msg/extended_telemetry.hpp>
 #include <sensor_msgs/msg/joy.hpp>
+#include <cmath>
+#include <optional>
 
 namespace ateam_joystick_control
 {
@@ -87,9 +91,15 @@ public:
     declare_parameter<double>("kick_speed", 5.0);
     declare_parameter<double>("chip_speed", 5.0);
 
-    // When true, joystick axes fill the global-frame pose (x, y, theta) and commands are sent as
-    // BCM_GLOBAL_POSITION instead of BCM_LOCAL_VELOCITY.
-    declare_parameter<bool>("use_global_position", false);
+    // Position mode: on entry (with vision active on the robot) the robot's estimated pose is
+    // captured as the anchor, and the sticks command BCM_GLOBAL_POSITION targets offset from it:
+    // x/y in the anchor's heading frame (stick forward = robot forward), scaled by
+    // position_mode.linear_range (m), and theta by position_mode.angular_range (rad). Until the
+    // anchor is captured the robot is held with a zero local-velocity command. The anchor is
+    // re-captured whenever position mode is turned on or the controlled robot changes.
+    declare_parameter<bool>("position_mode", false);
+    declare_parameter<double>("position_mode.linear_range", 0.25);
+    declare_parameter<double>("position_mode.angular_range", M_PI / 2);
 
     CreatePublisher(declare_parameter<int>("robot_id", -1));
     parameter_callback_handle_ =
@@ -120,6 +130,14 @@ private:
   rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr control_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::JoystickControlStatus>::SharedPtr status_publisher_;
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscription_;
+  rclcpp::Subscription<ateam_radio_msgs::msg::ExtendedTelemetry>::SharedPtr telemetry_subscription_;
+
+  // Latest estimated pose of the controlled robot and when its firmware last applied vision.
+  std::optional<std::array<double, 3>> robot_pose_;
+  std::optional<rclcpp::Time> last_vision_time_;
+  // Position-mode anchor pose (x, y, theta), captured on entry.
+  std::optional<std::array<double, 3>> anchor_pose_;
+  static constexpr double kVisionActiveTimeoutS = 0.5;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
 
   void SendStop()
@@ -133,6 +151,10 @@ private:
   void CreatePublisher(const int robot_id)
   {
     ateam_msgs::msg::JoystickControlStatus status_msg;
+    telemetry_subscription_.reset();
+    robot_pose_.reset();
+    last_vision_time_.reset();
+    anchor_pose_.reset();
     if (robot_id == -1) {
       control_publisher_.reset();
       status_msg.is_active = false;
@@ -146,6 +168,19 @@ private:
       control_publisher_ =
         create_publisher<ateam_msgs::msg::RobotMotionCommand>(topic,
           rclcpp::SystemDefaultsQoS().keep_last(1));
+      telemetry_subscription_ = create_subscription<ateam_radio_msgs::msg::ExtendedTelemetry>(
+        std::string(Topics::kRobotMotionFeedbackPrefix) + std::to_string(robot_id),
+        rclcpp::SystemDefaultsQoS(),
+        [this](const ateam_radio_msgs::msg::ExtendedTelemetry::SharedPtr msg) {
+          const auto & bct = msg->body_control_telemetry;
+          if (bct.kf_body_pos_estimate.size() >= 3) {
+            robot_pose_ = {bct.kf_body_pos_estimate[0], bct.kf_body_pos_estimate[1],
+              bct.kf_body_pos_estimate[2]};
+          }
+          if (bct.vision_update) {
+            last_vision_time_ = now();
+          }
+        });
       status_msg.is_active = true;
       status_msg.active_id = robot_id;
     }
@@ -166,15 +201,33 @@ private:
       command_message.pivot_inset_angle = M_PI / 2;
 
       command_message.pivot_global_theta = M_PI * joy_message->axes[angular_z_axis_];
-    } else if (get_parameter("use_global_position").as_bool()) {
-      command_message.body_control_mode =
-        ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION;
-      command_message.pose.x = get_parameter("mapping.linear.x.scale").as_double() *
-        joy_message->axes[linear_x_axis_];
-      command_message.pose.y = get_parameter("mapping.linear.y.scale").as_double() *
-        joy_message->axes[linear_y_axis_];
-      command_message.pose.theta = get_parameter("mapping.angular.z.scale").as_double() *
-        joy_message->axes[angular_z_axis_];
+    } else if (get_parameter("position_mode").as_bool()) {
+      if (!anchor_pose_ && robot_pose_ && VisionActive()) {
+        anchor_pose_ = robot_pose_;
+        RCLCPP_INFO(
+          get_logger(), "Position mode anchored at (%.3f, %.3f, %.3f)",
+          (*anchor_pose_)[0], (*anchor_pose_)[1], (*anchor_pose_)[2]);
+      }
+      if (anchor_pose_) {
+        const auto [ax, ay, ath] = *anchor_pose_;
+        const double range = get_parameter("position_mode.linear_range").as_double();
+        const double dx = range * joy_message->axes[linear_x_axis_];
+        const double dy = range * joy_message->axes[linear_y_axis_];
+        command_message.body_control_mode =
+          ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_POSITION;
+        command_message.pose.x = ax + std::cos(ath) * dx - std::sin(ath) * dy;
+        command_message.pose.y = ay + std::sin(ath) * dx + std::cos(ath) * dy;
+        command_message.pose.theta = std::remainder(
+          ath + get_parameter("position_mode.angular_range").as_double() *
+          joy_message->axes[angular_z_axis_], 2.0 * M_PI);
+      } else {
+        // Hold still until the robot reports vision and a pose to anchor to.
+        RCLCPP_WARN_THROTTLE(
+          get_logger(), *get_clock(), 2000,
+          "Position mode: waiting for vision on the robot to anchor its start pose");
+        command_message.body_control_mode =
+          ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
+      }
     } else {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
       command_message.velocity.x = get_parameter("mapping.linear.x.scale").as_double() *
@@ -214,10 +267,21 @@ private:
     prev_joy_msg_ = *joy_message;
   }
 
+  bool VisionActive()
+  {
+    return last_vision_time_ && (now() - *last_vision_time_).seconds() < kVisionActiveTimeoutS;
+  }
+
   rcl_interfaces::msg::SetParametersResult SetParameterCallback(
     const std::vector<rclcpp::Parameter> & parameters)
   {
     rcl_interfaces::msg::SetParametersResult result;
+    for (const auto & param : parameters) {
+      if (param.get_name() == "position_mode" && param.as_bool()) {
+        // Re-anchor on every entry into position mode.
+        anchor_pose_.reset();
+      }
+    }
     const auto robot_id_param_iter = std::find_if(
       parameters.begin(), parameters.end(), [](const auto & param) {
         return param.get_name() == "robot_id";

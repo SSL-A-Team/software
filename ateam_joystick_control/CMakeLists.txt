@@ -6,6 +6,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
+find_package(ateam_radio_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
@@ -17,6 +18,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp_components
   ateam_common
   ateam_msgs
+  ateam_radio_msgs
   sensor_msgs
 )
 rclcpp_components_register_node(
