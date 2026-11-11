@@ -149,17 +149,22 @@ function robotHeaderStamp(msg: any): { sec: number; nanosec: number; nsec: numbe
 }
 
 // Anchor that maps the robot's boot-relative clock onto the PC (Unix) timeline.
-// The offset (pc_time - robot_time) is captured once from the first valid packet
-// and then held, so the emitted `header.stamp` lands on the same absolute
+// The offset (pc_time - robot_time) is captured from the first valid packet and
+// then held, so the emitted `header.stamp` lands on the same absolute
 // timescale as the data source's timeline. That is what lets a Timestamp-mode
 // Plot with `timestampMethod: headerStamp` line its X axis (and the synced hover
 // cursor) up with the global timeline, instead of sitting ~10^9 s away at
 // seconds-since-boot. After the one-time anchor the stamp advances on the robot's
 // own (jitter-free) clock, not PC receive time, so radio latency jitter on later
 // packets doesn't move the X axis. One converter instance owns one anchor and
-// re-anchors when recreated (e.g. the selected robot changes). A reboot (robot
-// clock jumps back to ~0) shows as a jump on the X axis.
+// re-anchors when recreated (e.g. the selected robot changes), and whenever the
+// anchored stamp disagrees with receive time by more than
+// `REANCHOR_THRESHOLD_SEC` -- a robot reboot/reconnect (robot clock restarts near
+// 0) or a large clock drift -- so reconnecting needs no manual refresh.
 export type RobotClockAnchor = { offsetSec?: number };
+
+// Well above radio latency jitter (tens of ms), well below a reboot's clock jump.
+const REANCHOR_THRESHOLD_SEC = 0.5;
 
 function syncedHeaderStamp(
   msg: any,
@@ -171,7 +176,10 @@ function syncedHeaderStamp(
     return { sec: 0, nanosec: 0, nsec: 0 };
   }
   const pcSec = receiveTime.sec + receiveTime.nsec * 1e-9;
-  if (anchor.offsetSec == undefined) {
+  if (
+    anchor.offsetSec == undefined ||
+    Math.abs(pcSec - (robotSec + anchor.offsetSec)) > REANCHOR_THRESHOLD_SEC
+  ) {
     anchor.offsetSec = pcSec - robotSec;
   }
   return secNanosFromSeconds(robotSec + anchor.offsetSec);

@@ -14,11 +14,12 @@
 // The command is routed onto the derivative implied by the active body control
 // mode, exactly like the ControlsAnalysis `cmd_echo` routing, and emitted with
 // the same nested `{x,y,theta}.{pos_cmd,vel_cmd,accel_cmd}` field names so the
-// layout paths line up. Only global-frame modes route a command; local-frame
-// commands (`BCM_LOCAL_*`) are intentionally NOT plotted, matching the
-// ControlsAnalysis side (this avoids a brittle local->global rotation, since the
-// command message carries no robot heading). Global-frame modes therefore
-// overlay the robot-side curve exactly.
+// layout paths line up. Global-frame modes overlay the robot-side curve exactly.
+// `BCM_LOCAL_VELOCITY` (e.g. joystick) is rotated into the global frame by the
+// selected robot's latest estimated heading from its telemetry (the command
+// message carries no heading), so it is NaN until telemetry has arrived and the
+// rotation uses the heading at the latest telemetry, not at the command time.
+// Other local-frame modes are not plotted.
 
 import { MessageSchemaDescription } from "@foxglove/extension";
 
@@ -29,6 +30,7 @@ const NAN = Number.NaN;
 // are intentionally not plotted.
 const BCM_GLOBAL_POSITION = 10;
 const BCM_GLOBAL_VELOCITY = 11;
+const BCM_LOCAL_VELOCITY = 12;
 const BCM_GLOBAL_ACCEL = 13;
 const BCM_GLOBAL_ACCEL_OPEN_LOOP = 15;
 
@@ -62,11 +64,25 @@ export function motionCommandSchemaDescription(): MessageSchemaDescription {
 // Convert one RobotMotionCommand into the flat overlay shape. Every command field
 // is NaN except the one the active mode routes to (and only for modes with a
 // direct x/y/theta mapping; OFF, ESTOP, pivot and line modes leave all NaN).
-export function buildMotionCommand(msg: any): Record<string, unknown> {
+// `heading` (rad) rotates `BCM_LOCAL_VELOCITY` commands into the global frame.
+export function buildMotionCommand(msg: any, heading: number = NAN): Record<string, unknown> {
   const mode = Number(msg.body_control_mode);
   const out: Record<string, unknown> = { body_control_mode: mode };
   for (const d of DIMS) {
     out[d] = { pos_cmd: NAN, vel_cmd: NAN, accel_cmd: NAN };
+  }
+  if (mode === BCM_LOCAL_VELOCITY) {
+    const v = msg.velocity;
+    if (v != undefined) {
+      const x = Number(v.x);
+      const y = Number(v.y);
+      const c = Math.cos(heading);
+      const s = Math.sin(heading);
+      (out["x"] as Record<string, number>)["vel_cmd"] = c * x - s * y;
+      (out["y"] as Record<string, number>)["vel_cmd"] = s * x + c * y;
+      (out["theta"] as Record<string, number>)["vel_cmd"] = Number(v.theta);
+    }
+    return out;
   }
   const route = MODE_ROUTE[mode];
   if (route != undefined) {

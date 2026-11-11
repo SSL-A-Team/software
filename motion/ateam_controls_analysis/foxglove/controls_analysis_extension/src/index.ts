@@ -85,6 +85,11 @@ function teamFrom(value: unknown): string {
   return value === "yellow" || value === "blue" ? value : DEFAULT_TEAM;
 }
 
+// Latest estimated heading (rad) of the selected robot, written by the telemetry
+// converter and read by the command converter to rotate local-frame commands into
+// the global frame. Cleared when the robot selection changes.
+const selectedRobotHeading = { theta: Number.NaN };
+
 export function activate(extensionContext: ExtensionContext): void {
   // ExtendedTelemetry -> ControlsAnalysis (the main analysis). Reads every
   // robot's telemetry topic, emits only the selected robot's.
@@ -101,10 +106,18 @@ export function activate(extensionContext: ExtensionContext): void {
       // first packet so the synced `header.stamp` sits on the PC timeline. Reset
       // on recreation (robot selection change) so we re-anchor for the new robot.
       const clock: RobotClockAnchor = {};
-      return (messageEvent) =>
-        messageEvent.topic === selected
-          ? buildControlsAnalysis(messageEvent.message, messageEvent.receiveTime, clock)
-          : undefined;
+      selectedRobotHeading.theta = Number.NaN;
+      return (messageEvent) => {
+        if (messageEvent.topic !== selected) {
+          return undefined;
+        }
+        const msg: any = messageEvent.message;
+        const pos = msg?.body_control_telemetry?.kf_body_pos_estimate;
+        if (pos != undefined && pos.length > 2) {
+          selectedRobotHeading.theta = Number(pos[2]);
+        }
+        return buildControlsAnalysis(msg, messageEvent.receiveTime, clock);
+      };
     },
   });
 
@@ -120,7 +133,7 @@ export function activate(extensionContext: ExtensionContext): void {
       const selected = commandTopic(robotIdFrom(globalVariables[ROBOT_VARIABLE]));
       return (messageEvent) =>
         messageEvent.topic === selected
-          ? buildMotionCommand(messageEvent.message)
+          ? buildMotionCommand(messageEvent.message, selectedRobotHeading.theta)
           : undefined;
     },
   });

@@ -94,7 +94,7 @@
           "value": "/analysis_control.x.pos_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
-          "color": "#0000ff",
+          "color": "#4169e1",
           "showLine": false,
           "label": "cmd"
         },
@@ -251,7 +251,7 @@
           "value": "/analysis_control.x.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
-          "color": "#0000ff",
+          "color": "#4169e1",
           "showLine": false,
           "label": "cmd"
         },
@@ -437,7 +437,7 @@
           "value": "/analysis_control.y.pos_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
-          "color": "#0000ff",
+          "color": "#4169e1",
           "showLine": false,
           "label": "cmd"
         },
@@ -594,7 +594,7 @@
           "value": "/analysis_control.y.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
-          "color": "#0000ff",
+          "color": "#4169e1",
           "showLine": false,
           "label": "cmd"
         },
@@ -780,7 +780,7 @@
           "value": "/analysis_control.theta.pos_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
-          "color": "#0000ff",
+          "color": "#4169e1",
           "showLine": false,
           "label": "cmd"
         },
@@ -937,7 +937,7 @@
           "value": "/analysis_control.theta.vel_cmd",
           "enabled": true,
           "timestampMethod": "receiveTime",
-          "color": "#0000ff",
+          "color": "#4169e1",
           "showLine": false,
           "label": "cmd"
         },

@@ -91,6 +91,14 @@
           "label": "traj_point_line_telem"
         },
         {
+          "value": "/analysis_control.x.pos_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#4169e1",
+          "showLine": false,
+          "label": "cmd"
+        },
+        {
           "value": "/analysis_telem.x.pos_cmd",
           "enabled": false,
           "timestampMethod": "headerStamp",
@@ -230,6 +238,14 @@
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_point_line_telem"
+        },
+        {
+          "value": "/analysis_control.x.vel_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#4169e1",
+          "showLine": false,
+          "label": "cmd"
         },
         {
           "value": "/analysis_telem.x.vel_cmd",
@@ -402,6 +418,14 @@
           "label": "traj_point_line_telem"
         },
         {
+          "value": "/analysis_control.y.pos_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#4169e1",
+          "showLine": false,
+          "label": "cmd"
+        },
+        {
           "value": "/analysis_telem.y.pos_cmd",
           "enabled": false,
           "timestampMethod": "headerStamp",
@@ -541,6 +565,14 @@
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_point_line_telem"
+        },
+        {
+          "value": "/analysis_control.y.vel_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#4169e1",
+          "showLine": false,
+          "label": "cmd"
         },
         {
           "value": "/analysis_telem.y.vel_cmd",
@@ -713,6 +745,14 @@
           "label": "traj_point_line_telem"
         },
         {
+          "value": "/analysis_control.theta.pos_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#4169e1",
+          "showLine": false,
+          "label": "cmd"
+        },
+        {
           "value": "/analysis_telem.theta.pos_cmd",
           "enabled": false,
           "timestampMethod": "headerStamp",
@@ -852,6 +892,14 @@
           "color": "#6100a1",
           "showLine": true,
           "label": "traj_point_line_telem"
+        },
+        {
+          "value": "/analysis_control.theta.vel_cmd",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "color": "#4169e1",
+          "showLine": false,
+          "label": "cmd"
         },
         {
           "value": "/analysis_telem.theta.vel_cmd",
