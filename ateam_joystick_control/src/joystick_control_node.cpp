@@ -101,8 +101,8 @@ public:
 
     // Trajectory acceleration limits sent with every command (m/s^2, rad/s^2);
     // 0 leaves the firmware default.
-    declare_parameter<double>("max_accel_linear", 3.0);
-    declare_parameter<double>("max_accel_angular", 0.0);
+    declare_parameter<double>("max_accel_linear", 2.0);
+    declare_parameter<double>("max_accel_angular", 10.0);
     declare_parameter<double>("position_mode.linear_range", 0.25);
     declare_parameter<double>("position_mode.angular_range", M_PI / 2);
 

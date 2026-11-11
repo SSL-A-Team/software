@@ -1,5 +1,7 @@
 /joystick_control_node:
   ros__parameters:
+    max_accel_linear: 2.0  # m/s^2
+    max_accel_angular: 10.0  # rad/s^2
     mapping:
       linear:
         x:
