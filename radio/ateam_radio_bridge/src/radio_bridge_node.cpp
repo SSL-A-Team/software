@@ -403,22 +403,24 @@ private:
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_VELOCITY:
           control_msg.body_control_mode = BCM_GLOBAL_VELOCITY;
+          // Velocity commands carry acceleration limits (max_linear_acc, max_angular_acc).
           control_msg.cmd.global_vel = {
             static_cast<float>(command.velocity.x),
             static_cast<float>(command.velocity.y),
             static_cast<float>(command.velocity.theta),
-            static_cast<float>(command.limit_vel_linear),
-            static_cast<float>(command.limit_vel_angular)
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_angular)
           };
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY:
           control_msg.body_control_mode = BCM_LOCAL_VELOCITY;
+          // Velocity commands carry acceleration limits (max_linear_acc, max_angular_acc).
           control_msg.cmd.local_vel = {
             static_cast<float>(command.velocity.x),
             static_cast<float>(command.velocity.y),
             static_cast<float>(command.velocity.theta),
-            static_cast<float>(command.limit_vel_linear),
-            static_cast<float>(command.limit_vel_angular)
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_angular)
           };
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_ACCEL:
