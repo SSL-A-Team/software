@@ -92,7 +92,7 @@ public:
     std::fill(connection_states_.begin(), connection_states_.end(), ConnectionState::Disconnected);
 
     declare_parameters<bool>("controls_enabled", {
-        {"wheel_vel", false}
+        {"wheel_vel", true}
     });
 
     joy_status_sub_ = create_subscription<ateam_msgs::msg::JoystickControlStatus>(

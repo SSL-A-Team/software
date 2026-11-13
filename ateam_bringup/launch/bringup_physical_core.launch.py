@@ -40,7 +40,11 @@ def generate_launch_description():
         # IP Overrides
         DeclareLaunchArgument('vision_interface_address', default_value=''),
         DeclareLaunchArgument('radio_interface_address', default_value=''),
-        DeclareLaunchArgument('controls_enabled_wheel_vel', default_value='False'),
+        # Wheel velocity loop on the motor controllers. All firmware feedback
+        # (position P, angular-rate P, trajectory velocity) reaches the wheels as
+        # velocity setpoints; with this off only the feed-forward current is applied
+        # and the robot runs open loop (no correction of heading/position error).
+        DeclareLaunchArgument('controls_enabled_wheel_vel', default_value='True'),
         DeclareLaunchArgument('gc_interface_address', default_value=''),
         DeclareLaunchArgument('gc_server_address', default_value=''),
 
