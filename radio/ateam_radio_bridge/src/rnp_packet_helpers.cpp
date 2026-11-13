@@ -307,6 +307,8 @@ ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & par
       return VEC4_F32;
     case WHEEL_FF_CURRENT_LIMIT:
       return F32;
+    case WHEEL_SLIP_COMP:
+      return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }
