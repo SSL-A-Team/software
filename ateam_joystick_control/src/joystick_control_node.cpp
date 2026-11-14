@@ -106,6 +106,25 @@ public:
     declare_parameter<double>("position_mode.linear_range", 0.25);
     declare_parameter<double>("position_mode.angular_range", M_PI / 2);
 
+    // Pivot (hold the pivot button): orbits the ball in front of the robot. The robot's
+    // heading when the button is pressed is captured as the reference; the angular stick
+    // then commands a target heading offset from it by up to pivot.angular_range (rad).
+    // All pivot.* parameters are read every packet, so they can be tuned live
+    // (e.g. rqt_reconfigure). 0 for max_angular_vel / max_angular_acc / orbit_radius
+    // leaves the firmware default.
+    declare_parameter<double>("pivot.angular_range", M_PI);
+    // Angle (rad) between the orbit tangent and the robot heading, toward the orbit
+    // center: 0 = robot faces along its direction of travel, pi/2 = faces the ball.
+    declare_parameter<double>("pivot.inset_angle", M_PI / 2,
+      RangeDescriptor("rad, orbit tangent -> heading toward the ball (pi/2 = face the ball)",
+      0.0, 1.6, 0.0));
+    declare_parameter<bool>("pivot.compute_inset_angle", false);
+    declare_parameter<bool>("pivot.backward", false);
+    declare_parameter<double>("pivot.orbit_radius", kRobotRadius + kBallRadius,
+      RangeDescriptor("m, distance from the robot center to the pivot point", 0.05, 0.3, 0.0));
+    declare_parameter<double>("pivot.max_angular_vel", 0.0);
+    declare_parameter<double>("pivot.max_angular_acc", 0.0);
+
     CreatePublisher(declare_parameter<int>("robot_id", -1));
     parameter_callback_handle_ =
       add_on_set_parameters_callback(
@@ -142,8 +161,23 @@ private:
   std::optional<rclcpp::Time> last_vision_time_;
   // Position-mode anchor pose (x, y, theta), captured on entry.
   std::optional<std::array<double, 3>> anchor_pose_;
+  // Robot heading captured when the pivot button was pressed.
+  std::optional<double> pivot_anchor_heading_;
   static constexpr double kVisionActiveTimeoutS = 0.5;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
+
+  static rcl_interfaces::msg::ParameterDescriptor RangeDescriptor(
+    const std::string & description, double from, double to, double step)
+  {
+    rcl_interfaces::msg::ParameterDescriptor d;
+    d.description = description;
+    rcl_interfaces::msg::FloatingPointRange range;
+    range.from_value = from;
+    range.to_value = to;
+    range.step = step;
+    d.floating_point_range.push_back(range);
+    return d;
+  }
 
   void SendStop()
   {
@@ -160,6 +194,7 @@ private:
     robot_pose_.reset();
     last_vision_time_.reset();
     anchor_pose_.reset();
+    pivot_anchor_heading_.reset();
     if (robot_id == -1) {
       control_publisher_.reset();
       status_msg.is_active = false;
@@ -200,12 +235,34 @@ private:
 
     ateam_msgs::msg::RobotMotionCommand command_message;
 
-    if (pivot_trigger_(*joy_message)) {
-      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT;
-      command_message.pivot_orbit_radius = kRobotRadius + kBallRadius;
-      command_message.pivot_inset_angle = M_PI / 2;
+    const bool pivot_held = pivot_trigger_(*joy_message);
+    if (!pivot_held) {
+      pivot_anchor_heading_.reset();
+    } else if (!pivot_anchor_heading_ && robot_pose_) {
+      // Captured on the press (or as soon as the robot reports a pose while held).
+      pivot_anchor_heading_ = (*robot_pose_)[2];
+      RCLCPP_INFO(get_logger(), "Pivot anchored at heading %.3f rad", *pivot_anchor_heading_);
+    }
 
-      command_message.pivot_global_theta = M_PI * joy_message->axes[angular_z_axis_];
+    if (pivot_held && pivot_anchor_heading_) {
+      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT;
+      command_message.pivot_global_theta = std::remainder(
+        *pivot_anchor_heading_ + get_parameter("pivot.angular_range").as_double() *
+        joy_message->axes[angular_z_axis_], 2.0 * M_PI);
+      command_message.pivot_orbit_radius = get_parameter("pivot.orbit_radius").as_double();
+      command_message.pivot_inset_angle = get_parameter("pivot.inset_angle").as_double();
+      command_message.pivot_compute_inset_angle =
+        get_parameter("pivot.compute_inset_angle").as_bool();
+      command_message.pivot_direction = get_parameter("pivot.backward").as_bool() ?
+        ateam_msgs::msg::RobotMotionCommand::PD_BACKWARD :
+        ateam_msgs::msg::RobotMotionCommand::PD_FORWARD;
+      command_message.pivot_max_angular_vel = get_parameter("pivot.max_angular_vel").as_double();
+      command_message.pivot_max_angular_acc = get_parameter("pivot.max_angular_acc").as_double();
+    } else if (pivot_held) {
+      // No pose from the robot yet to anchor the pivot: hold still.
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+        "Pivot: waiting for a pose from the robot to anchor the heading");
+      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
     } else if (get_parameter("position_mode").as_bool()) {
       if (!anchor_pose_ && robot_pose_ && VisionActive()) {
         anchor_pose_ = robot_pose_;
