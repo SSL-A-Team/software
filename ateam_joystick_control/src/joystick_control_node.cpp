@@ -118,7 +118,7 @@ public:
       RangeDescriptor("rad, pivot heading offset at full left stick (+/-)", 0.0, M_PI, 0.0));
     // Angle (rad) between the orbit tangent and the robot heading, toward the orbit
     // center: 0 = robot faces along its direction of travel, pi/2 = faces the ball.
-    declare_parameter<double>("pivot.inset_angle", 0.8,
+    declare_parameter<double>("pivot.inset_angle", 1.6,
       RangeDescriptor("rad, orbit tangent -> heading toward the ball (pi/2 = face the ball)",
       0.0, 1.6, 0.0));
     declare_parameter<bool>("pivot.compute_inset_angle", false);
@@ -127,7 +127,7 @@ public:
       RangeDescriptor("m, distance from the robot center to the pivot point", 0.05, 0.3, 0.0));
     declare_parameter<double>("pivot.max_angular_vel", 10.0,
       RangeDescriptor("rad/s, peak orbit angular velocity (0 = firmware default)", 0.0, 20.0, 0.0));
-    declare_parameter<double>("pivot.max_angular_acc", 7.0,
+    declare_parameter<double>("pivot.max_angular_acc", 20.0,
       RangeDescriptor("rad/s^2, orbit angular acceleration (0 = firmware default)", 0.0, 30.0, 0.0));
 
     CreatePublisher(declare_parameter<int>("robot_id", -1));
@@ -253,8 +253,8 @@ private:
     if (pivot_held && pivot_anchor_heading_) {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT;
       command_message.pivot_global_theta = std::remainder(
-        *pivot_anchor_heading_ + get_parameter("pivot.angular_range").as_double() *
-        joy_message->axes[pivot_axis_], 2.0 * M_PI);
+        *pivot_anchor_heading_ - get_parameter("pivot.angular_range").as_double() *
+        joy_message->axes[pivot_axis_], 2.0 * M_PI);  // stick right -> clockwise
       command_message.pivot_orbit_radius = get_parameter("pivot.orbit_radius").as_double();
       command_message.pivot_inset_angle = get_parameter("pivot.inset_angle").as_double();
       command_message.pivot_compute_inset_angle =

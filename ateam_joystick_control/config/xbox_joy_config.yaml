@@ -4,12 +4,12 @@
     max_accel_angular: 10.0  # rad/s^2
     pivot:  # hold the pivot button; tunable live (rqt_reconfigure)
       angular_range: 0.7854  # rad (+/-45 deg) heading offset at full left stick, from the heading at press
-      inset_angle: 0.8  # rad, orbit tangent -> heading toward the ball (pi/2 = face the ball)
+      inset_angle: 1.6  # rad, orbit tangent -> heading toward the ball (pi/2 = face the ball)
       compute_inset_angle: false
       backward: false
       orbit_radius: 0.15  # m, robot center to pivot point
       max_angular_vel: 10.0  # rad/s, 0 = firmware default
-      max_angular_acc: 7.0  # rad/s^2, 0 = firmware default
+      max_angular_acc: 20.0  # rad/s^2, 0 = firmware default
     mapping:
       linear:
         x:
