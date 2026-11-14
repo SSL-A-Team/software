@@ -8,8 +8,8 @@
       compute_inset_angle: false
       backward: false
       orbit_radius: 0.15  # m, robot center to pivot point
-      max_angular_vel: 0.0  # rad/s, 0 = firmware default
-      max_angular_acc: 0.0  # rad/s^2, 0 = firmware default
+      max_angular_vel: 10.0  # rad/s, 0 = firmware default
+      max_angular_acc: 7.0  # rad/s^2, 0 = firmware default
     mapping:
       linear:
         x:
