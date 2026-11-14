@@ -3,7 +3,7 @@
     max_accel_linear: 2.0  # m/s^2
     max_accel_angular: 10.0  # rad/s^2
     pivot:  # hold the pivot button; tunable live (rqt_reconfigure)
-      angular_range: 3.14159  # rad of target heading per full stick, from the heading at press
+      angular_range: 0.7854  # rad (+/-45 deg) heading offset at full left stick, from the heading at press
       inset_angle: 0.8  # rad, orbit tangent -> heading toward the ball (pi/2 = face the ball)
       compute_inset_angle: false
       backward: false

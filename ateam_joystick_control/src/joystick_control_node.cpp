@@ -114,7 +114,8 @@ public:
     // All pivot.* parameters are read every packet, so they can be tuned live
     // (e.g. rqt_reconfigure). 0 for max_angular_vel / max_angular_acc / orbit_radius
     // leaves the firmware default (10 rad/s, 7 rad/s^2, 0.12 m).
-    declare_parameter<double>("pivot.angular_range", M_PI);
+    declare_parameter<double>("pivot.angular_range", M_PI / 4,
+      RangeDescriptor("rad, pivot heading offset at full left stick (+/-)", 0.0, M_PI, 0.0));
     // Angle (rad) between the orbit tangent and the robot heading, toward the orbit
     // center: 0 = robot faces along its direction of travel, pi/2 = faces the ball.
     declare_parameter<double>("pivot.inset_angle", 0.8,
