@@ -104,7 +104,7 @@ public:
     // Trajectory acceleration limits sent with every command (m/s^2, rad/s^2);
     // 0 leaves the firmware default.
     declare_parameter<double>("max_accel_linear", 2.0);
-    declare_parameter<double>("max_accel_angular", 10.0);
+    declare_parameter<double>("max_accel_angular", 20.0);
     declare_parameter<double>("position_mode.linear_range", 0.25);
     declare_parameter<double>("position_mode.angular_range", M_PI / 2);
 
@@ -114,7 +114,7 @@ public:
     // All pivot.* parameters are read every packet, so they can be tuned live
     // (e.g. rqt_reconfigure). 0 for max_angular_vel / max_angular_acc / orbit_radius
     // leaves the firmware default (10 rad/s, 7 rad/s^2, 0.12 m).
-    declare_parameter<double>("pivot.angular_range", M_PI / 4,
+    declare_parameter<double>("pivot.angular_range", 1.6,
       RangeDescriptor("rad, pivot heading offset at full left stick (+/-)", 0.0, M_PI, 0.0));
     // Angle (rad) between the orbit tangent and the robot heading, toward the orbit
     // center: 0 = robot faces along its direction of travel, pi/2 = faces the ball.
@@ -127,7 +127,7 @@ public:
       RangeDescriptor("m, distance from the robot center to the pivot point", 0.05, 0.3, 0.0));
     declare_parameter<double>("pivot.max_angular_vel", 10.0,
       RangeDescriptor("rad/s, peak orbit angular velocity (0 = firmware default)", 0.0, 20.0, 0.0));
-    declare_parameter<double>("pivot.max_angular_acc", 20.0,
+    declare_parameter<double>("pivot.max_angular_acc", 15.0,
       RangeDescriptor("rad/s^2, orbit angular acceleration (0 = firmware default)", 0.0, 30.0, 0.0));
 
     CreatePublisher(declare_parameter<int>("robot_id", -1));

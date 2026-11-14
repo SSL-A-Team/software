@@ -1,27 +1,27 @@
 /joystick_control_node:
   ros__parameters:
     max_accel_linear: 2.0  # m/s^2
-    max_accel_angular: 10.0  # rad/s^2
+    max_accel_angular: 20.0  # rad/s^2
     pivot:  # hold the pivot button; tunable live (rqt_reconfigure)
-      angular_range: 0.7854  # rad (+/-45 deg) heading offset at full left stick, from the heading at press
+      angular_range: 1.6  # rad heading offset at full left stick, from the heading at press
       inset_angle: 1.6  # rad, orbit tangent -> heading toward the ball (pi/2 = face the ball)
       compute_inset_angle: false
       backward: false
       orbit_radius: 0.15  # m, robot center to pivot point
       max_angular_vel: 10.0  # rad/s, 0 = firmware default
-      max_angular_acc: 20.0  # rad/s^2, 0 = firmware default
+      max_angular_acc: 15.0  # rad/s^2, 0 = firmware default
     mapping:
       linear:
         x:
           axis: 1
-          scale: 2.0
+          scale: 0.2
         y:
           axis: 0
-          scale: 2.0
+          scale: 0.2
       angular:
         z:
           axis: 3
-          scale: 4.0
+          scale: 3.0
       kick: "axis 5 < -0.8"
       pivot: "button 5"
       pivot_axis: 0  # left stick horizontal steers the pivot heading
