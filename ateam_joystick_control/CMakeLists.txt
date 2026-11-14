@@ -8,6 +8,7 @@ find_package(ateam_common REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(ssl_league_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/joystick_control_node.cpp
@@ -20,6 +21,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ateam_msgs
   ateam_radio_msgs
   sensor_msgs
+  ssl_league_msgs
 )
 rclcpp_components_register_node(
   ${PROJECT_NAME}

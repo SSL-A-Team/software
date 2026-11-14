@@ -15,6 +15,7 @@
   <depend>ateam_msgs</depend>
   <depend>ateam_radio_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>ssl_league_msgs</depend>
 
   <exec_depend>joy</exec_depend>
   <exec_depend>teleop_twist_joy</exec_depend>

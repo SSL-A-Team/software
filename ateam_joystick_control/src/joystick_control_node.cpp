@@ -26,10 +26,12 @@
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ateam_common/topic_names.hpp>
 #include <ateam_common/robot_constants.hpp>
+#include <ateam_common/game_controller_listener.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
 #include <ateam_msgs/msg/joystick_control_status.hpp>
 #include <ateam_radio_msgs/msg/extended_telemetry.hpp>
 #include <sensor_msgs/msg/joy.hpp>
+#include <ssl_league_msgs/msg/vision_wrapper.hpp>
 #include <cmath>
 #include <optional>
 
@@ -40,7 +42,8 @@ class JoystickControlNode : public rclcpp::Node
 {
 public:
   explicit JoystickControlNode(const rclcpp::NodeOptions & options)
-  : rclcpp::Node("joystick_control_node", options)
+  : rclcpp::Node("joystick_control_node", options),
+    game_controller_listener_(*this)
   {
     status_publisher_ =
       create_publisher<ateam_msgs::msg::JoystickControlStatus>(std::string(
@@ -49,6 +52,9 @@ public:
       std::string(Topics::kJoystick), rclcpp::QoS{1}, std::bind(
         &JoystickControlNode::JoyCallback, this,
         std::placeholders::_1));
+    vision_subscription_ = create_subscription<ssl_league_msgs::msg::VisionWrapper>(
+      std::string(Topics::kVisionMessages), rclcpp::SystemDefaultsQoS(),
+      std::bind(&JoystickControlNode::VisionCallback, this, std::placeholders::_1));
     command_topic_template_ = declare_parameter<std::string>("command_topic_template", "");
     if (command_topic_template_.empty()) {
       throw std::runtime_error("Missing required parameter 'command_topic_template'");
@@ -69,6 +75,8 @@ public:
         "axis 5 < -0.8"));
     pivot_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.pivot",
       "button 5"));
+    line_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.line",
+      "axis 2 < -0.5"));
     dribbler_increment_trigger_ =
       ParseTriggerFunction(declare_parameter<std::string>("mapping.dribbler.increment",
         "button 3"));
@@ -114,6 +122,15 @@ public:
     // All pivot.* parameters are read every packet, so they can be tuned live
     // (e.g. rqt_reconfigure). 0 for max_angular_vel / max_angular_acc / orbit_radius
     // leaves the firmware default (10 rad/s, 7 rad/s^2, 0.12 m).
+    // Line (hold the line trigger): on the press, a line from the robot straight through
+    // the closest ball is captured; the robot drives along it facing the ball, with
+    // the linear x stick (forward = toward / through the ball) setting the speed along
+    // it, up to line.max_velocity. Read every packet (tunable live).
+    declare_parameter<double>("line.max_velocity", 1.0,
+      RangeDescriptor("m/s along the line at full stick", 0.0, 3.0, 0.0));
+    declare_parameter<double>("line.max_accel", 2.0,
+      RangeDescriptor("m/s^2 along and across the line (0 = firmware default)", 0.0, 6.0, 0.0));
+
     declare_parameter<double>("pivot.angular_range", 1.6,
       RangeDescriptor("rad, pivot heading offset at full left stick (+/-)", 0.0, M_PI, 0.0));
     // Angle (rad) between the orbit tangent and the robot heading, toward the orbit
@@ -149,6 +166,7 @@ private:
 
   TriggerFunction kick_trigger_;
   TriggerFunction pivot_trigger_;
+  TriggerFunction line_trigger_;
   TriggerFunction dribbler_increment_trigger_;
   TriggerFunction dribbler_decrement_trigger_;
   TriggerFunction dribbler_spin_trigger_;
@@ -169,6 +187,13 @@ private:
   std::optional<std::array<double, 3>> anchor_pose_;
   // Robot heading captured when the pivot button was pressed.
   std::optional<double> pivot_anchor_heading_;
+  // Line captured when the line trigger was pressed: point (the ball) and unit direction.
+  struct Line { double x, y, dx, dy; };
+  std::optional<Line> line_;
+  // Ball positions from the latest vision frame, in our field frame (m).
+  std::vector<std::array<double, 2>> balls_;
+  ateam_common::GameControllerListener game_controller_listener_;
+  rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr vision_subscription_;
   static constexpr double kVisionActiveTimeoutS = 0.5;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
 
@@ -201,6 +226,7 @@ private:
     last_vision_time_.reset();
     anchor_pose_.reset();
     pivot_anchor_heading_.reset();
+    line_.reset();
     if (robot_id == -1) {
       control_publisher_.reset();
       status_msg.is_active = false;
@@ -241,6 +267,13 @@ private:
 
     ateam_msgs::msg::RobotMotionCommand command_message;
 
+    const bool line_held = line_trigger_(*joy_message);
+    if (!line_held) {
+      line_.reset();
+    } else if (!line_ && robot_pose_) {
+      line_ = LineThroughClosestBall();
+    }
+
     const bool pivot_held = pivot_trigger_(*joy_message);
     if (!pivot_held) {
       pivot_anchor_heading_.reset();
@@ -250,7 +283,28 @@ private:
       RCLCPP_INFO(get_logger(), "Pivot anchored at heading %.3f rad", *pivot_anchor_heading_);
     }
 
-    if (pivot_held && pivot_anchor_heading_) {
+    if (line_held && line_) {
+      const double v_max = get_parameter("line.max_velocity").as_double();
+      const double acc = get_parameter("line.max_accel").as_double();
+      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE;
+      command_message.line_start_x = line_->x;
+      command_message.line_start_y = line_->y;
+      command_message.line_dir_x = line_->dx;
+      command_message.line_dir_y = line_->dy;
+      // Face the ball's current position (the line itself stays as captured).
+      const auto ball = ClosestBallTo(line_->x, line_->y).value_or(
+        std::array<double, 2>{line_->x, line_->y});
+      command_message.line_target_x = ball[0];
+      command_message.line_target_y = ball[1];
+      command_message.line_velocity = v_max * joy_message->axes[linear_x_axis_];
+      command_message.line_max_vel_colinear = v_max;
+      command_message.line_max_accel_colinear = acc;
+      command_message.line_max_accel_perp = acc;
+    } else if (line_held) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+        "Line: waiting for a robot pose and a ball in vision");
+      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
+    } else if (pivot_held && pivot_anchor_heading_) {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT;
       command_message.pivot_global_theta = std::remainder(
         *pivot_anchor_heading_ - get_parameter("pivot.angular_range").as_double() *
@@ -336,6 +390,54 @@ private:
 
     control_publisher_->publish(command_message);
     prev_joy_msg_ = *joy_message;
+  }
+
+  void VisionCallback(const ssl_league_msgs::msg::VisionWrapper::SharedPtr msg)
+  {
+    // Same frame convention as the radio bridge: rotate 180 deg on the positive half.
+    const double sign =
+      game_controller_listener_.GetTeamSide() == ateam_common::TeamSide::PositiveHalf ? -1.0 : 1.0;
+    std::vector<std::array<double, 2>> balls;
+    for (const auto & detection : msg->detection) {
+      for (const auto & ball : detection.balls) {
+        balls.push_back({sign * ball.pos.x, sign * ball.pos.y});
+      }
+    }
+    if (!msg->detection.empty()) {
+      balls_ = std::move(balls);
+    }
+  }
+
+  std::optional<std::array<double, 2>> ClosestBallTo(double x, double y) const
+  {
+    std::optional<std::array<double, 2>> closest;
+    double best = 1e9;
+    for (const auto & b : balls_) {
+      const double d = std::hypot(b[0] - x, b[1] - y);
+      if (d < best) {
+        best = d;
+        closest = b;
+      }
+    }
+    return closest;
+  }
+
+  std::optional<Line> LineThroughClosestBall()
+  {
+    const auto [rx, ry, rth] = *robot_pose_;
+    const auto closest = ClosestBallTo(rx, ry);
+    if (!closest) {
+      return std::nullopt;
+    }
+    const double best = std::hypot((*closest)[0] - rx, (*closest)[1] - ry);
+    if (best < 1e-3) {
+      return std::nullopt;
+    }
+    const Line line{(*closest)[0], (*closest)[1], ((*closest)[0] - rx) / best,
+      ((*closest)[1] - ry) / best};
+    RCLCPP_INFO(get_logger(), "Line through ball (%.3f, %.3f), direction (%.2f, %.2f)",
+      line.x, line.y, line.dx, line.dy);
+    return line;
   }
 
   bool VisionActive()
