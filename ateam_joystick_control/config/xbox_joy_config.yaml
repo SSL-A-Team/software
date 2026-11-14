@@ -24,6 +24,7 @@
           scale: 4.0
       kick: "axis 5 < -0.8"
       pivot: "button 5"
+      pivot_axis: 0  # left stick horizontal steers the pivot heading
       dribbler:
         increment: "button 3"
         decrement: "button 2"

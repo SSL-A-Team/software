@@ -62,6 +62,8 @@ public:
     linear_x_axis_ = declare_parameter<int>("mapping.linear.x.axis", 1);
     linear_y_axis_ = declare_parameter<int>("mapping.linear.y.axis", 1);
     angular_z_axis_ = declare_parameter<int>("mapping.angular.z.axis", 1);
+    // Axis that steers the pivot target heading (default: left stick horizontal).
+    pivot_axis_ = declare_parameter<int>("mapping.pivot_axis", 0);
 
     kick_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.kick",
         "axis 5 < -0.8"));
@@ -107,7 +109,7 @@ public:
     declare_parameter<double>("position_mode.angular_range", M_PI / 2);
 
     // Pivot (hold the pivot button): orbits the ball in front of the robot. The robot's
-    // heading when the button is pressed is captured as the reference; the angular stick
+    // heading when the button is pressed is captured as the reference; the pivot stick axis
     // then commands a target heading offset from it by up to pivot.angular_range (rad).
     // All pivot.* parameters are read every packet, so they can be tuned live
     // (e.g. rqt_reconfigure). 0 for max_angular_vel / max_angular_acc / orbit_radius
@@ -152,6 +154,7 @@ private:
   int linear_x_axis_;
   int linear_y_axis_;
   int angular_z_axis_;
+  int pivot_axis_;
 
   rclcpp::Publisher<ateam_msgs::msg::RobotMotionCommand>::SharedPtr control_publisher_;
   rclcpp::Publisher<ateam_msgs::msg::JoystickControlStatus>::SharedPtr status_publisher_;
@@ -250,7 +253,7 @@ private:
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT;
       command_message.pivot_global_theta = std::remainder(
         *pivot_anchor_heading_ + get_parameter("pivot.angular_range").as_double() *
-        joy_message->axes[angular_z_axis_], 2.0 * M_PI);
+        joy_message->axes[pivot_axis_], 2.0 * M_PI);
       command_message.pivot_orbit_radius = get_parameter("pivot.orbit_radius").as_double();
       command_message.pivot_inset_angle = get_parameter("pivot.inset_angle").as_double();
       command_message.pivot_compute_inset_angle =
