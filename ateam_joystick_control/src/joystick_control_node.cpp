@@ -115,12 +115,12 @@ public:
     declare_parameter<double>("pivot.angular_range", M_PI);
     // Angle (rad) between the orbit tangent and the robot heading, toward the orbit
     // center: 0 = robot faces along its direction of travel, pi/2 = faces the ball.
-    declare_parameter<double>("pivot.inset_angle", M_PI / 2,
+    declare_parameter<double>("pivot.inset_angle", 0.8,
       RangeDescriptor("rad, orbit tangent -> heading toward the ball (pi/2 = face the ball)",
       0.0, 1.6, 0.0));
     declare_parameter<bool>("pivot.compute_inset_angle", false);
     declare_parameter<bool>("pivot.backward", false);
-    declare_parameter<double>("pivot.orbit_radius", kRobotRadius + kBallRadius,
+    declare_parameter<double>("pivot.orbit_radius", 0.15,
       RangeDescriptor("m, distance from the robot center to the pivot point", 0.05, 0.3, 0.0));
     declare_parameter<double>("pivot.max_angular_vel", 0.0);
     declare_parameter<double>("pivot.max_angular_acc", 0.0);
