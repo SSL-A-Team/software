@@ -127,9 +127,9 @@ public:
     // (e.g. rqt_reconfigure). 0 for max_angular_vel / max_angular_acc / orbit_radius
     // leaves the firmware default (10 rad/s, 7 rad/s^2, 0.12 m).
     // Face goal (hold the face-goal trigger): normal local velocity control on the linear
-    // stick, but the angular rate servos the heading onto our own (blue) goal center
-    // (-field_length/2, 0): we are always on the negative half in our frame. Field size
-    // from vision geometry:
+    // stick, but the angular rate servos the heading onto the center of the goal we score on,
+    // (+field_length/2, 0) in our frame (rotated with the team side, like the radio bridge).
+    // Field size from vision geometry:
     //   w = kp * bearing_error + bearing_rate_ff, clamped to +/- max_angular_vel,
     // where the feed-forward is the bearing rate the commanded translation produces.
     // Read every packet (tunable live).
@@ -212,7 +212,7 @@ private:
   bool ball_in_breakbeam_ = false;
   // Robot heading captured when the pivot button was pressed.
   std::optional<double> pivot_anchor_heading_;
-  // Field length (m) from vision geometry; our goal center is (-length/2, 0).
+  // Field length (m) from vision geometry; the goal we score on is (+length/2, 0).
   std::optional<double> field_length_;
   // Ball positions from the latest vision frame, in our field frame (m).
   std::vector<std::array<double, 2>> balls_;
@@ -339,7 +339,7 @@ private:
       command_message.velocity.x = vx;
       command_message.velocity.y = vy;
       if (robot_pose_ && field_length_) {
-        const std::array<double, 2> goal{-*field_length_ / 2.0, 0.0};
+        const std::array<double, 2> goal{*field_length_ / 2.0, 0.0};
         command_message.velocity.theta = FacePointAngularVelocity(*robot_pose_, goal, vx, vy,
           get_parameter("face_goal.kp").as_double(),
           get_parameter("face_goal.max_angular_vel").as_double());
