@@ -562,7 +562,8 @@ private:
     if (!field_length_) {
       return std::nullopt;
     }
-    return std::array<double, 2>{*field_length_ / 2.0, 0.0};
+    // TEMPORARY (uncommitted): face field -x until the team side is set.
+    return std::array<double, 2>{-*field_length_ / 2.0, 0.0};
   }
 
   void FillPivotParams(ateam_msgs::msg::RobotMotionCommand & command)
