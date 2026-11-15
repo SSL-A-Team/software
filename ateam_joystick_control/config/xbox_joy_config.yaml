@@ -13,6 +13,12 @@
     face_ball:  # hold the face-ball trigger: local velocity, heading servoed onto the ball
       kp: 4.0  # 1/s, heading error -> angular velocity
       max_angular_vel: 6.0  # rad/s
+    capture:  # press the capture button (X) to toggle: face the closest ball and drive into it
+      velocity: 0.2  # m/s forward
+      max_accel_linear: 0.5  # m/s^2
+      kp: 4.0  # 1/s, heading error -> angular velocity
+      max_angular_vel: 6.0  # rad/s
+      stick_cancel: 0.3  # left stick deflection that cancels capture
     mapping:
       linear:
         x:
@@ -29,7 +35,8 @@
       pivot: "button 5"
       pivot_axis: 0  # left stick horizontal steers the pivot heading
       face_ball: "axis 2 < -0.5"  # left trigger: face the closest ball
+      capture: "button 2"  # X: toggle capture
       dribbler:
         increment: "button 3"
-        decrement: "button 2"
+        decrement: "button 1"
         spin: "button 4"
