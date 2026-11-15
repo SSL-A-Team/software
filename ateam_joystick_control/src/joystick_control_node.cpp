@@ -79,6 +79,8 @@ public:
       "button 5"));
     face_goal_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.face_goal",
       "axis 2 < -0.5"));
+    pivot_shot_trigger_ = ParseTriggerFunction(declare_parameter<std::string>(
+      "mapping.pivot_shot", "button 0"));
     capture_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.capture",
       "button 2"));
     dribbler_increment_trigger_ =
@@ -142,9 +144,29 @@ public:
     // max(0, cos(heading error)), accelerating at capture.max_accel_linear. Ends on a second
     // press, the breakbeam seeing the ball, or the face-goal / pivot trigger (the sticks
     // are ignored). Read every packet (tunable live).
+    // Pivot shot (press the pivot-shot button, A): dribbler off, pivot about the ball
+    // (BCM_POINT_PIVOT, pivot.* params) until facing the goal we score on, then drive a
+    // line straight through the ball toward the goal (BCM_HEADING_LINE) with a touch kick
+    // held. Ends once the ball leaves the breakbeam after being in it, after
+    // pivot_shot.line_distance or pivot_shot.line_timeout, on another A press, or on the
+    // face-goal / pivot trigger or a capture press. Read every packet (tunable live).
+    declare_parameter<double>("pivot_shot.heading_tolerance", 0.05,
+      RangeDescriptor("rad, heading error to the goal that ends the pivot", 0.0, 0.5, 0.0));
+    declare_parameter<double>("pivot_shot.angular_vel_tolerance", 0.3,
+      RangeDescriptor("rad/s, angular speed below which the pivot is done", 0.0, 3.0, 0.0));
+    declare_parameter<double>("pivot_shot.pivot_timeout", 4.0,
+      RangeDescriptor("s, abort if the pivot hasn't finished", 0.0, 10.0, 0.0));
+    declare_parameter<double>("pivot_shot.line_velocity", 0.5,
+      RangeDescriptor("m/s along the line through the ball", 0.0, 3.0, 0.0));
+    declare_parameter<double>("pivot_shot.line_max_accel", 2.0,
+      RangeDescriptor("m/s^2 along and across the line (0 = firmware default)", 0.0, 6.0, 0.0));
+    declare_parameter<double>("pivot_shot.line_distance", 0.2,
+      RangeDescriptor("m of travel that ends the line", 0.0, 1.0, 0.0));
+    declare_parameter<double>("pivot_shot.line_timeout", 1.5,
+      RangeDescriptor("s, ends the line", 0.0, 5.0, 0.0));
     declare_parameter<double>("capture.velocity", 0.2,
       RangeDescriptor("m/s forward toward the ball", 0.0, 3.0, 0.0));
-    declare_parameter<double>("capture.max_accel_linear", 0.5,
+    declare_parameter<double>("capture.max_accel_linear", 1.0,
       RangeDescriptor("m/s^2 linear acceleration limit", 0.0, 6.0, 0.0));
     declare_parameter<double>("capture.kp", 4.0,
       RangeDescriptor("1/s, heading error -> angular velocity", 0.0, 15.0, 0.0));
@@ -188,6 +210,7 @@ private:
   TriggerFunction pivot_trigger_;
   TriggerFunction face_goal_trigger_;
   TriggerFunction capture_trigger_;
+  TriggerFunction pivot_shot_trigger_;
   TriggerFunction dribbler_increment_trigger_;
   TriggerFunction dribbler_decrement_trigger_;
   TriggerFunction dribbler_spin_trigger_;
@@ -210,6 +233,16 @@ private:
   // Capture mode is active (toggled by the capture button) and the robot's breakbeam state.
   bool capture_active_ = false;
   bool ball_in_breakbeam_ = false;
+  // Robot angular velocity estimate (rad/s).
+  double robot_w_ = 0.0;
+  // Pivot shot state.
+  enum class PivotShotPhase { Off, Pivot, Line };
+  PivotShotPhase pivot_shot_phase_ = PivotShotPhase::Off;
+  rclcpp::Time pivot_shot_phase_start_;
+  std::array<double, 2> pivot_shot_line_start_{};
+  std::array<double, 2> pivot_shot_robot_start_{};
+  double pivot_shot_line_theta_ = 0.0;
+  bool pivot_shot_saw_ball_ = false;
   // Robot heading captured when the pivot button was pressed.
   std::optional<double> pivot_anchor_heading_;
   // Field length (m) from vision geometry; the goal we score on is (+length/2, 0).
@@ -249,6 +282,7 @@ private:
     basic_telemetry_subscription_.reset();
     capture_active_ = false;
     ball_in_breakbeam_ = false;
+    pivot_shot_phase_ = PivotShotPhase::Off;
     robot_pose_.reset();
     last_vision_time_.reset();
     anchor_pose_.reset();
@@ -274,6 +308,9 @@ private:
           if (bct.kf_body_pos_estimate.size() >= 3) {
             robot_pose_ = {bct.kf_body_pos_estimate[0], bct.kf_body_pos_estimate[1],
               bct.kf_body_pos_estimate[2]};
+          }
+          if (bct.kf_body_vel_estimate.size() >= 3) {
+            robot_w_ = bct.kf_body_vel_estimate[2];
           }
           if (bct.vision_update) {
             last_vision_time_ = now();
@@ -302,6 +339,7 @@ private:
     const bool face_goal_held = face_goal_trigger_(*joy_message);
 
     const bool pivot_held = pivot_trigger_(*joy_message);
+    UpdatePivotShot(*joy_message, face_goal_held || pivot_held);
     UpdateCapture(*joy_message, face_goal_held || pivot_held);
 
     if (!pivot_held) {
@@ -312,7 +350,26 @@ private:
       RCLCPP_INFO(get_logger(), "Pivot anchored at heading %.3f rad", *pivot_anchor_heading_);
     }
 
-    if (capture_active_) {
+    if (pivot_shot_phase_ == PivotShotPhase::Pivot) {
+      const auto goal = *GoalCenter();
+      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT;
+      command_message.pivot_target_x = goal[0];
+      command_message.pivot_target_y = goal[1];
+      FillPivotParams(command_message);
+    } else if (pivot_shot_phase_ == PivotShotPhase::Line) {
+      const double v = get_parameter("pivot_shot.line_velocity").as_double();
+      const double acc = get_parameter("pivot_shot.line_max_accel").as_double();
+      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE;
+      command_message.line_global_theta = pivot_shot_line_theta_;
+      command_message.line_start_x = pivot_shot_line_start_[0];
+      command_message.line_start_y = pivot_shot_line_start_[1];
+      command_message.line_dir_x = std::cos(pivot_shot_line_theta_);
+      command_message.line_dir_y = std::sin(pivot_shot_line_theta_);
+      command_message.line_velocity = v;
+      command_message.line_max_vel_colinear = v;
+      command_message.line_max_accel_colinear = acc;
+      command_message.line_max_accel_perp = acc;
+    } else if (capture_active_) {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
       const auto ball = robot_pose_ ?
         ClosestBallTo((*robot_pose_)[0], (*robot_pose_)[1]) : std::nullopt;
@@ -338,9 +395,9 @@ private:
         joy_message->axes[linear_y_axis_];
       command_message.velocity.x = vx;
       command_message.velocity.y = vy;
-      if (robot_pose_ && field_length_) {
-        const std::array<double, 2> goal{*field_length_ / 2.0, 0.0};
-        command_message.velocity.theta = FacePointAngularVelocity(*robot_pose_, goal, vx, vy,
+      const auto goal = GoalCenter();
+      if (robot_pose_ && goal) {
+        command_message.velocity.theta = FacePointAngularVelocity(*robot_pose_, *goal, vx, vy,
           get_parameter("face_goal.kp").as_double(),
           get_parameter("face_goal.max_angular_vel").as_double());
       } else {
@@ -352,15 +409,7 @@ private:
       command_message.pivot_global_theta = std::remainder(
         *pivot_anchor_heading_ - get_parameter("pivot.angular_range").as_double() *
         joy_message->axes[pivot_axis_], 2.0 * M_PI);  // stick right -> clockwise
-      command_message.pivot_orbit_radius = get_parameter("pivot.orbit_radius").as_double();
-      command_message.pivot_inset_angle = get_parameter("pivot.inset_angle").as_double();
-      command_message.pivot_compute_inset_angle =
-        get_parameter("pivot.compute_inset_angle").as_bool();
-      command_message.pivot_direction = get_parameter("pivot.backward").as_bool() ?
-        ateam_msgs::msg::RobotMotionCommand::PD_BACKWARD :
-        ateam_msgs::msg::RobotMotionCommand::PD_FORWARD;
-      command_message.pivot_max_angular_vel = get_parameter("pivot.max_angular_vel").as_double();
-      command_message.pivot_max_angular_acc = get_parameter("pivot.max_angular_acc").as_double();
+      FillPivotParams(command_message);
     } else if (pivot_held) {
       // No pose from the robot yet to anchor the pivot: hold still.
       RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
@@ -408,7 +457,7 @@ private:
       get_parameter("max_accel_linear").as_double();
     command_message.limit_acc_angular = get_parameter("max_accel_angular").as_double();
 
-    if (kick_trigger_(*joy_message)) {
+    if (kick_trigger_(*joy_message) || pivot_shot_phase_ == PivotShotPhase::Line) {
       command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_KICK_TOUCH;
       command_message.kick_speed = get_parameter("kick_speed").as_double();
     } else {
@@ -425,7 +474,11 @@ private:
       std::clamp(
       dribbler_speed_, static_cast<float>(get_parameter("mapping.dribbler.min").as_double()),
       static_cast<float>(get_parameter("mapping.dribbler.max").as_double()));
-    if (dribbler_spin_trigger_(*joy_message)) {
+    // Capture spins the dribbler; afterwards it stays on only while the spin bumper is held.
+    // The pivot shot always runs with the dribbler off.
+    if (pivot_shot_phase_ == PivotShotPhase::Off &&
+      (capture_active_ || dribbler_spin_trigger_(*joy_message)))
+    {
       command_message.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_CURRENT;
       command_message.dribbler_setpoint = dribbler_speed_;
     } else {
@@ -470,15 +523,118 @@ private:
     return closest;
   }
 
+  bool Pressed(const TriggerFunction & trigger, const sensor_msgs::msg::Joy & joy) const
+  {
+    const bool have_prev = !prev_joy_msg_.buttons.empty() && !prev_joy_msg_.axes.empty();
+    return trigger(joy) && !(have_prev && trigger(prev_joy_msg_));
+  }
+
+  // Center of the goal we score on: +x in our frame.
+  std::optional<std::array<double, 2>> GoalCenter() const
+  {
+    if (!field_length_) {
+      return std::nullopt;
+    }
+    return std::array<double, 2>{*field_length_ / 2.0, 0.0};
+  }
+
+  void FillPivotParams(ateam_msgs::msg::RobotMotionCommand & command)
+  {
+    command.pivot_orbit_radius = get_parameter("pivot.orbit_radius").as_double();
+    command.pivot_inset_angle = get_parameter("pivot.inset_angle").as_double();
+    command.pivot_compute_inset_angle = get_parameter("pivot.compute_inset_angle").as_bool();
+    command.pivot_direction = get_parameter("pivot.backward").as_bool() ?
+      ateam_msgs::msg::RobotMotionCommand::PD_BACKWARD :
+      ateam_msgs::msg::RobotMotionCommand::PD_FORWARD;
+    command.pivot_max_angular_vel = get_parameter("pivot.max_angular_vel").as_double();
+    command.pivot_max_angular_acc = get_parameter("pivot.max_angular_acc").as_double();
+  }
+
+  void StopPivotShot(const char * reason)
+  {
+    pivot_shot_phase_ = PivotShotPhase::Off;
+    RCLCPP_INFO(get_logger(), "Pivot shot stopped: %s", reason);
+  }
+
+  // Start the pivot shot on a pivot-shot press (a second press cancels it); advance from the
+  // pivot to the line once facing the goal, and end the line after the kick.
+  void UpdatePivotShot(const sensor_msgs::msg::Joy & joy, bool other_mode_held)
+  {
+    if (Pressed(pivot_shot_trigger_, joy)) {
+      if (pivot_shot_phase_ != PivotShotPhase::Off) {
+        StopPivotShot("button pressed again");
+      } else if (!robot_pose_ || !GoalCenter()) {
+        RCLCPP_WARN(get_logger(),
+          "Pivot shot: waiting for a robot pose and field geometry from vision");
+      } else {
+        pivot_shot_phase_ = PivotShotPhase::Pivot;
+        pivot_shot_phase_start_ = now();
+        capture_active_ = false;
+        RCLCPP_INFO(get_logger(), "Pivot shot: pivoting to face the goal");
+      }
+      return;
+    }
+    if (pivot_shot_phase_ == PivotShotPhase::Off) {
+      return;
+    }
+    if (other_mode_held) {
+      StopPivotShot("another mode's trigger");
+      return;
+    }
+    const auto [x, y, th] = *robot_pose_;
+    const auto goal = *GoalCenter();
+    const double elapsed = (now() - pivot_shot_phase_start_).seconds();
+    if (pivot_shot_phase_ == PivotShotPhase::Pivot) {
+      const double error = std::remainder(std::atan2(goal[1] - y, goal[0] - x) - th, 2.0 * M_PI);
+      if (std::abs(error) < get_parameter("pivot_shot.heading_tolerance").as_double() &&
+        std::abs(robot_w_) < get_parameter("pivot_shot.angular_vel_tolerance").as_double())
+      {
+        const auto ball = ClosestBallTo(x, y);
+        if (!ball) {
+          StopPivotShot("no ball in vision");
+          return;
+        }
+        const double dx = goal[0] - (*ball)[0];
+        const double dy = goal[1] - (*ball)[1];
+        if (std::hypot(dx, dy) < 1e-3) {
+          StopPivotShot("ball is at the goal");
+          return;
+        }
+        pivot_shot_line_start_ = *ball;
+        pivot_shot_line_theta_ = std::atan2(dy, dx);
+        pivot_shot_robot_start_ = {x, y};
+        pivot_shot_saw_ball_ = false;
+        pivot_shot_phase_ = PivotShotPhase::Line;
+        pivot_shot_phase_start_ = now();
+        RCLCPP_INFO(get_logger(), "Pivot shot: line kick through ball (%.3f, %.3f), heading %.3f",
+          (*ball)[0], (*ball)[1], pivot_shot_line_theta_);
+      } else if (elapsed > get_parameter("pivot_shot.pivot_timeout").as_double()) {
+        StopPivotShot("pivot timed out");
+      }
+      return;
+    }
+    pivot_shot_saw_ball_ = pivot_shot_saw_ball_ || ball_in_breakbeam_;
+    const double traveled =
+      std::hypot(x - pivot_shot_robot_start_[0], y - pivot_shot_robot_start_[1]);
+    if (pivot_shot_saw_ball_ && !ball_in_breakbeam_) {
+      StopPivotShot("ball kicked");
+    } else if (traveled > get_parameter("pivot_shot.line_distance").as_double()) {
+      StopPivotShot("line distance reached");
+    } else if (elapsed > get_parameter("pivot_shot.line_timeout").as_double()) {
+      StopPivotShot("line timed out");
+    }
+  }
+
   // Toggle capture on a capture-button press; end it on the breakbeam or another mode's
   // trigger.
   void UpdateCapture(const sensor_msgs::msg::Joy & joy, bool other_mode_held)
   {
-    const bool have_prev = !prev_joy_msg_.buttons.empty() && !prev_joy_msg_.axes.empty();
-    const bool pressed = capture_trigger_(joy) && !(have_prev && capture_trigger_(prev_joy_msg_));
-    if (pressed) {
+    if (Pressed(capture_trigger_, joy)) {
       capture_active_ = !capture_active_;
       RCLCPP_INFO(get_logger(), "Capture %s", capture_active_ ? "started" : "stopped");
+      if (capture_active_ && pivot_shot_phase_ != PivotShotPhase::Off) {
+        StopPivotShot("capture pressed");
+      }
       return;
     }
     if (!capture_active_) {

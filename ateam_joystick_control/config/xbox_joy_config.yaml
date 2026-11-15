@@ -13,11 +13,19 @@
     face_goal:  # hold the face-goal trigger: local velocity, heading servoed onto the goal we score on (+x in our frame)
       kp: 4.0  # 1/s, heading error -> angular velocity
       max_angular_vel: 6.0  # rad/s
-    capture:  # press the capture button (X) to toggle: face the closest ball and drive into it
+    capture:  # press X to toggle: dribbler on, face the closest ball and drive into it
       velocity: 0.2  # m/s forward
-      max_accel_linear: 0.5  # m/s^2
+      max_accel_linear: 1.0  # m/s^2
       kp: 4.0  # 1/s, heading error -> angular velocity
       max_angular_vel: 6.0  # rad/s
+    pivot_shot:  # press A: dribbler off, pivot (pivot.* params) to face the goal, then line kick through the ball
+      heading_tolerance: 0.05  # rad, heading error to the goal that ends the pivot
+      angular_vel_tolerance: 0.3  # rad/s
+      pivot_timeout: 4.0  # s
+      line_velocity: 0.5  # m/s along the line through the ball
+      line_max_accel: 2.0  # m/s^2, 0 = firmware default
+      line_distance: 0.2  # m of travel that ends the line
+      line_timeout: 1.5  # s
     mapping:
       linear:
         x:
@@ -34,7 +42,8 @@
       pivot: "button 5"
       pivot_axis: 0  # left stick horizontal steers the pivot heading
       face_goal: "axis 2 < -0.5"  # left trigger: face the goal we score on
-      capture: "button 2"  # X: toggle capture
+      capture: "button 2"  # X: toggle capture (spins the dribbler)
+      pivot_shot: "button 0"  # A: pivot shot
       dribbler:
         increment: "button 3"
         decrement: "button 1"
