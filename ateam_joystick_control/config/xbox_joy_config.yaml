@@ -48,6 +48,7 @@
       capture: "button 2"  # X: toggle capture (spins the dribbler)
       pivot_shot: "button 0"  # A: pivot shot
       dribbler:
+        speed: 0.045  # setpoint, fraction of full effort (Y/B step it live)
         increment: "button 3"
         decrement: "button 1"
         spin: "button 4"

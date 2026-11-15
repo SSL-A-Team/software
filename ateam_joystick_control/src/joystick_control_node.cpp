@@ -103,6 +103,10 @@ public:
 
     // controls the size of steps when changing dribbler speed
     declare_parameter<double>("dribbler_speed_step", 0.01);
+    // Dribbler setpoint (fraction of full effort). The increment/decrement buttons step this
+    // parameter, so it is visible and tunable live and saved with the other parameters.
+    declare_parameter<double>("mapping.dribbler.speed", 0.045,
+      RangeDescriptor("dribbler setpoint, fraction of full effort", 0.0, 1.0, 0.0));
 
     declare_parameter<double>("kick_speed", 2.0);
     declare_parameter<double>("chip_speed", 5.0);
@@ -210,7 +214,6 @@ private:
   using TriggerFunction = std::function<bool(const sensor_msgs::msg::Joy & )>;
 
   std::string command_topic_template_;
-  float dribbler_speed_ = kDefaultDribblerSetpoint;
   sensor_msgs::msg::Joy prev_joy_msg_;
 
   TriggerFunction kick_trigger_;
@@ -483,23 +486,28 @@ private:
       command_message.kick_request = ateam_msgs::msg::RobotMotionCommand::KR_ARM;
     }
 
-    if (dribbler_increment_trigger_(*joy_message) && !dribbler_increment_trigger_(prev_joy_msg_)) {
-      dribbler_speed_ += get_parameter("dribbler_speed_step").as_double();
+    double dribbler_speed = get_parameter("mapping.dribbler.speed").as_double();
+    double dribbler_step = 0.0;
+    if (Pressed(dribbler_increment_trigger_, *joy_message)) {
+      dribbler_step += get_parameter("dribbler_speed_step").as_double();
     }
-    if (dribbler_decrement_trigger_(*joy_message) && !dribbler_decrement_trigger_(prev_joy_msg_)) {
-      dribbler_speed_ -= get_parameter("dribbler_speed_step").as_double();
+    if (Pressed(dribbler_decrement_trigger_, *joy_message)) {
+      dribbler_step -= get_parameter("dribbler_speed_step").as_double();
     }
-    dribbler_speed_ =
-      std::clamp(
-      dribbler_speed_, static_cast<float>(get_parameter("mapping.dribbler.min").as_double()),
-      static_cast<float>(get_parameter("mapping.dribbler.max").as_double()));
+    if (dribbler_step != 0.0) {
+      dribbler_speed = std::clamp(dribbler_speed + dribbler_step,
+        get_parameter("mapping.dribbler.min").as_double(),
+        get_parameter("mapping.dribbler.max").as_double());
+      set_parameter(rclcpp::Parameter("mapping.dribbler.speed", dribbler_speed));
+      RCLCPP_INFO(get_logger(), "Dribbler speed %.3f", dribbler_speed);
+    }
     // Capture spins the dribbler; afterwards it stays on only while the spin bumper is held.
     // The pivot shot always runs with the dribbler off.
     if (pivot_shot_phase_ == PivotShotPhase::Off &&
       (capture_active_ || dribbler_spin_trigger_(*joy_message)))
     {
       command_message.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_CURRENT;
-      command_message.dribbler_setpoint = dribbler_speed_;
+      command_message.dribbler_setpoint = dribbler_speed;
     } else {
       command_message.dribbler_mode = ateam_msgs::msg::RobotMotionCommand::DC_DISABLE;
       command_message.dribbler_setpoint = 0.0;
