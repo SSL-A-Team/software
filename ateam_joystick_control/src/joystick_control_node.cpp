@@ -164,9 +164,13 @@ public:
       RangeDescriptor("m of travel that ends the line", 0.0, 1.0, 0.0));
     declare_parameter<double>("pivot_shot.line_timeout", 1.5,
       RangeDescriptor("s, ends the line", 0.0, 5.0, 0.0));
-    declare_parameter<double>("capture.breakbeam_hold_ms", 200.0,
-      RangeDescriptor("ms the breakbeam must see the ball continuously to end capture",
-      0.0, 2000.0, 0.0));
+    // Capture ends when a first-order low-pass of the breakbeam (1 = ball seen) exceeds
+    // breakbeam_threshold. A continuous detection crosses it after tau * ln(1 / (1 - threshold))
+    // (about 200 ms with the defaults).
+    declare_parameter<double>("capture.breakbeam_filter_tau_ms", 125.0,
+      RangeDescriptor("ms, breakbeam low-pass time constant", 0.0, 2000.0, 0.0));
+    declare_parameter<double>("capture.breakbeam_threshold", 0.8,
+      RangeDescriptor("filtered breakbeam level that ends capture", 0.0, 1.0, 0.0));
     declare_parameter<double>("capture.velocity", 0.2,
       RangeDescriptor("m/s forward toward the ball", 0.0, 3.0, 0.0));
     declare_parameter<double>("capture.max_accel_linear", 1.0,
@@ -236,8 +240,9 @@ private:
   // Capture mode is active (toggled by the capture button) and the robot's breakbeam state.
   bool capture_active_ = false;
   bool ball_in_breakbeam_ = false;
-  // When the breakbeam started continuously seeing the ball (unset while it doesn't).
-  std::optional<rclcpp::Time> breakbeam_since_;
+  // Low-passed breakbeam signal (0..1) and the time of its last update.
+  double breakbeam_filtered_ = 0.0;
+  std::optional<rclcpp::Time> breakbeam_last_update_;
   // Robot angular velocity estimate (rad/s).
   double robot_w_ = 0.0;
   // Pivot shot state.
@@ -287,7 +292,8 @@ private:
     basic_telemetry_subscription_.reset();
     capture_active_ = false;
     ball_in_breakbeam_ = false;
-    breakbeam_since_.reset();
+    breakbeam_filtered_ = 0.0;
+    breakbeam_last_update_.reset();
     pivot_shot_phase_ = PivotShotPhase::Off;
     robot_pose_.reset();
     last_vision_time_.reset();
@@ -327,11 +333,13 @@ private:
         rclcpp::SystemDefaultsQoS(),
         [this](const ateam_radio_msgs::msg::BasicTelemetry::SharedPtr msg) {
           ball_in_breakbeam_ = msg->breakbeam_ball_detected;
-          if (!ball_in_breakbeam_) {
-            breakbeam_since_.reset();
-          } else if (!breakbeam_since_) {
-            breakbeam_since_ = now();
-          }
+          const auto t = now();
+          const double tau = get_parameter("capture.breakbeam_filter_tau_ms").as_double() * 1e-3;
+          const double dt = breakbeam_last_update_ ?
+            std::max(0.0, (t - *breakbeam_last_update_).seconds()) : 0.0;
+          const double alpha = tau > 0.0 ? 1.0 - std::exp(-dt / tau) : 1.0;
+          breakbeam_filtered_ += alpha * ((ball_in_breakbeam_ ? 1.0 : 0.0) - breakbeam_filtered_);
+          breakbeam_last_update_ = t;
         });
       status_msg.is_active = true;
       status_msg.active_id = robot_id;
@@ -652,9 +660,7 @@ private:
       return;
     }
     const char * reason = nullptr;
-    if (breakbeam_since_ && (now() - *breakbeam_since_).seconds() * 1000.0 >=
-      get_parameter("capture.breakbeam_hold_ms").as_double())
-    {
+    if (breakbeam_filtered_ >= get_parameter("capture.breakbeam_threshold").as_double()) {
       reason = "ball held in breakbeam";
     } else if (other_mode_held) {
       reason = "another mode's trigger";
