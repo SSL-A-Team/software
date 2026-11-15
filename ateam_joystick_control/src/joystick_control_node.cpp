@@ -77,7 +77,7 @@ public:
         "axis 5 < -0.8"));
     pivot_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.pivot",
       "button 5"));
-    face_ball_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.face_ball",
+    face_goal_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.face_goal",
       "axis 2 < -0.5"));
     capture_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.capture",
       "button 2"));
@@ -126,20 +126,21 @@ public:
     // All pivot.* parameters are read every packet, so they can be tuned live
     // (e.g. rqt_reconfigure). 0 for max_angular_vel / max_angular_acc / orbit_radius
     // leaves the firmware default (10 rad/s, 7 rad/s^2, 0.12 m).
-    // Face ball (hold the face-ball trigger): normal local velocity control on the linear
-    // stick, but the angular rate servos the heading onto the closest ball:
+    // Face goal (hold the face-goal trigger): normal local velocity control on the linear
+    // stick, but the angular rate servos the heading onto the opponent goal center
+    // (+field_length/2, 0), field size from vision geometry:
     //   w = kp * bearing_error + bearing_rate_ff, clamped to +/- max_angular_vel,
     // where the feed-forward is the bearing rate the commanded translation produces.
     // Read every packet (tunable live).
-    declare_parameter<double>("face_ball.kp", 4.0,
+    declare_parameter<double>("face_goal.kp", 4.0,
       RangeDescriptor("1/s, heading error -> angular velocity", 0.0, 15.0, 0.0));
-    declare_parameter<double>("face_ball.max_angular_vel", 6.0,
+    declare_parameter<double>("face_goal.max_angular_vel", 6.0,
       RangeDescriptor("rad/s, angular velocity clamp", 0.0, 15.0, 0.0));
     // Capture (press the capture button to toggle): servo the heading onto the closest ball
     // and drive forward (robot local) into it at capture.velocity, scaled by
     // max(0, cos(heading error)), accelerating at capture.max_accel_linear. Ends on a second
-    // press, the breakbeam seeing the ball, the linear stick leaving its deadband, or the
-    // face-ball / pivot trigger. Read every packet (tunable live).
+    // press, the breakbeam seeing the ball, or the face-goal / pivot trigger (the sticks
+    // are ignored). Read every packet (tunable live).
     declare_parameter<double>("capture.velocity", 0.2,
       RangeDescriptor("m/s forward toward the ball", 0.0, 3.0, 0.0));
     declare_parameter<double>("capture.max_accel_linear", 0.5,
@@ -148,8 +149,6 @@ public:
       RangeDescriptor("1/s, heading error -> angular velocity", 0.0, 15.0, 0.0));
     declare_parameter<double>("capture.max_angular_vel", 6.0,
       RangeDescriptor("rad/s, angular velocity clamp", 0.0, 15.0, 0.0));
-    declare_parameter<double>("capture.stick_cancel", 0.3,
-      RangeDescriptor("linear stick deflection that cancels capture", 0.0, 1.0, 0.0));
 
     declare_parameter<double>("pivot.angular_range", 1.6,
       RangeDescriptor("rad, pivot heading offset at full left stick (+/-)", 0.0, M_PI, 0.0));
@@ -186,7 +185,7 @@ private:
 
   TriggerFunction kick_trigger_;
   TriggerFunction pivot_trigger_;
-  TriggerFunction face_ball_trigger_;
+  TriggerFunction face_goal_trigger_;
   TriggerFunction capture_trigger_;
   TriggerFunction dribbler_increment_trigger_;
   TriggerFunction dribbler_decrement_trigger_;
@@ -212,6 +211,8 @@ private:
   bool ball_in_breakbeam_ = false;
   // Robot heading captured when the pivot button was pressed.
   std::optional<double> pivot_anchor_heading_;
+  // Field length (m) from vision geometry; the opponent goal center is (+length/2, 0).
+  std::optional<double> field_length_;
   // Ball positions from the latest vision frame, in our field frame (m).
   std::vector<std::array<double, 2>> balls_;
   ateam_common::GameControllerListener game_controller_listener_;
@@ -297,10 +298,10 @@ private:
 
     ateam_msgs::msg::RobotMotionCommand command_message;
 
-    const bool face_ball_held = face_ball_trigger_(*joy_message);
+    const bool face_goal_held = face_goal_trigger_(*joy_message);
 
     const bool pivot_held = pivot_trigger_(*joy_message);
-    UpdateCapture(*joy_message, face_ball_held || pivot_held);
+    UpdateCapture(*joy_message, face_goal_held || pivot_held);
 
     if (!pivot_held) {
       pivot_anchor_heading_.reset();
@@ -321,14 +322,14 @@ private:
         const double vx = get_parameter("capture.velocity").as_double() *
           std::max(0.0, std::cos(error));
         command_message.velocity.x = vx;
-        command_message.velocity.theta = FaceBallAngularVelocity(*robot_pose_, *ball, vx, 0.0,
+        command_message.velocity.theta = FacePointAngularVelocity(*robot_pose_, *ball, vx, 0.0,
           get_parameter("capture.kp").as_double(),
           get_parameter("capture.max_angular_vel").as_double());
       } else {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
           "Capture: waiting for a robot pose and a ball in vision");
       }
-    } else if (face_ball_held) {
+    } else if (face_goal_held) {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
       const double vx = get_parameter("mapping.linear.x.scale").as_double() *
         joy_message->axes[linear_x_axis_];
@@ -336,15 +337,14 @@ private:
         joy_message->axes[linear_y_axis_];
       command_message.velocity.x = vx;
       command_message.velocity.y = vy;
-      const auto ball = robot_pose_ ?
-        ClosestBallTo((*robot_pose_)[0], (*robot_pose_)[1]) : std::nullopt;
-      if (ball) {
-        command_message.velocity.theta = FaceBallAngularVelocity(*robot_pose_, *ball, vx, vy,
-          get_parameter("face_ball.kp").as_double(),
-          get_parameter("face_ball.max_angular_vel").as_double());
+      if (robot_pose_ && field_length_) {
+        const std::array<double, 2> goal{*field_length_ / 2.0, 0.0};
+        command_message.velocity.theta = FacePointAngularVelocity(*robot_pose_, goal, vx, vy,
+          get_parameter("face_goal.kp").as_double(),
+          get_parameter("face_goal.max_angular_vel").as_double());
       } else {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
-          "Face ball: waiting for a robot pose and a ball in vision");
+          "Face goal: waiting for a robot pose and field geometry from vision");
       }
     } else if (pivot_held && pivot_anchor_heading_) {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT;
@@ -450,6 +450,9 @@ private:
     if (!msg->detection.empty()) {
       balls_ = std::move(balls);
     }
+    if (!msg->geometry.empty() && msg->geometry.back().field.field_length > 0.0f) {
+      field_length_ = msg->geometry.back().field.field_length;
+    }
   }
 
   std::optional<std::array<double, 2>> ClosestBallTo(double x, double y) const
@@ -466,8 +469,8 @@ private:
     return closest;
   }
 
-  // Toggle capture on a capture-button press; end it on the breakbeam, a linear stick
-  // override, or another mode's trigger.
+  // Toggle capture on a capture-button press; end it on the breakbeam or another mode's
+  // trigger.
   void UpdateCapture(const sensor_msgs::msg::Joy & joy, bool other_mode_held)
   {
     const bool have_prev = !prev_joy_msg_.buttons.empty() && !prev_joy_msg_.axes.empty();
@@ -480,14 +483,11 @@ private:
     if (!capture_active_) {
       return;
     }
-    const double cancel = get_parameter("capture.stick_cancel").as_double();
     const char * reason = nullptr;
     if (ball_in_breakbeam_) {
       reason = "ball in breakbeam";
     } else if (other_mode_held) {
       reason = "another mode's trigger";
-    } else if (std::hypot(joy.axes[linear_x_axis_], joy.axes[linear_y_axis_]) > cancel) {
-      reason = "stick override";
     }
     if (reason) {
       capture_active_ = false;
@@ -495,9 +495,9 @@ private:
     }
   }
 
-  // Angular velocity that turns the robot to face the ball while it translates at the
+  // Angular velocity that turns the robot to face a static point while it translates at the
   // commanded local velocity (vx, vy).
-  double FaceBallAngularVelocity(
+  double FacePointAngularVelocity(
     const std::array<double, 3> & pose, const std::array<double, 2> & ball,
     double vx, double vy, double kp, double w_max)
   {
