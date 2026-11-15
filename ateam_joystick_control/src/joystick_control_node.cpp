@@ -104,7 +104,7 @@ public:
     // controls the size of steps when changing dribbler speed
     declare_parameter<double>("dribbler_speed_step", 0.01);
 
-    declare_parameter<double>("kick_speed", 5.0);
+    declare_parameter<double>("kick_speed", 2.0);
     declare_parameter<double>("chip_speed", 5.0);
 
     // Position mode: on entry (with vision active on the robot) the robot's estimated pose is
