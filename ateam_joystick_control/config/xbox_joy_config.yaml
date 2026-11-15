@@ -10,9 +10,9 @@
       orbit_radius: 0.15  # m, robot center to pivot point
       max_angular_vel: 10.0  # rad/s, 0 = firmware default
       max_angular_acc: 15.0  # rad/s^2, 0 = firmware default
-    line:  # hold the line trigger; left stick forward/back sets speed along the line
-      max_velocity: 1.0  # m/s at full stick
-      max_accel: 2.0  # m/s^2, 0 = firmware default
+    face_ball:  # hold the face-ball trigger: local velocity, heading servoed onto the ball
+      kp: 4.0  # 1/s, heading error -> angular velocity
+      max_angular_vel: 6.0  # rad/s
     mapping:
       linear:
         x:
@@ -28,7 +28,7 @@
       kick: "axis 5 < -0.8"
       pivot: "button 5"
       pivot_axis: 0  # left stick horizontal steers the pivot heading
-      line: "axis 2 < -0.5"  # left trigger: line through the closest ball
+      face_ball: "axis 2 < -0.5"  # left trigger: face the closest ball
       dribbler:
         increment: "button 3"
         decrement: "button 2"

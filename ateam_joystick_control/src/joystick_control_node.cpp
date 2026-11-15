@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <algorithm>
 #include <array>
 #include <string>
 #include <vector>
@@ -75,7 +76,7 @@ public:
         "axis 5 < -0.8"));
     pivot_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.pivot",
       "button 5"));
-    line_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.line",
+    face_ball_trigger_ = ParseTriggerFunction(declare_parameter<std::string>("mapping.face_ball",
       "axis 2 < -0.5"));
     dribbler_increment_trigger_ =
       ParseTriggerFunction(declare_parameter<std::string>("mapping.dribbler.increment",
@@ -122,14 +123,15 @@ public:
     // All pivot.* parameters are read every packet, so they can be tuned live
     // (e.g. rqt_reconfigure). 0 for max_angular_vel / max_angular_acc / orbit_radius
     // leaves the firmware default (10 rad/s, 7 rad/s^2, 0.12 m).
-    // Line (hold the line trigger): on the press, a line from the robot straight through
-    // the closest ball is captured; the robot drives along it facing the ball, with
-    // the linear x stick (forward = toward / through the ball) setting the speed along
-    // it, up to line.max_velocity. Read every packet (tunable live).
-    declare_parameter<double>("line.max_velocity", 1.0,
-      RangeDescriptor("m/s along the line at full stick", 0.0, 3.0, 0.0));
-    declare_parameter<double>("line.max_accel", 2.0,
-      RangeDescriptor("m/s^2 along and across the line (0 = firmware default)", 0.0, 6.0, 0.0));
+    // Face ball (hold the face-ball trigger): normal local velocity control on the linear
+    // stick, but the angular rate servos the heading onto the closest ball:
+    //   w = kp * bearing_error + bearing_rate_ff, clamped to +/- max_angular_vel,
+    // where the feed-forward is the bearing rate the commanded translation produces.
+    // Read every packet (tunable live).
+    declare_parameter<double>("face_ball.kp", 4.0,
+      RangeDescriptor("1/s, heading error -> angular velocity", 0.0, 15.0, 0.0));
+    declare_parameter<double>("face_ball.max_angular_vel", 6.0,
+      RangeDescriptor("rad/s, angular velocity clamp", 0.0, 15.0, 0.0));
 
     declare_parameter<double>("pivot.angular_range", 1.6,
       RangeDescriptor("rad, pivot heading offset at full left stick (+/-)", 0.0, M_PI, 0.0));
@@ -166,7 +168,7 @@ private:
 
   TriggerFunction kick_trigger_;
   TriggerFunction pivot_trigger_;
-  TriggerFunction line_trigger_;
+  TriggerFunction face_ball_trigger_;
   TriggerFunction dribbler_increment_trigger_;
   TriggerFunction dribbler_decrement_trigger_;
   TriggerFunction dribbler_spin_trigger_;
@@ -187,9 +189,6 @@ private:
   std::optional<std::array<double, 3>> anchor_pose_;
   // Robot heading captured when the pivot button was pressed.
   std::optional<double> pivot_anchor_heading_;
-  // Line captured when the line trigger was pressed: point (the ball) and unit direction.
-  struct Line { double x, y, dx, dy; };
-  std::optional<Line> line_;
   // Ball positions from the latest vision frame, in our field frame (m).
   std::vector<std::array<double, 2>> balls_;
   ateam_common::GameControllerListener game_controller_listener_;
@@ -226,7 +225,6 @@ private:
     last_vision_time_.reset();
     anchor_pose_.reset();
     pivot_anchor_heading_.reset();
-    line_.reset();
     if (robot_id == -1) {
       control_publisher_.reset();
       status_msg.is_active = false;
@@ -267,12 +265,7 @@ private:
 
     ateam_msgs::msg::RobotMotionCommand command_message;
 
-    const bool line_held = line_trigger_(*joy_message);
-    if (!line_held) {
-      line_.reset();
-    } else if (!line_ && robot_pose_) {
-      line_ = LineThroughClosestBall();
-    }
+    const bool face_ball_held = face_ball_trigger_(*joy_message);
 
     const bool pivot_held = pivot_trigger_(*joy_message);
     if (!pivot_held) {
@@ -283,27 +276,22 @@ private:
       RCLCPP_INFO(get_logger(), "Pivot anchored at heading %.3f rad", *pivot_anchor_heading_);
     }
 
-    if (line_held && line_) {
-      const double v_max = get_parameter("line.max_velocity").as_double();
-      const double acc = get_parameter("line.max_accel").as_double();
-      command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_POINT_LINE;
-      command_message.line_start_x = line_->x;
-      command_message.line_start_y = line_->y;
-      command_message.line_dir_x = line_->dx;
-      command_message.line_dir_y = line_->dy;
-      // Face the ball's current position (the line itself stays as captured).
-      const auto ball = ClosestBallTo(line_->x, line_->y).value_or(
-        std::array<double, 2>{line_->x, line_->y});
-      command_message.line_target_x = ball[0];
-      command_message.line_target_y = ball[1];
-      command_message.line_velocity = v_max * joy_message->axes[linear_x_axis_];
-      command_message.line_max_vel_colinear = v_max;
-      command_message.line_max_accel_colinear = acc;
-      command_message.line_max_accel_perp = acc;
-    } else if (line_held) {
-      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
-        "Line: waiting for a robot pose and a ball in vision");
+    if (face_ball_held) {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY;
+      const double vx = get_parameter("mapping.linear.x.scale").as_double() *
+        joy_message->axes[linear_x_axis_];
+      const double vy = get_parameter("mapping.linear.y.scale").as_double() *
+        joy_message->axes[linear_y_axis_];
+      command_message.velocity.x = vx;
+      command_message.velocity.y = vy;
+      const auto ball = robot_pose_ ?
+        ClosestBallTo((*robot_pose_)[0], (*robot_pose_)[1]) : std::nullopt;
+      if (ball) {
+        command_message.velocity.theta = FaceBallAngularVelocity(*robot_pose_, *ball, vx, vy);
+      } else {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+          "Face ball: waiting for a robot pose and a ball in vision");
+      }
     } else if (pivot_held && pivot_anchor_heading_) {
       command_message.body_control_mode = ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_PIVOT;
       command_message.pivot_global_theta = std::remainder(
@@ -422,22 +410,27 @@ private:
     return closest;
   }
 
-  std::optional<Line> LineThroughClosestBall()
+  // Angular velocity that turns the robot to face the ball while it translates at the
+  // commanded local velocity (vx, vy).
+  double FaceBallAngularVelocity(
+    const std::array<double, 3> & pose, const std::array<double, 2> & ball,
+    double vx, double vy)
   {
-    const auto [rx, ry, rth] = *robot_pose_;
-    const auto closest = ClosestBallTo(rx, ry);
-    if (!closest) {
-      return std::nullopt;
+    const auto [x, y, th] = pose;
+    const double rx = ball[0] - x;
+    const double ry = ball[1] - y;
+    const double r2 = rx * rx + ry * ry;
+    if (r2 < 1e-6) {
+      return 0.0;
     }
-    const double best = std::hypot((*closest)[0] - rx, (*closest)[1] - ry);
-    if (best < 1e-3) {
-      return std::nullopt;
-    }
-    const Line line{(*closest)[0], (*closest)[1], ((*closest)[0] - rx) / best,
-      ((*closest)[1] - ry) / best};
-    RCLCPP_INFO(get_logger(), "Line through ball (%.3f, %.3f), direction (%.2f, %.2f)",
-      line.x, line.y, line.dx, line.dy);
-    return line;
+    // Bearing rate from the robot's own (global-frame) translation; the ball is static.
+    const double vgx = std::cos(th) * vx - std::sin(th) * vy;
+    const double vgy = std::sin(th) * vx + std::cos(th) * vy;
+    const double bearing_rate = (ry * vgx - rx * vgy) / r2;
+    const double error = std::remainder(std::atan2(ry, rx) - th, 2.0 * M_PI);
+    const double w_max = get_parameter("face_ball.max_angular_vel").as_double();
+    return std::clamp(get_parameter("face_ball.kp").as_double() * error + bearing_rate,
+      -w_max, w_max);
   }
 
   bool VisionActive()
