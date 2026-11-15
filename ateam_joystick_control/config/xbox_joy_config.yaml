@@ -2,7 +2,7 @@
   ros__parameters:
     max_accel_linear: 2.0  # m/s^2
     max_accel_angular: 20.0  # rad/s^2
-    kick_speed: 2.0  # m/s, kick button and pivot shot
+    kick_speed: 0.2  # m/s, kick button and pivot shot
     pivot:  # hold the pivot button; tunable live (rqt_reconfigure)
       angular_range: 1.6  # rad heading offset at full left stick, from the heading at press
       inset_angle: 1.6  # rad, orbit tangent -> heading toward the ball (pi/2 = face the ball)
