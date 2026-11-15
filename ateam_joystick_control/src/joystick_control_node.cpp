@@ -166,8 +166,8 @@ public:
       RangeDescriptor("s, ends the line", 0.0, 5.0, 0.0));
     // Capture ends when a first-order low-pass of the breakbeam (1 = ball seen) exceeds
     // breakbeam_threshold. A continuous detection crosses it after tau * ln(1 / (1 - threshold))
-    // (about 200 ms with the defaults).
-    declare_parameter<double>("capture.breakbeam_filter_tau_ms", 125.0,
+    // (about 160 ms with the defaults).
+    declare_parameter<double>("capture.breakbeam_filter_tau_ms", 100.0,
       RangeDescriptor("ms, breakbeam low-pass time constant", 0.0, 2000.0, 0.0));
     declare_parameter<double>("capture.breakbeam_threshold", 0.8,
       RangeDescriptor("filtered breakbeam level that ends capture", 0.0, 1.0, 0.0));
