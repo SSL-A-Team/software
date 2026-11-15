@@ -10,7 +10,7 @@
       orbit_radius: 0.15  # m, robot center to pivot point
       max_angular_vel: 10.0  # rad/s, 0 = firmware default
       max_angular_acc: 15.0  # rad/s^2, 0 = firmware default
-    face_goal:  # hold the face-goal trigger: local velocity, heading servoed onto the opponent goal center
+    face_goal:  # hold the face-goal trigger: local velocity, heading servoed onto our (blue) goal center, -x
       kp: 4.0  # 1/s, heading error -> angular velocity
       max_angular_vel: 6.0  # rad/s
     capture:  # press the capture button (X) to toggle: face the closest ball and drive into it
@@ -33,7 +33,7 @@
       kick: "axis 5 < -0.8"
       pivot: "button 5"
       pivot_axis: 0  # left stick horizontal steers the pivot heading
-      face_goal: "axis 2 < -0.5"  # left trigger: face the opponent goal center
+      face_goal: "axis 2 < -0.5"  # left trigger: face our goal center
       capture: "button 2"  # X: toggle capture
       dribbler:
         increment: "button 3"
