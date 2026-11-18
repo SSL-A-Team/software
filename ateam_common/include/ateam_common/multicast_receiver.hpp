@@ -61,17 +61,12 @@ private:
   std::array<uint8_t, 4096> send_buffer_;
   std::array<uint8_t, 4096> buffer_;
   std::thread io_service_thread_;
-  boost::asio::ip::address_v4 multicast_address_;
-  std::string interface_address_;
-  boost::asio::steady_timer rejoin_timer_;
 
   void HandleMulticastReceiveFrom(const boost::system::error_code & error, size_t bytes_received);
 
   void HandleUDPSendTo(const boost::system::error_code & error, size_t bytes_sent);
 
-  void JoinMulticastGroup();
-  void LeaveMulticastGroup();
-  void ScheduleRejoin();
+  void JoinMulticastGroupOnAllV4Interfaces(const boost::asio::ip::address & multicast_address);
 };
 
 }  // namespace ateam_common
