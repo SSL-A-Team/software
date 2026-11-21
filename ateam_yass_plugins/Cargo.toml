@@ -1,0 +1,11 @@
+[package]
+name = "ateam_yass_plugins"
+version = "0.0.1"
+authors = ["Matthew Barulic <matthew.barulic@gmail.com>"]
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+yass-corelib = { git = "https://github.com/SSL-A-Team/yass.git", branch = "dev/barulicm/start", version = "0.1.0" }
