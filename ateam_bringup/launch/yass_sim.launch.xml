@@ -1,0 +1,3 @@
+<launch>
+  <executable cmd="yass_headless -c $(find-pkg-share ateam_bringup)/config/yass_config.yaml" output="screen" respawn="true"/>
+</launch>

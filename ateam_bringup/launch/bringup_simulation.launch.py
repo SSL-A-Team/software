@@ -56,10 +56,7 @@ def generate_launch_description():
         IncludeLaunchDescription(
             FrontendLaunchDescriptionSource(
                 PackageLaunchFileSubstitution('ateam_bringup',
-                                              'ssl_erforce_sim.launch.xml')),
-            launch_arguments={
-                'headless': LaunchConfiguration('headless_sim')
-            }.items(),
+                                              'yass_sim.launch.xml')),
             condition=IfCondition(LaunchConfiguration('start_sim'))
         ),
 

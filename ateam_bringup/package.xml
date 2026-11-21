@@ -12,6 +12,7 @@
 
   <exec_depend>docker.io</exec_depend>
 
+  <depend>ateam_yass_plugins</depend>
   <depend>python3-websockets</depend>
 
   <test_depend>ament_lint_auto</test_depend>
