@@ -77,7 +77,7 @@ ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 
 install(
   DIRECTORY ${RADIO_PACKETS_INCLUDE_DIR}/
-  DESTINATION include/ateam_radio_msgs/ateam_radio_msgs/packets
+  DESTINATION include/${PROJECT_NAME}/packets
 )
 
 install(

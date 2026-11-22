@@ -111,7 +111,7 @@ def generate_header_file(output_directory, header_tus, struct_names, include_roo
             if node.spelling not in struct_names:
                 continue
             relative_path = header_path.relative_to(include_root)
-            header_text += f'#include <ateam_radio_msgs/packets/{relative_path}>\n'
+            header_text += f'#include <ateam_software_communication/packets/{relative_path}>\n'
     header_text += 'namespace ateam_radio_msgs {\n'
     for header_path, translation_unit in header_tus:
         for node in _nodes_in_file(translation_unit, header_path):

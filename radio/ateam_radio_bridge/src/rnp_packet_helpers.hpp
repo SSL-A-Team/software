@@ -28,11 +28,11 @@
 #include <typeindex>
 #include <typeinfo>
 #include <variant>
-#include <ateam_radio_msgs/packets/radio.h>
-#include <ateam_radio_msgs/packets/discovery.h>
-#include <ateam_radio_msgs/packets/basic_control.h>
-#include <ateam_radio_msgs/packets/basic_telemetry.h>
-#include <ateam_radio_msgs/packets/robot_parameters.h>
+#include <ateam_software_communication/packets/radio.h>
+#include <ateam_software_communication/packets/discovery.h>
+#include <ateam_software_communication/packets/basic_control.h>
+#include <ateam_software_communication/packets/basic_telemetry.h>
+#include <ateam_software_communication/packets/robot_parameters.h>
 
 namespace ateam_radio_bridge
 {

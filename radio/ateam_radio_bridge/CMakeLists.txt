@@ -11,6 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(ateam_radio_msgs REQUIRED)
 find_package(ateam_msgs REQUIRED)
 find_package(ateam_common REQUIRED)
+find_package(ateam_software_communication REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
@@ -21,7 +22,6 @@ add_library(${PROJECT_NAME} SHARED
   src/rnp_packet_helpers.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-target_include_directories(${PROJECT_NAME} PUBLIC software-communication/ateam-common-packets/include)
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
@@ -29,6 +29,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ateam_radio_msgs
   ateam_msgs
   ateam_common
+  ateam_software_communication
   tf2_geometry_msgs
 )
 rclcpp_components_register_node(

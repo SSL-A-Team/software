@@ -17,7 +17,7 @@ find_package(rosidl_default_generators REQUIRED)
 set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/ateam_generated)
 
 ament_index_has_resource(ATEAM_SOFT_COMM_PREFIX packages ateam_software_communication)
-set(RADIO_PACKETS_INCLUDE_DIR ${ATEAM_SOFT_COMM_PREFIX}/include/ateam_software_communication/packets)
+set(RADIO_PACKETS_INCLUDE_DIR ${ATEAM_SOFT_COMM_PREFIX}/include/ateam_software_communication/ateam_software_communication/packets)
 
 set(RADIO_STRUCTS_TO_GENERATE
     GlobalPositionCommand
@@ -91,7 +91,7 @@ target_include_directories(${LIB_TARGET} PUBLIC
 )
 set_target_properties(${LIB_TARGET} PROPERTIES CXX_STANDARD 20)
 rosidl_get_typesupport_target(cpp_typesupport_target ${MSG_TARGET} rosidl_typesupport_cpp)
-target_link_libraries(${LIB_TARGET} PUBLIC ${cpp_typesupport_target})
+target_link_libraries(${LIB_TARGET} PUBLIC ${cpp_typesupport_target} ateam_software_communication::ateam_software_communication)
 
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 
@@ -122,5 +122,5 @@ if(BUILD_TESTING)
   find_package(ament_cmake_pep257 REQUIRED)
 endif()
 
-ament_export_dependencies(rosidl_default_runtime)
+ament_export_dependencies(rosidl_default_runtime ateam_software_communication)
 ament_package()
