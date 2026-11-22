@@ -2,7 +2,7 @@
 	path = ssl_ros_bridge
 	url = https://github.com/SSL-A-Team/ssl_ros_bridge.git
 [submodule "radio/ateam_radio_msgs/software-communication"]
-	path = radio/ateam_radio_msgs/software-communication
+	path = radio/ateam_software_communication/software-communication
 	url = https://github.com/SSL-A-Team/software-communication.git
 [submodule "motion/ateam_controls/controls"]
 	path = motion/ateam_controls/controls

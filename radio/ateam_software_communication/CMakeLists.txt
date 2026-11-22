@@ -7,7 +7,28 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
-set(RADIO_PACKETS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/include)
+set(SUBMODULE_DIR ${CMAKE_SOURCE_DIR}/software-communication)
+set(RADIO_PACKETS_INCLUDE_DIR ${SUBMODULE_DIR}/ateam-common-packets/include)
+set(RUST_CRATE_DIR ${SUBMODULE_DIR}/ateam-common-packets/rust-lib)
+set(RUST_TARGET_DIR ${CMAKE_CURRENT_BINARY_DIR}/rs-target)
+file(GLOB_RECURSE PACKET_HEADERS ${RADIO_PACKETS_INCLUDE_DIR}/*)
+list(APPEND RUST_LIB_SOURCES
+  ${RUST_CRATE_DIR}/Cargo.toml
+  ${RUST_CRATE_DIR}/Cargo.lock
+  ${RUST_CRATE_DIR}/build.rs
+  ${RUST_CRATE_DIR}/src/lib.rs
+  ${RUST_CRATE_DIR}/src/radio.rs
+)
+set(RUST_LIB_OUTPUT ${RUST_TARGET_DIR}/$<IF:$<CONFIG:Release,RelWithDebInfo>,release,debug>/libateam_common_packets.rlib)
+add_custom_command(
+  OUTPUT ${RUST_LIB_OUTPUT}
+  COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${RUST_TARGET_DIR} $<$<CONFIG:RelWithDebInfo,Debug>:RUSTFLAGS=-g> --unset=MAKEFLAGS --unset=MFLAGS cargo build $<$<CONFIG:Release,RelWithDebInfo>:--release> --no-default-features
+  WORKING_DIRECTORY ${RUST_CRATE_DIR}
+  DEPENDS ${RUST_LIB_SOURCES} ${PACKET_HEADERS}
+)
+add_custom_target(build_rust_lib ALL
+  DEPENDS ${RUST_LIB_OUTPUT}
+)
 
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE
