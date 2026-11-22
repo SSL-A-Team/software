@@ -22,34 +22,11 @@
 function(generate_version_header)
   message(STATUS "Generating version header...")
 
-  set(SOFT_COMS_SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/software-communication")
-
-  find_package(Git REQUIRED)
-
-  execute_process(
-      COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
-      WORKING_DIRECTORY ${SOFT_COMS_SUBMODULE_DIR}
-      OUTPUT_VARIABLE SOFT_COMS_SUBMODULE_SHA
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET
-  )
-
-  string(SUBSTRING "${SOFT_COMS_SUBMODULE_SHA}" 0 8 SOFT_COMS_SUBMODULE_SHA_SHORT)
+  string(SUBSTRING "${ateam_software_communication_SUBMODULE_SHA}" 0 8 SOFT_COMS_SUBMODULE_SHA_SHORT)
   set(_hex_string "0x${SOFT_COMS_SUBMODULE_SHA_SHORT}")
   math(EXPR SOFT_COMS_SUBMODULE_SHA_SHORT_NUM "${_hex_string} + 0")
 
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} status --porcelain
-    WORKING_DIRECTORY ${SOFT_COMS_SUBMODULE_DIR}
-    OUTPUT_VARIABLE SOFT_COMS_SUBMODULE_STATUS
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-
-  if(SOFT_COMS_SUBMODULE_STATUS)
-    set(SOFT_COMS_SUBMODULE_DIRTY true)
-  else()
-    set(SOFT_COMS_SUBMODULE_DIRTY false)
-  endif()
+  set(SOFT_COMS_SUBMODULE_DIRTY ${ateam_software_communication_SUBMODULE_DIRTY})
 
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/templates/version.hpp.in

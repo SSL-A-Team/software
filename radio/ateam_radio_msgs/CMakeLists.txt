@@ -11,11 +11,13 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ateam_software_communication REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/ateam_generated)
 
-set(RADIO_PACKETS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/software-communication/ateam-common-packets/include)
+ament_index_has_resource(ATEAM_SOFT_COMM_PREFIX packages ateam_software_communication)
+set(RADIO_PACKETS_INCLUDE_DIR ${ATEAM_SOFT_COMM_PREFIX}/include/ateam_software_communication/packets)
 
 set(RADIO_STRUCTS_TO_GENERATE
     GlobalPositionCommand
@@ -103,10 +105,6 @@ install(
   DESTINATION include/ateam_radio_msgs/ateam_radio_msgs
 )
 install(
-  DIRECTORY ${RADIO_PACKETS_INCLUDE_DIR}/
-  DESTINATION include/ateam_radio_msgs/ateam_radio_msgs/packets
-)
-install(
   TARGETS ${LIB_TARGET}
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION lib
@@ -116,22 +114,12 @@ install(
 )
 
 if(BUILD_TESTING)
-  file(GLOB_RECURSE submodule_files software-communication/*)
-  file(GLOB_RECURSE symlinked_headers include/ateam_radio_msgs/packets/*)
-  set(_linter_excludes
-    software-communication
-    ${submodule_files}
-    ${symlinked_headers}
-  )
-
   find_package(ament_cmake_lint_cmake REQUIRED)
   ament_lint_cmake()
 
   find_package(ament_cmake_flake8 REQUIRED)
-  ament_flake8(EXCLUDE ${_linter_excludes})
 
   find_package(ament_cmake_pep257 REQUIRED)
-  ament_pep257(EXCLUDE ${_linter_excludes})
 endif()
 
 ament_export_dependencies(rosidl_default_runtime)

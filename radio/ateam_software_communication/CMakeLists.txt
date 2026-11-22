@@ -6,11 +6,49 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(Git REQUIRED)
 
 set(SUBMODULE_DIR ${CMAKE_SOURCE_DIR}/software-communication)
 set(RADIO_PACKETS_INCLUDE_DIR ${SUBMODULE_DIR}/ateam-common-packets/include)
 set(RUST_CRATE_DIR ${SUBMODULE_DIR}/ateam-common-packets/rust-lib)
 set(RUST_TARGET_DIR ${CMAKE_CURRENT_BINARY_DIR}/rs-target)
+
+execute_process(
+  COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+  WORKING_DIRECTORY ${SUBMODULE_DIR}
+  OUTPUT_VARIABLE SUBMODULE_SHA
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  RESULT_VARIABLE _git_result
+)
+if(NOT _git_result EQUAL 0 OR NOT SUBMODULE_SHA)
+  message(FATAL_ERROR "Failed to read git SHA of submodule at ${SUBMODULE_DIR}")
+endif()
+execute_process(
+  COMMAND ${GIT_EXECUTABLE} status --porcelain
+  WORKING_DIRECTORY ${SUBMODULE_DIR}
+  OUTPUT_VARIABLE _submodule_status
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(_submodule_status)
+  set(SUBMODULE_DIRTY true)
+else()
+  set(SUBMODULE_DIRTY false)
+endif()
+message(STATUS "software-communication submodule: ${SUBMODULE_SHA} (dirty: ${SUBMODULE_DIRTY})")
+
+execute_process(
+  COMMAND ${GIT_EXECUTABLE} rev-parse --absolute-git-dir
+  WORKING_DIRECTORY ${SUBMODULE_DIR}
+  OUTPUT_VARIABLE _submodule_git_dir
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+file(GLOB_RECURSE _submodule_files ${SUBMODULE_DIR}/*)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  ${_submodule_git_dir}/HEAD
+  ${_submodule_git_dir}/index
+  ${_submodule_files}
+)
+
 file(GLOB_RECURSE PACKET_HEADERS ${RADIO_PACKETS_INCLUDE_DIR}/*)
 list(APPEND RUST_LIB_SOURCES
   ${RUST_CRATE_DIR}/Cargo.toml
@@ -56,4 +94,6 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_package()
+ament_package(
+  CONFIG_EXTRAS "cmake/ateam_software_communication-extras.cmake.in"
+)
