@@ -4,8 +4,8 @@ blue_team:
     name: ateam_firmware
 yellow_team:
   firmware:
-    lib: ${ATEAM_YASS_PLUGINS_PREFIX}/lib/ateam_yass_plugins/libateam_yass_plugins.so
-    name: ateam_firmware
+    lib: libyass_standard_plugins.so
+    name: no_firmware
 vision_plugins:
 - lib: libyass_standard_plugins.so
   name: league_proto_vision

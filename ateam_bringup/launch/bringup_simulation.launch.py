@@ -38,6 +38,7 @@ from launch.launch_description_sources import FrontendLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
+from ateam_bringup.utils import remap_indexed_topics
 
 
 def generate_launch_description():
@@ -113,13 +114,23 @@ def generate_launch_description():
         ),
 
         Node(
-            package='ateam_ssl_simulation_radio_bridge',
-            executable='ssl_simulation_radio_bridge_node',
+            package='ateam_radio_bridge',
+            executable='radio_bridge_node',
             name='radio_bridge',
             parameters=[{
-                'ssl_sim_radio_ip': LaunchConfiguration('sim_ip'),
+                'net_interface_address': '127.0.0.1',
                 'gc_team_name': LaunchConfiguration('team_name')
-            }]
+            }],
+            respawn=True,
+            remappings=remap_indexed_topics([
+                ('~/robot_motion_commands/robot', '/robot_motion_commands/robot'),
+                ('~/robot_feedback/basic/robot', '/robot_feedback/basic/robot'),
+                ('~/robot_feedback/extended/robot',
+                 '/robot_feedback/extended/robot'),
+                ('~/robot_feedback/connection/robot',
+                 '/robot_feedback/connection/robot'),
+                ('~/robot_feedback/error/robot', '/robot_feedback/error/robot'),
+            ]),
         ),
 
         IncludeLaunchDescription(

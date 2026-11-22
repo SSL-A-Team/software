@@ -8,4 +8,7 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
+ateam-common-packets = { version = "1.0.0", path = "../radio/ateam_software_communication/software-communication/ateam-common-packets/rust-lib", default-features = false }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_yaml = "0.9.34"
 yass-corelib = { git = "https://github.com/SSL-A-Team/yass.git", branch = "dev/barulicm/start", version = "0.1.0" }
