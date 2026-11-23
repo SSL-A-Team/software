@@ -1,6 +1,5 @@
 use ateam_common_packets::bindings::{
-    BasicControl, BasicTelemetry, BodyControlTelemetry, CommandCode, HelloRequest, HelloResponse,
-    RadioData, RadioHeader, RadioPacket
+    BasicControl, BasicTelemetry, BodyControlMode, BodyControlTelemetry, CommandCode, HelloRequest, HelloResponse, RadioData, RadioHeader, RadioPacket,
 };
 use std::{
     io::ErrorKind,
@@ -44,11 +43,12 @@ impl RadioConnection {
         self.connected
     }
 
-    pub fn update(&mut self, sim_bot: &Robot) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn update(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
         if !self.connected {
-            self.update_discovering()
+            self.update_discovering()?;
+            Ok(false)
         } else {
-            self.update_connected(sim_bot)
+            self.update_connected()
         }
     }
 
@@ -75,7 +75,8 @@ impl RadioConnection {
         Ok(())
     }
 
-    fn update_connected(&mut self, sim_bot: &Robot) -> Result<(), Box<dyn std::error::Error>> {
+    fn update_connected(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+        let mut should_send_feedback = false;
         loop {
             let Some(packet) = self.recv_packet()? else {
                 break;
@@ -84,8 +85,9 @@ impl RadioConnection {
                 CommandCode::CC_GOODBYE => {
                     self.connected = false;
                     self.bridge_addr = None;
+                    should_send_feedback = false;
                     break;
-                },
+                }
                 CommandCode::CC_CONTROL => {
                     if packet.header.command_code != CommandCode::CC_CONTROL
                         || packet.header.data_length as usize != size_of::<BasicControl>()
@@ -93,12 +95,13 @@ impl RadioConnection {
                         continue;
                     }
                     self.last_command = Some(unsafe { packet.data.control });
-                    self.send_feedback(sim_bot)?;
-                },
-                _ => {},
+                    should_send_feedback = true;
+                }
+                _ => {}
             }
         }
-        Ok(())
+        // TODO if we haven't received a control packet recently enough, send goodbye, disconnect, and invalidate last command
+        Ok(should_send_feedback)
     }
 
     pub fn get_command(&mut self) -> Option<BasicControl> {
@@ -135,7 +138,7 @@ impl RadioConnection {
         self.send_packet::<HelloRequest, _>(packet, "224.4.20.69:42069")
     }
 
-    fn send_feedback(&mut self, sim_bot: &Robot) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn send_feedback(&mut self, sim_bot: &Robot, body_control_mode: BodyControlMode::Type, body_control_telemetry: BodyControlTelemetry) -> Result<(), Box<dyn std::error::Error>> {
         let Some(bridge_addr) = self.bridge_addr else {
             return Ok(());
         };
@@ -150,18 +153,56 @@ impl RadioConnection {
                 telemetry: BasicTelemetry {
                     transmission_sequence_number: 0,
                     control_data_sequence_number: 0,
-                    body_control_mode: 0,
+                    body_control_mode: body_control_mode,
                     reserved1: 0,
                     _bitfield_align_1: Default::default(),
                     _bitfield_1: BasicTelemetry::new_bitfield_1(
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        sim_bot.ball_sense as u32,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
                     ),
                     battery_percent: 100,
                     kicker_charge_percent: 100,
-                    control_telem: BodyControlTelemetry::default(),
-                    kf_body_pos_estimate: [0, 0, 0],
-                    kf_body_vel_estimate: [0, 0, 0],
+                    control_telem: body_control_telemetry,
+                    kf_body_pos_estimate: [
+                        (sim_bot.pose.x * 1000.0).clamp(i16::MIN as f32, i16::MAX as f32) as i16,
+                        (sim_bot.pose.y * 1000.0).clamp(i16::MIN as f32, i16::MAX as f32) as i16,
+                        (sim_bot.pose.theta * 1000.0).clamp(i16::MIN as f32, i16::MAX as f32)
+                            as i16,
+                    ],
+                    kf_body_vel_estimate: [
+                        (sim_bot.velocity.x * 1000.0).clamp(i16::MIN as f32, i16::MAX as f32)
+                            as i16,
+                        (sim_bot.velocity.y * 1000.0).clamp(i16::MIN as f32, i16::MAX as f32)
+                            as i16,
+                        (sim_bot.velocity.theta * 1000.0).clamp(i16::MIN as f32, i16::MAX as f32)
+                            as i16,
+                    ],
                 },
             },
         };

@@ -1,6 +1,7 @@
 mod firmware_config;
 mod firmware_plugin;
 mod radio_connection;
+mod motion_controller;
 
 use firmware_config::parse_config;
 use firmware_plugin::FirmwarePlugin;

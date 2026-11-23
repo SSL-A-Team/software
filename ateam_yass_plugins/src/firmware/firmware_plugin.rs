@@ -1,9 +1,14 @@
-use crate::firmware::{firmware_config::FirmwareConfig, radio_connection::RadioConnection};
-use yass_corelib::{Robot, RobotCommand, SimulationState, TeamColor};
+use crate::firmware::{
+    firmware_config::FirmwareConfig, motion_controller::MotionController,
+    radio_connection::RadioConnection,
+};
+use ateam_common_packets::bindings::KickRequest;
+use yass_corelib::{DribblerCommand, Robot, RobotCommand, SimulationState, TeamColor};
 
 pub struct FirmwarePlugin {
     color: TeamColor,
     connections: [Option<RadioConnection>; 16],
+    motion_controllers: [MotionController; 16],
 }
 
 impl FirmwarePlugin {
@@ -14,6 +19,7 @@ impl FirmwarePlugin {
         Ok(Self {
             color,
             connections: [const { None }; 16],
+            motion_controllers: std::array::from_fn(|_| MotionController::new()),
         })
     }
 
@@ -38,25 +44,57 @@ impl FirmwarePlugin {
             return;
         }
         if !self.ensure_connected(&robot) {
+            self.motion_controllers[robot.id as usize].clear_active_command();
             return;
         }
         let Some(conn) = &mut self.connections[robot.id as usize] else {
             return;
         };
-        if let Err(e) = conn.update(&robot) {
-            eprintln!("Error updaing radio connection: {e}");
-            return;
-        }
+        let should_send_feedback = match conn.update() {
+            Ok(b) => b,
+            Err(e) => {
+                eprintln!("Error updaing radio connection: {e}");
+                return;
+            }
+        };
         if let Some(command) = conn.get_command() {
-            // update active manuever
+            self.motion_controllers[robot.id as usize].set_active_command(command);
+            self.motion_controllers[robot.id as usize].update(delta_t_us, command_out);
+            command_out.active = true;
+            command_out.kick_command.speed = match command.kick_request {
+                KickRequest::KR_KICK_NOW
+                | KickRequest::KR_KICK_CAPTURED
+                | KickRequest::KR_KICK_TOUCH => command.kick_vel,
+                _ => 0.0,
+            };
+            command_out.kick_command.angle = 0.0;
+            command_out.dribbler_command = match command.dribbler_mode {
+                ateam_common_packets::bindings::DribblerCommand::DC_CURRENT => {
+                    if command.dribbler_setpoint > 0.0 {
+                        DribblerCommand::Sticky
+                    } else {
+                        DribblerCommand::Off
+                    }
+                }
+                _ => DribblerCommand::Off,
+            }
+        } else {
+            self.motion_controllers[robot.id as usize].clear_active_command();
+            command_out.active = false;
         }
-        // TODO: execute active manuever
+        if should_send_feedback {
+            let mode = self.motion_controllers[robot.id as usize].get_radio_body_control_mode();
+            let control_telemetry = self.motion_controllers[robot.id as usize].get_radio_control_feedback();
+            if let Err(e) = conn.send_feedback(&robot, mode, control_telemetry) {
+                eprintln!("Error sending feedback: {e}");
+            }
+        }
     }
 
     fn ensure_connected(&mut self, robot: &Robot) -> bool {
         if let Some(conn) = &mut self.connections[robot.id as usize] {
             if !conn.is_connected() {
-                if let Err(e) = conn.update(robot) {
+                if let Err(e) = conn.update() {
                     eprintln!("Error updating radio connection during discovery: {e}");
                 }
                 return false;
