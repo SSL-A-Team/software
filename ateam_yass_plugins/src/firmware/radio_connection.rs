@@ -18,6 +18,7 @@ pub struct RadioConnection {
     id: u8,
     connected: bool,
     last_discovery_send_time: Instant,
+    last_command_recv_time: Instant,
     bridge_addr: Option<SocketAddr>,
     recv_buf: [u8; 2048],
     last_command: Option<BasicControl>,
@@ -33,6 +34,7 @@ impl RadioConnection {
             id,
             connected: false,
             last_discovery_send_time: Instant::now(),
+            last_command_recv_time: Instant::now(),
             bridge_addr: None,
             recv_buf: [0; 2048],
             last_command: None,
@@ -95,12 +97,22 @@ impl RadioConnection {
                         continue;
                     }
                     self.last_command = Some(unsafe { packet.data.control });
+                    self.last_command_recv_time = Instant::now();
+                    should_send_feedback = true;
+                }
+                CommandCode::CC_KEEPALIVE => {
+                    self.last_command_recv_time = Instant::now();
                     should_send_feedback = true;
                 }
                 _ => {}
             }
         }
-        // TODO if we haven't received a control packet recently enough, send goodbye, disconnect, and invalidate last command
+        if self.last_command_recv_time.elapsed() > Duration::from_secs(1) {
+            self.send_goodbye()?;
+            self.connected = false;
+            self.bridge_addr = None;
+            self.last_command = None;
+        }
         Ok(should_send_feedback)
     }
 
