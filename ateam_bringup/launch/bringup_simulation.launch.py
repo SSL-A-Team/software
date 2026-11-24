@@ -151,4 +151,11 @@ def generate_launch_description():
             ),
             condition=IfCondition(LaunchConfiguration('start_kenobi'))
         ),
+
+        Node(
+            package='ssl_ros_bridge',
+            executable='sim_control_bridge_node',
+            name='sim_control_bridge',
+            respawn=True,
+        ),
     ])

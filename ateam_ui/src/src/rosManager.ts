@@ -180,7 +180,7 @@ export class RosManager {
 
         let sendSimulatorControlPacketService = new ROSLIB.Service({
             ros: this.ros,
-            name: '/radio_bridge/send_simulator_control_packet',
+            name: '/sim_control_bridge/send_simulator_control_packet',
             serviceType: 'ateam_msgs/srv/SendSimulatorControlPacket'
         })
         this.services.set("sendSimulatorControlPacket", sendSimulatorControlPacketService);
