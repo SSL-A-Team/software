@@ -11,10 +11,10 @@ jobs:
     container: ros:jazzy
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7
         with:
           path: src/ateam_software
-          submodules: true
+          submodules: recursive
       
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1.16.1
