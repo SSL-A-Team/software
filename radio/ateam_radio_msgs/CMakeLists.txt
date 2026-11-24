@@ -17,7 +17,7 @@ find_package(rosidl_default_generators REQUIRED)
 set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/ateam_generated)
 
 ament_index_has_resource(ATEAM_SOFT_COMM_PREFIX packages ateam_software_communication)
-set(RADIO_PACKETS_INCLUDE_DIR ${ATEAM_SOFT_COMM_PREFIX}/include/ateam_software_communication/ateam_software_communication/packets)
+set(RADIO_PACKETS_INCLUDE_DIR ${ATEAM_SOFT_COMM_PREFIX}/include/ateam_software_communication/packets)
 
 set(RADIO_STRUCTS_TO_GENERATE
     GlobalPositionCommand
@@ -95,11 +95,6 @@ target_link_libraries(${LIB_TARGET} PUBLIC ${cpp_typesupport_target} ateam_softw
 
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 
-install(
-  DIRECTORY include/
-  DESTINATION include
-  PATTERN packets EXCLUDE
-)
 install(
   DIRECTORY ${GENERATED_DIR}/include/
   DESTINATION include/ateam_radio_msgs/ateam_radio_msgs
