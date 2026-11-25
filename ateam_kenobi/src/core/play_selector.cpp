@@ -70,6 +70,7 @@ PlaySelector::PlaySelector(rclcpp::Node & node)
   addPlay<ExtractPlay>(stp_options);
   addPlay<TrianglePassPlay>(stp_options);
   addPlay<WaypointsPlay>(stp_options);
+  addPlay<TdpMotionPlay>(stp_options);
   addPlay<SpinningAPlay>(stp_options);
   addPlay<PassToLanePlay>(
     "PassLeftForwardPlay", stp_options, play_helpers::lanes::Lane::Left,

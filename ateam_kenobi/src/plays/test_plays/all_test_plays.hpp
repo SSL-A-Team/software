@@ -22,6 +22,7 @@
 #define PLAYS__TEST_PLAYS__ALL_TEST_PLAYS_HPP_
 
 #include "spinning_a_play.hpp"
+#include "tdp_motion_play.hpp"
 #include "test_kick_play.hpp"
 #include "test_pass_play.hpp"
 #include "test_pivot_play.hpp"
