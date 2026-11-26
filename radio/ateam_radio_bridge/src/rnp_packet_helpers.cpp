@@ -281,34 +281,32 @@ PacketDataVariant ExtractData(const RadioPacket & packet, std::string & error)
 ParameterDataFormat GetParameterDataFormatForParameter(const ParameterName & parameter)
 {
   switch(parameter) {
-    case KF_PROCESS_STD:
-      return VEC4_F32;
-    case KF_MEASUREMENT_STD:
-      return VEC4_F32;
-    case KF_MAX_STATE:
-      return VEC4_F32;
+    case EKF_PROCESS_STD:
+      return VEC3_F32;
+    case EKF_MEASUREMENT_STD:
+      return VEC2_F32;
     case PHYS_WHEEL:
       return VEC4_F32;
     case PHYS_INERTIA:
       return VEC2_F32;
-    case PHYS_MOTOR_MODEL:
-      return VEC2_F32;
+    case PHYS_MOTOR_TORQUE_CONSTANT:
+      return F32;
     case PHYS_FRICTION_MODEL:
       return VEC6_F32;
-    case FRICTION_COMP_GATING:
+    case FB_POS_LINEAR:
+      return VEC3_F32;
+    case FB_POS_ANGULAR:
       return VEC4_F32;
-    case POSE_CONTROL_GAIN:
-      return VEC2_F32;
-    case TRAJ_RECOMPUTE_ERROR:
+    case FB_WHEEL_VEL:
       return VEC4_F32;
-    case POSE_FB_PIDII_LINEAR:
-      return VEC5_F32;
-    case POSE_FB_PIDII_ANGULAR:
-      return VEC5_F32;
-    case TWIST_FB_PIDII_LINEAR:
-      return VEC5_F32;
-    case TWIST_FB_PIDII_ANGULAR:
-      return VEC5_F32;
+    case FF_WHEEL_CURRENT_LIMIT:
+      return F32;
+    case FF_WHEEL_SLIP_COMP:
+      return F32;
+    case ERROR_TRACKING_DIVERGENCE_THRESHOLD:
+      return VEC4_F32;
+    case VISION_SEED_SAMPLES:
+      return F32;
     default:
       throw std::invalid_argument("GetParameterDataFormatForParameter: Unrecognized parameter name.");
   }

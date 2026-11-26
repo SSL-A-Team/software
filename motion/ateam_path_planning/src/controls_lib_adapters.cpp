@@ -120,7 +120,7 @@ BangBangTraj3D_t GenerateTrajectory(
 {
   BangBangTraj3D_t trajectory;
   if(const auto err =
-    ateam_controls_traj_from_target_pose(init_state, target_pose, params,
+    ateam_controls_traj_from_target_pos(init_state, target_pose, params,
           &trajectory); err != ATEAM_CONTROLS_OK)
   {
     throw ControlsException(err);

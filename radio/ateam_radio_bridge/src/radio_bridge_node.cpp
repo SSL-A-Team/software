@@ -91,9 +91,7 @@ public:
     std::fill(connection_states_.begin(), connection_states_.end(), ConnectionState::Disconnected);
 
     declare_parameters<bool>("controls_enabled", {
-        {"body_vel", true},
-        {"wheel_vel", true},
-        {"wheel_torque", true}
+        {"wheel_vel", true}
     });
 
     joy_status_sub_ = create_subscription<ateam_msgs::msg::JoystickControlStatus>(
@@ -317,8 +315,6 @@ private:
 
       control_msg.emergency_stop = false;
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
-      control_msg.wheel_torque_control_enabled =
-        get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.reset_controller = (last_side_change_timestamp_ + sustain_timeout_threshold_) >= now;
       control_msg.reserved1 = 0;
       FillVisionUpdate(control_msg, id);
