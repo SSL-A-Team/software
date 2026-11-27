@@ -68,7 +68,6 @@ struct MotionCommand
   double pivot_inset_angle = 0.0;
 
   uint8_t pivot_direction = 0;
-  bool pivot_commpute_inset_angle = false;
 
   double line_global_theta = 0.0;
   double line_target_x = 0.0;

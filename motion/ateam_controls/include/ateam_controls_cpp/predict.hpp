@@ -83,7 +83,6 @@ struct HeadingPivot
   float max_accel_angular;
   float orbit_radius;
   float inset_angle;
-  bool compute_inset_angle;
   int direction;
 };
 
@@ -95,7 +94,6 @@ struct PointPivot
   float max_accel_angular;
   float orbit_radius;
   float inset_angle;
-  bool compute_inset_angle;
   int direction;
 };
 

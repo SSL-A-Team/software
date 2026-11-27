@@ -108,7 +108,6 @@ RobotCommand PivotKick::Pivot(
   intent.target_y = target_point_.y();
   intent.radius = 0.2;
   intent.inset_angle = 0.6;
-  intent.compute_inset_angle = false;
 
   intent.limits.angular_velocity = 3.0;
   intent.limits.angular_acceleration = 3.0;

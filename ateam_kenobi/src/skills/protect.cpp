@@ -115,7 +115,7 @@ RobotCommand Protect::Pivot(
   motion::intents::PivotHeading intent;
   intent.radius = 0.02 + kRobotRadius + kBallRadius;
   intent.target_heading = block_angle;
-  intent.inset_angle = M_PI / 2.0;
+  intent.inset_angle = 1.1;
 
   intent.limits.angular_velocity = 2.0;
   intent.limits.angular_acceleration = 2.0;

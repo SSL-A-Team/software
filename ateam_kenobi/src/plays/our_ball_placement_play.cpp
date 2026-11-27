@@ -267,7 +267,7 @@ void OurBallPlacementPlay::runExtracting(
         intent.radius = kRobotRadius + kBallRadius;
         intent.target_x = placement_point_.x();
         intent.target_y = placement_point_.y();
-        intent.inset_angle = M_PI / 2.0;
+        intent.inset_angle = 1.1;
         intent.limits.angular_velocity = 1.0;
         intent.limits.angular_acceleration = 1.0;
         motion_command.motion_intent = intent;

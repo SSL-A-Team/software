@@ -18,7 +18,6 @@ float32 pivot_max_angular_acc  # (rad/s/s)
 float32 pivot_orbit_radius  # (m)
 float32 pivot_inset_angle  # (rad)
 uint8 pivot_direction  # orbit drive direction: PD_FORWARD=0, PD_BACKWARD=1
-bool pivot_compute_inset_angle  # if true, firmware derives inset_angle from peak angular vel
 
 # (BCM_HEADING_LINE)
 float32 line_global_theta  # (rad) maintained global heading

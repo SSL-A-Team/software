@@ -297,7 +297,6 @@ private:
         ros_cmd.pivot_orbit_radius = motion_cmd.pivot_orbit_radius;
         ros_cmd.pivot_inset_angle = motion_cmd.pivot_inset_angle;
         ros_cmd.pivot_direction = motion_cmd.pivot_direction;
-        ros_cmd.pivot_compute_inset_angle = motion_cmd.pivot_commpute_inset_angle;
         ros_cmd.line_global_theta = motion_cmd.line_global_theta;
         ros_cmd.line_target_x = motion_cmd.line_target_x;
         ros_cmd.line_target_y = motion_cmd.line_target_y;

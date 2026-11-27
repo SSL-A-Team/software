@@ -129,7 +129,6 @@ ateam_geometry::Point PositionAtT(
       0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
     .orbit_radius = params.orbit_radius,
     .inset_angle = params.inset_angle,
-    .compute_inset_angle = params.compute_inset_angle,
     .direction = static_cast<PivotDirection>(params.direction)
   };
   Vector6C c_start_state{
@@ -170,7 +169,6 @@ ateam_geometry::Point PositionAtT(
       0.0f ? params.max_accel_angular : default_c_params.max_accel_angular,
     .orbit_radius = params.orbit_radius,
     .inset_angle = params.inset_angle,
-    .compute_inset_angle = params.compute_inset_angle,
     .direction = static_cast<PivotDirection>(params.direction)
   };
   Vector6C c_start_state{

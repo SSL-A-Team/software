@@ -126,9 +126,8 @@ struct PivotHeading
 {
   double target_heading;
   double radius = 0.0;  // Use firmware default
-  double inset_angle = 0.0;  // Uses firmware default through compute_inset_angle
+  double inset_angle = 1.1;  // rad, angle between orbit tangent and heading toward the center
   PivotDirection direction = PivotDirection::Forward;
-  bool compute_inset_angle = true;  // Use firmware default
   Limits limits;  // NOTE: linear limits are NOT respected or used
 };
 
@@ -137,9 +136,8 @@ struct PivotPoint
   double target_x;
   double target_y;
   double radius = 0.0;  // Use firmware default
-  double inset_angle = 0.0;  // Uses firmware default through compute_inset_angle
+  double inset_angle = 1.1;  // rad, angle between orbit tangent and heading toward the center
   PivotDirection direction = PivotDirection::Forward;
-  bool compute_inset_angle = true;
   Limits limits;  // NOTE: linear limits are NOT respected or used
 };
 

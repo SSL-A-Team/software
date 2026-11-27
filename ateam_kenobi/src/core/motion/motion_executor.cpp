@@ -269,7 +269,6 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   command.pivot_orbit_radius = intent.radius;
   command.pivot_inset_angle = intent.inset_angle;
   command.pivot_direction = static_cast<uint8_t>(intent.direction);
-  command.pivot_commpute_inset_angle = intent.compute_inset_angle;
 
   return command;
 }
@@ -291,7 +290,6 @@ std::optional<MotionCommand> MotionExecutor::ExecuteIntent(
   command.pivot_orbit_radius = intent.radius;
   command.pivot_inset_angle = intent.inset_angle;
   command.pivot_direction = static_cast<uint8_t>(intent.direction);
-  command.pivot_commpute_inset_angle = intent.compute_inset_angle;
 
   return command;
 }

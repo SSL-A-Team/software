@@ -401,8 +401,7 @@ private:
             static_cast<float>(command.pivot_orbit_radius),
             static_cast<float>(command.pivot_inset_angle),
             static_cast<PivotDirection>(command.pivot_direction),
-            static_cast<uint8_t>(command.pivot_compute_inset_angle),
-            {0, 0}
+            {0, 0, 0}
           };
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_POINT_PIVOT:
@@ -415,8 +414,7 @@ private:
             static_cast<float>(command.pivot_orbit_radius),
             static_cast<float>(command.pivot_inset_angle),
             static_cast<PivotDirection>(command.pivot_direction),
-            static_cast<uint8_t>(command.pivot_compute_inset_angle),
-            {0, 0}
+            {0, 0, 0}
           };
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_HEADING_LINE:
