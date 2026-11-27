@@ -19,6 +19,8 @@
 // THE SOFTWARE.
 
 
+#include <cmath>
+
 #include <ateam_common/game_controller_listener.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/time.hpp>
@@ -207,15 +209,20 @@ private:
     robot.kicker_available = msg->kicker_available;
     robot.chipper_available = msg->chipper_available;
     robot.firmware_pos = ateam_geometry::Point{
-      msg->kf_body_pos_estimate[0] / 1e3,
-      msg->kf_body_pos_estimate[1] / 1e3
+      msg->pos_est[0] / 1e3,
+      msg->pos_est[1] / 1e3
     };
-    robot.firmware_theta = msg->kf_body_pos_estimate[2] / 1e3;
+    robot.firmware_theta = msg->pos_est[2] / 1e3;
+    // The firmware reports its velocity estimate in the robot's local frame.
+    const double local_vx = msg->vel_est[0] / 1e3;
+    const double local_vy = msg->vel_est[1] / 1e3;
+    const double cos_theta = std::cos(robot.firmware_theta);
+    const double sin_theta = std::sin(robot.firmware_theta);
     robot.firmware_vel = ateam_geometry::Vector{
-      msg->kf_body_vel_estimate[0] / 1e3,
-      msg->kf_body_vel_estimate[1] / 1e3
+      cos_theta * local_vx - sin_theta * local_vy,
+      sin_theta * local_vx + cos_theta * local_vy
     };
-    robot.firmware_omega = msg->kf_body_vel_estimate[2] / 1e3;
+    robot.firmware_omega = msg->vel_est[2] / 1e3;
   }
 
   void RobotConnectionCallback(const ateam_radio_msgs::msg::ConnectionStatus::SharedPtr msg, int id)

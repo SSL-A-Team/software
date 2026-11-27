@@ -21,6 +21,8 @@
 
 #include <array>
 #include <chrono>
+#include <cmath>
+#include <cstdint>
 #include <numeric>
 #include <mutex>
 #include <thread>
@@ -37,8 +39,8 @@
 #include <ateam_radio_msgs/conversion.hpp>
 #include <ateam_radio_msgs/version.hpp>
 #include <ateam_msgs/msg/robot_motion_command.hpp>
-#include <ateam_msgs/msg/vision_state_robot.hpp>
 #include <ateam_msgs/msg/joystick_control_status.hpp>
+#include <ssl_league_msgs/msg/vision_wrapper.hpp>
 #include <ateam_common/indexed_topic_helpers.hpp>
 #include <ateam_common/multicast_receiver.hpp>
 #include <ateam_common/bi_directional_udp.hpp>
@@ -72,7 +74,6 @@ public:
   : rclcpp::Node("radio_bridge", options),
     sustain_timeout_threshold_(declare_parameter("sustain_timeout_ms", 500)),
     connect_timeout_threshold_(declare_parameter("connect_timeout_ms", 750)),
-    vision_state_staleness_threshold_(declare_parameter("vision_state_staleness_ms", 100)),
     command_timeout_threshold_(declare_parameter("command_timeout_ms", 100)),
     last_side_change_timestamp_(std::chrono::steady_clock::now()),
     game_controller_listener_(*this,
@@ -91,9 +92,7 @@ public:
     std::fill(connection_states_.begin(), connection_states_.end(), ConnectionState::Disconnected);
 
     declare_parameters<bool>("controls_enabled", {
-        {"body_vel", true},
-        {"wheel_vel", true},
-        {"wheel_torque", true}
+        {"wheel_vel", true}
     });
 
     joy_status_sub_ = create_subscription<ateam_msgs::msg::JoystickControlStatus>(
@@ -158,16 +157,26 @@ private:
   // Incoming timeouts
   const std::chrono::milliseconds sustain_timeout_threshold_;
   const std::chrono::milliseconds connect_timeout_threshold_;
-  const std::chrono::milliseconds vision_state_staleness_threshold_;
-
   // Outgoing timeouts
   const std::chrono::milliseconds command_timeout_threshold_;
 
   std::mutex mutex_;
   std::array<ateam_msgs::msg::RobotMotionCommand, 16> motion_commands_;
   std::array<std::chrono::steady_clock::time_point, 16> motion_command_timestamps_;
-  std::array<ateam_msgs::msg::VisionStateRobot, 16> vision_states_;
-  std::array<std::chrono::steady_clock::time_point, 16> vision_state_timestamps_;
+
+  // Raw (unfiltered) vision measurement for a single robot, in our team's
+  // coordinate convention. Forwarded straight to the robot along with the
+  // absolute time-of-capture so the robot can do its own filtering.
+  struct RawVisionMeasurement
+  {
+    bool valid = false;
+    bool sent = false;  // true once this exact measurement has been forwarded to the robot
+    double x = 0.0;
+    double y = 0.0;
+    double theta = 0.0;
+    int64_t capture_time_ns = 0;  // absolute, nanoseconds since Unix epoch
+  };
+  std::array<RawVisionMeasurement, 16> vision_states_;
   std::array<bool, 16> shutdown_requested_;
   std::array<bool, 16> reboot_requested_;
   std::chrono::steady_clock::time_point last_side_change_timestamp_;
@@ -177,8 +186,7 @@ private:
   rclcpp::Subscription<ateam_msgs::msg::JoystickControlStatus>::SharedPtr joy_status_sub_;
   std::array<rclcpp::Subscription<ateam_msgs::msg::RobotMotionCommand>::SharedPtr,
     16> motion_command_subscriptions_;
-  std::array<rclcpp::Subscription<ateam_msgs::msg::VisionStateRobot>::SharedPtr,
-    16> vision_state_subscriptions_;
+  rclcpp::Subscription<ssl_league_msgs::msg::VisionWrapper>::SharedPtr vision_messages_subscription_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::ConnectionStatus>::SharedPtr,
     16> connection_publishers_;
   std::array<rclcpp::Publisher<ateam_radio_msgs::msg::BasicTelemetry>::SharedPtr,
@@ -207,14 +215,55 @@ private:
     motion_command_timestamps_[robot_id] = std::chrono::steady_clock::now();
   }
 
-  void VisionStateCallback(
-    const ateam_msgs::msg::VisionStateRobot::SharedPtr vision_msg,
-    int robot_id)
+  void VisionMessagesCallback(const ssl_league_msgs::msg::VisionWrapper::SharedPtr vision_msg)
   {
+    const auto team_color = game_controller_listener_.GetTeamColor();
+    if (team_color == ateam_common::TeamColor::Unknown) {
+      // Without a known team color we can't tell which detections are our robots.
+      return;
+    }
+    const auto team_side = game_controller_listener_.GetTeamSide();
+
     const std::lock_guard lock(mutex_);
-    vision_states_[robot_id] = *vision_msg;
-    REPLACE_NAN_WITH_ZERO(vision_states_[robot_id]);
-    vision_state_timestamps_[robot_id] = std::chrono::steady_clock::now();
+
+    // TODO(single-camera): for a multi-camera system we'll need to pick which
+    // camera streams each robot and reject spurious detections from the others.
+    // For now we forward every matching detection; later frames win.
+    for (const auto & detection : vision_msg->detection) {
+      const auto & robots = (team_color == ateam_common::TeamColor::Blue) ?
+        detection.robots_blue : detection.robots_yellow;
+      const int64_t capture_time_ns = rclcpp::Time(detection.t_capture).nanoseconds();
+
+      for (const auto & robot : robots) {
+        if (robot.robot_id >= vision_states_.size()) {
+          continue;
+        }
+
+        double x = robot.pose.position.x;
+        double y = robot.pose.position.y;
+        double theta = GetYaw(robot.pose);
+
+        // Match the vision filter's convention: when we play on the positive
+        // half, rotate measurements 180 degrees into our coordinate frame.
+        if (team_side == ateam_common::TeamSide::PositiveHalf) {
+          x *= -1.0;
+          y *= -1.0;
+          theta = std::atan2(std::sin(theta + M_PI), std::cos(theta + M_PI));
+        }
+
+        if (std::isnan(x) || std::isnan(y) || std::isnan(theta)) {
+          continue;
+        }
+
+        auto & vision_state = vision_states_[robot.robot_id];
+        vision_state.valid = true;
+        vision_state.sent = false;
+        vision_state.x = x;
+        vision_state.y = y;
+        vision_state.theta = theta;
+        vision_state.capture_time_ns = capture_time_ns;
+      }
+    }
   }
 
   void JoyStatusCallback(const ateam_msgs::msg::JoystickControlStatus::SharedPtr msg)
@@ -317,8 +366,6 @@ private:
 
       control_msg.emergency_stop = false;
       control_msg.wheel_vel_control_enabled = get_parameter("controls_enabled.wheel_vel").as_bool();
-      control_msg.wheel_torque_control_enabled =
-        get_parameter("controls_enabled.wheel_torque").as_bool();
       control_msg.reset_controller = (last_side_change_timestamp_ + sustain_timeout_threshold_) >= now;
       control_msg.reserved1 = 0;
       FillVisionUpdate(control_msg, id);
@@ -358,22 +405,24 @@ private:
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_VELOCITY:
           control_msg.body_control_mode = BCM_GLOBAL_VELOCITY;
+          // Velocity commands carry acceleration limits (max_linear_acc, max_angular_acc).
           control_msg.cmd.global_vel = {
             static_cast<float>(command.velocity.x),
             static_cast<float>(command.velocity.y),
             static_cast<float>(command.velocity.theta),
-            static_cast<float>(command.limit_vel_linear),
-            static_cast<float>(command.limit_vel_angular)
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_angular)
           };
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_VELOCITY:
           control_msg.body_control_mode = BCM_LOCAL_VELOCITY;
+          // Velocity commands carry acceleration limits (max_linear_acc, max_angular_acc).
           control_msg.cmd.local_vel = {
             static_cast<float>(command.velocity.x),
             static_cast<float>(command.velocity.y),
             static_cast<float>(command.velocity.theta),
-            static_cast<float>(command.limit_vel_linear),
-            static_cast<float>(command.limit_vel_angular)
+            static_cast<float>(command.limit_acc_linear),
+            static_cast<float>(command.limit_acc_angular)
           };
           break;
         case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_ACCEL:
@@ -387,6 +436,22 @@ private:
         case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_ACCEL:
           control_msg.body_control_mode = BCM_LOCAL_ACCEL;
           control_msg.cmd.local_acc = {
+            static_cast<float>(command.acceleration.x),
+            static_cast<float>(command.acceleration.y),
+            static_cast<float>(command.acceleration.theta),
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_GLOBAL_ACCEL_OPEN_LOOP:
+          control_msg.body_control_mode = BCM_GLOBAL_ACCEL_OPEN_LOOP;
+          control_msg.cmd.global_acc_open_loop = {
+            static_cast<float>(command.acceleration.x),
+            static_cast<float>(command.acceleration.y),
+            static_cast<float>(command.acceleration.theta),
+          };
+          break;
+        case ateam_msgs::msg::RobotMotionCommand::BCM_LOCAL_ACCEL_OPEN_LOOP:
+          control_msg.body_control_mode = BCM_LOCAL_ACCEL_OPEN_LOOP;
+          control_msg.cmd.local_acc_open_loop = {
             static_cast<float>(command.acceleration.x),
             static_cast<float>(command.acceleration.y),
             static_cast<float>(command.acceleration.theta),
@@ -464,28 +529,32 @@ private:
   }
 
   void FillVisionUpdate(BasicControl & control_msg, const int id) {
-    const auto & vision_state = vision_states_[id];
-    const auto timestamp = vision_state_timestamps_[id];
-    const auto now = std::chrono::steady_clock::now();
-    if (now - timestamp > vision_state_staleness_threshold_ || !vision_state.visible) {
+    auto & vision_state = vision_states_[id];
+    // Only forward each raw measurement once: skip if invalid or already sent
+    // in a previous command cycle. Firmware determines measurement age from the
+    // absolute time-of-capture below.
+    if (!vision_state.valid || vision_state.sent) {
       control_msg.vision_update = 0;
       control_msg.vision_position_update[0] = 0;
       control_msg.vision_position_update[1] = 0;
       control_msg.vision_position_update[2] = 0;
-      return;
-    }
-    if(joy_status_.is_active && joy_status_.active_id == id) {
-      // Do not send vision updates to robots under joystick control
-      control_msg.vision_update = 0;
-      control_msg.vision_position_update[0] = 0;
-      control_msg.vision_position_update[1] = 0;
-      control_msg.vision_position_update[2] = 0;
+      control_msg.vision_capture_us_lo = 0;
+      control_msg.vision_capture_us_hi = 0;
       return;
     }
     control_msg.vision_update = 1;
-    control_msg.vision_position_update[0] = static_cast<float>(vision_state.pose.position.x);
-    control_msg.vision_position_update[1] = static_cast<float>(vision_state.pose.position.y);
-    control_msg.vision_position_update[2] = static_cast<float>(GetYaw(vision_state.pose));
+    control_msg.vision_position_update[0] = static_cast<float>(vision_state.x);
+    control_msg.vision_position_update[1] = static_cast<float>(vision_state.y);
+    control_msg.vision_position_update[2] = static_cast<float>(vision_state.theta);
+
+    // Absolute time-of-capture in microseconds since the Unix epoch. The robot
+    // firmware uses this to determine how old the measurement is.
+    const uint64_t capture_us = static_cast<uint64_t>(vision_state.capture_time_ns / 1000);
+    control_msg.vision_capture_us_lo = static_cast<uint32_t>(capture_us & 0xFFFFFFFFu);
+    control_msg.vision_capture_us_hi = static_cast<uint32_t>((capture_us >> 32) & 0xFFFFFFFFu);
+
+    // Mark consumed so it isn't re-sent on the next command cycle.
+    vision_state.sent = true;
   }
 
   void DiscoveryMessageCallback(
@@ -570,18 +639,31 @@ private:
       return;
     }
 
+    // Reuse an existing connection to the same robot address: a robot re-sending hellos
+    // (e.g. several queued during a link outage) must keep getting the same port. This
+    // also avoids destroying a connection while holding mutex_ (its receive thread may be
+    // waiting on it).
+    const bool reuse_connection = connections_[robot_id] != nullptr;
     RCLCPP_INFO(
-      get_logger(), "Creating connection for robot %d (%s:%d)", robot_id,
+      get_logger(), "%s connection for robot %d (%s:%d)",
+      reuse_connection ? "Reusing" : "Creating", robot_id,
       sender_address.c_str(), sender_port);
 
     motion_command_timestamps_[robot_id] = {};
     last_heartbeat_timestamps_[robot_id] = std::chrono::steady_clock::now();
     connection_states_[robot_id] = ConnectionState::Connecting;
-    connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
-      sender_address, sender_port,
-      std::bind(
-        &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_data.robot_id,
-        std::placeholders::_1, std::placeholders::_2));
+    // Use the agreed robot listen port rather than the hello source port.
+    // Robots bind their data socket to this fixed port so software can reach them
+    // reliably. Compatible with ODIN (which also uses this port as its source port).
+    const uint16_t robot_listen_port =
+      static_cast<uint16_t>(get_parameter("discovery_port").as_int());
+    if (!reuse_connection) {
+      connections_[hello_data.robot_id] = std::make_unique<ateam_common::BiDirectionalUDP>(
+        sender_address, robot_listen_port,
+        std::bind(
+          &RadioBridgeNode::RobotIncomingPacketCallback, this, hello_data.robot_id,
+          std::placeholders::_1, std::placeholders::_2));
+    }
 
     HelloResponse response;
     response.port = connections_[hello_data.robot_id]->GetLocalPort();
@@ -592,7 +674,7 @@ private:
 
     const auto reply_packet = CreatePacket(CC_HELLO_RESP, response);
     discovery_receiver_.SendTo(
-      sender_address, sender_port,
+      sender_address, robot_listen_port,
       reinterpret_cast<const char *>(&reply_packet), GetPacketSize(reply_packet.header.command_code));
   }
 
@@ -749,20 +831,16 @@ private:
     }
   }
 
-  void SetupVisionSubscribers(const ateam_common::TeamColor color) {
-    for(auto & sub : vision_state_subscriptions_) {
-      sub.reset();
-    }
-    if(color == ateam_common::TeamColor::Unknown) {
+  void SetupVisionSubscribers(const ateam_common::TeamColor /*color*/) {
+    // The raw vision topic is not team-specific; team color/side are applied
+    // per-detection in the callback. Subscribe once and reuse.
+    if (vision_messages_subscription_) {
       return;
     }
-    const auto topic_prefix = color == ateam_common::TeamColor::Yellow ? Topics::kYellowTeamRobotPrefix : Topics::kBlueTeamRobotPrefix;
-    ateam_common::indexed_topic_helpers::create_indexed_subscribers<ateam_msgs::msg::VisionStateRobot>(
-      vision_state_subscriptions_,
-      topic_prefix,
+    vision_messages_subscription_ = create_subscription<ssl_league_msgs::msg::VisionWrapper>(
+      std::string(Topics::kVisionMessages),
       rclcpp::SystemDefaultsQoS(),
-      &RadioBridgeNode::VisionStateCallback,
-      this);
+      std::bind(&RadioBridgeNode::VisionMessagesCallback, this, std::placeholders::_1));
   }
 
   double GetYaw(const geometry_msgs::msg::Pose & pose)

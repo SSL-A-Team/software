@@ -67,7 +67,7 @@ ateam_geometry::Point PositionAtT(
     .z = params.global_theta
   };
   BangBangTraj3D trajectory;
-  if(const auto err = ateam_controls_traj_from_target_pose(c_start_state, c_goal_state, c_params,
+  if(const auto err = ateam_controls_traj_from_target_pos(c_start_state, c_goal_state, c_params,
       &trajectory); err != ATEAM_CONTROLS_OK)
   {
     throw ControlsException(err);
